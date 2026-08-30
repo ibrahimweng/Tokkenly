@@ -71,6 +71,7 @@ time.
 | `surface/inverse` | `053329` | Deep green moments such as welcome and camera. |
 | `surface/accent` | `2BBD9B` | The mint accent card. Once per screen. |
 | `surface/sand` | `D5A578` | The sand accent card. Once per screen. |
+| `surface/frost` | `FFFFFF` at 72% | Floating surfaces that content scrolls under. Always paired with a background blur of 24. |
 
 Surfaces nest in three steps and no more. Canvas holds a white card, and a white
 card holds a sunken panel. Never a white card inside a white card.
@@ -259,6 +260,23 @@ Every button is a full pill. Rounded rectangles are not used for buttons.
 | `size/field` | 56 | Text field. |
 | `size/row` | 64 | List row. |
 
+## 6b. Icons
+
+Icons carry state through shape, never through colour on its own.
+
+| State | Treatment |
+| --- | --- |
+| Inactive | Stroked outline, 2px, round caps and joins, `ink/muted`. |
+| Active | Solid filled glyph, no stroke. |
+| Not yet built | Stroked outline, 2px, `ink/subtle` at 40 percent opacity. |
+
+Every icon is drawn on a 24 by 24 grid. Never resize a vector to fit a square
+box, because that stretches the artwork. Centre it in a fixed frame instead.
+
+An icon set therefore needs two drawings of each glyph, one stroked and one
+filled. Pick shapes that fill cleanly. A house, a person, a set of bars and a
+grid all work. A thin pulse line does not.
+
 ## 7. Depth
 
 Separation comes from surface colour and a one pixel hairline border, not from
@@ -311,11 +329,40 @@ it is 2px `border/focus`. On error it is 2px `state/negative` and the helper tex
 turns `state/negative` at the same time. The label sits above in `Label/M` and
 `ink/muted` with an 8 gap.
 
-### 8.7 Bottom navigation
+### 8.7 Floating navigation
 
-88 tall. Four items. A 24 icon above a `Label/M` word with a 4 gap. The active
-item is `ink/strong`, inactive items are `ink/muted`, and an item that is not yet
-built is `ink/subtle` at 40 percent opacity. Icon strokes are 2 throughout.
+The navigation floats clear of the screen edge. It is two separate elements in
+one row, not a single bar.
+
+| Measure | Value |
+| --- | --- |
+| Distance from each side | 20 |
+| Distance above the safe area | 24 |
+| Row height | 64 |
+| Gap between the group and the More button | 12 |
+| Group padding | 8 |
+| Gap between items in the group | 4 |
+| More button | 64 circle |
+
+Both elements use `surface/frost` with a background blur of 24, a 1px
+`border/hairline`, and the floating shadow. Content genuinely blurs as it passes
+underneath, so a scrolling screen needs 88 of bottom padding to clear the bar.
+
+The group holds the destinations that work today. Anything not yet built lives
+behind More, not as a disabled tab, because a permanently dead tab wastes a slot.
+
+| Item | Size | Treatment |
+| --- | --- | --- |
+| Inactive | 48 square | 24 stroked icon in `ink/muted`, no label. |
+| Active | 48 tall capsule, 16 side padding | `ink/strong` fill, pill radius, 24 filled glyph in `ink/inverse`, 8 gap, name in `Label/M` in `ink/inverse`. |
+| More | 64 circle | 24 stroked icon in `ink/strong`. |
+
+The active item changes in four ways at once. It gains a background, it changes
+shape, its glyph fills, and it gains a label. A person who cannot separate the
+colours can still see which one is selected.
+
+A badge on the More button is a 20 circle in `fill/negative`, sitting on the top
+right, with the number in `Label/M` in white.
 
 ### 8.8 Balance
 
@@ -356,8 +403,11 @@ scale.
 6. Never put more than one `Heading/XXL` on a screen.
 7. Never use the serif anywhere in the app.
 8. Never let a gap inside a group equal the gap around it.
-9. Never carry meaning with colour alone.
+9. Never carry meaning with colour alone. An active icon fills, it does not
+    merely change colour.
 10. Never use `ink/subtle` for text a person needs to read.
 11. Never add a shadow except to a bottom sheet or a floating element.
 12. Never nest more than three surface levels.
 13. Never compose an amount below 28px. Set it flat.
+14. Never put a feature that is not built into the navigation. It goes behind
+    More.
