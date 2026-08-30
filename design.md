@@ -275,6 +275,11 @@ Icons carry state through shape, never through colour on its own.
 Every icon is drawn on a 24 by 24 grid. Never resize a vector to fit a square
 box, because that stretches the artwork. Centre it in a fixed frame instead.
 
+The multiple of 4 rule stops at the edge of that 24 grid. What happens inside an
+icon is artwork, not layout. A stroke can land on 7.5 and a corner can be 2.5,
+because those are drawing decisions, not spacing anyone reads. The box the icon
+sits in is 16, 20 or 24, and that does have to be on the grid.
+
 An icon set therefore needs two drawings of each glyph, one stroked and one
 filled. Pick shapes that fill cleanly. A house, a person, a set of bars and a
 grid all work. A thin pulse line does not.
