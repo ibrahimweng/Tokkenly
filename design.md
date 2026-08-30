@@ -391,6 +391,37 @@ roadmap lives behind More in the navigation and nowhere else.
 When a later phase ships, its action joins this row. At three or more the row
 returns to circular 56 actions with a `Label/M` word beneath each.
 
+### 8.9 The More sheet
+
+More is the only place a feature that is not built yet is allowed to appear. It
+is a bottom sheet, not a screen, so the person keeps their place behind it.
+
+| Part | Value |
+| --- | --- |
+| Surface | `surface/default`, top corners 28, no bottom corners |
+| Shadow | 0 by -8, blur 32, black at 12 percent |
+| Padding | 20 at the sides, 12 at the top, 40 at the bottom |
+| Grabber | 40 by 4 pill in `border/strong`, centred |
+| Gap between groups | 24 |
+| Scrim | `ink/strong` at 50 percent over the whole screen |
+
+The sheet holds two groups and they are never mixed.
+
+1. **Now.** Under a `Label/Caps` heading that reads "Now". Each item is a full
+   row with a 40 tile, a `Heading/M` title, a `Body/S` line saying what it does,
+   and a chevron. These open.
+2. **Later.** Under a `Label/Caps` heading that reads "Later". Each item is a
+   flat pill in `surface/sunken` with `ink/muted` text and a hairline border. No
+   tile, no chevron, no shadow. A `Body/S` line under the group says plainly
+   that nothing there can be opened.
+
+The two groups must stay visibly different. A later item never borrows the row
+shape of a now item, because a row with a chevron promises that tapping it does
+something.
+
+The sheet covers the floating navigation while it is open. That is correct. The
+grabber and the scrim are both ways out.
+
 ## 9. How this maps to the reference work
 
 Checked before the system was built. Every element in the references lands on the
@@ -430,7 +461,9 @@ scale.
 12. Never nest more than three surface levels.
 13. Never compose an amount below 28px. Set it flat.
 14. Never put a feature that is not built into the navigation or onto the home
-    screen. Not as a greyed tile, not as a teaser. It goes behind More.
+    screen. Not as a greyed tile, not as a teaser. It goes behind More, under
+    the "Later" heading, as a flat pill that carries no chevron and opens
+    nothing.
 
 ## 11. The screens, by flow
 
@@ -459,6 +492,8 @@ Flow D holds three outcomes of the same check, so its screens carry no arrows.
 | H. Send money | Send who, Send amount, Send review, Send sent, Send failed |
 | I. Activity and receipts | Activity, Transaction detail |
 | J. Account and security | Account, Security |
+| K. The More sheet | More |
+| L. First run and empty states | Home first run, Activity nothing yet |
 
 Flow F holds two states of one screen, so its screens carry no arrows. In flow H
 the last two screens are the two endings of the same send, so the arrow stops at
