@@ -431,3 +431,45 @@ scale.
 13. Never compose an amount below 28px. Set it flat.
 14. Never put a feature that is not built into the navigation or onto the home
     screen. Not as a greyed tile, not as a teaser. It goes behind More.
+
+## 11. The screens, by flow
+
+Every screen sits inside a named section in Figma. A section holds one flow, a
+short note that says what the flow is for, and an arrow between each step. Where
+two screens are alternatives rather than steps there is no arrow between them.
+
+### 11.1 Onboarding, page `03 Onboarding`
+
+| Flow | Screens |
+| --- | --- |
+| A. Set up a new account | Welcome, How this works, Recovery phrase hidden, Recovery phrase revealed, Confirm your phrase, Create a PIN, Confirm your PIN, Unlock with your face |
+| B. Confirm your mobile number | Your mobile number, Enter the code |
+| C. Verify your identity | Verify your identity, Choose NIN or BVN, Enter your NIN, Check your details, Photograph your ID, Check the photo, Take a selfie, Review and submit |
+| D. After you submit | Under review, Verified, More information needed |
+| E. Come back to your account | Restore your account |
+
+Flow D holds three outcomes of the same check, so its screens carry no arrows.
+
+### 11.2 The app, page `04 App`
+
+| Flow | Screens |
+| --- | --- |
+| F. Home | Home verified, Home verification pending |
+| G. Receive money | Receive |
+| H. Send money | Send who, Send amount, Send review, Send sent, Send failed |
+| I. Activity and receipts | Activity, Transaction detail |
+| J. Account and security | Account, Security |
+
+Flow F holds two states of one screen, so its screens carry no arrows. In flow H
+the last two screens are the two endings of the same send, so the arrow stops at
+the review screen.
+
+### 11.3 What every screen has to satisfy
+
+1. The frame is 390 by 844 and nothing spills past it.
+2. Side padding is 20. The status bar is 56 and an app bar, when there is one,
+   is another 56.
+3. A screen that shows the floating navigation ends its content 88 above the
+   bottom, and no element reaches into the navigation.
+4. A screen without the navigation ends its content 32 above the bottom.
+5. Two font weights, and every size and gap a multiple of 4.
