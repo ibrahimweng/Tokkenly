@@ -15,9 +15,11 @@ even if it looks fine.
 3. **No mid tone surfaces.** A screen is near white or deep green, never a wash
    of beige in between.
 
-Two things sit outside rule 2 on purpose. Letter spacing is optical correction
-rather than layout, so it is set by eye. The pill radius is not a measurement,
-it is fully round.
+Three things sit outside rule 2 on purpose. Letter spacing is optical correction
+rather than layout, so it is set by eye. The pill radius is not a measurement, it
+is fully round. And a width that comes from filling the space available is not a
+value anyone chose, so it does not need to land on the grid. Only the gaps and
+padding around it do.
 
 ## 1. The direction
 
@@ -364,12 +366,25 @@ colours can still see which one is selected.
 A badge on the More button is a 20 circle in `fill/negative`, sitting on the top
 right, with the number in `Label/M` in white.
 
-### 8.8 Balance
+### 8.8 Balance and the home actions
 
 The balance sits directly on the canvas, not in a card, so the number is the
 loudest thing on the screen. `Label/Caps` above it, `Heading/XXL` for the amount
-with the symbol and decimals at 20, then `Body/S` for the naira value. Circular
-56 actions sit below with a 24 gap.
+with the symbol and decimals at 20, then `Body/S` for the naira value.
+
+Below it, with a 24 gap, sit the actions a person can actually take today. In
+Phase 1 that is two, so they are two equal buttons splitting the width with a 12
+gap, each 56 tall at pill radius, each holding a 20 icon, an 8 gap and a label in
+`Heading/M`.
+
+Send uses the Primary style and Receive uses Secondary, because sending is the
+action with consequence and receiving only shares an address.
+
+Nothing that is not built appears here. No greyed out tiles and no teasers. The
+roadmap lives behind More in the navigation and nowhere else.
+
+When a later phase ships, its action joins this row. At three or more the row
+returns to circular 56 actions with a `Label/M` word beneath each.
 
 ## 9. How this maps to the reference work
 
@@ -409,5 +424,5 @@ scale.
 11. Never add a shadow except to a bottom sheet or a floating element.
 12. Never nest more than three surface levels.
 13. Never compose an amount below 28px. Set it flat.
-14. Never put a feature that is not built into the navigation. It goes behind
-    More.
+14. Never put a feature that is not built into the navigation or onto the home
+    screen. Not as a greyed tile, not as a teaser. It goes behind More.
