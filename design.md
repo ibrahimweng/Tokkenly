@@ -155,30 +155,29 @@ other pair sits above it.
 
 ## 3. Typography
 
-### 3.1 The one family
+### 3.1 The typeface
 
 | Role | Family | Weight |
 | --- | --- | --- |
-| Everything | SF Pro | Semibold and Regular |
+| Everything | Geist | SemiBold and Regular |
+| Codes | Geist Mono | Regular |
 
-One family, two weights, no exceptions. There is no second family to police and
-no serif anywhere. SF Pro was chosen because it is what a phone already renders,
-so nothing in the design fights the platform, and because its figures are cut
-tighter than a humanist face, which makes a balance read as data rather than as
-a word.
+One typeface, two weights. Geist Mono is the same design cut to a fixed width,
+so a wallet address lines up in a column without bringing a foreign face into
+the file. A screen using Geist SemiBold, Geist Regular and Geist Mono Regular
+still counts as two weights, because Mono only ever uses Regular.
 
-Two things follow from this that are worth knowing before it ships.
+Geist is released under the SIL Open Font License, so it ships anywhere. The app
+on iOS, the app on Android and the website can all use the same face, which is
+not true of a platform font.
 
-**Licensing.** Apple licenses SF for designing and developing apps for Apple
-platforms. An Android build or the website needs a different face. Inter is the
-closest free substitute and its metrics are near enough that the scale below
-does not change.
+Its figures are cut tight with flat terminals, which is why a balance set in it
+reads as a number rather than as a word. That is the whole reason for the
+choice.
 
-**The mono styles are no longer mono.** `Mono/M` and `Mono/S` now set SF Pro,
-because every other family was removed. A wallet address or a transaction hash
-therefore no longer aligns in a column. Where a code has to line up, set it in
-SF Pro with the tabular figures feature turned on rather than bringing a second
-family back.
+There is no serif anywhere. There is no second sans. If a screen needs a
+different voice it gets a different size or a different weight, never a
+different family.
 
 ### 3.2 The scale
 
