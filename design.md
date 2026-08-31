@@ -531,6 +531,42 @@ Activity is no longer a destination in the navigation. It is reached by See all
 on the home screen and by a row in the More sheet, and it opens as a pushed
 screen with a back bar rather than a tab.
 
+## 13. What makes it beautiful
+
+The system so far says what is allowed. It does not say what is good. These are
+the tests a screen has to pass before it is finished.
+
+**One thing lands first.** Look at the screen for half a second and something
+should have caught the eye. If everything is the same weight, nothing is. The
+balance is that thing on home. A screen with no focal object is not calm, it is
+empty.
+
+**Colour is spent once, at full strength.** Deep green appears in one place per
+screen and does real work there. Spreading it thinly across five elements makes
+none of them read. A tint is not a weaker version of a colour, it is a different
+material.
+
+**Equal things get equal weight.** Receive and Send are the same size of
+decision, so one must not be a heavy filled pill next to a pale outline. When
+the design makes one look louder, it is making a claim about the product.
+
+**Density is a kindness.** A list of three payments separated by 16 of air reads
+as a rough draft. Hairline dividers and tighter rows read as a finished product
+and fit more on the screen. Air belongs between sections, not inside them.
+
+**The numbers are the product.** Money is set large, tracked tight, with the
+currency mark and the decimals stepped down. Everything around a number is
+smaller and quieter than the number.
+
+**Chrome recedes.** The status bar, the header and the navigation are furniture.
+They are never the most interesting thing on the screen.
+
+**Nothing is decorative.** Every mark carries information. If a shape can be
+removed and nothing is lost, remove it.
+
+**Space is structure.** Leftover space at the bottom of a screen is a mistake.
+Space that separates two ideas is a decision. The difference shows.
+
 ## 9. How this maps to the reference work
 
 Checked before the system was built. Every element in the references lands on the
@@ -611,6 +647,7 @@ Flow D holds three outcomes of the same check, so its screens carry no arrows.
 | K. The More sheet | More |
 | L. First run and empty states | Home first run, Activity nothing yet |
 | M. Grow and Stocks | Grow, Stocks |
+| N. Home, three directions | Green hero, Big number, Product stack |
 
 Flow F holds two states of one screen, so its screens carry no arrows. In flow H
 the last two screens are the two endings of the same send, so the arrow stops at
