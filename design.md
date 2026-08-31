@@ -180,52 +180,53 @@ rather than bringing a second family back.
 
 ### 3.2 The scale
 
-Five sizes. No two neighbours are closer than a 1.25 step, so nothing can drift
-into a soft middle.
+Four sizes. Nothing else exists.
 
-`12 → 16 → 20 → 28 → 40`
+`12 → 14 → 18 → 36`
 
-**SemiBold**
+| Style | Size / line | Weight | Tracking | Use |
+| --- | --- | --- | --- | --- |
+| `Display` | 36 / 40 | SemiBold | -1.2 | The hero figure. One per screen, never two. |
+| `Title` | 18 / 24 | SemiBold | -0.4 | Screen title and section title. |
+| `Body strong` | 14 / 20 | SemiBold | -0.2 | Row title, button label, any value. |
+| `Body` | 14 / 20 | Regular | 0 | Sentences, explanations, subtitles. |
+| `Label caps` | 12 / 16 | SemiBold | +1.2 | Uppercase eyebrow above a value. |
+| `Label` | 12 / 16 | Regular | 0 | Timestamps, chips, captions, links. |
 
-| Style | Size / line | Tracking | Use |
-| --- | --- | --- | --- |
-| `Heading/XXL` | 40 / 44 | -1.6 | The balance. One per screen, never two. |
-| `Heading/XL` | 28 / 32 | -0.8 | Screen title and amount entry. |
-| `Heading/L` | 20 / 24 | -0.4 | Section title and the amount in a list row. |
-| `Heading/M` | 16 / 20 | -0.2 | Card title, list row title, button label, small amount. Set flat. |
-| `Label/Caps` | 12 / 16 | +1.2 | Uppercase label above a value. Set the layer to uppercase. |
-| `Label/M` | 12 / 16 | +0.4 | Tab, chip, badge, bottom navigation, link. |
+Six styles. That is the whole system.
 
-**Regular**
+The sizes are not multiples of 4 and are not meant to be. The multiple of 4 rule
+governs spacing and the size of boxes. Type sits on its own scale, and every
+line height is a multiple of 4 so the text still lands on the grid.
 
-| Style | Size / line | Tracking | Use |
-| --- | --- | --- | --- |
-| `Body/L` | 16 / 24 | 0 | Explanations and long copy. |
-| `Body/S` | 12 / 16 | 0 | Helper text and captions. |
-| `Code/M` | 16 / 24 | +0.2 | Wallet addresses and recovery words. |
-| `Code/S` | 12 / 16 | +0.4 | Reference numbers and IDs. |
+**12 is for metadata only.** A timestamp, a chip, an eyebrow, a reference number.
+Never a sentence a person has to read. The usual floor for body copy is 16 and
+this system sets it at 14, so the 12 has to stay out of the reading path or the
+screens become hard work. Nigerian apps are already criticised for small type.
 
-Ten styles. That is the whole system.
+The jump from 18 to 36 is deliberate. There is no middle size to drift into, so a
+screen has one big thing and everything else is quiet.
 
 ### 3.3 How to set an amount
 
 An amount is built from three parts, not typed as one string.
 
-- The currency symbol and any sign are half the main size, in `ink/muted`.
+- The currency symbol and any sign are the size below, in the muted ink.
 - The whole number is the full size and weight.
-- The decimals are half the main size, in `ink/muted`.
-
-Half of every size on the scale is also on the scale, so the parts never leave
-the grid.
+- The decimals are the size below, in the muted ink.
 
 | Main | Symbol and decimals |
 | --- | --- |
-| 40 | 20 |
-| 28 | 16 |
+| 36 | 18 |
 
-Only compose at 28 and above. Below that an amount is set flat, in one size and
-one colour. A composed amount in a list row reads as fussy, and the parts get too
-close in size to tell apart.
+**Only `Display` composes.** Every other size is set flat, in one size and one
+colour. At 18 and below the two parts get too close to tell apart and it reads as
+fussy rather than considered.
+
+A composed amount is the one place a text style is overridden, because the parts
+need two sizes inside one node. There are 19 of them in the file and they are the
+only nodes not linked to a style. If that ever needs fixing, the answer is a
+component with two text nodes, not a third size.
 
 In a table or a list, amounts align right so the digits line up.
 
@@ -588,6 +589,25 @@ it is worth. The chart only says which way it went.
 The period chips under it are the standard pill, with the selected one filled in
 `surface/inverse`.
 
+### 8.14 Screens that scroll
+
+Most screens fit. Home does not, and should not.
+
+A screen whose job is a feed sets its body to hug its content and lets the list
+run under the floating navigation and off the bottom of the frame. The cut is the
+point. A list that stops neatly above the navigation tells a person there is
+nothing more, which on home is a lie.
+
+Two rules make the cut read as scrolling rather than as breakage.
+
+1. The cut lands inside a row, never on a section heading. A heading sliced in
+   half looks like a bug. A row sliced in half looks like a list.
+2. Nothing below the fold is the only copy of anything. Everything under the
+   navigation is also reachable another way.
+
+Every other screen still ends above the navigation, or above the bottom padding
+where there is no navigation.
+
 ## 9. How this maps to the reference work
 
 Checked before the system was built. Every element in the references lands on the
@@ -632,7 +652,8 @@ scale.
     box around it changes, the glyph does not.
 16. Never put an unbuilt part of a product onto the home screen. It goes behind
     More, under the "Later" heading, as a flat pill that carries no chevron and
-    opens nothing.
+    opens nothing. A whole product may show a hint on home, because it has a
+    place in the navigation to lead to. The hint carries a "Soon" marker.
 17. A whole product is the exception. Grow and Stocks sit in the navigation
     before they open, because they are what the account grows into and the
     website already promises them. Each carries a "Not open yet" pill on its own
