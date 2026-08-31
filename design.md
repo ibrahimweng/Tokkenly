@@ -576,6 +576,18 @@ removed and nothing is lost, remove it.
 **Space is structure.** Leftover space at the bottom of a screen is a mistake.
 Space that separates two ideas is a decision. The difference shows.
 
+
+### 8.13 Charts
+
+A price line is not an icon and is not held to the 12 rule. It is drawn at the
+width of its container with a 2 stroke in `state/positive` when the period is up
+and `state/negative` when it is down, over a single hairline baseline. No axes,
+no gridlines, no labels on the line itself. The number above the chart says what
+it is worth. The chart only says which way it went.
+
+The period chips under it are the standard pill, with the selected one filled in
+`surface/inverse`.
+
 ## 9. How this maps to the reference work
 
 Checked before the system was built. Every element in the references lands on the
@@ -656,7 +668,8 @@ Flow D holds three outcomes of the same check, so its screens carry no arrows.
 | K. The More sheet | More |
 | L. First run and empty states | Home first run, Activity nothing yet |
 | M. Grow and Stocks | Grow, Stocks |
-| N. Home, three directions | Green hero, Big number, Product stack |
+| O. Earn and Borrow | Move money in, Borrow amount, Borrow review, Borrow done |
+| P. Buying and selling | Stock detail, Buy amount, Buy review, Buy done, Sell |
 
 Flow F holds two states of one screen, so its screens carry no arrows. In flow H
 the last two screens are the two endings of the same send, so the arrow stops at
