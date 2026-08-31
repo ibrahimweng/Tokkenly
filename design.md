@@ -155,19 +155,30 @@ other pair sits above it.
 
 ## 3. Typography
 
-### 3.1 Families and weights
+### 3.1 The one family
 
 | Role | Family | Weight |
 | --- | --- | --- |
-| Everything | Lato | SemiBold and Regular |
-| Codes | IBM Plex Mono | Regular |
+| Everything | SF Pro | Semibold and Regular |
 
-The serif does not appear in the app. Sentient is a marketing typeface. It is
-used on social graphics and the website, never on an app screen. This keeps
-every screen at two weights with no exception to police.
+One family, two weights, no exceptions. There is no second family to police and
+no serif anywhere. SF Pro was chosen because it is what a phone already renders,
+so nothing in the design fights the platform, and because its figures are cut
+tighter than a humanist face, which makes a balance read as data rather than as
+a word.
 
-IBM Plex Mono is a second family but it only uses Regular, so a screen with Lato
-SemiBold, Lato Regular and Mono Regular still has two weights.
+Two things follow from this that are worth knowing before it ships.
+
+**Licensing.** Apple licenses SF for designing and developing apps for Apple
+platforms. An Android build or the website needs a different face. Inter is the
+closest free substitute and its metrics are near enough that the scale below
+does not change.
+
+**The mono styles are no longer mono.** `Mono/M` and `Mono/S` now set SF Pro,
+because every other family was removed. A wallet address or a transaction hash
+therefore no longer aligns in a column. Where a code has to line up, set it in
+SF Pro with the tabular figures feature turned on rather than bringing a second
+family back.
 
 ### 3.2 The scale
 
