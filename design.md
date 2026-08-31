@@ -272,13 +272,41 @@ Icons carry state through shape, never through colour on its own.
 | Active | Solid filled glyph, no stroke. |
 | Not yet built | Stroked outline, 2px, `ink/subtle` at 40 percent opacity. |
 
-Every icon is drawn on a 24 by 24 grid. Never resize a vector to fit a square
-box, because that stretches the artwork. Centre it in a fixed frame instead.
+### 6b.1 The one icon size
 
-The multiple of 4 rule stops at the edge of that 24 grid. What happens inside an
-icon is artwork, not layout. A stroke can land on 7.5 and a corner can be 2.5,
-because those are drawing decisions, not spacing anyone reads. The box the icon
-sits in is 16, 20 or 24, and that does have to be on the grid.
+Every glyph is drawn at 12 by 12 with a 2 point stroke. There is no second size.
+A tall or wide glyph fits the 12 square on its longer side and keeps its
+proportions, so a chevron is 6 by 12 rather than a squashed 12 by 12.
+
+Draw on a 24 by 24 grid, then scale the whole glyph down to fit 12. Never resize
+a vector to fill a square box, because that stretches the artwork. Centre it in
+a fixed frame instead.
+
+The stroke stays at 2 after scaling. That is deliberate. At 12 the stroke is one
+sixth of the glyph, which is heavier than the usual one ninth, and it is what
+gives the set its weight. Two consequences follow.
+
+1. Pick open shapes. Fine interior detail closes up at this size, so a glyph
+   needs room between its strokes.
+2. Never lower the stroke to keep a detail. Simplify the drawing instead.
+
+The box the glyph sits in does not change with the glyph. It stays 16, 20 or 24
+and it stays on the multiple of 4 grid, so nothing in a row shifts and every tap
+target keeps its size. A 12 glyph in a 20 box is correct.
+
+The multiple of 4 rule stops at the edge of the 24 grid the glyph is drawn on.
+What happens inside an icon is artwork, not layout. A stroke can land on 7.5 and
+a corner can be 2.5, because those are drawing decisions, not spacing anyone
+reads.
+
+### 6b.2 Round badges
+
+A badge is a filled circle holding one glyph. With a 12 glyph the circle is 40.
+Anything larger leaves the glyph stranded in the middle. This covers the outcome
+screens, money sent, send failed, verified, under review and nothing here yet.
+
+The 64 circle in the floating navigation is not a badge. It is the More button,
+and it stays 64 because that is a tap target, not artwork.
 
 An icon set therefore needs two drawings of each glyph, one stroked and one
 filled. Pick shapes that fill cleanly. A house, a person, a set of bars and a
@@ -460,7 +488,9 @@ scale.
 11. Never add a shadow except to a bottom sheet or a floating element.
 12. Never nest more than three surface levels.
 13. Never compose an amount below 28px. Set it flat.
-14. Never put a feature that is not built into the navigation or onto the home
+14. Never draw a glyph at any size but 12, and never at any stroke but 2. The
+    box around it changes, the glyph does not.
+15. Never put a feature that is not built into the navigation or onto the home
     screen. Not as a greyed tile, not as a teaser. It goes behind More, under
     the "Later" heading, as a flat pill that carries no chevron and opens
     nothing.
