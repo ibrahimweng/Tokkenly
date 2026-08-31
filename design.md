@@ -538,3 +538,16 @@ the review screen.
    bottom, and no element reaches into the navigation.
 4. A screen without the navigation ends its content 32 above the bottom.
 5. Two font weights, and every size and gap a multiple of 4.
+
+## 12. The prototype
+
+Both pages are wired for a click through. The floating navigation works on
+every screen that carries it, the send flow runs from picking a person to the
+receipt, and the onboarding screens run in a straight line.
+
+Figma does not allow a prototype link to cross from one page to another, so the
+onboarding prototype ends at Verified and the app prototype starts at Home.
+Testers open them as two separate runs.
+
+Starting points are set. Onboarding opens at Welcome or at Restore your
+account. The app opens at Home or at a brand new account.
