@@ -409,38 +409,29 @@ turns `state/negative` at the same time. The label sits above in `Label/M` and
 
 ### 8.7 Floating navigation
 
-The navigation floats clear of the screen edge. It is two separate elements in
-one row, not a single bar.
+Two floating elements, 20 in from each side, 24 above the safe area, both 64
+tall. On the left a rounded group of destinations. On the right a single More
+button. Both use `surface/frost` with a background blur of 24 and the floating
+shadow.
 
-| Measure | Value |
+| Part | Value |
 | --- | --- |
-| Distance from each side | 20 |
-| Distance above the safe area | 24 |
-| Row height | 64 |
-| Gap between the group and the More button | 12 |
-| Group padding | 8 |
-| Gap between items in the group | 4 |
-| More button | 64 circle |
+| Destinations | Home, Grow, Stocks, Account |
+| Group | padding 8, gap 4 between items, radius pill |
+| Inactive item | 48 by 48, glyph only, `ink/muted` outline |
+| Active item | 64 by 48 pill in `surface/inverse`, glyph filled in `ink/inverse` |
+| More | 64 circle, its own frosted element, gap 12 from the group |
+| Total width | 236 group plus 12 plus 64, inside the 350 available |
 
-Both elements use `surface/frost` with a background blur of 24, a 1px
-`border/hairline`, and the floating shadow. Content genuinely blurs as it passes
-underneath, so a scrolling screen needs 88 of bottom padding to clear the bar.
+The items carry no labels. Four destinations and a label on the active one does
+not fit in 350, and shrinking the type or the side inset to force it would cost
+more than the labels are worth. State is carried by the pill and by the glyph
+filling, which is shape, not colour.
 
-The group holds the destinations that work today. Anything not yet built lives
-behind More, not as a disabled tab, because a permanently dead tab wastes a slot.
-
-| Item | Size | Treatment |
-| --- | --- | --- |
-| Inactive | 48 square | 24 stroked icon in `ink/muted`, no label. |
-| Active | 48 tall capsule, 16 side padding | `ink/strong` fill, pill radius, 24 filled glyph in `ink/inverse`, 8 gap, name in `Label/M` in `ink/inverse`. |
-| More | 64 circle | 24 stroked icon in `ink/strong`. |
-
-The active item changes in four ways at once. It gains a background, it changes
-shape, its glyph fills, and it gains a label. A person who cannot separate the
-colours can still see which one is selected.
-
-A badge on the More button is a 20 circle in `fill/negative`, sitting on the top
-right, with the number in `Label/M` in white.
+A screen that shows the navigation needs 88 of bottom padding, and no element in
+its body may reach below the top of the navigation at y 722. A bottom anchored
+button on such a screen is a collision, so actions on those screens live inside
+their cards.
 
 ### 8.8 Balance and the home actions
 
@@ -516,6 +507,30 @@ twelve word slots it is about to fill, redacted, at half opacity, with the lock
 and the label sitting on a small raised card in the middle. A person can see
 there is something there and what shape it takes.
 
+### 8.12 The four products
+
+The account is one balance with four products on top of it. Only Everyday is
+open.
+
+| Product | State | What it is |
+| --- | --- | --- |
+| Everyday | Open | Hold, send and receive digital dollars. Convert to naira, bills and spend are not built. |
+| Earn | Not open | A floating rate on the balance, compounding daily, no lockups. |
+| Borrow | Not open | Borrow against what you hold instead of selling it. Paid out in naira. |
+| Stocks | Not open | US stocks and funds in fractional shares, funded from the same balance. |
+
+There is one balance, not four. Stocks buys from the money you already hold, and
+Borrow lends against it. Nothing in the app should suggest a person moves money
+between four separate pots.
+
+Earn and Borrow share one page called Grow, because borrowing is priced off what
+you are earning on and the two only make sense next to each other. Stocks has
+its own page.
+
+Activity is no longer a destination in the navigation. It is reached by See all
+on the home screen and by a row in the More sheet, and it opens as a pushed
+screen with a back bar rather than a tab.
+
 ## 9. How this maps to the reference work
 
 Checked before the system was built. Every element in the references lands on the
@@ -558,10 +573,13 @@ scale.
 14. Never compose an amount below 28px. Set it flat.
 15. Never draw a glyph at any size but 12, and never at any stroke but 2. The
     box around it changes, the glyph does not.
-16. Never put a feature that is not built into the navigation or onto the home
-    screen. Not as a greyed tile, not as a teaser. It goes behind More, under
-    the "Later" heading, as a flat pill that carries no chevron and opens
-    nothing.
+16. Never put an unbuilt part of a product onto the home screen. It goes behind
+    More, under the "Later" heading, as a flat pill that carries no chevron and
+    opens nothing.
+17. A whole product is the exception. Grow and Stocks sit in the navigation
+    before they open, because they are what the account grows into and the
+    website already promises them. Each carries a "Not open yet" pill on its own
+    page. A part of a product never gets this exception, only a product does.
 
 ## 11. The screens, by flow
 
@@ -592,6 +610,7 @@ Flow D holds three outcomes of the same check, so its screens carry no arrows.
 | J. Account and security | Account, Security |
 | K. The More sheet | More |
 | L. First run and empty states | Home first run, Activity nothing yet |
+| M. Grow and Stocks | Grow, Stocks |
 
 Flow F holds two states of one screen, so its screens carry no arrows. In flow H
 the last two screens are the two endings of the same send, so the arrow stops at
