@@ -160,24 +160,23 @@ other pair sits above it.
 | Role | Family | Weight |
 | --- | --- | --- |
 | Everything | Geist | SemiBold and Regular |
-| Codes | Geist Mono | Regular |
 
-One typeface, two weights. Geist Mono is the same design cut to a fixed width,
-so a wallet address lines up in a column without bringing a foreign face into
-the file. A screen using Geist SemiBold, Geist Regular and Geist Mono Regular
-still counts as two weights, because Mono only ever uses Regular.
+One family, two weights, nothing else in the file. No serif, no second sans, no
+monospace companion. If a screen needs a different voice it gets a different
+size or a different weight, never a different family.
 
-Geist is released under the SIL Open Font License, so it ships anywhere. The app
-on iOS, the app on Android and the website can all use the same face, which is
-not true of a platform font.
+Geist is released under the SIL Open Font License, so the same face ships on
+iOS, on Android and on the website. A platform font cannot do that.
 
 Its figures are cut tight with flat terminals, which is why a balance set in it
 reads as a number rather than as a word. That is the whole reason for the
 choice.
 
-There is no serif anywhere. There is no second sans. If a screen needs a
-different voice it gets a different size or a different weight, never a
-different family.
+**Codes do not line up in a column.** `Code/M` and `Code/S` set Geist like
+everything else, so a wallet address or a transaction hash has uneven character
+widths. This is accepted rather than solved, because one family is worth more
+than aligned hashes. Where a code truly has to align, turn on tabular figures
+rather than bringing a second family back.
 
 ### 3.2 The scale
 
@@ -203,8 +202,8 @@ into a soft middle.
 | --- | --- | --- | --- |
 | `Body/L` | 16 / 24 | 0 | Explanations and long copy. |
 | `Body/S` | 12 / 16 | 0 | Helper text and captions. |
-| `Mono/M` | 16 / 24 | +0.2 | Wallet addresses and recovery words. |
-| `Mono/S` | 12 / 16 | +0.4 | Reference numbers and IDs. |
+| `Code/M` | 16 / 24 | +0.2 | Wallet addresses and recovery words. |
+| `Code/S` | 12 / 16 | +0.4 | Reference numbers and IDs. |
 
 Ten styles. That is the whole system.
 
@@ -594,7 +593,7 @@ scale.
 | A section title | 16 | `Heading/M` 16 |
 | Bottom navigation labels | 10 | `Label/M` 12 |
 | A screen title such as "Invoice" | 26 | `Heading/XL` 28 |
-| A reference code such as IN-001 | 12 | `Mono/S` 12 |
+| A reference code such as IN-001 | 12 | `Code/S` 12 |
 | A value in a data table | 16 | `Heading/M` 16 |
 | A confirmation headline | 28 | `Heading/XL` 28 |
 | An event name on a ticket | 20 | `Heading/L` 20 |
