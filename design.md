@@ -78,6 +78,7 @@ drawn around it.
 | `surface/accent` | `2BBD9B` | The mint accent card. Once per screen. |
 | `surface/sand` | `D5A578` | The sand accent card. Once per screen. |
 | `surface/frost` | `F1F6F3` at 88% | Floating surfaces that content scrolls under. Always paired with a background blur of 24. |
+| `surface/scan` | `FFFFFF` | Behind a QR code. The one exception to the white rule, because a reader needs the quiet zone. |
 
 Each step is about five percent darker than the one above it. That is enough to
 separate a card from the page without turning the screen grey.
@@ -364,6 +365,20 @@ disappears. A medium button is 48 tall and uses `Label/M`. There is no small
 button. Pressed is 88 percent opacity and disabled is 38 percent opacity on the
 whole button. Do not use a separate grey for either.
 
+#### Disabled
+
+A disabled control is inert, not faded. Never dim a live control with opacity,
+because a dark pill at 38 percent on a white page turns into a grey blob.
+
+| Variant | Fill | Label and icon |
+| --- | --- | --- |
+| Primary, Secondary, Destructive | `surface/sunken` | `ink/subtle` |
+| Quiet | none | `ink/subtle` |
+| Inverse | `surface/inverse-raised` | `ink/inverse-muted` |
+
+`ink/subtle` is below 4.5 to 1 on purpose here. A disabled control carries no
+action, so its label is the one place the rule does not apply.
+
 ### 8.2 Icon button
 
 A 44 circle filled with `surface/sunken` holding a 20px icon in `ink/strong`.
@@ -477,6 +492,29 @@ something.
 
 The sheet covers the floating navigation while it is open. That is correct. The
 grabber and the scrim are both ways out.
+
+### 8.10 Vertical composition
+
+A white page shows every loose gap, so nothing sits at an arbitrary height.
+
+1. A screen has at most one fixed spacer. Everything else that separates groups
+   is the body gap.
+2. Space that is left over goes into a flexible spacer, never into a fixed one.
+   A fixed 200 spacer is a guess. A flexible one is a rule.
+3. A screen whose job is one focal element between a header and a control puts a
+   flexible spacer on both sides of that element, so it centres. The PIN dots
+   work this way.
+4. An outcome screen, the kind that reports what happened, centres its whole
+   block the same way and anchors its actions to the bottom.
+5. Two stacked buttons are one group with a gap of 12, not two items in the body
+   rhythm.
+
+### 8.11 The covered phrase
+
+Before the recovery phrase is revealed it is not a blank panel. It shows the
+twelve word slots it is about to fill, redacted, at half opacity, with the lock
+and the label sitting on a small raised card in the middle. A person can see
+there is something there and what shape it takes.
 
 ## 9. How this maps to the reference work
 
