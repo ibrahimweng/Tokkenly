@@ -65,25 +65,36 @@ time.
 
 ### 2.3 Surface
 
+The page is pure white. Everything that sits on it carries a soft green tinted
+step, so the shape of a card comes from its own surface rather than from a line
+drawn around it.
+
 | Token | Value | Use |
 | --- | --- | --- |
-| `surface/canvas` | `F6F8F6` | The screen background. |
-| `surface/default` | `FFFFFF` | Cards and sheets on the canvas. |
-| `surface/sunken` | `EFF2F0` | A panel nested inside a white card. |
+| `surface/canvas` | `FFFFFF` | The screen background. Pure white, always. |
+| `surface/default` | `F1F6F3` | Cards, sheets and fields sitting on the canvas. |
+| `surface/sunken` | `E7EEEA` | A panel nested inside a card. |
 | `surface/inverse` | `053329` | Deep green moments such as welcome and camera. |
 | `surface/accent` | `2BBD9B` | The mint accent card. Once per screen. |
 | `surface/sand` | `D5A578` | The sand accent card. Once per screen. |
-| `surface/frost` | `FFFFFF` at 72% | Floating surfaces that content scrolls under. Always paired with a background blur of 24. |
+| `surface/frost` | `F1F6F3` at 88% | Floating surfaces that content scrolls under. Always paired with a background blur of 24. |
 
-Surfaces nest in three steps and no more. Canvas holds a white card, and a white
-card holds a sunken panel. Never a white card inside a white card.
+Each step is about five percent darker than the one above it. That is enough to
+separate a card from the page without turning the screen grey.
+
+Surfaces nest in three steps and no more. White canvas holds a tinted card, and
+a tinted card holds a sunken panel. Never a card inside a card of the same
+value.
+
+Nothing on a screen is pure white except the canvas itself. If a card looks
+white, it is wrong.
 
 ### 2.4 Ink
 
 | Token | Value | Contrast on canvas | Use |
 | --- | --- | --- | --- |
-| `ink/strong` | `053329` | 13.3 to 1 | Headings, values, body text. |
-| `ink/muted` | `55746E` | 4.85 to 1 | Labels, captions, secondary text. |
+| `ink/strong` | `053329` | 13.9 to 1 | Headings, values, body text. |
+| `ink/muted` | `4D6B65` | 5.8 to 1 | Labels, captions, secondary text. |
 | `ink/subtle` | `8EA39F` | 2.9 to 1 | Disabled text and placeholders only. |
 | `ink/inverse` | `FFFFFF` | on deep green | Text on `surface/inverse`. |
 | `ink/inverse-muted` | `A9C4BB` | 7.5 to 1 on deep green | Secondary text on deep green. |
@@ -92,7 +103,7 @@ card holds a sunken panel. Never a white card inside a white card.
 
 | Token | Value | Use |
 | --- | --- | --- |
-| `border/hairline` | `DDDED6` | Card outlines and dividers. 1px. |
+| `border/hairline` | `DCE6E0` | Card outlines and dividers. 1px. |
 | `border/strong` | `B4C2BF` | Input outline at rest. 1px. |
 | `border/focus` | `105C4C` | The focused input. 2px. |
 
@@ -105,16 +116,19 @@ enough contrast to be read as small text.
 
 | Token | Value | Use |
 | --- | --- | --- |
-| `state/positive` | `0F7A5F` | Text and icons for money received. 4.98 to 1. |
-| `state/negative` | `C2410C` | Text and icons for errors. 4.84 to 1. |
-| `state/warning` | `8A6A00` | Text and icons for warnings. 4.76 to 1. |
+| `state/positive` | `0C6B52` | Text and icons for money received. 5.45 to 1 on its own tint. |
+| `state/negative` | `A8380A` | Text and icons for errors. 5.13 to 1 on its own tint. |
+| `state/warning` | `7A5E00` | Text and icons for warnings. 5.37 to 1 on its own tint. |
 | `fill/positive` | `2BBD9B` | Solid mint fills, dots and large marks. |
 | `fill/negative` | `F85113` | Solid orange fills and large marks. |
 | `fill/warning` | `F9D100` | Solid yellow fills and large marks. |
-| `tint/positive` | `E6F7F1` | Success banner background. |
-| `tint/negative` | `FDEAE2` | Error banner background. |
-| `tint/warning` | `FDF6DC` | Warning banner background. |
-| `tint/brand` | `E8F0ED` | Quiet brand tint behind icons. |
+| `tint/positive` | `D8F1E8` | Success banner background. |
+| `tint/negative` | `FBDFD3` | Error banner background. |
+| `tint/warning` | `FBF0C9` | Warning banner background. |
+| `tint/brand` | `DCE9E3` | Quiet brand tint behind icons. |
+
+The tints are one step deeper than a card. They have to be, or a status banner
+sitting inside a card would read as part of the card.
 
 ### 2.7 Contrast
 
@@ -123,6 +137,20 @@ enough contrast to be read as small text.
 - `ink/subtle` fails 4.5 to 1 on purpose. Use it only where the text carries no
   information the person needs.
 - Never carry meaning with colour alone. A status pairs a colour with a word.
+
+Every text and surface pair in the file was measured after the surfaces were
+restacked. The worst case is `ink/muted` on `tint/brand` at 4.66 to 1, and every
+other pair sits above it.
+
+| Surface | `ink/strong` | `ink/muted` |
+| --- | --- | --- |
+| `surface/canvas` | 13.89 | 5.82 |
+| `surface/default` | 12.71 | 5.33 |
+| `surface/sunken` | 11.78 | 4.94 |
+| `tint/brand` | 11.12 | 4.66 |
+| `tint/positive` | 11.68 | 4.90 |
+| `tint/negative` | 10.98 | 4.60 |
+| `tint/warning` | 12.18 | 5.10 |
 
 ## 3. Typography
 
@@ -478,19 +506,21 @@ scale.
 2. Every size and gap is a multiple of 4.
 3. Never use a colour, size, gap or radius that is not in this file.
 4. Never fill a whole screen with sand or any other mid tone.
-5. Never use a rounded rectangle for a button. Buttons are pills.
-6. Never put more than one `Heading/XXL` on a screen.
-7. Never use the serif anywhere in the app.
-8. Never let a gap inside a group equal the gap around it.
-9. Never carry meaning with colour alone. An active icon fills, it does not
+5. Never paint anything pure white except the canvas. A card that reads as
+    white has lost its surface step.
+6. Never use a rounded rectangle for a button. Buttons are pills.
+7. Never put more than one `Heading/XXL` on a screen.
+8. Never use the serif anywhere in the app.
+9. Never let a gap inside a group equal the gap around it.
+10. Never carry meaning with colour alone. An active icon fills, it does not
     merely change colour.
-10. Never use `ink/subtle` for text a person needs to read.
-11. Never add a shadow except to a bottom sheet or a floating element.
-12. Never nest more than three surface levels.
-13. Never compose an amount below 28px. Set it flat.
-14. Never draw a glyph at any size but 12, and never at any stroke but 2. The
+11. Never use `ink/subtle` for text a person needs to read.
+12. Never add a shadow except to a bottom sheet or a floating element.
+13. Never nest more than three surface levels.
+14. Never compose an amount below 28px. Set it flat.
+15. Never draw a glyph at any size but 12, and never at any stroke but 2. The
     box around it changes, the glyph does not.
-15. Never put a feature that is not built into the navigation or onto the home
+16. Never put a feature that is not built into the navigation or onto the home
     screen. Not as a greyed tile, not as a teaser. It goes behind More, under
     the "Later" heading, as a flat pill that carries no chevron and opens
     nothing.
@@ -531,13 +561,13 @@ the review screen.
 
 ### 11.3 What every screen has to satisfy
 
-1. The frame is 390 by 844 and nothing spills past it.
-2. Side padding is 20. The status bar is 56 and an app bar, when there is one,
+17. The frame is 390 by 844 and nothing spills past it.
+18. Side padding is 20. The status bar is 56 and an app bar, when there is one,
    is another 56.
-3. A screen that shows the floating navigation ends its content 88 above the
+19. A screen that shows the floating navigation ends its content 88 above the
    bottom, and no element reaches into the navigation.
-4. A screen without the navigation ends its content 32 above the bottom.
-5. Two font weights, and every size and gap a multiple of 4.
+20. A screen without the navigation ends its content 32 above the bottom.
+21. Two font weights, and every size and gap a multiple of 4.
 
 ## 12. The prototype
 
