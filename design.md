@@ -650,6 +650,22 @@ The Base warning on Receive stays and is not negotiable. Sending the wrong asset
 to that address loses the money, and a warning cannot be given for something the
 app never mentions.
 
+### 8.17 The QR code
+
+Drawn, not scaled. A code that has been resized has uneven modules and stops
+reading as a code.
+
+| Part | Value |
+| --- | --- |
+| Block | 160 square, radius 24, `surface/scan`, hairline border |
+| Grid | 15 by 15 modules at 8 each |
+| Quiet zone | 20 on every side |
+| Finder | 5 modules square, 1 module ring, 1 module centre, in three corners |
+| Modules | `ink/strong`, square, no rounding |
+
+If the block ever changes size, redraw it. Pick a module size and a count whose
+product plus the quiet zone lands on the new box, so every module stays whole.
+
 ## 9. How this maps to the reference work
 
 Checked before the system was built. Every element in the references lands on the
