@@ -608,6 +608,48 @@ Two rules make the cut read as scrolling rather than as breakage.
 Every other screen still ends above the navigation, or above the bottom padding
 where there is no navigation.
 
+### 8.15 Sheets, not pages
+
+Anything transactional is a bottom sheet over the page that started it. The page
+stays behind, dimmed. A person never loses their place, and nothing in the app is
+more than four taps from home.
+
+Pages are only for destinations: home, Grow, Stocks, Account, Activity, Security
+and a stock in full. Everything else, fifteen screens of it, is a sheet.
+
+| Part | Value |
+| --- | --- |
+| Scrim | `ink/strong` at 50 percent over the whole page |
+| Sheet | `surface/default`, top corners 28, no bottom corners |
+| Shadow | 0 by -8, blur 32, black at 14 percent |
+| Padding | 20 at the sides, 12 at the top, 32 at the bottom |
+| Grabber | 40 by 4 pill in `border/strong`, centred |
+| Gap | 24 between blocks |
+| Header | Title on the left, a 32 close circle on the right. Outcome sheets have no header. |
+| Height | Hugs its content. Never more than 720, or it stops reading as a sheet. |
+
+Three things dismiss a sheet: the scrim, the close control and the grabber. All
+three are wired, because a person will reach for whichever is nearest.
+
+A sheet arrives from the bottom. A page pushes from the side. The transition is
+how a person knows which one they are in.
+
+### 8.16 The chain is not the product
+
+A person holding dollars should not have to learn what a chain is.
+
+| Where | What is shown |
+| --- | --- |
+| Home | A balance in dollars and a naira estimate. No token, no chain, no address. |
+| Send | Who, how much, the fee and when it arrives. No network row. |
+| Receive | The address, the network and the warning. This is the one place it all appears. |
+| A receipt | The reference and the transaction hash, because a receipt has to be complete. |
+| Account | The address, for anyone who wants it. |
+
+The Base warning on Receive stays and is not negotiable. Sending the wrong asset
+to that address loses the money, and a warning cannot be given for something the
+app never mentions.
+
 ## 9. How this maps to the reference work
 
 Checked before the system was built. Every element in the references lands on the
