@@ -72,16 +72,16 @@ drawn around it.
 | Token | Value | Use |
 | --- | --- | --- |
 | `surface/canvas` | `FFFFFF` | The screen background. Pure white, always. |
-| `surface/default` | `F1F6F3` | Cards, sheets and fields sitting on the canvas. |
-| `surface/sunken` | `E7EEEA` | A panel nested inside a card. |
+| `surface/default` | `F2F3F4` | Cards, sheets and fields sitting on the canvas. Neutral grey. |
+| `surface/sunken` | `E8E9EB` | A panel nested inside a card. Neutral grey. |
 | `surface/inverse` | `053329` | Deep green moments such as welcome and camera. |
 | `surface/accent` | `2BBD9B` | The mint accent card. Once per screen. |
 | `surface/sand` | `D5A578` | The sand accent card. Once per screen. |
-| `surface/frost` | `F1F6F3` at 88% | Floating surfaces that content scrolls under. Always paired with a background blur of 24. |
+| `surface/frost` | `F2F3F4` at 88% | Floating surfaces that content scrolls under. Always paired with a background blur of 24. |
 | `surface/scan` | `FFFFFF` | Behind a QR code. The one exception to the white rule, because a reader needs the quiet zone. |
 
-Each step is about five percent darker than the one above it. That is enough to
-separate a card from the page without turning the screen grey.
+The greys are neutral, with no green cast. That is deliberate. If every surface
+is faintly green, the green stops reading as green when it actually appears.
 
 Surfaces nest in three steps and no more. White canvas holds a tinted card, and
 a tinted card holds a sunken panel. Never a card inside a card of the same
@@ -104,8 +104,8 @@ white, it is wrong.
 
 | Token | Value | Use |
 | --- | --- | --- |
-| `border/hairline` | `DCE6E0` | Card outlines and dividers. 1px. |
-| `border/strong` | `B4C2BF` | Input outline at rest. 1px. |
+| `border/hairline` | `DEE0E3` | Card outlines and dividers. 1px. |
+| `border/strong` | `B6BABD` | Input outline at rest. 1px. |
 | `border/focus` | `105C4C` | The focused input. 2px. |
 
 Strokes are 1 or 2. There are no other values.
@@ -152,6 +152,37 @@ other pair sits above it.
 | `tint/positive` | 11.68 | 4.90 |
 | `tint/negative` | 10.98 | 4.60 |
 | `tint/warning` | 12.18 | 5.10 |
+
+## 2b. The seventy twenty ten split
+
+Every screen is roughly seventy percent white, twenty percent light grey and ten
+percent green. The split is not a guideline to feel your way towards. It decides
+what may be green.
+
+**White is the page.** The canvas, and the inside of anything that is not a card.
+
+**Light grey is structure.** Cards, sheets, sunken panels, fields, dividers,
+inactive states, the grey action circles. Anything whose job is to group or to
+separate.
+
+**Green is only these five things.**
+
+1. Primary buttons, filled.
+2. Secondary buttons, as a one pixel edge and the label. The fill stays white.
+3. The selected state: the active navigation pill, a chosen chip, a selected row.
+4. A toggle that is on.
+5. Money that moved in the good direction, and the sparkline that shows it.
+
+Nothing else is green. A card is never green. A header band is never green. The
+balance sits on light grey with dark green figures, not on a green fill, because
+one green card on its own spends the whole ten percent.
+
+**Four screens are exempt** and always will be: the welcome screen and the three
+camera screens. A welcome is a moment rather than a page, and a camera needs a
+dark ground or the capture frame cannot be seen.
+
+The deep green is still the brand. It carries more weight at ten percent of the
+screen than it did at forty, because it now only ever means something.
 
 ## 3. Typography
 
@@ -374,6 +405,13 @@ Use Inverse on a deep green screen, because a dark button on deep green
 disappears. A medium button is 48 tall and uses `Label/M`. There is no small
 button. Pressed is 88 percent opacity and disabled is 38 percent opacity on the
 whole button. Do not use a separate grey for either.
+
+
+#### Secondary
+
+White fill, a one pixel `surface/inverse` edge, and a `surface/inverse` label.
+Not a grey fill and not a green fill. Next to a solid green primary it reads as
+the quieter of the pair while still carrying the brand.
 
 #### Disabled
 
