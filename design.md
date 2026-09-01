@@ -65,27 +65,33 @@ time.
 
 ### 2.3 Surface
 
-The page is pure white. Everything that sits on it carries a soft green tinted
-step, so the shape of a card comes from its own surface rather than from a line
-drawn around it.
+The page is pure white. Everything that sits on it carries a light grey step, so
+the shape of a card comes from its own surface. Nothing in this system is
+outlined. There are no border lines anywhere in the app.
 
 | Token | Value | Use |
 | --- | --- | --- |
 | `surface/canvas` | `FFFFFF` | The screen background. Pure white, always. |
-| `surface/default` | `F2F3F4` | Cards, sheets and fields sitting on the canvas. Neutral grey. |
-| `surface/sunken` | `E8E9EB` | A panel nested inside a card. Neutral grey. |
+| `surface/default` | `FAFBFC` | Cards, sheets, fields and secondary buttons sitting on the canvas. |
+| `surface/sunken` | `F0F2F4` | Anything nested inside a `surface/default` surface. |
 | `surface/inverse` | `053329` | Deep green moments such as welcome and camera. |
 | `surface/accent` | `2BBD9B` | The mint accent card. Once per screen. |
 | `surface/sand` | `D5A578` | The sand accent card. Once per screen. |
-| `surface/frost` | `F2F3F4` at 88% | Floating surfaces that content scrolls under. Always paired with a background blur of 24. |
+| `surface/frost` | `FAFBFC` at 88% | Floating surfaces that content scrolls under. Always paired with a background blur of 24. |
 | `surface/scan` | `FFFFFF` | Behind a QR code. The one exception to the white rule, because a reader needs the quiet zone. |
 
 The greys are neutral, with no green cast. That is deliberate. If every surface
 is faintly green, the green stops reading as green when it actually appears.
 
-Surfaces nest in three steps and no more. White canvas holds a tinted card, and
-a tinted card holds a sunken panel. Never a card inside a card of the same
-value.
+`FAFBFC` sits two percent away from white. That is a deliberate whisper. It is
+enough to shape a card at arm's length on a good screen, and it is not enough to
+survive a cheap panel in daylight. The system carries no fallback for that,
+because the fallback would be a line.
+
+Surfaces step down, never sideways. A `surface/default` card on the white canvas
+holds a `surface/sunken` panel. A `surface/sunken` panel holds nothing further.
+Two surfaces of the same value may never touch, because with no line between
+them there would be nothing left to tell them apart.
 
 Nothing on a screen is pure white except the canvas itself. If a card looks
 white, it is wrong.
@@ -100,15 +106,23 @@ white, it is wrong.
 | `ink/inverse` | `FFFFFF` | on deep green | Text on `surface/inverse`. |
 | `ink/inverse-muted` | `A9C4BB` | 7.5 to 1 on deep green | Secondary text on deep green. |
 
-### 2.5 Border
+### 2.5 Edges
+
+There are no border lines. No card outline, no field outline, no list divider,
+no chart baseline, no chip edge. A shape is described by its own fill and by the
+space around it, and by nothing else. The grey border tokens were removed from
+the file so the line cannot come back by accident.
+
+One stroke survives, and it is green, not grey.
 
 | Token | Value | Use |
 | --- | --- | --- |
-| `border/hairline` | `DEE0E3` | Card outlines and dividers. 1px. |
-| `border/strong` | `B6BABD` | Input outline at rest. 1px. |
-| `border/focus` | `105C4C` | The focused input. 2px. |
+| `border/focus` | `105C4C` | The focused field and the selected row. 2px. |
 
-Strokes are 1 or 2. There are no other values.
+An error field is the single other exception, at 2px in `state/negative`, and it
+always appears with the helper text saying the same thing in words. Both of
+these mark a state rather than draw a shape, which is why they are allowed to
+exist in a system that has no lines.
 
 ### 2.6 State
 
@@ -139,19 +153,24 @@ sitting inside a card would read as part of the card.
   information the person needs.
 - Never carry meaning with colour alone. A status pairs a colour with a word.
 
-Every text and surface pair in the file was measured after the surfaces were
-restacked. The worst case is `ink/muted` on `tint/brand` at 4.66 to 1, and every
-other pair sits above it.
+Every text and surface pair in the file was measured after the greys were
+lightened. The worst case is `ink/muted` on `tint/negative` at 4.60 to 1, and
+every other pair sits above it. Lightening the greys moved every pair up.
 
-| Surface | `ink/strong` | `ink/muted` |
-| --- | --- | --- |
-| `surface/canvas` | 13.89 | 5.82 |
-| `surface/default` | 12.71 | 5.33 |
-| `surface/sunken` | 11.78 | 4.94 |
-| `tint/brand` | 11.12 | 4.66 |
-| `tint/positive` | 11.68 | 4.90 |
-| `tint/negative` | 10.98 | 4.60 |
-| `tint/warning` | 12.18 | 5.10 |
+| Surface | Value | `ink/strong` | `ink/muted` |
+| --- | --- | --- | --- |
+| `surface/canvas` | `FFFFFF` | 13.89 | 5.82 |
+| `surface/default` | `FAFBFC` | 13.41 | 5.62 |
+| `surface/sunken` | `F0F2F4` | 12.38 | 5.19 |
+| `tint/brand` | `DCE9E3` | 11.12 | 4.66 |
+| `tint/positive` | `D8F1E8` | 11.68 | 4.90 |
+| `tint/negative` | `FBDFD3` | 10.98 | 4.60 |
+| `tint/warning` | `FBF0C9` | 12.18 | 5.10 |
+
+Contrast is not the risk here. Every pair passes comfortably. The risk is
+surface against surface, which contrast ratios do not measure. `FAFBFC` on
+`FFFFFF` is 1.04 to 1. That number is the whole argument for the design and the
+whole argument against it.
 
 ## 2b. The seventy twenty ten split
 
@@ -161,14 +180,15 @@ what may be green.
 
 **White is the page.** The canvas, and the inside of anything that is not a card.
 
-**Light grey is structure.** Cards, sheets, sunken panels, fields, dividers,
-inactive states, the grey action circles. Anything whose job is to group or to
-separate.
+**Light grey is structure.** `FAFBFC` on the canvas, `F0F2F4` for anything
+nested inside it. Cards, sheets, panels, fields, secondary buttons, inactive
+states. Anything whose job is to group or to separate. Grey does this work
+alone, because there are no lines to help it.
 
 **Green is only these five things.**
 
 1. Primary buttons, filled.
-2. Secondary buttons, as a one pixel edge and the label. The fill stays white.
+2. Secondary buttons, as the label only. The fill is grey.
 3. The selected state: the active navigation pill, a chosen chip, a selected row.
 4. A toggle that is on.
 5. Money that moved in the good direction, and the sparkline that shows it.
@@ -384,9 +404,14 @@ grid all work. A thin pulse line does not.
 
 ## 7. Depth
 
-Separation comes from surface colour and a one pixel hairline border, not from
-shadows. The only exceptions are a bottom sheet and a floating element, which
-both use `0 8 24 rgba(5, 51, 41, 0.10)`.
+Separation comes from surface colour and from space. Not from lines, and not
+from shadows. The only exceptions are a bottom sheet and a floating element,
+which both use `0 8 24 rgba(5, 51, 41, 0.10)`, because both of them float over
+content and a person has to read them as lifted.
+
+This leaves the system with two tools where most systems have four. Where a line
+would have done the work, the answer is a surface step or more space, and if
+neither is available the answer is that the two things did not need separating.
 
 ## 8. Components
 
@@ -396,7 +421,7 @@ both use `0 8 24 rgba(5, 51, 41, 0.10)`.
 | --- | --- | --- | --- | --- | --- |
 | Fill | `ink/strong` | `surface/default` | none | `state/negative` | `surface/sand` |
 | Label | `ink/inverse` | `ink/strong` | `ink/strong` | `ink/inverse` | `ink/strong` |
-| Border | none | 1px `border/hairline` | none | none | none |
+| Border | none | none | none | none | none |
 | Height | 56 | 56 | 56 | 56 | 56 |
 | Radius | pill | pill | pill | pill | pill |
 | Type | `Heading/M` | `Heading/M` | `Heading/M` | `Heading/M` | `Heading/M` |
@@ -434,14 +459,19 @@ The only shape for a secondary action in an app bar or beside a field.
 
 ### 8.3 Card
 
-White, 24 radius, 1px `border/hairline`, 20 padding, no shadow. A panel nested
-inside it is `surface/sunken` at 16 radius with 16 padding.
+`surface/default`, 24 radius, 20 padding. No border and no shadow. A panel
+nested inside it is `surface/sunken` at 16 radius with 16 padding. The radius is
+doing most of the work of telling you a card is there, so it is never reduced.
 
 ### 8.4 List row
 
-64 tall. A 40 circle icon on the left, 8 gap, then the title in `Heading/M` and
-the caption in `Body/S` stacked with a 4 gap. The amount sits right in
-`Heading/L`. A divider is 1px `border/hairline` and starts where the text starts.
+56 tall with 8 padding top and bottom. A 40 circle icon on the left, 8 gap, then
+the title in `Heading/M` and the caption in `Body/S` stacked with a 4 gap. The
+amount sits right in `Heading/L`.
+
+There is no divider. Rows are separated by an 8 gap, which puts 24 between one
+row's caption and the next row's title. That is the smallest gap that still
+reads as two rows rather than one paragraph.
 
 ### 8.5 Status pill
 
@@ -450,10 +480,14 @@ dot in the matching solid fill, 8 gap, then the word in `Label/M`.
 
 ### 8.6 Text field
 
-56 tall, 16 radius, white fill. At rest the border is 1px `border/strong`. Focused
-it is 2px `border/focus`. On error it is 2px `state/negative` and the helper text
-turns `state/negative` at the same time. The label sits above in `Label/M` and
-`ink/muted` with an 8 gap.
+56 tall, 16 radius. At rest it is a grey fill with no border, one step below
+whatever it sits on: `surface/default` on the canvas, `surface/sunken` on a card
+or a sheet. Focused it takes a 2px `border/focus` ring. On error it takes a 2px
+`state/negative` ring and the helper text turns `state/negative` at the same
+time. The label sits above in `Label/M` and `ink/muted` with an 8 gap.
+
+A field at rest is therefore a very quiet shape. The placeholder text is what
+tells a person it is a field, so it is never left empty.
 
 ### 8.7 Floating navigation
 
@@ -511,7 +545,7 @@ is a bottom sheet, not a screen, so the person keeps their place behind it.
 | Surface | `surface/default`, top corners 28, no bottom corners |
 | Shadow | 0 by -8, blur 32, black at 12 percent |
 | Padding | 20 at the sides, 12 at the top, 40 at the bottom |
-| Grabber | 40 by 4 pill in `border/strong`, centred |
+| Grabber | 40 by 4 pill in `ink/subtle`, centred |
 | Gap between groups | 24 |
 | Scrim | `ink/strong` at 50 percent over the whole screen |
 
@@ -521,8 +555,8 @@ The sheet holds two groups and they are never mixed.
    row with a 40 tile, a `Heading/M` title, a `Body/S` line saying what it does,
    and a chevron. These open.
 2. **Later.** Under a `Label/Caps` heading that reads "Later". Each item is a
-   flat pill in `surface/sunken` with `ink/muted` text and a hairline border. No
-   tile, no chevron, no shadow. A `Body/S` line under the group says plainly
+   flat pill in `surface/sunken` with `ink/muted` text. No border, no tile, no
+   chevron, no shadow. A `Body/S` line under the group says plainly
    that nothing there can be opened.
 
 The two groups must stay visibly different. A later item never borrows the row
@@ -599,8 +633,10 @@ decision, so one must not be a heavy filled pill next to a pale outline. When
 the design makes one look louder, it is making a claim about the product.
 
 **Density is a kindness.** A list of three payments separated by 16 of air reads
-as a rough draft. Hairline dividers and tighter rows read as a finished product
-and fit more on the screen. Air belongs between sections, not inside them.
+as a rough draft. Tight rows read as a finished product and fit more on the
+screen. Air belongs between sections, not inside them. With no dividers to lean
+on, the gap inside a list has to stay smaller than the gap around it, or the
+list stops being a list.
 
 **The numbers are the product.** Money is set large, tracked tight, with the
 currency mark and the decimals stepped down. Everything around a number is
@@ -620,8 +656,8 @@ Space that separates two ideas is a decision. The difference shows.
 
 A price line is not an icon and is not held to the 12 rule. It is drawn at the
 width of its container with a 2 stroke in `state/positive` when the period is up
-and `state/negative` when it is down, over a single hairline baseline. No axes,
-no gridlines, no labels on the line itself. The number above the chart says what
+and `state/negative` when it is down. No baseline, no axes, no gridlines, no
+labels on the line itself. The number above the chart says what
 it is worth. The chart only says which way it went.
 
 The period chips under it are the standard pill, with the selected one filled in
@@ -661,7 +697,7 @@ and a stock in full. Everything else, fifteen screens of it, is a sheet.
 | Sheet | `surface/default`, top corners 28, no bottom corners |
 | Shadow | 0 by -8, blur 32, black at 14 percent |
 | Padding | 20 at the sides, 12 at the top, 32 at the bottom |
-| Grabber | 40 by 4 pill in `border/strong`, centred |
+| Grabber | 40 by 4 pill in `ink/subtle`, centred |
 | Gap | 24 between blocks |
 | Header | Title on the left, a 32 close circle on the right. Outcome sheets have no header. |
 | Height | Hugs its content. Never more than 720, or it stops reading as a sheet. |
@@ -695,7 +731,7 @@ reading as a code.
 
 | Part | Value |
 | --- | --- |
-| Block | 160 square, radius 24, `surface/scan`, hairline border |
+| Block | 160 square, radius 24, `surface/scan`, no border |
 | Grid | 15 by 15 modules at 8 each |
 | Quiet zone | 20 on every side |
 | Finder | 5 modules square, 1 module ring, 1 module centre, in three corners |
@@ -728,12 +764,12 @@ scale.
 
 ## 10. Rules that must not be broken
 
-1. Two font weights per screen. Lato SemiBold and Lato Regular.
+1. Two font weights per screen. Geist SemiBold and Geist Regular.
 2. Every size and gap is a multiple of 4.
 3. Never use a colour, size, gap or radius that is not in this file.
 4. Never fill a whole screen with sand or any other mid tone.
 5. Never paint anything pure white except the canvas. A card that reads as
-    white has lost its surface step.
+   white has lost its surface step.
 6. Never use a rounded rectangle for a button. Buttons are pills.
 7. Never put more than one `Heading/XXL` on a screen.
 8. Never use the serif anywhere in the app.
@@ -742,15 +778,19 @@ scale.
     merely change colour.
 11. Never use `ink/subtle` for text a person needs to read.
 12. Never add a shadow except to a bottom sheet or a floating element.
-13. Never nest more than three surface levels.
-14. Never compose an amount below 28px. Set it flat.
-15. Never draw a glyph at any size but 12, and never at any stroke but 2. The
+13. Never draw a line. No card outline, no field outline, no list divider, no
+    chart baseline, no chip edge, no rule under a heading. The only strokes in
+    the app are a 2px green focus ring, a 2px error ring, and the glyphs
+    themselves. If two things need separating, step the surface or add space.
+14. Never nest more than three surface levels.
+15. Never compose an amount below 36. Set it flat.
+16. Never draw a glyph at any size but 12, and never at any stroke but 2. The
     box around it changes, the glyph does not.
-16. Never put an unbuilt part of a product onto the home screen. It goes behind
+17. Never put an unbuilt part of a product onto the home screen. It goes behind
     More, under the "Later" heading, as a flat pill that carries no chevron and
     opens nothing. A whole product may show a hint on home, because it has a
     place in the navigation to lead to. The hint carries a "Soon" marker.
-17. A whole product is the exception. Grow and Stocks sit in the navigation
+18. A whole product is the exception. Grow and Stocks sit in the navigation
     before they open, because they are what the account grows into and the
     website already promises them. Each carries a "Not open yet" pill on its own
     page. A part of a product never gets this exception, only a product does.
