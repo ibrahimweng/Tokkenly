@@ -211,6 +211,16 @@ one you picked. If every chip is green, the selected one has nothing left to say
 4. A toggle that is on.
 5. Money that moved in the good direction, and the sparkline that shows it.
 
+Everything else that a person might expect to be green is grey. A circle behind
+a glyph is grey. The four action circles on home are grey. A row's icon is grey.
+A settings tile is grey. If every icon sits on green, green stops meaning
+anything and the amounts stop standing out, which is the one place on home where
+green has real work to do.
+
+The exceptions are the ones that carry a fact rather than a decoration: a status
+pill, an outcome badge, a toggle that is on, a progress bar, and the information
+callout. Those keep their colour because the colour is the message.
+
 Nothing else is green. A card is never green. A header band is never green. The
 balance sits on light grey with dark green figures, not on a green fill, because
 one green card on its own spends the whole ten percent.
@@ -477,8 +487,12 @@ action, so its label is the one place the rule does not apply.
 
 ### 8.2 Icon button
 
-A 44 circle filled with `surface/sunken` holding a 20px icon in `ink/strong`.
-The only shape for a secondary action in an app bar or beside a field.
+A 44 circle filled with `surface/control` holding a 12 glyph in `ink/strong`.
+The only shape for a secondary action in an app bar or beside a field. It uses
+the control grey and not the card grey, because it is tapped.
+
+The four action circles on home are the same idea at 56, with a `Label/M` caption
+under each one.
 
 ### 8.3 Card
 
@@ -488,7 +502,8 @@ doing most of the work of telling you a card is there, so it is never reduced.
 
 ### 8.4 List row
 
-56 tall with 8 padding top and bottom. A 40 circle icon on the left, 8 gap, then
+56 tall with 8 padding top and bottom. A 40 circle in `surface/sunken` holding a
+12 glyph on the left, 8 gap, then
 the title in `Heading/M` and the caption in `Body/S` stacked with a 4 gap. The
 amount sits right in `Heading/L`.
 
