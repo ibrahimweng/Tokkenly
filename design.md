@@ -74,6 +74,8 @@ outlined. There are no border lines anywhere in the app.
 | `surface/canvas` | `FFFFFF` | The screen background. Pure white, always. |
 | `surface/default` | `FAFBFC` | Cards, sheets, fields and secondary buttons sitting on the canvas. |
 | `surface/sunken` | `F0F2F4` | Anything nested inside a `surface/default` surface. |
+| `surface/control` | `E9ECEF` | Anything a person taps that is not the primary button: secondary buttons and unselected chips. |
+| `surface/control-pressed` | `DDE2E6` | A control being held down. |
 | `surface/inverse` | `053329` | Deep green moments such as welcome and camera. |
 | `surface/accent` | `2BBD9B` | The mint accent card. Once per screen. |
 | `surface/sand` | `D5A578` | The sand accent card. Once per screen. |
@@ -87,6 +89,13 @@ is faintly green, the green stops reading as green when it actually appears.
 enough to shape a card at arm's length on a good screen, and it is not enough to
 survive a cheap panel in daylight. The system carries no fallback for that,
 because the fallback would be a line.
+
+That whisper works for a card and fails for a button. A card is large and has a
+24 radius, so two percent is enough to shape it. A 56 tall pill is small, and at
+two percent it reads as disabled rather than as something to tap. So controls
+get their own step at `E9ECEF`, which is far enough from white to look pressable
+at any size. Grey therefore does two different jobs at two different depths:
+`FAFBFC` and `F0F2F4` group things, `E9ECEF` invites a tap.
 
 Surfaces step down, never sideways. A `surface/default` card on the white canvas
 holds a `surface/sunken` panel. A `surface/sunken` panel holds nothing further.
@@ -162,12 +171,18 @@ every other pair sits above it. Lightening the greys moved every pair up.
 | `surface/canvas` | `FFFFFF` | 13.89 | 5.82 |
 | `surface/default` | `FAFBFC` | 13.41 | 5.62 |
 | `surface/sunken` | `F0F2F4` | 12.38 | 5.19 |
+| `surface/control` | `E9ECEF` | 11.71 | 4.91 |
+| `surface/control-pressed` | `DDE2E6` | 10.65 | 4.46 |
 | `tint/brand` | `DCE9E3` | 11.12 | 4.66 |
 | `tint/positive` | `D8F1E8` | 11.68 | 4.90 |
 | `tint/negative` | `FBDFD3` | 10.98 | 4.60 |
 | `tint/warning` | `FBF0C9` | 12.18 | 5.10 |
 
-Contrast is not the risk here. Every pair passes comfortably. The risk is
+`ink/muted` on `surface/control-pressed` is the one pair below 4.5 to 1, at 4.46.
+Nothing uses it. A pressed control always carries `ink/strong`, which reaches
+10.65 to 1, and the pressed state lasts as long as a finger is down.
+
+Contrast is not the risk here. Every pair in use passes comfortably. The risk is
 surface against surface, which contrast ratios do not measure. `FAFBFC` on
 `FFFFFF` is 1.04 to 1. That number is the whole argument for the design and the
 whole argument against it.
@@ -180,10 +195,13 @@ what may be green.
 
 **White is the page.** The canvas, and the inside of anything that is not a card.
 
-**Light grey is structure.** `FAFBFC` on the canvas, `F0F2F4` for anything
-nested inside it. Cards, sheets, panels, fields, secondary buttons, inactive
-states. Anything whose job is to group or to separate. Grey does this work
-alone, because there are no lines to help it.
+**Light grey is structure, and grey is also every control that is not primary.**
+`FAFBFC` on the canvas and `F0F2F4` nested inside it for cards, sheets, panels
+and fields. `E9ECEF` for secondary buttons and unselected chips. Grey does all
+of this alone, because there are no lines to help it.
+
+An unselected chip is grey, never a green tint. Green on a chip means it is the
+one you picked. If every chip is green, the selected one has nothing left to say.
 
 **Green is only these five things.**
 
@@ -419,12 +437,17 @@ neither is available the answer is that the two things did not need separating.
 
 | Property | Primary | Secondary | Quiet | Destructive | Inverse |
 | --- | --- | --- | --- | --- | --- |
-| Fill | `ink/strong` | `surface/default` | none | `state/negative` | `surface/sand` |
+| Fill | `ink/strong` | `surface/control` | none | `state/negative` | `surface/sand` |
 | Label | `ink/inverse` | `ink/strong` | `ink/strong` | `ink/inverse` | `ink/strong` |
 | Border | none | none | none | none | none |
 | Height | 56 | 56 | 56 | 56 | 56 |
 | Radius | pill | pill | pill | pill | pill |
 | Type | `Heading/M` | `Heading/M` | `Heading/M` | `Heading/M` | `Heading/M` |
+
+Primary and Secondary must read as equal weight when they sit side by side, as
+Buy and Sell do. Secondary is pressed at `surface/control-pressed` and disabled
+at `surface/sunken` with an `ink/subtle` label, which is lighter than the
+enabled control on purpose, so a disabled button recedes rather than shouts.
 
 Use Inverse on a deep green screen, because a dark button on deep green
 disappears. A medium button is 48 tall and uses `Label/M`. There is no small
@@ -472,6 +495,17 @@ amount sits right in `Heading/L`.
 There is no divider. Rows are separated by an 8 gap, which puts 24 between one
 row's caption and the next row's title. That is the smallest gap that still
 reads as two rows rather than one paragraph.
+
+### 8.5a Chip
+
+32 tall, full round, 12 padding left and right, the label in `Label/M`.
+Unselected it is `surface/control` with an `ink/strong` label. Selected it is
+`surface/inverse` with an `ink/inverse` label. There is no third state and no
+border in either.
+
+The one exception is the "Later" pill in the More sheet, which is
+`surface/sunken` with `ink/muted` text. It sits lighter than a real chip because
+it is not a control and tapping it does nothing.
 
 ### 8.5 Status pill
 
@@ -660,8 +694,8 @@ and `state/negative` when it is down. No baseline, no axes, no gridlines, no
 labels on the line itself. The number above the chart says what
 it is worth. The chart only says which way it went.
 
-The period chips under it are the standard pill, with the selected one filled in
-`surface/inverse`.
+The period chips under it are the standard chip from 8.5a. Unselected they are
+`surface/control`, and the selected one is filled in `surface/inverse`.
 
 ### 8.14 Screens that scroll
 
