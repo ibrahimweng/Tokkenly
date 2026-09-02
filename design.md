@@ -259,12 +259,13 @@ rather than bringing a second family back.
 
 ### 3.2 The scale
 
-Four sizes. Nothing else exists.
+Four sizes on the phone. A fifth exists on desktop and nowhere else.
 
-`12 → 14 → 18 → 36`
+`12 → 14 → 18 → 36` on mobile, plus `48` on desktop.
 
 | Style | Size / line | Weight | Tracking | Use |
 | --- | --- | --- | --- | --- |
+| `Display XL` | 48 / 52 | SemiBold | -1.6 | Desktop only. The hero figure on a wide screen. One per screen. |
 | `Display` | 36 / 40 | SemiBold | -1.2 | The hero figure. One per screen, never two. |
 | `Title` | 18 / 24 | SemiBold | -0.4 | Screen title and section title. |
 | `Body strong` | 14 / 20 | SemiBold | -0.2 | Row title, button label, any value. |
@@ -272,7 +273,11 @@ Four sizes. Nothing else exists.
 | `Label caps` | 12 / 16 | SemiBold | +1.2 | Uppercase eyebrow above a value. |
 | `Label` | 12 / 16 | Regular | 0 | Timestamps, chips, captions, links. |
 
-Six styles. That is the whole system.
+Seven styles, six of which the phone uses. That is the whole system.
+
+`Display XL` exists because a 36 figure that filled a 390 screen looks modest on
+a 1440 one. It is the only concession desktop gets. Every other size, weight and
+tracking is identical on both, so one system covers two products.
 
 The sizes are not multiples of 4 and are not meant to be. The multiple of 4 rule
 governs spacing and the size of boxes. Type sits on its own scale, and every
@@ -296,6 +301,7 @@ An amount is built from three parts, not typed as one string.
 
 | Main | Symbol and decimals |
 | --- | --- |
+| 48 | 18 |
 | 36 | 18 |
 
 **Only `Display` composes.** Every other size is set flat, in one size and one
@@ -890,6 +896,75 @@ the review screen.
    bottom, and no element reaches into the navigation.
 20. A screen without the navigation ends its content 32 above the bottom.
 21. Two font weights, and every size and gap a multiple of 4.
+
+## 11b. The desktop product
+
+The desktop product is the same account on a wider screen. Same balance, same
+send and receive, same Grow and Stocks, same colours, same type, same rules.
+What changes is the shape of the page, because a monitor is not a phone held in
+one hand.
+
+### 11b.1 The canvas and the grid
+
+| Part | Value |
+| --- | --- |
+| Canvas | 1440 by 1024 |
+| Sidebar | 240, fixed, always visible |
+| Content | 1200 |
+| Content padding | 36 on each side |
+| Columns | 12 at 72 |
+| Gutter | 24 |
+
+The numbers close exactly: 240 plus 1200 is 1440, and 36 plus 864 of column plus
+264 of gutter plus 36 is 1200. Every one of them is a multiple of 4, so the
+divide by four rule survives the move to desktop untouched.
+
+Home uses an 8 and 4 split: 744 for the money column and 360 for the side
+column, with the 24 gutter between them.
+
+### 11b.2 The sidebar
+
+There is no More sheet on desktop. More only ever existed because a phone can
+show four destinations and no more. A sidebar shows seven with their names, so
+everything that hid behind More now sits in the open.
+
+| Part | Value |
+| --- | --- |
+| Width | 240 |
+| Fill | `surface/default` against the white content area |
+| Padding | 20 at the sides, 32 at the top, 24 at the bottom |
+| Brand | A 32 mark in `surface/inverse` at radius 8, 12 gap, the name in `Title` |
+| Item | 40 tall, pill radius, 16 padding at the sides, a 12 glyph, 12 gap, the label in `Body strong` |
+| Gap between items | 4 |
+| Gap between groups | 32 |
+| Selected item | `surface/inverse` fill, `ink/inverse` label and glyph |
+| Unselected item | No fill, `ink/muted` label and glyph |
+| Footer | The avatar, the name in `Body strong` and the state in `Label`, pinned to the bottom |
+
+The sidebar holds two groups. First the places money lives: Home, Activity, Grow,
+Stocks. Then the places the account is managed: Account, Security, Support.
+
+The selected glyph does not fill on desktop, and on mobile it does. That is not
+an oversight. On mobile the glyph is alone, so filling it is the only way to show
+which one is active without relying on colour. On desktop the item carries a
+label and a deep green pill, so the state is already carried by shape and not by
+colour alone.
+
+### 11b.3 What desktop does differently
+
+- **Scan is gone.** A person cannot point a monitor at a QR code. Home offers
+  Receive and Send, and nothing else.
+- **Receive and Send carry equal weight.** Both are `surface/control` pills of
+  the same size, because they are the same size of decision. Neither is filled
+  green, which would make a claim the product does not mean.
+- **Activity is a table, not a list.** It gains a `Label caps` heading row and a
+  Type column, because a wide screen has room to say what a payment was as well
+  as who it was with. There are still no dividers and no lines. Rows are 56 tall
+  with an 8 gap, exactly as on mobile.
+- **Home shows more.** Eight payments instead of three, and the side column
+  carries Stocks, Grow and the people you send to most.
+- **Home still shows no address, no token and no chain.** Rule 8.16 does not
+  relax because the screen got bigger.
 
 ## 12. The prototype
 
