@@ -1009,6 +1009,31 @@ colour alone.
   carries Stocks, Grow and the people you send to most.
 - **Home still shows no address, no token and no chain.** Rule 8.16 does not
   relax because the screen got bigger.
+- **A sheet becomes a centred modal.** Same job, same content, different arrival.
+  480 wide, radius 28, 32 padding, `surface/default`, over the same
+  `ink/strong` scrim at 50 percent. It is centred in the window and it never
+  runs past the bottom of it.
+
+### 11b.4 The desktop screens
+
+| Screen | What it holds |
+| --- | --- |
+| D01 Home | Balance, Receive and Send, eight payments, stocks, Grow, the people you send to most |
+| D02 Activity | Search, three filters, export, twelve payments across five columns |
+| D03 Grow | The hero figure, then Earn and Borrow side by side |
+| D04 Stocks | Three market tiles, your portfolio as a chart, what is moving today, popular |
+| D05 Apple | The full chart, today's trading, growth and valuation, your position, trending, news |
+| D06 Account | Personal details, your address with its warning, verification, devices |
+| D07 Security | How you get in, recovery, where you are signed in |
+| D08 Support | Common questions, how to reach a person, service state |
+| D09 Send | Who and how much, in one modal |
+| D10 Send review | What is about to happen, before it happens |
+| D11 Send sent | The outcome, with the reference |
+| D12 Receive | The drawn code, the address, the network warning |
+
+Every one of the twelve was checked: nothing runs past the frame, nothing falls
+below the fold, every gap and padding divides by four, and no grey line exists
+anywhere.
 
 ## 12. The prototype
 
