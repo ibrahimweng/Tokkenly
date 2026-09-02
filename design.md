@@ -985,8 +985,12 @@ everything that hid behind More now sits in the open.
 | Unselected item | No fill, `ink/muted` label and glyph |
 | Footer | The avatar, the name in `Body strong` and the state in `Label`, pinned to the bottom |
 
-The sidebar holds two groups. First the places money lives: Home, Activity, Grow,
-Stocks. Then the places the account is managed: Account, Security, Support.
+The sidebar holds two groups. First the places money lives, then the places the
+account is managed: Account, Security and Support.
+
+The first group was Home, Activity, Grow and Stocks when this was written. It
+is now the eight in 11c.4, because reading the code showed the product moves
+money four ways and the design only knew about two of them.
 
 The selected glyph does not fill on desktop, and on mobile it does. That is not
 an oversight. On mobile the glyph is alone, so filling it is the only way to show
@@ -1034,6 +1038,136 @@ colour alone.
 Every one of the twelve was checked: nothing runs past the frame, nothing falls
 below the fold, every gap and padding divides by four, and no grey line exists
 anywhere.
+
+These twelve were drawn before the code was readable. Five of them survive the
+audit in 11c unchanged: Home, Account, Security, Support and Receive. Activity
+becomes History and takes on the filter that replaces Withdrawals. Grow and
+Stocks keep their place but must lead somewhere honest. The send flow needs
+rebuilding around sending to a wallet, which is the only rail the product has.
+And Buy, Convert, Portfolio and Withdrawals do not exist here at all yet.
+
+## 11c. What the product actually does
+
+Everything above this section was designed before anyone had read the code. On
+2 September the frontend repository was finally readable, and it says the
+product is not quite the one the design assumed. This section records what is
+really there, so nothing after it is invented.
+
+Source: `tokkenly-frontend`, a workspace holding three applications and two
+shared packages. `apps/web` is the marketing site, exported as static HTML.
+`apps/dashboard` is the signed in product, rendered on a server because a
+session cookie has to be set by one. `apps/admin` is a separate panel for staff.
+
+### 11c.1 What a person can do today
+
+| Route | What it is |
+| --- | --- |
+| `/` | Home. Balance, recent movement |
+| `/buy` and `/buy/[id]` | Buying a balance with local currency |
+| `/deposit`, `/deposit/crypto`, `/deposit/crypto/address` | Receiving. Either buy with naira or receive on a chain |
+| `/send`, `/send/wallet`, `/send/recipient` | Sending out to a wallet |
+| `/convert` | Turning a balance into local currency, paid to a bank |
+| `/transactions` and `/transactions/[id]` | History, and one movement in full |
+| `/portfolio` | What is held, reached from the balance card |
+| `/withdrawals` and `/withdrawals/[id]` | Money on its way out, reached from a completed send |
+| `/settings` plus account, security, payout, alerts | Settings |
+
+Signing in is its own set: `login`, `signup`, `verify-email`,
+`forgot-password`, `reset-password`, `activate` and `locked`. It is an email
+and a password with a Google option, an emailed verification, and a lock that
+takes over after a period of no activity.
+
+### 11c.2 Facts that constrain every screen
+
+- **One asset. USDC and nothing else.** Naira and Tether appear in the registry
+  and are not supported.
+- **The interface returns no dollar valuation at all.** A balance is its own
+  dollar value because a USDC is a dollar. A second asset would need a rate
+  from somewhere that does not exist yet, so no screen may show a converted
+  total until it does.
+- **Buying and cashing out are separate corridors.** The countries the product
+  collects money in are not the same list as the ones it pays out to, and both
+  lists come from the server. A screen that names Nigeria in its own text is
+  wrong the day a second country opens.
+- **Buying is not capped by your balance.** Cashing out is. That is the whole
+  difference between the two amount screens.
+- **Verification gates whether money can move at all**, and it can also be
+  switched off entirely, in which case nothing is gated and no screen should
+  imply otherwise.
+- **Money leaving has six states, not three.** One of them means the payment
+  was sent to the network, has not been picked up, and is neither finished nor
+  failed. Calling that failed would tell someone their money is safe when it
+  may still be moving, and invite them to send it twice.
+- **An unrecognised state reads as in flight, never as failed.** The words that
+  mean trouble are a closed list. Anything outside it is far more likely to be
+  a new step than a new failure.
+
+### 11c.3 What the code disagrees with in this document
+
+Their team already cut the navigation from eleven destinations to five, and
+deleted the screens behind Cards, Earn, Markets, Borrow, Promotions, Pay Bills
+and Refer. Their stated reason was that a navigation full of things you cannot
+do is worse than no entry at all.
+
+This document said the opposite in rule 18. **Rule 18 stands.** Grow and Stocks
+keep their place, because a whole product that the marketing site already
+promises is a different case from seven half features. What changes is that
+they must carry the marker honestly and lead to a page that says plainly what
+is not open yet, rather than to a page that looks live.
+
+### 11c.4 The routing, after the revamp
+
+Four ways money moves, each with its own destination, exactly as the code has
+them. Their names stay, because Buy, Receive, Send and Convert are already the
+words a person would use.
+
+| Rail | Route |
+| --- | --- |
+| Home | `/` |
+| Buy | `/buy` |
+| Receive | `/deposit` |
+| Send | `/send` |
+| Convert | `/convert` |
+| Grow | `/grow`, not open yet |
+| Stocks | `/stocks`, not open yet |
+| History | `/transactions` |
+
+Account, Security and Support sit at the bottom of the sidebar, away from the
+eight above.
+
+**Two screens stop being destinations.** Portfolio folds into Home, because the
+balance card is already there and a second page of the same numbers is a page
+nobody needs. Withdrawals folds into History, which gains a filter for
+everything, money in, and money out. Their detail pages stay, reached from a
+row, because a movement in full is worth its own address.
+
+**The phone cannot carry eight.** The tab bar holds four and a More control, so
+it carries Home, Send, Receive and History, and everything else including Grow
+and Stocks sits behind More with Home showing a hint for each. Desktop has room
+for all eight and uses it. This is the one place the two products differ on
+purpose, and it is the same reason More exists on one and not the other.
+
+### 11c.5 Signing in
+
+Google first, an email and a password underneath it. Their code already carries
+the Google control, so this is a change of layout and not of the server.
+
+The twenty two screens in section 11.1 describe a different product, one where
+a person holds their own recovery phrase. That is not what was built. Those
+screens stay in this file as a record and are not the plan.
+
+The verification screens are the exception and they survive, because the code
+does gate money movement on a verified account and has no screens for getting
+verified.
+
+### 11c.6 Not designed yet
+
+Buy, Convert, Portfolio and Withdrawals have never been drawn. They are the
+largest gap between this document and the product, and they come next.
+
+The staff panel is out of scope for now. It holds a list of users, a user in
+full, transactions, and a log of who looked at what. It is a different audience
+with different needs and it should not borrow the consumer layout unexamined.
 
 ## 12. The prototype
 
