@@ -562,7 +562,7 @@ shadow.
 
 | Part | Value |
 | --- | --- |
-| Destinations | Home, Grow, Stocks, Account |
+| Destinations | Home, Money, Grow, Stocks |
 | Group | padding 8, gap 4 between items, radius pill |
 | Inactive item | 48 by 48, glyph only, `ink/muted` outline |
 | Active item | 64 by 48 pill in `surface/inverse`, glyph filled in `ink/inverse` |
@@ -573,6 +573,15 @@ The items carry no labels. Four destinations and a label on the active one does
 not fit in 350, and shrinking the type or the side inset to force it would cost
 more than the labels are worth. State is carried by the pill and by the glyph
 filling, which is shape, not colour.
+
+Money is one destination covering all four movements: buying, receiving,
+sending and converting. It exists because the phone has four slots and the
+product has eight places to go. Account and History are not on the bar at all;
+they live behind More, and More fills in `surface/inverse` when the person is
+somewhere that lives inside it, so the bar is never showing nothing as current.
+
+There are five states, one per destination plus More. A screen that sits behind
+a sheet keeps the state of the page underneath it.
 
 A screen that shows the navigation needs 88 of bottom padding, and no element in
 its body may reach below the top of the navigation at y 722. A bottom anchored
@@ -623,12 +632,25 @@ The sheet holds two groups and they are never mixed.
    chevron, no shadow. A `Body/S` line under the group says plainly
    that nothing there can be opened.
 
+Now holds History, Account, Security, Limits, Support and About Tokkenly. Later
+holds Bills and Spend, and nothing else.
+
+Converting to naira used to sit under Later. It was moved out when the code was
+read, because converting is live and has been for some time. A thing listed as
+not built when it works is the same failure as a thing listed as working when it
+is not, and it is worth checking this list against the code rather than against
+memory.
+
 The two groups must stay visibly different. A later item never borrows the row
 shape of a now item, because a row with a chevron promises that tapping it does
 something.
 
-The sheet covers the floating navigation while it is open. That is correct. The
-grabber and the scrim are both ways out.
+The sheet covers the floating navigation while it is open. That is correct, and
+it has to be built that way: the navigation is drawn before the scrim so the
+scrim and the sheet land on top of it. Drawn in the other order the navigation
+punches through a sheet that is supposed to be modal.
+
+The grabber and the scrim are both ways out.
 
 ### 8.10 Vertical composition
 
@@ -1145,7 +1167,8 @@ everything, money in, and money out. Their detail pages stay, reached from a
 row, because a movement in full is worth its own address.
 
 **The phone cannot carry eight.** The tab bar holds four and a More control. It
-carries Home, Money, Grow and Stocks. Money is one destination covering all four
+carries Home, Money, Grow and Stocks, and the Money screen is `27 Money` on the
+app page. Account and History moved behind More. Money is one destination covering all four
 movements, which frees two tabs for the products that are coming.
 
 That choice was made knowing its price, and the price is written here so nobody
