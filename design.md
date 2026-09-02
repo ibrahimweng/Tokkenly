@@ -922,6 +922,12 @@ Every screen sits inside a named section in Figma. A section holds one flow, a
 short note that says what the flow is for, and an arrow between each step. Where
 two screens are alternatives rather than steps there is no arrow between them.
 
+Every section is filled `surface/default`. That matters more than it sounds.
+Figma gives a new section a dark fill, and a white screen sitting on a dark
+section reads as a card with a heavy shadow behind it, which is not what the
+screen looks like. The pale fill lets the screen read as the white page it is.
+No screen sits loose on a page.
+
 ### 11.1 Onboarding, page `03 Onboarding`
 
 | Flow | Screens |
@@ -956,13 +962,13 @@ for the sand guide drawn on top of it to read.
 | K. The More sheet | More |
 | L. First run and empty states | Home first run, Activity nothing yet |
 | M. Grow and Stocks | Grow, Stocks |
-| O. Earn and Borrow | Move money in, Borrow amount, Borrow review, Borrow done |
-| P. Buying and selling | Stock detail, Buy amount, Buy review, Buy done, Sell |
-| Q. Money | Money, Buy, Convert |
+| N. Earn and Borrow | Move money in, Borrow amount, Borrow review, Borrow done |
+| O. Buying and selling | Stock detail, Buy amount, Buy review, Buy done, Sell |
+| P. Money | Money, Buy, Convert |
 
 Flow F holds two states of one screen, so its screens carry no arrows. In flow H
 the last two screens are the two endings of the same send, so the arrow stops at
-the review screen. In flow Q, Buy and Convert are two sheets that open from
+the review screen. In flow P, Buy and Convert are two sheets that open from
 Money, so they are alternatives to each other and carry no arrows either.
 
 ### 11.3 What every screen has to satisfy
@@ -1087,6 +1093,32 @@ Support and Receive. Activity becomes History and takes on the filter that
 replaces Withdrawals. Grow and Stocks keep their place but must lead somewhere
 honest. The send flow needs rebuilding around sending to a wallet, which is the
 only rail the product has. Portfolio and Withdrawals do not exist here yet.
+
+### 11b.5 The desktop flows
+
+The sixteen screens used to sit loose on the page in a grid of four across.
+They now sit in named sections like the phone screens do, one section per flow,
+in the order a person meets them.
+
+| Flow | Screens |
+| --- | --- |
+| A. The way in | D15 Sign in, D16 Create account |
+| B. Home | D01 Home |
+| C. Receive money | D12 Receive |
+| D. Send money | D09 Send, D10 Send review, D11 Send sent |
+| E. Buy and convert | D13 Buy, D14 Convert |
+| F. Activity and receipts | D02 Activity |
+| G. Grow and Stocks | D03 Grow, D04 Stocks, D05 Apple |
+| H. Account, security and support | D06 Account, D07 Security, D08 Support |
+
+Arrows appear only between real steps. Flow D carries two, because the send is a
+chain. Flow G carries one, between Stocks and the company page it opens. Flows
+A, E and H hold alternatives rather than steps, so they carry none.
+
+A desktop section is 60 of padding on each side, its note at 48 from the top,
+and its screens at 144. Screens sit 160 apart, and sections sit 240 apart. The
+phone pages use the same shape with 48 between screens, because the frames are
+narrower.
 
 ## 11c. What the product actually does
 
