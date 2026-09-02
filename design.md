@@ -76,7 +76,7 @@ outlined. There are no border lines anywhere in the app.
 | `surface/sunken` | `F0F2F4` | Anything nested inside a `surface/default` surface. |
 | `surface/control` | `E9ECEF` | Anything a person taps that is not the primary button: secondary buttons and unselected chips. |
 | `surface/control-pressed` | `DDE2E6` | A control being held down. |
-| `surface/inverse` | `053329` | Deep green moments such as welcome and camera. |
+| `surface/inverse` | `053329` | The camera feed, the brand mark, and the active navigation pill. Never a screen background. |
 | `surface/accent` | `2BBD9B` | The mint accent card. Once per screen. |
 | `surface/sand` | `D5A578` | The sand accent card. Once per screen. |
 | `surface/frost` | `FAFBFC` at 88% | Floating surfaces that content scrolls under. Always paired with a background blur of 24. |
@@ -931,8 +931,18 @@ two screens are alternatives rather than steps there is no arrow between them.
 | C. Verify your identity | Verify your identity, Choose NIN or BVN, Enter your NIN, Check your details, Photograph your ID, Check the photo, Take a selfie, Review and submit |
 | D. After you submit | Under review, Verified, More information needed |
 | E. Come back to your account | Restore your account |
+| F. Sign in and sign up | Sign in, Create account |
 
 Flow D holds three outcomes of the same check, so its screens carry no arrows.
+Flow F holds the two ways in, so its screens carry no arrows either.
+
+Every onboarding screen sits on `surface/canvas`. There are no deep green
+screens. Welcome used to be deep green and the three camera steps used to be
+deep green, and they are now white like the rest of the product. The only deep
+green left in the flow is the camera feed itself on Photograph your ID, Check
+the photo and Take a selfie. That block is not a background choice. It stands
+for what the lens is seeing before the picture is taken, so it has to be dark
+for the sand guide drawn on top of it to read.
 
 ### 11.2 The app, page `04 App`
 
@@ -948,10 +958,12 @@ Flow D holds three outcomes of the same check, so its screens carry no arrows.
 | M. Grow and Stocks | Grow, Stocks |
 | O. Earn and Borrow | Move money in, Borrow amount, Borrow review, Borrow done |
 | P. Buying and selling | Stock detail, Buy amount, Buy review, Buy done, Sell |
+| Q. Money | Money, Buy, Convert |
 
 Flow F holds two states of one screen, so its screens carry no arrows. In flow H
 the last two screens are the two endings of the same send, so the arrow stops at
-the review screen.
+the review screen. In flow Q, Buy and Convert are two sheets that open from
+Money, so they are alternatives to each other and carry no arrows either.
 
 ### 11.3 What every screen has to satisfy
 
@@ -1058,18 +1070,23 @@ colour alone.
 | D12 Receive | The drawn code, the address, the network warning |
 | D13 Buy | Naira in, dollars out, the rate, the moving minimum, recent orders |
 | D14 Convert | Dollars out, naira into a bank, capped by the balance, saved banks |
+| D15 Sign in | Google first, then email and password, on a 480 card centred on white |
+| D16 Create account | The same card, plus what happens next and the terms line |
 
-Every one of the twelve was checked: nothing runs past the frame, nothing falls
+Every one of the sixteen was checked: nothing runs past the frame, nothing falls
 below the fold, every gap and padding divides by four, and no grey line exists
 anywhere.
 
-The first twelve were drawn before the code was readable, and D13 and D14 after.
-All fourteen now carry the same eleven sidebar entries from 11c.4. Five of them survive the
-audit in 11c unchanged: Home, Account, Security, Support and Receive. Activity
-becomes History and takes on the filter that replaces Withdrawals. Grow and
-Stocks keep their place but must lead somewhere honest. The send flow needs
-rebuilding around sending to a wallet, which is the only rail the product has.
-And Buy, Convert, Portfolio and Withdrawals do not exist here at all yet.
+The first twelve were drawn before the code was readable. D13 and D14 came
+after, and D15 and D16 after those. All sixteen sit on `surface/canvas`, and the
+fourteen that are signed in carry the same eleven sidebar entries from 11c.4.
+D15 and D16 carry no sidebar, because nobody is signed in yet.
+
+Five screens survive the audit in 11c unchanged: Home, Account, Security,
+Support and Receive. Activity becomes History and takes on the filter that
+replaces Withdrawals. Grow and Stocks keep their place but must lead somewhere
+honest. The send flow needs rebuilding around sending to a wallet, which is the
+only rail the product has. Portfolio and Withdrawals do not exist here yet.
 
 ## 11c. What the product actually does
 
@@ -1213,6 +1230,25 @@ The verification screens are the exception and they survive, because the code
 does gate money movement on a verified account and has no screens for getting
 verified.
 
+Four screens now carry this. On the phone they are `23 Sign in` and
+`24 Create account`. On desktop they are `D15 Sign in` and `D16 Create account`.
+All four share the same order. The Google button comes first as a full width
+control on `surface/control`. Under it sits the label `OR USE YOUR EMAIL` in
+`Label caps` and `ink/muted`, which does the work a divider line would do
+without drawing a line. Then the email field, then the password field with a
+Show control inside it. The primary button is last.
+
+Sign in adds a Forgot your password link above the button and a link to create
+an account below it. Create account adds the terms sentence under the button and
+a link back to sign in. Neither screen shows the floating navigation, because
+there is no account to navigate yet.
+
+Desktop puts all of this on a 480 wide card in `surface/default`, centred on
+`surface/canvas`, with the fields in `surface/sunken`. The phone uses the full
+width inside the usual 20 of side padding.
+
+The example address in every field is `ibrahimweng0@gmail.com`.
+
 ### 11c.5a Sending
 
 Paying a person stays the front door, with sending to a wallet behind it.
@@ -1223,9 +1259,11 @@ ships and needs that rail brought back before any of it can be built.
 
 ### 11c.6 Not designed yet
 
-Buy and Convert are now drawn, as `D13` and `D14`. Portfolio and Withdrawals
-are still missing, though both fold into screens that exist: Portfolio into
-Home, Withdrawals into History with its filter.
+Buy and Convert are now drawn on both products, as `D13` and `D14` on desktop
+and as `28 Buy` and `29 Convert` on the phone. Signing in and signing up are
+drawn on both as well. Portfolio and Withdrawals are still missing, though both
+fold into screens that exist: Portfolio into Home, Withdrawals into History with
+its filter.
 
 The staff panel is out of scope for now. It holds a list of users, a user in
 full, transactions, and a log of who looked at what. It is a different audience
