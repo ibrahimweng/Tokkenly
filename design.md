@@ -1034,12 +1034,15 @@ colour alone.
 | D10 Send review | What is about to happen, before it happens |
 | D11 Send sent | The outcome, with the reference |
 | D12 Receive | The drawn code, the address, the network warning |
+| D13 Buy | Naira in, dollars out, the rate, the moving minimum, recent orders |
+| D14 Convert | Dollars out, naira into a bank, capped by the balance, saved banks |
 
 Every one of the twelve was checked: nothing runs past the frame, nothing falls
 below the fold, every gap and padding divides by four, and no grey line exists
 anywhere.
 
-These twelve were drawn before the code was readable. Five of them survive the
+The first twelve were drawn before the code was readable, and D13 and D14 after.
+All fourteen now carry the same eleven sidebar entries from 11c.4. Five of them survive the
 audit in 11c unchanged: Home, Account, Security, Support and Receive. Activity
 becomes History and takes on the filter that replaces Withdrawals. Grow and
 Stocks keep their place but must lead somewhere honest. The send flow needs
@@ -1141,11 +1144,38 @@ nobody needs. Withdrawals folds into History, which gains a filter for
 everything, money in, and money out. Their detail pages stay, reached from a
 row, because a movement in full is worth its own address.
 
-**The phone cannot carry eight.** The tab bar holds four and a More control, so
-it carries Home, Send, Receive and History, and everything else including Grow
-and Stocks sits behind More with Home showing a hint for each. Desktop has room
-for all eight and uses it. This is the one place the two products differ on
-purpose, and it is the same reason More exists on one and not the other.
+**The phone cannot carry eight.** The tab bar holds four and a More control. It
+carries Home, Money, Grow and Stocks. Money is one destination covering all four
+movements, which frees two tabs for the products that are coming.
+
+That choice was made knowing its price, and the price is written here so nobody
+has to rediscover it. Paying somebody is the most common thing anyone does in
+this app, and it now costs one extra tap on a phone. Two of the four tabs lead
+to things that do not work yet. Their team had eleven such entries, measured the
+result and cut it to five. If the tabs are ever reconsidered, this is the
+paragraph to read first.
+
+Desktop has room for all eight and uses them, so the two products differ here on
+purpose. It is the same reason More exists on one and not the other.
+
+**Grow and Stocks carry a marker in the rail itself**, a six pixel dot in
+`fill/warning` after the label. A destination that does not work should say so
+before it is opened, not after.
+
+### 11c.4a What Grow shows before it opens
+
+The full page, with its figures, under a Not open yet marker.
+
+This is worth stating plainly because it is the riskiest decision in this file.
+The page shows an amount in Grow, a rate, and an amount paid so far. A person
+reading it quickly will believe they already hold money that is earning
+interest. They do not. In a product that handles real money that is a stronger
+problem than a design one, and it is the exact thing their team removed the old
+screens for.
+
+It is built this way because it was asked for. If it is ever revisited, the
+safer version is the same layout with no figures at all: what Earn and Borrow
+will be, in one sentence each, and one control to be told when they open.
 
 ### 11c.5 Signing in
 
@@ -1160,10 +1190,19 @@ The verification screens are the exception and they survive, because the code
 does gate money movement on a verified account and has no screens for getting
 verified.
 
+### 11c.5a Sending
+
+Paying a person stays the front door, with sending to a wallet behind it.
+
+The code has only the wallet rail. Sending to another Tokkenly account by its
+reference was withdrawn, so the person flow in this file is ahead of what
+ships and needs that rail brought back before any of it can be built.
+
 ### 11c.6 Not designed yet
 
-Buy, Convert, Portfolio and Withdrawals have never been drawn. They are the
-largest gap between this document and the product, and they come next.
+Buy and Convert are now drawn, as `D13` and `D14`. Portfolio and Withdrawals
+are still missing, though both fold into screens that exist: Portfolio into
+Home, Withdrawals into History with its filter.
 
 The staff panel is out of scope for now. It holds a list of users, a user in
 full, transactions, and a log of who looked at what. It is a different audience
