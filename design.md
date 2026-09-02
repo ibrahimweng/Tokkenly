@@ -122,16 +122,21 @@ no chart baseline, no chip edge. A shape is described by its own fill and by the
 space around it, and by nothing else. The grey border tokens were removed from
 the file so the line cannot come back by accident.
 
-One stroke survives, and it is green, not grey.
+Three strokes survive, and they are named here so nothing else can creep in.
 
 | Token | Value | Use |
 | --- | --- | --- |
 | `border/focus` | `105C4C` | The focused field and the selected row. 2px. |
+| `chart/grid` | `E9ECEF` | Vertical gridlines inside a chart, and nowhere else. 1px. |
+| `chart/tooltip` | `053329` | The dark card that shows a value on a chart. |
 
-An error field is the single other exception, at 2px in `state/negative`, and it
-always appears with the helper text saying the same thing in words. Both of
-these mark a state rather than draw a shape, which is why they are allowed to
-exist in a system that has no lines.
+An error field is the other exception, at 2px in `state/negative`, and it always
+appears with the helper text saying the same thing in words.
+
+The first two mark a state rather than draw a shape. The third is different. A
+chart is the one place in this product where a person reads data rather than
+glances at it, so a chart is allowed axes and gridlines. That exception is
+written out in 8.13 and it travels nowhere else.
 
 ### 2.6 State
 
@@ -447,6 +452,10 @@ This leaves the system with two tools where most systems have four. Where a line
 would have done the work, the answer is a surface step or more space, and if
 neither is available the answer is that the two things did not need separating.
 
+There is exactly one gradient in the product: the area under a chart line, the
+line colour at 22 percent fading to nothing. It is part of the chart, not a
+surface. Nothing else is ever a gradient.
+
 ## 8. Components
 
 ### 8.1 Buttons
@@ -709,14 +718,47 @@ Space that separates two ideas is a decision. The difference shows.
 
 ### 8.13 Charts
 
-A price line is not an icon and is not held to the 12 rule. It is drawn at the
-width of its container with a 2 stroke in `state/positive` when the period is up
-and `state/negative` when it is down. No baseline, no axes, no gridlines, no
-labels on the line itself. The number above the chart says what
-it is worth. The chart only says which way it went.
+A chart is the one place in this product where a person reads data instead of
+glancing at it. It is therefore the one place allowed axes, gridlines and a
+gradient. None of that travels to the rest of the product.
 
-The period chips under it are the standard chip from 8.5a. Unselected they are
-`surface/control`, and the selected one is filled in `surface/inverse`.
+There are two sizes of chart and they follow different rules.
+
+#### The sparkline
+
+Inline in a card or a row, showing direction only. A 2 stroke in
+`state/positive` when the period is up and `state/negative` when it is down,
+with a gradient area under it. No axes, no gridlines, no labels, no tooltip. The
+number beside it says what it is worth.
+
+#### The full chart
+
+On a stock page, on either product. Every part below is required.
+
+| Part | Value |
+| --- | --- |
+| Plot | 624 by 288 on desktop, 294 by 200 on mobile |
+| Price axis | 5 labels in `Label` and `ink/muted`, right aligned, left of the plot |
+| Time axis | 4 to 6 labels in `Label` and `ink/muted`, under the plot, starting where the plot starts |
+| Gridlines | Vertical only, 1px `chart/grid`, evenly spaced. Never horizontal |
+| Line | 2 stroke, `state/positive` up or `state/negative` down, round cap and join |
+| Area | The line colour at 22 percent under the line, fading to nothing at the bottom |
+| Crosshair | 1px dashed `ink/subtle` at 50 percent, floor to ceiling |
+| Point | A 12 circle, white fill, 2 stroke in the line colour |
+| Tooltip | `chart/tooltip`, radius 12, the time in `Label` and `ink/inverse-muted`, then the values in `Body strong` and `ink/inverse` |
+| Periods | 7 chips on desktop, 5 on mobile, the standard chip from 8.5a |
+
+**Every line is a curve, never a run of straight segments.** Points are joined
+with a monotone cubic curve, which is smooth at every point and, unlike a plain
+spline, can never bulge past a real value. A chart that invents a high the stock
+never reached is a lie, however pretty it looks.
+
+**The tooltip never covers the line.** It sits above the point when there is
+room and beside it when there is not. It lives inside the plot, so it is also
+the one element that has to be checked against the card that clips it.
+
+**Chart insides are not held to the divide by four rule.** A point sits where its
+value puts it. The box around the chart still obeys the rule.
 
 ### 8.14 Screens that scroll
 
@@ -834,9 +876,11 @@ scale.
 11. Never use `ink/subtle` for text a person needs to read.
 12. Never add a shadow except to a bottom sheet or a floating element.
 13. Never draw a line. No card outline, no field outline, no list divider, no
-    chart baseline, no chip edge, no rule under a heading. The only strokes in
-    the app are a 2px green focus ring, a 2px error ring, and the glyphs
-    themselves. If two things need separating, step the surface or add space.
+    chip edge, no rule under a heading. Outside a chart the only strokes are a
+    2px green focus ring, a 2px error ring, and the glyphs themselves. If two
+    things need separating, step the surface or add space. A chart is the single
+    named exception, spelled out in 8.13, because reading a price is not the
+    same job as glancing at a card.
 14. Never nest more than three surface levels.
 15. Never compose an amount below 36. Set it flat.
 16. Never draw a glyph at any size but 12, and never at any stroke but 2. The
