@@ -78,7 +78,8 @@ outlined. There are no border lines anywhere in the app.
 | `surface/control-pressed` | `DDE2E6` | A control being held down. |
 | `surface/inverse` | `053329` | The camera feed, the brand mark, and the active navigation pill. Never a screen background. |
 | `surface/accent` | `2BBD9B` | The mint accent card. Once per screen. |
-| `surface/sand` | `D5A578` | The sand accent card. Once per screen. |
+| `surface/sand` | `D5A578` | The saturated sand. A badge, a chip, a small mark inside an accent card. Never the card itself. |
+| `surface/sand-soft` | `F7EFE7` | The sand accent card. Once per screen. Warm enough to read as an accent, pale enough to carry `ink/muted`. |
 | `surface/frost` | `FAFBFC` at 88% | Floating surfaces that content scrolls under. Always paired with a background blur of 24. |
 | `surface/scan` | `FFFFFF` | Behind a QR code. The one exception to the white rule, because a reader needs the quiet zone. |
 
@@ -182,6 +183,14 @@ every other pair sits above it. Lightening the greys moved every pair up.
 | `tint/positive` | `D8F1E8` | 11.68 | 4.90 |
 | `tint/negative` | `FBDFD3` | 10.98 | 4.60 |
 | `tint/warning` | `FBF0C9` | 12.18 | 5.10 |
+| `surface/sand-soft` | `F7EFE7` | 12.21 | 4.74 |
+| `surface/sand` | `D5A578` | 6.27 | 2.71 |
+
+`surface/sand` at `D5A578` carries `ink/strong` at 6.27 to 1 and nothing else.
+`ink/muted` on it is 2.71 to 1 and is never allowed. That is the reason the
+accent card is now `surface/sand-soft` and the saturated value survives only as
+a badge, where the one word on it is `ink/strong`.
+
 
 `ink/muted` on `surface/control-pressed` is the one pair below 4.5 to 1, at 4.46.
 Nothing uses it. A pressed control always carries `ink/strong`, which reaches
@@ -191,6 +200,45 @@ Contrast is not the risk here. Every pair in use passes comfortably. The risk is
 surface against surface, which contrast ratios do not measure. `FAFBFC` on
 `FFFFFF` is 1.04 to 1. That number is the whole argument for the design and the
 whole argument against it.
+
+### 2.7a The check that catches this
+
+Rule 11 has been in this file from the start: never use `ink/subtle` for text a
+person needs to read. On 3 September both desktop Home screens were measured and
+each had **ten outright contrast failures**, all of them mine, all of them rule
+11:
+
+| What | Measured | Needed |
+| --- | --- | --- |
+| The range tabs `1D 1W 1M 1Y ALL` on `surface/sunken` | 2.57 to 1 | 4.5 |
+| The chart period labels `AUG` and `$6,240` | 2.37 to 1 | 4.5 |
+| The fund names on the sand card, set at 70% opacity | 3.62 to 1 | 4.5 |
+
+The lesson is not that the rule was missing. The rule was there and I broke it
+anyway, in five places per screen, because `8EA39F` looks fine next to a
+headline and only fails when it is measured. A rule nobody can test is a rule
+that gets broken.
+
+So the rule now has a test. Before any screen is called finished, walk every text
+node, composite its own opacity and every ancestor opacity against the nearest
+solid surface behind it, and compare the result against 4.5 to 1, or 3 to 1 for
+text at 24 or larger, or 18.66 and bold. Three things this catches that reading a
+screenshot does not:
+
+- **Opacity is contrast.** Text at `ink/strong` and 70% is not `ink/strong`. It
+  is whatever `ink/strong` mixed with the surface comes to, and on sand that is
+  3.62 to 1. Opacity below 1 on a text node is a contrast bug every time, so the
+  audit resets it rather than reporting it.
+- **The surface behind is rarely the canvas.** `ink/subtle` is 2.90 to 1 on
+  white and 2.38 to 1 on `surface/sunken`. The number in the ink table is the
+  best case, not the case.
+- **A component instance carries its own copies.** Fixing the dot column chart
+  component fixed 2 texts and 142 dots in one place. Fixing the screens had to
+  be done twice, once per screen, because Simple and Detailed are separate
+  frames.
+
+Both Home screens now report zero failures. The tightest text on either screen
+is the word "Market" at 5.62 to 1 against a 4.5 requirement.
 
 ### 2.8 The data palette
 
@@ -831,18 +879,30 @@ is for one series over time. Segments is for a total split into parts. Dots is
 for comparing three series, and three is the limit, because a dot matrix is a
 chart where any two dots can end up neighbours. See 2.8.
 
+All three cards in a row take the same form. Home's figures row began with
+Segments, Dots and Segments side by side, and a row that changes chart form card
+by card has to be read three times instead of once. The variants exist so that
+different rows on different pages can differ, not so that neighbours can. Home
+now uses Segments three times.
+
 ### 8.12b The dot column chart
 
-The chart that carries Home. It is 1080 by 216 and it is made of 826 dots.
+The chart that carries Home. It is 690 by 232 and it is made of 572 dots.
 
 | Part | Value |
 | --- | --- |
-| Column | One day. 108 of them, two months |
+| Column | One day. 69 of them, two months |
 | Dot | 4 across, on a 10 pitch, so there is as much gap as dot |
-| Rows | 18, and the columns start at zero |
-| Previous period | `ink/subtle` at 50 percent |
-| Current period | `ink/strong` at full |
-| Labels | The period in `Label caps` and its value in `Label`, under its own half |
+| Rows | 20 in a 200 tall plot, and the columns start at zero |
+| Previous period | `ink/subtle` at full opacity |
+| Current period | `ink/strong` at full opacity |
+| Labels | The period in `Label caps` and its value in `Label`, in `ink/muted` for the previous period and `ink/strong` for the current one, under its own half |
+
+Neither the dots nor the labels carry opacity. The first build set the previous
+period to `ink/subtle` at 50 percent and the labels to `ink/subtle`, which put
+the labels at 2.37 to 1 on `surface/sunken`. Tone is a token, not a transparency:
+`ink/subtle` and `ink/strong` already differ enough to separate the two halves,
+and the labels have to be readable in both. See 2.7a and rule 28.
 
 Three things about it are deliberate.
 
@@ -862,9 +922,11 @@ individual days up close, and they give the largest surface on the screen
 something to look at. That is what makes a quiet screen interesting rather than
 empty.
 
-It costs 826 nodes, which is heavy for a Figma file and slow to generate. If the
-file starts to struggle, the same look can be had with one rectangle per column
-at about a tenth of the nodes, losing the individual dots at close range.
+It costs 572 nodes, which is heavy for a Figma file and slow to generate. The
+first build was 826 and the Figma connection dropped repeatedly while writing it,
+so it was cut to 69 columns. If the file starts to struggle again, the same look
+can be had with one rectangle per column at about a twentieth of the nodes,
+losing the individual dots at close range.
 
 ### 8.12c When a thing becomes a component
 
@@ -1095,6 +1157,16 @@ scale.
 25. Colour belongs in many small places, not a few large ones. Bars, dots, chips
     and legends, not card backgrounds. The one exception is the single accent
     card the seventy twenty ten rule asks for, and there is only ever one.
+26. Never call a screen finished without measuring it. Walk every text node,
+    composite its opacity and its ancestors' against the surface behind it, and
+    check the ratio. Rule 11 was broken ten times on one screen because nobody
+    was measuring. See 2.7a.
+27. An accent card is a warm surface, not a saturated one. The card takes
+    `surface/sand-soft`, and the saturated `surface/sand` appears inside it in
+    one small place, such as a badge. A saturated card that big beats the chart
+    it sits beside, and the chart is the point of the screen.
+28. Never set text below full opacity. If it needs to recede, use `ink/muted`.
+    Opacity on a text node is a contrast bug wearing a hierarchy costume.
 
 ## 11. The screens, by flow
 
@@ -1306,19 +1378,50 @@ for the screen.**
 
 **Colour is back, in many small places rather than a few large ones.** That is
 what the first reference actually does. The portfolio card carries a three part
-allocation bar in `data/1` to `data/3` with the holdings named. Today carries
-thirty dots, one per day, in `state/positive` and `state/negative` with a count
-beside each. Cash ready carries a two part bar showing what is working against
-what is sitting still. None of it is a large coloured fill, so the screen still
+allocation bar in `data/1` to `data/3` with the holdings named. Today carries a
+two part bar in `state/positive` and `state/negative` with the up and down day
+counts beside it. Cash ready carries a single `data/4` fill on a
+`surface/sunken` track. None of it is a large coloured fill, so the screen still
 reads as green and white.
 
 **The chart stays grey.** It is the one element the second reference was about,
 and it is the largest, so it is the one thing that must not compete. See 8.12b.
 
 **One sand card, once.** The seventy twenty ten rule asks for about a tenth of a
-screen in accent, and version three had none. The accent is now a single sand
-card carrying a market pick, which puts the warm moment on something worth
-looking at rather than on a control.
+screen in accent, and version three had none. The accent is a single sand card
+carrying a market pick, which puts the warm moment on something worth looking at
+rather than on a control.
+
+#### The fifth pass, 3 September
+
+The note was "this doesn't have enough contrast and the page is now too busy",
+pointed at the sand card. Both halves of it were right, and both were
+measurable.
+
+Contrast: ten failures per screen, all of them rule 11. What was wrong and how
+it is checked from now on is 2.7a.
+
+Busy: three counts made it concrete. Three cards in the figures row carried
+three different chart forms, so the eye had to learn the row three times. Seven
+distinct hues sat inside 176 vertical pixels. The sand card held fourteen pieces
+of text and was the most saturated block on a screen whose hero is a grey chart.
+
+Four changes, and nothing else moved:
+
+| Change | Why |
+| --- | --- |
+| Today's thirty dot matrix became a two part bar | Three cards, one form. The row is read once, not three times. Thirty marks became two, and the dot texture belongs to the hero chart alone. |
+| Cash ready's two part bar became one fill on a track | Cash against total is one quantity, not two categories. Seven hues in the row became six. The bar no longer restates the portfolio figure sitting two cards to its left. |
+| The sand card lost its tickers and kept the fund names | It said "VOO" and "Vanguard S&P 500" on the same line. The plain name is the half a beginner can use, and the row went from three texts to two. |
+| The sand card went to `surface/sand-soft`, with the saturated sand kept as a "This week" badge | A 360 by 344 block of `D5A578` beat the chart beside it. Rules 25 and 27. |
+
+Text on the screen went from 85 nodes to 82, hues in the figures row from seven
+to six, and contrast failures from ten to zero.
+
+What was **not** done, deliberately: no card was removed, no row was
+re-proportioned, nothing was redesigned. Rule 24. The note named the sand card,
+so the work stayed on the sand card and on the two measurements that named
+themselves.
 
 **Scale runs from 36 to 12.** Three figures at Display, the lists at Body
 strong, the labels at Label. The cards are not a grid either: 360 three times,
