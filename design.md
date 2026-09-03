@@ -1089,6 +1089,12 @@ scale.
 23. Quiet is not the same as flat. A screen that has given up colour has to earn
     its interest somewhere else, which means texture, a real range of scale, and
     cards that are not all the same size. See 11b.4a.
+24. A note about one element is not a new direction for the screen. If someone
+    says a chart is too loud, quieten the chart. Do not quieten everything
+    around it as well. See 11b.4a for the time this went wrong.
+25. Colour belongs in many small places, not a few large ones. Bars, dots, chips
+    and legends, not card backgrounds. The one exception is the single accent
+    card the seventy twenty ten rule asks for, and there is only ever one.
 
 ## 11. The screens, by flow
 
@@ -1277,50 +1283,48 @@ only rail the product has. Portfolio and Withdrawals do not exist here yet.
 
 ### 11b.4a Home is the portfolio
 
-Home has been rebuilt three times. The first reported and nothing more. The
-second put a money in and out chart at the centre, which was the loudest thing
-on the screen and was answering a question nobody opens this product to ask. The
-third made it quiet, and quiet turned out to mean flat.
+Home has been rebuilt four times, and the fourth is the one to keep. Version
+three made the screen quiet, and quiet turned out to mean flat. The mistake was
+mine and it is worth recording, because it is easy to repeat.
 
-Tokkenly sells stocks trading, so Home leads with the portfolio. The interest
-comes from texture and from scale, not from colour.
+Two references were in play. One was a rich blue dashboard, sent with the words
+"make it more interesting". The other was a grey dot column card, sent later
+with the words "this chart is very distracting, make it a bit more subtle". The
+second reference was about **the chart**. I applied it to the whole screen and
+threw away everything the first reference asked for.
+
+The rule that comes out of it: **a note about one element is not a new direction
+for the screen.**
 
 | Band | Height | What it holds |
 | --- | --- | --- |
 | Header | 44 | The greeting, the Simple and Detailed toggle, notifications |
-| Cash | 76 | The cash balance, what it is ready for, Add money and Convert |
-| Portfolio | 432 | Full width. The value, the change, what it cost, and the dot column chart on a sunken panel |
-| Bottom | 328 | Positions 456, activity 360, then Borrow and Earn stacked in 264 |
+| Figures | 176 | Portfolio, Today and Cash ready, three cards of 360 |
+| Over time | 344 | The dot column chart at 744, the sand pick at 360 |
+| Lists | 316 | Positions 456, activity 360, then Borrow and Earn stacked in 264 |
 
-Three things make it interesting without adding a single colour.
+**Colour is back, in many small places rather than a few large ones.** That is
+what the first reference actually does. The portfolio card carries a three part
+allocation bar in `data/1` to `data/3` with the holdings named. Today carries
+thirty dots, one per day, in `state/positive` and `state/negative` with a count
+beside each. Cash ready carries a two part bar showing what is working against
+what is sitting still. None of it is a large coloured fill, so the screen still
+reads as green and white.
 
-**The chart is a texture.** The dot column chart in 8.12b is 826 dots. From
-across the room it is a shape. Up close it is individual days. A thin line
-carries the same numbers and none of that.
+**The chart stays grey.** It is the one element the second reference was about,
+and it is the largest, so it is the one thing that must not compete. See 8.12b.
 
-**Scale is used properly.** Display XL at 48 for the portfolio value, Display at
-36 for the two offers, Body strong at 14 for the lists. That is a range of more
-than three to one between the largest thing on the screen and the smallest, so
-the eye is told where to start.
+**One sand card, once.** The seventy twenty ten rule asks for about a tenth of a
+screen in accent, and version three had none. The accent is now a single sand
+card carrying a market pick, which puts the warm moment on something worth
+looking at rather than on a control.
 
-**The cards are not a grid.** The hero runs the full 1128. Under it sit three
-things of different widths, 456, 360 and 264, and the last of those is a stack
-of two small cards rather than one tall one. Four cards of the same size in a
-row is what made the earlier version read as a report.
+**Scale runs from 36 to 12.** Three figures at Display, the lists at Body
+strong, the labels at Label. The cards are not a grid either: 360 three times,
+then 744 and 360, then 456, 360 and a stack of two.
 
-**The chart panel changes tone.** The top of the hero is `surface/default` and
-the chart sits on `surface/sunken` below it, full bleed to the card edges. That
-tonal step does the work a divider line would do, without a line, which rule 13
-would not allow anyway.
-
-The order of the bands is the priority that was asked for: stocks first and
-largest, then borrowing and lending, then a little of converting. Cash is a thin
-strip because it is not the product, it is what funds the product. Converting
-lives in that strip as one control beside Add money.
-
-The send ruler moved off Home to the Send screen. It was the biggest block of
-space on an earlier version and sending is not what this product sells. The
-component is unchanged and still belongs on Send, Buy and Convert.
+The send ruler is not on Home. It belongs on Send and on Invest, which is
+reached from the Invest control on the Cash ready card.
 
 ### 11b.4b The Market page
 
