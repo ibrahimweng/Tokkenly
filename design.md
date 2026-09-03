@@ -236,6 +236,29 @@ legend word all wear `ink/strong` or `ink/muted`. The coloured dot beside the
 word carries the identity, and the word carries the meaning, so colour is never
 the only thing telling two series apart.
 
+### 2.8a Charts are grey by default
+
+Having a data palette is not a reason to spend it.
+
+A chart is drawn in greys unless colour is carrying something a grey cannot.
+`ink/subtle` for a sparkline, `ink/strong` for the one line a card is about,
+`chart/grid` for the gridlines, and a faint wash of `ink/strong` for the area
+beneath. That is the whole language for most charts in the product.
+
+Colour appears in exactly two places. A stock being up or down, which is
+`state/positive` or `state/negative` on the number and its arrow. And the series
+of a chart that genuinely has to tell several things apart, which is where the
+five slots in 2.8 earn their place.
+
+The reason is that a chart on a dashboard is competing with the figure it exists
+to explain. The first version of the desktop Home had a six month chart in two
+strong colours, and it took the eye before the balance did. The chart was
+answering a smaller question more loudly than the screen was answering the big
+one. Greying it did not make it less useful. It made it stop shouting.
+
+The five colour palette stays in the system. It is for the charts that need it,
+which are fewer than they look.
+
 ## 2b. The seventy twenty ten split
 
 Every screen is roughly seventy percent white, twenty percent light grey and ten
@@ -980,10 +1003,12 @@ scale.
     More, under the "Later" heading, as a flat pill that carries no chevron and
     opens nothing. A whole product may show a hint on home, because it has a
     place in the navigation to lead to. The hint carries a "Soon" marker.
-18. A whole product is the exception. Grow and Stocks sit in the navigation
-    before they open, because they are what the account grows into and the
-    website already promises them. Each carries a "Not open yet" pill on its own
-    page. A part of a product never gets this exception, only a product does.
+18. A whole product is the exception. It may sit in the navigation before it
+    opens, because it is what the account grows into. While it is not open it
+    carries a "Not open yet" pill on its own page. A part of a product never
+    gets this exception, only a product does. **Superseded for Grow and Market
+    on 3 September**, which are now treated as live and carry no marker. See
+    11c.4a for what that costs.
 19. Never put a data colour on text. `data/1` to `data/5` are scoped to fills
     and strokes so the picker will not offer them for a text layer. The dot
     beside a word carries the identity, the word carries the meaning, and no
@@ -994,6 +1019,9 @@ scale.
 21. Never size a card by eye. Measure what its content needs, then set the
     height. Every card on the desktop Home was solved this way, which is why the
     two states of it have different row heights.
+22. Never draw a chart in colour by default. Grey is the default and colour is
+    the exception, earned only by a rise or fall, or by a series that has to be
+    told apart from another. See 2.8a.
 
 ## 11. The screens, by flow
 
@@ -1107,9 +1135,16 @@ everything that hid behind More now sits in the open.
 The sidebar holds two groups. First the places money lives, then the places the
 account is managed: Account, Security and Support.
 
-The first group was Home, Activity, Grow and Stocks when this was written. It
-is now the eight in 11c.4, because reading the code showed the product moves
-money four ways and the design only knew about two of them.
+The first group is now ordered by what the product is for, not by what it can
+do alphabetically:
+
+`Home · Market · Buy · Grow · Convert · Receive · Send · History`
+
+Market comes second, right under Home, because trading is the reason the
+product exists. It was called Stocks until Home took over the portfolio, at
+which point Stocks and Home were two names for the same idea. Home is now what
+you own. Market is what you could own. Sending and receiving sit at the bottom
+of the group because they support the trading rather than being the point of it.
 
 The selected glyph does not fill on desktop, and on mobile it does. That is not
 an oversight. On mobile the glyph is alone, so filling it is the only way to show
@@ -1141,10 +1176,10 @@ colour alone.
 
 | Screen | What it holds |
 | --- | --- |
-| D01 Home | Three stat cards, the six month chart, four payments, the send ruler, Grow. Drawn in both Simple and Detailed |
+| D01 Home | Cash strip, the portfolio and its positions, Borrow, Earn, activity. Drawn in both Simple and Detailed |
 | D02 Activity | Search, three filters, export, twelve payments across five columns |
 | D03 Grow | The hero figure, then Earn and Borrow side by side |
-| D04 Stocks | Three market tiles, your portfolio as a chart, what is moving today, popular |
+| D04 Market | Search, seven categories, three indices, five plain language picks, what is moving today, popular |
 | D05 Apple | The full chart, today's trading, growth and valuation, your position, trending, news |
 | D06 Account | Personal details, your address with its warning, verification, devices |
 | D07 Security | How you get in, recovery, where you are signed in |
@@ -1173,50 +1208,58 @@ replaces Withdrawals. Grow and Stocks keep their place but must lead somewhere
 honest. The send flow needs rebuilding around sending to a wallet, which is the
 only rail the product has. Portfolio and Withdrawals do not exist here yet.
 
-### 11b.4a The Home rebuild
+### 11b.4a Home is the portfolio
 
-The first Home was honest and quiet. Everything sat at one weight, the activity
-table took about sixty percent of the screen for the least interesting content
-on it, the right rail was three identical pale cards, and colour appeared twice,
-in a sidebar pill and in two sparklines you had to lean in to see. Nothing on it
-could be touched. It reported, and that was all.
+Home has been rebuilt twice. The first version reported and nothing more. The
+second put a money in and out chart at the centre of it. That chart was the
+loudest thing on the screen and it was answering a question nobody opens this
+product to ask, so it is gone.
 
-The rebuild keeps the honesty and fixes the rest.
+Tokkenly sells stocks trading. Home now says so.
 
 | Band | Height | What it holds |
 | --- | --- | --- |
 | Header | 44 | The greeting, the Simple and Detailed toggle, notifications |
-| Row A | 172 | Three stat cards, 360 each: Total balance, Money in, Money out |
-| Row B | 688 | Left 648: the six month chart above recent activity. Right 456: Send above Grow |
+| Cash | 76 | The cash balance, what it is ready for, Add money and Convert |
+| Portfolio | 400 | Left 744: the value, the change, the range, the chart. Right 360: five positions and what is still uninvested |
+| Offers | 360 | Borrow, Earn and Recent activity, three cards of 360 |
 
-Each stat card uses a different chart form, because each answers a different
-question. Total balance is one line over seven days. Money in is a split bar,
-because the question is where it came from. Money out is a dot matrix over three
-destinations, which is the most that form can carry.
+The order is the priority: stocks first and largest, then borrowing and lending,
+then a little of converting. Cash is a thin strip at the top rather than a card,
+because it is not the product, it is what funds the product. Converting lives in
+that strip as one control beside Add money, which is the "a little" it was
+asked for.
 
-The **Send card** is the change that matters most. Home used to be a place you
-read. Now the most common thing a person does sits on it: drag the ruler, tap a
-recipient, send. The four quick amounts underneath are there because most people
-send the same few numbers, and dragging to an exact figure is slower than tapping
-one.
+The send ruler moved off Home to the Send screen. It was the single biggest
+block of space on the previous version, and sending is not what this product is
+selling. The component is unchanged and still belongs on Send, Buy and Convert.
 
-Activity is cut to four rows with a link to the rest. The full list already has
-its own screen, and eight rows of it was never the reason anyone opened Home.
+**Charts are grey here.** See 2.8a. The portfolio line is `ink/strong` on a
+faint wash of the same ink, every sparkline is `ink/subtle` at 1.5, and the only
+colour on the screen is the numbers that say up or down. That is the whole point
+of the change: a chart that shouts is a chart competing with the figure it
+exists to explain.
 
-**Simple and Detailed.** The toggle is not a preference that hides in settings.
-It is on the screen, and it governs everything at once. Simple rounds the
-figures, names things in plain words and leaves the machinery out. Detailed adds
-the cents, the naira value at the indicative rate, the amount beside every
-legend entry, the network, the fee, the arrival time, the wallet address and the
-reference on every payment. Both states are drawn, as `D01 Home` and
-`D01 Home — detailed`, because a toggle that reveals nothing is a promise not
-kept. `D01 Home — before` is the old screen, kept only until the direction is
-agreed.
+### 11b.4b The Market page
 
-The row heights above are not chosen by eye. Every card is measured against what
-its own content needs, and the rows are solved so the total lands exactly on the
-884 the content area allows. The two states have different numbers because
-Detailed genuinely needs more room.
+`D04 Market` was `D04 Stocks`. It is where you go to find something to buy, and
+it is built to be browsed rather than searched:
+
+| Band | What it holds |
+| --- | --- |
+| Header | The title and one search field |
+| Categories | All, Popular, Technology, Funds, Dividend, Energy, Recently listed |
+| Indices | S&P 500, Nasdaq, Dow Jones, with grey sparklines |
+| Worth a look | Five picks written as plain sentences, not tickers |
+| Moving today | Three up and three down |
+| Popular | Four cards |
+
+The Worth a look card is the one that matters. A market page full of tickers
+only helps a person who already knows what they are looking for. Each row leads
+with what the thing is in plain words, "One fund, five hundred companies",
+and keeps the tickers as small grey text at the end for the person who does
+know. It carries the line "Picked weekly, not advice", because a list of
+suggestions inside a product that takes your money has to say what it is.
 
 ### 11b.5 The desktop flows
 
@@ -1227,12 +1270,12 @@ in the order a person meets them.
 | Flow | Screens |
 | --- | --- |
 | A. The way in | D15 Sign in, D16 Create account |
-| B. Home | D01 Home, D01 Home detailed, D01 Home before |
+| B. Home | D01 Home, D01 Home detailed |
 | C. Receive money | D12 Receive |
 | D. Send money | D09 Send, D10 Send review, D11 Send sent |
 | E. Buy and convert | D13 Buy, D14 Convert |
 | F. Activity and receipts | D02 Activity |
-| G. Grow and Stocks | D03 Grow, D04 Stocks, D05 Apple |
+| G. Grow and Market | D03 Grow, D04 Market, D05 Apple |
 | H. Account, security and support | D06 Account, D07 Security, D08 Support |
 
 Arrows appear only between real steps. Flow D carries two, because the send is a
@@ -1307,11 +1350,10 @@ deleted the screens behind Cards, Earn, Markets, Borrow, Promotions, Pay Bills
 and Refer. Their stated reason was that a navigation full of things you cannot
 do is worse than no entry at all.
 
-This document said the opposite in rule 18. **Rule 18 stands.** Grow and Stocks
-keep their place, because a whole product that the marketing site already
-promises is a different case from seven half features. What changes is that
-they must carry the marker honestly and lead to a page that says plainly what
-is not open yet, rather than to a page that looks live.
+This document said the opposite in rule 18. Rule 18 stood until 3 September:
+Grow and Stocks kept their place and carried a marker. On 3 September the
+markers were removed and both are treated as live, because trading is the
+selling point of the product. 11c.4a records that decision and the risk in it.
 
 ### 11c.4 The routing, after the revamp
 
@@ -1326,8 +1368,8 @@ words a person would use.
 | Receive | `/deposit` |
 | Send | `/send` |
 | Convert | `/convert` |
-| Grow | `/grow`, not open yet |
-| Stocks | `/stocks`, not open yet |
+| Grow | `/grow` |
+| Market | `/market`, was `/stocks` |
 | History | `/transactions` |
 
 Account, Security and Support sit at the bottom of the sidebar, away from the
@@ -1358,20 +1400,31 @@ purpose. It is the same reason More exists on one and not the other.
 `fill/warning` after the label. A destination that does not work should say so
 before it is opened, not after.
 
-### 11c.4a What Grow shows before it opens
+### 11c.4a Stocks and lending are treated as live
 
-The full page, with its figures, under a Not open yet marker.
+On 3 September the direction changed. Stocks trading is the selling point of the
+product, so it leads the desktop Home, and borrowing and lending come second.
+Every Not open yet marker has been removed: the two amber dots in the sidebar,
+the pill on the Grow page and the pill on the Market page.
 
-This is worth stating plainly because it is the riskiest decision in this file.
-The page shows an amount in Grow, a rate, and an amount paid so far. A person
-reading it quickly will believe they already hold money that is earning
-interest. They do not. In a product that handles real money that is a stronger
-problem than a design one, and it is the exact thing their team removed the old
-screens for.
+This is the riskiest thing in this file and it needs saying plainly.
 
-It is built this way because it was asked for. If it is ever revisited, the
-safer version is the same layout with no figures at all: what Earn and Borrow
-will be, in one sentence each, and one control to be told when they open.
+Section 11c.2 records what the code says, and the code says the opposite. There
+is one supported asset and it is USDC. There is no USD valuation anywhere in
+their API. The Markets, Earn and Borrow screens were deleted by their own team
+because they were coming soon against nothing. The design now shows a portfolio
+of five holdings, a borrowing rate, a collateral level and a liquidation price,
+and none of that exists in the code that was read on 2 September.
+
+Two things can make that fine and only two. Either the build is ahead of what
+was readable, or these screens ship at the same time as the product behind
+them. If neither is true, this is a design that promises a person their money is
+invested and earning when it is not, which is the exact failure the audit in 11c
+was written to catch.
+
+The decision was made by the person who owns the product, with the conflict
+stated. It is recorded here so nobody later mistakes it for something the code
+supported.
 
 ### 11c.5 Signing in
 
