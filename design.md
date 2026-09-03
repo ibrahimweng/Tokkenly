@@ -192,6 +192,50 @@ surface against surface, which contrast ratios do not measure. `FAFBFC` on
 `FFFFFF` is 1.04 to 1. That number is the whole argument for the design and the
 whole argument against it.
 
+### 2.8 The data palette
+
+The brand palette carries meaning. Mint means money arrived, orange means
+something failed, yellow means take care. That is why none of them can also mean
+"the third series in a chart". A chart needs colours that mean nothing except
+"this is not that", and the system had none, which is why every chart in the
+first pass was a single thin green line.
+
+Five slots, in a fixed order that never changes:
+
+| Token | Value | Name |
+| --- | --- | --- |
+| `data/1` | `0F8F70` | teal |
+| `data/2` | `9333EA` | violet |
+| `data/3` | `C57A2E` | clay |
+| `data/4` | `2563EB` | blue |
+| `data/5` | `E11D74` | rose |
+
+Each has a soft partner, `data/1-soft` through `data/5-soft`, for the area under
+a line and for the empty dots in a matrix.
+
+The order is not a taste decision. It is the thing that keeps the chart readable
+to someone who cannot tell red from green. Colours are handed out in this order
+and never cycled, because neighbouring slots are the ones that end up touching,
+and this order is the one where every neighbouring pair stays far apart. The
+worst neighbouring pair is 19.2 apart under simulated protanopia and 33.9 apart
+under normal vision, against a target of 8 and a floor of 15.
+
+Two rules come out of that and both are hard:
+
+**Only the first three slots may be used where any two marks can sit side by
+side.** That means dot matrices, scatter plots and small multiples. Blue and
+violet are 1.3 apart under deuteranopia, which is nothing. They are safe in a
+line or a stacked bar because the fixed order keeps them two apart and they
+never touch. They are not safe where anything can neighbour anything. A fourth
+series in that kind of chart is not a new colour, it is a fourth chart or an
+"Other" group.
+
+**A data colour never touches text.** The tokens are scoped to fills and strokes
+only, so Figma will not even offer them for a text layer. A value, a label and a
+legend word all wear `ink/strong` or `ink/muted`. The coloured dot beside the
+word carries the identity, and the word carries the meaning, so colour is never
+the only thing telling two series apart.
+
 ## 2b. The seventy twenty ten split
 
 Every screen is roughly seventy percent white, twenty percent light grey and ten
@@ -738,6 +782,31 @@ removed and nothing is lost, remove it.
 Space that separates two ideas is a decision. The difference shows.
 
 
+### 8.12a The dashboard parts
+
+Five components carry the desktop dashboard. They live on `02 Components`.
+
+| Component | Variants | What it is |
+| --- | --- | --- |
+| Delta chip | Up, Down, Flat | The change against the last period. The arrow carries the direction, so a person who cannot see the colour still reads the sign. |
+| Legend item | Slot 1 to 5 | One series. A dot in its data colour and the name in `ink/muted`. |
+| Detail toggle | Simple, Detailed | The one control that governs how much the whole screen says. |
+| Amount ruler | one | A tick track you drag to set an amount. |
+| Stat card | Line, Segments, Dots | One headline figure, its change, and a small chart. |
+
+The **Amount ruler** is the tactile part. It is 408 by 72, a tick every 8, and
+every fifth tick is taller. That taller tick is the whole point. It gives the
+drag a rhythm, so a person feels where they are instead of only reading it. The
+ticks fade toward both edges so the track reads as continuing past the card
+rather than stopping at a wall, and one bold line in the middle is the value
+under the finger. It belongs anywhere a person picks an amount, which is Send,
+Buy and Convert on both products.
+
+The **Stat card** is 360 by 176. Its three chart forms are not decoration. Line
+is for one series over time. Segments is for a total split into parts. Dots is
+for comparing three series, and three is the limit, because a dot matrix is a
+chart where any two dots can end up neighbours. See 2.8.
+
 ### 8.13 Charts
 
 A chart is the one place in this product where a person reads data instead of
@@ -915,6 +984,16 @@ scale.
     before they open, because they are what the account grows into and the
     website already promises them. Each carries a "Not open yet" pill on its own
     page. A part of a product never gets this exception, only a product does.
+19. Never put a data colour on text. `data/1` to `data/5` are scoped to fills
+    and strokes so the picker will not offer them for a text layer. The dot
+    beside a word carries the identity, the word carries the meaning, and no
+    reader ever depends on colour alone.
+20. Never hand out data colours out of order, and never cycle them. The order is
+    what keeps the chart readable to a colour blind reader. Where any two marks
+    can end up neighbours, only the first three slots exist. See 2.8.
+21. Never size a card by eye. Measure what its content needs, then set the
+    height. Every card on the desktop Home was solved this way, which is why the
+    two states of it have different row heights.
 
 ## 11. The screens, by flow
 
@@ -1062,7 +1141,7 @@ colour alone.
 
 | Screen | What it holds |
 | --- | --- |
-| D01 Home | Balance, Receive and Send, eight payments, stocks, Grow, the people you send to most |
+| D01 Home | Three stat cards, the six month chart, four payments, the send ruler, Grow. Drawn in both Simple and Detailed |
 | D02 Activity | Search, three filters, export, twelve payments across five columns |
 | D03 Grow | The hero figure, then Earn and Borrow side by side |
 | D04 Stocks | Three market tiles, your portfolio as a chart, what is moving today, popular |
@@ -1094,6 +1173,51 @@ replaces Withdrawals. Grow and Stocks keep their place but must lead somewhere
 honest. The send flow needs rebuilding around sending to a wallet, which is the
 only rail the product has. Portfolio and Withdrawals do not exist here yet.
 
+### 11b.4a The Home rebuild
+
+The first Home was honest and quiet. Everything sat at one weight, the activity
+table took about sixty percent of the screen for the least interesting content
+on it, the right rail was three identical pale cards, and colour appeared twice,
+in a sidebar pill and in two sparklines you had to lean in to see. Nothing on it
+could be touched. It reported, and that was all.
+
+The rebuild keeps the honesty and fixes the rest.
+
+| Band | Height | What it holds |
+| --- | --- | --- |
+| Header | 44 | The greeting, the Simple and Detailed toggle, notifications |
+| Row A | 172 | Three stat cards, 360 each: Total balance, Money in, Money out |
+| Row B | 688 | Left 648: the six month chart above recent activity. Right 456: Send above Grow |
+
+Each stat card uses a different chart form, because each answers a different
+question. Total balance is one line over seven days. Money in is a split bar,
+because the question is where it came from. Money out is a dot matrix over three
+destinations, which is the most that form can carry.
+
+The **Send card** is the change that matters most. Home used to be a place you
+read. Now the most common thing a person does sits on it: drag the ruler, tap a
+recipient, send. The four quick amounts underneath are there because most people
+send the same few numbers, and dragging to an exact figure is slower than tapping
+one.
+
+Activity is cut to four rows with a link to the rest. The full list already has
+its own screen, and eight rows of it was never the reason anyone opened Home.
+
+**Simple and Detailed.** The toggle is not a preference that hides in settings.
+It is on the screen, and it governs everything at once. Simple rounds the
+figures, names things in plain words and leaves the machinery out. Detailed adds
+the cents, the naira value at the indicative rate, the amount beside every
+legend entry, the network, the fee, the arrival time, the wallet address and the
+reference on every payment. Both states are drawn, as `D01 Home` and
+`D01 Home — detailed`, because a toggle that reveals nothing is a promise not
+kept. `D01 Home — before` is the old screen, kept only until the direction is
+agreed.
+
+The row heights above are not chosen by eye. Every card is measured against what
+its own content needs, and the rows are solved so the total lands exactly on the
+884 the content area allows. The two states have different numbers because
+Detailed genuinely needs more room.
+
 ### 11b.5 The desktop flows
 
 The sixteen screens used to sit loose on the page in a grid of four across.
@@ -1103,7 +1227,7 @@ in the order a person meets them.
 | Flow | Screens |
 | --- | --- |
 | A. The way in | D15 Sign in, D16 Create account |
-| B. Home | D01 Home |
+| B. Home | D01 Home, D01 Home detailed, D01 Home before |
 | C. Receive money | D12 Receive |
 | D. Send money | D09 Send, D10 Send review, D11 Send sent |
 | E. Buy and convert | D13 Buy, D14 Convert |
