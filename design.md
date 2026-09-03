@@ -816,6 +816,7 @@ Five components carry the desktop dashboard. They live on `02 Components`.
 | Detail toggle | Simple, Detailed | The one control that governs how much the whole screen says. |
 | Amount ruler | one | A tick track you drag to set an amount. |
 | Stat card | Line, Segments, Dots | One headline figure, its change, and a small chart. |
+| Dot column chart | one | Two periods of dot columns in two tones of grey. See 8.12b. |
 
 The **Amount ruler** is the tactile part. It is 408 by 72, a tick every 8, and
 every fifth tick is taller. That taller tick is the whole point. It gives the
@@ -829,6 +830,69 @@ The **Stat card** is 360 by 176. Its three chart forms are not decoration. Line
 is for one series over time. Segments is for a total split into parts. Dots is
 for comparing three series, and three is the limit, because a dot matrix is a
 chart where any two dots can end up neighbours. See 2.8.
+
+### 8.12b The dot column chart
+
+The chart that carries Home. It is 1080 by 216 and it is made of 826 dots.
+
+| Part | Value |
+| --- | --- |
+| Column | One day. 108 of them, two months |
+| Dot | 4 across, on a 10 pitch, so there is as much gap as dot |
+| Rows | 18, and the columns start at zero |
+| Previous period | `ink/subtle` at 50 percent |
+| Current period | `ink/strong` at full |
+| Labels | The period in `Label caps` and its value in `Label`, under its own half |
+
+Three things about it are deliberate.
+
+**The columns start at zero.** A column says "this much" by its height, so a
+column chart that starts anywhere else lies about the size of the difference. It
+works here because the account genuinely began near nothing two months ago. If
+that ever stops being true, this becomes a line chart, not a truncated column
+chart.
+
+**The two periods are told apart by tone, not by colour.** Pale for what has
+happened, solid for what is happening. That is one less thing for the palette to
+carry and it survives being printed or photocopied.
+
+**The texture is the reason it exists.** A smooth line and a dot column chart
+carry the same numbers. The dots read as a shape from a distance and as
+individual days up close, and they give the largest surface on the screen
+something to look at. That is what makes a quiet screen interesting rather than
+empty.
+
+It costs 826 nodes, which is heavy for a Figma file and slow to generate. If the
+file starts to struggle, the same look can be had with one rectangle per column
+at about a tenth of the nodes, losing the individual dots at close range.
+
+### 8.12c When a thing becomes a component
+
+Four tests. A thing becomes a component when it passes any two.
+
+1. **It appears three times or more**, across at least two screens. Twice on one
+   screen is a copy, not a pattern.
+2. **Getting it wrong would be visible.** A delta chip with the arrow pointing
+   the wrong way, or a legend dot in the wrong slot, is a mistake a reader would
+   catch. Those are worth locking.
+3. **It carries a rule.** The legend item exists so slots are never cycled. The
+   delta chip exists so direction is never carried by colour alone. The
+   component is where the rule lives, so the rule cannot be forgotten by
+   whoever builds the next screen.
+4. **It has states.** Anything with an on and an off, or a rest and a pressed,
+   belongs in a variant set rather than being redrawn each time.
+
+And two tests for when it should **not** be a component.
+
+- **It is layout, not a part.** A row of three cards is an arrangement. Making
+  it a component freezes a decision that should stay free.
+- **The data is the whole thing.** A chart whose shape comes entirely from its
+  numbers cannot be reused without those numbers. The dot column chart is a
+  component anyway, because the form and the rules are the reusable part and the
+  numbers are placeholder, but that is a judgement call rather than a rule.
+
+The library at the time of writing: Delta chip, Legend item, Detail toggle,
+Amount ruler, Stat card, Dot column chart, plus the older phone components.
 
 ### 8.13 Charts
 
@@ -1022,6 +1086,9 @@ scale.
 22. Never draw a chart in colour by default. Grey is the default and colour is
     the exception, earned only by a rise or fall, or by a series that has to be
     told apart from another. See 2.8a.
+23. Quiet is not the same as flat. A screen that has given up colour has to earn
+    its interest somewhere else, which means texture, a real range of scale, and
+    cards that are not all the same size. See 11b.4a.
 
 ## 11. The screens, by flow
 
@@ -1176,7 +1243,7 @@ colour alone.
 
 | Screen | What it holds |
 | --- | --- |
-| D01 Home | Cash strip, the portfolio and its positions, Borrow, Earn, activity. Drawn in both Simple and Detailed |
+| D01 Home | Cash strip, the portfolio with its dot column chart, positions, activity, Borrow and Earn. Drawn in both Simple and Detailed |
 | D02 Activity | Search, three filters, export, twelve payments across five columns |
 | D03 Grow | The hero figure, then Earn and Borrow side by side |
 | D04 Market | Search, seven categories, three indices, five plain language picks, what is moving today, popular |
@@ -1210,35 +1277,50 @@ only rail the product has. Portfolio and Withdrawals do not exist here yet.
 
 ### 11b.4a Home is the portfolio
 
-Home has been rebuilt twice. The first version reported and nothing more. The
-second put a money in and out chart at the centre of it. That chart was the
-loudest thing on the screen and it was answering a question nobody opens this
-product to ask, so it is gone.
+Home has been rebuilt three times. The first reported and nothing more. The
+second put a money in and out chart at the centre, which was the loudest thing
+on the screen and was answering a question nobody opens this product to ask. The
+third made it quiet, and quiet turned out to mean flat.
 
-Tokkenly sells stocks trading. Home now says so.
+Tokkenly sells stocks trading, so Home leads with the portfolio. The interest
+comes from texture and from scale, not from colour.
 
 | Band | Height | What it holds |
 | --- | --- | --- |
 | Header | 44 | The greeting, the Simple and Detailed toggle, notifications |
 | Cash | 76 | The cash balance, what it is ready for, Add money and Convert |
-| Portfolio | 400 | Left 744: the value, the change, the range, the chart. Right 360: five positions and what is still uninvested |
-| Offers | 360 | Borrow, Earn and Recent activity, three cards of 360 |
+| Portfolio | 432 | Full width. The value, the change, what it cost, and the dot column chart on a sunken panel |
+| Bottom | 328 | Positions 456, activity 360, then Borrow and Earn stacked in 264 |
 
-The order is the priority: stocks first and largest, then borrowing and lending,
-then a little of converting. Cash is a thin strip at the top rather than a card,
-because it is not the product, it is what funds the product. Converting lives in
-that strip as one control beside Add money, which is the "a little" it was
-asked for.
+Three things make it interesting without adding a single colour.
 
-The send ruler moved off Home to the Send screen. It was the single biggest
-block of space on the previous version, and sending is not what this product is
-selling. The component is unchanged and still belongs on Send, Buy and Convert.
+**The chart is a texture.** The dot column chart in 8.12b is 826 dots. From
+across the room it is a shape. Up close it is individual days. A thin line
+carries the same numbers and none of that.
 
-**Charts are grey here.** See 2.8a. The portfolio line is `ink/strong` on a
-faint wash of the same ink, every sparkline is `ink/subtle` at 1.5, and the only
-colour on the screen is the numbers that say up or down. That is the whole point
-of the change: a chart that shouts is a chart competing with the figure it
-exists to explain.
+**Scale is used properly.** Display XL at 48 for the portfolio value, Display at
+36 for the two offers, Body strong at 14 for the lists. That is a range of more
+than three to one between the largest thing on the screen and the smallest, so
+the eye is told where to start.
+
+**The cards are not a grid.** The hero runs the full 1128. Under it sit three
+things of different widths, 456, 360 and 264, and the last of those is a stack
+of two small cards rather than one tall one. Four cards of the same size in a
+row is what made the earlier version read as a report.
+
+**The chart panel changes tone.** The top of the hero is `surface/default` and
+the chart sits on `surface/sunken` below it, full bleed to the card edges. That
+tonal step does the work a divider line would do, without a line, which rule 13
+would not allow anyway.
+
+The order of the bands is the priority that was asked for: stocks first and
+largest, then borrowing and lending, then a little of converting. Cash is a thin
+strip because it is not the product, it is what funds the product. Converting
+lives in that strip as one control beside Add money.
+
+The send ruler moved off Home to the Send screen. It was the biggest block of
+space on an earlier version and sending is not what this product sells. The
+component is unchanged and still belongs on Send, Buy and Convert.
 
 ### 11b.4b The Market page
 
