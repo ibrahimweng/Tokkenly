@@ -81,7 +81,10 @@ outlined. There are no border lines anywhere in the app.
 | `surface/sand` | `D5A578` | The saturated sand. A badge, a chip, a small mark inside an accent card. Never the card itself. |
 | `surface/sand-soft` | `F7EFE7` | The sand accent card. Once per screen. Warm enough to read as an accent, pale enough to carry `ink/muted`. |
 | `surface/frost` | `FAFBFC` at 88% | Floating surfaces that content scrolls under. Always paired with a background blur of 24. |
-| `surface/scan` | `FFFFFF` | Behind a QR code. The one exception to the white rule, because a reader needs the quiet zone. |
+| `surface/scan` | `FFFFFF` | Behind a QR code. The one exception to the white rule, because a reader needs the quiet zone. The one token that does not change in dark mode. |
+| `surface/hero` | `053329` | The balance hero on the pending and first run Home screens. Its own token because it must not invert in dark mode. See 2.9a. |
+| `surface/hero-raised` | `094135` | Buttons sitting on that hero. |
+| `surface/camera` | `053329` | The viewfinder and the captured photo. A camera preview stays dark in both modes. |
 
 The greys are neutral, with no green cast. That is deliberate. If every surface
 is faintly green, the green stops reading as green when it actually appears.
@@ -115,6 +118,9 @@ white, it is wrong.
 | `ink/subtle` | `8EA39F` | 2.9 to 1 | Disabled text and placeholders only. |
 | `ink/inverse` | `FFFFFF` | on deep green | Text on `surface/inverse`. |
 | `ink/inverse-muted` | `A9C4BB` | 7.5 to 1 on deep green | Secondary text on deep green. |
+
+These are the light mode values. Every one of them has a dark mode partner and
+the dark figures are in 2.9.
 
 ### 2.5 Edges
 
@@ -306,6 +312,132 @@ one. Greying it did not make it less useful. It made it stop shouting.
 
 The five colour palette stays in the system. It is for the charts that need it,
 which are fewer than they look.
+
+### 2.9 Dark mode
+
+The whole product is dark. It is built as a second **mode on the `Colour`
+variable collection**, not as a repaint. The collection now has two modes,
+`Light` and `Dark`, every one of the semantic tokens carries a value in both,
+and every page in the file is set to `Dark`. Nothing was recoloured by hand.
+
+That was only possible because the file was already disciplined: a sweep of all
+three screen pages found **11,559 bound fills and strokes and exactly two literal
+ones** — a stray `FAFBFC` frame and a stray black vector. Both are now bound. The
+lesson is worth keeping: a design system pays for itself the first time somebody
+asks for a theme.
+
+**The surface ramp inverts.** In light mode surfaces step *down* from white. In
+dark mode they step *up* from near black, because a card has to be lighter than
+the page when the page is dark.
+
+| Token | Light | Dark | Step from the one above |
+| --- | --- | --- | --- |
+| `surface/canvas` | `FFFFFF` | `080F0D` | — |
+| `surface/default` | `FAFBFC` | `111D1A` | 1.12 |
+| `surface/sunken` | `F0F2F4` | `192926` | 1.14 |
+| `surface/control` | `E9ECEF` | `223531` | 1.17 |
+| `surface/control-pressed` | `DDE2E6` | `2B403C` | 1.17 |
+
+The dark steps are **larger** than the light ones. Light mode's canvas to card
+step is 1.04 to 1, which section 2.3 admits is a whisper. Dark mode cannot afford
+a whisper: there are still no border lines anywhere, so the surface step is the
+only thing separating a card from the page, and dark values compress. Every dark
+step is at least 1.12.
+
+The greys keep a green cast in dark mode where light mode's were neutral. On
+white a green tint would compete with the brand green. On near black it reads as
+depth rather than colour, and a pure neutral black next to the brand green looks
+broken.
+
+**Ink inverts with it.**
+
+| Token | Light | on light canvas | Dark | on dark canvas |
+| --- | --- | --- | --- | --- |
+| `ink/strong` | `053329` | 13.89 | `D6E2DD` | 14.55 |
+| `ink/muted` | `4D6B65` | 5.82 | `96ADA6` | 8.14 |
+| `ink/subtle` | `8EA39F` | 2.90 | `5E736D` | 3.83 |
+
+`ink/strong` is `D6E2DD`, not white. Pure white on near black is about 18 to 1
+and halates on an OLED panel; `D6E2DD` lands at 14.55, within a whisker of light
+mode's 13.89, so the two modes read as the same amount of contrast rather than
+one being harsher.
+
+`ink/subtle` still fails 4.5 to 1 on purpose, in both modes. Rule 11 is unchanged.
+
+**The inverse pair swaps ends.** In light mode `surface/inverse` and `ink/strong`
+are the same value, `053329`: a deep block carrying white text. Dark mode keeps
+that symmetry and flips it, so `surface/inverse` is `D6E2DD` and `ink/inverse` is
+`080F0D`: a pale block carrying dark text. The active navigation pill, the brand
+mark and every primary button therefore invert for free, and a primary button in
+dark mode is a pale pill with dark text, which is what it should be.
+
+#### 2.9a What must not simply invert
+
+Three things break if `surface/inverse` is allowed to flip them, and each needed
+its own token. Their light values are identical to what was there before, so
+light mode did not change by a single pixel.
+
+| Token | What it is | Light | Dark |
+| --- | --- | --- | --- |
+| `surface/hero` | The balance hero on the pending and first run Home screens | `053329` | `0C2620` |
+| `surface/hero-raised` | The buttons sitting on that hero | `094135` | `143530` |
+| `surface/camera` | The viewfinder and the captured photo | `053329` | `141F1C` |
+| `ink/on-hero` | Text on any of those | `FFFFFF` | `D6E2DD` |
+| `ink/on-hero-muted` | Secondary text on any of those | `A9C4BB` | `96ADA6` |
+
+The hero is the clearest case. Flipped, it became a 350 by 220 near white slab on
+an otherwise dark screen, which is a lot of light to throw at somebody, and worse,
+it made the **verification pending** state louder than the verified one. A state
+that means "you cannot send yet" must not shout at the person more than the state
+that means everything works.
+
+The viewfinder is the blunt one. A camera preview is dark because a camera
+preview is dark. `surface/camera` steps 1.17 up from the canvas so the block is
+still visible on a page with no border lines.
+
+**`surface/scan` stays `FFFFFF` in both modes.** It is the quiet zone behind a QR
+code, and a reader needs the light. This is the one token in the system that is
+deliberately identical in dark mode, and it is the reason the QR quiet zone is a
+separate token from `surface/canvas` in the first place.
+
+#### 2.9b The dark data palette
+
+The five data colours were re-derived, not tinted. Each was converted to OKLCH,
+its lightness set to **0.62** to land inside the 0.48 to 0.67 band the dark mode
+check requires, and its hue and chroma kept. They were then run through the same
+six-check validator as the light palette, against `surface/default` at `111D1A`.
+
+| Slot | Light | Dark | vs dark card |
+| --- | --- | --- | --- |
+| `data/1` teal | `0F8F70` | `009F7B` | 5.14 |
+| `data/2` violet | `9333EA` | `A064DB` | 4.40 |
+| `data/3` clay | `C57A2E` | `B4772E` | 4.63 |
+| `data/4` blue | `2563EB` | `5783DC` | 4.68 |
+| `data/5` rose | `E11D74` | `D54E86` | 4.33 |
+
+All six checks pass. The worst adjacent pair is rose against blue at ΔE 13.9
+under protanopia, comfortably above the 8.0 target.
+
+**The three slot cap carries over unchanged.** Under `--pairs all`, dark blue and
+dark violet collapse to ΔE 0.7 under deuteranopia, exactly as their light
+counterparts do. Rule 20 needs no dark mode exception, which is a good sign that
+the light palette was derived properly rather than picked.
+
+#### 2.9c What dark mode does not solve
+
+**Shadows are near invisible.** The file carries 59 drop shadows, all deep green
+at 10 percent, and on a near black canvas they do essentially nothing. They were
+left alone rather than rewritten, because a Figma effect colour does not follow a
+variable mode the way a fill does, so a dark shadow value would be wrong the
+moment anyone looks at light mode. This costs less than it sounds: section 7 says
+depth in this system comes from the surface step, and the surface steps in dark
+mode are larger than in light. The floating navigation still reads, because it is
+a lighter surface on a darker page. If shadows are ever needed in dark mode they
+have to become their own mode-aware token, not an edited effect.
+
+**Light mode is still there and still correct.** Every token has both values and
+the pages carry an explicit mode. Switching the file back is one setting per page,
+and no screen was flattened to get here.
 
 ## 2b. The seventy twenty ten split
 
@@ -956,6 +1088,15 @@ And two tests for when it should **not** be a component.
 The library at the time of writing: Delta chip, Legend item, Detail toggle,
 Amount ruler, Stat card, Dot column chart, plus the older phone components.
 
+A component is also where a bug gets fixed once instead of thirty times. The
+`Transaction row` set had the amount on `ink/subtle` in its Pending and Failed
+variants, which is 2.90 to 1 in light mode and 3.83 in dark, and it was wrong in
+both. It reached five screens through instances and none of them showed it as
+their own defect. Both variants now use `ink/muted`, which keeps a pending or
+failed amount quieter than a settled one without dropping it below 4.5 to 1.
+Quiet is a token, not a transparency, and never `ink/subtle` when the quiet thing
+is a number somebody is looking for.
+
 ### 8.13 Charts
 
 A chart is the one place in this product where a person reads data instead of
@@ -1167,6 +1308,16 @@ scale.
     it sits beside, and the chart is the point of the screen.
 28. Never set text below full opacity. If it needs to recede, use `ink/muted`.
     Opacity on a text node is a contrast bug wearing a hierarchy costume.
+29. Never paint a colour that is not bound to a variable. A literal fill is a
+    node that will not follow a theme, and you will not find it by looking. Two
+    of them survived in this file and both were only caught by a sweep. See 2.9.
+30. Never let a state that restricts a person shout louder than the state where
+    everything works. The verification pending hero was brighter than the
+    verified one for exactly as long as it took to measure it. See 2.9a.
+31. Never assume a token should invert just because the mode inverted. A camera
+    preview, a QR quiet zone and a brand hero each stay dark or stay light for a
+    reason that has nothing to do with the theme. Give them their own token
+    rather than bending `surface/inverse`. See 2.9a.
 
 ## 11. The screens, by flow
 
