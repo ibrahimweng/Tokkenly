@@ -814,7 +814,7 @@ Five components carry the desktop dashboard. They live on `02 Components`.
 | Delta chip | Up, Down, Flat | The change against the last period. The arrow carries the direction, so a person who cannot see the colour still reads the sign. |
 | Legend item | Slot 1 to 5 | One series. A dot in its data colour and the name in `ink/muted`. |
 | Detail toggle | Simple, Detailed | The one control that governs how much the whole screen says. |
-| Amount ruler | one | A tick track you drag to set an amount. |
+| Amount ruler | one | A tick track you drag to set an amount. Used on Send and Invest. |
 | Stat card | Line, Segments, Dots | One headline figure, its change, and a small chart. |
 | Dot column chart | one | Two periods of dot columns in two tones of grey. See 8.12b. |
 
@@ -1265,6 +1265,7 @@ colour alone.
 | D14 Convert | Dollars out, naira into a bank, capped by the balance, saved banks |
 | D15 Sign in | Google first, then email and password, on a 480 card centred on white |
 | D16 Create account | The same card, plus what happens next and the terms line |
+| D17 Invest | How much with the ruler, what you are buying with its price line, recent orders |
 
 Every one of the sixteen was checked: nothing runs past the frame, nothing falls
 below the fold, every gap and padding divides by four, and no grey line exists
@@ -1347,6 +1348,42 @@ and keeps the tickers as small grey text at the end for the person who does
 know. It carries the line "Picked weekly, not advice", because a list of
 suggestions inside a product that takes your money has to say what it is.
 
+### 11b.4c Invest, and where the ruler lives
+
+`D17 Invest` is where the Amount ruler earns its place. It is reached from the
+Invest control on the Cash ready card on Home, and from any stock on the Market
+page. The sidebar shows Market as the active item, because Invest is a thing you
+do from the market rather than a separate destination. It has no entry of its
+own, since Buy already means something else in this product: turning naira into
+dollars.
+
+| Band | Height | What it holds |
+| --- | --- | --- |
+| Header | 44 | The title and the cash available |
+| Choose | 600 | How much at 456, what you are buying at 648 |
+| Orders | 260 | The last three orders in five columns |
+
+The left card is the tactile one. The amount in `Display XL`, the ruler under
+it, four quick amounts under that, then what the money actually buys: the number
+of shares, the price each, the fee and how long it takes. A `tint/brand` note
+says that a part of a share is a real thing you can sell, because that is the
+question a first time buyer asks and the answer is not obvious.
+
+The right card is the case for the purchase. The company, the price, a grey
+price line, and four facts. The chart is a line rather than dot columns, because
+a price history is a level rather than a flow, and a column that does not start
+at zero lies about the size of a move. See 8.12b.
+
+**The ruler now appears in two places.** On `D09 Send`, in the modal, where the
+amount used to be a plain field. And on `D17 Invest`, as the main control. It is
+not on Home. Home is where you see what you have; these are where you decide a
+number, and a ruler is only worth its space where there is a number to decide.
+
+While updating Send, the Home screen behind its modal was two versions out of
+date, so `D09`, `D10` and `D11` all have a current background again. That is a
+standing cost of drawing a modal over a real screen: the screen underneath keeps
+moving.
+
 ### 11b.5 The desktop flows
 
 The sixteen screens used to sit loose on the page in a grid of four across.
@@ -1361,7 +1398,7 @@ in the order a person meets them.
 | D. Send money | D09 Send, D10 Send review, D11 Send sent |
 | E. Buy and convert | D13 Buy, D14 Convert |
 | F. Activity and receipts | D02 Activity |
-| G. Grow and Market | D03 Grow, D04 Market, D05 Apple |
+| G. Grow and Market | D03 Grow, D04 Market, D05 Apple, D17 Invest |
 | H. Account, security and support | D06 Account, D07 Security, D08 Support |
 
 Arrows appear only between real steps. Flow D carries two, because the send is a
