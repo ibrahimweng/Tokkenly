@@ -470,7 +470,11 @@ plain text. Twenty of them still read light values, and several of those
 (`55746E`, `0F7A5F`, `E6F7F1`) were stale before dark mode ever landed. A caption
 is not a token and nothing keeps it honest.
 
-**Two Home screens are now two different products.** See 11b.4a.
+**Two Home screens were two different products, and there was a third.** Fixed;
+see 11b.4a. The lesson is the one rule 34 nearly says and did not: a screen that
+exists in two states is two screens, and a screen painted behind a modal is a
+third. Rebuild one and you have signed up to rebuild all of them in the same
+pass.
 
 #### 2.9c What dark mode does not solve
 
@@ -1380,6 +1384,10 @@ scale.
     accent. See 2.9a-0.
 34. Never show the same number twice on one screen. If a figure is in the hero it
     does not also get a card. This is what removed three cards from Home.
+35. A screen with two states is two screens, and a screen painted behind a modal
+    is another one. Rebuilding one of them commits you to all of them in the same
+    pass, or the file quietly accumulates generations. Home had three. See
+    11b.4a.
 
 ## 11. The screens, by flow
 
@@ -1679,22 +1687,36 @@ Cards on the page went from ten to six, text nodes to 97, and the audit reports
 zero contrast failures, zero overflow, zero spacing off the four grid and zero
 clipped text.
 
-Still to do, and this is the largest open item in the file. The Simple and
-Detailed toggle is supposed to switch **density**, not design. Right now it
-switches design:
+#### Both states, and the four backgrounds, 4 September
 
-| | D01 Home | D01 Home — detailed |
+The first pass rebuilt `D01 Home` and left `D01 Home — detailed` alone, which
+meant the Simple and Detailed toggle switched **design** rather than density, and
+the sand card the note had specifically objected to was still sitting on half of
+Home. Four modal screens made it worse by painting a third, older Home behind
+their scrim. Three generations of one screen.
+
+All of them now carry the same design. Detailed differs from Simple only in how
+much each line says:
+
+| | Simple | Detailed |
 | --- | --- | --- |
-| Top band | Hero, price, Send and Receive, amounts card | Three stat cards |
-| Chart | Solid bars with a callout | Dot columns |
-| Accent | none | the sand card |
-| Cards | 6 | 10 |
+| Delta line | `+$142.60 (1.16%) Today` | `… Today · +$1,840.60 (17.28%) all time` |
+| Amounts card | Cash, buying power, total gain | plus Invested, and the gain carries its percentage |
+| Positions | `Apple` | `Apple · 23.42 shares` |
+| Activity | `Today at 14:32` | `TXN-8F2K9G · Today at 14:32` |
+| Borrow | `Against your shares, 9.4% a year` | `9.4% a year · 140% collateral · sold below $2,604` |
+| Chart callout | value, delta, month | plus the month's high |
 
-`D09 Send`, `D10 Send review`, `D11 Send sent` and `D12 Receive` make it worse:
-each paints a Home behind its modal scrim, and that Home is older still. So the
-file now holds three generations of the same screen. Whatever is agreed for
-Detailed has to be applied to those four backgrounds in the same pass, or the
-next reviewer will find a fourth generation.
+`D09 Send`, `D10 Send review`, `D11 Send sent` and `D12 Receive` now paint the
+rebuilt Home behind their scrim, so the background of a modal is the screen you
+actually came from.
+
+The scrim itself was the quiet fault underneath all of this: a literal `001A14`
+at 54 percent on four screens, which is why the modal backgrounds still looked
+green after the ramp went neutral. It is `surface/scrim` now.
+
+Whole page, measured: 26 screens, 1,305 texts, zero contrast failures, zero
+overflow, zero spacing off the four grid, zero unbound fills.
 
 ### 11b.4b The Market page
 
