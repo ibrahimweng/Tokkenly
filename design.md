@@ -1638,6 +1638,10 @@ scale.
     and a neutral plus back on the screen within an hour of rule 43 being
     written. The check is the guard, not the component. Run it after every edit,
     not only after your own.
+45. Check the paint, not the name. A row named `inactive Wallet` was painted
+    active on three screens for a day, and the pass written to catch it read
+    layer names and reported everything clean. Names are a note somebody left.
+    The fill is what the reader sees. See 11b.4b.
 
 ## 11. The screens, by flow
 
@@ -2097,23 +2101,60 @@ and none of it moved again. See rule 38.
 ### 11b.4b The Market page
 
 `D04 Market` was `D04 Stocks`. It is where you go to find something to buy, and
-it is built to be browsed rather than searched:
+on 5 September it was rebuilt against how the category actually works.
 
-| Band | What it holds |
-| --- | --- |
-| Header | The title and one search field |
-| Categories | All, Popular, Technology, Funds, Dividend, Energy, Recently listed |
-| Indices | S&P 500, Nasdaq, Dow Jones, with grey sparklines |
-| Worth a look | Five picks written as plain sentences, not tickers |
-| Moving today | Three up and three down |
-| Popular | Four cards |
+**The one thing nothing else in the category can say.** Bamboo, Trove and
+Risevest all trade real US equities, so they are shut from 9pm to 2:30pm the next
+afternoon in Lagos. A Nigerian who opens one of those at ten in the morning can
+do nothing for four and a half hours, and none of them says so on the browse
+screen. Tokkenly's stocks are tokenised and trade around the clock, so the page
+leads with `Open now · trades 24/7` in the header and says it again in plain
+words under the search: *Everything here trades any time, day or night. No
+opening bell, no waiting for New York.* That is the sentence the page exists to
+deliver.
 
-The Worth a look card is the one that matters. A market page full of tickers
-only helps a person who already knows what they are looking for. Each row leads
-with what the thing is in plain words, "One fund, five hundred companies",
-and keeps the tickers as small grey text at the end for the person who does
-know. It carries the line "Picked weekly, not advice", because a list of
-suggestions inside a product that takes your money has to say what it is.
+| Band | What it holds | Height |
+| --- | --- | --- |
+| page header | `Market`, and the open marker with a live dot | 28 |
+| search | One field across the full width, not a box in the corner | 52 |
+| why | The 24/7 line in plain words | 20 |
+| categories | All, Popular, Technology, Funds, Dividend, Energy, New | 24 |
+| markets | S&P 500, NASDAQ, DOW JONES with their sparklines | 100 |
+| columns | Your watchlist on the left, Moving today on the right | 384 |
+| collections | Worth a look, four plain language picks | 140 |
+
+952 of 1024 used.
+
+**Search stopped being a control in the page header** and became a band of its
+own across all 1128. Finding a company is the reason people open this page, and
+it was competing with a title for the corner.
+
+**The watchlist is new**, and it is the thing a returning person opens the page
+for. Five rows: ticker, company, price, change. It implies a follow action on the
+company page that does not exist yet, which is a debt this section records rather
+than hides.
+
+**Moving today carries three tabs**, Gainers, Losers and Active, where the old
+page had only a list of things going up. A browse screen that can only show good
+news is not a market screen.
+
+**What survived unchanged.** The plain language collections. Nothing else in the
+category writes *One fund, five hundred companies* or *Companies that share their
+profit*, and they are the reason this page reads as built for someone who has
+never owned a share.
+
+**What went.** The four popular cards, which said the same thing as the watchlist
+with less information in more space, and the separate `Popular` heading above
+them.
+
+Two defects the rebuild surfaced. Four collection meta lines were `ink/subtle`
+at 3.06 to 1, which is the same trap 8.12c already records: quiet is a token, and
+never `ink/subtle` when the quiet thing is something a person is reading. And the
+sidebar showed **two** rows lit on `D04`, `D05` and `D17`, because the Wallet row
+added on 4 September was cloned from whatever Market row already existed in each
+variant, and in `State=Market` that row was the active one. The clone was named
+`inactive Wallet` and painted active. The first fix missed it by reading names.
+See rule 45.
 
 ### 11b.4c Invest, and where the ruler lives
 
