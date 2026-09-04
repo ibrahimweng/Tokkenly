@@ -1994,6 +1994,9 @@ alone.
 | D16 Create account | The same card, plus what happens next and the terms line |
 | D17 Invest | How much with the ruler, what you are buying with its price line, recent orders |
 | D18 Wallet | The cash you can spend, three ways to move it, what is still settling, your limits, and your banks |
+| D02a Receipt | One payment in full: who, the reference, when, the fee |
+| D06a Change email | Two fields and one button, the pattern behind every Change link |
+| D07a Change PIN | The PIN you have, the new one, and it typed twice |
 
 Every one of the numbered screens was checked: nothing runs past the frame,
 nothing falls below the fold, every gap and padding divides by four, and no grey
@@ -2508,6 +2511,61 @@ the Borrow card and `See history` on the Earn card. Repaying a loan and taking
 money out of Earn are both named on these screens as things a person can do at
 any time, and neither has a screen yet.
 
+### 11b.4g History, Account, Security and Support
+
+Four screens that showed facts and offered nothing to do with them.
+
+| Screen | What was added |
+| --- | --- |
+| `D02a Receipt` | The sheet a History row opens. There was no way to see one payment in full |
+| `D06a Change email` | The form sheet behind Change. Three of the five personal details now carry one |
+| `D07a Change PIN` | The form sheet behind App PIN |
+
+**A row that shows a payment has to open the payment.** `D02 History` listed
+twelve and none of them led anywhere, so a person could see that $120.00 arrived
+and never find out who from beyond a first name. The receipt names the sender,
+the reference, the time and the fee, and says plainly that nothing about it is
+going to change now. Its figure is the one green Display XL in the file, because
+it is money in and rule 43 does not stop at small text.
+
+**Three of the five personal details are things a person changes.** Name and date
+of birth are what the NIN check verified, so they are facts. Mobile number, email
+and home address are not, and each now carries the same `Change` link the Invest
+card uses. The email sheet is the pattern: two fields, a note about what will
+never be asked for, and one button.
+
+**Support was telling people the truth from March.** It answered *When do Earn,
+Borrow and Stocks open* with *They are being built. Nothing is live yet*, on a
+product where all three are now drawn as working. That answer is gone. Five
+questions took its place, all of them raised by what 11b.4f built, and the page
+got a search because ten questions is a list you scan rather than read.
+
+**Security says what to do, not only what is set.** Two cards were added: the
+three steps to take if the phone is lost, and a flat statement that nobody at
+Tokkenly will ever ask for a PIN, a recovery phrase, or a code from a text
+message. That last one is the single most useful sentence on the page in a market
+where the fraud arrives by phone call.
+
+**Account gained the two things a finance app owes a person**: everything held
+about them, downloadable, and a plain account of what closing the account
+involves. Neither is decoration. Both were empty space before.
+
+**Four faults, all mine, all the same shape as ones already recorded.** The
+never-do paragraph was cloned from the amber recovery warning and kept its
+colour, so a calm statement arrived looking like an error, which is rule 41 from
+the other direction. The form fields were cloned out of the History filter, where
+they were `FILL` on the vertical axis of a horizontal row; dropped into a vertical
+sheet the same value collapsed them to nothing, which is rule 38 again. Their
+labels kept the centre alignment of the figure caps they were cloned from. And
+they were painted `surface/sunken`, the same value as the sheet, so the first
+render had three invisible inputs; they take `surface/control` now, the step a
+control on a card is supposed to sit on.
+
+**`D08 Support` was lighting no sidebar row at all.** Account and Security both
+light Account, because neither is a place in the rail. Support is reached the
+same way and now does the same. Rule 39 says the rail lists places, and a screen
+that is not a place still has to say which place it belongs to.
+
 ### 11b.5 The desktop flows
 
 The screens used to sit loose on the page in a grid of four across. They now sit
@@ -2522,9 +2580,9 @@ a person meets them.
 | D. Receive money | D12 Receive |
 | E. Send money | D09 Send, D10 Send review, D11 Send sent |
 | F. Buy and convert | D13 Add money, D14 Convert |
-| G. History and receipts | D02 History |
+| G. History and receipts | D02 History, D02a Receipt |
 | H. Grow and Stocks | D03 Grow, D04 Market, D05 Apple, D17 Invest, D03a–D03c Borrow, D03d–D03f Earn |
-| I. Account, security and support | D06 Account, D07 Security, D08 Support |
+| I. Account, security and support | D06 Account, D06a Change email, D07 Security, D07a Change PIN, D08 Support |
 
 **Wallet sits third, straight after Home**, for the same reason it sits second in
 the rail: funding comes before anything a person can do with the money. The
