@@ -332,11 +332,11 @@ the page when the page is dark.
 
 | Token | Light | Dark | Step from the one above |
 | --- | --- | --- | --- |
-| `surface/canvas` | `FFFFFF` | `080F0D` | — |
-| `surface/default` | `FAFBFC` | `111D1A` | 1.12 |
-| `surface/sunken` | `F0F2F4` | `192926` | 1.14 |
-| `surface/control` | `E9ECEF` | `223531` | 1.17 |
-| `surface/control-pressed` | `DDE2E6` | `2B403C` | 1.17 |
+| `surface/canvas` | `FFFFFF` | `0A0A0C` | — |
+| `surface/default` | `FAFBFC` | `19191C` | 1.12 |
+| `surface/sunken` | `F0F2F4` | `232327` | 1.13 |
+| `surface/control` | `E9ECEF` | `2D2D32` | 1.15 |
+| `surface/control-pressed` | `DDE2E6` | `38383E` | 1.19 |
 
 The dark steps are **larger** than the light ones. Light mode's canvas to card
 step is 1.04 to 1, which section 2.3 admits is a whisper. Dark mode cannot afford
@@ -344,21 +344,24 @@ a whisper: there are still no border lines anywhere, so the surface step is the
 only thing separating a card from the page, and dark values compress. Every dark
 step is at least 1.12.
 
-The greys keep a green cast in dark mode where light mode's were neutral. On
-white a green tint would compete with the brand green. On near black it reads as
-depth rather than colour, and a pure neutral black next to the brand green looks
-broken.
+**The dark greys are neutral, and that was a correction.** The first dark build
+gave them a green cast, on the theory that a green tint would read as depth. It
+did not. It read as green. Every card, panel and control on every screen became a
+dark green box, and since surfaces are most of a screen by area, the brand colour
+ended up being the colour of the room rather than a thing in it. The note that
+came back was "the app looks too mint green", and it was correct. The ramp is now
+neutral, and the brand appears only where it does work.
 
 **Ink inverts with it.**
 
 | Token | Light | on light canvas | Dark | on dark canvas |
 | --- | --- | --- | --- | --- |
-| `ink/strong` | `053329` | 13.89 | `D6E2DD` | 14.55 |
-| `ink/muted` | `4D6B65` | 5.82 | `96ADA6` | 8.14 |
-| `ink/subtle` | `8EA39F` | 2.90 | `5E736D` | 3.83 |
+| `ink/strong` | `053329` | 13.89 | `DCDCE0` | 14.48 |
+| `ink/muted` | `4D6B65` | 5.82 | `A6A6AD` | 8.18 |
+| `ink/subtle` | `8EA39F` | 2.90 | `65656C` | 3.34 |
 
-`ink/strong` is `D6E2DD`, not white. Pure white on near black is about 18 to 1
-and halates on an OLED panel; `D6E2DD` lands at 14.55, within a whisker of light
+`ink/strong` is `DCDCE0`, not white. Pure white on near black is about 18 to 1
+and halates on an OLED panel; `DCDCE0` lands at 14.48, within a whisker of light
 mode's 13.89, so the two modes read as the same amount of contrast rather than
 one being harsher.
 
@@ -366,10 +369,27 @@ one being harsher.
 
 **The inverse pair swaps ends.** In light mode `surface/inverse` and `ink/strong`
 are the same value, `053329`: a deep block carrying white text. Dark mode keeps
-that symmetry and flips it, so `surface/inverse` is `D6E2DD` and `ink/inverse` is
-`080F0D`: a pale block carrying dark text. The active navigation pill, the brand
+that symmetry and flips it, so `surface/inverse` is `DCDCE0` and `ink/inverse` is
+`0A0A0C`: a pale block carrying dark text. The active navigation pill, the brand
 mark and every primary button therefore invert for free, and a primary button in
 dark mode is a pale pill with dark text, which is what it should be.
+
+#### 2.9a-0 How much brand there is allowed to be
+
+Green is a **mark**, never a material. On the desktop Home it now appears in
+exactly two roles and nowhere else:
+
+| Where | Token | Count on Home |
+| --- | --- | --- |
+| A gain, as a number | `state/positive` | 8 |
+| The pill around a gain | `tint/positive` | 3 |
+
+No green surface, no green button, no green card, no green cast. The one other
+place it is allowed is the active navigation item, because that is the app
+telling you where you are.
+
+The test is arithmetic, not taste: count the nodes carrying a brand token on a
+screen. If a surface token is among them, the brand has stopped being an accent.
 
 #### 2.9a What must not simply invert
 
@@ -379,11 +399,11 @@ light mode did not change by a single pixel.
 
 | Token | What it is | Light | Dark |
 | --- | --- | --- | --- |
-| `surface/hero` | The balance hero on the pending and first run Home screens | `053329` | `0C2620` |
-| `surface/hero-raised` | The buttons sitting on that hero | `094135` | `143530` |
-| `surface/camera` | The viewfinder and the captured photo | `053329` | `141F1C` |
-| `ink/on-hero` | Text on any of those | `FFFFFF` | `D6E2DD` |
-| `ink/on-hero-muted` | Secondary text on any of those | `A9C4BB` | `96ADA6` |
+| `surface/hero` | The balance hero on the pending and first run Home screens | `053329` | `1B1B1F` |
+| `surface/hero-raised` | The buttons sitting on that hero | `094135` | `2A2A30` |
+| `surface/camera` | The viewfinder and the captured photo | `053329` | `1E1E22` |
+| `ink/on-hero` | Text on any of those | `FFFFFF` | `DCDCE0` |
+| `ink/on-hero-muted` | Secondary text on any of those | `A9C4BB` | `A6A6AD` |
 
 The hero is the clearest case. Flipped, it became a 350 by 220 near white slab on
 an otherwise dark screen, which is a lot of light to throw at somebody, and worse,
@@ -1019,7 +1039,11 @@ now uses Segments three times.
 
 ### 8.12b The dot column chart
 
-The chart that carries Home. It is 690 by 232 and it is made of 572 dots.
+**Superseded on Home, 4 September.** Desktop Home now uses the solid bar chart
+described in 11b.4a. This component still exists and the spec below still holds,
+but nothing on Home instances it any more.
+
+The chart that carried Home. It is 690 by 232 and it is made of 572 dots.
 
 | Part | Value |
 | --- | --- |
@@ -1318,6 +1342,15 @@ scale.
     preview, a QR quiet zone and a brand hero each stay dark or stay light for a
     reason that has nothing to do with the theme. Give them their own token
     rather than bending `surface/inverse`. See 2.9a.
+32. Never tint the greys with the brand colour. Surfaces are most of a screen by
+    area, so a brand tint on them makes the brand the colour of the room instead
+    of a thing in it. The greys are neutral in both modes. See 2.9.
+33. The brand colour never fills a surface. It marks a number, a chip, or the
+    place you are standing in the navigation. If you can count brand-coloured
+    nodes on a screen and a surface token is among them, it has stopped being an
+    accent. See 2.9a-0.
+34. Never show the same number twice on one screen. If a figure is in the hero it
+    does not also get a card. This is what removed three cards from Home.
 
 ## 11. The screens, by flow
 
@@ -1580,6 +1613,46 @@ then 744 and 360, then 456, 360 and a stack of two.
 
 The send ruler is not on Home. It belongs on Send and on Invest, which is
 reached from the Invest control on the Cash ready card.
+
+#### The sixth pass, 4 September
+
+Two references came in together. A dark stock dashboard supplied the **shell**: a
+neutral near black, no green cast, colour only on gains. A light finance
+dashboard supplied the **layout**: a purpose line, a large amount and two buttons
+on the left, an amounts card on the right, one wide chart, a transactions list.
+The note attached to them was that the page was still busy and the boxes were too
+green. Both were acted on; the orange gradient in the second reference was not.
+
+| Band | Height | What it holds |
+| --- | --- | --- |
+| Hero | 200 | Purpose line, the portfolio value at Display XL, the day's change, Send and Receive. To the right, one 360 card holding cash, buying power and total gain |
+| Chart | 348 | Portfolio over time at 744, with Borrow and Earn stacked in 360 |
+| Lists | 288 | Your positions and Recent activity, 552 each |
+
+**The three stat cards are gone.** They held the portfolio value, the day's change
+and the cash figure, all of which now sit in the hero or in the amounts card
+beside it. A screen should not say a number twice.
+
+**The sand card is gone.** It was the last large block of colour on the page and it
+was competing with the chart for a job the chart already had.
+
+**The chart is bars now.** Solid columns, grey by default, with one month drawn in
+`ink/strong` and a callout above it carrying the value, a delta chip and the
+period. This replaces the dot column chart on Home. The dots were texture; the
+bars are a reading. Section 8.12b keeps the dot chart spec because the component
+still exists, but Home no longer uses it.
+
+**Send and Receive are the same pill.** Two identical filled buttons, because
+sending and receiving are the same size of decision. That is rule 12 in section
+13, and the reference happens to agree.
+
+Cards on the page went from ten to six, text nodes to 97, and the audit reports
+zero contrast failures, zero overflow, zero spacing off the four grid and zero
+clipped text.
+
+Still to do: `D01 Home — detailed` has not been rebuilt to match. It carries the
+old three card layout and the dot chart, so the Simple and Detailed toggle now
+switches between two different designs rather than two densities of one.
 
 ### 11b.4b The Market page
 
