@@ -2186,24 +2186,31 @@ grid, no unbound fills, and both amounts obey 8.12d.
 
 ### 11b.5 The desktop flows
 
-The sixteen screens used to sit loose on the page in a grid of four across.
-They now sit in named sections like the phone screens do, one section per flow,
-in the order a person meets them.
+The screens used to sit loose on the page in a grid of four across. They now sit
+in named sections like the phone screens do, one section per flow, in the order
+a person meets them.
 
 | Flow | Screens |
 | --- | --- |
 | A. The way in | D15 Sign in, D16 Create account |
-| B. Home | D01 Home, D01 Home detailed |
-| C. Receive money | D12 Receive |
-| D. Send money | D09 Send, D10 Send review, D11 Send sent |
-| E. Buy and convert | D13 Add money, D14 Convert |
-| F. History and receipts | D02 History |
-| G. Grow and Market | D03 Grow, D04 Market, D05 Apple, D17 Invest |
-| H. Account, security and support | D06 Account, D07 Security, D08 Support |
+| B. Home | D01 Home detailed, D01c Home gateway |
+| C. Wallet | D18 Wallet |
+| D. Receive money | D12 Receive |
+| E. Send money | D09 Send, D10 Send review, D11 Send sent |
+| F. Buy and convert | D13 Add money, D14 Convert |
+| G. History and receipts | D02 History |
+| H. Grow and Stocks | D03 Grow, D04 Market, D05 Apple, D17 Invest |
+| I. Account, security and support | D06 Account, D07 Security, D08 Support |
 
-Arrows appear only between real steps. Flow D carries two, because the send is a
-chain. Flow G carries one, between Stocks and the company page it opens. Flows
-A, E and H hold alternatives rather than steps, so they carry none.
+**Wallet sits third, straight after Home**, for the same reason it sits second in
+the rail: funding comes before anything a person can do with the money. The
+section letters are positions, not names, so they were all shifted rather than
+letting Wallet keep the letter it was built under.
+
+Arrows appear only between real steps. Flow E carries two, because the send is a
+chain. Flow H carries one, between Market and the company page it opens. Flows
+A, B, F and I hold alternatives rather than steps, so they carry none. B holds
+two views of one destination, which is not a step either.
 
 A desktop section is 60 of padding on each side, its note at 48 from the top,
 and its screens at 144. Screens sit 160 apart, and sections sit 240 apart. The
