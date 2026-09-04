@@ -499,26 +499,72 @@ screenshot is evidence that something looks wrong; it is not evidence of what is
 wrong, and the difference is two false bug reports handed to the person who has
 to act on them.
 
-#### 8.12d The transaction row, second pass
+#### 8.12d The activity row
 
 The row was an icon, a name, a timestamp and an amount. The reference carried two
 more columns and both earn their place: **what state the money is in**, and
 **which account it moved through**.
 
+`Activity row` on `02 Components` is a six variant set,
+`Direction = In, Out` by `Status = Settled, Pending, Failed`. Every activity
+list on desktop is built from instances of it.
+
 | Slot | Content | Sizing |
 | --- | --- | --- |
 | mark | The direction glyph, 28 | fixed |
 | what | Name, and the reference and time beneath it | fill |
-| status | Settled, Pending or Failed | hug |
-| ref | The masked account, `•••• 2841` | hug |
-| amount | The figure | hug |
+| status | Settled, Pending or Failed | 72 fixed |
+| ref | The masked account, `•••• 2841` | 68 fixed |
+| amount | The figure, right aligned | 96 fixed |
 
-**The status pill is on every row, and it is grey most of the time.** Settled uses
-`surface/control` with `ink/muted`: a pill you can see but never read unless you
-want to. Only the states that need attention take colour, Pending on
+**The three right hand slots are fixed, not hugging.** Hugging made every row a
+different shape: the status pill started at a different x on each line because
+the amount beside it was a different length, so four rows of the same thing read
+as four unrelated rows. Fixed widths make them columns. `what` takes `FILL` and
+absorbs whatever the list is, which is 696 on the detailed Home, 1008 on the
+gateway and 504 in the send and receive panels.
+
+**Below 620 the account column is hidden.** Five columns do not fit in 504 and
+the account is the least load bearing of them.
+
+**The status pill is on every row, and it is grey most of the time.** Settled
+uses `surface/control` with `ink/muted`: a pill you can see but never read unless
+you want to. Only the states that need attention take colour, Pending on
 `tint/warning` and Failed on `tint/negative`. A status column where every row
 shouts is a column nobody scans, and green on every settled line would have put
 the brand colour back on 28 rows for no reason. See rule 33.
+
+**The amount colour rule.** Money in is `state/positive`, money out is
+`ink/strong`, and anything not settled is `ink/muted` whichever way it points.
+The last part is the older finding in 8.12c, kept: an amount that has not moved
+yet should not read as one that has.
+
+This rule is worth stating because it was not being followed. Applied by hand
+across five lists, it held on most rows and broke on two, and both breaks were on
+the detailed Home:
+
+| Row | Was | Should be |
+| --- | --- | --- |
+| `Bought ETH -$1,200.00` | `state/positive` | `ink/strong` |
+| `Dividend Received +$75.00` | `ink/strong` | `state/positive` |
+
+The larger of those is the biggest outflow on the screen, painted green. Nobody
+saw it for a week because there was no component to see it in. Fifty seven signed
+amounts across eighteen screens now obey the rule, and the check that proves it
+is two lines: read every text matching a signed figure, read the token painting
+it, and assert the pair. See rule 43.
+
+**What the same pass found elsewhere.** `D17 Invest` painted its order names
+`ink/muted` while the number beside them was `ink/strong`, so the row label was
+quieter than its own value. `D13 Add money` had invented its own words, `Done` in
+green and `Waiting for your transfer`, for the two states every other screen
+calls `Settled` and `Pending`, and green on a settled row is exactly what the
+grey pill exists to prevent. The gateway wrote `Friday at 08:00` where four other
+screens wrote `Fri at 08:00`.
+
+**The phone row is a different component.** `Transaction row` at `74:87` is
+320 by 56 with a 40 avatar and belongs to the mobile screens. It was not used by
+anything on desktop and still is not. Two widths, two components, on purpose.
 
 ### 8.12e The quick action tile
 
@@ -1289,8 +1335,9 @@ And two tests for when it should **not** be a component.
   component anyway, because the form and the rules are the reusable part and the
   numbers are placeholder, but that is a judgement call rather than a rule.
 
-The library at the time of writing: Delta chip, Legend item, Detail toggle,
-Amount ruler, Stat card, Dot column chart, plus the older phone components.
+The library at the time of writing: Sidebar, Activity row, Delta chip, Legend
+item, Detail toggle, Amount ruler, Stat card, Dot column chart, plus the older
+phone components.
 
 A component is also where a bug gets fixed once instead of thirty times. The
 `Transaction row` set had the amount on `ink/subtle` in its Pending and Failed
@@ -1564,6 +1611,11 @@ scale.
     the tree looking for the nearest solid fill steps straight over a gradient
     and grades the text against something behind it. Sample the gradient at the
     text's own position instead, or the report is worth nothing. See 8.12f.
+43. A rule applied by hand is not a rule. Green for money in and neutral for
+    money out held on six of eight rows, and one of the two that broke it was the
+    largest outflow on the screen painted as a gain. Put the rule in a variant so
+    the exceptions become impossible, then write the check that proves it. See
+    8.12d.
 
 ## 11. The screens, by flow
 
