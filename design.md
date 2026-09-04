@@ -551,6 +551,71 @@ have to become their own mode-aware token, not an edited effect.
 the pages carry an explicit mode. Switching the file back is one setting per page,
 and no screen was flattened to get here.
 
+### 8.12f The halftone card
+
+The three get started cards on `D01c` carry a halftone dot field across the
+bottom of each. It came from a reference the client liked, a set of dark cards
+with a photograph rendered as a dot screen under the headline. Two things about
+that reference were taken and two were left.
+
+**Taken.** The dot field bleeding to the card edges, and the small pill with a
+chevron in place of a bare text link.
+
+**Left.** The serif headline, because this project has one family and two
+weights and rule 1 says so. And the reference palette, because the dark data
+colours here are already validated and a second set would not be.
+
+The field is not a picture. It is a scalar function sampled on a grid, and each
+sample becomes a circle whose diameter is the value at that point.
+
+| Part | Value |
+| --- | --- |
+| Card | 300 tall. Buy is 400 wide, Convert and Borrow are 280 |
+| Art plate | 140 tall, full width, pinned to the bottom edge, absolutely positioned inside the card |
+| Grid | 12 pitch |
+| Dot | 1.8 at the smallest, 10.6 at the largest, so the densest areas nearly touch |
+| Cut | Below 0.10 no dot is drawn at all, which is what makes the empty regions empty |
+| Dim dot | `ink/subtle` |
+| Bright dot | `ink/muted`, above 0.52 |
+| Accent | `data/2`, roughly five per card |
+
+The function is three sine waves whose frequencies do not divide into each
+other, so the pattern never repeats inside a card and reads as blobs rather than
+as stripes. The first attempt used two related waves and looked like a barcode.
+
+```
+f = 0.5 + 0.5*(0.55*sin(6.1u + 3.7v + 0.4)
+             + 0.30*sin(11.3u - 8.2v + 2.1)
+             + 0.15*sin(17.7u + 13.1v + 4.3))
+f = clamp((f - 0.32) / 0.46)          the stretch that creates real empty space
+t = f * (0.40 + 0.60 * v^0.7)          the fade that dissolves it under the text
+```
+
+**The three cards are one field, not three.** `u` is measured against a fixed
+400, not against each card's own width, and the three cards sample windows at 0,
+520 and 1040. So the dots are the same size and the same spacing on every card,
+and the pattern continues across the row instead of restarting. Normalising by
+each card's width instead would have squeezed the same number of blobs into the
+narrower cards, and the row would have read as three unrelated pictures.
+
+**The accent may not be a state colour.** The first build painted the accent
+dots `state/positive`, picked up from the delta figure above them. That put
+green dots a few hundred pixels under a green `+$142.60`, which implies the dots
+mean something and they do not. They are `data/2` now, which is a palette colour
+with no state attached to it. There is no chart on this screen, so nothing else
+is claiming that colour here. See rule 41.
+
+**Cost.** 677 dots across the three cards, 794 nodes on the screen in total.
+8.12b records that the dot column chart cost 572 and that the connection dropped
+at 826, so the three fields were generated in three calls rather than one and
+none exceeded 340. If the file starts to struggle, the pitch goes from 12 to 14
+and the count falls by about a third.
+
+**What was removed to make room.** Each card had a 48 badge above its title. The
+art is the card's identity now, so a second decorative mark above the words was
+one thing too many. The band grew from 228 to 300 and the gap between bands on
+`D01c` went from 48 to 40 to pay for it, which leaves 36 spare in the column.
+
 ## 2b. The seventy twenty ten split
 
 Every screen is roughly seventy percent white, twenty percent light grey and ten
@@ -1465,6 +1530,9 @@ scale.
     time. The sidebar was seventeen hand built copies, so one edit changed one
     screen and left sixteen lying. Repetition is the test, not complexity.
     See 8.12c and 11b.2.
+41. Decoration never wears a state colour. A green dot means the same thing a
+    green number means, so the moment ornament borrows `state/positive` it starts
+    making a claim. Take the accent from the data palette instead. See 8.12f.
 
 ## 11. The screens, by flow
 
@@ -1856,6 +1924,10 @@ What is deliberately missing, and why:
 
 - No chart. The reading of a chart is the first Home's job.
 - No stat cards. Four numbers in a row is a dashboard, and this is not one.
+
+Each of the three cards carries a halftone dot field across its bottom 140. The
+three are windows onto one continuous field rather than three separate pictures,
+so the pattern runs across the row. See 8.12f.
 - No cash strip, no positions table, no Earn panel, no offers.
 - No status pills on the activity rows. The rows carry a name, a time and an
   amount, and the sign on the amount does the rest.
