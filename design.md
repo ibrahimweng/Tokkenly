@@ -334,7 +334,7 @@ the page when the page is dark.
 | --- | --- | --- | --- |
 | `surface/canvas` | `FFFFFF` | `0A0A0C` | — |
 | `surface/default` | `FAFBFC` | `19191C` | 1.12 |
-| `surface/sunken` | `F0F2F4` | `232327` | 1.13 |
+| `surface/sunken` | `F0F2F4` | `18181B` | 1.12 from canvas, and it sits *under* `surface/default` |
 | `surface/control` | `E9ECEF` | `2D2D32` | 1.15 |
 | `surface/control-pressed` | `DDE2E6` | `38383E` | 1.19 |
 
@@ -343,6 +343,22 @@ step is 1.04 to 1, which section 2.3 admits is a whisper. Dark mode cannot affor
 a whisper: there are still no border lines anywhere, so the surface step is the
 only thing separating a card from the page, and dark values compress. Every dark
 step is at least 1.12.
+
+**The dark card came down on 5 September**, from `232327` to `18181B`. Every
+signed in screen paints its content area with nothing, so every card in the main
+column sits straight on `surface/canvas`, and at `232327` that was a step of
+1.25. One card at 1.25 is fine. Nine of them on a page reads as a grid of bright
+tiles with dark grout, and it gets worse the fuller the page gets. At `18181B`
+the step is 1.12, which is the same step the sidebar takes from the canvas, so a
+card and the sidebar now sit at the same distance from the page.
+
+Two things fell out of that change and both are improvements. `surface/control`
+on a card went from 1.14 to 1.29, so buttons and status pills separate from the
+card better than they did. And the promo panel in the sidebar, which sat on
+`surface/sunken` inside a lighter `surface/default`, would have vanished at the
+new value: it is `surface/canvas` now and reads as a well cut into the sidebar
+rather than a card raised off it. Same visible step, 1.13, opposite direction.
+A panel on a dark ground steps up. A panel on a lighter ground can step down.
 
 **The dark greys are neutral, and that was a correction.** The first dark build
 gave them a green cast, on the theory that a green tint would read as depth. It
