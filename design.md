@@ -701,6 +701,41 @@ art is the card's identity now, so a second decorative mark above the words was
 one thing too many. The band grew from 228 to 300 and the gap between bands on
 `D01c` went from 48 to 40 to pay for it, which leaves 36 spare in the column.
 
+### 8.12g The follow button
+
+`Follow button` on `02 Components` is a two variant set, `State = Follow,
+Following`. It sits first in the actions row on a company page, before Buy and
+Sell.
+
+| Part | Value |
+| --- | --- |
+| Shape | 48 tall, pill radius, 20 padding left, 24 right, 8 gap |
+| Fill | `surface/sunken` in both states |
+| Follow | A plus glyph and the word, both `ink/strong` |
+| Following | A check glyph and the word, both `ink/muted` |
+
+**It has to be quieter than Buy and Sell**, which are `surface/control`. On the
+canvas that is a step of 1.45, where `surface/sunken` is 1.12. So the row reads
+Buy and Sell first and Follow second, which is the right order: following a
+company is not why anyone opened the page. Three pills at the same weight would
+have flattened the header into a row of equal choices.
+
+**Following is grey, not green.** A check in `state/positive` would have been the
+obvious choice and it is the wrong one. Green on this page already means the
+price went up, and 8.12d settled the same argument for the Settled pill: a state
+that needs no action does not take colour. The past tense of the word and the
+check together carry it.
+
+**The state is not free to choose.** `D04 Market` lists AAPL in the watchlist, so
+`D05 Apple` shows `Following`. Had it shown `Follow`, the two screens would have
+disagreed about the same fact, which is the class of defect 11b.4b and 8.12d were
+both written about. Any company page added later has to be checked against the
+watchlist the same way.
+
+**What this still owes.** The watchlist header carries a `See all` that leads
+nowhere, because there is no watchlist page. That is a smaller debt than the one
+this closes and it is recorded here rather than left to be found.
+
 ## 2b. The seventy twenty ten split
 
 Every screen is roughly seventy percent white, twenty percent light grey and ten
@@ -2130,9 +2165,8 @@ own across all 1128. Finding a company is the reason people open this page, and
 it was competing with a title for the corner.
 
 **The watchlist is new**, and it is the thing a returning person opens the page
-for. Five rows: ticker, company, price, change. It implies a follow action on the
-company page that does not exist yet, which is a debt this section records rather
-than hides.
+for. Five rows: ticker, company, price, change. It needed a follow action on the
+company page to mean anything, and `D05 Apple` carries one now. See 8.12g.
 
 **Moving today carries three tabs**, Gainers, Losers and Active, where the old
 page had only a list of things going up. A browse screen that can only show good
