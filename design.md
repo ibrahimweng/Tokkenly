@@ -605,6 +605,29 @@ mean something and they do not. They are `data/2` now, which is a palette colour
 with no state attached to it. There is no chart on this screen, so nothing else
 is claiming that colour here. See rule 41.
 
+**Buy Stocks is the one card that is not neutral.** Buying shares is the click
+the product exists to earn, so that card carries a vertical gradient and the
+other two do not. Three stops, all bound to tokens: `surface/sunken` at 0,
+`surface/sunken` again at 0.42, then `surface/accent` at 1. The doubled stop is
+the whole trick. It holds the card neutral through the entire text block and
+only lets the green appear under the halftone, where nothing has to be read.
+
+That order was forced by measurement, not taste. `ink/muted` on a full
+`surface/accent` is 3.15 to 1, which fails. Sampled at the description's actual
+position on the finished gradient it is comfortably past 4.5. A gradient
+background has to be checked where the text really sits, because walking up the
+tree for the nearest solid fill skips straight past it and reports a pass that
+is not real. See rule 42.
+
+The card also carries the only filled pill on the screen. Convert and Borrow
+have plain text links. Colour alone would have been one signal; the button
+weight is the second, and it survives being seen by someone who cannot separate
+the green from the grey.
+
+Its dots are lifted one tone, `ink/muted` where the others are `ink/subtle` and
+`ink/strong` where the others are `ink/muted`, because the greens they sit on
+are lighter than the neutral cards.
+
 **Cost.** 677 dots across the three cards, 794 nodes on the screen in total.
 8.12b records that the dot column chart cost 572 and that the connection dropped
 at 826, so the three fields were generated in three calls rather than one and
@@ -1502,10 +1525,14 @@ scale.
 32. Never tint the greys with the brand colour. Surfaces are most of a screen by
     area, so a brand tint on them makes the brand the colour of the room instead
     of a thing in it. The greys are neutral in both modes. See 2.9.
-33. The brand colour never fills a surface. It marks a number, a chip, or the
-    place you are standing in the navigation. If you can count brand-coloured
-    nodes on a screen and a surface token is among them, it has stopped being an
-    accent. See 2.9a-0.
+33. The brand colour never fills a surface, with one exception, and the exception
+    has to be argued rather than assumed. It marks a number, a chip, or the place
+    you are standing in the navigation. If you can count brand-coloured nodes on
+    a screen and a surface token is among them, it has stopped being an accent.
+    See 2.9a-0. The exception is a single element that the whole screen exists to
+    push toward, at most one per screen, never repeated: on `D01c` that is the
+    Buy Stocks card. The sidebar promo failed the same test in the same week
+    because an advertisement is not what the screen is for. See 8.12f.
 34. Never show the same number twice on one screen. If a figure is in the hero it
     does not also get a card. This is what removed three cards from Home.
 35. A screen with two states is two screens, and a screen painted behind a modal
@@ -1533,6 +1560,10 @@ scale.
 41. Decoration never wears a state colour. A green dot means the same thing a
     green number means, so the moment ornament borrows `state/positive` it starts
     making a claim. Take the accent from the data palette instead. See 8.12f.
+42. Check contrast where the text actually sits. A contrast pass that walks up
+    the tree looking for the nearest solid fill steps straight over a gradient
+    and grades the text against something behind it. Sample the gradient at the
+    text's own position instead, or the report is worth nothing. See 8.12f.
 
 ## 11. The screens, by flow
 
@@ -1631,17 +1662,36 @@ back to and an address worth sharing. A task has an end, and when it ends you go
 back to where you were. The rail carried both until 4 September, and that was
 the cause of nearly everything wrong with it.
 
-**The five places.** `Home · Market · Grow · History`, then `Account` on its
-own below them.
+**The six places.** `Home · Wallet · Market · Grow · History`, then `Account`
+on its own below them.
 
-Home is what you own. Market is what you could own. Grow is what your money can
-do while you hold it. History is what already happened. Account is who you are.
-Nothing else is a place.
+Home is what you own. Wallet is the money itself and how it gets in and out.
+Market is what you could own. Grow is what your money can do while you hold it.
+History is what already happened. Account is who you are. Nothing else is a
+place.
+
+**Wallet sits second, above Market**, even though trading is what the product is
+for, because nobody can trade until they have funded the account. The rail is
+ordered by what a person does first, not by what matters most.
+
+Wallet passes the place test: it has state you return to, an address worth
+sharing, and content that outlives the visit. It carries balances, the ways
+money gets in and out, saved banks and cards, and what is still settling. It
+must not become a second portfolio page. 11c.4 records that Portfolio was folded
+into Home precisely because a second page of the same numbers is a page nobody
+needs, and a Wallet that leads with the total is that page again under a new
+name. Home answers how am I doing. Wallet answers where is my money and how do I
+add more.
+
+**`D18 Wallet` does not exist yet.** The rail entry was added on 4 September and
+the screen was not. 11c.4a records what happens when a destination promises
+something that is not there, so this is a debt, not a feature.
 
 **The four money rails are not places.** Buy, Convert, Send and Receive used to
 sit in the rail and do not any more. They are buttons on Home, which is one
 click from anywhere, so the furthest any of them sits from any screen is two
-clicks. Every Home variant carries all four.
+clicks. Every Home variant carries all four. Wallet does not change that. A
+wallet is where the money lives, not the act of moving it.
 
 **Security and Support are not places either.** Security is part of Account.
 Support lives behind the avatar, which is why the avatar now has a chevron and
@@ -1654,6 +1704,7 @@ is a control rather than a label.
 | Padding | 20 at the sides, 32 at the top, 24 at the bottom |
 | Brand | A 32 mark in `surface/inverse` at radius 8, 12 gap, the name in `Title` |
 | Item | 40 tall, pill radius, 16 padding at the sides, a 12 glyph, 12 gap, the label in `Body strong` |
+| Wallet glyph | A billfold, a rounded rectangle with a fold line across the middle. The first draft was a rectangle with a clasp dot and read as the Market square at 12 |
 | Gap between items | 4 |
 | Gap between groups | 32 |
 | Selected item | `surface/inverse` fill, `ink/inverse` label and glyph |
@@ -1661,8 +1712,8 @@ is a control rather than a label.
 | Promo | 200 wide, radius 20, `surface/sunken`, a 48 badge, a title, one sentence and a link |
 | Footer | The avatar, the name, the state, and a chevron, pinned to the bottom |
 
-**It is one component now.** `Sidebar` on `02 Components` is a six variant set,
-`State = Home, Market, Grow, History, Account, None`. All seventeen desktop
+**It is one component now.** `Sidebar` on `02 Components` is a seven variant
+set, `State = Home, Wallet, Market, Grow, History, Account, None`. All seventeen desktop
 screens carry an instance of it. Before this it was seventeen hand built frames,
 which is how the rail came to say one thing on one screen and something else on
 sixteen others. A fix now happens once. The unbound badge fill was found by the
