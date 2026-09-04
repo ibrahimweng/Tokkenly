@@ -402,6 +402,7 @@ light mode did not change by a single pixel.
 | `surface/hero` | The balance hero on the pending and first run Home screens | `053329` | `1B1B1F` |
 | `surface/hero-raised` | The buttons sitting on that hero | `094135` | `2A2A30` |
 | `surface/camera` | The viewfinder and the captured photo | `053329` | `1E1E22` |
+| `surface/scrim` | Behind a modal. 54 percent | `001A14` | `050506` |
 | `ink/on-hero` | Text on any of those | `FFFFFF` | `DCDCE0` |
 | `ink/on-hero-muted` | Secondary text on any of those | `A9C4BB` | `A6A6AD` |
 
@@ -442,6 +443,34 @@ under protanopia, comfortably above the 8.0 target.
 dark violet collapse to ΔE 0.7 under deuteranopia, exactly as their light
 counterparts do. Rule 20 needs no dark mode exception, which is a good sign that
 the light palette was derived properly rather than picked.
+
+#### 2.9b-1 What a review found afterwards
+
+The dark mode work was audited screen by screen as it went, and a review after it
+was finished still turned up four things. Worth listing, because each is a
+different kind of miss.
+
+**The scrim was never a token.** Four modal screens carried a literal `001A14` at
+54 percent behind the sheet. Literal, so it ignored the mode; green, so it was
+the exact fault the neutral ramp had just fixed everywhere else. It is now
+`surface/scrim`, dark neutral in dark mode and unchanged in light. Rule 29 exists
+precisely for this and the sweep that wrote rule 29 had already run — it caught
+fills on shapes and text but this one hid behind a modal on screens the sweep had
+counted and the eye had not.
+
+**The overflow warnings were false.** Five frames were reported as overflowing
+their auto-layout. Every one of them has a `FILL` child, which shrinks to fit, so
+nothing clips. The checker summed each child's current width without asking
+whether that width was fixed. A layout check that does not read
+`layoutSizingHorizontal` will cry wolf on every well-built frame in the file.
+
+**The Foundation page documents a palette that no longer exists.** Its swatches
+are bound and follow the mode correctly, but the hex captions beside them are
+plain text. Twenty of them still read light values, and several of those
+(`55746E`, `0F7A5F`, `E6F7F1`) were stale before dark mode ever landed. A caption
+is not a token and nothing keeps it honest.
+
+**Two Home screens are now two different products.** See 11b.4a.
 
 #### 2.9c What dark mode does not solve
 
@@ -1650,9 +1679,22 @@ Cards on the page went from ten to six, text nodes to 97, and the audit reports
 zero contrast failures, zero overflow, zero spacing off the four grid and zero
 clipped text.
 
-Still to do: `D01 Home — detailed` has not been rebuilt to match. It carries the
-old three card layout and the dot chart, so the Simple and Detailed toggle now
-switches between two different designs rather than two densities of one.
+Still to do, and this is the largest open item in the file. The Simple and
+Detailed toggle is supposed to switch **density**, not design. Right now it
+switches design:
+
+| | D01 Home | D01 Home — detailed |
+| --- | --- | --- |
+| Top band | Hero, price, Send and Receive, amounts card | Three stat cards |
+| Chart | Solid bars with a callout | Dot columns |
+| Accent | none | the sand card |
+| Cards | 6 | 10 |
+
+`D09 Send`, `D10 Send review`, `D11 Send sent` and `D12 Receive` make it worse:
+each paints a Home behind its modal scrim, and that Home is older still. So the
+file now holds three generations of the same screen. Whatever is agreed for
+Detailed has to be applied to those four backgrounds in the same pass, or the
+next reviewer will find a fourth generation.
 
 ### 11b.4b The Market page
 
