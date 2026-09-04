@@ -1741,9 +1741,8 @@ needs, and a Wallet that leads with the total is that page again under a new
 name. Home answers how am I doing. Wallet answers where is my money and how do I
 add more.
 
-**`D18 Wallet` does not exist yet.** The rail entry was added on 4 September and
-the screen was not. 11c.4a records what happens when a destination promises
-something that is not there, so this is a debt, not a feature.
+**`D18 Wallet` exists.** The rail entry was added on 4 September and the screen
+followed the same day. See 11b.4d.
 
 **The four money rails are not places.** Buy, Convert, Send and Receive used to
 sit in the rail and do not any more. They are buttons on Home, which is one
@@ -1846,6 +1845,7 @@ alone.
 | D15 Sign in | Google first, then email and password, on a 480 card centred on white |
 | D16 Create account | The same card, plus what happens next and the terms line |
 | D17 Invest | How much with the ruler, what you are buying with its price line, recent orders |
+| D18 Wallet | The cash you can spend, three ways to move it, what is still settling, your limits, and your banks |
 
 Every one of the numbered screens was checked: nothing runs past the frame,
 nothing falls below the fold, every gap and padding divides by four, and no grey
@@ -2134,6 +2134,55 @@ While updating Send, the Home screen behind its modal was two versions out of
 date, so `D09`, `D10` and `D11` all have a current background again. That is a
 standing cost of drawing a modal over a real screen: the screen underneath keeps
 moving.
+
+### 11b.4d The Wallet page
+
+`D18 Wallet` (`643:1245`) is the page the rail entry has been pointing at since
+4 September. It closes the debt recorded in 11b.2.
+
+**Home answers how am I doing. Wallet answers where is my money and how do I add
+more.** That sentence decided everything on the page, and mostly it decided what
+is not on it. There is no portfolio total, no day's change, no positions and no
+chart. 11c.4 records that Portfolio was folded into Home because a second page
+of the same numbers is a page nobody needs, and a Wallet that opens with
+`$12,480.60` is that page again wearing a different name.
+
+| Band | What it holds | Height |
+| --- | --- | --- |
+| page header | `Wallet`, and `Add money` as the one filled button | 40 |
+| balance | `AVAILABLE TO SPEND`, the cash figure at 48, and one line of state | 104 |
+| rails | Send, Receive and Convert as three cards of 360 | 96 |
+| columns | In progress and Your limits on the left, Payment methods on the right | 458 |
+
+860 of 1024 used, so the page has 164 spare. It is a short page on purpose.
+
+**The hero figure is the cash, not the portfolio.** `$2,480.00` is what can be
+spent or invested today. It is the same number Home carries as one line inside
+its Available card, which is correct: a summary points at the page that owns the
+subject. Wallet owns cash.
+
+**`Add money` is in the header and nowhere else.** The rails row carries the
+other three movements, so no action appears twice. Buy is absent because buying
+is not a money movement, it is what the money is for, and it lives on Home and
+in Market.
+
+**In progress is the reason the page earns its place.** Two pending rows, built
+from `Activity row` instances in their Pending variants, and a line saying
+nothing else is waiting. Home never shows this and History buries it among
+everything that already finished. A person who wants to know whether their money
+has arrived has had nowhere to look until now.
+
+**Your limits** is the other thing no other screen carries: what you may send in
+a day, convert in a month, and add in a day, each with what is already used.
+
+**Two things were cut after the first build.** The right column had a debit card
+panel that repeated the promo already in the sidebar, which is the same offer
+twice on one screen. And the balance line read `$620.00 is on the way`, naming a
+figure the pending row underneath already carried. It reads `Two payments are
+still settling` now, and no figure appears twice on the page. See rule 34.
+
+Measured: 131 nodes, no contrast failures, no overflow, no spacing off the four
+grid, no unbound fills, and both amounts obey 8.12d.
 
 ### 11b.5 The desktop flows
 
