@@ -1616,6 +1616,12 @@ scale.
     largest outflow on the screen painted as a gain. Put the rule in a variant so
     the exceptions become impossible, then write the check that proves it. See
     8.12d.
+44. A variant guards only while it is the right variant. Duplicating a row keeps
+    the variant of the row it was copied from, so retyping the words leaves the
+    colour behind: three rows added to Simple on 4 September put a green minus
+    and a neutral plus back on the screen within an hour of rule 43 being
+    written. The check is the guard, not the component. Run it after every edit,
+    not only after your own.
 
 ## 11. The screens, by flow
 
@@ -1999,12 +2005,24 @@ green after the ramp went neutral. It is `surface/scrim` now.
 Whole page, measured: 26 screens, 1,305 texts, zero contrast failures, zero
 overflow, zero spacing off the four grid, zero unbound fills.
 
-### 11b.4a-2 The gateway, the other Home
+### 11b.4a-2 Simple, the other Home
 
-`D01c Home — gateway` (`565:135`) is a second Home, built to sit beside the
-first one so the two can be looked at together and one of them chosen. It is not
-a variant of `D01 Home` and it shares no frame with it. Editing either one
-leaves the other alone. That is the point of it.
+`D01c Home — gateway` (`565:135`) started as a second Home built to sit beside
+the first so the two could be compared and one chosen. That comparison is over.
+`D01 Home`, the original Simple screen, has been deleted, and this screen is
+Simple now. The page went from nineteen screens to eighteen.
+
+**The two are one destination with two views**, joined by the Simple and
+Detailed toggle. Detailed sits on the left of section B, Simple on the right,
+and Simple is where people land. Both carry the toggle, each showing its own
+side as selected. Before 4 September only Detailed had it, so a person landing
+on Simple had no way to reach the other view and no way back once they left.
+A pair of views needs the switch on both, or it is not a pair.
+
+They agree on every number they both show: the total, the day's change, and the
+four activity amounts they share. Detailed shows more, which is the point of it,
+and the greeting is the same on both because it is the same person at the same
+moment.
 
 The first Home answers "how am I doing". This one answers "what do I do next".
 It is a way in to the three things the sidebar cannot hold, and nothing else.
@@ -2016,7 +2034,7 @@ What is on it, top to bottom:
 | greeting | `Good morning, Chinaza`, then one line of status | 72 |
 | portfolio | `TOTAL PORTFOLIO`, the amount at 48, the day's change | 104 |
 | get started | Buy, Convert and Borrow as three cards of 320 | 228 |
-| activity | Four rows and a `See all`, as a plain list with no card | 248 |
+| activity | Five rows and a `See all`, built from `Activity row` instances | 288 |
 
 Content is 1008 wide inside 96 of padding on each side and 72 top and bottom,
 with 48 between bands. That comes to 932 of the 1024 the frame gives, so about
@@ -2032,8 +2050,10 @@ Each of the three cards carries a halftone dot field across its bottom 140. The
 three are windows onto one continuous field rather than three separate pictures,
 so the pattern runs across the row. See 8.12f.
 - No cash strip, no positions table, no Earn panel, no offers.
-- No status pills on the activity rows. The rows carry a name, a time and an
-  amount, and the sign on the amount does the rest.
+- The activity rows were bare at first, a name, a time and an amount. They carry
+  the full treatment now, a direction glyph, the reference, a status pill and the
+  masked account, the same as Detailed. Two views of one destination should not
+  disagree about what a row is.
 
 Each of the three cards is the same shape: a 48 badge on `surface/control`, the
 verb as a title, one plain sentence saying what it is for, and a link at the
