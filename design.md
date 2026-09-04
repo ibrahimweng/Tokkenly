@@ -1698,8 +1698,11 @@ scale.
     push toward, at most one per screen, never repeated: on `D01c` that is the
     Buy Stocks card. The sidebar promo failed the same test in the same week
     because an advertisement is not what the screen is for. See 8.12f.
-34. Never show the same number twice on one screen. If a figure is in the hero it
-    does not also get a card. This is what removed three cards from Home.
+34. Never show the same number twice on one screen as information. If a figure is
+    in the hero it does not also get a card, and it does not get a panel row that
+    can only ever restate it. A button may name the figure, because naming what
+    you are agreeing to is the button's job, not a second reading of the number.
+    See 11b.4e. This is what removed three cards from Home.
 35. A screen with two states is two screens, and a screen painted behind a modal
     is another one. Rebuilding one of them commits you to all of them in the same
     pass, or the file quietly accumulates generations. Home had three. See
@@ -2350,6 +2353,56 @@ still settling` now, and no figure appears twice on the page. See rule 34.
 
 Measured: 131 nodes, no contrast failures, no overflow, no spacing off the four
 grid, no unbound fills, and both amounts obey 8.12d.
+
+### 11b.4e The five rails, finished
+
+Send had three screens. Add money, Convert and Invest had one each, so the
+product could take a person's money without ever showing them what they were
+about to do or telling them it had worked. All five are complete now.
+
+| Rail | Screens |
+| --- | --- |
+| Send | `D09 Send` · `D10 Send review` · `D11 Send sent` |
+| Receive | `D12 Receive` |
+| Add money | `D13 Add money` · `D13a Add money review` · `D13b Add money added` |
+| Convert | `D14 Convert` · `D14a Convert review` · `D14b Convert done` |
+| Invest | `D17 Invest` · `D17a Invest review` · `D17b Invest bought` |
+
+**Every review and every outcome is a sheet**, including on the three rails that
+are pages, which is what 8.15 already required and 8.15a now explains. The page
+stays behind at 54 percent so a person can see what they were doing.
+
+**The shape is one shape.** A 480 sheet at radius 28 with 32 of padding. A head
+with the word and a close. A figure with a caps label and the amount. A panel of
+four labelled rows. One callout. One filled button naming the action and the
+amount. The outcome sheet swaps the figure for a 64 tick and adds a second,
+quieter button.
+
+**The four rows differ because the questions differ**, and that is the point of
+having them rather than one generic receipt:
+
+| Rail | What the panel answers |
+| --- | --- |
+| Send | Who, what it costs, when it lands |
+| Add money | What you pay in naira, which bank it leaves, the rate, when it lands |
+| Convert | What you get in naira, which bank it lands in, the rate, when |
+| Invest | How many shares, the price each, the fee, when it settles |
+
+**Two defects came out of the build.** Cloning a screen dropped the scrim's paint
+opacity from 0.54 to 1, so the first two sheets were solid black with nothing
+behind them. That is the same fault 2.9b-1 records from March: a bound paint
+loses its alpha unless the alpha is part of the object you bind. Every scrim on
+the page is checked now, and all ten carry 0.54.
+
+And `D05 Apple` and `D17 Invest` had been sitting at the same x inside section H
+since the day Invest was drawn, one on top of the other. Nobody saw it because
+the section is wider than a screen.
+
+**Rule 34, refined.** A confirm button may name the amount, because that is how a
+person knows what they are agreeing to. What it may not do is show the figure
+twice as *information*. `D10 Send review` did: the hero said `$120.00` and a row
+called THEY RECEIVE said `$120.00` underneath it. The fee is free, so the row
+could never say anything else. It is gone.
 
 ### 11b.5 The desktop flows
 
