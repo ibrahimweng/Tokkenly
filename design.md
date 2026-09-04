@@ -1453,6 +1453,10 @@ scale.
 37. Never report a defect you have only seen in a screenshot. Measure the node
     first. Two of the findings in the 4 September critique were false and cost
     the reader time. See 2.9b-2.
+38. Never size a child by FILL before its parent has a width. Fill is a share of
+    something, so a chain that has not resolved yet gives it nothing to share and
+    the child collapses to one pixel or runs to thousands. Give the containers
+    explicit widths, append the child, then size it. See 11b.4a-2.
 
 ## 11. The screens, by flow
 
@@ -1608,6 +1612,7 @@ colour alone.
 | Screen | What it holds |
 | --- | --- |
 | D01 Home | Cash strip, the portfolio with its dot column chart, positions, activity, Borrow and Earn. Drawn in both Simple and Detailed |
+| D01c Home — gateway | A second Home, kept alongside the first. The amount, three cards to get started, recent activity, and space. See 11b.4a-2 |
 | D02 Activity | Search, three filters, export, twelve payments across five columns |
 | D03 Grow | The hero figure, then Earn and Borrow side by side |
 | D04 Market | Search, seven categories, three indices, five plain language picks, what is moving today, popular |
@@ -1625,9 +1630,9 @@ colour alone.
 | D16 Create account | The same card, plus what happens next and the terms line |
 | D17 Invest | How much with the ruler, what you are buying with its price line, recent orders |
 
-Every one of the sixteen was checked: nothing runs past the frame, nothing falls
-below the fold, every gap and padding divides by four, and no grey line exists
-anywhere.
+Every one of the numbered screens was checked: nothing runs past the frame,
+nothing falls below the fold, every gap and padding divides by four, and no grey
+line exists anywhere. `D01c` came later and carries its own audit in 11b.4a-2.
 
 The first twelve were drawn before the code was readable. D13 and D14 came
 after, and D15 and D16 after those. All sixteen sit on `surface/canvas`, and the
@@ -1782,6 +1787,61 @@ green after the ramp went neutral. It is `surface/scrim` now.
 
 Whole page, measured: 26 screens, 1,305 texts, zero contrast failures, zero
 overflow, zero spacing off the four grid, zero unbound fills.
+
+### 11b.4a-2 The gateway, the other Home
+
+`D01c Home — gateway` (`565:135`) is a second Home, built to sit beside the
+first one so the two can be looked at together and one of them chosen. It is not
+a variant of `D01 Home` and it shares no frame with it. Editing either one
+leaves the other alone. That is the point of it.
+
+The first Home answers "how am I doing". This one answers "what do I do next".
+It is a way in to the three things the sidebar cannot hold, and nothing else.
+
+What is on it, top to bottom:
+
+| Band | What it holds | Height |
+| --- | --- | --- |
+| greeting | `Good morning, Chinaza`, then one line of status | 72 |
+| portfolio | `TOTAL PORTFOLIO`, the amount at 48, the day's change | 104 |
+| get started | Buy, Convert and Borrow as three cards of 320 | 228 |
+| activity | Four rows and a `See all`, as a plain list with no card | 248 |
+
+Content is 1008 wide inside 96 of padding on each side and 72 top and bottom,
+with 48 between bands. That comes to 932 of the 1024 the frame gives, so about
+92 is left over at the bottom. The empty space is the design, not a gap left by
+accident.
+
+What is deliberately missing, and why:
+
+- No chart. The reading of a chart is the first Home's job.
+- No stat cards. Four numbers in a row is a dashboard, and this is not one.
+- No cash strip, no positions table, no Earn panel, no offers.
+- No status pills on the activity rows. The rows carry a name, a time and an
+  amount, and the sign on the amount does the rest.
+
+Each of the three cards is the same shape: a 48 badge on `surface/control`, the
+verb as a title, one plain sentence saying what it is for, and a link at the
+bottom. The sentences are written for someone who has not used the product
+before. "Own a piece of Apple, Nvidia or a whole market fund. From $1." is the
+Buy card, not "Purchase fractional equities".
+
+The status line under the greeting first read "Your portfolio is up $142.60
+today", which put $142.60 on the screen twice, once there and once in the
+delta below the amount. That is rule 34, and the rule caught it in the audit
+rather than in a review. It reads "Everything is settled. Nothing needs your
+attention." now, and no figure on the screen appears more than once.
+
+Measured after the fixes: 127 nodes, zero contrast failures, zero overflow,
+zero gaps or paddings off the four grid, zero unbound fills, no data colour on
+text, no text below full opacity.
+
+The first attempt at this screen collapsed. The greeting came out 1872 tall and
+the cards came out one pixel wide, because `layoutSizingHorizontal = 'FILL'` was
+set on children whose parents did not have a resolved width yet. Fill is a
+share of something, and there was nothing to take a share of. The rebuild gives
+every container an explicit width, appends the child first and sizes it after,
+and none of it moved again. See rule 38.
 
 ### 11b.4b The Market page
 
