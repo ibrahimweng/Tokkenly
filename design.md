@@ -333,8 +333,8 @@ the page when the page is dark.
 | Token | Light | Dark | Step from the one above |
 | --- | --- | --- | --- |
 | `surface/canvas` | `FFFFFF` | `0A0A0C` | — |
-| `surface/default` | `FAFBFC` | `19191C` | 1.12 |
-| `surface/sunken` | `F0F2F4` | `18181B` | 1.12 from canvas, and it sits *under* `surface/default` |
+| `surface/default` | `FAFBFC` | `1E1E22` | 1.19. The sidebar, and nothing in the main column |
+| `surface/sunken` | `F0F2F4` | `161619` | 1.10 from canvas. Every card in the main column |
 | `surface/control` | `E9ECEF` | `2D2D32` | 1.15 |
 | `surface/control-pressed` | `DDE2E6` | `38383E` | 1.19 |
 
@@ -344,7 +344,26 @@ a whisper: there are still no border lines anywhere, so the surface step is the
 only thing separating a card from the page, and dark values compress. Every dark
 step is at least 1.12.
 
-**The dark card came down on 5 September**, from `232327` to `18181B`. Every
+**The two grounds were the same colour until 5 September.** Seventy five panels
+in the main column were painted `surface/default`, and so was the sidebar, so a
+card and the navigation were the same value and no amount of darkening one of
+them could separate them. The main column moved to `surface/sunken`, which now
+means one thing only: a card on the canvas. `surface/default` means the sidebar
+and nothing else.
+
+| | Step from canvas |
+| --- | --- |
+| Card, `surface/sunken` `161619` | 1.10 |
+| Sidebar, `surface/default` `1E1E22` | 1.19 |
+| Card against the sidebar | 1.09 |
+
+The sidebar went **up** while the card went **down**, which is the part that
+matters. Making the card darker alone would have left it sitting at the same
+value as the rail. A page and its navigation are two grounds, and two grounds
+need two values.
+
+**The dark card came down on 5 September**, from `232327` to `18181B` and then
+to `161619`. Every
 signed in screen paints its content area with nothing, so every card in the main
 column sits straight on `surface/canvas`, and at `232327` that was a step of
 1.25. One card at 1.25 is fine. Nine of them on a page reads as a grid of bright
