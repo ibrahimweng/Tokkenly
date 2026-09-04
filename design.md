@@ -755,6 +755,54 @@ watchlist the same way.
 nowhere, because there is no watchlist page. That is a smaller debt than the one
 this closes and it is recorded here rather than left to be found.
 
+### 8.12h The amount field
+
+`Amount field` on `02 Components` is a two variant set, `State = Resting,
+Focused`. It replaces the bare figure that used to sit above the ruler on `D09
+Send` and `D17 Invest`.
+
+| Part | Value |
+| --- | --- |
+| Shape | 72 tall, radius 16, 24 padding at the sides, hugs its value |
+| Resting | `surface/control` |
+| Focused | `surface/control-pressed`, and a 2 by 44 caret after the value |
+| Value | `Display XL` in `ink/strong` |
+
+**The figure was not a control before, and it looked like one.** A 48 point
+number centred over a ruler reads as output, not input, so the only way to set an
+amount was to drag. The field shape says the number can be typed. The ruler stays
+directly beneath it as the fast way in, and the line under both says so in
+words: *Type an amount, or drag the ruler.*
+
+**Typed is the source of truth.** Dragging writes into the field. Nothing else
+holds the value, so the two ways in cannot disagree.
+
+**What it cost on Invest.** The field is 20 taller than the bare figure and the
+hint added another 16, which pushed the `How much` card from 600 to 652 inside a
+row pinned at 600. The Buy button was cut in half and the overflow check did not
+see it, because the row clipped rather than overflowed. The rows hug now, the
+card gap came down from 20 to 16, the fraction note is one line, and the column
+gap is 20. The screen uses 1024 of 1024.
+
+### 8.15a Which rail is a sheet and which is a page
+
+The five money rails were split between sheets and pages with nothing saying
+which was which. The rule, stated once so it can be checked:
+
+**If the task needs you to consult something, it gets a page. If it only needs
+you to enter something, it gets a sheet.**
+
+| Rail | Shape | Why |
+| --- | --- | --- |
+| Send | Sheet | A person and an amount. Nothing to look up |
+| Receive | Sheet | An address to copy. Nothing to decide |
+| Add money | Page | The rate, the minimum, your bank, your recent orders |
+| Convert | Page | The rate, which bank it lands in, past conversions |
+| Invest | Page | The price, the chart, your position, what the fee is |
+
+A page-shaped rail still confirms in a sheet over itself, which is what 8.15
+already says about anything transactional.
+
 ## 2b. The seventy twenty ten split
 
 Every screen is roughly seventy percent white, twenty percent light grey and ten
@@ -1696,6 +1744,15 @@ scale.
     active on three screens for a day, and the pass written to catch it read
     layer names and reported everything clean. Names are a note somebody left.
     The fill is what the reader sees. See 11b.4b.
+46. A clipped child is not an overflow, and the check will not find it. A frame
+    with `clipsContent` on simply cuts what will not fit, so the sums balance and
+    the Buy button is still missing half its height. Where a card can grow, its
+    row and its column have to hug, or the audit passes on a screen a person
+    cannot use. See 8.12h.
+47. Any control a person can drag must also be typeable. The ruler is faster and
+    the field is exact, and a design that offers only the fast one is a design
+    that cannot take 137.42. Dragging writes into the field, so the two never
+    disagree. See 8.12h.
 
 ## 11. The screens, by flow
 
