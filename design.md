@@ -499,6 +499,42 @@ screenshot is evidence that something looks wrong; it is not evidence of what is
 wrong, and the difference is two false bug reports handed to the person who has
 to act on them.
 
+#### 8.12d The transaction row, second pass
+
+The row was an icon, a name, a timestamp and an amount. The reference carried two
+more columns and both earn their place: **what state the money is in**, and
+**which account it moved through**.
+
+| Slot | Content | Sizing |
+| --- | --- | --- |
+| mark | The direction glyph, 28 | fixed |
+| what | Name, and the reference and time beneath it | fill |
+| status | Settled, Pending or Failed | hug |
+| ref | The masked account, `•••• 2841` | hug |
+| amount | The figure | hug |
+
+**The status pill is on every row, and it is grey most of the time.** Settled uses
+`surface/control` with `ink/muted`: a pill you can see but never read unless you
+want to. Only the states that need attention take colour, Pending on
+`tint/warning` and Failed on `tint/negative`. A status column where every row
+shouts is a column nobody scans, and green on every settled line would have put
+the brand colour back on 28 rows for no reason. See rule 33.
+
+### 8.12e The quick action tile
+
+Three tiles in the hero band, beside the balance: Buy, Convert, Borrow. Send and
+Receive are already the hero's two buttons, so the tiles carry the three things
+you cannot do from there.
+
+Each is a card of `surface/default` at radius 20, padding 24, laid out
+`SPACE_BETWEEN` so the glyph sits at the top and the words at the bottom. The
+glyph is the standard 12 at stroke 2 inside a 48 `surface/control` circle. The
+label is `Title`, the line under it `Body` in `ink/muted`.
+
+They divide the hero's spare width by `FILL`, so the three are always equal and
+the band needs no hand-set widths. At 1128 with a 308 balance block they come out
+at 247 each.
+
 #### 2.9c What dark mode does not solve
 
 **Shadows are near invisible.** The file carries 59 drop shadows, all deep green
