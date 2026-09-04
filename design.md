@@ -1756,6 +1756,14 @@ scale.
     the field is exact, and a design that offers only the fast one is a design
     that cannot take 137.42. Dragging writes into the field, so the two never
     disagree. See 8.12h.
+48. An audit is code, and code has bugs. Two of the three faults the Grow pass
+    reported were the checker's, not the file's. Green was compared against a
+    colour typed from memory rather than the resolved value of `state/positive`,
+    so four correct rows were called broken. The duplicate figure count read the
+    page sitting behind a scrim and the cells of a table column, where repeating
+    a number is the whole point. Resolve every constant out of the file, and give
+    every check the same scope a reader has. A check you have not doubted is a
+    second opinion you have not got. See 11b.4f.
 
 ## 11. The screens, by flow
 
@@ -1964,7 +1972,13 @@ alone.
 | D01 Home | Cash strip, the portfolio with its dot column chart, positions, activity, Borrow and Earn. Drawn in both Simple and Detailed |
 | D01c Home — gateway | A second Home, kept alongside the first. The amount, three cards to get started, recent activity, and space. See 11b.4a-2 |
 | D02 History | Search, three filters, export, twelve payments across five columns |
-| D03 Grow | The hero figure, then Earn and Borrow side by side |
+| D03 Grow | What is in Grow, then Earn and Borrow side by side, each led by its rate, then six questions |
+| D03a Borrow | How much with the ruler, the terms, and what secures it with the cover bar |
+| D03b Borrow review | The amount, the rate, the monthly cost, the sell point |
+| D03c Borrowed | The outcome, with the reference |
+| D03d Earn | How much with the ruler, what it pays, and where the interest comes from |
+| D03e Earn review | The amount, the rate, when it pays, how to take it out |
+| D03f Earning | The outcome, with the reference |
 | D04 Market | Search, seven categories, three indices, five plain language picks, what is moving today, popular |
 | D05 Apple | The full chart, today's trading, growth and valuation, your position, trending, news |
 | D06 Account | Personal details, your address with its warning, verification, devices |
@@ -2404,6 +2418,96 @@ twice as *information*. `D10 Send review` did: the hero said `$120.00` and a row
 called THEY RECEIVE said `$120.00` underneath it. The fee is free, so the row
 could never say anything else. It is gone.
 
+### 11b.4f Grow, finished
+
+Grow was a hub with two dead ends. The Earn card had a button called `Move money
+in` that led nowhere, and the Borrow card had a button called `Borrow $1,150`
+that led nowhere and named an amount nobody had chosen. Both products now have a
+page and a two sheet chain, the same shape the five rails use.
+
+| Product | Screens |
+| --- | --- |
+| Borrow | `D03a Borrow` · `D03b Borrow review` · `D03c Borrowed` |
+| Earn | `D03d Earn` · `D03e Earn review` · `D03f Earning` |
+
+Three taps from the hub in both cases: the product button, `Continue`, then the
+confirm. Four from anywhere in the app, counting the sidebar.
+
+**The terms were invented and they should be read as invented.** Nothing in the
+codebase sets a rate, a collateral ratio or a payout schedule, so this document
+is the only place they exist, the way 11c.4a already flags the equities gap. What
+the design does guarantee is that they are the *same* invented numbers
+everywhere, which they were not before.
+
+| Fact | Settled at |
+| --- | --- |
+| Cash in the wallet | $2,480.00 |
+| In Earn | $1,240.00 |
+| Earn rate | 4.8% a year, paid every day |
+| Earned so far | +$18.60 |
+| Shares held | $12,480.60 |
+| Borrow limit | $1,860.00 in total |
+| Already borrowed | $380.00 |
+| Available to borrow | $1,480.00 |
+| Borrow rate | 9.4% a year |
+| Cover required | 140% of what is owed |
+| Interest owed so far | $8.90 |
+
+**Four screens disagreed with each other before this pass.** `D03 Grow` said
+Borrow was 8.2% a year; `D01 Home — detailed` said 9.4%. Grow said you borrow
+`Against $2,480.00 you hold`, which is the cash balance, not the shares the loan
+is actually secured on. Five screens carried a Borrow offer card reading
+`$1,860`, the full limit, on a person who has $380 out. And Earn's `Paid so far`
+and Borrow's `Interest so far` were both `$12.40`, one being money received and
+the other money owed.
+
+**The sell point is derived, so it stopped being quoted as a constant.** At 140%
+cover, $1,530 owed is sold below $2,142, and $1,860 owed is sold below $2,604.
+The old Home line quoted $2,604 next to a person who owed nothing, so Home now
+states the rule instead: `9.4% a year · 140% cover · repay any time`. Only the
+Borrow composer, where an amount has actually been chosen, names a figure.
+
+**Borrow's second column is the risk, not the product.** Invest puts the company
+on the right. Borrow puts what secures the loan: the shares, a cover bar with a
+notch at the minimum, three position rows, and a small table that answers the
+only question that matters.
+
+| Shares fall by | Worth | What happens |
+| --- | --- | --- |
+| 20% | $9,984.48 | Nothing changes |
+| 50% | $6,240.30 | Nothing changes |
+| 83% | $2,142.00 | We sell enough to cover |
+
+That last row repeats the sell point stated in the summary above the button. It
+is the one duplicate on the screen that earns its place, because the table is
+where the number comes from.
+
+**Earn's second column is where the money comes from.** A rate with no
+explanation behind it is the thing that makes people not use these products, so
+the card says plainly that the dollars sit in short term US government debt, that
+the rate moves with the market, and that it is neither fixed nor guaranteed.
+Above it, a projection: what $1,740 pays over a month, six months and a year.
+
+**The Grow hub was rebuilt around the two rates.** Each product card leads with
+its rate as a display figure rather than burying it in a row, then one line of
+what it is, then two numbers, then the button. Under both, six questions with
+plain answers, which is the only part of the page written for someone who has not
+decided yet.
+
+**The collateral meter is a bar, not a number.** 816% cover means nothing on its
+own. The bar fills to where the cover sits, with a notch at the minimum, so the
+distance between them is the message. The notch is painted `surface/canvas`, not
+a state colour, per rule 41.
+
+**Two of the three audit findings were the audit's.** They are written up as rule
+48. The one real fault was `+$18.60` sitting neutral on all three Earn screens,
+because the row it was cloned from was an outgoing figure.
+
+**What still leads nowhere.** `See all` on both history bands, `See holdings` on
+the Borrow card and `See history` on the Earn card. Repaying a loan and taking
+money out of Earn are both named on these screens as things a person can do at
+any time, and neither has a screen yet.
+
 ### 11b.5 The desktop flows
 
 The screens used to sit loose on the page in a grid of four across. They now sit
@@ -2419,7 +2523,7 @@ a person meets them.
 | E. Send money | D09 Send, D10 Send review, D11 Send sent |
 | F. Buy and convert | D13 Add money, D14 Convert |
 | G. History and receipts | D02 History |
-| H. Grow and Stocks | D03 Grow, D04 Market, D05 Apple, D17 Invest |
+| H. Grow and Stocks | D03 Grow, D04 Market, D05 Apple, D17 Invest, D03a–D03c Borrow, D03d–D03f Earn |
 | I. Account, security and support | D06 Account, D07 Security, D08 Support |
 
 **Wallet sits third, straight after Home**, for the same reason it sits second in
@@ -2626,6 +2730,12 @@ and as `28 Buy` and `29 Convert` on the phone. Signing in and signing up are
 drawn on both as well. Portfolio and Withdrawals are still missing, though both
 fold into screens that exist: Portfolio into Home, Withdrawals into History with
 its filter.
+
+Repaying a loan and taking money out of Earn are the two gaps left by 11b.4f.
+Both are named on the Grow screens as things a person can do at any time, and a
+promise a screen makes is a screen somebody has to draw. Neither is hard: repay
+is the Borrow composer with the direction reversed, and taking money out of Earn
+is the Earn composer with the direction reversed.
 
 The staff panel is out of scope for now. It holds a list of users, a user in
 full, transactions, and a log of who looked at what. It is a different audience
