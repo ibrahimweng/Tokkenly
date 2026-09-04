@@ -476,6 +476,29 @@ exists in two states is two screens, and a screen painted behind a modal is a
 third. Rebuild one and you have signed up to rebuild all of them in the same
 pass.
 
+#### 2.9b-2 A chart with no scale, and two claims that were wrong
+
+The bar chart shipped with axis labels and no gridlines. `12.5K` through `2.5K`
+floated beside the plot at even pixel spacing rather than at their own values, so
+the numbers named nothing and a bar's height could not be read off them. Every
+chart in the file now draws a gridline per tick on a fixed 0 to 12.5K scale, in
+`chart/grid`, behind the bars, with each label seated on its own line. Six
+charts: both Home states and the four modal backgrounds.
+
+Two things reported in the same critique were **not true**, and measuring them is
+what showed it:
+
+- *"The tooltip covers the data it describes."* It overlaps **zero** bars. The
+  callout clears the highlighted range by 19 pixels.
+- *"There is dead space under the plot."* The card wraps the panel exactly
+  (`cardMinusPanel: 0`) and the 16 pixels below the lowest mark are the panel's
+  own bottom padding.
+
+Both came from reading a rendered screenshot instead of the node tree. A
+screenshot is evidence that something looks wrong; it is not evidence of what is
+wrong, and the difference is two false bug reports handed to the person who has
+to act on them.
+
 #### 2.9c What dark mode does not solve
 
 **Shadows are near invisible.** The file carries 59 drop shadows, all deep green
@@ -1388,6 +1411,12 @@ scale.
     is another one. Rebuilding one of them commits you to all of them in the same
     pass, or the file quietly accumulates generations. Home had three. See
     11b.4a.
+36. An axis label without a gridline names nothing. If a chart carries values on
+    its edge, the reader has to be able to lay a straight edge from the number to
+    the mark. See 2.9b-2.
+37. Never report a defect you have only seen in a screenshot. Measure the node
+    first. Two of the findings in the 4 September critique were false and cost
+    the reader time. See 2.9b-2.
 
 ## 11. The screens, by flow
 
