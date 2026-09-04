@@ -1457,6 +1457,14 @@ scale.
     something, so a chain that has not resolved yet gives it nothing to share and
     the child collapses to one pixel or runs to thousands. Give the containers
     explicit widths, append the child, then size it. See 11b.4a-2.
+39. Navigation lists places, not tasks. A place has state you return to and an
+    address worth sharing. A task has an end, and when it ends you go back where
+    you were. Four of the nine desktop rail entries were verbs, and taking them
+    out is what let the rail drop to five. See 11b.2.
+40. Anything drawn on every screen is a component before it is drawn the second
+    time. The sidebar was seventeen hand built copies, so one edit changed one
+    screen and left sixteen lying. Repetition is the test, not complexity.
+    See 8.12c and 11b.2.
 
 ## 11. The screens, by flow
 
@@ -1550,14 +1558,31 @@ column, with the 24 gutter between them.
 
 ### 11b.2 The sidebar
 
-There is no More sheet on desktop. More only ever existed because a phone can
-show four destinations and no more. A sidebar shows seven with their names, so
-everything that hid behind More now sits in the open.
+A sidebar is a list of places, not a list of tasks. A place has state you come
+back to and an address worth sharing. A task has an end, and when it ends you go
+back to where you were. The rail carried both until 4 September, and that was
+the cause of nearly everything wrong with it.
+
+**The five places.** `Home · Market · Grow · History`, then `Account` on its
+own below them.
+
+Home is what you own. Market is what you could own. Grow is what your money can
+do while you hold it. History is what already happened. Account is who you are.
+Nothing else is a place.
+
+**The four money rails are not places.** Buy, Convert, Send and Receive used to
+sit in the rail and do not any more. They are buttons on Home, which is one
+click from anywhere, so the furthest any of them sits from any screen is two
+clicks. Every Home variant carries all four.
+
+**Security and Support are not places either.** Security is part of Account.
+Support lives behind the avatar, which is why the avatar now has a chevron and
+is a control rather than a label.
 
 | Part | Value |
 | --- | --- |
 | Width | 240 |
-| Fill | `surface/default` against the white content area |
+| Fill | `surface/default` |
 | Padding | 20 at the sides, 32 at the top, 24 at the bottom |
 | Brand | A 32 mark in `surface/inverse` at radius 8, 12 gap, the name in `Title` |
 | Item | 40 tall, pill radius, 16 padding at the sides, a 12 glyph, 12 gap, the label in `Body strong` |
@@ -1565,27 +1590,42 @@ everything that hid behind More now sits in the open.
 | Gap between groups | 32 |
 | Selected item | `surface/inverse` fill, `ink/inverse` label and glyph |
 | Unselected item | No fill, `ink/muted` label and glyph |
-| Footer | The avatar, the name in `Body strong` and the state in `Label`, pinned to the bottom |
+| Promo | 200 wide, radius 20, `surface/sunken`, a 48 badge, a title, one sentence and a link |
+| Footer | The avatar, the name, the state, and a chevron, pinned to the bottom |
 
-The sidebar holds two groups. First the places money lives, then the places the
-account is managed: Account, Security and Support.
+**It is one component now.** `Sidebar` on `02 Components` is a six variant set,
+`State = Home, Market, Grow, History, Account, None`. All seventeen desktop
+screens carry an instance of it. Before this it was seventeen hand built frames,
+which is how the rail came to say one thing on one screen and something else on
+sixteen others. A fix now happens once. The unbound badge fill was found by the
+audit and corrected in the master, and all seventeen screens took the fix
+without being touched.
 
-The first group is now ordered by what the product is for, not by what it can
-do alphabetically:
+**Which state each screen carries.** A detail page keeps its parent selected, so
+`D05 Apple` and `D17 Invest` show Market. A task painted over Home keeps Home
+selected, so all four Send and Receive screens, `D13 Add money` and `D14 Convert`
+show Home. `D07 Security` shows Account because it is part of Account.
+`D08 Support` shows None, because it is reached from the avatar and is not a
+place in the rail.
 
-`Home · Market · Buy · Grow · Convert · Receive · Send · History`
+**The promo slot.** The bottom of the rail holds one card, currently the debit
+card. It is `surface/sunken` and flat. It was a green gradient painted straight
+onto the node with no token behind it, which broke two rules at once: the brand
+does not fill a surface, and nothing is painted unbound. An advertisement must
+never be the loudest thing in the navigation.
 
-Market comes second, right under Home, because trading is the reason the
-product exists. It was called Stocks until Home took over the portfolio, at
-which point Stocks and Home were two names for the same idea. Home is now what
-you own. Market is what you could own. Sending and receiving sit at the bottom
-of the group because they support the trading rather than being the point of it.
+**Why five and not nine.** On desktop the rail makes everything one click, so
+depth is not the cost. Width is. Nine permanent entries is a nine way decision
+taken on every screen, every time. 11c.4 records that the phone had eleven such
+entries, measured it, and cut to five. The same arithmetic applies here, and it
+is the reason desktop and mobile now agree about what a destination is instead
+of differing because one of them had room.
 
 The selected glyph does not fill on desktop, and on mobile it does. That is not
-an oversight. On mobile the glyph is alone, so filling it is the only way to show
-which one is active without relying on colour. On desktop the item carries a
-label and a deep green pill, so the state is already carried by shape and not by
-colour alone.
+an oversight. On mobile the glyph is alone, so filling it is the only way to
+show which one is active without relying on colour. On desktop the item carries
+a label and a pill, so the state is already carried by shape and not by colour
+alone.
 
 ### 11b.3 What desktop does differently
 
@@ -1613,7 +1653,7 @@ colour alone.
 | --- | --- |
 | D01 Home | Cash strip, the portfolio with its dot column chart, positions, activity, Borrow and Earn. Drawn in both Simple and Detailed |
 | D01c Home — gateway | A second Home, kept alongside the first. The amount, three cards to get started, recent activity, and space. See 11b.4a-2 |
-| D02 Activity | Search, three filters, export, twelve payments across five columns |
+| D02 History | Search, three filters, export, twelve payments across five columns |
 | D03 Grow | The hero figure, then Earn and Borrow side by side |
 | D04 Market | Search, seven categories, three indices, five plain language picks, what is moving today, popular |
 | D05 Apple | The full chart, today's trading, growth and valuation, your position, trending, news |
@@ -1624,7 +1664,7 @@ colour alone.
 | D10 Send review | What is about to happen, before it happens |
 | D11 Send sent | The outcome, with the reference |
 | D12 Receive | The drawn code, the address, the network warning |
-| D13 Buy | Naira in, dollars out, the rate, the moving minimum, recent orders |
+| D13 Add money | Naira in, dollars out, the rate, the moving minimum, recent orders |
 | D14 Convert | Dollars out, naira into a bank, capped by the balance, saved banks |
 | D15 Sign in | Google first, then email and password, on a 480 card centred on white |
 | D16 Create account | The same card, plus what happens next and the terms line |
@@ -1912,8 +1952,8 @@ in the order a person meets them.
 | B. Home | D01 Home, D01 Home detailed |
 | C. Receive money | D12 Receive |
 | D. Send money | D09 Send, D10 Send review, D11 Send sent |
-| E. Buy and convert | D13 Buy, D14 Convert |
-| F. Activity and receipts | D02 Activity |
+| E. Buy and convert | D13 Add money, D14 Convert |
+| F. History and receipts | D02 History |
 | G. Grow and Market | D03 Grow, D04 Market, D05 Apple, D17 Invest |
 | H. Account, security and support | D06 Account, D07 Security, D08 Support |
 
@@ -2011,8 +2051,10 @@ words a person would use.
 | Market | `/market`, was `/stocks` |
 | History | `/transactions` |
 
-Account, Security and Support sit at the bottom of the sidebar, away from the
-eight above.
+Account sits at the bottom of the sidebar, away from the four above. Security
+is part of Account and Support is reached from the avatar, so neither is a rail
+entry any more. Buy, Receive, Send and Convert keep their routes but are reached
+from buttons rather than from the rail. See 11b.2.
 
 **Two screens stop being destinations.** Portfolio folds into Home, because the
 balance card is already there and a second page of the same numbers is a page
@@ -2032,8 +2074,9 @@ to things that do not work yet. Their team had eleven such entries, measured the
 result and cut it to five. If the tabs are ever reconsidered, this is the
 paragraph to read first.
 
-Desktop has room for all eight and uses them, so the two products differ here on
-purpose. It is the same reason More exists on one and not the other.
+Desktop used to carry all eight and does not any more. The rail holds five
+places and the four money rails are buttons, which is closer to what the phone
+does than what desktop did before. See 11b.2.
 
 **Grow and Stocks carry a marker in the rail itself**, a six pixel dot in
 `fill/warning` after the label. A destination that does not work should say so
