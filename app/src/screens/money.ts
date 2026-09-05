@@ -154,7 +154,7 @@ export function sendScreen(): HTMLElement {
     // No 'To' row: the lede above already names them, and the same fact twice
     // in one dialog reads as a mistake.
     summary: () => [
-      ['Fee', 'Nothing, Tokkenly covers it'],
+      ['Fee', 'None — what you send is what they get'],
       ['Arrives', 'In about a minute'],
       ['Network', 'Base'],
     ],

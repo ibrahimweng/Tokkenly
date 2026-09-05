@@ -3,7 +3,7 @@ import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, kv, emptyState } from '../components/bits'
 import { find } from '../catalogue'
-import { state, actions, bucketTotal, bucketShortfall } from '../state'
+import { state, actions, bucketTotal, bucketShortfall, bucketCost, tradeFee } from '../state'
 import { usd, shares as fmtShares } from '../format'
 import { go, openSheet } from '../router'
 
@@ -55,16 +55,18 @@ export function bucketScreen(): HTMLElement {
     const total = bucketTotal()
     const short = bucketShortfall()
     summary.replaceChildren(
-      kv('Total', usd(total)),
+      kv('Investment', usd(total)),
+      kv('Fee', `${usd(tradeFee(total))} · ${state.fees.trade}%`),
+      kv('Total', usd(bucketCost())),
       kv('Cash you have', usd(state.cash)),
       // The question you are actually asking while you fill a bucket.
-      kv('Left after', short > 0 ? '—' : usd(state.cash - total)),
+      kv('Left after', short > 0 ? '—' : usd(state.cash - bucketCost())),
       short > 0
         ? h('small', { class: 'field-error' },
             h('span', { html: icon.alert() }),
             h('span', { text: `That is ${usd(short)} more than you have.` }))
         : h('span', { class: 'muted t-caption',
-            text: 'One payment. Each company still gets its own receipt.' }))
+            text: 'One payment, one fee. Each company still gets its own receipt.' }))
     pay.textContent = short > 0 ? 'Add ' + usd(short) + ' to cover this' : `Buy all ${state.bucket.length}`
     pay.onclick = () => (short > 0 ? go('/addmoney') : openSheet('bucket-review'))
   }

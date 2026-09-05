@@ -6,7 +6,7 @@ import { table } from '../components/table'
 import { amount } from '../components/bits'
 import { find } from '../catalogue'
 import { stockScreen } from './stock'
-import { state, holding, nairaAside } from '../state'
+import { state, holding, nairaAside, tradeFee, maxInvestable } from '../state'
 import { usd, pct, shares as fmtShares, when } from '../format'
 import { go, openSheet } from '../router'
 
@@ -43,9 +43,11 @@ export function investScreen(ticker: string): HTMLElement {
     eyebrow: ['Cash available', usd(state.cash)],
     cardLabel: 'How much',
     cardRight: 'Cash ' + usd(state.cash),
-    initial: Math.min(500, state.cash),
-    max: state.cash,
-    maxLabel: 'The cash you have to spend',
+    initial: Math.min(500, maxInvestable()),
+    // The fee has to fit in the cash too, so the ceiling is what is left once
+    // it does — not the balance, which would put every "All" over the top.
+    max: maxInvestable(),
+    maxLabel: 'The most you can invest, fee included',
     note: nairaAside(Math.min(500, state.cash)) ?? undefined,
     quick: [
       { label: usd(100, false), value: 100 },
@@ -54,10 +56,10 @@ export function investScreen(ticker: string): HTMLElement {
       { label: 'All', value: state.cash },
     ],
     summary: (v) => [
-      ['You get', fmtShares(v / c.price) + ' shares'],
-      ['Price each', usd(c.price)],
-      ['Fee', 'Free, Tokkenly covers it'],
-      ['Settles', 'In about a minute'],
+      ['Investment', usd(v)],
+      ['Fee', `${usd(tradeFee(v))} · ${state.fees.trade}%`],
+      ['Total', usd(v + tradeFee(v))],
+      ['You receive', fmtShares(v / c.price) + ' shares'],
     ],
     callout: 'You are buying part of a share. Sell any part of it whenever you want.',
     action: (v) => `Buy ${usd(v)} of ${c.name}`,
@@ -112,10 +114,10 @@ export function sellScreen(ticker: string): HTMLElement {
       { label: 'All', value: maxValue },
     ],
     summary: (v) => [
-      ['You sell', fmtShares(v / c.price) + ' shares'],
-      ['Price each', usd(c.price)],
-      ['Fee', 'Free, Tokkenly covers it'],
-      ['Lands in', 'Your wallet'],
+      ['Sale', usd(v)],
+      ['Fee', `${usd(tradeFee(v))} · ${state.fees.trade}%`],
+      ['You receive', usd(v - tradeFee(v))],
+      ['Shares sold', fmtShares(v / c.price)],
     ],
     callout: 'Selling part of a holding is fine. Whatever you keep carries on tracking the price.',
     action: (v) => `Sell ${usd(v)} of ${c.name}`,

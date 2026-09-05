@@ -4,7 +4,7 @@ import { sheet, figure, panel, outcome, toast } from './components/sheet'
 import { callout as calloutEl, emptyState as emptyStateEl } from './components/bits'
 import {
   state, actions, owed, monthlyCost, monthlyEarn, holding, bucketTotal,
-  visibleNotifications, type Activity,
+  visibleNotifications, tradeFee, type Activity,
 } from './state'
 import { find } from './catalogue'
 import { usd, naira, pct, shares as fmtShares, longWhen, when } from './format'
@@ -231,7 +231,7 @@ export const SHEETS: Record<string, Builder> = {
         [inbound ? 'From' : 'To', a.who],
         ['Reference', a.ref],
         ['When', longWhen(a.at)],
-        ['Fee', 'Free, Tokkenly covers it']
+        ['Fee', 'None — the rate above is what you get']
       ),
       calloutEl(a.settled
         ? 'Settled. Nothing about this payment is going to change now.'
@@ -431,7 +431,7 @@ export const SHEETS: Record<string, Builder> = {
     return review({
       title: 'Review',
       figureLabel: 'You are sending', figureValue: usd(v), amount: v,
-      rows: [['To', to], ['They receive', usd(v)], ['Fee', 'Free, Tokkenly covers it'], ['Arrives', 'In about a minute']],
+      rows: [['To', to], ['They receive', usd(v)], ['Fee', 'None — what you send is what they get'], ['Arrives', 'In about a minute']],
       note: 'Payments cannot be recalled once they are on the network.',
       action: 'Send ' + usd(v),
       onConfirm: () => {
@@ -442,7 +442,7 @@ export const SHEETS: Record<string, Builder> = {
   },
   'send-done': (r) => {
     const a = state.activity.find((x) => x.ref === str(r, 'ref'))!
-    return done('Sent', `${usd(Math.abs(a.amount))} is on its way to ${a.who}.`, a, [['Fee', 'Free']])
+    return done('Sent', `${usd(Math.abs(a.amount))} is on its way to ${a.who}.`, a, [['Fee', 'None']])
   },
 
   /* ----- add money ----- */
@@ -454,8 +454,10 @@ export const SHEETS: Record<string, Builder> = {
       figureLabel: 'You are buying', figureValue: usd(v), amount: v,
       rows: [
         ['You pay', naira(v * state.ngnPerUsd)],
-        ['From', bank.name + ' •••• ' + bank.last4],
         ['Rate', '1 dollar = ' + naira(state.ngnPerUsd)],
+        ['Fee', 'None — the rate above is the rate you get'],
+        ['You receive', usd(v)],
+        ['From', bank.name + ' •••• ' + bank.last4],
         ['Lands', 'In about a minute'],
       ],
       note: 'This rate is held for ninety seconds.',
@@ -479,9 +481,11 @@ export const SHEETS: Record<string, Builder> = {
       title: 'Review',
       figureLabel: 'You are converting', figureValue: usd(v), amount: v,
       rows: [
-        ['You get', naira(v * state.ngnPerUsd)],
-        ['Into', bank.name + ' •••• ' + bank.last4],
+        ['Withdrawing', usd(v)],
         ['Rate', '1 dollar = ' + naira(state.ngnPerUsd)],
+        ['Fee', 'None — the rate above is the rate you get'],
+        ['You receive', naira(v * state.ngnPerUsd)],
+        ['Into', bank.name + ' •••• ' + bank.last4],
         ['Arrives', 'Usually within a minute'],
       ],
       note: 'The naira amount is fixed once you confirm.',
@@ -504,10 +508,14 @@ export const SHEETS: Record<string, Builder> = {
     return review({
       title: 'Review',
       figureLabel: 'You are buying', figureValue: usd(v), amount: v,
+      // The amount, the fee, the total and exactly what you receive, in that
+      // order, before you confirm. Nothing folded into a worse price.
       rows: [
-        ['You get', fmtShares(v / c.price) + ' shares of ' + c.name],
+        ['Investment', usd(v)],
+        ['Fee', `${usd(tradeFee(v))} · ${state.fees.trade}%`],
+        ['Total', usd(v + tradeFee(v))],
         ['Price each', usd(c.price)],
-        ['Fee', 'Free, Tokkenly covers it'],
+        ['You receive', fmtShares(v / c.price) + ' shares of ' + c.name],
         ['Settles', 'In about a minute'],
       ],
       note: 'You are buying part of a share. Sell any part of it whenever you want.',
@@ -539,9 +547,11 @@ export const SHEETS: Record<string, Builder> = {
       title: 'Review',
       figureLabel: 'You are selling', figureValue: usd(v),
       rows: [
-        ['You sell', fmtShares(v / c.price) + ' shares of ' + c.name],
+        ['Sale', usd(v)],
+        ['Fee', `${usd(tradeFee(v))} · ${state.fees.trade}%`],
+        ['You receive', usd(v - tradeFee(v))],
         ['Price each', usd(c.price)],
-        ['Fee', 'Free, Tokkenly covers it'],
+        ['Shares sold', fmtShares(v / c.price) + ' of ' + c.name],
         ['Lands in', 'Your wallet'],
       ],
       note: 'Whatever you keep carries on tracking the price.',
@@ -570,14 +580,17 @@ export const SHEETS: Record<string, Builder> = {
     const total = bucketTotal()
     return review({
       title: 'Review',
-      figureLabel: 'You are buying', figureValue: usd(total), amount: total,
+      figureLabel: 'You are buying', figureValue: usd(total),
       rows: [
         ...lines,
-        ['Fee', 'Free, Tokkenly covers it'],
-        ['Cash left after', usd(state.cash - total)],
+        ['Investment', usd(total)],
+        ['Fee', `${usd(tradeFee(total))} · ${state.fees.trade}%`],
+        ['Total', usd(total + tradeFee(total))],
+        ['Cash left after', usd(state.cash - total - tradeFee(total))],
       ],
       note: 'One payment, but each company gets its own receipt so you can find any of them later.',
-      action: `Buy all ${state.bucket.length} for ${usd(total)}`,
+      action: `Buy all ${state.bucket.length} for ${usd(total + tradeFee(total))}`,
+      amount: total + tradeFee(total),
       onConfirm: () => {
         const { refs, spent, lines: got } = actions.payBucket()
         replaceSheet('bucket-done', {

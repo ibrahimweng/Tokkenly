@@ -45,9 +45,10 @@ ok('and what is left afterwards', /\$/.test(view.left ?? ''), view.left ?? '')
 
 const f = p.locator('.bucket-amount').first()
 await f.fill('300'); await f.dispatchEvent('change'); await p.waitForTimeout(500)
-ok('an amount can be changed in place',
-   money((await p.evaluate(() => [...document.querySelectorAll('.kv')].find((e) => /Total/.test(e.textContent))?.textContent))) === 400,
-   await p.evaluate(() => [...document.querySelectorAll('.kv')].find((e) => /Total/.test(e.textContent))?.textContent))
+// Total now means all-in; Investment is the figure the amounts add up to.
+const invested = () => p.evaluate(() =>
+  [...document.querySelectorAll('.kv')].find((e) => /^Investment/.test(e.textContent))?.textContent ?? '')
+ok('an amount can be changed in place', money(await invested()) === 400, await invested())
 
 await p.locator('.bucket-row').last().locator('.icon-btn').click(); await p.waitForTimeout(500)
 ok('and a pick can be taken out', (await p.evaluate(() => document.querySelectorAll('.bucket-row').length)) === 2)
@@ -69,7 +70,9 @@ const cashBefore = await (async () => {
   return money(await p.$eval('.hero-figure', (e) => e.textContent))
 })()
 await p.goto(B + '/bucket', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
-const total = money(await p.evaluate(() => [...document.querySelectorAll('.kv')].find((e) => /Total/.test(e.textContent))?.textContent))
+// the all-in figure, which is what the wallet will actually be charged
+const total = money(await p.evaluate(() =>
+  [...document.querySelectorAll('.kv')].find((e) => /^Total/.test(e.textContent))?.textContent))
 await p.locator('.btn-primary').first().click(); await p.waitForTimeout(500)
 const rev = await p.evaluate(() => document.querySelector('.scrim')?.innerText.replace(/\n/g, ' ') ?? '')
 ok('review lists every company before anything happens', /apple/i.test(rev) && /nvidia/i.test(rev), rev.slice(0, 80))

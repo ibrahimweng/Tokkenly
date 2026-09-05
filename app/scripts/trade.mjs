@@ -119,11 +119,12 @@ console.log('AFTER THE TRADE  the ledger has to agree')
   await p.locator('.btn-primary').first().click(); await p.waitForTimeout(400)
   await p.locator('.scrim .btn-primary').first().click(); await p.waitForTimeout(900)
   const after = await cash()
-  ok('cash went down by exactly what was spent', Math.abs((before - after) - 200) < 0.02,
-     `${before} → ${after}`)
+  // 200 invested plus the 0.5% fee: the ledger charges the total, not the amount
+  ok('cash went down by the investment and its fee', Math.abs((before - after) - 201) < 0.02,
+     `${before} → ${after}, expected −201.00`)
   await p.goto(B + '/history?filter=trades', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
   const rows = await p.evaluate(() => document.body.innerText)
-  ok('the trade is in history', /Nvidia|NVDA/.test(rows) && /200/.test(rows))
+  ok('the trade is in history at what it cost', /Nvidia|NVDA/.test(rows) && /201\.00/.test(rows))
   await p.close()
 }
 

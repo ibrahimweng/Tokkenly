@@ -92,6 +92,13 @@ export interface State {
   interestOwed: number
   borrowLimit: number
   rates: { earn: number; borrow: number; collateral: number }
+  /** What a transaction costs, as a percentage. The marketing sells this:
+   *  "the amount, the rate, the fee, and exactly what you receive, before you
+   *  confirm. Nothing folded into a worse rate." A product that answers that
+   *  with "free" is not being transparent, it is being vague — and the two
+   *  ship together. `fx` is nought because the naira rate on screen is the
+   *  rate you get; that is the "nothing folded in" half of the promise. */
+  fees: { trade: number; fx: number }
   holdings: Holding[]
   watchlist: string[]
   /** Companies picked out and not yet paid for. A watchlist is a list of
@@ -165,6 +172,7 @@ export const state: State = {
   interestOwed: 8.9,
   borrowLimit: 1860,
   rates: { earn: 4.8, borrow: 9.4, collateral: 140 },
+  fees: { trade: 0.5, fx: 0 },
   holdings: [
     { ticker: 'AAPL', name: 'Apple', shares: 23.42, price: 224.1, dayPct: 1.2 },
     { ticker: 'NVDA', name: 'Nvidia', shares: 26.94, price: 118.9, dayPct: 2.4 },
@@ -264,11 +272,26 @@ export const nairaAside = (dollars: number): string | null =>
     ? `About ₦${Math.round(dollars * state.ngnPerUsd).toLocaleString('en-US')} at today’s indicative rate`
     : null
 
+/* ------------------------------------------------------------------ fees --
+   The figure a person types is what they are investing. The fee is added on
+   top, so "$50 of Nvidia" buys $50 of Nvidia and costs $50.25 — rather than
+   buying $49.75 of it and leaving them to work out why. */
+export const tradeFee = (amount: number): number =>
+  Math.round(amount * state.fees.trade) / 100
+
+/** The most that can be invested once the fee has to fit in the cash too. */
+export const maxInvestable = (): number =>
+  Math.floor((state.cash / (1 + state.fees.trade / 100)) * 100) / 100
+
 export const bucketTotal = (): number =>
   state.bucket.reduce((t, b) => t + b.dollars, 0)
 
+/** What the bucket costs all in — the fee is charged once on the whole
+ *  payment, not per company, which is the point of paying once. */
+export const bucketCost = (): number => bucketTotal() + tradeFee(bucketTotal())
+
 export const bucketShortfall = (): number =>
-  Math.max(0, bucketTotal() - state.cash)
+  Math.max(0, bucketCost() - state.cash)
 
 export const inBucket = (ticker: string): BucketItem | undefined =>
   state.bucket.find((b) => b.ticker === ticker)
@@ -354,37 +377,42 @@ export const actions = {
    *  take the money and add the shares only `if (h)`, so a first purchase —
    *  the one the whole product is for — charged the wallet, created nothing,
    *  and reported "you now own undefined shares". */
-  buy(ticker: string, dollars: number): { activity: Activity; shares: number } {
+  buy(ticker: string, dollars: number): { activity: Activity; shares: number; fee: number; invested: number } {
     const c = find(ticker)
     if (!c) throw new Error('No such instrument: ' + ticker)
-    // Never spend money that is not there, whatever the caller asks for. The
-    // composer clamps too; this is the floor under it.
-    const spend = Math.max(0, Math.min(dollars, state.cash))
+    // Never spend money that is not there, whatever the caller asks for —
+    // and the fee is part of what has to be there. The composer clamps too;
+    // this is the floor under it.
+    const spend = Math.max(0, Math.min(dollars, maxInvestable()))
+    const fee = tradeFee(spend)
     const shares = spend / c.price
     const h = holding(ticker)
     if (h) h.shares += shares
     else state.holdings.push({ ticker: c.ticker, name: c.name, shares, price: c.price, dayPct: c.dayPct })
-    state.cash -= spend
-    const activity = record({ kind: 'trade', who: c.name, type: 'Bought', amount: -spend })
+    state.cash -= spend + fee
+    const activity = record({ kind: 'trade', who: c.name, type: 'Bought', amount: -(spend + fee) })
     changed()
-    return { activity, shares }
+    return { activity, shares, fee, invested: spend }
   },
 
   /** And selling is bounded by what is actually held, so a holding can never
    *  go negative and the wallet can never be paid for shares that were not
    *  there. A position sold out entirely leaves rather than sitting at zero. */
-  sell(ticker: string, dollars: number): { activity: Activity; shares: number } {
+  sell(ticker: string, dollars: number): { activity: Activity; shares: number; fee: number; proceeds: number } {
     const h = holding(ticker)
     const c = find(ticker)
     if (!h || !c) throw new Error('Nothing held in ' + ticker)
     const value = Math.max(0, Math.min(dollars, h.shares * h.price))
+    const fee = tradeFee(value)
     const shares = value / h.price
     h.shares -= shares
     if (h.shares < 1e-6) state.holdings.splice(state.holdings.indexOf(h), 1)
-    state.cash += value
-    const activity = record({ kind: 'trade', who: c.name, type: 'Sold', amount: value })
+    // Selling $100 puts $99.50 in the wallet: the fee comes out of what you
+    // get, not out of what you sold, which is the figure on the review.
+    state.cash += value - fee
+    const activity = record({ kind: 'trade', who: c.name, type: 'Sold', amount: value - fee })
     changed()
-    return { activity, shares }
+    return { activity, shares, fee, proceeds: value - fee }
   },
 
   borrow(amount: number): Activity {
@@ -476,13 +504,23 @@ export const actions = {
     const refs: string[] = []
     const lines: { ticker: string; shares: number }[] = []
     let spent = 0
-    for (const it of [...state.bucket]) {
-      if (it.dollars <= 0) continue
-      const { activity, shares } = actions.buy(it.ticker, it.dollars)
-      refs.push(activity.ref)
-      lines.push({ ticker: it.ticker, shares })
-      spent += Math.abs(activity.amount)
-    }
+    // The fee is charged once on the whole payment rather than per company —
+    // that is what paying once is for — so the individual buys go through at
+    // no fee and the single charge is applied after.
+    const fee = tradeFee(bucketTotal())
+    const kept = state.fees.trade
+    state.fees.trade = 0
+    try {
+      for (const it of [...state.bucket]) {
+        if (it.dollars <= 0) continue
+        const { activity, shares } = actions.buy(it.ticker, it.dollars)
+        refs.push(activity.ref)
+        lines.push({ ticker: it.ticker, shares })
+        spent += Math.abs(activity.amount)
+      }
+    } finally { state.fees.trade = kept }
+    state.cash -= fee
+    spent += fee
     state.bucket = []
     changed()
     return { refs, spent, lines }
