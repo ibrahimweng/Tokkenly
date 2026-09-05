@@ -28,7 +28,7 @@ function productCard(opts: {
   for (const [k, v] of opts.rows) c.appendChild(kv(k, v))
   c.appendChild(h('span', { class: 'muted t-caption', text: opts.caption }))
   c.appendChild(h('div', { class: 'spacer' }))
-  c.appendChild(h('button', { class: 'btn btn-quiet', text: opts.cta, on: { click: () => go(opts.ctaTo) } }))
+  c.appendChild(h('button', { class: 'btn btn-secondary', text: opts.cta, on: { click: () => go(opts.ctaTo) } }))
   return c
 }
 

@@ -19,7 +19,7 @@ const ok = (label, pass, detail = '') =>
 
 console.log('HOVER')
 await go('/')
-const filled = page.locator('.btn-filled').first()
+const filled = page.locator('.btn-primary').first()
 const rest = await bg(await filled.elementHandle())
 await filled.hover(); await page.waitForTimeout(80)
 const hov = await bg(await filled.elementHandle())
@@ -50,7 +50,7 @@ await page.locator('.amount-box input').fill('0')
 await page.locator('.amount-box input').dispatchEvent('input')
 await page.waitForTimeout(120)
 const dis = await page.evaluate(() => {
-  const el = document.querySelector('.card .btn-filled')
+  const el = document.querySelector('.card .btn-primary')
   const s = getComputedStyle(el)
   return { disabled: el.hasAttribute('disabled'), opacity: s.opacity, pe: s.pointerEvents }
 })
@@ -59,9 +59,9 @@ ok('a zero amount disables the action', dis.disabled && dis.opacity === '0.4' &&
 
 console.log('LOADING')
 await go('/grow/borrow?sheet=borrow-review&v=500')
-await page.locator('.sheet .btn-filled').click()
+await page.locator('.sheet .btn-primary').click()
 await page.waitForTimeout(80)
-const busy = await page.locator('.sheet .btn-filled.is-busy').count()
+const busy = await page.locator('.sheet .btn-primary.is-busy').count()
 ok('confirming shows a spinner', busy === 1, `is-busy nodes: ${busy}`)
 await page.waitForTimeout(700)
 const outcomeTitle = await page.locator('.sheet .figure .t-title').first().textContent()
@@ -92,7 +92,7 @@ ok('the picker search filters', n === 1, `${n} row(s)`)
 console.log('ERROR')
 await go('/send', 390)
 await page.locator('input[placeholder="Paste a Base address"]').fill('0x12')
-await page.locator('.btn-quiet', { hasText: 'Continue' }).click()
+await page.locator('.btn-secondary', { hasText: 'Continue' }).click()
 await page.waitForTimeout(120)
 const err = await page.evaluate(() => {
   const f = document.querySelector('.field.error')
@@ -104,6 +104,41 @@ await page.locator('input[placeholder="Paste a Base address"]').fill('0x22b1A7c0
 await page.waitForTimeout(100)
 const cleared = await page.locator('.field.error').count()
 ok('and the error clears as you fix it', cleared === 0, `${cleared} ringed`)
+
+console.log('BUTTON VARIANTS')
+await go('/')
+const swatch = await page.evaluate(() => {
+  const probe = (cls) => {
+    const el = document.createElement('button')
+    el.className = 'btn ' + cls
+    document.body.appendChild(el)
+    const s = getComputedStyle(el)
+    const out = { bg: s.backgroundColor, fg: s.color }
+    el.remove()
+    return out
+  }
+  return {
+    primary: probe('btn-primary'), secondary: probe('btn-secondary'),
+    quiet: probe('btn-quiet'), destructive: probe('btn-destructive'),
+    inverse: probe('btn-inverse'),
+  }
+})
+// Figma 02 Components, Button Variant=*, resolved in dark
+const WANT = {
+  primary:     { bg: 'rgb(220, 220, 224)', fg: 'rgb(10, 10, 12)' },
+  secondary:   { bg: 'rgb(45, 45, 50)',    fg: 'rgb(220, 220, 224)' },
+  quiet:       { bg: 'rgba(0, 0, 0, 0)',   fg: 'rgb(220, 220, 224)' },
+  destructive: { bg: 'rgb(45, 45, 50)',    fg: 'rgb(255, 138, 92)' },
+  inverse:     { bg: 'rgb(110, 79, 53)',   fg: 'rgb(220, 220, 224)' },
+}
+for (const [k, want] of Object.entries(WANT)) {
+  const got = swatch[k]
+  ok(`btn-${k} matches Figma`, got.bg === want.bg && got.fg === want.fg,
+     `${got.bg} / ${got.fg}`)
+}
+const stale = await page.evaluate(() =>
+  [...document.querySelectorAll('[class*="btn-filled"],[class*="btn-danger"]')].length)
+ok('no button still uses an old class name', stale === 0, `${stale} found`)
 
 console.log('\nERRORS: ' + (errors.length ? errors.join(' | ') : 'none'))
 await b.close()

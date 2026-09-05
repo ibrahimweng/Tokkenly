@@ -29,10 +29,10 @@ log.push('  back →   ' + (await p.locator('.page-header h1').textContent()) + 
 // and it still completes
 await p.locator('.sheet-row', { hasText: 'Adaeze' }).click()
 await p.waitForTimeout(200)
-await p.locator('.sheet .btn-filled').click()
+await p.locator('.sheet .btn-primary').click()
 await p.waitForTimeout(600)
 log.push('  review:  ' + (await p.locator('.sheet-head h2').textContent()))
-await p.locator('.sheet .btn-filled').click()
+await p.locator('.sheet .btn-primary').click()
 await p.waitForTimeout(600)
 log.push('  outcome: ' + (await p.locator('.sheet .t-title').textContent()))
 

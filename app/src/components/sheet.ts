@@ -68,9 +68,9 @@ export function outcome(
       h('span', { class: 't-title', text: title }),
       h('span', { class: 'muted', text: line })),
     panel(...rows),
-    h('button', { class: 'btn btn-filled', text: primary.label, on: { click: primary.onClick } }),
+    h('button', { class: 'btn btn-primary', text: primary.label, on: { click: primary.onClick } }),
     secondary
-      ? h('button', { class: 'btn btn-quiet', text: secondary.label, on: { click: secondary.onClick } })
+      ? h('button', { class: 'btn btn-secondary', text: secondary.label, on: { click: secondary.onClick } })
       : null
   )
 }

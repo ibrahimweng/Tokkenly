@@ -31,13 +31,13 @@ export function stockScreen(ticker: string): HTMLElement {
   if (!c) {
     return shell('market', pageHeader('Not found'),
       h('p', { class: 'muted', text: 'No such company. Go back to Market and search for it.' }),
-      h('button', { class: 'btn btn-quiet btn-sm', text: 'Back to Market', on: { click: () => go('/market') } }))
+      h('button', { class: 'btn btn-secondary btn-sm', text: 'Back to Market', on: { click: () => go('/market') } }))
   }
   const held = holding(c.ticker)
   const watching = state.watchlist.includes(c.ticker)
 
   const follow = h('button', {
-    class: watching ? 'btn btn-quiet btn-sm' : 'btn btn-filled btn-sm',
+    class: watching ? 'btn btn-secondary btn-sm' : 'btn btn-primary btn-sm',
     text: watching ? 'Following' : 'Follow',
     on: {
       click: () => {
@@ -51,7 +51,7 @@ export function stockScreen(ticker: string): HTMLElement {
     'market',
     pageHeader(c.name,
       h('div', { class: 'chip-row' }, follow,
-        h('button', { class: 'btn btn-filled btn-sm', text: 'Buy ' + c.ticker,
+        h('button', { class: 'btn btn-primary btn-sm', text: 'Buy ' + c.ticker,
           on: { click: () => go('/market/' + c.ticker.toLowerCase() + '/invest') } }))),
     h('div', { class: 'row' },
       h('div', { class: 'stack col-main' },
@@ -101,10 +101,10 @@ export function stockScreen(ticker: string): HTMLElement {
                 kv('Today', h('span', { class: c.dayPct >= 0 ? 'pos t-body-strong' : 't-body-strong',
                   text: signed((held.shares * c.price * c.dayPct) / 100) })))
             : h('span', { class: 'muted', text: 'You do not own any yet.' }),
-          h('button', { class: 'btn btn-filled', text: 'Buy ' + c.ticker,
+          h('button', { class: 'btn btn-primary', text: 'Buy ' + c.ticker,
             on: { click: () => go('/market/' + c.ticker.toLowerCase() + '/invest') } }),
           held && held.shares > 0
-            ? h('button', { class: 'btn btn-quiet', text: 'Sell ' + c.ticker,
+            ? h('button', { class: 'btn btn-secondary', text: 'Sell ' + c.ticker,
                 on: { click: () => go('/market/' + c.ticker.toLowerCase() + '/sell') } })
             : null
         )))

@@ -86,11 +86,21 @@
   height: 56px; padding: 0 24px; border-radius: var(--r-pill);
   font-weight: 600; font-size: 14px; width: 100%;
 }
-.btn-filled { background: var(--inverse); color: var(--on-inverse); }
-.btn-filled:hover { background: var(--inverse-hover); }
-.btn-quiet { background: var(--control); color: var(--ink); }
-.btn-quiet:hover { background: var(--control-pressed); }
-.btn-danger { background: var(--control); color: var(--warning); }
+/* Five variants, named the way Figma names them, so a button called Secondary
+   in the file is a button called Secondary here. Figma 02 Components, Button
+   Variant=Primary|Secondary|Quiet|Destructive|Inverse. */
+.btn-primary { background: var(--inverse); color: var(--on-inverse); }
+.btn-primary:hover { background: var(--inverse-hover); }
+.btn-secondary { background: var(--control); color: var(--ink); }
+.btn-secondary:hover { background: var(--control-pressed); }
+.btn-quiet { background: none; color: var(--ink); }
+.btn-quiet:hover { background: var(--control); }
+/* Danger is quiet on purpose. Signing out everywhere matters, but a filled
+   orange button shouts louder than the action deserves. */
+.btn-destructive { background: var(--control); color: var(--negative); }
+.btn-destructive:hover { background: var(--control-pressed); }
+.btn-inverse { background: var(--sand); color: var(--ink); }
+.btn-inverse:hover { background: var(--sand-hover); }
 .btn-sm { height: 40px; padding: 0 18px; width: auto; }
 .btn[disabled] { opacity: 0.4; cursor: not-allowed; }
 
@@ -355,7 +365,8 @@
 .btn:active, .icon-btn:active, .nav-row:active, .rail-tab:active,
 .rail-more:active, .sheet-row:active, .key:active, .chip:active,
 .whoami:active, .link:active { opacity: 0.88; }
-.btn-quiet:active, .icon-btn:active, .chip:active, .key:active,
+.btn-secondary:active, .btn-quiet:active, .btn-destructive:active,
+.icon-btn:active, .chip:active, .key:active,
 .sheet-row:active, .nav-row:active { background: var(--control-pressed); }
 
 /* One disabled rule for everything, not just .btn */

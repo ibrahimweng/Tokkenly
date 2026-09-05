@@ -3264,15 +3264,91 @@ and none in forty six mobile ones, and no contrast failure in a hundred and
 eight button variants. The tightest passing figures are the Disabled states at
 3.12:1, which WCAG exempts.
 
-### 11f.5 Still open
+### 11f.5 The app bar, and what the buttons are called
+
+Two of the four open items closed.
+
+**M07 carries the real bar.** It had a back chevron sitting in the body, which
+worked but was the only sub screen not using the `App bar` component. The bar
+costs 56 pixels and the screen had 16, so the cash line went with it: how much
+you have belongs to the step that asks for an amount, not the step that asks
+who. Content now ends at 736 with the rail at 748.
+
+Six other bars were carrying stale titles from whatever screen they were cloned
+from. History and Receipt both said `Activity`; Invest, Invest review, Invest
+bought and Sell all said `Apple`. Fixed.
+
+**The button names stop lying.** The two vocabularies had crossed:
+
+| The app said | It actually was | Figma calls it |
+|---|---|---|
+| `btn-filled` | inverse fill, dark label | Primary |
+| `btn-quiet` | control fill, ink label | **Secondary** |
+| `btn-danger` | control fill, warning label | nothing |
+| — | transparent, ink label | Quiet |
+| — | sand fill | Inverse |
+
+Counting the instances settled which way to move. Figma's Primary has 71 uses,
+Secondary 47, Quiet 21, Inverse 2 — and **Destructive has none at all**. It was
+drawn and never used. Meanwhile the app's `btn-danger` was a real, used pattern
+with no variant to its name: a quiet danger, control fill with a coloured label,
+on the two Sign out buttons.
+
+So the file already had the answer and the code had the usage. Destructive in
+Figma now is the quiet danger the product actually ships, the app renames to
+Figma's five, and both sides mean the same thing by the same word:
+
+| Class | Fill | Label | Uses |
+|---|---|---|---|
+| `btn-primary` | `--inverse` | `--on-inverse` | 9 files |
+| `btn-secondary` | `--control` | `--ink` | 10 files |
+| `btn-quiet` | none | `--ink` | the empty state action |
+| `btn-destructive` | `--control` | `--negative` | Sign out, and closing an account |
+| `btn-inverse` | `--sand` | `--ink` | Figma only, on `03 Onboarding` |
+
+Two variants had no use anywhere and now have one. `btn-quiet` took the empty
+state's action, because a second filled grey on a grey card is one surface too
+many. `btn-destructive` took `Email us to close it`, which is the commit point
+of the close account flow and had been wearing the primary button all along.
+
+`--sand` and `--sand-hover` are new, and `surface/sand-hover` is new in Figma.
+The Inverse hover had been the last overlay paint in the set, which is exactly
+the shape of the fault in rule 51, so it is a flat token on both sides now and
+there is no overlay left to lose its alpha.
+
+`scripts/states.mjs` grew a parity check: it builds each of the five classes in
+the page and compares the computed fill and label against the value the Figma
+variant resolves to in dark. Twenty one checks, no failures.
+
+### 11f.6 The pill that was not broken
+
+The rendered variant sheet showed two black pills with no label, in a set where
+every other cell reads fine. They are `Destructive/Large/Disabled` and
+`Destructive/Medium/Disabled`: `surface/sunken` at `#161619`, which is 1.28:1
+against the `#0a0a0c` canvas, with `ink/subtle` text at 3.12:1. Nothing is
+wrong with them. At sheet scale a legitimately dim state reads as a hole.
+
+Rule 48 said an audit is code and code has bugs. This is the other direction:
+the audit was right twice and the eye was wrong. Both checks — structure and
+contrast — passed on those cells before and after.
+
+It does leave one real disagreement, which is not fixed:
+
+> Figma paints Disabled as `surface/sunken` with `ink/subtle`. The app dims the
+> variant's own fill to `opacity: 0.4`. On a card that is already
+> `surface/sunken`, the Figma treatment makes the button vanish entirely, while
+> the app's keeps its shape. The app's is better. Nine Figma variants would have
+> to change to agree.
+
+### 11f.7 Still open
 
 - The nav component's variants are still named `Money` and `Stocks` from the
   older product. They light the right icons; renaming breaks twenty nine
   instances on `04 App`.
-- `M07` uses a back chevron in the body rather than the `App bar` component the
-  other sub screens use. The bar costs 56 pixels and the screen has 16 to spare.
+- Disabled disagrees between the file and the app, as above.
+- `M36 Account` is the one screen behind More without an `App bar`, where
+  Security and Support have one. Account is a place in the app's model and the
+  rail is the way back, so it may be right; History has a bar and is also a
+  place, so the tier is not applied consistently either way.
 - Grow's rate, collateral ratio and payout schedule are still invented. See
   11b.4f.
-- The app's button classes are `filled`, `quiet` and `danger`; Figma's variants
-  are Primary, Secondary, Quiet, Destructive and Inverse. They do not map one to
-  one, and nothing in the product uses Inverse.

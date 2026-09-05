@@ -37,7 +37,7 @@ function review(opts: {
     // Money takes a moment to move. The button says so, rather than pretending
     // the ledger changed the instant it was pressed. Figma Button State=Loading.
     h('button', {
-      class: 'btn btn-filled', text: opts.action,
+      class: 'btn btn-primary', text: opts.action,
       on: {
         click: (e) => {
           const b = e.currentTarget as HTMLButtonElement
@@ -110,7 +110,7 @@ export const SHEETS: Record<string, Builder> = {
         ? 'Settled. Nothing about this payment is going to change now.'
         : 'Still settling. It usually clears within a minute.'),
       h('button', {
-        class: 'btn btn-filled', text: 'Download receipt',
+        class: 'btn btn-primary', text: 'Download receipt',
         on: { click: () => toast('Receipt saved as ' + a.ref + '.pdf') },
       })
     )
@@ -126,7 +126,7 @@ export const SHEETS: Record<string, Builder> = {
       ),
       calloutEl('The file lists every reference, so it reconciles against your bank.'),
       h('button', {
-        class: 'btn btn-filled', text: 'Email me the file',
+        class: 'btn btn-primary', text: 'Email me the file',
         on: { click: () => { toast('On its way to ' + state.person.email); closeSheet() } },
       })),
 
@@ -135,7 +135,7 @@ export const SHEETS: Record<string, Builder> = {
     const found = QA.find(([question]) => question === q)
     return sheet(q || 'Answer',
       h('p', { class: 'muted', style: { margin: '0' }, text: found ? found[1] + '.' : 'No answer for that yet.' }),
-      h('button', { class: 'btn btn-quiet', text: 'Still stuck, email us', on: { click: () => replaceSheet('contact') } }))
+      h('button', { class: 'btn btn-secondary', text: 'Still stuck, email us', on: { click: () => replaceSheet('contact') } }))
   },
 
   contact: () =>
@@ -148,7 +148,7 @@ export const SHEETS: Record<string, Builder> = {
       ),
       calloutEl('Tell us the reference of anything you are asking about and it will be answered faster.'),
       h('button', {
-        class: 'btn btn-filled', text: 'Open my email app',
+        class: 'btn btn-primary', text: 'Open my email app',
         on: { click: () => { toast('Opening a draft to ' + state.person.email); closeSheet() } },
       })),
 
@@ -164,9 +164,9 @@ export const SHEETS: Record<string, Builder> = {
       ),
       calloutEl('We will only write to you about the card, once, when it is ready.'),
       state.cardWaitlist
-        ? h('button', { class: 'btn btn-quiet', text: 'You are on the list', on: { click: closeSheet } })
+        ? h('button', { class: 'btn btn-secondary', text: 'You are on the list', on: { click: closeSheet } })
         : h('button', {
-            class: 'btn btn-filled', text: 'Add me to the list',
+            class: 'btn btn-primary', text: 'Add me to the list',
             on: { click: () => { actions.joinCardWaitlist(); toast('You are on the list'); closeSheet() } },
           })),
 
@@ -188,7 +188,7 @@ export const SHEETS: Record<string, Builder> = {
         h('label', { class: 'field' }, confirm)),
       calloutEl('We will never email you asking for your PIN or your recovery phrase.'),
       h('button', {
-        class: 'btn btn-filled', text: 'Save the change',
+        class: 'btn btn-primary', text: 'Save the change',
         on: {
           click: () => {
             const v = input.value.trim()
@@ -213,7 +213,7 @@ export const SHEETS: Record<string, Builder> = {
             h('input', { type: 'password', placeholder: i === 0 ? '••••••' : 'Six digits' })))),
       calloutEl('If you forget your PIN you will need your recovery phrase to get back in.'),
       h('button', {
-        class: 'btn btn-filled', text: 'Save the new PIN',
+        class: 'btn btn-primary', text: 'Save the new PIN',
         on: { click: () => { toast('Your PIN has been changed'); closeSheet() } },
       })),
 
@@ -227,7 +227,7 @@ export const SHEETS: Record<string, Builder> = {
         ['Written down', '12 August 2026']
       ),
       calloutEl('Anyone with these twelve words can move your money. We cannot stop them and we cannot get it back.', 'warning'),
-      h('button', { class: 'btn btn-filled', text: 'Show the words', on: { click: () => replaceSheet('phrase-shown') } })),
+      h('button', { class: 'btn btn-primary', text: 'Show the words', on: { click: () => replaceSheet('phrase-shown') } })),
 
   'phrase-shown': () => {
     const words = ['ridge', 'olive', 'cargo', 'siren', 'palm', 'unfold', 'quilt', 'rocket', 'dolphin', 'marble', 'tenant', 'glide']
@@ -242,7 +242,7 @@ export const SHEETS: Record<string, Builder> = {
       grid,
       calloutEl('Anyone with these twelve words can move your money.', 'warning'),
       h('button', {
-        class: 'btn btn-filled', text: 'I have written them down',
+        class: 'btn btn-primary', text: 'I have written them down',
         on: { click: () => { actions.markPhraseWritten(); toast('Keep it somewhere safe'); closeSheet() } },
       }))
   },
@@ -258,7 +258,9 @@ export const SHEETS: Record<string, Builder> = {
       ),
       calloutEl('We keep your records for seven years because Nigerian law requires it. Nothing else is kept.', 'warning'),
       h('button', {
-        class: 'btn btn-filled', text: 'Email us to close it',
+        // The commit point of the close-account flow. It was wearing the
+        // primary button; the danger variant is what it has always been.
+        class: 'btn btn-destructive', text: 'Email us to close it',
         on: { click: () => { toast('Opening a draft to ' + state.person.email); closeSheet() } },
       })),
 
@@ -281,7 +283,7 @@ export const SHEETS: Record<string, Builder> = {
         h('label', { class: 'field' }, acct)),
       calloutEl('A bank account has to be in your own name. We check that before the first payout.'),
       h('button', {
-        class: 'btn btn-filled', text: 'Add this bank',
+        class: 'btn btn-primary', text: 'Add this bank',
         on: {
           click: () => {
             const n = name.value.trim()

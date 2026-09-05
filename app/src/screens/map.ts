@@ -97,5 +97,5 @@ export function mapScreen(): HTMLElement {
     h('h2', { class: 't-caps subtle', style: { margin: '8px 0 0' }, text: 'Sheets' }),
     h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' } },
       ...SHEETS.map(([t, rows]) => group(t, rows))),
-    link('/', 'btn btn-quiet', 'Back to the product'))
+    link('/', 'btn btn-secondary', 'Back to the product'))
 }

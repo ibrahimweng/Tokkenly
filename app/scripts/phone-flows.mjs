@@ -21,22 +21,22 @@ for (let i = 0; i < 10; i++) await p.locator('.key[aria-label="Delete"]').click(
 for (const d of ['7', '5', '0', '0', '0']) await p.getByRole('button', { name: d, exact: true }).first().click()
 await p.waitForTimeout(120)
 log.push('  keypad typed: ' + (await p.locator('.amount-box input').inputValue()))
-log.push('  button says:  ' + (await text('.sheet .btn-filled')).trim())
+log.push('  button says:  ' + (await text('.sheet .btn-primary')).trim())
 
-await p.locator('.sheet .btn-filled').click()
+await p.locator('.sheet .btn-primary').click()
 await p.waitForTimeout(600)
 log.push('  review:  ' + (await text('.sheet-head h2')).trim() + ' / ' + (await text('.sheet .figure .t-display-xl')).trim())
 const reviewFits = await p.evaluate(() => {
-  const btn = document.querySelector('.sheet .btn-filled')
+  const btn = document.querySelector('.sheet .btn-primary')
   const r = btn.getBoundingClientRect()
   return r.bottom <= window.innerHeight + 1
 })
 log.push('  review button on screen: ' + reviewFits)
 
-await p.locator('.sheet .btn-filled').click()
+await p.locator('.sheet .btn-primary').click()
 await p.waitForTimeout(600)
 log.push('  outcome: ' + (await text('.sheet .t-title')).trim() + ' — ' + (await text('.sheet .figure .muted')).trim())
-await p.locator('.sheet .btn-quiet').click()
+await p.locator('.sheet .btn-secondary').click()
 await p.waitForTimeout(250)
 log.push('  landed:  ' + p.url().split('#')[1].split('?')[0] + ' with ' + (await text('.sheet-head h2')).trim())
 await p.keyboard.press('Escape')

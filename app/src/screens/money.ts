@@ -90,7 +90,7 @@ export function sendWhoScreen(): HTMLElement {
       cardHead('Or send to an address'),
       addressField,
       addressError,
-      h('button', { class: 'btn btn-quiet', text: 'Continue', on: { click: submitAddress } }),
+      h('button', { class: 'btn btn-secondary', text: 'Continue', on: { click: submitAddress } }),
       callout('Base network only. Sending any other asset to this address loses it.', 'warning')
     )
   )
@@ -171,7 +171,7 @@ export function receiveScreen(): HTMLElement {
         h('div', { style: { display: 'grid', placeItems: 'center', padding: '8px 0' } }, qr),
         h('p', { class: 'muted', style: { margin: '0', wordBreak: 'break-all' }, text: address }),
         h('button', {
-          class: 'btn btn-filled', text: 'Copy the address',
+          class: 'btn btn-primary', text: 'Copy the address',
           on: {
             click: () => {
               navigator.clipboard?.writeText(address).catch(() => undefined)
@@ -192,7 +192,7 @@ export function receiveScreen(): HTMLElement {
         card(
           cardHead('Or ask by name'),
           h('span', { class: 'muted', text: 'Anyone already on Tokkenly can pay you by searching your name. They do not need the address.' }),
-          h('button', { class: 'btn btn-quiet', text: 'Share my name', on: { click: () => toast('Sharing sheet would open here') } })
+          h('button', { class: 'btn btn-secondary', text: 'Share my name', on: { click: () => toast('Sharing sheet would open here') } })
         )))
   )
 }

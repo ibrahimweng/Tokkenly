@@ -43,7 +43,7 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
 
   const summaryBox = h('div', { class: 'stack-8' })
   const rightBox = h('div', { class: 'stack grow' })
-  const button = h('button', { class: 'btn btn-filled' })
+  const button = h('button', { class: 'btn btn-primary' })
 
   function paint(v: number): void {
     summaryBox.replaceChildren(...spec.summary(v).map(([k, val, cls]) => kv(k, val, cls ?? '')))

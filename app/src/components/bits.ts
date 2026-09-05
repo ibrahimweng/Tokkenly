@@ -42,6 +42,8 @@ export function emptyState(
     h('span', { class: 'mark', html: icon[glyph]() }),
     h('h3', { text: title }),
     h('p', { text: body }),
+    // A quiet button inside a card. A second filled grey on a grey card is
+    // one surface too many.
     action ? h('button', { class: 'btn btn-quiet', text: action.label, on: { click: action.onClick } }) : null)
 }
 
@@ -62,11 +64,11 @@ export function busy(btn: HTMLButtonElement, on: boolean): void {
 }
 
 export function filled(label: string, onClick: () => void, disabled = false): HTMLButtonElement {
-  return h('button', { class: 'btn btn-filled', disabled, on: { click: onClick } }, label)
+  return h('button', { class: 'btn btn-primary', disabled, on: { click: onClick } }, label)
 }
 
 export function quiet(label: string, onClick: () => void): HTMLButtonElement {
-  return h('button', { class: 'btn btn-quiet', on: { click: onClick } }, label)
+  return h('button', { class: 'btn btn-secondary', on: { click: onClick } }, label)
 }
 
 /** Money in is green and signed. Money out is neutral. One function, so the

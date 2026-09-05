@@ -63,7 +63,7 @@ export function accountScreen(): HTMLElement {
           cardHead('Devices', h('button', { class: 'link quiet', text: 'Security', on: { click: () => go('/security') } })),
           ...state.devices.map((d) => kv(d.name, d.current ? 'This one' : d.seen))
         ),
-        h('button', { class: 'btn btn-danger', text: 'Sign out',
+        h('button', { class: 'btn btn-destructive', text: 'Sign out',
           on: { click: () => { actions.signOut(); go('/signin') } } })))
   )
 }
@@ -154,7 +154,7 @@ export function securityScreen(): HTMLElement {
           ...state.devices.map((d) => kv(d.name, d.current ? 'Now' : d.seen))
         ),
         h('button', {
-          class: 'btn btn-danger', text: 'Sign out everywhere',
+          class: 'btn btn-destructive', text: 'Sign out everywhere',
           on: {
             click: () => {
               actions.signOutEverywhere()

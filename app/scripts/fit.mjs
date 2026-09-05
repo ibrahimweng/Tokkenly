@@ -8,7 +8,7 @@ for (const hash of ['/grow/borrow','/grow/repay','/grow/earn','/grow/takeout','/
   await p.waitForTimeout(160)
   const r = await p.evaluate(() => {
     const sheet = document.querySelector('.sheet')
-    const btn = sheet && sheet.querySelector('.btn-filled')
+    const btn = sheet && sheet.querySelector('.btn-primary')
     if (!sheet || !btn) return null
     const sb = sheet.getBoundingClientRect(), bb = btn.getBoundingClientRect()
     return { sheetH: Math.round(sb.height), scrollH: sheet.scrollHeight,

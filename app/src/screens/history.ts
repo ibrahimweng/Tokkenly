@@ -55,7 +55,7 @@ export function historyScreen(): HTMLElement {
   return shell(
     'history',
     pageHeader('History',
-      h('button', { class: 'btn btn-quiet btn-sm', on: { click: () => openSheet('export') } },
+      h('button', { class: 'btn btn-secondary btn-sm', on: { click: () => openSheet('export') } },
         h('span', { html: icon.download() }), h('span', { text: 'Export' }))),
     h('div', { class: 'row', style: { alignItems: 'center' } }, search, chips),
     rows.length

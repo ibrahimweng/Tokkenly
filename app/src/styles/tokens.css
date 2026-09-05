@@ -7,6 +7,8 @@
   --control-pressed: #38383e;
   --inverse: #dcdce0;        /* filled buttons */
   --inverse-hover: #ececed;  /* one step further from the page than --inverse */
+  --sand: #6e4f35;           /* the hero surface, and the button that sits on it */
+  --sand-hover: #775a41;     /* --sand lifted six per cent */
 
   --ink: #dcdce0;
   --muted: #a6a6ad;

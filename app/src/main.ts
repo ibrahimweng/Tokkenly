@@ -26,7 +26,7 @@ function notFound(path: string): HTMLElement {
     h('div', { class: 'auth-card' },
       h('h1', { class: 't-title', style: { margin: '0' }, text: 'No screen at that address' }),
       h('p', { class: 'muted', style: { margin: '0' }, text: path }),
-      h('button', { class: 'btn btn-filled', text: 'Go home', on: { click: () => go('/') } })))
+      h('button', { class: 'btn btn-primary', text: 'Go home', on: { click: () => go('/') } })))
 }
 
 /** Flat routes first, then the two that nest. Everything the product can show
