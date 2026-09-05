@@ -52,13 +52,15 @@ console.log('DISABLED')
 await go('/grow/borrow')
 await page.locator('.amount-box input').fill('0')
 await page.locator('.amount-box input').dispatchEvent('input')
-await page.waitForTimeout(120)
+// past the end of the fade, so the opacity read is the settled one
+await page.waitForTimeout(320)
 const dis = await page.evaluate(() => {
   const el = document.querySelector('.card .btn-primary')
   const s = getComputedStyle(el)
   return { disabled: el.hasAttribute('disabled'), opacity: s.opacity, pe: s.pointerEvents }
 })
-ok('a zero amount disables the action', dis.disabled && dis.opacity === '0.4' && dis.pe === 'none',
+ok('a zero amount disables the action',
+   dis.disabled && Math.abs(Number(dis.opacity) - 0.4) < 0.01 && dis.pe === 'none',
    JSON.stringify(dis))
 
 console.log('LOADING')

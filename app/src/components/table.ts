@@ -5,9 +5,12 @@ export interface Column {
   label: string
   align?: 'left' | 'right'
   width?: string
-  /** Dropped below the breakpoint. A phone has room for who and how much,
-   *  and the rest is one tap away in the receipt. */
+  /** Dropped below the phone breakpoint. A phone has room for who and how
+   *  much, and the rest is one tap away in the receipt. */
   optional?: boolean
+  /** Dropped below a wide desktop too. Nine columns fit 1440 and overflow a
+   *  laptop, and a table that runs off the side has stopped being a table. */
+  wide?: boolean
   /** A column you can order by. The header becomes a button. */
   sortable?: boolean
 }
@@ -40,6 +43,7 @@ export function table(
     if (c.align === 'right') th.classList.add('right')
     if (c.width) th.style.width = c.width
     if (c.optional) th.classList.add('opt')
+    if (c.wide) th.classList.add('opt-wide')
     tr.appendChild(th)
   }
   thead.appendChild(tr)
@@ -51,11 +55,15 @@ export function table(
       const td = h('td')
       if (cols[j]?.align === 'right') td.classList.add('right')
       if (cols[j]?.optional) td.classList.add('opt')
+      if (cols[j]?.wide) td.classList.add('opt-wide')
       td.appendChild(typeof cell === 'string' ? document.createTextNode(cell) : cell)
       row.appendChild(td)
     })
     tbody.appendChild(row)
   })
 
-  return h('table', { class: 'table' }, thead, tbody)
+  // A table has a floor below which its columns stop shrinking. Below that
+  // the wide content scrolls in its own box rather than pushing the page
+  // sideways — a horizontal scrollbar on the document is never the answer.
+  return h('div', { class: 'table-scroll' }, h('table', { class: 'table' }, thead, tbody))
 }

@@ -60,11 +60,30 @@
   display: flex; flex-direction: column; gap: 16px;
 }
 .card.tight { padding: 16px; }
-.card-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+/* A head is a label and, often, a control beside it. On a narrow card the two
+   have nowhere to go, so the control drops to its own line rather than pushing
+   the page sideways. */
+.card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; row-gap: 8px;
+}
+.card-head > * { min-width: 0; }
 .link { font-size: 14px; font-weight: 600; color: var(--ink); }
 .link.quiet { color: var(--muted); }
 
-.kv { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+/* A key and its value wrap rather than overflow. A 32px figure beside a
+   change on a card 229 wide has nowhere to go, and a row that runs off the
+   side of a card is worse than one that takes two lines. */
+.kv { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; row-gap: 4px; }
+.kv > * { min-width: 0; }
+/* A value and the control that changes it. The long value is an email address,
+   and at 320 it and its Change button do not fit on one line — so they wrap,
+   and the address itself may break rather than run off the card. */
+.kv-edit {
+  display: flex; align-items: baseline; justify-content: flex-end;
+  gap: 16px; flex-wrap: wrap; row-gap: 4px; min-width: 0;
+}
+.kv-edit > .t-body-strong { overflow-wrap: anywhere; }
 .kv > span:first-child { color: var(--muted); }
 .kv > span:last-child { font-weight: 600; text-align: right; }
 
@@ -127,6 +146,7 @@
 .hint { text-align: center; color: var(--subtle); font-size: 12px; }
 
 /* ---------- tables ---------- */
+.table-scroll { overflow-x: auto; }
 .table { width: 100%; border-collapse: collapse; }
 .table th {
   text-align: left; font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
@@ -139,6 +159,11 @@
    padding; the sides were nothing but the slack the browser had left over,
    and at seven columns there was none. */
 .table th + th, .table td + td { padding-left: 20px; }
+/* Nine columns fit 1440 and run off a laptop. The quietest four go first, at
+   a width of their own rather than waiting for the phone breakpoint. */
+@media (max-width: 1279px) {
+  .table th.opt-wide, .table td.opt-wide { display: none; }
+}
 /* Right belongs to the column, not to its position. Every table here already
    declares align on its last column, so the two agree — but a right-hand
    column in the middle of the row now aligns too. */
@@ -558,7 +583,7 @@ th.right .th-sort { flex-direction: row-reverse; }
 /* The header's controls stay side by side at every width. .row turns into a
    column below the breakpoint, which stacked the search, the toggle and the
    bell into three full width rows. */
-.header-actions { display: flex; align-items: center; gap: 12px; flex: none; }
+.header-actions { display: flex; align-items: center; gap: 12px; flex: 0 1 auto; flex-wrap: wrap; }
 
 @media (max-width: 899px) {
   /* keyboard hints on a device with no keyboard */
@@ -839,6 +864,42 @@ th.right .th-sort { flex-direction: row-reverse; }
   .bucket-field { flex: 1 1 0; width: auto; }
 }
 
+/* ----------------------------------------------------------- the token --
+   What a tokenised share needs said about it that a real one does not: what
+   it costs against the thing it tracks, how it has moved over four windows,
+   how thin the book is, and which token this actually is. */
+.mark-line { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+
+/* The strip keeps the card's own ground rather than sitting on --control: an
+   11px caps label and a percentage are the smallest text in the product, and
+   --control costs them their AA margin in both themes. A hairline says
+   "segmented" just as well as a fill does. */
+.tf-row {
+  display: flex; gap: 0; flex: none; border-radius: var(--r-panel);
+  overflow: hidden; border: 1px solid var(--grid);
+}
+.tf {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 8px 16px; min-width: 76px;
+}
+.tf + .tf { border-left: 1px solid var(--grid); }
+
+/* A token address is long, unmemorable and worth showing anyway: on a product
+   sold as tokenised, showing the token is the trust signal. Middle-elided,
+   because the ends are the part anyone checks. */
+.addr {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 10px 14px; border-radius: var(--r-panel);
+  background: var(--control); color: var(--ink);
+  font-size: 13px; font-variant-numeric: tabular-nums;
+}
+.addr svg { width: 14px; height: 14px; }
+
+@media (max-width: 899px) {
+  .tf-row { width: 100%; }
+  .tf { flex: 1 1 0; min-width: 0; padding: 8px 10px; align-items: center; }
+}
+
 /* ----------------------------------------------------------- the chart --
    One value over time, drawn the same way everywhere. The old version was a
    comb of fixed 5px bars with no axis, no gridlines and no hover: you could
@@ -864,20 +925,61 @@ th.right .th-sort { flex-direction: row-reverse; }
   font-size: 11px; line-height: 16px; color: var(--muted); white-space: nowrap;
 }
 
-/* the bars: 2px of surface between neighbours, ends rounded, sat on the floor */
+/* Candles, not bars. A bar says where a period ended; a candle says where it
+   opened, how far it ran either way, and which direction it closed — four
+   numbers for the same width, which is why every trading screen draws them.
+   The wick is one pixel down the middle and the body sits over it. */
 .ch-bars {
   position: relative; height: 100%;
   display: flex; align-items: flex-end; gap: 2px;
 }
-.ch-bar {
-  flex: 1 1 0; min-width: 0;
-  border-radius: 3px 3px 0 0;
-  background: var(--control-pressed);
-  transition: height 220ms var(--ease), background-color var(--t-fast) var(--ease);
+.ch-candle { position: relative; flex: 1 1 0; min-width: 0; height: 100%; }
+.ch-wick {
+  position: absolute; left: 50%; width: 1px; transform: translateX(-50%);
+  background: currentColor; opacity: 0.55;
 }
-/* the last bar is now, and stays lit whether or not a pointer is present */
-.ch-bar.now { background: var(--muted); }
-.ch-bar.on { background: var(--ink); }
+.ch-body {
+  position: absolute; left: 0; right: 0; border-radius: 1px;
+  background: currentColor;
+  transition: background-color var(--t-fast) var(--ease);
+}
+/* Up and down are the chart's own two colours, not the product's positive and
+   negative: a candle is a direction, not a judgement about your money. */
+.ch-candle.up { color: var(--positive); }
+.ch-candle.down { color: var(--warning); }
+.ch-candle.now .ch-body { box-shadow: 0 0 0 1px var(--ink); }
+.ch-candle.on { color: var(--ink); }
+.ch-candle.on .ch-wick { opacity: 1; }
+
+/* the real share behind the token, drawn across the whole period */
+.ch-overlay { position: absolute; inset: 0; pointer-events: none; }
+.ch-mark {
+  position: absolute; left: 0; right: 0; height: 0;
+  border-top: 1px dashed var(--data-2);
+}
+/* On the left, because the right edge already carries the period's high and
+   low and two labels at the same height read as one wrong label. */
+.ch-mark-tag {
+  position: absolute; left: 0; top: -9px;
+  background: var(--data-2); color: var(--on-inverse);
+  font-size: 10px; font-weight: 600; line-height: 16px;
+  padding: 0 6px; border-radius: 4px; white-space: nowrap;
+}
+/* the period's high and low, on the edge where a trader looks for them */
+.ch-edge {
+  position: absolute; right: 0; height: 0;
+  font-size: 10px; line-height: 14px; color: var(--muted); white-space: nowrap;
+}
+.ch-edge span {
+  position: absolute; right: 0; top: -7px;
+  background: var(--control); padding: 0 5px; border-radius: 4px;
+}
+
+/* open, high, low, close and the change, above the plot */
+.ch-top { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.ch-ohlc { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.ch-num { display: inline-flex; align-items: baseline; gap: 4px; font-size: 12px; line-height: 16px; }
+.ch-num .subtle { font-weight: 600; }
 
 .ch-axis {
   display: flex; justify-content: space-between;
@@ -900,6 +1002,10 @@ th.right .th-sort { flex-direction: row-reverse; }
   .ch-line { left: 44px; }
   .ch-tick { right: calc(100% + 8px); }
   .ch-axis { font-size: 11px; }
+  /* four OHLC figures and a change do not fit a phone beside the caption */
+  .ch-ohlc { gap: 8px; }
+  .ch-num { font-size: 11px; }
+  .ch-mark-tag, .ch-edge { font-size: 9px; }
 }
 
 /* ---------------------------------------------------------- the market --

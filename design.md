@@ -3741,7 +3741,216 @@ content in the middle being stretched — not the top.
     consistent. Consistency within a frame says nothing about consistency
     across them; only a sweep that counts does.
 
-### 11f.19 Still open
+### 11f.20 One chart, and the card that was actually broken
+
+The note was "this graph across the product is bad, it is not robust enough,
+plus it has responsive issues". Two of those three were true of the chart. The
+third was not the chart at all.
+
+**The comb.** Home, the stock page and the wallet each drew their own bar
+strip: a fixed count of `<div>`s, no axis, no hover, no way to read a value
+off it. They are one component now, `components/chart.ts`, and every caller
+passes the same `ChartSpec`.
+
+**How many bars.** The count follows the width rather than the caller. A bar
+is unreadable under 5px and uninteresting under twelve of them, so the width
+decides, between 12 and 90 — and the gaps are part of the arithmetic. The
+first version divided the width by the bar width alone and the bars collapsed
+to nothing: n bars carry n−1 gaps, so it is `floor((w + GAP) / (MIN_BAR +
+GAP))`. A `ResizeObserver` redraws on width change, guarded, because not every
+browser the preview runs in has one.
+
+**The baseline.** Asked whether to keep a zero baseline or zoom to the range,
+the answer was zoom. This portfolio never went near zero and a zero baseline
+squeezes a year of movement into the top fifth of the card. The lowest axis
+label is the series low, stated, so the shape can never be misread as growth
+from nothing.
+
+**The responsive fault.** It was not the chart. The stock page put a hard
+360px `.col-side` next to a main column inside 96px of page padding; at a 900
+viewport the main column came out **88 pixels wide** and the chart inside it
+had nothing to draw on. Two rules fix it for every page, not just this one:
+`.row:has(> .col-side)` stacks below 1240, and `--content-pad-x` steps 96 → 48
+below 1280.
+
+55. **The component that looks broken is not always the one that is.** A chart
+    88px wide is a layout fault wearing a chart's clothes. Measuring the
+    element before rewriting it would have found the parent in a minute.
+
+### 11f.21 Simple by default, and preferences that keep
+
+Home opens on the gateway now, not the detailed dashboard — the simple screen
+is the one a new arrival can read.
+
+Which one it opens on is a setting, and the settings live in Account rather
+than in a screen of their own: a Settings tab nobody visits is a tab. `Prefs`
+holds the default home screen, the theme, whether naira sits beside dollars,
+the amount a trade starts at, the figure above which the product asks again,
+and four notification switches. `state.prefs` replaced a scatter of top-level
+flags.
+
+They persist — `localStorage`, one key, `{ prefs, seenIntro }` only, merged
+over the defaults so a stored file from an older shape still loads, and the
+whole thing in a try/catch because a browser with storage disabled should lose
+the preference, not the product.
+
+Each one had to actually do something, which is the part that is easy to skip:
+the naira aside disappears from every screen that shows one but stays on
+Convert, because on Convert the naira *is* the subject; turning off a
+notification class removes those rows from the panel and drops the bell count;
+the ask-again figure puts a tick above the confirm button and disables it
+until it is ticked.
+
+### 11f.22 The bucket
+
+Picking one company, paying, then picking the next is three payments and three
+fees. The bucket collects them: an "Add to bucket" beside every Buy, a count
+in the top bar, a screen that lists what is in it with the amounts editable in
+place, and one payment at the end that charges one fee for the lot.
+
+`setBucketAmount` deliberately does not broadcast a change. Re-rendering the
+route from a focused input's handler throws `NotFoundError: Failed to execute
+'replaceChildren'` — the node the browser is holding a caret in is gone — so
+the row updates its own summary and leaves the rest of the screen alone.
+
+Over the balance it says how much short, and offers the fix as an amount:
+"Add $98,069.25 to cover this" rather than a disabled button and no reason.
+
+### 11f.23 An intro that teaches the one thing the product is for
+
+Four full-screen steps before the first Home, gated on `seenIntro` alone:
+naira in and dollars held, the market never closes, pick as you go and pay
+once, and then the thing it taught — a button into Invest. Skip lands on Home
+and does not come back; Account can bring it back.
+
+A deep link is not a new arrival. Arriving at `/invest/aapl` with the intro
+unseen goes to `/invest/aapl`; the intro is for someone who opened the
+product, not for someone who was sent somewhere in it.
+
+### 11f.24 What the devs call it
+
+Five screenshots of the marketing site, and the instruction to keep our look
+and feel but take their plans. Four decisions came out of it.
+
+**The fee.** Theirs: 0.5% a trade, nothing on the currency conversion. Ours
+now says exactly that, everywhere the money moves — the composer, the review
+sheet, the ledger. A buy charges amount + fee; a sell takes the fee out of the
+proceeds; "All" leaves room for the fee rather than offering a figure the
+account cannot pay.
+
+**The names.** Market → Invest, Wallet → Transfer for the movement screens,
+Earn/Borrow under Grow. Their words, since they are the words the product will
+be sold in.
+
+**Earn and Borrow stay working.** The marketing lists them; leaving them as
+pictures would be the one thing a demo cannot survive.
+
+**Unverified is the starting state**, which is 11f.25.
+
+### 11f.25 Verification, and limits that bite
+
+An account starts unverified with a $1,000 monthly and $250 single-payment
+ceiling; verified lifts those to $10,000 and $2,500. The ceilings are one
+function, `movementCeiling()`, and every screen that moves money asks it — so
+there is no screen where the limit is a sentence rather than a rule.
+
+The message names which ceiling stopped you, which is the part that matters:
+"Your single payment limit until you verify is $250.00" is a different problem
+from "What this holding is worth is $5,248.42", and a composer that clamps
+without saying which is a composer that appears to have lost your money.
+
+Four steps: what is needed and why, the number, the details already on file,
+and an end that says what changed rather than "submitted". Eleven digits or it
+is refused where it was typed — and silent while the field is still empty,
+because nagging someone who has not finished typing is not validation. Only
+the last four digits are echoed back. Step one warns about the thing scammers
+ask for.
+
+Buying counts against the month too. A limit that only transfers can fill is
+not a limit.
+
+### 11f.26 A fund is not a company
+
+VOO and QQQ were listed as companies. They are funds, and the difference is
+the whole risk conversation: one holds 500 companies, the other 100, and
+neither is a business you can form a view about.
+
+`Instrument` carries a `kind` now. The list says "10 companies · 2 ETFs" and
+tags only the funds; the column is Name, not Company; a fund's own page says
+so, and its buy screen says what a fund is before the money moves rather than
+after.
+
+The long version is a screen — `/disclosures` — covering what you actually
+own, that you get no votes, custodian risk, that funds are not companies, the
+currency risk, what it costs, who is eligible and where to complain. Account
+links to it and the market states it once at the foot. Risk belongs where the
+decision is, not in a drawer.
+
+### 11f.27 What a token screen owes a trader
+
+Jupiter's token pages, offered as "extremely detailed", and the question of
+what to copy. Five things, and none of them is a visual.
+
+**The gap to the real share.** A tokenised AAPL is not AAPL, and the number
+that says how far apart they are is the number that decides whether the price
+on screen is a good one. It is on the stock page under the price, in the
+market table as its own sortable column, and in the buy review beside the fee.
+The twelve marks are computed from our own prices — `mark = price / (1 −
+offset/100)` — because lifting Jupiter's absolute figures put an AAPL mark of
+$320 against our $224.
+
+**Four windows, not one.** 5m, 1h, 6h, 24h across the top of the price. One
+percentage cannot tell a fresh move from a trend.
+
+**The book.** Liquidity, 24h volume, holders and their change, and a sentence
+that turns the first of those into advice: an order much over 1% of the pool
+moves the price against you, so say so before the order.
+
+**The token.** Its address, middle-elided, with a copy button. On a product
+sold as tokenised, showing the token is the trust signal.
+
+**Candles.** Bars became candles — wick for the range, body from open to
+close — with the four numbers above the plot, the period high and low labelled
+on the axis edge, and the real share's price drawn as its own line across the
+whole period so the gap is a shape rather than a figure.
+
+The high and the low come off the **wicks only**. The first version folded the
+mark into them so its line would stay on screen, and the card then reported
+the real share's price as the token's period high — the wrong instrument, in
+the one place a trader reads without checking. The scale includes the mark;
+the reported extremes do not.
+
+56. **A number that is right for the scale is not thereby right for the label.**
+    Two uses, two variables. `scaleLo`/`scaleHi` decide what fits; `lo`/`hi`
+    decide what is true.
+
+### 11f.28 What the sweep caught this time
+
+Nine widths, twelve routes, both themes, and the offending element named — as
+`scripts/sweep.mjs`, because this had been run by hand four times.
+
+- **The composer was 456px of inline style.** `left.style.width = '456px'`
+  cannot be relaxed by a media rule, so at 900 the card beside it was 88px —
+  the same failure as 11f.20, in the one place the stacking rule could not
+  reach. It is `.col-compose` now, and stacks at 1240 with everything else.
+- **A card head could not wrap.** A label and the control beside it, `nowrap`,
+  on a narrow card. The control drops to its own line now.
+- **The editable value could not wrap either**, for the same reason: another
+  inline flex. At 320 an email address and its Change button overflowed by
+  3px. `.kv-edit`, wrapping, and the address itself may break.
+- **A table has a floor.** Below about 320 the columns stop shrinking, so the
+  table scrolls in its own box rather than pushing the document sideways.
+- **The timeframe strip cost its own labels their contrast.** 11px caps on
+  `--control` measure 4.21:1 dark and 4.26:1 light, and the strip's positive
+  figure 4.22:1 in light. On the card's own ground all three clear AA with
+  room. A hairline border says "segmented" as well as a fill does.
+
+57. **An inline style is a rule no other rule can answer.** Three of the five
+    faults above were a `style.width` or a `style.display: flex` that a media
+    query had no way to override. If a value might need to change with the
+    width, it belongs in the stylesheet.
+
+### 11f.29 Still open
 
 - The nav component's variants are still named `Money` and `Stocks` from the
   older product. Renaming breaks 29 instances on `04 App`.
@@ -3751,3 +3960,11 @@ content in the middle being stretched — not the top.
   built yet.
 - D04 Market and D18 Wallet now carry the new table and hero, but the rest of
   each screen is still the older composition.
+- The Figma file still draws the old bar comb on D01 and D05, and does not
+  carry the candles, the timeframe strip, the depth card, the bucket, the
+  intro, the verification flow or the disclosures screen. The app is ahead of
+  the file by nine sections.
+- Two things from the marketing reference have never been ruled on: their
+  phone lists cash as a row inside the holdings list, one "everything you own"
+  list rather than our Wallet/positions split; and their down-moves are red
+  where ours are amber.

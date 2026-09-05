@@ -6,7 +6,7 @@ import {
   state, actions, owed, monthlyCost, monthlyEarn, holding, bucketTotal,
   visibleNotifications, tradeFee, type Activity,
 } from './state'
-import { find } from './catalogue'
+import { find, discount } from './catalogue'
 import { usd, naira, pct, shares as fmtShares, longWhen, when } from './format'
 import { type Route, closeSheet, replaceSheet, go } from './router'
 import { QA } from './screens/settings'
@@ -515,6 +515,10 @@ export const SHEETS: Record<string, Builder> = {
         ['Fee', `${usd(tradeFee(v))} · ${state.fees.trade}%`],
         ['Total', usd(v + tradeFee(v))],
         ['Price each', usd(c.price)],
+        // What the token costs against the share it tracks. A fee line that
+        // stops at the fee is not the whole cost on a tokenised product.
+        [discount(c) >= 0 ? 'Below the real price' : 'Above the real price',
+          `${pct(Math.abs(discount(c)), 2)} · ${c.name} is ${usd(c.mark)}`],
         ['You receive', fmtShares(v / c.price) + ' shares of ' + c.name],
         ['Settles', 'In about a minute'],
       ],

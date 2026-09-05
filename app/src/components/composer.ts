@@ -56,7 +56,7 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
   })
 
   const capNote = h('small', { class: 'field-error', hidden: true })
-  const summaryBox = h('div', { class: 'stack-8' })
+  const summaryBox = h('div', { class: 'stack-8 summary' })
   const rightBox = h('div', { class: 'stack grow' })
   const button = h('button', { class: 'btn btn-primary' })
 
@@ -97,8 +97,9 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
   const left = card(
     cardHead(spec.cardLabel, h('span', { class: 'muted', text: spec.cardRight })),
     comp.el, capNote, summaryBox, calloutEl(spec.callout), button)
-  left.style.width = '456px'
-  left.style.flex = 'none'
+  // A stated width, not an inline one: the stacking rule has to be able to
+  // release it below 1240, and it cannot outrank a style attribute.
+  left.classList.add('col-compose')
 
   return shell(
     spec.place,

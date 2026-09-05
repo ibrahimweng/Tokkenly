@@ -62,7 +62,7 @@ console.log('CHART  a range that redraws nothing is a button that lies')
   const read = () => p.evaluate(() => {
     const chart = document.querySelector('.ch-bars')?.closest('.card')
     return {
-      bars: chart?.querySelectorAll('.ch-bar').length,
+      bars: chart?.querySelectorAll('.ch-candle').length,
       // the bar count follows the width now, so what has to change with the
       // range is the scale, the dates and the figure — not how many marks
       ticks: [...chart.querySelectorAll('.ch-tick')].map((e) => e.textContent).join(' '),
@@ -91,7 +91,7 @@ console.log('CHART  a range that redraws nothing is a button that lies')
   await p.waitForTimeout(200)
   const tip = await p.evaluate(() => {
     const t = document.querySelector('.ch-tip')
-    return t.hidden ? null : { text: t.innerText.replace(/\n/g, ' '), lit: document.querySelectorAll('.ch-bar.on').length }
+    return t.hidden ? null : { text: t.innerText.replace(/\n/g, ' '), lit: document.querySelectorAll('.ch-candle.on').length }
   })
   ok('pointing at a bar says what it was worth', !!tip && tip.lit === 1, tip ? tip.text : 'no tooltip')
   await p.close()
