@@ -3332,20 +3332,46 @@ Rule 48 said an audit is code and code has bugs. This is the other direction:
 the audit was right twice and the eye was wrong. Both checks — structure and
 contrast — passed on those cells before and after.
 
-It does leave one real disagreement, which is not fixed:
+That reading did expose a real fault, now fixed. See 11f.7.
 
-> Figma paints Disabled as `surface/sunken` with `ink/subtle`. The app dims the
-> variant's own fill to `opacity: 0.4`. On a card that is already
-> `surface/sunken`, the Figma treatment makes the button vanish entirely, while
-> the app's keeps its shape. The app's is better. Nine Figma variants would have
-> to change to agree.
+### 11f.7 Disabled keeps its own colour
 
-### 11f.7 Still open
+Figma painted Disabled as `surface/sunken` with `ink/subtle` text. Every card in
+the main column is also `surface/sunken`, so a disabled button sitting in one
+was the same colour as the card it sat on: 1.00 to 1, no shape at all. That is
+what made two cells in the variant sheet look like holes.
+
+The app had it right. A disabled button keeps its own colour and loses its
+weight, at `opacity: 0.4`. Ten Button variants and the Text field now do the
+same, which also puts them in step with Icon button, which was already 0.4. One
+number governs disabled everywhere.
+
+What it buys, measured against a `surface/sunken` card:
+
+| Variant | Was | Now |
+|---|---|---|
+| Primary | 1.00 | **3.12** |
+| Inverse | 1.00 | **1.36** |
+| Secondary | 1.00 | 1.10 |
+| Destructive | 1.00 | 1.10 |
+| Quiet | 1.00 | 1.00, and correctly so |
+
+Primary is the clear win. Secondary and Destructive stay subtle because the gap
+between `surface/control` and `surface/sunken` is small to begin with: an
+*enabled* Secondary on a sunken card is only 1.29 to 1. Their shape was never
+the signal. Their label is, and it drops from 10.1 to 1 down to 2.9 to 1 when
+disabled, which is unmistakable. Quiet has no fill when it is enabled either,
+so having none when disabled is right.
+
+`scripts/states.mjs` now asserts the rule rather than the colour: a disabled
+button keeps its variant's fill, carries `opacity: 0.4`, and is never repainted
+to `--sunken`. Twenty five checks, no failures.
+
+### 11f.8 Still open
 
 - The nav component's variants are still named `Money` and `Stocks` from the
   older product. They light the right icons; renaming breaks twenty nine
   instances on `04 App`.
-- Disabled disagrees between the file and the app, as above.
 - `M36 Account` is the one screen behind More without an `App bar`, where
   Security and Support have one. Account is a place in the app's model and the
   rail is the way back, so it may be right; History has a bar and is also a

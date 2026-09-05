@@ -140,5 +140,37 @@ const stale = await page.evaluate(() =>
   [...document.querySelectorAll('[class*="btn-filled"],[class*="btn-danger"]')].length)
 ok('no button still uses an old class name', stale === 0, `${stale} found`)
 
+console.log('DISABLED KEEPS ITS COLOUR')
+await go('/')
+const dim = await page.evaluate(() => {
+  const probe = (cls) => {
+    const el = document.createElement('button')
+    el.className = 'btn ' + cls
+    el.setAttribute('disabled', '')
+    document.body.appendChild(el)
+    const s = getComputedStyle(el)
+    const out = { bg: s.backgroundColor, opacity: s.opacity }
+    el.remove()
+    return out
+  }
+  return { primary: probe('btn-primary'), secondary: probe('btn-secondary'),
+           destructive: probe('btn-destructive') }
+})
+// Figma dims the variant's own fill rather than repainting it sunken, so a
+// disabled button never vanishes on a card that is already sunken.
+ok('disabled primary keeps its fill',
+   dim.primary.bg === 'rgb(220, 220, 224)' && dim.primary.opacity === '0.4',
+   JSON.stringify(dim.primary))
+ok('disabled secondary keeps its fill',
+   dim.secondary.bg === 'rgb(45, 45, 50)' && dim.secondary.opacity === '0.4',
+   JSON.stringify(dim.secondary))
+ok('disabled destructive keeps its fill',
+   dim.destructive.bg === 'rgb(45, 45, 50)' && dim.destructive.opacity === '0.4',
+   JSON.stringify(dim.destructive))
+const sunken = await page.evaluate(() =>
+  getComputedStyle(document.documentElement).getPropertyValue('--sunken').trim())
+ok('and none of them is repainted to --sunken',
+   dim.primary.bg !== sunken && dim.secondary.bg !== sunken, sunken)
+
 console.log('\nERRORS: ' + (errors.length ? errors.join(' | ') : 'none'))
 await b.close()
