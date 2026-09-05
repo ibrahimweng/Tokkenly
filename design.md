@@ -2771,6 +2771,85 @@ and its screens at 144. Screens sit 160 apart, and sections sit 240 apart. The
 phone pages use the same shape with 48 between screens, because the frames are
 narrower.
 
+## 11e. The phone
+
+`07 Mobile` carries the settled product at 390 by 844: forty seven screens, one
+for every place and every sheet on `06 Desktop`.
+
+**It is built on the phone language that already existed, not a new one.** Page
+`04 App` had twenty nine screens from before Grow, Wallet and Market were
+settled, and they had already solved the hard part: a 56 status bar, a body at 20
+of side padding with a 24 gap, and a floating navigation that is four tabs in a
+pill with a separate More button beside it. That component is reused unchanged.
+
+**Four tabs and a More button.** Home, Wallet, Market and Grow sit in the pill.
+More opens a bottom sheet holding History, Account, Security, Your banks,
+Support and About. Six places, the same six the desktop rail lists, reached the
+way a phone reaches them.
+
+The nav component's variants are still named `Money` and `Stocks` from the older
+product. They light the right icons, and renaming them would break the twenty
+nine instances on `04 App`, so they stay. What a variant is called is a note to
+whoever opens the file; what it paints is what a person sees. Rule 45, applied to
+a name that is wrong but harmless.
+
+**A composer is a bottom sheet, not a page.** This is the one real difference
+from desktop. There, Borrow and Earn are pages with the amount on the left and
+the context on the right. There is no right on a phone, so the context stays on
+the Grow screen and the amount arrives as a sheet over it, with a keypad. The
+review and the outcome are sheets over the same screen, so a person never leaves
+the place they started from.
+
+| Flow | Screens |
+| --- | --- |
+| Home | `M01` detailed, `M02` simple |
+| Wallet | `M03` |
+| Buy dollars | `M04` · `M05` review · `M06` bought |
+| Send | `M07` who · `M08` amount · `M09` review · `M10` sent |
+| Receive | `M11` |
+| Convert | `M12` · `M13` review · `M14` done |
+| Market | `M15` · `M16` a company · `M17` invest · `M18` review · `M19` bought · `M20` sell |
+| Grow | `M21` hub |
+| Earn | `M22` · `M23` review · `M24` moved in |
+| Take out | `M25` · `M26` review · `M27` taken out |
+| Borrow | `M28` · `M29` review · `M30` borrowed |
+| Repay | `M31` · `M32` review · `M33` repaid |
+| History | `M34` · `M35` receipt |
+| You | `M36` Account · `M37` change email · `M38` close account · `M39` Security · `M40` change PIN · `M41` recovery phrase · `M42` shown · `M43` Support · `M44` your banks · `M45` join the list |
+| The rail | `M46` More |
+
+**The way in is not repeated.** `03 Onboarding` already runs fourteen phone
+screens from welcome through the recovery phrase, the PIN, Face ID, the mobile
+number and the NIN check. It is better than the two cards the desktop uses.
+Section A on `07 Mobile` is a note pointing at it and nothing else.
+
+**The whole page was in the wrong colour mode for a while.** Every fill on those
+twenty nine screens is bound to a token, so nothing was painted wrong; the frames
+were simply resolving `Colour` in Light. One explicit mode on the page turned
+forty seven screens dark at once. A palette held in variables is worth the
+trouble on exactly the day you find that out.
+
+**What the copied screens were still saying.** Borrow at 8.2% a year against
+`$2,480 you hold`, a `$1,860` limit, `Paid so far +$12.40`, an `EVERYDAY` account
+label from before the product was called Tokkenly, and a `Not open yet` pill on a
+product that is now drawn as working. All of it is on the settled numbers now.
+Some of it was inside component instances, which the first sweep skipped, because
+a text override is still a text.
+
+**Three faults of my own, worth writing down.** The Grow hub's two new links,
+`Take out` and `Repay`, were put in the slot that holds a status pill, so they
+arrived amber with a dot: an action dressed as a warning, which is rule 41 from
+the other side. They are neutral controls now. The sweep that applied them
+matched `card > row` and hit the Account screens, overwriting a phone number with
+the word `Repay` on three of them. And Support, cloned from Security, inherited a
+toggle switch on `How long does a payment take`, because a list of questions and a
+list of settings have the same shape and only one of them is switchable.
+
+**Forty seven screens pass**: nothing below 4.5 to 1, no unbound fill, no gap or
+padding off the four grid, and every amount coloured by direction. Two
+placeholders and a button label were lifted off `ink/subtle`, and twenty figures
+that were money in were painted `state/positive`.
+
 ## 11c. What the product actually does
 
 Everything above this section was designed before anyone had read the code. On
