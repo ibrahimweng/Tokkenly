@@ -1,4 +1,5 @@
 import { h } from '../ui'
+import { icon } from '../icons'
 import { usd, parseAmount } from '../format'
 
 export interface AmountComposer {
@@ -6,6 +7,28 @@ export interface AmountComposer {
   get(): number
   set(v: number): void
   onChange(fn: (v: number) => void): void
+}
+
+/** The phone enters an amount with a keypad, the way the Figma screens do.
+ *  Digits are read as cents so the decimal point never has to be typed. */
+export function keypad(comp: AmountComposer): HTMLElement {
+  const press = (d: string) => {
+    const cents = Math.round(comp.get() * 100).toString()
+    const next = cents === '0' ? d : cents + d
+    comp.set(Number(next.slice(0, 9)) / 100)
+  }
+  const back = () => {
+    const cents = Math.round(comp.get() * 100).toString()
+    comp.set(Number(cents.slice(0, -1) || '0') / 100)
+  }
+  const pad = h('div', { class: 'keypad' })
+  for (const d of ['1', '2', '3', '4', '5', '6', '7', '8', '9']) {
+    pad.appendChild(h('button', { class: 'key', text: d, on: { click: () => press(d) } }))
+  }
+  pad.appendChild(h('span'))
+  pad.appendChild(h('button', { class: 'key', text: '0', on: { click: () => press('0') } }))
+  pad.appendChild(h('button', { class: 'key', html: icon.back(), ariaLabel: 'Delete', on: { click: back } }))
+  return pad
 }
 
 /** Rule 47: anything you can drag must also be typeable, and the two never

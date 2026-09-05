@@ -5,6 +5,7 @@ import { composerScreen, scenarios } from '../components/composer'
 import { table } from '../components/table'
 import { amount } from '../components/bits'
 import { find } from '../catalogue'
+import { stockScreen } from './stock'
 import { state, holding } from '../state'
 import { usd, pct, shares as fmtShares, when } from '../format'
 import { go, openSheet } from '../router'
@@ -16,11 +17,13 @@ function orders(ticker?: string): HTMLElement {
       h('button', { class: 'link', text: 'See all', on: { click: () => go('/history?filter=trades') } })),
     table(
       [
-        { key: 'w', label: 'What' }, { key: 'when', label: 'When' },
-        { key: 'ref', label: 'Reference' }, { key: 'amt', label: 'Total', align: 'right' },
+        { key: 'w', label: 'What' }, { key: 'when', label: 'When', optional: true },
+        { key: 'ref', label: 'Reference', optional: true }, { key: 'amt', label: 'Total', align: 'right' },
       ],
       rows.map((a) => [
-        h('span', { class: 't-body-strong', text: a.type + ' ' + a.who }),
+        h('span', { class: 'two-line' },
+          h('span', { class: 't-body-strong', text: a.type + ' ' + a.who }),
+          h('small', { class: 'phone-only', text: when(a.at) })),
         h('span', { class: 'muted', text: when(a.at) }),
         h('span', { class: 'muted', text: a.ref }),
         amount(a.amount),
@@ -35,6 +38,7 @@ export function investScreen(ticker: string): HTMLElement {
   if (!c) return shell('market', pageHeader('Not found'))
   return composerScreen({
     place: 'market',
+    base: () => stockScreen(ticker),
     title: 'Invest',
     eyebrow: ['Cash available', usd(state.cash)],
     cardLabel: 'How much',
@@ -91,6 +95,7 @@ export function sellScreen(ticker: string): HTMLElement {
   const maxValue = held.shares * c.price
   return composerScreen({
     place: 'market',
+    base: () => stockScreen(ticker),
     title: 'Sell',
     eyebrow: ['You hold', usd(maxValue)],
     cardLabel: 'How much',

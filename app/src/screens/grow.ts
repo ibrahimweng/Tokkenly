@@ -92,12 +92,14 @@ function loanHistory(): HTMLElement {
     cardHead('Your loans', h('button', { class: 'link', text: 'See all', on: { click: () => go('/history?filter=grow') } })),
     table(
       [
-        { key: 'w', label: 'What' }, { key: 'when', label: 'When' },
-        { key: 'rate', label: 'Rate' }, { key: 'ref', label: 'Reference' },
+        { key: 'w', label: 'What' }, { key: 'when', label: 'When', optional: true },
+        { key: 'rate', label: 'Rate', optional: true }, { key: 'ref', label: 'Reference', optional: true },
         { key: 'amt', label: 'Amount', align: 'right' },
       ],
       rows.map((a) => [
-        h('span', { class: 't-body-strong', text: a.type }),
+        h('span', { class: 'two-line' },
+          h('span', { class: 't-body-strong', text: a.type }),
+          h('small', { class: 'phone-only', text: when(a.at) })),
         h('span', { class: 'muted', text: when(a.at) }),
         h('span', { class: 'muted', text: pct(state.rates.borrow) }),
         h('span', { class: 'muted', text: a.ref }),
@@ -114,12 +116,14 @@ function earnHistory(): HTMLElement {
     cardHead('Your earnings', h('button', { class: 'link', text: 'See all', on: { click: () => go('/history?filter=grow') } })),
     table(
       [
-        { key: 'w', label: 'What' }, { key: 'when', label: 'When' },
-        { key: 'rate', label: 'Rate' }, { key: 'ref', label: 'Reference' },
+        { key: 'w', label: 'What' }, { key: 'when', label: 'When', optional: true },
+        { key: 'rate', label: 'Rate', optional: true }, { key: 'ref', label: 'Reference', optional: true },
         { key: 'amt', label: 'Paid', align: 'right' },
       ],
       rows.map((a) => [
-        h('span', { class: 't-body-strong', text: a.type }),
+        h('span', { class: 'two-line' },
+          h('span', { class: 't-body-strong', text: a.type }),
+          h('small', { class: 'phone-only', text: when(a.at) })),
         h('span', { class: 'muted', text: when(a.at) }),
         h('span', { class: 'muted', text: pct(state.rates.earn) }),
         h('span', { class: 'muted', text: a.ref }),
@@ -137,6 +141,7 @@ export function borrowScreen(): HTMLElement {
   const avail = availableToBorrow()
   return composerScreen({
     place: 'grow',
+    base: growScreen,
     title: 'Borrow',
     eyebrow: ['Available', usd(avail)],
     cardLabel: 'How much',
@@ -202,6 +207,7 @@ export function repayScreen(): HTMLElement {
   const total = owed()
   return composerScreen({
     place: 'grow',
+    base: growScreen,
     title: 'Repay',
     eyebrow: ['You owe', usd(total)],
     cardLabel: 'How much',
@@ -257,6 +263,7 @@ export function repayScreen(): HTMLElement {
 export function earnScreen(): HTMLElement {
   return composerScreen({
     place: 'grow',
+    base: growScreen,
     title: 'Earn',
     eyebrow: ['In your wallet', usd(state.cash)],
     cardLabel: 'How much',
@@ -312,6 +319,7 @@ export function earnScreen(): HTMLElement {
 export function takeOutScreen(): HTMLElement {
   return composerScreen({
     place: 'grow',
+    base: growScreen,
     title: 'Take out',
     eyebrow: ['In Earn', usd(state.inEarn)],
     cardLabel: 'How much',

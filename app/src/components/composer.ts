@@ -1,7 +1,10 @@
 import { h } from '../ui'
+import { icon } from '../icons'
 import { shell, pageHeader, eyebrow, type Place } from './shell'
 import { card, cardHead, kv, callout as calloutEl } from './bits'
-import { amountComposer } from './amount'
+import { amountComposer, keypad } from './amount'
+import { isMobile } from '../responsive'
+import { current, closeSheet } from '../router'
 
 export interface ComposerSpec {
   place: Place
@@ -19,12 +22,18 @@ export interface ComposerSpec {
   onAction: (v: number) => void
   right: (v: number) => Node
   bottom?: Node
+  /** The place the composer belongs to. On the phone the amount arrives as a
+   *  sheet over this, because there is no second column to put context in. */
+  base: () => HTMLElement
 }
 
-/** Every amount screen in the product is this shape: the composer on the
- *  left, the context that makes the decision on the right, the history under
- *  both. Building it once is what keeps them consistent. */
 export function composerScreen(spec: ComposerSpec): HTMLElement {
+  const mobile = isMobile()
+
+  // A review or an outcome sheet replaces the composer sheet rather than
+  // stacking on it, so the phone only ever shows one sheet at a time.
+  if (mobile && current().sheet) return spec.base()
+
   const comp = amountComposer({
     initial: spec.initial,
     max: spec.max,
@@ -38,28 +47,39 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
 
   function paint(v: number): void {
     summaryBox.replaceChildren(...spec.summary(v).map(([k, val, cls]) => kv(k, val, cls ?? '')))
-    rightBox.replaceChildren(spec.right(v))
+    if (!mobile) rightBox.replaceChildren(spec.right(v))
     button.textContent = spec.action(v)
     button.toggleAttribute('disabled', v <= 0 || v > spec.max)
   }
-
   comp.onChange(paint)
   button.addEventListener('click', () => {
     const v = comp.get()
     if (v > 0 && v <= spec.max) spec.onAction(v)
   })
+  paint(spec.initial)
+
+  if (mobile) {
+    const panel = h('div', { class: 'sheet' },
+      h('div', { class: 'grabber' }),
+      h('div', { class: 'sheet-head' },
+        h('h2', { text: spec.title }),
+        h('button', { class: 'close', ariaLabel: 'Back', html: icon.close(),
+          on: { click: () => history.back() } })),
+      comp.el,
+      keypad(comp),
+      summaryBox,
+      button)
+    const scrim = h('div', { class: 'scrim' }, panel)
+    const base = spec.base()
+    base.appendChild(scrim)
+    return base
+  }
 
   const left = card(
     cardHead(spec.cardLabel, h('span', { class: 'muted', text: spec.cardRight })),
-    comp.el,
-    summaryBox,
-    calloutEl(spec.callout),
-    button
-  )
+    comp.el, summaryBox, calloutEl(spec.callout), button)
   left.style.width = '456px'
   left.style.flex = 'none'
-
-  paint(spec.initial)
 
   return shell(
     spec.place,
@@ -87,3 +107,5 @@ export function scenarios(
   for (const r of rows) grid.appendChild(line(r, false))
   return grid
 }
+
+export { closeSheet }

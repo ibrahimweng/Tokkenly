@@ -14,6 +14,12 @@ npm run typecheck  # tsc --noEmit on its own
 
 No framework. TypeScript, hand-written DOM, and three stylesheets.
 
+**One codebase, two shapes.** Above 900 pixels it is the desktop product from
+`06 Desktop`. Below, it is the phone drawn on `07 Mobile`: a top bar, one
+column, a floating rail of four tabs plus More, and every sheet arriving from
+the bottom. `src/responsive.ts` holds the single breakpoint, and the router
+re-renders when it is crossed.
+
 ## How it is put together
 
 | File | What it owns |
@@ -23,6 +29,7 @@ No framework. TypeScript, hand-written DOM, and three stylesheets.
 | `src/sheets.ts` | Every review and outcome sheet, in one registry |
 | `src/components/` | The shell, the amount composer, tables, sheets, and the shared bits |
 | `src/screens/` | One file per place, plus `map.ts`, which lists every address |
+| `src/responsive.ts` | The one breakpoint, and the crossing event |
 | `src/styles/tokens.css` | The palette and type scale from design.md section 2 |
 
 **State is real.** Borrowing moves money into the wallet, raises what you owe,
@@ -50,8 +57,11 @@ Two Playwright scripts, run against a build:
 
 ```bash
 npm run build && npx vite preview --port 4173 &
-node scripts/walk.mjs    # opens all 24 addresses, screenshots each, reports page errors
-node scripts/flows.mjs   # clicks five flows through and prints what the money did
+node scripts/walk.mjs         # all 24 addresses at 1440, screenshots and page errors
+node scripts/flows.mjs        # five flows clicked through, and what the money did
+node scripts/phone.mjs        # the same addresses at 390, checking nothing scrolls sideways
+node scripts/phone-flows.mjs  # a borrow driven on the keypad, plus the rail and the breakpoint
+node scripts/fit.mjs          # every composer sheet, with its button reachable on a phone
 ```
 
 `flows.mjs` is the one that matters. It borrows $600 and checks the wallet went

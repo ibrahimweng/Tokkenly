@@ -4,6 +4,7 @@ import { shell, pageHeader, eyebrow } from '../components/shell'
 import { card, cardHead, kv, callout } from '../components/bits'
 import { composerScreen } from '../components/composer'
 import { state } from '../state'
+import { walletScreen } from './wallet'
 import { usd, naira } from '../format'
 import { openSheet, current, go } from '../router'
 import { toast } from '../components/sheet'
@@ -15,6 +16,7 @@ export function sendScreen(): HTMLElement {
   const to = r.query.get('to') ?? PEOPLE[0]
   return composerScreen({
     place: 'wallet',
+    base: walletScreen,
     title: 'Send money',
     eyebrow: ['Cash available', usd(state.cash)],
     cardLabel: 'How much',
@@ -109,6 +111,7 @@ export function addMoneyScreen(): HTMLElement {
   const bank = state.banks[0]
   return composerScreen({
     place: 'wallet',
+    base: walletScreen,
     title: 'Buy dollars',
     eyebrow: ['Cash available', usd(state.cash)],
     cardLabel: 'How much',
@@ -150,6 +153,7 @@ export function convertScreen(): HTMLElement {
   const bank = state.banks[0]
   return composerScreen({
     place: 'wallet',
+    base: walletScreen,
     title: 'Convert to naira',
     eyebrow: ['Cash available', usd(state.cash)],
     cardLabel: 'How much',

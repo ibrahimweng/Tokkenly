@@ -2771,6 +2771,38 @@ and its screens at 144. Screens sit 160 apart, and sections sit 240 apart. The
 phone pages use the same shape with 48 between screens, because the frames are
 narrower.
 
+### 11d.1 The build, on a phone
+
+`app/` is one codebase in two shapes. Above 900 pixels it is `06 Desktop`.
+Below, it is `07 Mobile`, and the difference is not a squeeze.
+
+| Desktop | Phone |
+| --- | --- |
+| Sidebar of six places | Top bar for identity, floating rail of four tabs, More for the other two |
+| Centred modal | Sheet from the bottom, full width, radius on the top corners only |
+| Composer is a page with context on the right | Composer is a sheet over the place it belongs to, because there is no right |
+| Ruler and a typed field | Ruler, a typed field, and a keypad |
+| Five column tables | Two columns, with what was dropped stacked under the name |
+
+**A composer knows what it sits over.** `ComposerSpec` gained one field, `base`,
+naming the screen the sheet belongs to: Borrow and Repay sit over Grow, Invest
+and Sell over the company page, Send and Convert over Wallet. On the phone the
+composer renders that screen and puts itself on top of it. When a review or an
+outcome opens, the composer sheet steps aside rather than stacking, so a phone
+only ever shows one sheet.
+
+**Fitting the button on the screen was the real work.** The first phone
+composer ran 928 tall in an 88vh sheet, which put `Borrow $1,150.00` below the
+fold on the one screen where the button is the point. The ruler shortened, the
+hint went because a keypad explains itself, and the callout moved to the review,
+which repeated it anyway. `scripts/fit.mjs` now asserts that every one of the
+nine composers has its button on screen at 390 by 844.
+
+**Four screens scrolled sideways** before the charts were told to share the
+width they have rather than the width they were drawn at. `scripts/phone.mjs`
+measures `scrollWidth` against the viewport on every address, so that class of
+fault reports itself.
+
 ## 11e. The phone
 
 `07 Mobile` carries the settled product at 390 by 844: forty seven screens, one

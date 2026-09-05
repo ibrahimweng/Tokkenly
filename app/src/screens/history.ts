@@ -62,14 +62,16 @@ export function historyScreen(): HTMLElement {
       ? table(
           [
             { key: 'who', label: 'Who' },
-            { key: 'type', label: 'Type' },
-            { key: 'ref', label: 'Reference' },
-            { key: 'date', label: 'Date' },
+            { key: 'type', label: 'Type', optional: true },
+            { key: 'ref', label: 'Reference', optional: true },
+            { key: 'date', label: 'Date', optional: true },
             { key: 'amt', label: 'Amount', align: 'right' },
           ],
           rows.map((a) => [
             h('span', { class: 'who' }, directionMark(a.amount),
-              h('span', { class: 't-body-strong', text: a.who })),
+              h('span', { class: 'two-line' },
+                h('span', { class: 't-body-strong', text: a.who }),
+                h('small', { class: 'phone-only', text: a.type + ' · ' + when(a.at) }))),
             h('span', { class: 'muted', text: a.type }),
             h('span', { class: 'muted', text: a.ref }),
             h('span', { class: 'muted', text: when(a.at) }),

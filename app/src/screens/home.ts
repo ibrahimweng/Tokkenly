@@ -6,6 +6,7 @@ import { table } from '../components/table'
 import { state, actions, holdingsValue, availableToBorrow, buyingPower } from '../state'
 import { usd, signed, when, pct, activityLabel } from '../format'
 import { go } from '../router'
+import { isMobile } from '../responsive'
 
 function viewToggle(): HTMLElement {
   const mk = (v: 'simple' | 'detailed', label: string) =>
@@ -19,7 +20,7 @@ function viewToggle(): HTMLElement {
 }
 
 function quickAction(label: string, sub: string, ic: string, to: string): HTMLElement {
-  const a = link(to, 'card grow')
+  const a = link(to, 'card grow tile')
   a.style.textDecoration = 'none'
   a.appendChild(h('div', { class: 'promo-badge', html: ic }))
   a.appendChild(h('div', { class: 'spacer' }))
@@ -50,7 +51,7 @@ function chart(): HTMLElement {
       ...['1D', '1W', '1M', '3M', '1Y', 'ALL'].map((p, i) =>
         h('button', { class: 'chip', text: p, ariaPressed: i === 4 })))))
 
-  const bars = h('div', { style: { display: 'flex', alignItems: 'flex-end', gap: '3px', height: '196px' } })
+  const bars = h('div', { class: 'bars', style: { display: 'flex', alignItems: 'flex-end', gap: '3px', height: '196px' } })
   let seed = 7
   const rand = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648)
   for (let i = 0; i < 72; i++) {
@@ -107,7 +108,7 @@ function detailed(): HTMLElement {
 
   return shell(
     'home',
-    pageHeader('Good morning, ' + state.person.name.split(' ')[0], viewToggle()),
+    pageHeader(isMobile() ? '' : 'Good morning, ' + state.person.name.split(' ')[0], viewToggle()),
     h('div', { class: 'row' },
       h('div', { class: 'stack', style: { width: '308px', flex: 'none' } },
         h('div', { class: 'stack-8' },
@@ -118,7 +119,7 @@ function detailed(): HTMLElement {
         h('div', { class: 'chip-row' },
           h('button', { class: 'btn btn-filled btn-sm', text: 'Send', on: { click: () => go('/send') } }),
           h('button', { class: 'btn btn-quiet btn-sm', text: 'Receive', on: { click: () => go('/receive') } }))),
-      h('div', { class: 'row grow' },
+      h('div', { class: 'row grow tiles' },
         quickAction('Buy', 'Shares and funds', icon.buy(), '/market'),
         quickAction('Convert', 'Naira and dollars', icon.convert(), '/convert'),
         quickAction('Borrow', 'Against your shares', icon.download(), '/grow/borrow'))),
@@ -139,7 +140,7 @@ function detailed(): HTMLElement {
 
 function gateway(): HTMLElement {
   const tile = (label: string, sub: string, to: string, ic: string) => {
-    const a = link(to, 'card')
+    const a = link(to, 'card tile')
     a.style.textDecoration = 'none'
     a.style.minHeight = '220px'
     a.appendChild(h('div', { class: 'promo-badge', html: ic }))
@@ -151,12 +152,12 @@ function gateway(): HTMLElement {
   }
   return shell(
     'home',
-    pageHeader('Good morning, ' + state.person.name.split(' ')[0], viewToggle()),
+    pageHeader(isMobile() ? '' : 'Good morning, ' + state.person.name.split(' ')[0], viewToggle()),
     h('div', { class: 'stack-8' },
       h('span', { class: 't-caps subtle', text: 'Your money' }),
       h('span', { class: 't-display-xl', text: usd(state.cash + state.inEarn + holdingsValue()) }),
       h('span', { class: 'muted', text: 'Everything is settled. Nothing needs your attention.' })),
-    h('div', { class: 'row' },
+    h('div', { class: 'row tiles' },
       tile('Buy stock', 'Own a piece of Apple, Nvidia or an index fund', '/market', icon.buy()),
       tile('Add money', 'Turn naira into dollars, usually in under a minute', '/addmoney', icon.receive()),
       tile('Send', 'Pay anyone, anywhere, for nothing', '/send', icon.send())),

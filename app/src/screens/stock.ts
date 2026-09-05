@@ -10,7 +10,7 @@ import { toast } from '../components/sheet'
 function sparkline(seedNum: number, up: boolean): HTMLElement {
   let seed = seedNum
   const rand = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648)
-  const bars = h('div', { style: { display: 'flex', alignItems: 'flex-end', gap: '3px', height: '220px' } })
+  const bars = h('div', { class: 'bars', style: { display: 'flex', alignItems: 'flex-end', gap: '3px', height: '220px' } })
   for (let i = 0; i < 80; i++) {
     const t = i / 79
     const drift = up ? t * 0.55 : (1 - t) * 0.35

@@ -5,6 +5,7 @@ import './styles/components.css'
 import { h } from './ui'
 import { start, current, go, type Route } from './router'
 import { state, subscribe } from './state'
+import { onBreakpointChange } from './responsive'
 import { buildSheet } from './sheets'
 import { homeScreen } from './screens/home'
 import { walletScreen } from './screens/wallet'
@@ -84,4 +85,5 @@ function render(r: Route): void {
 }
 
 subscribe(() => render(current()))
+onBreakpointChange(() => render(current()))
 start(render)

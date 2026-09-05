@@ -5,6 +5,9 @@ export interface Column {
   label: string
   align?: 'left' | 'right'
   width?: string
+  /** Dropped below the breakpoint. A phone has room for who and how much,
+   *  and the rest is one tap away in the receipt. */
+  optional?: boolean
 }
 
 export function table(
@@ -18,6 +21,7 @@ export function table(
     const th = h('th', { text: c.label })
     if (c.align === 'right') th.style.textAlign = 'right'
     if (c.width) th.style.width = c.width
+    if (c.optional) th.classList.add('opt')
     tr.appendChild(th)
   }
   thead.appendChild(tr)
@@ -28,6 +32,7 @@ export function table(
     cells.forEach((cell, j) => {
       const td = h('td')
       if (cols[j]?.align === 'right') td.style.textAlign = 'right'
+      if (cols[j]?.optional) td.classList.add('opt')
       td.appendChild(typeof cell === 'string' ? document.createTextNode(cell) : cell)
       row.appendChild(td)
     })

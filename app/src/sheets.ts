@@ -9,6 +9,7 @@ import { find } from './catalogue'
 import { usd, naira, pct, shares as fmtShares, longWhen, when } from './format'
 import { type Route, closeSheet, replaceSheet, go } from './router'
 import { QA } from './screens/settings'
+import { BEHIND_MORE } from './components/shell'
 
 const num = (r: Route, k: string, d = 0): number => Number(r.query.get(k) ?? d) || d
 const str = (r: Route, k: string, d = ''): string => r.query.get(k) ?? d
@@ -53,6 +54,28 @@ function done(
 type Builder = (r: Route) => HTMLElement
 
 export const SHEETS: Record<string, Builder> = {
+  /** The rest of the rail. Four places are tabs; these five are behind More. */
+  more: () =>
+    sheet('More',
+      h('div', { class: 'sheet-list' },
+        ...BEHIND_MORE.map((p) =>
+          h('button', {
+            class: 'sheet-row',
+            on: { click: () => { closeSheet(); go(p.to) } },
+          },
+            h('span', { class: 'mark', html: p.ic() }),
+            h('span', { class: 'two-line' },
+              h('span', { class: 't-body-strong', text: p.label }),
+              h('small', { text: p.sub })),
+            h('span', { class: 'muted', html: icon.chevron() })))),
+      h('div', { class: 'stack-8' },
+        h('span', { class: 't-caps subtle', text: 'Coming' }),
+        h('div', { class: 'chip-row' },
+          h('button', { class: 'chip', text: 'Debit card', on: { click: () => replaceSheet('card') } }),
+          h('span', { class: 'chip', text: 'Bills' }))),
+      h('p', { class: 'muted t-caption', style: { margin: '0' },
+        text: 'These are parts of Tokkenly that are not built yet.' })),
+
   /* ----- receipts and records ----- */
   receipt: (r) => {
     const a = state.activity.find((x) => x.ref === str(r, 'ref'))

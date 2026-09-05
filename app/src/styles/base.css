@@ -46,3 +46,36 @@ ul { margin: 0; padding: 0; list-style: none; }
 .warn { color: var(--warning); }
 .right { text-align: right; }
 .nowrap { white-space: nowrap; }
+
+/* ---------------------------------------------------------------- phone --
+   Below 900 the product becomes the phone: one column, a top bar, and a
+   floating rail. Figma page 07 Mobile. */
+@media (max-width: 899px) {
+  :root {
+    --content-pad-x: 20px;
+    --content-pad-y: 16px;
+  }
+  .screen { display: block; }
+  .content {
+    gap: 24px;
+    padding-bottom: calc(var(--nav-h) + 48px);
+  }
+  .page-header { align-items: flex-start; }
+  .page-header h1 { font-size: 22px; line-height: 28px; }
+
+  /* every row becomes a stack, and every side column a full-width band */
+  .row { flex-direction: column; gap: 16px; }
+  .row > .col-side,
+  .row > .col-main,
+  .row > * { width: 100% !important; flex: none !important; }
+
+  .stack, .row { gap: 16px; }
+  .card { padding: 20px; border-radius: 24px; }
+  .eyebrow { flex-direction: column; gap: 2px; align-items: flex-end; }
+}
+
+.phone-only { display: none; }
+@media (max-width: 899px) {
+  .phone-only { display: block; }
+  .table td .two-line small { color: var(--muted); font-size: 12px; }
+}
