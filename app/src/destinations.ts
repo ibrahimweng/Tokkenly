@@ -48,6 +48,8 @@ export const DESTINATIONS: Destination[] = [
   { label: 'Grow activity', to: '/activity?filter=grow', place: 'history', kind: 'screen', primary: true, also: 'interest borrowed repaid' },
 
   { label: 'Account', to: '/account', place: 'account', kind: 'place', primary: true, also: 'profile details name address' },
+  { label: 'Verify your identity', to: '/verify', place: 'account', kind: 'action', primary: true,
+    also: 'kyc nin bvn identity check limits raise lift', hint: 'Raises what you can move' },
   { label: 'Security', to: '/security', place: 'account', kind: 'screen', primary: true, also: 'pin face id recovery phrase devices sign out' },
   { label: 'Support', to: '/support', place: 'account', kind: 'screen', primary: true, also: 'help questions contact email us' },
   { label: 'Everything', to: '/all', place: 'account', kind: 'screen', primary: true, also: 'all screens index directory sitemap' },
@@ -71,18 +73,31 @@ export function trailFor(path: string, query: URLSearchParams): Destination[] {
     if (!q) return true
     return new URLSearchParams(q).get('filter') === query.get('filter')
   })
-  if (!here) return []
+  // A step inside a flow keeps the flow's trail. /verify/number is not its own
+  // destination and should not be — but losing the way back on step two of
+  // four is worse than a slightly generic crumb.
+  const step = here ?? DESTINATIONS.find((d) => {
+    const p = bare(d.to)
+    return p !== '/' && path.startsWith(p + '/')
+  })
+  if (!step) return []
+  return trailTo(step, path)
+}
+
+function trailTo(here: Destination, path: string): Destination[] {
+  {
   const root = DESTINATIONS.find((d) => d.place === here.place && d.kind === 'place')
   const trail: Destination[] = []
   if (root && root !== here) trail.push(root)
-  // A stock's action sits under the stock, which sits under Market.
+  // A stock's action sits under the stock, which sits under Invest.
   const parts = path.split('/').filter(Boolean)
-  if (parts[0] === 'market' && parts[1] && parts[2]) {
+  if (parts[0] === 'invest' && parts[1] && parts[2]) {
     const stock = DESTINATIONS.find((d) => bare(d.to) === `/${parts[0]}/${parts[1]}`)
     if (stock && stock !== here) trail.push(stock)
   }
   trail.push(here)
   return trail
+  }
 }
 
 export interface Hit { label: string; to: string; group: string; hint?: string }

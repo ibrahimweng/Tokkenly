@@ -6,7 +6,7 @@ import { table } from '../components/table'
 import { amount } from '../components/bits'
 import { find } from '../catalogue'
 import { stockScreen } from './stock'
-import { state, holding, nairaAside, tradeFee, maxInvestable } from '../state'
+import { state, holding, nairaAside, tradeFee, maxInvestable, movementCeiling, ceilingLabel } from '../state'
 import { usd, pct, shares as fmtShares, when } from '../format'
 import { go, openSheet } from '../router'
 
@@ -46,8 +46,10 @@ export function investScreen(ticker: string): HTMLElement {
     initial: Math.min(500, maxInvestable()),
     // The fee has to fit in the cash too, so the ceiling is what is left once
     // it does — not the balance, which would put every "All" over the top.
-    max: maxInvestable(),
-    maxLabel: 'The most you can invest, fee included',
+    // Two ceilings, and the lower one is the real one: the cash that is there
+    // once the fee fits, and what the account is allowed to move.
+    max: Math.min(maxInvestable(), movementCeiling()),
+    maxLabel: ceilingLabel(maxInvestable(), 'The most you can invest, fee included'),
     note: nairaAside(Math.min(500, state.cash)) ?? undefined,
     quick: [
       { label: usd(100, false), value: 100 },

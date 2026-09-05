@@ -2,7 +2,7 @@ import { h } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader, eyebrow } from '../components/shell'
 import { card, cardHead, headLink, kv, callout, amount, directionMark } from '../components/bits'
-import { state, buyingPower, availableToBorrow, nairaAside } from '../state'
+import { state, buyingPower, availableToBorrow, nairaAside, limits, leftThisMonth, verified } from '../state'
 import { usd, when, activityLabel } from '../format'
 import { go, openSheet } from '../router'
 
@@ -90,10 +90,15 @@ export function walletScreen(): HTMLElement {
       h('div', { class: 'stack col-side' },
         card(
           cardHead('Your limits'),
-          kv('Monthly', usd(10000, false)),
-          kv('Used this month', usd(3180)),
-          kv('Single payment', usd(2500, false)),
-          callout('Limits lift once you have been verified for ninety days.')
+          kv('Monthly', usd(limits().monthly, false)),
+          kv('Used this month', usd(state.usedThisMonth)),
+          kv('Left this month', usd(leftThisMonth())),
+          kv('One payment', usd(limits().single, false)),
+          // The card that states a limit is the place to lift it.
+          verified()
+            ? callout('These are the verified limits. They reset on the first of the month.')
+            : h('button', { class: 'btn btn-primary btn-sm', text: 'Verify to lift these',
+                on: { click: () => go('/verify') } })
         ),
         card(
           cardHead('Payment methods', h('button', { class: 'link', text: 'Add a bank', on: { click: () => openSheet('banks') } })),

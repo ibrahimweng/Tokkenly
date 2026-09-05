@@ -45,6 +45,22 @@ export const DEFAULT_PREFS: Prefs = {
   notify: { payments: true, prices: true, earn: true, borrowing: true },
 }
 
+export interface Kyc {
+  status: 'none' | 'checking' | 'verified'
+  method?: 'NIN' | 'BVN'
+  checkedOn?: string
+  /** The last four digits, which is all a person needs to recognise it. */
+  last4?: string
+}
+
+/** What an account can move in a month and in one go, before and after the
+ *  check. One pair of numbers, read everywhere, so the limits card and the
+ *  thing that actually stops a payment cannot drift apart. */
+export const LIMITS = {
+  none: { monthly: 1000, single: 250 },
+  verified: { monthly: 10000, single: 2500 },
+}
+
 export interface BucketItem {
   ticker: string
   dollars: number
@@ -99,6 +115,11 @@ export interface State {
    *  ship together. `fx` is nought because the naira rate on screen is the
    *  rate you get; that is the "nothing folded in" half of the promise. */
   fees: { trade: number; fx: number }
+  /** Identity, and what it unlocks. The marketing says identity checks "may be
+   *  required before financial and investment services", so an account starts
+   *  without one and the limits say what that costs. */
+  kyc: Kyc
+  usedThisMonth: number
   holdings: Holding[]
   watchlist: string[]
   /** Companies picked out and not yet paid for. A watchlist is a list of
@@ -173,6 +194,8 @@ export const state: State = {
   borrowLimit: 1860,
   rates: { earn: 4.8, borrow: 9.4, collateral: 140 },
   fees: { trade: 0.5, fx: 0 },
+  kyc: { status: 'none' },
+  usedThisMonth: 180,
   holdings: [
     { ticker: 'AAPL', name: 'Apple', shares: 23.42, price: 224.1, dayPct: 1.2 },
     { ticker: 'NVDA', name: 'Nvidia', shares: 26.94, price: 118.9, dayPct: 2.4 },
@@ -272,6 +295,28 @@ export const nairaAside = (dollars: number): string | null =>
     ? `About ₦${Math.round(dollars * state.ngnPerUsd).toLocaleString('en-US')} at today’s indicative rate`
     : null
 
+/* ------------------------------------------------------------ the limits --
+   One place, so the card that states a limit and the thing that enforces it
+   are the same number. */
+export const verified = (): boolean => state.kyc.status === 'verified'
+export const limits = () => (verified() ? LIMITS.verified : LIMITS.none)
+export const leftThisMonth = (): number =>
+  Math.max(0, limits().monthly - state.usedThisMonth)
+
+/** The most a single movement can be: the single-payment cap, or whatever is
+ *  left of the month, whichever runs out first. */
+export const movementCeiling = (): number =>
+  Math.min(limits().single, leftThisMonth())
+
+/** Which ceiling is actually doing the stopping, so the message names the real
+ *  one. Three can bind — the money, the month, and the single payment — and a
+ *  message that names the wrong one sends someone to fix the wrong thing. */
+export function ceilingLabel(byBalance: number, ownLabel: string): string {
+  if (movementCeiling() >= byBalance) return ownLabel
+  if (leftThisMonth() < limits().single) return 'What is left of your monthly limit'
+  return verified() ? 'The most you can move in one go' : 'Your single payment limit until you verify'
+}
+
 /* ------------------------------------------------------------------ fees --
    The figure a person types is what they are investing. The fee is added on
    top, so "$50 of Nvidia" buys $50 of Nvidia and costs $50.25 — rather than
@@ -344,7 +389,32 @@ export const actions = {
     changed()
   },
 
+  /** Money that has left, for the monthly limit. Buying a share counts: the
+   *  marketing's phrase is "financial and investment services", and a limit
+   *  that only watched transfers would be a limit with a hole in it. */
+  countAgainstLimit(amount: number) {
+    state.usedThisMonth = Math.round((state.usedThisMonth + amount) * 100) / 100
+  },
+
+  /* ----- identity ----- */
+  startVerification(method: 'NIN' | 'BVN', number: string) {
+    state.kyc = { status: 'checking', method, last4: number.slice(-4) }
+    changed()
+  },
+  finishVerification() {
+    state.kyc = {
+      ...state.kyc, status: 'verified',
+      checkedOn: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+    }
+    changed()
+  },
+  resetVerification() {
+    state.kyc = { status: 'none' }
+    changed()
+  },
+
   send(to: string, amount: number): Activity {
+    actions.countAgainstLimit(amount)
     state.cash -= amount
     const a = record({ kind: 'payment', who: to, type: 'Sent', amount: -amount })
     changed()
@@ -352,6 +422,7 @@ export const actions = {
   },
 
   addMoney(amount: number, bankId: string): Activity {
+    actions.countAgainstLimit(amount)
     const bank = state.banks.find((b) => b.id === bankId)
     state.cash += amount
     const a = record({
@@ -363,6 +434,7 @@ export const actions = {
   },
 
   convert(amount: number, bankId: string): Activity {
+    actions.countAgainstLimit(amount)
     const bank = state.banks.find((b) => b.id === bankId)
     state.cash -= amount
     const a = record({
@@ -390,6 +462,7 @@ export const actions = {
     if (h) h.shares += shares
     else state.holdings.push({ ticker: c.ticker, name: c.name, shares, price: c.price, dayPct: c.dayPct })
     state.cash -= spend + fee
+    actions.countAgainstLimit(spend + fee)
     const activity = record({ kind: 'trade', who: c.name, type: 'Bought', amount: -(spend + fee) })
     changed()
     return { activity, shares, fee, invested: spend }

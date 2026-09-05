@@ -698,6 +698,14 @@ th.right .th-sort { flex-direction: row-reverse; }
   background-repeat: no-repeat;
 }
 
+/* ----------------------------------------------------------- the check --
+   An identity check is four questions, and pretending it is one long form
+   does not make it shorter. The dots say how many are left, reusing the
+   intro's own marks so the two flows read as the same product. */
+.verify-dots { display: flex; gap: 6px; margin-bottom: 4px; }
+.verify-dots .welcome-dot { width: 20px; height: 4px; border-radius: 2px; }
+.verify-dots .welcome-dot.on { width: 20px; background: var(--positive); }
+
 /* ------------------------------------------------------------ the intro --
    Four screens, each making one claim the product has to earn. No sidebar and
    no rail: the first thing a person sees should have one thing to do on it.

@@ -2,7 +2,7 @@ import { h } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader, eyebrow } from '../components/shell'
 import { card, cardHead, kv, callout, emptyState, toggle, choice } from '../components/bits'
-import { state, actions } from '../state'
+import { state, actions, verified, LIMITS } from '../state'
 import { usd } from '../format'
 import { openSheet, go, current } from '../router'
 import { toast } from '../components/sheet'
@@ -95,11 +95,36 @@ function payments(): HTMLElement {
     h('button', { class: 'link quiet', text: 'Manage banks', on: { click: () => openSheet('banks') } }))
 }
 
+/** What the check is worth, and the way into it. Unverified this is the most
+ *  useful card on the screen; verified it is a receipt. */
+function verification(): HTMLElement {
+  if (verified()) {
+    return card(
+      cardHead('Verification', h('span', { class: 'chip pos', text: 'Verified' })),
+      kv('Checked with', state.kyc.method ?? 'NIN'),
+      kv('Number', 'ending ' + (state.kyc.last4 ?? '••••')),
+      kv('Checked on', state.kyc.checkedOn ?? ''),
+      kv('Monthly limit', usd(LIMITS.verified.monthly, false)),
+      h('button', { class: 'link quiet', text: 'Start again',
+        on: { click: () => { actions.resetVerification(); toast('Verification cleared') } } }))
+  }
+  return card(
+    cardHead('Verification', h('span', { class: 'pill', text: 'Not done' })),
+    h('span', { class: 'muted',
+      text: 'You can browse, add money and buy small amounts without this. Verifying raises what you can move.' }),
+    kv('Monthly limit', `${usd(LIMITS.none.monthly, false)} → ${usd(LIMITS.verified.monthly, false)}`),
+    kv('One payment', `${usd(LIMITS.none.single, false)} → ${usd(LIMITS.verified.single, false)}`),
+    h('button', { class: 'btn btn-primary btn-sm', text: 'Verify with NIN or BVN',
+      on: { click: () => go('/verify') } }))
+}
+
 export function accountScreen(): HTMLElement {
   const p = state.person
   return shell(
     'account',
-    pageHeader('Account', eyebrow('Verified', 'NIN checked 12 Aug 2026')),
+    pageHeader('Account', verified()
+      ? eyebrow('Verified', (state.kyc.method ?? 'NIN') + ' checked ' + (state.kyc.checkedOn ?? ''))
+      : eyebrow('Not verified', 'Limits are low until you are')),
     h('div', { class: 'row' },
       h('div', { class: 'stack col-main' },
         preferences(),
@@ -134,12 +159,7 @@ export function accountScreen(): HTMLElement {
       h('div', { class: 'stack col-side' },
         notifications(),
         payments(),
-        card(
-          cardHead('Verification', h('span', { class: 'chip pos', text: 'Verified' })),
-          kv('Checked with', 'NIN'),
-          kv('Checked on', '12 Aug 2026'),
-          kv('Monthly limit', usd(10000, false))
-        ),
+        verification(),
         card(
           cardHead('Devices', h('button', { class: 'link quiet', text: 'Security', on: { click: () => go('/security') } })),
           ...state.devices.map((d) => kv(d.name, d.current ? 'This one' : d.seen))

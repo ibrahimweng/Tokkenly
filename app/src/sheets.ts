@@ -403,7 +403,7 @@ export const SHEETS: Record<string, Builder> = {
               h('span', { class: 'two-line' },
                 h('span', { class: 't-body-strong', text: b.name }),
                 h('small', { text: '•••• ' + b.last4 + ' · ' + b.holder }))),
-            h('span', { class: 'muted t-caption', text: 'Verified' })))),
+            h('span', { class: 'muted t-caption', text: state.kyc.status === 'verified' ? 'Verified' : 'Not verified' })))),
       h('div', { class: 'stack-8' },
         h('span', { class: 't-caps subtle', text: 'Add a bank' }),
         h('label', { class: 'field' }, name),

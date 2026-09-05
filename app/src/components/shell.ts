@@ -111,7 +111,7 @@ function whoami(): HTMLElement {
     h('span', { class: 'avatar', text: initials }),
     h('span', { class: 'two-line grow' },
       h('span', { class: 't-body-strong', text: state.person.name }),
-      h('small', { text: 'Verified' })),
+      h('small', { text: state.kyc.status === 'verified' ? 'Verified' : 'Not verified' })),
     h('span', { class: 'muted', html: icon.chevron() }))
 }
 
