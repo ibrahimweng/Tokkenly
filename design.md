@@ -3623,3 +3623,131 @@ Rule 52 comes out of this.
   place, so the tier is not applied consistently either way.
 - Grow's rate, collateral ratio and payout schedule are still invented. See
   11b.4f.
+
+### 11f.15 Hover, at three strengths and behind a pointer check
+
+Hover was the state the product had never really answered with. Twenty rules
+scattered down `components.css`, every one of them instant, several too faint
+to find, and all of them live on a phone — where `:hover` latches after a tap,
+so the row you just left stays lit while the next screen draws.
+
+They live in one section now, behind `@media (hover: hover) and (pointer:
+fine)`, at three strengths and nothing in between:
+
+- **step** — a control moves to the next surface it already owns.
+- **wash** — a row or a card takes the rung above the card it sits in.
+- **lift** — a filled button or a card brightens and rises.
+
+The transitions are one curve and one duration, 110ms on
+`cubic-bezier(0.2, 0.8, 0.2, 1)`, listed by selector rather than applied with
+a wildcard: a transition on everything catches layout properties too, and a
+card that eases its own width is a card that lags.
+
+Two things needed their own answer:
+
+- A **table row** is the widest hover in the product and it was the faintest.
+  `rgba(255,255,255,0.03)` over a card is about two steps of lightness, under
+  what an eye finds unless it is told to look. It now takes `--sunken-hover`,
+  the same rung every other row takes, and the disc at the head of the row
+  goes with it so the row reads as one object rather than a stripe passing
+  behind one.
+- **Cards that are links** had no hover at all. The three gateway tiles on
+  Home are 300 tall, navigate, and answered with nothing.
+
+`scripts/hover.mjs` probes eighteen targets in a real browser and reports, for
+each, the surface at rest, the surface under the pointer, the L\* step between
+them, whether the thing moves or lifts, and the contrast of the text on the
+hovered ground. All eighteen answer. It also checks the two things that are
+easy to claim and hard to see: a tap on a touch context leaves nothing lit,
+and `prefers-reduced-motion` keeps the colour while dropping the travel.
+
+### 11f.16 The label rung was under AA the whole time
+
+The row wash exposed something that had nothing to do with hover.
+
+`--subtle` was `#65656c`, which is **3.1:1** on a card. Every eyebrow in the
+product is 11px caps in `--subtle` — around thirty of them — so that was the
+whole label rung sitting under AA, and the new wash pushed it to 2.8:1 on a
+hovered row. Raised to `#8e8e95`, which clears 4.5:1 on `--canvas`,
+`--surface`, `--sunken` and `--sunken-hover` alike, and stays a visible rung
+below `--muted` (ΔL\* 9).
+
+The sort caret was faded to `opacity: 0.45` on top of that — a 10px glyph at
+**2.1:1** carrying which way the sort runs. It follows the label it belongs to
+now, and turns `--positive` when the column is on.
+
+`scripts/contrast.mjs` walks every rendered text node across ten routes, at
+rest and with a row hovered, compositing alpha and inherited opacity the way a
+screen does. It reports zero below AA.
+
+53. **A state can expose a fault that was never about that state.** Nothing
+    was wrong with hover here. Raising the row wash by three steps of
+    lightness simply moved a label that had always been under AA far enough
+    under it to notice.
+
+### 11f.17 The market table had no gutters
+
+Seven columns of company data, and `.table td` set `padding: 12px 0` — the
+sides were nothing but the slack the browser had left over. At two or three
+columns there was slack. At seven there was none, so a price ran straight into
+the day's move: `+1.2%$164`.
+
+`th + th, td + td { padding-left: 20px }` fixes the structure. Right-alignment
+moved off `:last-child` and onto a `.right` class the column declares, so a
+right-hand column in the middle of the row aligns too, and the sort caret sits
+left of the label on those — which is what puts the label's right edge over
+the numbers under it.
+
+The table also stopped sharing its width. Seven columns cannot live in 730px
+beside a side column; it takes the full 1008 now, and the watchlist, the
+movers and the picks line up in a three-up row underneath.
+
+### 11f.18 The dot fields, and the column the file could not agree on
+
+Comparing D01c Home — gateway against what the app rendered turned up most of
+a screen missing.
+
+**The dot fields.** Each gateway tile carries one: a 12px grid of circles from
+2 to 11 across, in three greys and a scatter of five violet. They are composed,
+not generated — a formula that came close would still be a different picture —
+so `src/components/art.ts` holds all three cell for cell, 677 dots, as two
+strings per tile: diameters in base 36, tones as one letter each. Drawn as a
+single SVG, because three tiles of divs is a thousand nodes for a decoration,
+and clipped to the bottom edge exactly as the Figma frames clip them.
+
+**The tiles.** 400 / 288 / 288 with 16 between, which is 1008 exactly. 300
+tall, 28 of padding, 20 of radius. The wide one carries a gradient — sunken
+for the first 42%, then the brand green at the bottom edge under the dots —
+and a filled pill; the other two are the same words unfilled, which is what
+stops three buttons competing.
+
+Stated flex bases, not `flex: 400 1 0`. Under `box-sizing: border-box` a
+`flex-basis` of 0 cannot go below the padding, so 56px floors each base and
+the growth shares out over what is left. That came out 387/294/294.
+
+**The column.** The file disagreed with itself: D01c and D19 sat at 96 down
+each side for a 1008 column, the other 46 at 32 for 1136, and the app had
+followed first the 46 and then the 2. All three are at 96 now. Sixteen
+children were pinned to a fixed 1128 or 1136 and would have hung over the new
+edge; they are FILL like the other 97, and all 116 measure 1008.
+
+The vertical stays at 24. 72 read well on a short screen but pushed 25 of the
+48 past the bottom of their own frame, and the note was about the sides —
+content in the middle being stretched — not the top.
+
+54. **Two screens drawn after a note are not the file agreeing with the note.**
+    D01c and D19 carried the higher margin for weeks while 46 screens carried
+    the old one, and nothing flagged it, because every screen was internally
+    consistent. Consistency within a frame says nothing about consistency
+    across them; only a sweep that counts does.
+
+### 11f.19 Still open
+
+- The nav component's variants are still named `Money` and `Stocks` from the
+  older product. Renaming breaks 29 instances on `04 App`.
+- Grow's rate, collateral ratio and payout schedule remain invented.
+- `.btn-inverse` exists in the stylesheet and as a Figma variant but has no
+  instance in the app — the sand button belongs to a hero the product has not
+  built yet.
+- D04 Market and D18 Wallet now carry the new table and hero, but the rest of
+  each screen is still the older composition.
