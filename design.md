@@ -3369,33 +3369,50 @@ to `--sunken`. Twenty five checks, no failures.
 
 ### 11f.8 Deploying it
 
-The app lives in `app/`, and there is no `package.json` at the repository root,
-so an import that points Vercel at the root finds nothing to build.
-`vercel.json` at the root now says where to look:
+The product is in `app/`, which is not where a host looks by default. The
+repository now answers both ways an import can be pointed, because guessing
+which one was chosen is not a plan:
 
-    installCommand   cd app && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install
-    buildCommand     cd app && npm run build
-    outputDirectory  app/dist
-    rewrites         /(.*) -> /index.html
+| Root Directory | Reads | Builds |
+|---|---|---|
+| repository root | `vercel.json` | `cd app && npm run build` into `app/dist` |
+| `app` | `app/vercel.json` | Vite detected, `dist` |
 
-The skip flag matters. Playwright is a dev dependency and its install hook
-downloads about four hundred megabytes of browsers, which a deploy has no use
-for. Vercel installs dev dependencies by default, so without the flag every
-build pays for browsers it will never open.
+A root `package.json` exists so detection has something to read, and its
+scripts delegate to `app/`. Four things were wrong or missing and are fixed.
 
-The rewrite is belt and braces. Routing is by hash, so `/` serves every screen
-already; the rewrite only covers someone typing a path without one. Vercel
-checks the filesystem before rewrites, so the hashed assets still resolve.
+**Nothing at the root to detect.** No `package.json`, so an import pointing at
+the repository root found no project. There is one now, with `engines` naming
+the Node floor.
 
-Setting Root Directory to `app` in the dashboard works just as well and needs no
-file. If it is set, Vercel reads `app/vercel.json` and ignores the root one, so
-the two cannot fight.
+**Playwright.** It is a dev dependency and its install hook downloads about
+four hundred megabytes of browsers. Vercel installs dev dependencies by
+default, so every build would have paid for browsers it will never open. Both
+install commands now set `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1`.
 
-Verified the way it will actually run: a fresh clone, install with the flag,
-`npm run build`, then the built `dist` served by a plain static server with no
-Vite in the loop. Fifteen routes render, the borrow flow completes on the
-bundle, the phone picker lists four people and shows the rail, and there are no
-JavaScript errors and no failed requests.
+The first attempt at that was an `.npmrc` carrying
+`playwright_skip_browser_download=1`, on the theory that npm exposes config
+keys to install scripts as `npm_config_*`. npm does set it, and
+`npm config get` reads it back, but Playwright never looks: the only reference
+in `playwright-core` is `getAsBooleanFromENV("PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD")`.
+The file would have sat there looking like protection and provided none. It was
+deleted and the flag put where it is actually read.
+
+**A relative asset base under a catch-all rewrite.** `vite.config.ts` had
+`base: './'`. Both configs rewrite every path to `index.html` so a link typed
+without a hash still lands on the app, and that combination breaks: a request
+for `/market/aapl` serves `index.html`, whose `./assets/index.js` resolves
+against `/market/` and 404s. The base is `/` now.
+
+**No rewrite when the root is `app`.** Vercel reads the config inside the root
+directory, so a root-level `vercel.json` is invisible to that setup. `app/`
+carries its own.
+
+Checked by building both ways from a clean copy, then serving `dist` behind a
+server that does what Vercel does, static file if it exists and `index.html`
+otherwise. `/`, `/wallet`, `/market/aapl`, `/grow/borrow` and `/a/b/c` all boot
+the app with no failed requests; the last three would have lost their assets
+under the old base. `node_modules` comes to 63MB either way, so no browsers.
 
 ### 11f.9 Still open
 
