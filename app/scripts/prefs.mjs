@@ -1,7 +1,7 @@
 /* A preference that changes nothing is a preference that lies. Every switch in
    Account is followed to the thing it claims to change. */
 import { chromium } from 'playwright'
-import { seen } from './seen.mjs'
+import { seen, verify } from './seen.mjs'
 const B = 'http://localhost:4173/#'
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const errs = []
@@ -14,6 +14,9 @@ await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 const acct = async () => { await p.goto(B + '/account', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400) }
 const at = async (r) => { await p.goto(B + r, { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400) }
 const text = () => p.evaluate(() => document.body.innerText)
+
+// out of the way of the limits, so the ceiling under test is the one meant
+await verify(p)
 
 console.log('IT REMEMBERS')
 await acct()

@@ -3,10 +3,13 @@ import { icon } from '../icons'
 import { shell, pageHeader, eyebrow, renderBase } from '../components/shell'
 import { card, cardHead, kv, callout, emptyState } from '../components/bits'
 import { composerScreen } from '../components/composer'
-import { state } from '../state'
+import { state, movementCeiling, ceilingLabel } from '../state'
+
+const ceilingLabel2 = (byBalance: number) => ceilingLabel(byBalance, 'The most you can move here')
 import { walletScreen } from './wallet'
 import { usd, naira, when } from '../format'
 import { openSheet, current, go } from '../router'
+
 import { isMobile } from '../responsive'
 import { toast, modalOver } from '../components/sheet'
 
@@ -143,7 +146,8 @@ export function sendScreen(): HTMLElement {
     cardLabel: 'How much',
     cardRight: 'Cash ' + usd(state.cash),
     initial: Math.min(120, state.cash),
-    max: state.cash,
+    max: Math.min(state.cash, movementCeiling()),
+    maxLabel: ceilingLabel2(state.cash),
     note: 'Arrives in under a minute, any day of the week.',
     quick: [
       { label: usd(20, false), value: 20 },
@@ -206,7 +210,8 @@ export function addMoneyScreen(): HTMLElement {
     cardLabel: 'How much',
     cardRight: 'Minimum ' + usd(10, false),
     initial: 200,
-    max: 5000,
+    max: Math.min(5000, movementCeiling()),
+    maxLabel: ceilingLabel2(5000),
     note: 'Pay from your bank in naira, receive dollars.',
     quick: [
       { label: usd(50, false), value: 50 },
@@ -248,7 +253,8 @@ export function convertScreen(): HTMLElement {
     cardLabel: 'How much',
     cardRight: 'Cash ' + usd(state.cash),
     initial: Math.min(300, state.cash),
-    max: state.cash,
+    max: Math.min(state.cash, movementCeiling()),
+    maxLabel: ceilingLabel2(state.cash),
     note: 'Dollars out of your wallet, naira into your bank.',
     quick: [
       { label: usd(50, false), value: 50 },

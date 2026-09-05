@@ -2,7 +2,7 @@
    receive, before you confirm." That is a promise about arithmetic, so it is
    checked as arithmetic: what the review says must be what the ledger does. */
 import { chromium } from 'playwright'
-import { seen } from './seen.mjs'
+import { seen, verify } from './seen.mjs'
 const B = 'http://localhost:4173/#'
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const errs = []
@@ -24,6 +24,9 @@ const rows = () => p.evaluate(() =>
   Object.fromEntries([...document.querySelectorAll('.scrim .panel .cell')]
     .map((e) => [...e.children].map((c) => c.textContent.trim()))
     .filter((x) => x.length >= 2).map(([k, v]) => [k, v])))
+
+// out of the way of the limits, so the ceiling under test is the one meant
+await verify(p)
 
 console.log('BUYING  the amount, the fee, the total, and what you receive')
 const before = await cash()
@@ -72,7 +75,11 @@ const have = await (async () => { const c = await cash(); return c })()
 ok('"all in" leaves room for the fee',
    money(capped.action) * 1.005 <= have + 0.02,
    `offers ${capped.action}, cash ${have}`)
-ok('and the ceiling says what it is', /fee included/.test(capped.said ?? ''), capped.said ?? '')
+// Whichever of the three ceilings binds, the message names that one and
+// states its figure — that is the thing being checked, not which one it is.
+ok('and the ceiling names itself, with its figure',
+   /\$[\d,]+/.test(capped.said ?? '') && /(fee included|in one go|monthly limit|until you verify)/.test(capped.said ?? ''),
+   capped.said ?? '')
 
 console.log('NAIRA  no fee, and it says so rather than saying nothing')
 await p.goto(B + '/addmoney', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
