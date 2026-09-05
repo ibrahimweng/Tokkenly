@@ -3,6 +3,7 @@
    way a screen composites it rather than assumed away. AA is 4.5:1, or 3:1
    for text at 24px, or 18.66px carrying 600. */
 import { chromium } from 'playwright'
+import { seen } from './seen.mjs'
 
 const B = 'http://localhost:4173/#'
 const ROUTES = ['/', '/wallet', '/market', '/market/aapl', '/grow', '/history',
@@ -10,6 +11,7 @@ const ROUTES = ['/', '/wallet', '/market', '/market/aapl', '/grow', '/history',
 
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const page = await b.newPage({ viewport: { width: 1440, height: 1000 } })
+await seen(page)
 page.setDefaultTimeout(8000)
 
 /* The webfont is fetched from a host this sandbox cannot reach, and a page
@@ -80,8 +82,8 @@ for (const r of ROUTES) {
   }
 }
 
-const seen = new Set()
-const uniq = bad.filter((x) => { const k = x.route.split(' ')[0] + x.sel + x.ratio; if (seen.has(k)) return false; seen.add(k); return true })
+const already = new Set()
+const uniq = bad.filter((x) => { const k = x.route.split(' ')[0] + x.sel + x.ratio; if (already.has(k)) return false; already.add(k); return true })
 console.log(uniq.length ? 'BELOW AA:' : 'BELOW AA: none')
 for (const x of uniq.sort((a, c) => a.ratio - c.ratio))
   console.log(`  ${String(x.ratio).padStart(5)} / ${x.need}  ${String(x.px).padStart(4)}px  ${x.route.padEnd(22)} ${x.sel.slice(0, 44).padEnd(45)} ${JSON.stringify(x.text)}`)

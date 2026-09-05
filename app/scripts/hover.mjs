@@ -3,10 +3,12 @@
    lightness step between them, and whether the text on the hovered surface
    still clears AA. A hover nobody can see is not a hover. */
 import { chromium } from 'playwright'
+import { seen } from './seen.mjs'
 
 const B = 'http://localhost:4173/#'
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const page = await b.newPage({ viewport: { width: 1440, height: 1000 } })
+await seen(page, { homeView: 'detailed' })
 const errors = []
 page.on('pageerror', (e) => errors.push(String(e)))
 page.setDefaultTimeout(4000)
@@ -62,7 +64,7 @@ async function probe(label, route, sel, hoverSel = sel, readSel = sel) {
 await probe('sidebar nav row',    '/',        '.nav-row:not([aria-current])')
 await probe('sidebar lit row',    '/',        ".nav-row[aria-current='page']")
 await probe('whoami',             '/',        '.whoami')
-await probe('gateway tile (a.card)', '/',     'a.card.tile')
+await probe('quick-action tile',    '/',     'a.card.tile')
 await probe('primary button',     '/market/aapl', '.btn-primary')
 await probe('secondary button',   '/market/aapl', '.btn-secondary')
 await probe('quiet button',       '/history?q=zzzz', '.btn-quiet')
@@ -106,7 +108,7 @@ console.log('hero tooltip:', JSON.stringify(tip))
 /* A pointer is the premise. On a touch screen :hover latches after a tap, so
    none of it may apply. */
 const touch = await b.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
-const tp = await touch.newPage(); await noFonts(tp)
+const tp = await touch.newPage(); await noFonts(tp); await seen(tp, { homeView: 'detailed' })
 await tp.goto(B + '/market', { waitUntil: 'networkidle' }); await tp.waitForTimeout(200)
 const coarse = await tp.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches)
 await tp.tap('.table tbody tr td:first-child').catch(() => {})
@@ -118,7 +120,7 @@ console.log('\ntouch: pointer is fine?', coarse, ' rows left lit after a tap:', 
 
 /* Reduced motion keeps the answer and drops the travel. */
 const rm = await b.newContext({ viewport: { width: 1440, height: 1000 }, reducedMotion: 'reduce' })
-const rp = await rm.newPage(); await noFonts(rp)
+const rp = await rm.newPage(); await noFonts(rp); await seen(rp, { homeView: 'detailed' })
 await rp.goto(B + '/', { waitUntil: 'networkidle' }); await rp.waitForTimeout(200)
 await rp.hover('a.card.tile'); await rp.waitForTimeout(250)
 const rmState = await rp.$eval('a.card.tile', (e) => {

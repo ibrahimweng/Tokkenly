@@ -2,6 +2,7 @@
    dialogs that present the way Figma draws them, a chart whose ranges redraw,
    notifications that clear, and a table you can order. */
 import { chromium } from 'playwright'
+import { seen } from './seen.mjs'
 
 const B = 'http://localhost:4173/#'
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
@@ -10,6 +11,7 @@ const ok = (label, pass, detail = '') =>
   console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${label}${detail ? '  ' + detail : ''}`)
 const page = async (w = 1440, h = 1024) => {
   const p = await b.newPage({ viewport: { width: w, height: h } })
+  await seen(p, { homeView: 'detailed' })
   p.on('pageerror', (e) => errs.push(String(e)))
   p.setDefaultTimeout(8000)
   // the webfont host is unreachable from here, and networkidle waits for it

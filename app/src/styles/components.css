@@ -674,6 +674,30 @@ th.right .th-sort { flex-direction: row-reverse; }
   .hero-legend { gap: 12px; flex-direction: column; }
 }
 
+/* A payment over the figure you set is not stopped by a second sheet — that
+   is a second thing to dismiss. It is stopped by a tick, which is a deliberate
+   act that cannot be muscle-memoried through. */
+.agree {
+  display: flex; align-items: flex-start; gap: 12px; width: 100%; text-align: left;
+  padding: 14px 16px; border-radius: var(--r-panel);
+  background: var(--control); color: var(--ink);
+  font-size: 13px; line-height: 18px;
+}
+.agree-box {
+  width: 20px; height: 20px; border-radius: 6px; flex: none; margin-top: -1px;
+  background: var(--control-pressed);
+  transition: background-color var(--t-fast) var(--ease);
+}
+.agree-box.on {
+  background: var(--positive);
+  /* the tick, drawn rather than shipped as a glyph that needs a font */
+  background-image: linear-gradient(45deg, transparent 44%, var(--canvas) 44%, var(--canvas) 56%, transparent 56%),
+                    linear-gradient(-45deg, transparent 52%, var(--canvas) 52%, var(--canvas) 64%, transparent 64%);
+  background-size: 11px 2px, 7px 2px;
+  background-position: 7px 11px, 4px 9px;
+  background-repeat: no-repeat;
+}
+
 /* ------------------------------------------------------------ the intro --
    Four screens, each making one claim the product has to earn. No sidebar and
    no rail: the first thing a person sees should have one thing to do on it.

@@ -2,12 +2,14 @@
    Every step asks the same three questions: can I tell what will happen, can
    I get out, and does the number that lands match the number I agreed to. */
 import { chromium } from 'playwright'
+import { seen } from './seen.mjs'
 const B = 'http://localhost:4173/#'
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const errs = []
 const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
 const page = async (w = 1440, h = 1024) => {
   const p = await b.newPage({ viewport: { width: w, height: h } })
+  await seen(p)
   p.on('pageerror', (e) => errs.push(String(e)))
   p.setDefaultTimeout(6000)
   await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())

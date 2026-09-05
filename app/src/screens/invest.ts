@@ -6,7 +6,7 @@ import { table } from '../components/table'
 import { amount } from '../components/bits'
 import { find } from '../catalogue'
 import { stockScreen } from './stock'
-import { state, holding } from '../state'
+import { state, holding, nairaAside } from '../state'
 import { usd, pct, shares as fmtShares, when } from '../format'
 import { go, openSheet } from '../router'
 
@@ -46,7 +46,7 @@ export function investScreen(ticker: string): HTMLElement {
     initial: Math.min(500, state.cash),
     max: state.cash,
     maxLabel: 'The cash you have to spend',
-    note: `About ${(500 * state.ngnPerUsd).toLocaleString('en-US')} naira at today's indicative rate`,
+    note: nairaAside(Math.min(500, state.cash)) ?? undefined,
     quick: [
       { label: usd(100, false), value: 100 },
       { label: usd(250, false), value: 250 },

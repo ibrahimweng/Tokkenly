@@ -1,6 +1,6 @@
 import { h, link, append } from '../ui'
 import { icon } from '../icons'
-import { state } from '../state'
+import { state, visibleNotifications } from '../state'
 import { openSheet, go, current } from '../router'
 import { isMobile } from '../responsive'
 import { trailFor } from '../destinations'
@@ -55,7 +55,7 @@ export function bucketButton(): HTMLElement {
 
 /** The bell from Figma D01. It carries the unread count and opens the panel. */
 export function bell(): HTMLElement {
-  const unread = state.notifications.filter((n) => !n.read).length
+  const unread = visibleNotifications().filter((n) => !n.read).length
   const b = h('button', {
     class: 'icon-btn bell', ariaLabel: unread ? unread + ' unread notifications' : 'Notifications',
     html: icon.bell(), on: { click: () => openSheet('notifications') },

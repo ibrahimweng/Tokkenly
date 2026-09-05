@@ -1,10 +1,12 @@
 /* Filling a bucket from the places you would fill it, and paying for it once. */
 import { chromium } from 'playwright'
+import { seen } from './seen.mjs'
 const B = 'http://localhost:4173/#'
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const errs = []
 const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
 const p = await b.newPage({ viewport: { width: 1440, height: 1024 } })
+await seen(p)
 p.on('pageerror', (e) => errs.push(String(e)))
 p.setDefaultTimeout(6000)
 await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
@@ -88,6 +90,7 @@ ok('each company has its own receipt', /Apple/.test(hist) && /Nvidia/.test(hist)
 
 console.log('PHONE')
 const m = await b.newPage({ viewport: { width: 390, height: 844 } })
+await seen(m)
 await m.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 await m.goto(B + '/market/aapl', { waitUntil: 'domcontentloaded' }); await m.waitForTimeout(400)
 await m.getByRole('button', { name: 'Add to bucket' }).click(); await m.waitForTimeout(500)

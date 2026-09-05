@@ -3,7 +3,8 @@ import { icon } from './icons'
 import { sheet, figure, panel, outcome, toast } from './components/sheet'
 import { callout as calloutEl, emptyState as emptyStateEl } from './components/bits'
 import {
-  state, actions, owed, monthlyCost, monthlyEarn, holding, bucketTotal, type Activity,
+  state, actions, owed, monthlyCost, monthlyEarn, holding, bucketTotal,
+  visibleNotifications, type Activity,
 } from './state'
 import { find } from './catalogue'
 import { usd, naira, pct, shares as fmtShares, longWhen, when } from './format'
@@ -30,25 +31,47 @@ function review(opts: {
   note: string
   action: string
   onConfirm: () => void
+  /** What is leaving, so the "ask again above" preference can decide whether
+   *  this needs a deliberate second step. Omit for anything that is not a
+   *  payment out. */
+  amount?: number
 }): HTMLElement {
+  const button = h('button', { class: 'btn btn-primary', text: opts.action })
+  button.addEventListener('click', () => {
+    if (button.classList.contains('is-busy') || button.hasAttribute('disabled')) return
+    // Money takes a moment to move. The button says so, rather than pretending
+    // the ledger changed the instant it was pressed. Figma Button State=Loading.
+    button.classList.add('is-busy')
+    setTimeout(opts.onConfirm, CONFIRM_MS)
+  })
+
+  // The preference is "ask again above X". A second sheet for that would be a
+  // second thing to dismiss; a tick on this one is a deliberate act that
+  // cannot be muscle-memoried through.
+  const limit = state.prefs.confirmOver
+  const big = limit > 0 && (opts.amount ?? 0) > limit
+  let agreed = false
+  const check = h('span', { class: 'agree-box' })
+  const agree = h('button', { class: 'agree' }, check,
+    h('span', { text: `Yes, ${opts.figureValue.startsWith('$') ? 'move ' : ''}${opts.figureValue}. This is over my ${usd(limit, false)} check.` }))
+  if (big) {
+    button.setAttribute('disabled', 'true')
+    agree.addEventListener('click', () => {
+      agreed = !agreed
+      check.classList.toggle('on', agreed)
+      agree.setAttribute('aria-pressed', String(agreed))
+      button.toggleAttribute('disabled', !agreed)
+    })
+    agree.setAttribute('aria-pressed', 'false')
+  }
+
   return sheet(
     opts.title,
     figure(opts.figureLabel, opts.figureValue),
     panel(...opts.rows),
     calloutEl(opts.note),
-    // Money takes a moment to move. The button says so, rather than pretending
-    // the ledger changed the instant it was pressed. Figma Button State=Loading.
-    h('button', {
-      class: 'btn btn-primary', text: opts.action,
-      on: {
-        click: (e) => {
-          const b = e.currentTarget as HTMLButtonElement
-          if (b.classList.contains('is-busy')) return
-          b.classList.add('is-busy')
-          setTimeout(opts.onConfirm, CONFIRM_MS)
-        },
-      },
-    })
+    big ? agree : null,
+    button
   )
 }
 
@@ -140,7 +163,8 @@ export const SHEETS: Record<string, Builder> = {
   /** The bell's panel. Reading one marks it read; the count on the bell drops
    *  as you go, which is the whole point of a count. */
   notifications: () => {
-    const unread = state.notifications.filter((n) => !n.read).length
+    const list = visibleNotifications()
+    const unread = list.filter((n) => !n.read).length
     const GLYPH = { money: icon.wallet, trade: icon.market, grow: icon.grow, security: icon.lock }
     return sheet('Notifications',
       h('div', { class: 'sheet-head', style: { marginTop: '-8px' } },
@@ -149,9 +173,9 @@ export const SHEETS: Record<string, Builder> = {
           ? h('button', { class: 'link', text: 'Mark all read',
               on: { click: () => actions.readAllNotifications() } })
           : null),
-      state.notifications.length
+      list.length
         ? h('div', { class: 'sheet-list' },
-            ...state.notifications.map((n) =>
+            ...list.map((n) =>
               h('button', {
                 class: 'sheet-row' + (n.read ? ' read' : ''),
                 on: { click: () => actions.readNotification(n.id) },
@@ -406,7 +430,7 @@ export const SHEETS: Record<string, Builder> = {
     const to = str(r, 'to')
     return review({
       title: 'Review',
-      figureLabel: 'You are sending', figureValue: usd(v),
+      figureLabel: 'You are sending', figureValue: usd(v), amount: v,
       rows: [['To', to], ['They receive', usd(v)], ['Fee', 'Free, Tokkenly covers it'], ['Arrives', 'In about a minute']],
       note: 'Payments cannot be recalled once they are on the network.',
       action: 'Send ' + usd(v),
@@ -427,7 +451,7 @@ export const SHEETS: Record<string, Builder> = {
     const bank = state.banks[0]
     return review({
       title: 'Review',
-      figureLabel: 'You are buying', figureValue: usd(v),
+      figureLabel: 'You are buying', figureValue: usd(v), amount: v,
       rows: [
         ['You pay', naira(v * state.ngnPerUsd)],
         ['From', bank.name + ' •••• ' + bank.last4],
@@ -453,7 +477,7 @@ export const SHEETS: Record<string, Builder> = {
     const bank = state.banks[0]
     return review({
       title: 'Review',
-      figureLabel: 'You are converting', figureValue: usd(v),
+      figureLabel: 'You are converting', figureValue: usd(v), amount: v,
       rows: [
         ['You get', naira(v * state.ngnPerUsd)],
         ['Into', bank.name + ' •••• ' + bank.last4],
@@ -479,7 +503,7 @@ export const SHEETS: Record<string, Builder> = {
     const c = find(str(r, 't'))!
     return review({
       title: 'Review',
-      figureLabel: 'You are buying', figureValue: usd(v),
+      figureLabel: 'You are buying', figureValue: usd(v), amount: v,
       rows: [
         ['You get', fmtShares(v / c.price) + ' shares of ' + c.name],
         ['Price each', usd(c.price)],
@@ -546,7 +570,7 @@ export const SHEETS: Record<string, Builder> = {
     const total = bucketTotal()
     return review({
       title: 'Review',
-      figureLabel: 'You are buying', figureValue: usd(total),
+      figureLabel: 'You are buying', figureValue: usd(total), amount: total,
       rows: [
         ...lines,
         ['Fee', 'Free, Tokkenly covers it'],
@@ -608,7 +632,7 @@ export const SHEETS: Record<string, Builder> = {
     const left = Math.max(0, owed() - v)
     return review({
       title: 'Review',
-      figureLabel: 'You are repaying', figureValue: usd(v),
+      figureLabel: 'You are repaying', figureValue: usd(v), amount: v,
       rows: [
         ['Comes from', 'Your wallet'],
         ['Left owing', usd(left)],

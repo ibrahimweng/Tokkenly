@@ -2,8 +2,8 @@ import { h } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader, eyebrow } from '../components/shell'
 import { card, cardHead, headLink, kv, callout, amount, directionMark } from '../components/bits'
-import { state, buyingPower, availableToBorrow } from '../state'
-import { usd, naira, when, activityLabel } from '../format'
+import { state, buyingPower, availableToBorrow, nairaAside } from '../state'
+import { usd, when, activityLabel } from '../format'
 import { go, openSheet } from '../router'
 
 function way(label: string, sub: string, ic: string, to: string): HTMLElement {
@@ -31,7 +31,9 @@ function cashHero(): HTMLElement {
       h('div', { class: 'stack-8' },
         h('span', { class: 't-caps subtle', text: 'Cash you can spend' }),
         h('span', { class: 'hero-figure', text: usd(state.cash) }),
-        h('span', { class: 'muted', text: `About ${naira(state.cash * state.ngnPerUsd)} at today's indicative rate` })),
+        nairaAside(state.cash)
+          ? h('span', { class: 'muted', text: nairaAside(state.cash)! })
+          : null),
       h('div', { class: 'stack-8 hero-aside' },
         h('span', { class: 't-caps subtle', text: 'Buying power' }),
         h('span', { class: 't-display', text: usd(buyingPower()) }),

@@ -110,6 +110,35 @@ export interface State {
   ngnPerUsd: number
 }
 
+/* --------------------------------------------------------------- keeping --
+   The ledger is demo data and resets, which is the point of a prototype. The
+   preferences are not: a theme that forgets on reload, or an intro that plays
+   again every time the page is opened, is worse than not having the setting.
+   Only these two are kept, and a browser that refuses storage just gets the
+   defaults rather than an error. */
+const KEEP = 'tokkenly.prefs.v1'
+
+function remember(): void {
+  try {
+    localStorage.setItem(KEEP, JSON.stringify({ prefs: state.prefs, seenIntro: state.seenIntro }))
+  } catch { /* private windows and blocked storage are not a failure */ }
+}
+
+export function recall(): void {
+  try {
+    const raw = localStorage.getItem(KEEP)
+    if (!raw) return
+    const saved = JSON.parse(raw) as { prefs?: Partial<Prefs>; seenIntro?: boolean }
+    // Merged, not replaced: a preference added after this was written should
+    // arrive at its default rather than as undefined.
+    state.prefs = {
+      ...DEFAULT_PREFS, ...saved.prefs,
+      notify: { ...DEFAULT_PREFS.notify, ...(saved.prefs?.notify ?? {}) },
+    }
+    state.seenIntro = saved.seenIntro ?? false
+  } catch { /* unreadable or from an older shape: the defaults stand */ }
+}
+
 /** The only preference that lands on the document rather than in a screen. */
 export function applyTheme(): void {
   if (typeof document !== 'undefined') {
@@ -218,6 +247,23 @@ export const monthlyCost = (principal: number): number =>
 export const monthlyEarn = (principal: number): number =>
   (principal * state.rates.earn) / 100 / 12
 
+/** The naira line beside a dollar figure, when the person wants one. Add
+ *  money and Convert are *about* naira and always show it — this is only for
+ *  the asides, which is what the preference is offering to quieten. */
+/** The notifications the switches let through. A switch that changes nothing
+ *  is a switch that lies, so the panel and its count both read this rather
+ *  than state.notifications directly. */
+const NOTIFY_OF: Record<Notif['kind'], keyof Prefs['notify']> = {
+  money: 'payments', trade: 'prices', grow: 'earn', security: 'borrowing',
+}
+export const visibleNotifications = (): Notif[] =>
+  state.notifications.filter((n) => state.prefs.notify[NOTIFY_OF[n.kind]])
+
+export const nairaAside = (dollars: number): string | null =>
+  state.prefs.showNaira
+    ? `About ₦${Math.round(dollars * state.ngnPerUsd).toLocaleString('en-US')} at today’s indicative rate`
+    : null
+
 export const bucketTotal = (): number =>
   state.bucket.reduce((t, b) => t + b.dollars, 0)
 
@@ -239,6 +285,7 @@ export function subscribe(fn: Listener): () => void {
   return () => listeners.delete(fn)
 }
 function changed(): void {
+  remember()
   for (const fn of listeners) fn()
 }
 

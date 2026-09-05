@@ -4,7 +4,7 @@ import './styles/components.css'
 
 import { h } from './ui'
 import { start, current, go, openSheet, type Route } from './router'
-import { state, subscribe, applyTheme } from './state'
+import { state, subscribe, applyTheme, recall } from './state'
 import { onBreakpointChange } from './responsive'
 import { buildSheet } from './sheets'
 import { homeScreen } from './screens/home'
@@ -101,6 +101,7 @@ addEventListener('keydown', (e) => {
   }
 })
 
+recall()
 applyTheme()
 subscribe(() => render(current()))
 onBreakpointChange(() => render(current()))
