@@ -45,7 +45,7 @@ for (const [flow, route, verb] of [['BUY', '/invest/aapl/invest', 'Buy'], ['SELL
   await p.waitForTimeout(250)
   const after = await p.evaluate(() => ({
     action: document.querySelector('.btn-primary')?.textContent,
-    summary: [...document.querySelectorAll('.kv')].map((e) => e.textContent).slice(0, 4),
+    summary: [...document.querySelectorAll('.summary .kv')].map((e) => e.textContent),
   }))
   ok('typing an amount moves the button', /75/.test(after.action ?? ''), after.action ?? '')
   ok('and the summary follows it', after.summary.some((s) => /sh|share/i.test(s)), after.summary[0] ?? '')

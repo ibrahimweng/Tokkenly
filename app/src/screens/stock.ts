@@ -1,7 +1,8 @@
 import { h } from '../ui'
+import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, kv, callout } from '../components/bits'
-import { find, type Instrument } from '../catalogue'
+import { find, discount, type Instrument } from '../catalogue'
 import { barChart, type Range } from '../components/chart'
 import { state, actions, holding, inBucket } from '../state'
 import { usd, pct, signed } from '../format'
@@ -27,6 +28,10 @@ function priceChart(c: Instrument): HTMLElement {
     title: c.ticker + ' over time',
     endValue: c.price,
     seed: c.ticker.charCodeAt(0) * 31,
+    // The share behind the token, so the gap reads as a shape over the period
+    // rather than only as today's percentage.
+    mark: c.mark,
+    markLabel: 'Real ' + c.ticker,
   })
 }
 
@@ -47,6 +52,59 @@ function bucketAdd(c: Instrument): HTMLElement {
       },
     },
   })
+}
+
+/** What you are paying over or under the real share. On a tokenised product
+ *  this is the number that decides whether the price on screen is a good one,
+ *  and leaving it out is the one omission a trader would call dishonest. */
+function markLine(c: Instrument): HTMLElement {
+  const d = discount(c)
+  const cheap = d >= 0
+  return h('span', { class: 'mark-line' },
+    h('span', { class: (cheap ? 'pos' : 'warn') + ' t-body-strong',
+      text: (cheap ? '+' : '') + pct(d, 2) }),
+    h('span', { class: 'muted t-caption',
+      text: `${cheap ? 'below' : 'above'} ${usd(c.mark)}, the real ${c.name} price` }))
+}
+
+/** Four windows in a row. One percentage cannot tell a fresh move from a
+ *  trend; four can, and they cost a line. */
+function timeframes(c: Instrument): HTMLElement {
+  // Derived from the day's move so the four agree with each other and with the
+  // figure the rest of the product shows.
+  const d = c.dayPct
+  const of = (share: number) => Math.round(d * share * 100) / 100
+  const cells: [string, number][] = [['5m', of(0.04)], ['1h', of(0.12)], ['6h', of(0.5)], ['24h', d]]
+  return h('div', { class: 'tf-row' }, ...cells.map(([label, v]) =>
+    h('div', { class: 'tf' },
+      h('span', { class: 't-caps subtle', text: label }),
+      h('span', { class: (v >= 0 ? 'pos' : 'warn') + ' t-body-strong',
+        text: (v >= 0 ? '+' : '') + pct(v, 2) }))))
+}
+
+/** How much can be bought right now without moving the price, and how many
+ *  people are in. A tokenised book is thin; an order that is large against it
+ *  fills badly, and that is worth saying before the order rather than after. */
+function depthCard(c: Instrument): HTMLElement {
+  const thin = c.liquidity < 120000
+  return card(
+    cardHead('The token itself'),
+    kv('Liquidity', usd(c.liquidity, false)),
+    kv('24h volume', usd(c.vol24h, false)),
+    kv('Holders', c.holders.toLocaleString('en-US') + '  ' +
+      (c.holdersPct >= 0 ? '+' : '') + pct(c.holdersPct)),
+    h('span', { class: 'muted t-caption',
+      text: thin
+        ? `Thin. An order much over ${usd(Math.round(c.liquidity * 0.01), false)} will move the price against you.`
+        : `Deep enough that an order up to about ${usd(Math.round(c.liquidity * 0.01), false)} fills at the price you see.` }),
+    h('div', { class: 'stack-8' },
+      h('span', { class: 't-caps subtle', text: 'Token address' }),
+      h('button', { class: 'addr', on: { click: () => {
+        navigator.clipboard?.writeText(c.address).catch(() => {})
+        toast('Address copied')
+      } } },
+        h('span', { class: 'grow', text: c.address.slice(0, 6) + '…' + c.address.slice(-4) }),
+        h('span', { class: 'muted', html: icon.copy() }))))
 }
 
 export function stockScreen(ticker: string): HTMLElement {
@@ -83,10 +141,10 @@ export function stockScreen(ticker: string): HTMLElement {
         card(
           h('div', { class: 'card-head' },
             h('div', { class: 'stack-8' },
-              h('span', { class: 't-caps subtle', text: 'Price' }),
-              h('span', { class: 't-display-xl', text: usd(c.price) })),
-            h('span', { class: c.dayPct >= 0 ? 'chip pos' : 'chip',
-              text: (c.dayPct >= 0 ? '+' : '') + pct(c.dayPct) + ' today' })),
+              h('span', { class: 't-caps subtle', text: 'Token price' }),
+              h('span', { class: 't-display-xl', text: usd(c.price) }),
+              markLine(c)),
+            timeframes(c)),
           priceChart(c)
         ),
         card(
@@ -109,6 +167,7 @@ export function stockScreen(ticker: string): HTMLElement {
               h('small', { text: s }))))
         )),
       h('div', { class: 'stack col-side' },
+        depthCard(c),
         card(
           cardHead('What this is'),
           h('span', { class: 'muted', text: c.plain }),

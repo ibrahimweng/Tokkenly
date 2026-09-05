@@ -3,7 +3,7 @@ import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, emptyState } from '../components/bits'
 import { table } from '../components/table'
-import { CATALOGUE, CATEGORIES, INDICES, PICKS, find, type Instrument } from '../catalogue'
+import { CATALOGUE, CATEGORIES, INDICES, PICKS, find, discount, type Instrument } from '../catalogue'
 import { state, actions, inBucket } from '../state'
 import { usd, pct } from '../format'
 import { go, current } from '../router'
@@ -98,6 +98,8 @@ export function marketScreen(): HTMLElement {
     cap: (a, b) => capNum(a.cap) - capNum(b.cap),
     yield: (a, b) => a.dividend - b.dividend,
     pe: (a, b) => a.pe - b.pe,
+    disc: (a, b) => discount(a) - discount(b),
+    holders: (a, b) => a.holders - b.holders,
   }
   const ordered = [...list].sort((a, b) =>
     (cmp[sortKey] ?? cmp.cap)(a, b) * (sortDir === 'asc' ? 1 : -1))
@@ -148,10 +150,11 @@ export function marketScreen(): HTMLElement {
                   { key: 'name', label: 'Name', sortable: true },
                   { key: 'price', label: 'Price', align: 'right', sortable: true },
                   { key: 'day', label: 'Today', align: 'right', sortable: true },
-                  { key: 'range', label: 'Year range', optional: true },
-                  { key: 'cap', label: 'Size', align: 'right', optional: true, sortable: true },
-                  { key: 'yield', label: 'Yield', align: 'right', optional: true, sortable: true },
-                  { key: 'pe', label: 'P/E', align: 'right', optional: true, sortable: true },
+                  { key: 'disc', label: 'vs real', align: 'right', optional: true, sortable: true },
+                  { key: 'range', wide: true, label: 'Year range', optional: true },
+                  { key: 'cap', wide: true, label: 'Size', align: 'right', optional: true, sortable: true },
+                  { key: 'yield', wide: true, label: 'Yield', align: 'right', optional: true, sortable: true },
+                  { key: 'holders', wide: true, label: 'Holders', align: 'right', optional: true, sortable: true },
                   { key: 'bucket', label: '', align: 'right' },
                 ],
                 ordered.map((c) => [
@@ -163,10 +166,21 @@ export function marketScreen(): HTMLElement {
                   h('span', { class: 't-body-strong nowrap', text: usd(c.price) }),
                   h('span', { class: (c.dayPct >= 0 ? 'pos' : 'warn') + ' t-body-strong nowrap',
                     text: (c.dayPct >= 0 ? '+' : '') + pct(c.dayPct) }),
+                  // What the token costs against the share it tracks, and the
+                  // share's own price under it. The pair is the reference
+                  // site's first numeric column, and it is the one number a
+                  // tokenised product cannot honestly leave out.
+                  h('span', { class: 'two-line right' },
+                    h('span', { class: (discount(c) >= 0 ? 'pos' : 'warn') + ' t-body-strong nowrap',
+                      text: (discount(c) >= 0 ? '+' : '') + pct(discount(c), 2) }),
+                    h('small', { text: usd(c.mark) })),
                   rangeBar(c),
                   h('span', { class: 'muted nowrap', text: c.cap }),
                   h('span', { class: 'muted nowrap', text: c.dividend ? pct(c.dividend) : '—' }),
-                  h('span', { class: 'muted nowrap', text: c.pe ? c.pe.toFixed(1) : '—' }),
+                  h('span', { class: 'two-line right' },
+                    h('span', { class: 'muted nowrap', text: (c.holders / 1000).toFixed(1) + 'K' }),
+                    h('small', { class: c.holdersPct >= 0 ? 'pos' : 'warn',
+                      text: (c.holdersPct >= 0 ? '+' : '') + pct(c.holdersPct) })),
                   // Deciding while you scan the list is the point of a bucket,
                   // so the list is where it can be filled.
                   bucketCell(c),

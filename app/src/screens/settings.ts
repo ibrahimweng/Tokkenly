@@ -12,7 +12,7 @@ import { toast } from '../components/sheet'
 function editable(label: string, value: string, field: 'email' | 'phone' | 'address'): HTMLElement {
   return h('div', { class: 'kv' },
     h('span', { text: label }),
-    h('span', { style: { display: 'flex', gap: '16px', alignItems: 'baseline' } },
+    h('span', { class: 'kv-edit' },
       h('span', { class: 't-body-strong', text: value }),
       h('button', { class: 'link', text: 'Change', on: { click: () => openSheet('edit', { field }) } })))
 }

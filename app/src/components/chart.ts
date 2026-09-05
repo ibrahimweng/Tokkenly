@@ -38,7 +38,14 @@ export interface ChartSpec {
   height?: number
   seed?: number
   title?: string
+  /** The real price of the thing the token tracks. Drawn as a line over the
+   *  candles, because the gap between the two is the number that matters most
+   *  on a tokenised share and a single figure only shows it as of now. */
+  mark?: number
+  markLabel?: string
 }
+
+export interface Candle { o: number; h: number; l: number; c: number }
 
 /* ---------------------------------------------------------------- series --
    Seeded, so a range always draws the same shape and a figure someone comes
@@ -60,6 +67,24 @@ export function seriesFor(r: Range, endValue: number, n: number, seed = 7): numb
   }
   out[0] = start
   out[n - 1] = endValue
+  return out
+}
+
+/** One candle per bucket, from a finer series inside it. A bar says where a
+ *  period ended; a candle says where it opened, how far it ran either way, and
+ *  which direction it closed — four numbers for the same width, which is why
+ *  every trading screen draws them. */
+export function candlesFor(r: Range, endValue: number, n: number, seed = 7): Candle[] {
+  const STEPS = 6
+  const fine = seriesFor(r, endValue, n * STEPS, seed)
+  const out: Candle[] = []
+  for (let i = 0; i < n; i++) {
+    const slice = fine.slice(i * STEPS, i * STEPS + STEPS)
+    out.push({
+      o: slice[0], c: slice[slice.length - 1],
+      h: Math.max(...slice), l: Math.min(...slice),
+    })
+  }
   return out
 }
 
@@ -109,18 +134,24 @@ export function barChart(spec: ChartSpec): HTMLElement {
   const height = spec.height ?? 200
   let range = spec.ranges.find((r) => r.key === spec.initial) ?? spec.ranges[0]
   let vals: number[] = []
+  let candles: Candle[] = []
 
   const grid = h('div', { class: 'ch-grid' })
   const bars = h('div', { class: 'ch-bars' })
+  const overlay = h('div', { class: 'ch-overlay' })
   const tip = h('div', { class: 'ch-tip', hidden: true })
-  const plot = h('div', { class: 'ch-plot', style: { height: height + 'px' } }, grid, bars, tip)
+  const plot = h('div', { class: 'ch-plot', style: { height: height + 'px' } }, grid, bars, overlay, tip)
+  // Open, high, low, close and the change, above the plot — four numbers of
+  // precision the marks alone cannot give, and the line every trading screen
+  // puts here.
+  const ohlc = h('div', { class: 'ch-ohlc' })
   const axis = h('div', { class: 'ch-axis' })
   const caption = h('span', { class: 't-caption' })
   const chips = h('div', { class: 'chip-row' })
   const wrap = h('div', { class: 'chart' },
     h('div', { class: 'card-head' },
       h('span', { class: 't-caps subtle', text: spec.title ?? 'Value over time' }), chips),
-    caption, plot, axis)
+    h('div', { class: 'ch-top' }, caption, ohlc), plot, axis)
 
   const draw = () => {
     // A width of nothing is not a width. Drawing against a fallback puts a
@@ -129,17 +160,25 @@ export function barChart(spec: ChartSpec): HTMLElement {
     const w = bars.clientWidth
     if (w < MIN_BAR) return
     const n = fitBars(w)
-    vals = seriesFor(range, spec.endValue, n, spec.seed)
+    candles = candlesFor(range, spec.endValue, n, spec.seed)
+    vals = candles.map((k) => k.c)
 
     // The axis is zoomed to the series, not anchored at zero: this portfolio
     // never went near zero, and a zero baseline squeezes a year of movement
     // into the top fifth of the card. The lowest label is the series low, so
     // it can never be misread as growth from nothing.
-    const lo = Math.min(...vals)
-    const hi = Math.max(...vals)
-    const pad = (hi - lo) * 0.12 || hi * 0.02
-    const base = lo - pad
-    const top = hi + pad
+    // The extremes come off the wicks, not the closes: a candle whose high is
+    // clipped by the top of the plot is a candle that lies. The mark widens
+    // the scale so its line is always on screen, but it is not part of the
+    // high and the low — those belong to the price, and reporting the mark as
+    // the period's high would be reporting the wrong instrument.
+    const lo = Math.min(...candles.map((k) => k.l))
+    const hi = Math.max(...candles.map((k) => k.h))
+    const scaleLo = Math.min(lo, spec.mark ?? Infinity)
+    const scaleHi = Math.max(hi, spec.mark ?? -Infinity)
+    const pad = (scaleHi - scaleLo) * 0.12 || scaleHi * 0.02
+    const base = scaleLo - pad
+    const top = scaleHi + pad
     const at = (v: number) => ((v - base) / (top - base)) * 100
 
     const marks = niceTicks(lo, hi)
@@ -148,11 +187,30 @@ export function barChart(spec: ChartSpec): HTMLElement {
       h('div', { class: 'ch-line', style: { bottom: at(v) + '%' } },
         h('span', { class: 'ch-tick', text: compact(v, step) }))))
 
-    bars.replaceChildren(...vals.map((v, i) =>
-      h('div', {
-        class: 'ch-bar' + (i === n - 1 ? ' now' : ''),
-        style: { height: Math.max(2, at(v)) + '%' },
-      })))
+    bars.replaceChildren(...candles.map((k, i) => {
+      const up = k.c >= k.o
+      const bodyTop = Math.max(at(k.o), at(k.c))
+      const bodyLow = Math.min(at(k.o), at(k.c))
+      return h('div', { class: 'ch-candle' + (up ? ' up' : ' down') + (i === n - 1 ? ' now' : '') },
+        // the wick runs the whole range, the body only from open to close
+        h('span', { class: 'ch-wick',
+          style: { bottom: at(k.l) + '%', height: Math.max(1, at(k.h) - at(k.l)) + '%' } }),
+        h('span', { class: 'ch-body',
+          style: { bottom: bodyLow + '%', height: Math.max(1.2, bodyTop - bodyLow) + '%' } }))
+    }))
+
+    // The real price of the share behind the token, drawn across the whole
+    // period so the gap is a shape rather than a single figure.
+    overlay.replaceChildren()
+    if (spec.mark !== undefined) {
+      overlay.appendChild(h('span', { class: 'ch-mark', style: { bottom: at(spec.mark) + '%' } },
+        h('span', { class: 'ch-mark-tag', text: (spec.markLabel ?? 'Real price') + ' ' + usd(spec.mark) })))
+    }
+    // The period's own high and low, on the edge where a trader looks for them.
+    overlay.appendChild(h('span', { class: 'ch-edge high', style: { bottom: at(hi) + '%' } },
+      h('span', { text: 'High ' + usd(hi) })))
+    overlay.appendChild(h('span', { class: 'ch-edge low', style: { bottom: at(lo) + '%' } },
+      h('span', { text: 'Low ' + usd(lo) })))
 
     // Axis labels are generated, not listed: twelve months of them fit a
     // desktop card and crowd into each other on a phone. The width says how
@@ -169,6 +227,8 @@ export function barChart(spec: ChartSpec): HTMLElement {
       `${change >= 0 ? '+' : '−'}${usd(Math.abs(change))} (${change >= 0 ? '+' : '−'}${pct(Math.abs(range.pct))}) ` +
       (range.over ?? 'over ' + range.key)
 
+    paintOhlc(candles[candles.length - 1], vals[0])
+
     plot.setAttribute('role', 'img')
     plot.setAttribute('aria-label',
       `${spec.title ?? 'Value over time'}. ${range.over ?? 'Over ' + range.key}: ` +
@@ -180,7 +240,18 @@ export function barChart(spec: ChartSpec): HTMLElement {
     }
   }
 
-  // ---- the hover: which bar, what it was worth, and when
+  function paintOhlc(k: Candle | undefined, from: number): void {
+    if (!k) return
+    const d = k.c - k.o
+    ohlc.replaceChildren(
+      ...([['O', k.o], ['H', k.h], ['L', k.l], ['C', k.c]] as [string, number][]).map(([l, v]) =>
+        h('span', { class: 'ch-num' },
+          h('span', { class: 'subtle', text: l }), h('span', { text: usd(v) }))),
+      h('span', { class: (d >= 0 ? 'pos' : 'warn') + ' t-caption',
+        text: `${d >= 0 ? '+' : '−'}${usd(Math.abs(d))} (${d >= 0 ? '+' : '−'}${pct(Math.abs((d / (from || 1)) * 100))})` }))
+  }
+
+  // ---- the hover: which candle, what it did, and when
   let lit = -1
   const show = (i: number) => {
     if (i === lit || i < 0 || i >= vals.length) return
@@ -189,7 +260,11 @@ export function barChart(spec: ChartSpec): HTMLElement {
     const bar = bars.children[i] as HTMLElement
     bar.classList.add('on')
     const from = vals[0]
+    const k = candles[i]
     const d = vals[i] - from
+    // The readout follows the pointer, so the four numbers are the candle you
+    // are on rather than the last one.
+    paintOhlc(k, from)
     tip.replaceChildren(
       h('span', { class: 't-body-strong', text: usd(vals[i]) }),
       h('span', { class: (d >= 0 ? 'pos' : 'warn') + ' t-caption',
@@ -204,6 +279,7 @@ export function barChart(spec: ChartSpec): HTMLElement {
     if (lit >= 0) bars.children[lit]?.classList.remove('on')
     lit = -1
     tip.hidden = true
+    paintOhlc(candles[candles.length - 1], vals[0])
   }
   bars.addEventListener('pointermove', (e) => {
     const r = bars.getBoundingClientRect()

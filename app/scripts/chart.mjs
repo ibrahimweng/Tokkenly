@@ -13,7 +13,7 @@ page.on('pageerror', (e) => errs.push(String(e)))
 await page.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 
 const read = () => page.evaluate(() => {
-  const bars = [...document.querySelectorAll('.ch-bar')]
+  const bars = [...document.querySelectorAll('.ch-candle')]
   const w = bars.map((e) => e.getBoundingClientRect().width)
   const plot = document.querySelector('.ch-plot').getBoundingClientRect()
   const last = bars[bars.length - 1].getBoundingClientRect()
@@ -67,7 +67,7 @@ for (const f of [0.15, 0.5, 0.95]) {
     const tip = document.querySelector('.ch-tip')
     if (tip.hidden) return null
     const r = tip.getBoundingClientRect(), p = document.querySelector('.ch-plot').getBoundingClientRect()
-    return { text: tip.innerText.replace(/\n/g, ' · '), lit: document.querySelectorAll('.ch-bar.on').length,
+    return { text: tip.innerText.replace(/\n/g, ' · '), lit: document.querySelectorAll('.ch-candle.on').length,
       inside: r.left >= p.left - 1 && r.right <= p.right + 1 }
   })
   console.log(`  at ${(f * 100).toFixed(0)}%  ${t ? `${t.text}  lit ${t.lit}  inside ${t.inside}` : 'NO TIP'}`)

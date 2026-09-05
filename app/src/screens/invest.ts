@@ -4,7 +4,7 @@ import { card, cardHead, kv } from '../components/bits'
 import { composerScreen, scenarios } from '../components/composer'
 import { table } from '../components/table'
 import { amount } from '../components/bits'
-import { find } from '../catalogue'
+import { find, discount } from '../catalogue'
 import { stockScreen } from './stock'
 import { state, holding, nairaAside, tradeFee, maxInvestable, movementCeiling, ceilingLabel } from '../state'
 import { usd, pct, shares as fmtShares, when } from '../format'
@@ -61,6 +61,8 @@ export function investScreen(ticker: string): HTMLElement {
       ['Investment', usd(v)],
       ['Fee', `${usd(tradeFee(v))} · ${state.fees.trade}%`],
       ['Total', usd(v + tradeFee(v))],
+      [discount(c) >= 0 ? 'Below the real price' : 'Above the real price',
+        pct(Math.abs(discount(c)), 2), discount(c) >= 0 ? 'pos' : 'warn'],
       ['You receive', fmtShares(v / c.price) + ' shares'],
     ],
     callout: c.kind === 'etf'

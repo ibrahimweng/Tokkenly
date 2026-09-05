@@ -38,7 +38,14 @@ ul { margin: 0; padding: 0; list-style: none; }
   margin-inline: auto;
 }
 .page-header { display: flex; flex-direction: column; gap: 8px; }
-.page-header-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+/* The controls drop under the title rather than off the side of it. On the
+   gateway Home the greeting is 32px and the actions are a search, a toggle
+   and a bell: at 900 there is not room for both on one line, and `flex: none`
+   on the actions meant the row overflowed instead of wrapping. */
+.page-header-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap; row-gap: 12px;
+}
 .page-header h1 { margin: 0; font-size: 18px; line-height: 24px; font-weight: 600; }
 /* except where the heading is the greeting, which the file draws at 36 */
 .page-header h1.t-display { font-size: 32px; line-height: 40px; }
@@ -53,8 +60,8 @@ ul { margin: 0; padding: 0; list-style: none; }
    nothing to draw on. Rows that carry a .col-side stack; rows of equal cards
    and rows of tiles do not, because three cards across 700px is still fine. */
 @media (max-width: 1239px) {
-  .row:has(> .col-side) { flex-direction: column; gap: 16px; }
-  .row:has(> .col-side) > * { width: 100% !important; flex: none !important; }
+  .row:has(> .col-side, > .col-compose) { flex-direction: column; gap: 16px; }
+  .row:has(> .col-side, > .col-compose) > * { width: 100% !important; flex: none !important; }
 }
 
 /* 96 down each side is the desktop figure the file draws at 1440. On a
@@ -71,6 +78,10 @@ ul { margin: 0; padding: 0; list-style: none; }
 .row.equal { align-items: stretch; }
 .row.equal > * { flex: 1 1 0; min-width: 0; }
 .row > .col-side { width: 360px; flex: none; }
+/* The buy and sell composer: a fixed keypad column beside what it is about.
+   Fixed, because an amount field that grows with the monitor reads as a form
+   field rather than as the one thing on the screen. */
+.row > .col-compose { width: 456px; flex: none; }
 .stack { display: flex; flex-direction: column; gap: 16px; }
 .stack-16 { display: flex; flex-direction: column; gap: 16px; }
 .stack-12 { display: flex; flex-direction: column; gap: 12px; }
