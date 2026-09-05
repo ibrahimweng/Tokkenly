@@ -2566,6 +2566,55 @@ light Account, because neither is a place in the rail. Support is reached the
 same way and now does the same. Rule 39 says the rail lists places, and a screen
 that is not a place still has to say which place it belongs to.
 
+### 11b.4h Detailed Home, made to fit
+
+`D01 Home — detailed` had run 1232 tall inside a 1024 frame since it was drawn.
+The bottom of Recent activity and the whole of the Available card were simply
+below the fold, and the audit never caught it because the frame clips rather than
+overflows, which is rule 46.
+
+Two hundred and eight had to come out. It came out of four places, none of them a
+squeeze:
+
+| Change | Reclaimed |
+| --- | --- |
+| Borrow and Earn, two near identical offer cards, became one Grow card | 136 |
+| Recent activity went from eight rows to four, of which five ever rendered | 208 |
+| The quick action cards stopped setting the summary height and started following it | 20 |
+| The line above the amount became the status line the gateway already uses | — |
+
+The page now measures 1024 of 1024 with nothing clipped.
+
+**The two offer cards were the easy 136.** Each was a caps label, a display figure
+and a caption, stacked, saying almost the same thing about two products that live
+on one page. One card called GROW, two sentences, one chevron. It also fixed the
+thing that made them wrong: they were the only place still quoting `$0.00 to
+date`, from before Earn had a history.
+
+**Recent activity keeps four rows and its `See all`.** Eight were in the file and
+five fitted. A card that promises eight and shows five is worse than one that
+shows four and points at History.
+
+**`Your positions` was painted a raw colour.** Not a token, a hex, which is why it
+alone on that page read green. Rule 3 has been in this document since March and
+the audit that would have caught it, the unbound fill check, was only ever run on
+screens as they were built. It is bound to `surface/sunken` now and the check runs
+across all thirty six desktop screens.
+
+**Buying power stopped adding up** when the borrow limit changed. $2,480 of cash
+plus $1,480 that can be borrowed is $3,960, not the $4,280 five screens were
+carrying.
+
+**One amount was the other kind of wrong.** `D18 Wallet` shows a bank transfer of
+`+$200.00` that is still in progress, painted neutral. Colour and state are two
+signals with two jobs: the chip says it has not landed, the colour says which way
+the money is going. It is green.
+
+**The file passes end to end now.** Thirty six desktop screens: nothing past the
+fold, nothing below 4.5 to 1, no unbound fill, no gap or padding off the four
+grid, every amount coloured by direction, and every signed in screen lighting
+exactly one place in the rail.
+
 ### 11b.5 The desktop flows
 
 The screens used to sit loose on the page in a grid of four across. They now sit
