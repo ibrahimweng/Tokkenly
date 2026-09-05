@@ -309,11 +309,10 @@
   display: grid; place-items: center;
 }
 
-/* A chart is drawn at a fixed pitch for the desktop column. On a phone the
-   bars share whatever width there is rather than running off the side. */
-.bars { min-width: 0; }
+/* `.bars` and its phone override are gone with the comb they propped up: the
+   chart sizes its own marks to the width now, so there is nothing to stretch.
+   See the chart section below. */
 @media (max-width: 899px) {
-  .bars > * { flex: 1 1 0 !important; width: auto !important; min-width: 0 !important; }
   .auth-card { width: 100%; padding: 24px; }
   .auth { padding: 20px; }
   .keypad { margin: 0 -4px; }
@@ -673,6 +672,69 @@ th.right .th-sort { flex-direction: row-reverse; }
   .hero-top { flex-direction: column; gap: 16px; }
   .hero-aside { text-align: left; align-items: flex-start; }
   .hero-legend { gap: 12px; flex-direction: column; }
+}
+
+/* ----------------------------------------------------------- the chart --
+   One value over time, drawn the same way everywhere. The old version was a
+   comb of fixed 5px bars with no axis, no gridlines and no hover: you could
+   see that the line went up and could not read a single value off it, and on
+   a phone the fixed pitch either overflowed or got crushed by an override
+   that stretched every bar to fill.
+
+   The bar count now follows the width (see MIN_PITCH in chart.ts), so the
+   marks keep their pitch from a 390 phone to a 1440 desktop and the chart
+   never needs a mobile exception. */
+.chart { display: flex; flex-direction: column; gap: 16px; }
+
+.ch-plot { position: relative; padding-left: 56px; }
+
+/* the grid, and its labels in the gutter to the left of the bars */
+.ch-grid { position: absolute; inset: 0; pointer-events: none; }
+.ch-line {
+  position: absolute; left: 56px; right: 0; height: 1px;
+  background: var(--grid);
+}
+.ch-tick {
+  position: absolute; right: calc(100% + 12px); top: -8px;
+  font-size: 11px; line-height: 16px; color: var(--muted); white-space: nowrap;
+}
+
+/* the bars: 2px of surface between neighbours, ends rounded, sat on the floor */
+.ch-bars {
+  position: relative; height: 100%;
+  display: flex; align-items: flex-end; gap: 2px;
+}
+.ch-bar {
+  flex: 1 1 0; min-width: 0;
+  border-radius: 3px 3px 0 0;
+  background: var(--control-pressed);
+  transition: height 220ms var(--ease), background-color var(--t-fast) var(--ease);
+}
+/* the last bar is now, and stays lit whether or not a pointer is present */
+.ch-bar.now { background: var(--muted); }
+.ch-bar.on { background: var(--ink); }
+
+.ch-axis {
+  display: flex; justify-content: space-between;
+  padding-left: 56px; gap: 8px;
+}
+
+/* what the bar under the pointer is worth, and when it was */
+/* Inside the plot, not above it: above collided with the change line, and a
+   reserved row for a thing that is usually not there is 40px of nothing. */
+.ch-tip {
+  position: absolute; top: 0; transform: translateX(-50%);
+  display: flex; align-items: baseline; gap: 8px; white-space: nowrap;
+  background: var(--control); border-radius: 12px; padding: 8px 12px;
+  box-shadow: var(--shadow-hover); pointer-events: none; z-index: 2;
+}
+
+@media (max-width: 899px) {
+  /* the gutter shrinks with everything else, and the axis with it */
+  .ch-plot, .ch-axis { padding-left: 44px; }
+  .ch-line { left: 44px; }
+  .ch-tick { right: calc(100% + 8px); }
+  .ch-axis { font-size: 11px; }
 }
 
 /* ---------------------------------------------------------- the market --

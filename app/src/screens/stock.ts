@@ -1,29 +1,33 @@
 import { h } from '../ui'
 import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, kv, callout } from '../components/bits'
-import { find } from '../catalogue'
+import { find, type Instrument } from '../catalogue'
+import { barChart, type Range } from '../components/chart'
 import { state, actions, holding } from '../state'
 import { usd, pct, signed } from '../format'
 import { go } from '../router'
 import { toast } from '../components/sheet'
 
-function sparkline(seedNum: number, up: boolean): HTMLElement {
-  let seed = seedNum
-  const rand = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648)
-  const bars = h('div', { class: 'bars', style: { display: 'flex', alignItems: 'flex-end', gap: '3px', height: '220px' } })
-  for (let i = 0; i < 80; i++) {
-    const t = i / 79
-    const drift = up ? t * 0.55 : (1 - t) * 0.35
-    const v = 0.3 + drift + (rand() - 0.5) * 0.14
-    bars.appendChild(h('div', {
-      style: {
-        width: '5px', flex: 'none', borderRadius: '2px',
-        height: Math.max(6, v * 220) + 'px',
-        background: i > 72 ? 'var(--ink)' : 'var(--control-pressed)',
-      },
-    }))
-  }
-  return bars
+/** The same chart Home draws, with the company's own year behind it. The
+ *  ranges are anchored to the twelve months the catalogue already states, so
+ *  1Y ends at the price on screen and starts where the year low implies. */
+function priceChart(c: Instrument): HTMLElement {
+  const yearPct = ((c.price - c.yearLow) / c.yearLow) * 100
+  const time = (d: Date) => d.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })
+  const date = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+  const month = (d: Date) => d.toLocaleDateString('en-GB', { month: 'short' })
+  const ranges: Range[] = [
+    { key: '1D', days: 1, pct: c.dayPct, vol: 0.3, fmt: time, over: 'today' },
+    { key: '1M', days: 30, pct: c.dayPct * 3.4, vol: 0.25, fmt: date },
+    { key: '3M', days: 91, pct: yearPct * 0.31, vol: 0.22, fmt: date },
+    { key: '1Y', days: 365, pct: yearPct, vol: 0.18, fmt: month },
+  ]
+  return barChart({
+    ranges, initial: '1Y', height: 220,
+    title: c.ticker + ' over time',
+    endValue: c.price,
+    seed: c.ticker.charCodeAt(0) * 31,
+  })
 }
 
 export function stockScreen(ticker: string): HTMLElement {
@@ -62,10 +66,7 @@ export function stockScreen(ticker: string): HTMLElement {
               h('span', { class: 't-display-xl', text: usd(c.price) })),
             h('span', { class: c.dayPct >= 0 ? 'chip pos' : 'chip',
               text: (c.dayPct >= 0 ? '+' : '') + pct(c.dayPct) + ' today' })),
-          sparkline(c.ticker.charCodeAt(0) * 31, c.dayPct >= 0),
-          h('div', { style: { display: 'flex', justifyContent: 'space-between' } },
-            ...['Nov', 'Jan', 'Mar', 'May', 'Jul', 'Sep'].map((m) =>
-              h('span', { class: 't-caption subtle', text: m })))
+          priceChart(c)
         ),
         card(
           cardHead('Growth and valuation'),

@@ -42,6 +42,24 @@ ul { margin: 0; padding: 0; list-style: none; }
 .eyebrow strong { color: var(--ink); font-weight: 600; }
 
 .row { display: flex; gap: 20px; align-items: flex-start; }
+
+/* A two-column row is only two columns while there is room for two. The side
+   column is a hard 360, so below about 1240 the main column is what is left
+   over — at a 900 viewport that came to 88px, and the chart inside it had
+   nothing to draw on. Rows that carry a .col-side stack; rows of equal cards
+   and rows of tiles do not, because three cards across 700px is still fine. */
+@media (max-width: 1239px) {
+  .row:has(> .col-side) { flex-direction: column; gap: 16px; }
+  .row:has(> .col-side) > * { width: 100% !important; flex: none !important; }
+}
+
+/* 96 down each side is the desktop figure the file draws at 1440. On a
+   laptop it is most of the screen, so it steps down before the phone
+   breakpoint rather than at it. */
+@media (max-width: 1279px) { :root { --content-pad-x: 48px; } }
+/* A flex item will not shrink below its own content unless it is told it
+   may. Three action tiles in a 468px row were 976 wide between them. */
+.row > * { min-width: 0; }
 .row > .col-main { flex: 1 1 0; min-width: 0; }
 /* Cards of the same weight share the width evenly and end level. Left to
    itself a .row hugs each card and aligns their tops, which reads as three

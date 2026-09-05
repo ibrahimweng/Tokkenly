@@ -1,5 +1,6 @@
 import { h, link } from '../ui'
 import { icon } from '../icons'
+import { barChart, type Range } from '../components/chart'
 import { dotArt, BUY, CONVERT, BORROW, type ArtSpec } from '../components/art'
 import { shell, pageHeader, bell, jumpOpen } from '../components/shell'
 import { card, cardHead, headLink, kv, amount, directionMark } from '../components/bits'
@@ -42,75 +43,32 @@ function activityRows(limit: number) {
   ])
 }
 
-/** Six ranges, each with its own number of columns, its own axis and its own
- *  change. A range switch that redraws nothing is a button that lies. */
-const RANGES: Record<string, { cols: number; axis: string[]; drift: number; vol: number; pct: number }> = {
-  // pct is stated, not derived from the drawn line. A noisy series read at its
-  // endpoints produced things like +51% in a month. The day and the year are
-  // the figures already on this screen: +$142.60 today, +17.28% all in.
-  '1D': { cols: 24, axis: ['9am', '12pm', '3pm', '6pm', '9pm'], drift: 0.04, vol: 0.05, pct: 1.16 },
-  '1W': { cols: 28, axis: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], drift: 0.08, vol: 0.07, pct: 2.4 },
-  '1M': { cols: 30, axis: ['Wk 1', 'Wk 2', 'Wk 3', 'Wk 4'], drift: 0.14, vol: 0.06, pct: 4.1 },
-  '3M': { cols: 45, axis: ['Jul', 'Aug', 'Sep'], drift: 0.3, vol: 0.07, pct: 8.7 },
-  '1Y': { cols: 72, axis: ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'], drift: 0.6, vol: 0.09, pct: 17.28 },
-  'ALL': { cols: 84, axis: ['2024', '2025', '2026'], drift: 0.78, vol: 0.11, pct: 24.6 },
-}
+/** Six ranges of the portfolio. The percentages are the product's own
+ *  figures — +1.16% today and +17.28% all in are already on this screen — and
+ *  the series is pinned to them at both ends, so the caption under the chart
+ *  is read off the bars rather than asserted beside them. */
+const time = (d: Date) => d.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit' })
+const day = (d: Date) => d.toLocaleDateString('en-GB', { weekday: 'short' })
+const date = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+const month = (d: Date) => d.toLocaleDateString('en-GB', { month: 'short' })
+const monthYear = (d: Date) => d.toLocaleDateString('en-GB', { month: 'short', year: '2-digit' })
 
-/** Seeded per range, so a range always draws the same shape. Rule 43's
- *  sibling: a figure a person can come back to must not move on its own. */
-function series(key: string): number[] {
-  const r = RANGES[key]
-  let seed = 7 + key.length * 31
-  const rand = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648)
-  return Array.from({ length: r.cols }, (_, i) => {
-    const t = i / (r.cols - 1)
-    return Math.max(0.06, 0.28 + t * r.drift + (rand() - 0.5) * r.vol)
-  })
-}
+const RANGES: Range[] = [
+  { key: '1D', days: 1, pct: 1.16, vol: 0.05, fmt: time, over: 'today' },
+  { key: '1W', days: 7, pct: 2.4, vol: 0.07, fmt: day, over: 'this week' },
+  { key: '1M', days: 30, pct: 4.1, vol: 0.06, fmt: date },
+  { key: '3M', days: 91, pct: 8.7, vol: 0.07, fmt: date },
+  { key: '1Y', days: 365, pct: 17.28, vol: 0.09, fmt: month },
+  { key: 'ALL', days: 900, pct: 24.6, vol: 0.11, fmt: monthYear, over: 'all time' },
+]
 
 function chart(): HTMLElement {
-  // Twelve months of the portfolio, drawn as a dot column so a flat month
-  // still reads as a month. design.md 8.12.
-  const wrap = h('div', { class: 'card', style: { gap: '20px' } })
-  const bars = h('div', { class: 'bars', style: { display: 'flex', alignItems: 'flex-end', gap: '3px', height: '196px' } })
-  const axis = h('div', { style: { display: 'flex', justifyContent: 'space-between' } })
-  const delta = h('span', { class: 't-caption' })
-  const chips = h('div', { class: 'chip-row' })
-
-  const draw = (key: string) => {
-    const vals = series(key)
-    const live = Math.max(1, Math.round(vals.length * 0.1))
-    bars.replaceChildren(...vals.map((v, i) =>
-      h('div', {
-        style: {
-          width: '5px', borderRadius: '2px', flex: 'none',
-          height: Math.max(6, v * 196) + 'px',
-          background: i >= vals.length - live ? 'var(--ink)' : 'var(--control-pressed)',
-          transition: 'height 220ms cubic-bezier(0.2,0.8,0.2,1)',
-        },
-      })))
-    axis.replaceChildren(...RANGES[key].axis.map((m) =>
-      h('span', { class: 't-caption subtle', text: m })))
-    // What the range gained, against what it started from.
-    const change = RANGES[key].pct
-    const money = holdingsValue() - holdingsValue() / (1 + change / 100)
-    delta.className = 't-caption ' + (change >= 0 ? 'pos' : 'warn')
-    delta.textContent = `${change >= 0 ? '+' : ''}${usd(money)} (${change >= 0 ? '+' : ''}${pct(change)}) over ${key === 'ALL' ? 'all time' : key}`
-    for (const c of chips.children) {
-      (c as HTMLElement).setAttribute('aria-pressed', String(c.textContent === key))
-    }
-  }
-
-  for (const key of Object.keys(RANGES)) {
-    chips.appendChild(h('button', { class: 'chip', text: key, on: { click: () => draw(key) } }))
-  }
-  wrap.appendChild(h('div', { class: 'card-head' },
-    h('span', { class: 't-caps subtle', text: 'Portfolio over time' }), chips))
-  wrap.appendChild(delta)
-  wrap.appendChild(bars)
-  wrap.appendChild(axis)
-  draw('1Y')
-  return wrap
+  return h('section', { class: 'card' }, barChart({
+    ranges: RANGES,
+    initial: '1Y',
+    title: 'Portfolio over time',
+    endValue: state.cash + state.inEarn + holdingsValue(),
+  }))
 }
 
 export function homeScreen(): HTMLElement {
