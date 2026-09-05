@@ -1764,6 +1764,13 @@ scale.
     a number is the whole point. Resolve every constant out of the file, and give
     every check the same scope a reader has. A check you have not doubted is a
     second opinion you have not got. See 11b.4f.
+49. A link is a promise, and there are only three honest ways to keep it: point
+    it at something real, rename it so it names where it goes, or delete it. The
+    fourth, leaving it, is the one that ships. Twenty three links in this file
+    led nowhere, and the largest group of them was not a link problem at all: it
+    was History holding payments while three screens offered to show you loans,
+    earnings and trades in it. When several links break the same way, the
+    destination is usually what is wrong. See 11b.4j.
 
 ## 11. The screens, by flow
 
@@ -1985,6 +1992,12 @@ alone.
 | D03j Take out | How much with the ruler, and what the rest carries on paying |
 | D03k Take out review | The amount, where it goes, when, and what you give up |
 | D03l Taken out | The outcome, with the reference |
+| D02a Receipt | One payment in full: who, the reference, when, the fee |
+| D19 Join the list | What the card is, and the address we will write to |
+| D06b Close account | The three things that have to happen first |
+| D07b Recovery phrase | Hidden by default, and what the words can do |
+| D07c Recovery phrase shown | The twelve words, once you have asked for them |
+| D14c Your banks | Where payouts go, and how to add another |
 | D04 Market | Search, seven categories, three indices, five plain language picks, what is moving today, popular |
 | D05 Apple | The full chart, today's trading, growth and valuation, your position, trending, news |
 | D06 Account | Personal details, your address with its warning, verification, devices |
@@ -2673,6 +2686,57 @@ Take out's summary and `$940.00` again as the right column's figure, and gave
 Repay a right column headed by `$388.90` when the page header already said it.
 Both were caught before they were drawn, by working the copy out against the
 duplicate figure check rather than after it.
+
+### 11b.4j Links that led nowhere
+
+A link is a promise. Twenty three of them were not being kept.
+
+**Fifteen `See all` links pointed at a History that could not show what they
+promised.** `YOUR LOANS`, `YOUR EARNINGS` and `RECENT ORDERS` all offered to show
+you the rest, and `D02 History` held payments only: twelve rows, filtered All,
+Received, Sent. The fix was not to cut the links. It was that History had been
+wrong since it was drawn.
+
+**History is now the one place for everything.** The filters are `All`,
+`Payments`, `Trades` and `Grow`, and the table carries all three kinds: a payment
+in, an Apple buy, a Tesla sale, a day of Earn interest, a drawdown on the loan.
+That also closed a contradiction nobody had noticed. `D01 Home — detailed` has
+always shown `Bought AAPL` and `Sold TSLA` in Recent activity, and the History
+page those rows led to had no trades in it at all.
+
+**The direction arrows had to be re-derived.** They had been alternating in, out,
+in, out down the old list, which was right by luck rather than by rule. Ten of the
+twelve were wrong the moment the rows changed, so each is now set from the sign of
+its own amount. That is rule 43 again, in a column nobody thinks of as an amount.
+
+**The rest sorted into three piles.**
+
+| Fix | Links |
+| --- | --- |
+| Remove, the content is on the same page | `See history` ×6, `See loans` ×3, `See news`, the watchlist's `See all` |
+| Rename, so it names where it goes | `See holdings` → `Your positions` ×3, `View loan` / `View Earn` / `View order` → `View in History` ×5, `Change` → `Change stock` ×3 |
+| Build the destination | `D19 Join the list`, `D06b Close account`, `D07b Recovery phrase`, `D07c Recovery phrase shown`, `D14c Your banks` |
+
+**Removing is a fix, not a retreat.** `See history` sat in the header of the Earn
+card with the earnings table eight hundred pixels below it on the same screen.
+`See news` sat next to Apple's price with a `NEWS` band further down the same
+page. The watchlist's `See all` sat above a list of all five things in it. A link
+to something already visible is worse than no link, because it makes a person
+wonder what they are missing.
+
+**Two of the built screens are one flow.** A recovery phrase screen that shows the
+words by default is a screen that leaks them over somebody's shoulder, so `D07b`
+shows `Hidden` and states plainly what the words can do, and `D07c` shows them
+only after `Show the words` is pressed, with a button that says `I have written
+them down` rather than `Done`.
+
+**Closing an account is a sheet with no confirm button.** `D06b` does not offer a
+red `Delete` that a mis-tap can reach. It lists the three things that have to
+happen first, tells you records are kept for seven years because the law requires
+it, and ends in an email. Destructive and irreversible are not the same as fast.
+
+**Forty six desktop screens now pass**, and no text on any of them offers a
+destination that does not exist.
 
 ### 11b.5 The desktop flows
 
