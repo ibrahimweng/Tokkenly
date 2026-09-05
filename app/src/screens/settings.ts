@@ -1,7 +1,7 @@
 import { h } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader, eyebrow } from '../components/shell'
-import { card, cardHead, kv, callout, emptyState } from '../components/bits'
+import { card, cardHead, kv, callout, emptyState, toggle, choice } from '../components/bits'
 import { state, actions } from '../state'
 import { usd } from '../format'
 import { openSheet, go, current } from '../router'
@@ -17,6 +17,78 @@ function editable(label: string, value: string, field: 'email' | 'phone' | 'addr
       h('button', { class: 'link', text: 'Change', on: { click: () => openSheet('edit', { field }) } })))
 }
 
+/** Everything the person can decide about how the product behaves, in one
+ *  card. Every control here reads and writes state and survives the trip to
+ *  another screen and back — which the Face ID and PIN switches on Security
+ *  never did. */
+function preferences(): HTMLElement {
+  const p = state.prefs
+  const back = () => go('/account')   // repaint, so dependent copy follows
+  return card(
+    cardHead('Preferences',
+      h('button', { class: 'link quiet', text: 'Reset to defaults',
+        on: { click: () => { actions.resetPrefs(); toast('Preferences are back to their defaults') } } })),
+
+    choice({
+      label: 'Home screen', sub: 'Where Home opens when you arrive',
+      options: [{ label: 'Simple', value: 'simple' }, { label: 'Detailed', value: 'detailed' }],
+      get: () => p.homeView, set: (v) => actions.setHomeView(v as 'simple' | 'detailed'),
+    }),
+    choice({
+      label: 'Theme', sub: 'Dark is the default. Light is for bright rooms and printing.',
+      options: [{ label: 'Dark', value: 'dark' }, { label: 'Light', value: 'light' }],
+      get: () => p.theme, set: (v) => actions.setPref('theme', v as 'dark' | 'light'),
+    }),
+    toggle({
+      label: 'Show naira beside dollars', ic: icon.convert(),
+      sub: 'An indicative figure at today’s rate, next to the dollar amount',
+      get: () => p.showNaira, set: (v) => { actions.setPref('showNaira', v); back() },
+    }),
+    choice({
+      label: 'Add to bucket', sub: 'What goes against a company before you edit it',
+      options: [25, 50, 100, 250].map((v) => ({ label: usd(v, false), value: String(v) })),
+      get: () => String(p.tradeDefault), set: (v) => actions.setPref('tradeDefault', Number(v)),
+    }),
+    choice({
+      label: 'Ask again above', sub: 'A second confirmation before anything larger leaves',
+      options: [
+        { label: usd(250, false), value: '250' }, { label: usd(500, false), value: '500' },
+        { label: usd(1000, false), value: '1000' }, { label: 'Never', value: '0' },
+      ],
+      get: () => String(p.confirmOver), set: (v) => actions.setPref('confirmOver', Number(v)),
+    }))
+}
+
+/** Which events are worth a phone buzzing. Four, because a list of twenty is a
+ *  list nobody reads and everybody turns off wholesale. */
+function notifications(): HTMLElement {
+  const n = state.prefs.notify
+  return card(
+    cardHead('Notifications'),
+    toggle({ label: 'Money landing', sub: 'When a payment reaches you, or one you sent lands',
+      ic: icon.arrowIn(), get: () => n.payments, set: (v) => actions.setNotify('payments', v) }),
+    toggle({ label: 'Price moves', sub: 'When something you hold moves more than five per cent in a day',
+      ic: icon.market(), get: () => n.prices, set: (v) => actions.setNotify('prices', v) }),
+    toggle({ label: 'Earn interest', sub: 'The daily payout on money sitting in Earn',
+      ic: icon.grow(), get: () => n.earn, set: (v) => actions.setNotify('earn', v) }),
+    toggle({ label: 'Borrowing', sub: 'When what you owe gets close to what your shares can cover',
+      ic: icon.alert(), get: () => n.borrowing, set: (v) => actions.setNotify('borrowing', v) }))
+}
+
+/** Where money comes from and goes back to. It was a sheet reachable only
+ *  from the Wallet; a bank you added is a setting, so it lives here too. */
+function payments(): HTMLElement {
+  return card(
+    cardHead('Payment methods',
+      h('button', { class: 'link', text: 'Add a bank', on: { click: () => openSheet('banks') } })),
+    ...state.banks.map((b) => kv(b.name, '•••• ' + b.last4)),
+    state.banks.length
+      ? h('span', { class: 'muted t-caption',
+          text: 'Naira arrives from these and payouts go back to them. The first one is used unless you pick another.' })
+      : h('span', { class: 'muted', text: 'No bank yet. Add one to move naira in and out.' }),
+    h('button', { class: 'link quiet', text: 'Manage banks', on: { click: () => openSheet('banks') } }))
+}
+
 export function accountScreen(): HTMLElement {
   const p = state.person
   return shell(
@@ -24,6 +96,7 @@ export function accountScreen(): HTMLElement {
     pageHeader('Account', eyebrow('Verified', 'NIN checked 12 Aug 2026')),
     h('div', { class: 'row' },
       h('div', { class: 'stack col-main' },
+        preferences(),
         card(
           cardHead('Personal details'),
           kv('Full name', p.name),
@@ -53,6 +126,8 @@ export function accountScreen(): HTMLElement {
           h('button', { class: 'link', text: 'Close my account', on: { click: () => openSheet('close') } })
         )),
       h('div', { class: 'stack col-side' },
+        notifications(),
+        payments(),
         card(
           cardHead('Verification', h('span', { class: 'chip pos', text: 'Verified' })),
           kv('Checked with', 'NIN'),

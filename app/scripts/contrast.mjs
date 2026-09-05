@@ -6,7 +6,7 @@ import { chromium } from 'playwright'
 
 const B = 'http://localhost:4173/#'
 const ROUTES = ['/', '/wallet', '/market', '/market/aapl', '/grow', '/history',
-  '/settings', '/all', '/send', '/receive']
+  '/settings', '/all', '/send', '/receive', '/account', '/bucket']
 
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const page = await b.newPage({ viewport: { width: 1440, height: 1000 } })
@@ -61,22 +61,27 @@ const sweep = async () => page.evaluate(() => {
 })
 
 const bad = []
+/* Both themes. A light palette is not a dark one inverted, so it has to be
+   measured on its own ground rather than assumed to follow. */
+const THEMES = ['dark', 'light']
+for (const theme of THEMES)
 for (const r of ROUTES) {
   await page.goto(B + r, { waitUntil: 'domcontentloaded' })
   await page.reload({ waitUntil: 'domcontentloaded' })
+  await page.evaluate((t) => document.documentElement.setAttribute('data-theme', t), theme)
   await page.waitForTimeout(250)
-  for (const t of await sweep()) if (t.ratio < t.need) bad.push({ route: r, ...t })
+  for (const t of await sweep()) if (t.ratio < t.need) bad.push({ route: theme + ' ' + r, ...t })
 
   /* and again with a row under the pointer, because the wash moves the ground */
   const row = await page.$('.table tbody tr td')
   if (row) {
     await row.hover(); await page.waitForTimeout(250)
-    for (const t of await sweep()) if (t.ratio < t.need) bad.push({ route: r + ' (row hovered)', ...t })
+    for (const t of await sweep()) if (t.ratio < t.need) bad.push({ route: theme + ' ' + r + ' (row hovered)', ...t })
   }
 }
 
 const seen = new Set()
-const uniq = bad.filter((x) => { const k = x.sel + x.ratio; if (seen.has(k)) return false; seen.add(k); return true })
+const uniq = bad.filter((x) => { const k = x.route.split(' ')[0] + x.sel + x.ratio; if (seen.has(k)) return false; seen.add(k); return true })
 console.log(uniq.length ? 'BELOW AA:' : 'BELOW AA: none')
 for (const x of uniq.sort((a, c) => a.ratio - c.ratio))
   console.log(`  ${String(x.ratio).padStart(5)} / ${x.need}  ${String(x.px).padStart(4)}px  ${x.route.padEnd(22)} ${x.sel.slice(0, 44).padEnd(45)} ${JSON.stringify(x.text)}`)

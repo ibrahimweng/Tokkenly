@@ -1,4 +1,8 @@
 *, *::before, *::after { box-sizing: border-box; }
+/* So the browser paints form controls, scrollbars and the overscroll gutter
+   in the theme the page is actually in. */
+:root { color-scheme: dark; }
+:root[data-theme='light'] { color-scheme: light; }
 html, body { height: 100%; }
 body {
   margin: 0;

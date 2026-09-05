@@ -95,3 +95,64 @@ export function statLine(label: string, value: string, cls = ''): HTMLElement {
     h('span', { class: 't-caps subtle', text: label }),
     h('span', { class: 't-body-strong ' + cls, text: value }))
 }
+
+/* --------------------------------------------------------------- controls --
+   A preference is a control that remembers. The toggles on Security were
+   inline-styled buttons that lit up, said "Face ID is on" and forgot — they
+   looked like settings without being any. These read and write state. */
+
+export function toggle(opts: {
+  label: string
+  sub: string
+  ic?: string
+  get: () => boolean
+  set: (on: boolean) => void
+}): HTMLElement {
+  const knob = h('span', { class: 'switch' }, h('span', { class: 'switch-knob' }))
+  const row = h('button', { class: 'pref-row' },
+    opts.ic ? h('span', { class: 'mark', html: opts.ic }) : null,
+    h('span', { class: 'two-line grow' },
+      h('span', { class: 't-body-strong', text: opts.label }),
+      h('small', { text: opts.sub })),
+    knob)
+  const paint = (): void => {
+    const on = opts.get()
+    knob.classList.toggle('on', on)
+    row.setAttribute('aria-pressed', String(on))
+    row.setAttribute('aria-label', `${opts.label}, ${on ? 'on' : 'off'}`)
+  }
+  row.addEventListener('click', () => { opts.set(!opts.get()); paint() })
+  paint()
+  return row
+}
+
+/** A choice between a few named things, where seeing the alternatives is the
+ *  point. Anything longer than four belongs in a sheet. */
+export function choice(opts: {
+  label: string
+  sub: string
+  options: { label: string; value: string }[]
+  get: () => string
+  set: (v: string) => void
+  onPick?: () => void
+}): HTMLElement {
+  const chips = h('div', { class: 'chip-row' })
+  const paint = (): void => {
+    for (const c of chips.children) {
+      const el = c as HTMLElement
+      el.setAttribute('aria-pressed', String(el.dataset.value === opts.get()))
+    }
+  }
+  for (const o of opts.options) {
+    chips.appendChild(h('button', {
+      class: 'chip', text: o.label, dataset: { value: o.value },
+      on: { click: () => { opts.set(o.value); paint(); opts.onPick?.() } },
+    }))
+  }
+  paint()
+  return h('div', { class: 'pref-row pref-choice' },
+    h('span', { class: 'two-line grow' },
+      h('span', { class: 't-body-strong', text: opts.label }),
+      h('small', { text: opts.sub })),
+    chips)
+}

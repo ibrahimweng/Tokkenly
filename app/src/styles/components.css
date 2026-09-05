@@ -674,6 +674,36 @@ th.right .th-sort { flex-direction: row-reverse; }
   .hero-legend { gap: 12px; flex-direction: column; }
 }
 
+/* ------------------------------------------------------------ settings --
+   A preference is a control that remembers, so it reads as a row with the
+   thing it changes on the right, not as a list item that happens to light up. */
+.pref-row {
+  display: flex; align-items: center; gap: 16px;
+  width: 100%; text-align: left; padding: 12px 0;
+}
+.pref-row + .pref-row { border-top: 1px solid var(--grid); }
+.pref-row .mark { flex: none; }
+.pref-choice { flex-wrap: wrap; row-gap: 12px; }
+.pref-choice .chip-row { flex: none; }
+
+.switch {
+  width: 44px; height: 26px; border-radius: 999px; flex: none; position: relative;
+  background: var(--control-pressed);
+  transition: background-color var(--t-fast) var(--ease);
+}
+.switch-knob {
+  position: absolute; top: 3px; left: 3px; width: 20px; height: 20px;
+  border-radius: 999px; background: var(--muted);
+  transition: left var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease);
+}
+.switch.on { background: var(--positive); }
+.switch.on .switch-knob { left: 21px; background: var(--canvas); }
+
+@media (max-width: 899px) {
+  .pref-choice .chip-row { width: 100%; }
+  .pref-choice .chip-row .chip { flex: 1 1 0; padding: 0 8px; }
+}
+
 /* ---------------------------------------------------------- the bucket --
    Things picked out and not yet paid for. It lives in the sidebar with the
    places rather than in a page header, because a list you fill as you browse
