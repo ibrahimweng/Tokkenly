@@ -26,6 +26,13 @@
   --warning: #e0b341;
   --data-2: #a064db;
 
+  /* The gateway dot field. Its own three rungs, not the text ramp: these are
+     decorative circles with no reading to do, so they keep the values Figma
+     draws even where the text ramp has moved for contrast. */
+  --dot-dim: #65656c;
+  --dot-mid: #a6a6ad;
+  --dot-lit: #dcdce0;
+
   --tint-brand: #15241f;
   --tint-positive: #10291f;
   --tint-warning: #2a2211;
@@ -52,8 +59,11 @@
   --nav-h: 64px;
   --screen-h: 1024px;
   --content-max: 1200px;      /* the column 06 Desktop is drawn in */
-  --content-pad-x: 32px;
-  --content-pad-y: 24px;
+  /* Figma 06 Desktop draws the content frame 1200 wide with 96 down each side
+     and 72 top and bottom, so the column inside it is 1008. The app was on
+     32/24, which is why the middle read as stretched next to the file. */
+  --content-pad-x: 96px;
+  --content-pad-y: 72px;
 
   --font: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
     'Helvetica Neue', Arial, sans-serif;

@@ -570,6 +570,81 @@ th.right .th-sort { flex-direction: row-reverse; }
   .header-actions { gap: 8px; }
 }
 
+/* The number, and the two things you would do with it, on one line. Figma
+   06 Desktop D01c: TOTAL PORTFOLIO over a 48px figure over the day's move,
+   with Send and Receive at 148 x 48 on the right. */
+.headline { display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+.t-figure { font-size: 48px; line-height: 52px; font-weight: 600; letter-spacing: -0.02em; }
+.delta { display: flex; align-items: baseline; gap: 8px; }
+.headline-actions { display: flex; gap: 12px; flex: none; }
+.btn-wide { width: 148px; height: 48px; }
+
+@media (max-width: 899px) {
+  .headline { align-items: flex-start; flex-direction: column; gap: 16px; }
+  .t-figure { font-size: 36px; line-height: 44px; }
+  .headline-actions { width: 100%; }
+  .btn-wide { width: auto; flex: 1 1 0; }
+}
+
+/* --------------------------------------------------------- the gateway --
+   Figma 06 Desktop, D01c Home — gateway. Three tiles across the column at
+   400 / 288 / 288 with 16 between them, which is 1008 exactly — the width the
+   file draws the column at. 300 tall, 28 of padding, 20 of radius.
+
+   The bases are the real widths rather than 0-with-grow-factors. Under
+   border-box a flex-basis of 0 cannot go below the padding, so 56px of it
+   floors each base and the growth is shared out over what is left: the ratio
+   comes out 387/294/294 instead of 400/288/288. Stated bases with shrink do
+   the right thing at 1008 and stay in proportion under it. */
+.gates { display: flex; gap: 16px; align-items: stretch; }
+.gate {
+  position: relative; overflow: hidden;
+  flex: 0 1 288px; min-width: 0;
+  height: 300px; padding: 28px; gap: 16px; border-radius: 20px;
+  background: var(--sunken);
+  align-items: flex-start;
+}
+/* Buying a share is what this screen is for, so that tile is the wide one and
+   the only one that lifts off the flat surface. The gradient holds the card
+   for the first 42% and then goes to the brand green at the bottom edge,
+   under the dots. */
+.gate-lead {
+  flex: 0 1 400px;
+  background: linear-gradient(180deg, var(--sunken) 0%, var(--sunken) 42%, var(--accent) 100%);
+}
+.gate-words { display: flex; flex-direction: column; gap: 8px; position: relative; z-index: 1; }
+.gate-words .muted { font-size: 14px; line-height: 20px; }
+
+/* The lead tile's call to action is a filled pill; the other two are the same
+   words without the fill, which is what stops three buttons competing. */
+.gate-cta {
+  position: relative; z-index: 1;
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 14px; font-weight: 600; color: var(--ink);
+}
+.gate-cta .ic { display: inline-flex; }
+.gate-cta .ic svg { width: 12px; height: 12px; }
+.gate-lead .gate-cta {
+  height: 36px; padding: 0 12px 0 16px; border-radius: var(--r-pill);
+  background: var(--inverse); color: var(--on-inverse);
+}
+
+/* The field bleeds to the bottom edge, under the padding, and is clipped by
+   the tile exactly as the Figma frame clips it. */
+.gate-art {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 140px;
+  overflow: hidden; pointer-events: none;
+}
+
+@media (max-width: 899px) {
+  /* On a phone three of these stack, and 300 tall each is three screens of
+     scrolling before the activity list. They shorten, and the field with
+     them. */
+  .gates { flex-direction: column; gap: 12px; }
+  .gate { flex: none; width: 100%; height: 200px; padding: 20px; border-radius: 24px; }
+  .gate-art { height: 96px; }
+}
+
 /* ---------------------------------------------------------- the wallet --
    The centrepiece is not the number on its own. It is the number, and what
    the number is made of, drawn to scale. */

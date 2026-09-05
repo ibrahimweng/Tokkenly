@@ -103,7 +103,7 @@ export function marketScreen(): HTMLElement {
         h('span', { class: 't-caps subtle', text: i.name }),
         h('div', { class: 'kv' },
           h('span', { class: 't-display', text: i.value }),
-          h('span', { class: (i.pct >= 0 ? 'pos' : 'warn') + ' t-body-strong',
+          h('span', { class: (i.pct >= 0 ? 'pos' : 'warn') + ' t-body-strong nowrap',
             text: (i.pct >= 0 ? '+' : '') + pct(i.pct, 2) + ' today' }))))),
     // The list is the page, not a neighbour of the page. Seven columns of
     // company data cannot share 730px with a side column: the cells collide

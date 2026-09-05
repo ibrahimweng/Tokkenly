@@ -1,5 +1,6 @@
 import { h, link } from '../ui'
 import { icon } from '../icons'
+import { dotArt, BUY, CONVERT, BORROW, type ArtSpec } from '../components/art'
 import { shell, pageHeader, bell, jumpOpen } from '../components/shell'
 import { card, cardHead, headLink, kv, amount, directionMark } from '../components/bits'
 import { table } from '../components/table'
@@ -179,31 +180,64 @@ function detailed(): HTMLElement {
   )
 }
 
+/** Figma 06 Desktop, D01c Home — gateway. Three tiles, 400 / 288 / 288 in a
+ *  1008 column with 16 between them, each 300 tall with 28 of padding, and a
+ *  dot field bleeding to the bottom edge. The first one is wider and carries
+ *  the gradient, because buying a share is the thing this screen is for. */
 function gateway(): HTMLElement {
-  const tile = (label: string, sub: string, to: string, ic: string) => {
-    const a = link(to, 'card tile')
+  const tile = (
+    opts: { title: string; sub: string; cta: string; to: string; art: ArtSpec; lead?: boolean },
+  ) => {
+    const a = link(opts.to, 'card gate' + (opts.lead ? ' gate-lead' : ''))
     a.style.textDecoration = 'none'
-    a.style.minHeight = '220px'
-    a.appendChild(h('div', { class: 'promo-badge', html: ic }))
-    a.appendChild(h('div', { class: 'spacer' }))
-    a.appendChild(h('div', { class: 'stack-8' },
-      h('span', { class: 't-title', text: label }),
-      h('span', { class: 'muted', text: sub })))
+    a.appendChild(h('div', { class: 'gate-words' },
+      h('span', { class: 't-title', text: opts.title }),
+      h('span', { class: 'muted', text: opts.sub })))
+    a.appendChild(h('span', { class: 'gate-cta' },
+      h('span', { text: opts.cta }),
+      h('span', { class: 'ic', html: icon.chevron() })))
+    a.appendChild(h('div', { class: 'gate-art' }, dotArt(opts.art)))
     return a
   }
+  // Two rows, the way D01c has them: the greeting carries the name and the
+  // one line of reassurance, the portfolio carries the number and the two
+  // things you would do with it. The search and the bell are the app's own
+  // and stay beside the toggle.
+  const total = state.cash + state.inEarn + holdingsValue()
+  const move = dayMove()
   return shell(
     'home',
-    pageHeader(isMobile() ? '' : 'Good morning, ' + state.person.name.split(' ')[0],
-      h('div', { class: 'header-actions' }, jumpOpen(), viewToggle(), bell())),
-    h('div', { class: 'stack-8' },
-      h('span', { class: 't-caps subtle', text: 'Your money' }),
-      h('span', { class: 't-display-xl', text: usd(state.cash + state.inEarn + holdingsValue()) }),
-      h('span', { class: 'muted', text: 'Everything is settled. Nothing needs your attention.' })),
-    h('div', { class: 'row tiles' },
-      tile('Buy stock', 'Own a piece of Apple, Nvidia or an index fund', '/market', icon.buy()),
-      tile('Add money', 'Turn naira into dollars, usually in under a minute', '/addmoney', icon.receive()),
-      tile('Send', 'Pay anyone, anywhere, for nothing', '/send', icon.send())),
-    card(
+    // The greeting is the page's title here, so it takes the header row and the
+    // toggle sits beside it, the way D01c has it — not on a line of its own
+    // above an empty heading.
+    h('header', { class: 'page-header' },
+      h('div', { class: 'page-header-row' },
+        h('div', { class: 'stack-12' },
+          h('h1', { class: 't-display', text: 'Good morning, ' + state.person.name.split(' ')[0] }),
+          h('span', { class: 'muted', text: 'Everything is settled. Nothing needs your attention.' })),
+        h('div', { class: 'header-actions' }, jumpOpen(), viewToggle(), bell()))),
+    h('div', { class: 'headline' },
+      h('div', { class: 'stack-8' },
+        h('span', { class: 't-caps subtle', text: 'Total portfolio' }),
+        h('span', { class: 't-figure', text: usd(total) }),
+        h('span', { class: 'delta' },
+          h('span', { class: (move.amount >= 0 ? 'pos' : 'warn') + ' t-body-strong',
+            text: `${move.amount >= 0 ? '+' : ''}${usd(move.amount)} (${move.amount >= 0 ? '+' : ''}${pct(move.pct)})` }),
+          h('span', { class: 'muted', text: 'today' }))),
+      h('div', { class: 'headline-actions' },
+        link('/send', 'btn btn-primary btn-wide', 'Send'),
+        link('/receive', 'btn btn-secondary btn-wide', 'Receive'))),
+    h('div', { class: 'gates' },
+      tile({ lead: true, art: BUY, to: '/market', title: 'Buy Stocks', cta: 'Buy shares',
+        sub: 'Own a piece of Apple, Nvidia or a whole market fund. From $1.' }),
+      tile({ art: CONVERT, to: '/convert', title: 'Convert Cash', cta: 'Convert money',
+        sub: 'Move between naira and dollars at the rate you see.' }),
+      tile({ art: BORROW, to: '/grow', title: 'Borrow or Lend', cta: 'See your limit',
+        sub: 'Borrow against your shares without selling them.' })),
+    // D01c draws the activity straight onto the canvas, with no card behind
+    // it — the tiles above are the objects on this screen, and a fourth panel
+    // under them flattens all four.
+    h('section', { class: 'stack-8' },
       cardHead('Recent activity', headLink('See all', '/history')),
       table(
         [{ key: 'who', label: '' }, { key: 'state', label: '' }, { key: 'amt', label: '', align: 'right' }],
@@ -212,4 +246,14 @@ function gateway(): HTMLElement {
       )
     )
   )
+}
+
+/** What the portfolio did today: the holdings' own day moves against the cash
+ *  and Earn balances, which do not move with the market. */
+function dayMove(): { amount: number; pct: number } {
+  const now = holdingsValue()
+  const before = state.holdings.reduce((t, p) => t + (p.shares * p.price) / (1 + p.dayPct / 100), 0)
+  const total = state.cash + state.inEarn + now
+  const amount = now - before
+  return { amount, pct: total - amount ? (amount / (total - amount)) * 100 : 0 }
 }
