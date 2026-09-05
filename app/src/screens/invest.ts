@@ -45,6 +45,7 @@ export function investScreen(ticker: string): HTMLElement {
     cardRight: 'Cash ' + usd(state.cash),
     initial: Math.min(500, state.cash),
     max: state.cash,
+    maxLabel: 'The cash you have to spend',
     note: `About ${(500 * state.ngnPerUsd).toLocaleString('en-US')} naira at today's indicative rate`,
     quick: [
       { label: usd(100, false), value: 100 },
@@ -102,6 +103,7 @@ export function sellScreen(ticker: string): HTMLElement {
     cardRight: held.shares.toFixed(2) + ' shares',
     initial: Math.min(250, maxValue),
     max: maxValue,
+    maxLabel: 'What this holding is worth',
     note: 'The cash lands in your wallet, usually within a minute.',
     quick: [
       { label: usd(100, false), value: 100 },

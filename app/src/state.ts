@@ -3,6 +3,7 @@
  *  Opening figures match design.md 11b.4f. */
 
 import { reference } from './format'
+import { find } from './catalogue'
 
 export type ActivityKind = 'payment' | 'trade' | 'grow'
 
@@ -74,7 +75,9 @@ const iso = (d: string) => new Date(d).toISOString()
 
 export const state: State = {
   signedIn: true,
-  homeView: 'detailed',
+  // Simple is where a new person lands: three doors and the number, not a
+  // chart and four cards of detail they have not asked for yet.
+  homeView: 'simple',
   person: {
     name: 'Chinaza Okoro',
     email: 'ibrahimweng0@gmail.com',
@@ -245,22 +248,41 @@ export const actions = {
     return a
   },
 
-  buy(ticker: string, dollars: number): Activity {
+  /** Buying something you do not already hold opens the position. It used to
+   *  take the money and add the shares only `if (h)`, so a first purchase —
+   *  the one the whole product is for — charged the wallet, created nothing,
+   *  and reported "you now own undefined shares". */
+  buy(ticker: string, dollars: number): { activity: Activity; shares: number } {
+    const c = find(ticker)
+    if (!c) throw new Error('No such instrument: ' + ticker)
+    // Never spend money that is not there, whatever the caller asks for. The
+    // composer clamps too; this is the floor under it.
+    const spend = Math.max(0, Math.min(dollars, state.cash))
+    const shares = spend / c.price
     const h = holding(ticker)
-    if (h) h.shares += dollars / h.price
-    state.cash -= dollars
-    const a = record({ kind: 'trade', who: h ? h.name : ticker, type: 'Bought', amount: -dollars })
+    if (h) h.shares += shares
+    else state.holdings.push({ ticker: c.ticker, name: c.name, shares, price: c.price, dayPct: c.dayPct })
+    state.cash -= spend
+    const activity = record({ kind: 'trade', who: c.name, type: 'Bought', amount: -spend })
     changed()
-    return a
+    return { activity, shares }
   },
 
-  sell(ticker: string, dollars: number): Activity {
+  /** And selling is bounded by what is actually held, so a holding can never
+   *  go negative and the wallet can never be paid for shares that were not
+   *  there. A position sold out entirely leaves rather than sitting at zero. */
+  sell(ticker: string, dollars: number): { activity: Activity; shares: number } {
     const h = holding(ticker)
-    if (h) h.shares = Math.max(0, h.shares - dollars / h.price)
-    state.cash += dollars
-    const a = record({ kind: 'trade', who: h ? h.name : ticker, type: 'Sold', amount: dollars })
+    const c = find(ticker)
+    if (!h || !c) throw new Error('Nothing held in ' + ticker)
+    const value = Math.max(0, Math.min(dollars, h.shares * h.price))
+    const shares = value / h.price
+    h.shares -= shares
+    if (h.shares < 1e-6) state.holdings.splice(state.holdings.indexOf(h), 1)
+    state.cash += value
+    const activity = record({ kind: 'trade', who: c.name, type: 'Sold', amount: value })
     changed()
-    return a
+    return { activity, shares }
   },
 
   borrow(amount: number): Activity {

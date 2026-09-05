@@ -489,17 +489,22 @@ export const SHEETS: Record<string, Builder> = {
       note: 'You are buying part of a share. Sell any part of it whenever you want.',
       action: `Buy ${usd(v)} of ${c.name}`,
       onConfirm: () => {
-        const a = actions.buy(c.ticker, v)
-        replaceSheet('invest-done', { ref: a.ref, t: c.ticker })
+        const { activity, shares } = actions.buy(c.ticker, v)
+        replaceSheet('invest-done', { ref: activity.ref, t: c.ticker, got: shares.toFixed(4) })
       },
     })
   },
   'invest-done': (r) => {
     const a = state.activity.find((x) => x.ref === str(r, 'ref'))!
     const c = find(str(r, 't'))!
+    const got = num(r, 'got')
     const held = holding(c.ticker)
-    return done('Bought', `You now own ${held?.shares.toFixed(2)} shares of ${c.name}.`, a,
-      [['Price each', usd(c.price)]])
+    // What this purchase bought, and what it adds up to. The second line used
+    // to be the only one, and it read "undefined shares" for a first buy.
+    const line = held && held.shares - got > 1e-6
+      ? `${fmtShares(got)} shares of ${c.name}. You now hold ${fmtShares(held.shares)}.`
+      : `${fmtShares(got)} shares of ${c.name}. That is your first holding in it.`
+    return done('Bought', line, a, [['Price each', usd(c.price)]])
   },
 
   /* ----- sell ----- */
@@ -518,14 +523,18 @@ export const SHEETS: Record<string, Builder> = {
       note: 'Whatever you keep carries on tracking the price.',
       action: `Sell ${usd(v)} of ${c.name}`,
       onConfirm: () => {
-        const a = actions.sell(c.ticker, v)
-        replaceSheet('sell-done', { ref: a.ref, t: c.ticker })
+        const { activity, shares } = actions.sell(c.ticker, v)
+        replaceSheet('sell-done', { ref: activity.ref, t: c.ticker, sold: shares.toFixed(4) })
       },
     })
   },
   'sell-done': (r) => {
     const a = state.activity.find((x) => x.ref === str(r, 'ref'))!
-    return done('Sold', `${usd(a.amount)} is in your wallet.`, a)
+    const c = find(str(r, 't'))!
+    const left = holding(c.ticker)
+    return done('Sold',
+      `${fmtShares(num(r, 'sold'))} shares of ${c.name}. ${usd(a.amount)} is in your wallet.`, a,
+      [['You hold now', left ? fmtShares(left.shares) + ' shares' : 'None — that was all of it']])
   },
 
   /* ----- borrow ----- */
