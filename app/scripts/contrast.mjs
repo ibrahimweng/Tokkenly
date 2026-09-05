@@ -7,7 +7,7 @@ import { seen } from './seen.mjs'
 
 const B = 'http://localhost:4173/#'
 const ROUTES = ['/', '/transfer', '/invest', '/invest/aapl', '/grow', '/activity',
-  '/settings', '/all', '/send', '/receive', '/account', '/bucket']
+  '/settings', '/all', '/send', '/receive', '/account', '/bucket', '/verify', '/disclosures']
 
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const page = await b.newPage({ viewport: { width: 1440, height: 1000 } })

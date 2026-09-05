@@ -56,6 +56,16 @@ function bucketCell(c: Instrument): HTMLElement {
   return b
 }
 
+/** "5 companies" is wrong the moment a fund is in the list. */
+function countOf(list: Instrument[]): string {
+  const funds = list.filter((c) => c.kind === 'etf').length
+  const firms = list.length - funds
+  const bits: string[] = []
+  if (firms) bits.push(firms + (firms === 1 ? ' company' : ' companies'))
+  if (funds) bits.push(funds + (funds === 1 ? ' ETF' : ' ETFs'))
+  return bits.join(' · ')
+}
+
 export function marketScreen(): HTMLElement {
   const r = current()
   const cat = r.query.get('cat') ?? 'Popular'
@@ -110,7 +120,7 @@ export function marketScreen(): HTMLElement {
         on: { keydown: (e) => { if ((e as KeyboardEvent).key === 'Enter') setQuery('q', (e.target as HTMLInputElement).value) } },
       })),
     h('p', { class: 'muted', style: { margin: '0' },
-      text: 'Everything here is a tokenised share. You can buy part of one, and the market never closes.' }),
+      text: 'US stocks and ETFs, tokenised. You can buy part of one from a dollar, and the market never closes.' }),
     h('div', { class: 'chip-row' }, ...CATEGORIES.map((c) =>
       h('button', { class: 'chip', text: c, ariaPressed: c === cat && !term,
         on: { click: () => setQuery('cat', c) } }))),
@@ -131,11 +141,11 @@ export function marketScreen(): HTMLElement {
     h('div', { class: 'stack' },
         card(
           cardHead(term ? 'Results' : cat,
-            h('span', { class: 'muted t-caption', text: list.length + (list.length === 1 ? ' company' : ' companies') })),
+            h('span', { class: 'muted t-caption', text: countOf(list) })),
           list.length
             ? table(
                 [
-                  { key: 'name', label: 'Company', sortable: true },
+                  { key: 'name', label: 'Name', sortable: true },
                   { key: 'price', label: 'Price', align: 'right', sortable: true },
                   { key: 'day', label: 'Today', align: 'right', sortable: true },
                   { key: 'range', label: 'Year range', optional: true },
@@ -146,7 +156,9 @@ export function marketScreen(): HTMLElement {
                 ],
                 ordered.map((c) => [
                   h('span', { class: 'two-line' },
-                    h('span', { class: 't-body-strong', text: `${c.ticker} · ${c.name}` }),
+                    h('span', { class: 'name-line' },
+                      h('span', { class: 't-body-strong', text: `${c.ticker} · ${c.name}` }),
+                      c.kind === 'etf' ? h('span', { class: 'tag', text: 'ETF' }) : null),
                     h('small', { text: c.plain })),
                   h('span', { class: 't-body-strong nowrap', text: usd(c.price) }),
                   h('span', { class: (c.dayPct >= 0 ? 'pos' : 'warn') + ' t-body-strong nowrap',
@@ -182,6 +194,12 @@ export function marketScreen(): HTMLElement {
       card(cardHead('Your watchlist'), ...state.watchlist.map(tickerRow)),
       card(cardHead('Moving today'),
         ...[...CATALOGUE].sort((a, b) => Math.abs(b.dayPct) - Math.abs(a.dayPct)).slice(0, 4)
-          .map((c) => tickerRow(c.ticker))))
+          .map((c) => tickerRow(c.ticker)))),
+    // Once, at the foot of the page. A risk line on every card is a risk line
+    // nobody reads.
+    h('p', { class: 'subtle t-caption', style: { margin: '0' } },
+      h('span', { text: 'Investing involves risk. The value of what you hold can fall as well as rise, and you can get back less than you put in. ' }),
+      h('button', { class: 'link quiet', text: 'Risk and disclosures',
+        on: { click: () => go('/disclosures') } }))
   )
 }

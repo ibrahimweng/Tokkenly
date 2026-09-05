@@ -39,9 +39,10 @@ console.log('PRESSED')
 const box = await filled.boundingBox()
 await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
 await page.mouse.down(); await page.waitForTimeout(60)
-// The 110ms transition means the sample lands mid-fade, so this reads the
-// direction rather than an exact frame: pressed is on its way to 0.88.
-await page.waitForTimeout(160)
+// The 110ms transition means an immediate sample lands mid-fade. Wait past
+// it with room to spare — 160 was close enough to the edge to fail about one
+// run in three, which is a worse test than no test.
+await page.waitForTimeout(320)
 const pressedOpacity = await page.evaluate(
   (el) => getComputedStyle(el).opacity, await filled.elementHandle())
 await page.mouse.up()

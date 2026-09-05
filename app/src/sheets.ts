@@ -518,7 +518,11 @@ export const SHEETS: Record<string, Builder> = {
         ['You receive', fmtShares(v / c.price) + ' shares of ' + c.name],
         ['Settles', 'In about a minute'],
       ],
-      note: 'You are buying part of a share. Sell any part of it whenever you want.',
+      // The last thing read before money moves is the one that has to carry
+      // the risk, not a page in a settings menu nobody opens.
+      note: c.kind === 'etf'
+        ? `A fund, not a company. Its value can fall as well as rise, and you can get back less than you put in.`
+        : 'Its value can fall as well as rise, and you can get back less than you put in. Sell any part of it whenever you want.',
       action: `Buy ${usd(v)} of ${c.name}`,
       onConfirm: () => {
         const { activity, shares } = actions.buy(c.ticker, v)
