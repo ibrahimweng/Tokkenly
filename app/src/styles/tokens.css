@@ -75,6 +75,53 @@
     'Helvetica Neue', Arial, sans-serif;
 }
 
+/* ------------------------------------------------------------------ light --
+   Chosen, not flipped. Inverting a dark ramp gives you white cards on a white
+   page and a grey that was quiet on black shouting on paper. The roles are the
+   same — canvas under everything, cards a step off it, controls a step off
+   those — but each step is picked against its own ground and measured there.
+   The steps that carry meaning (positive, negative, warning) go darker rather
+   than lighter: the same green that reads clearly on #0a0a0c is 1.9:1 on white. */
+:root[data-theme='light'] {
+  --canvas: #f4f4f1;         /* the page */
+  --surface: #ffffff;        /* the sidebar */
+  --sunken: #ffffff;         /* every card */
+  --sunken-hover: #f1f1ee;
+  --control: #e9e9e4;
+  --control-pressed: #dcdcd5;
+  --inverse: #1a1a1e;        /* filled buttons: dark on light */
+  --inverse-hover: #2c2c33;
+  --sand: #6e4f35;
+  --sand-hover: #5c4029;
+
+  --ink: #17171a;
+  --muted: #55555e;
+  --subtle: #6c6c76;
+  --on-inverse: #f7f7f5;
+
+  --accent: #0b5140;
+  --positive: #0f7d55;
+  --negative: #ab3d16;   /* #b8431a was 4.47:1 on --control, just under AA */
+  --warning: #8a6510;
+  --data-2: #6c3bab;
+
+  --tint-brand: #e4efea;
+  --tint-positive: #e2f2ea;
+  --tint-warning: #f6efdc;
+  --tint-negative: #f8e8e0;
+  --scrim: rgba(28, 28, 26, 0.34);
+
+  --grid: #e5e5df;
+  --dot-dim: #b8b8b2;
+  --dot-mid: #8a8a84;
+  --dot-lit: #33333a;
+
+  /* A shadow on a light page is a real shadow, not a hole. */
+  --shadow-hover: 0 6px 20px rgba(24, 24, 20, 0.14);
+  --shadow-float: 0 10px 30px rgba(24, 24, 20, 0.18);
+  --shadow-toast: 0 8px 30px rgba(24, 24, 20, 0.16);
+}
+
 /* Type scale. Two weights only, per rule 1. */
 .t-display-xl { font-size: 40px; line-height: 52px; font-weight: 600; letter-spacing: -0.02em; }
 .t-display    { font-size: 32px; line-height: 40px; font-weight: 600; letter-spacing: -0.02em; }

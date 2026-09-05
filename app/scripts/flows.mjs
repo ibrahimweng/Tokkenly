@@ -16,7 +16,7 @@ async function clickText(t, opts = {}) {
 
 /* ---- flow 1: borrow, end to end, and check the money actually moved ---- */
 log.push('FLOW 1  Grow → Borrow → review → confirm → receipt')
-await page.goto(base + '/wallet', { waitUntil: 'networkidle' })
+await page.goto(base + '/transfer', { waitUntil: 'networkidle' })
 const cashBefore = await text('.t-display-xl')
 await step('wallet cash before: ' + cashBefore.trim())
 
@@ -39,7 +39,7 @@ await step('landed on ' + page.url().split('#')[1].split('?')[0] + ' with sheet 
 await page.keyboard.press('Escape')
 await page.waitForTimeout(150)
 
-await page.goto(base + '/wallet', { waitUntil: 'networkidle' })
+await page.goto(base + '/transfer', { waitUntil: 'networkidle' })
 await step('wallet cash after: ' + (await text('.t-display-xl')).trim())
 
 /* ---- flow 2: repay it back ---- */
@@ -59,7 +59,7 @@ await page.keyboard.press('Escape')
 /* ---- flow 3: buy a stock and see the holding change ---- */
 log.push('')
 log.push('FLOW 3  Market → Apple → Invest → confirm')
-await page.goto(base + '/market/aapl', { waitUntil: 'networkidle' })
+await page.goto(base + '/invest/aapl', { waitUntil: 'networkidle' })
 const heldBefore = await text('.col-side .card .kv span:last-child')
 await step('holding before: ' + heldBefore.trim())
 await clickText('Buy AAPL')
@@ -72,7 +72,7 @@ await page.locator('.sheet .btn-primary').click()
 await page.waitForTimeout(600)
 await step('outcome: ' + (await text('.sheet .t-title')).trim() + ' — ' + (await text('.sheet .figure .muted')).trim())
 await page.keyboard.press('Escape')
-await page.goto(base + '/market/aapl', { waitUntil: 'networkidle' })
+await page.goto(base + '/invest/aapl', { waitUntil: 'networkidle' })
 await step('holding after:  ' + (await text('.col-side .card .kv span:last-child')).trim())
 
 /* ---- flow 4: the sheets that are not flows ---- */
@@ -84,7 +84,7 @@ for (const [start, label, expect] of [
   ['/account', 'Close my account', 'Close your account'],
   ['/account', 'Change', 'Change your mobile number'],
   ['/support', 'Email us', 'Email us'],
-  ['/convert', 'Add a bank', 'Your banks'],
+  ['/withdraw', 'Add a bank', 'Your banks'],
 ]) {
   await page.goto(base + start, { waitUntil: 'networkidle' })
   await page.getByText(label, { exact: true }).first().click()

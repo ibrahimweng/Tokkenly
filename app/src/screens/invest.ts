@@ -6,7 +6,7 @@ import { table } from '../components/table'
 import { amount } from '../components/bits'
 import { find } from '../catalogue'
 import { stockScreen } from './stock'
-import { state, holding } from '../state'
+import { state, holding, nairaAside, tradeFee, maxInvestable } from '../state'
 import { usd, pct, shares as fmtShares, when } from '../format'
 import { go, openSheet } from '../router'
 
@@ -14,7 +14,7 @@ function orders(ticker?: string): HTMLElement {
   const rows = state.activity.filter((a) => a.kind === 'trade' && (!ticker || a.who === find(ticker)?.name))
   return card(
     cardHead('Recent orders',
-      h('button', { class: 'link', text: 'See all', on: { click: () => go('/history?filter=trades') } })),
+      h('button', { class: 'link', text: 'See all', on: { click: () => go('/activity?filter=trades') } })),
     table(
       [
         { key: 'w', label: 'What' }, { key: 'when', label: 'When', optional: true },
@@ -43,9 +43,12 @@ export function investScreen(ticker: string): HTMLElement {
     eyebrow: ['Cash available', usd(state.cash)],
     cardLabel: 'How much',
     cardRight: 'Cash ' + usd(state.cash),
-    initial: Math.min(500, state.cash),
-    max: state.cash,
-    note: `About ${(500 * state.ngnPerUsd).toLocaleString('en-US')} naira at today's indicative rate`,
+    initial: Math.min(500, maxInvestable()),
+    // The fee has to fit in the cash too, so the ceiling is what is left once
+    // it does — not the balance, which would put every "All" over the top.
+    max: maxInvestable(),
+    maxLabel: 'The most you can invest, fee included',
+    note: nairaAside(Math.min(500, state.cash)) ?? undefined,
     quick: [
       { label: usd(100, false), value: 100 },
       { label: usd(250, false), value: 250 },
@@ -53,10 +56,10 @@ export function investScreen(ticker: string): HTMLElement {
       { label: 'All', value: state.cash },
     ],
     summary: (v) => [
-      ['You get', fmtShares(v / c.price) + ' shares'],
-      ['Price each', usd(c.price)],
-      ['Fee', 'Free, Tokkenly covers it'],
-      ['Settles', 'In about a minute'],
+      ['Investment', usd(v)],
+      ['Fee', `${usd(tradeFee(v))} · ${state.fees.trade}%`],
+      ['Total', usd(v + tradeFee(v))],
+      ['You receive', fmtShares(v / c.price) + ' shares'],
     ],
     callout: 'You are buying part of a share. Sell any part of it whenever you want.',
     action: (v) => `Buy ${usd(v)} of ${c.name}`,
@@ -65,7 +68,7 @@ export function investScreen(ticker: string): HTMLElement {
       const held = holding(c.ticker)
       return card(
         cardHead('What you are buying',
-          h('button', { class: 'link', text: 'Change stock', on: { click: () => go('/market') } })),
+          h('button', { class: 'link', text: 'Change stock', on: { click: () => go('/invest') } })),
         h('span', { class: 't-title', text: c.name }),
         h('span', { class: 'muted', text: `${c.ticker} · listed in the United States` }),
         h('span', { class: 't-display-xl', text: usd(c.price) }),
@@ -102,6 +105,7 @@ export function sellScreen(ticker: string): HTMLElement {
     cardRight: held.shares.toFixed(2) + ' shares',
     initial: Math.min(250, maxValue),
     max: maxValue,
+    maxLabel: 'What this holding is worth',
     note: 'The cash lands in your wallet, usually within a minute.',
     quick: [
       { label: usd(100, false), value: 100 },
@@ -110,10 +114,10 @@ export function sellScreen(ticker: string): HTMLElement {
       { label: 'All', value: maxValue },
     ],
     summary: (v) => [
-      ['You sell', fmtShares(v / c.price) + ' shares'],
-      ['Price each', usd(c.price)],
-      ['Fee', 'Free, Tokkenly covers it'],
-      ['Lands in', 'Your wallet'],
+      ['Sale', usd(v)],
+      ['Fee', `${usd(tradeFee(v))} · ${state.fees.trade}%`],
+      ['You receive', usd(v - tradeFee(v))],
+      ['Shares sold', fmtShares(v / c.price)],
     ],
     callout: 'Selling part of a holding is fine. Whatever you keep carries on tracking the price.',
     action: (v) => `Sell ${usd(v)} of ${c.name}`,

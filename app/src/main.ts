@@ -4,7 +4,7 @@ import './styles/components.css'
 
 import { h } from './ui'
 import { start, current, go, openSheet, type Route } from './router'
-import { state, subscribe } from './state'
+import { state, subscribe, applyTheme, recall } from './state'
 import { onBreakpointChange } from './responsive'
 import { buildSheet } from './sheets'
 import { homeScreen } from './screens/home'
@@ -18,6 +18,8 @@ import { accountScreen, securityScreen, supportScreen } from './screens/settings
 import { signInScreen, signUpScreen } from './screens/auth'
 import { sendScreen, receiveScreen, addMoneyScreen, convertScreen } from './screens/money'
 import { allScreen } from './screens/all'
+import { welcomeScreen } from './screens/welcome'
+import { bucketScreen } from './screens/bucket'
 
 const app = document.getElementById('app')!
 
@@ -32,6 +34,9 @@ function notFound(path: string): HTMLElement {
 /** Flat routes first, then the two that nest. Everything the product can show
  *  is reachable from this table, which is what makes every button honest. */
 const FLAT: Record<string, () => HTMLElement> = {
+  transfer: walletScreen,
+  activity: historyScreen,
+  withdraw: convertScreen,
   wallet: walletScreen,
   history: historyScreen,
   account: accountScreen,
@@ -41,6 +46,7 @@ const FLAT: Record<string, () => HTMLElement> = {
   receive: receiveScreen,
   addmoney: addMoneyScreen,
   convert: convertScreen,
+  bucket: bucketScreen,
 }
 
 function screenFor(r: Route): HTMLElement {
@@ -51,12 +57,16 @@ function screenFor(r: Route): HTMLElement {
   if (a === 'signin') return signInScreen()
   if (a === 'signup') return signUpScreen()
   if (!state.signedIn) return signInScreen()
+  if (a === 'welcome') return welcomeScreen(Number(b ?? 0))
+  // The intro gates the landing route only. A deep link still goes where it
+  // points: being new is not a reason to be sent somewhere you did not ask for.
+  if (!a && !state.seenIntro) return welcomeScreen(0)
   if (!a) return homeScreen()
 
   const flat = FLAT[a]
   if (flat) return flat()
 
-  if (a === 'market') {
+  if (a === 'market' || a === 'invest') {
     if (!b) return marketScreen()
     if (c === 'invest') return investScreen(b)
     if (c === 'sell') return sellScreen(b)
@@ -94,6 +104,8 @@ addEventListener('keydown', (e) => {
   }
 })
 
+recall()
+applyTheme()
 subscribe(() => render(current()))
 onBreakpointChange(() => render(current()))
 start(render)

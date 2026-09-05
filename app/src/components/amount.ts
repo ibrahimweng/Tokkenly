@@ -6,7 +6,10 @@ export interface AmountComposer {
   el: HTMLElement
   get(): number
   set(v: number): void
-  onChange(fn: (v: number) => void): void
+  /** `capped` is true when the figure asked for was more than the maximum.
+   *  Clamping without saying so leaves a field reading 999,999 next to a
+   *  button offering 2,480, and no explanation of which one is real. */
+  onChange(fn: (v: number, capped: boolean) => void): void
 }
 
 /** The phone enters an amount with a keypad, the way the Figma screens do.
@@ -40,7 +43,7 @@ export function amountComposer(opts: {
   quick?: { label: string; value: number }[]
 }): AmountComposer {
   let value = opts.initial
-  const subs: ((v: number) => void)[] = []
+  const subs: ((v: number, capped: boolean) => void)[] = []
 
   const input = h('input', {
     type: 'text',
@@ -101,10 +104,11 @@ export function amountComposer(opts: {
   }
 
   function commit(v: number, syncField: boolean): void {
-    value = Math.max(0, Math.min(opts.max, Math.round(v * 100) / 100))
+    const asked = Math.max(0, Math.round(v * 100) / 100)
+    value = Math.min(opts.max, asked)
     if (syncField) input.value = usd(value)
     draw()
-    for (const fn of subs) fn(value)
+    for (const fn of subs) fn(value, asked > opts.max)
   }
 
   input.addEventListener('input', () => commit(parseAmount(input.value), false))

@@ -39,10 +39,13 @@ console.log('PRESSED')
 const box = await filled.boundingBox()
 await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
 await page.mouse.down(); await page.waitForTimeout(60)
+// The 110ms transition means the sample lands mid-fade, so this reads the
+// direction rather than an exact frame: pressed is on its way to 0.88.
+await page.waitForTimeout(160)
 const pressedOpacity = await page.evaluate(
   (el) => getComputedStyle(el).opacity, await filled.elementHandle())
 await page.mouse.up()
-ok('pressing sinks the button', pressedOpacity === '0.88', pressedOpacity)
+ok('pressing sinks the button', Math.abs(Number(pressedOpacity) - 0.88) < 0.02, pressedOpacity)
 
 console.log('DISABLED')
 await go('/grow/borrow')
@@ -69,17 +72,17 @@ ok('and then the outcome arrives', /Borrowed/.test(outcomeTitle ?? ''), outcomeT
 
 console.log('EMPTY')
 for (const [route, expect] of [
-  ['/history?q=zzzzz', 'Nothing matches that'],
-  ['/market?q=zzzzz', 'Nothing matches that'],
+  ['/activity?q=zzzzz', 'Nothing matches that'],
+  ['/invest?q=zzzzz', 'Nothing matches that'],
   ['/support?q=zzzzz', 'Nothing matches that'],
 ]) {
   await go(route)
   const t = await page.locator('.empty h3').first().textContent().catch(() => null)
   ok(route, t === expect, t ?? 'no empty state')
 }
-await go('/history?q=zzzzz')
+await go('/activity?q=zzzzz')
 await page.locator('.empty .btn').click(); await page.waitForTimeout(150)
-ok('the empty state clears the search', page.url().endsWith('#/history'), page.url().split('#')[1])
+ok('the empty state clears the search', page.url().endsWith('#/activity'), page.url().split('#')[1])
 
 console.log('EMPTY, on a phone')
 await go('/send?q=zzzzz', 390)

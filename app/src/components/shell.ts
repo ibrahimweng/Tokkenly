@@ -1,6 +1,6 @@
 import { h, link, append } from '../ui'
 import { icon } from '../icons'
-import { state } from '../state'
+import { state, visibleNotifications } from '../state'
 import { openSheet, go, current } from '../router'
 import { isMobile } from '../responsive'
 import { trailFor } from '../destinations'
@@ -11,20 +11,24 @@ interface PlaceDef { id: Place; label: string; to: string; ic: () => string }
 
 /** Six places. On desktop they are a rail; on the phone the first four are
  *  tabs and the rest arrive behind More. Same six either way. */
+/* The names the product is called by everywhere else: the marketing site's
+   tabs are Home, Invest, Transfer, Activity. The ids stay as they were, so the
+   lit-row logic and every `place:` in the registry keep working, and the old
+   paths still resolve — a bookmark to /market is not a broken link. */
 const PLACES: PlaceDef[] = [
   { id: 'home', label: 'Home', to: '/', ic: icon.home },
-  { id: 'wallet', label: 'Wallet', to: '/wallet', ic: icon.wallet },
-  { id: 'market', label: 'Market', to: '/market', ic: icon.market },
+  { id: 'market', label: 'Invest', to: '/invest', ic: icon.market },
+  { id: 'wallet', label: 'Transfer', to: '/transfer', ic: icon.wallet },
   { id: 'grow', label: 'Grow', to: '/grow', ic: icon.grow },
-  { id: 'history', label: 'History', to: '/history', ic: icon.history },
+  { id: 'history', label: 'Activity', to: '/activity', ic: icon.history },
   { id: 'account', label: 'Account', to: '/account', ic: icon.account },
 ]
 const TABS = PLACES.slice(0, 4)
 export const BEHIND_MORE: { label: string; sub: string; to: string; ic: () => string }[] = [
-  { label: 'History', sub: 'Everything that has moved', to: '/history', ic: icon.history },
+  { label: 'Activity', sub: 'Everything that has moved', to: '/activity', ic: icon.history },
   { label: 'Account', sub: 'Your details and your address', to: '/account', ic: icon.account },
   { label: 'Security', sub: 'PIN, Face ID and recovery', to: '/security', ic: icon.lock },
-  { label: 'Your banks', sub: 'Where your payouts land', to: '/wallet?sheet=banks', ic: icon.wallet },
+  { label: 'Your banks', sub: 'Where your payouts land', to: '/transfer?sheet=banks', ic: icon.wallet },
   { label: 'Support', sub: state.person.email, to: '/support', ic: icon.mail },
   { label: 'Everything', sub: 'Every screen, in one list', to: '/all', ic: icon.grid },
 ]
@@ -40,9 +44,22 @@ export function jumpOpen(): HTMLElement {
     h('span', { class: 'kbd', text: navigator.platform.includes('Mac') ? '\u2318K' : 'Ctrl K' }))
 }
 
+/** The bucket, with what is in it. It sits beside the bell on every screen
+ *  because a thing you are meant to come back to and pay for has to be
+ *  visible from wherever you wandered off to. */
+export function bucketButton(): HTMLElement {
+  const n = state.bucket.length
+  const b = h('button', {
+    class: 'icon-btn bucket-btn', ariaLabel: n ? n + ' in your bucket' : 'Your bucket, empty',
+    html: icon.bucket(), on: { click: () => go('/bucket') },
+  })
+  if (n) b.appendChild(h('span', { class: 'dot', text: String(n) }))
+  return b
+}
+
 /** The bell from Figma D01. It carries the unread count and opens the panel. */
 export function bell(): HTMLElement {
-  const unread = state.notifications.filter((n) => !n.read).length
+  const unread = visibleNotifications().filter((n) => !n.read).length
   const b = h('button', {
     class: 'icon-btn bell', ariaLabel: unread ? unread + ' unread notifications' : 'Notifications',
     html: icon.bell(), on: { click: () => openSheet('notifications') },
@@ -59,6 +76,17 @@ export function sidebar(active: Place): HTMLElement {
     if (p.id === 'account') nav.appendChild(h('div', { class: 'nav-gap' }))
     const row = link(p.to, 'nav-row', h('span', { html: p.ic() }), h('span', { text: p.label }))
     if (p.id === active) row.setAttribute('aria-current', 'page')
+    nav.appendChild(row)
+  }
+  // The bucket sits with the places rather than in a page header, so it is on
+  // every screen — a thing you fill as you browse and come back to pay for is
+  // no use if it is only visible where you filled it.
+  {
+    const n = state.bucket.length
+    const row = link('/bucket', 'nav-row nav-bucket',
+      h('span', { html: icon.bucket() }), h('span', { class: 'grow', text: 'Bucket' }),
+      n ? h('span', { class: 'count', text: String(n) }) : null)
+    if (current().path === '/bucket') row.setAttribute('aria-current', 'page')
     nav.appendChild(row)
   }
   const promo = h(
@@ -99,6 +127,7 @@ function topBar(): HTMLElement {
       h('strong', { text: state.person.name.split(' ')[0] })),
     h('button', { class: 'icon-btn', html: icon.search(), ariaLabel: 'Search Tokkenly',
       on: { click: () => openSheet('jump') } }),
+    bucketButton(),
     h('button', { class: 'icon-btn', html: icon.info(), ariaLabel: 'Support',
       on: { click: () => go('/support') } }))
 }

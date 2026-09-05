@@ -1,4 +1,6 @@
 import { h } from '../ui'
+import { icon } from '../icons'
+import { usd } from '../format'
 import { shell, pageHeader, eyebrow, renderBase, type Place } from './shell'
 import { card, cardHead, kv, callout as calloutEl } from './bits'
 import { amountComposer, keypad } from './amount'
@@ -15,6 +17,8 @@ export interface ComposerSpec {
   initial: number
   max: number
   note?: string
+  /** How the ceiling names itself when someone asks for more than it. */
+  maxLabel?: string
   quick?: { label: string; value: number }[]
   summary: (v: number) => [string, string, string?][]
   callout: string
@@ -51,15 +55,22 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
     quick: spec.quick,
   })
 
+  const capNote = h('small', { class: 'field-error', hidden: true })
   const summaryBox = h('div', { class: 'stack-8' })
   const rightBox = h('div', { class: 'stack grow' })
   const button = h('button', { class: 'btn btn-primary' })
 
-  function paint(v: number): void {
+  function paint(v: number, capped = false): void {
     summaryBox.replaceChildren(...spec.summary(v).map(([k, val, cls]) => kv(k, val, cls ?? '')))
     if (!overlaid && spec.right) rightBox.replaceChildren(spec.right(v))
     button.textContent = spec.action(v)
     button.toggleAttribute('disabled', v <= 0 || v > spec.max)
+    // Say why the figure stopped where it did, at the place it stopped.
+    capNote.hidden = !capped
+    if (capped) {
+      capNote.replaceChildren(h('span', { html: icon.alert() }),
+        h('span', { text: `${spec.maxLabel ?? 'The most you can use here'} is ${usd(spec.max)}.` }))
+    }
   }
   comp.onChange(paint)
   button.addEventListener('click', () => {
@@ -72,7 +83,7 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
     const leave = () => (spec.closeTo && !mobile ? go(spec.closeTo) : history.back())
     const out = modalOver(renderBase(spec.base), spec.title, leave,
       spec.lede ? spec.lede() : null,
-      comp.el,
+      comp.el, capNote,
       // The keypad is the phone's way in. A dialog has a keyboard already, and
       // room for the sentence the phone has to drop.
       mobile ? keypad(comp) : null,
@@ -85,7 +96,7 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
 
   const left = card(
     cardHead(spec.cardLabel, h('span', { class: 'muted', text: spec.cardRight })),
-    comp.el, summaryBox, calloutEl(spec.callout), button)
+    comp.el, capNote, summaryBox, calloutEl(spec.callout), button)
   left.style.width = '456px'
   left.style.flex = 'none'
 

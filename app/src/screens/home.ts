@@ -15,7 +15,7 @@ function viewToggle(): HTMLElement {
     h('button', {
       class: 'chip',
       text: label,
-      ariaPressed: state.homeView === v,
+      ariaPressed: state.prefs.homeView === v,
       on: { click: () => { actions.setHomeView(v); go('/') } },
     })
   return h('div', { class: 'chip-row' }, mk('simple', 'Simple'), mk('detailed', 'Detailed'))
@@ -72,13 +72,13 @@ function chart(): HTMLElement {
 }
 
 export function homeScreen(): HTMLElement {
-  return state.homeView === 'simple' ? gateway() : detailed()
+  return state.prefs.homeView === 'simple' ? gateway() : detailed()
 }
 
 function detailed(): HTMLElement {
   const value = holdingsValue()
   const positions = card(
-    cardHead('Your positions', headLink('Market', '/market')),
+    cardHead('Your positions', headLink('Invest', '/invest')),
     ...state.holdings.map((p) => {
       const row = h('div', { class: 'kv', style: { cursor: 'pointer' } },
         h('span', { class: 'two-line' },
@@ -87,7 +87,7 @@ function detailed(): HTMLElement {
         h('span', { class: 'two-line right' },
           h('span', { class: 't-body-strong', text: usd(p.shares * p.price) }),
           h('small', { class: p.dayPct >= 0 ? 'pos' : 'muted', text: (p.dayPct >= 0 ? '+' : '') + pct(p.dayPct) })))
-      row.addEventListener('click', () => go('/market/' + p.ticker.toLowerCase()))
+      row.addEventListener('click', () => go('/invest/' + p.ticker.toLowerCase()))
       return row
     })
   )
@@ -120,18 +120,18 @@ function detailed(): HTMLElement {
           h('button', { class: 'btn btn-primary btn-sm', text: 'Send', on: { click: () => go('/send') } }),
           h('button', { class: 'btn btn-secondary btn-sm', text: 'Receive', on: { click: () => go('/receive') } }))),
       h('div', { class: 'row grow tiles' },
-        quickAction('Buy', 'Shares and funds', icon.buy(), '/market'),
-        quickAction('Convert', 'Naira and dollars', icon.convert(), '/convert'),
+        quickAction('Buy', 'Shares and funds', icon.buy(), '/invest'),
+        quickAction('Convert', 'Naira and dollars', icon.convert(), '/withdraw'),
         quickAction('Borrow', 'Against your shares', icon.download(), '/grow/borrow'))),
     h('div', { class: 'row' },
       h('div', { class: 'stack col-main' },
         chart(),
         card(
-          cardHead('Recent activity', headLink('See all', '/history')),
+          cardHead('Recent activity', headLink('See all', '/activity')),
           table(
             [{ key: 'who', label: '' }, { key: 'state', label: '' }, { key: 'amt', label: '', align: 'right' }],
             activityRows(4),
-            (i) => go('/history?sheet=receipt&ref=' + state.activity[i].ref)
+            (i) => go('/activity?sheet=receipt&ref=' + state.activity[i].ref)
           )
         )),
       h('div', { class: 'stack col-side' }, growCard, positions, available))
@@ -186,9 +186,9 @@ function gateway(): HTMLElement {
         link('/send', 'btn btn-primary btn-wide', 'Send'),
         link('/receive', 'btn btn-secondary btn-wide', 'Receive'))),
     h('div', { class: 'gates' },
-      tile({ lead: true, art: BUY, to: '/market', title: 'Buy Stocks', cta: 'Buy shares',
+      tile({ lead: true, art: BUY, to: '/invest', title: 'Buy Stocks', cta: 'Buy shares',
         sub: 'Own a piece of Apple, Nvidia or a whole market fund. From $1.' }),
-      tile({ art: CONVERT, to: '/convert', title: 'Convert Cash', cta: 'Convert money',
+      tile({ art: CONVERT, to: '/withdraw', title: 'Convert Cash', cta: 'Convert money',
         sub: 'Move between naira and dollars at the rate you see.' }),
       tile({ art: BORROW, to: '/grow', title: 'Borrow or Lend', cta: 'See your limit',
         sub: 'Borrow against your shares without selling them.' })),
@@ -196,11 +196,11 @@ function gateway(): HTMLElement {
     // it — the tiles above are the objects on this screen, and a fourth panel
     // under them flattens all four.
     h('section', { class: 'stack-8' },
-      cardHead('Recent activity', headLink('See all', '/history')),
+      cardHead('Recent activity', headLink('See all', '/activity')),
       table(
         [{ key: 'who', label: '' }, { key: 'state', label: '' }, { key: 'amt', label: '', align: 'right' }],
         activityRows(5),
-        (i) => go('/history?sheet=receipt&ref=' + state.activity[i].ref)
+        (i) => go('/activity?sheet=receipt&ref=' + state.activity[i].ref)
       )
     )
   )

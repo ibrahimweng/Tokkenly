@@ -22,17 +22,19 @@ export interface Destination {
 export const DESTINATIONS: Destination[] = [
   { label: 'Home', to: '/', place: 'home', kind: 'place', also: 'dashboard overview start' },
 
-  { label: 'Wallet', to: '/wallet', place: 'wallet', kind: 'place', primary: true, also: 'cash balance dollars' },
+  { label: 'Transfer', to: '/transfer', place: 'wallet', kind: 'place', primary: true, also: 'wallet cash balance dollars move money' },
   { label: 'Add money', to: '/addmoney', place: 'wallet', kind: 'action', primary: true, also: 'buy dollars fund top up naira deposit', hint: 'Naira in, dollars out' },
   { label: 'Send money', to: '/send', place: 'wallet', kind: 'action', primary: true, also: 'pay transfer', hint: 'Pay a person or a wallet' },
   { label: 'Receive money', to: '/receive', place: 'wallet', kind: 'action', primary: true, also: 'address qr get paid', hint: 'Your address and code' },
-  { label: 'Convert to naira', to: '/convert', place: 'wallet', kind: 'action', primary: true, also: 'cash out withdraw bank payout', hint: 'Dollars out, naira into your bank' },
-  { label: 'Your banks', to: '/wallet?sheet=banks', place: 'wallet', kind: 'screen', primary: true, also: 'account number gtbank kuda payout' },
+  { label: 'Withdraw to your bank', to: '/withdraw', place: 'wallet', kind: 'action', primary: true, also: 'convert cash out naira bank payout', hint: 'Dollars out, naira into your bank' },
+  { label: 'Your banks', to: '/transfer?sheet=banks', place: 'wallet', kind: 'screen', primary: true, also: 'account number gtbank kuda payout' },
 
-  { label: 'Market', to: '/market', place: 'market', kind: 'place', primary: true, also: 'stocks shares invest browse' },
-  { label: 'Apple', to: '/market/aapl', place: 'market', kind: 'screen', also: 'aapl stock company' },
-  { label: 'Invest in Apple', to: '/market/aapl/invest', place: 'market', kind: 'action', also: 'buy aapl shares' },
-  { label: 'Sell Apple', to: '/market/aapl/sell', place: 'market', kind: 'action', also: 'aapl shares' },
+  { label: 'Invest', to: '/invest', place: 'market', kind: 'place', primary: true, also: 'market stocks shares etfs browse buy' },
+  { label: 'Your bucket', to: '/bucket', place: 'market', kind: 'screen', primary: true,
+    also: 'basket cart picked saved pay later checkout', hint: 'Companies you have picked, not yet paid for' },
+  { label: 'Apple', to: '/invest/aapl', place: 'market', kind: 'screen', also: 'aapl stock company' },
+  { label: 'Invest in Apple', to: '/invest/aapl/invest', place: 'market', kind: 'action', also: 'buy aapl shares' },
+  { label: 'Sell Apple', to: '/invest/aapl/sell', place: 'market', kind: 'action', also: 'aapl shares' },
 
   { label: 'Grow', to: '/grow', place: 'grow', kind: 'place', primary: true, also: 'earn borrow interest' },
   { label: 'Move money into Earn', to: '/grow/earn', place: 'grow', kind: 'action', primary: true, also: 'save interest yield', hint: '4.8% a year, paid daily' },
@@ -40,10 +42,10 @@ export const DESTINATIONS: Destination[] = [
   { label: 'Borrow', to: '/grow/borrow', place: 'grow', kind: 'action', primary: true, also: 'loan against shares credit', hint: 'Against the shares you own' },
   { label: 'Repay', to: '/grow/repay', place: 'grow', kind: 'action', primary: true, also: 'pay back loan owed', hint: 'Clear what you owe' },
 
-  { label: 'History', to: '/history', place: 'history', kind: 'place', primary: true, also: 'activity statement transactions' },
-  { label: 'Payments', to: '/history?filter=payments', place: 'history', kind: 'screen', primary: true, also: 'sent received' },
-  { label: 'Trades', to: '/history?filter=trades', place: 'history', kind: 'screen', primary: true, also: 'bought sold shares' },
-  { label: 'Grow activity', to: '/history?filter=grow', place: 'history', kind: 'screen', primary: true, also: 'interest borrowed repaid' },
+  { label: 'Activity', to: '/activity', place: 'history', kind: 'place', primary: true, also: 'history statement transactions receipts' },
+  { label: 'Payments', to: '/activity?filter=payments', place: 'history', kind: 'screen', primary: true, also: 'sent received' },
+  { label: 'Trades', to: '/activity?filter=trades', place: 'history', kind: 'screen', primary: true, also: 'bought sold shares' },
+  { label: 'Grow activity', to: '/activity?filter=grow', place: 'history', kind: 'screen', primary: true, also: 'interest borrowed repaid' },
 
   { label: 'Account', to: '/account', place: 'account', kind: 'place', primary: true, also: 'profile details name address' },
   { label: 'Security', to: '/security', place: 'account', kind: 'screen', primary: true, also: 'pin face id recovery phrase devices sign out' },
@@ -52,8 +54,8 @@ export const DESTINATIONS: Destination[] = [
 ]
 
 export const PLACE_LABEL: Record<Place, string> = {
-  home: 'Home', wallet: 'Wallet', market: 'Market',
-  grow: 'Grow', history: 'History', account: 'Account',
+  home: 'Home', wallet: 'Transfer', market: 'Invest',
+  grow: 'Grow', history: 'Activity', account: 'Account',
 }
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9 ]/g, '')
@@ -101,7 +103,7 @@ export function search(raw: string): Hit[] {
   }
   for (const p of state.holdings) {
     if (norm(p.ticker + ' ' + p.name).includes(q)) {
-      hits.push({ label: p.name, to: '/market/' + p.ticker.toLowerCase(), group: 'Your shares',
+      hits.push({ label: p.name, to: '/invest/' + p.ticker.toLowerCase(), group: 'Your shares',
                   hint: `${p.ticker} · ${p.shares.toFixed(2)} shares` })
     }
   }

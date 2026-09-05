@@ -3,10 +3,12 @@
    lightness step between them, and whether the text on the hovered surface
    still clears AA. A hover nobody can see is not a hover. */
 import { chromium } from 'playwright'
+import { seen } from './seen.mjs'
 
 const B = 'http://localhost:4173/#'
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const page = await b.newPage({ viewport: { width: 1440, height: 1000 } })
+await seen(page, { homeView: 'detailed' })
 const errors = []
 page.on('pageerror', (e) => errors.push(String(e)))
 page.setDefaultTimeout(4000)
@@ -62,24 +64,24 @@ async function probe(label, route, sel, hoverSel = sel, readSel = sel) {
 await probe('sidebar nav row',    '/',        '.nav-row:not([aria-current])')
 await probe('sidebar lit row',    '/',        ".nav-row[aria-current='page']")
 await probe('whoami',             '/',        '.whoami')
-await probe('gateway tile (a.card)', '/',     'a.card.tile')
-await probe('primary button',     '/market/aapl', '.btn-primary')
-await probe('secondary button',   '/market/aapl', '.btn-secondary')
-await probe('quiet button',       '/history?q=zzzz', '.btn-quiet')
+await probe('quick-action tile',    '/',     'a.card.tile')
+await probe('primary button',     '/invest/aapl', '.btn-primary')
+await probe('secondary button',   '/invest/aapl', '.btn-secondary')
+await probe('quiet button',       '/activity?q=zzzz', '.btn-quiet')
 await probe('chip, unselected',   '/',        ".chip[aria-pressed='false']")
 await probe('chip, selected',     '/',        ".chip[aria-pressed='true']")
 await probe('icon button',        '/',        '.icon-btn')
 await probe('jump-open',          '/',        '.jump-open')
-await probe('crumb',              '/market/aapl', 'a.crumb')
-await probe('sortable header',    '/market',  '.th-sort')
-await probe('table row',          '/market',  '.table tbody tr', '.table tbody tr td:first-child', '.table tbody tr td:first-child')
-await probe('table row mark',     '/history', '.table tbody tr .mark', '.table tbody tr td:first-child', '.table tbody tr .mark')
+await probe('crumb',              '/invest/aapl', 'a.crumb')
+await probe('sortable header',    '/invest',  '.th-sort')
+await probe('table row',          '/invest',  '.table tbody tr', '.table tbody tr td:first-child', '.table tbody tr td:first-child')
+await probe('table row mark',     '/activity', '.table tbody tr .mark', '.table tbody tr td:first-child', '.table tbody tr .mark')
 await probe('all-row',            '/all',     '.all-row')
 await probe('label.field',        '/all',     'label.field')
-await probe('link',               '/wallet',  '.link')
+await probe('link',               '/transfer',  '.link')
 
 /* a hero band holds while the others fall back */
-await page.goto(B + '/wallet', { waitUntil: 'networkidle' }); await page.waitForTimeout(150)
+await page.goto(B + '/transfer', { waitUntil: 'networkidle' }); await page.waitForTimeout(150)
 await page.mouse.move(0, 0); await page.waitForTimeout(60)
 const restOp = await page.$$eval('.hero-bar .seg', (n) => n.map((e) => +getComputedStyle(e).opacity))
 await page.hover('.hero-bar .seg.b'); await page.waitForTimeout(200)
@@ -106,8 +108,8 @@ console.log('hero tooltip:', JSON.stringify(tip))
 /* A pointer is the premise. On a touch screen :hover latches after a tap, so
    none of it may apply. */
 const touch = await b.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
-const tp = await touch.newPage(); await noFonts(tp)
-await tp.goto(B + '/market', { waitUntil: 'networkidle' }); await tp.waitForTimeout(200)
+const tp = await touch.newPage(); await noFonts(tp); await seen(tp, { homeView: 'detailed' })
+await tp.goto(B + '/invest', { waitUntil: 'networkidle' }); await tp.waitForTimeout(200)
 const coarse = await tp.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches)
 await tp.tap('.table tbody tr td:first-child').catch(() => {})
 await tp.waitForTimeout(300)
@@ -118,7 +120,7 @@ console.log('\ntouch: pointer is fine?', coarse, ' rows left lit after a tap:', 
 
 /* Reduced motion keeps the answer and drops the travel. */
 const rm = await b.newContext({ viewport: { width: 1440, height: 1000 }, reducedMotion: 'reduce' })
-const rp = await rm.newPage(); await noFonts(rp)
+const rp = await rm.newPage(); await noFonts(rp); await seen(rp, { homeView: 'detailed' })
 await rp.goto(B + '/', { waitUntil: 'networkidle' }); await rp.waitForTimeout(200)
 await rp.hover('a.card.tile'); await rp.waitForTimeout(250)
 const rmState = await rp.$eval('a.card.tile', (e) => {

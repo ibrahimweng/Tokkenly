@@ -674,6 +674,154 @@ th.right .th-sort { flex-direction: row-reverse; }
   .hero-legend { gap: 12px; flex-direction: column; }
 }
 
+/* A payment over the figure you set is not stopped by a second sheet — that
+   is a second thing to dismiss. It is stopped by a tick, which is a deliberate
+   act that cannot be muscle-memoried through. */
+.agree {
+  display: flex; align-items: flex-start; gap: 12px; width: 100%; text-align: left;
+  padding: 14px 16px; border-radius: var(--r-panel);
+  background: var(--control); color: var(--ink);
+  font-size: 13px; line-height: 18px;
+}
+.agree-box {
+  width: 20px; height: 20px; border-radius: 6px; flex: none; margin-top: -1px;
+  background: var(--control-pressed);
+  transition: background-color var(--t-fast) var(--ease);
+}
+.agree-box.on {
+  background: var(--positive);
+  /* the tick, drawn rather than shipped as a glyph that needs a font */
+  background-image: linear-gradient(45deg, transparent 44%, var(--canvas) 44%, var(--canvas) 56%, transparent 56%),
+                    linear-gradient(-45deg, transparent 52%, var(--canvas) 52%, var(--canvas) 64%, transparent 64%);
+  background-size: 11px 2px, 7px 2px;
+  background-position: 7px 11px, 4px 9px;
+  background-repeat: no-repeat;
+}
+
+/* ------------------------------------------------------------ the intro --
+   Four screens, each making one claim the product has to earn. No sidebar and
+   no rail: the first thing a person sees should have one thing to do on it.
+   The dot field from the gateway tiles carries the picture, so the intro and
+   the screen it hands you to are visibly the same product. */
+.welcome {
+  position: relative; min-height: 100vh; overflow: hidden;
+  display: flex; flex-direction: column;
+  padding: 32px 32px 40px;
+  background: var(--canvas);
+}
+.welcome.lead {
+  background: linear-gradient(180deg, var(--canvas) 0%, var(--canvas) 46%, var(--accent) 100%);
+}
+.welcome-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+
+.welcome-body {
+  position: relative; z-index: 1;
+  margin: auto 0; max-width: 560px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.welcome-title {
+  margin: 0; white-space: pre-line;
+  font-size: 44px; line-height: 52px; font-weight: 600; letter-spacing: -0.02em;
+}
+.welcome-text { margin: 0; color: var(--muted); font-size: 16px; line-height: 24px; max-width: 46ch; }
+
+/* Bottom-right, behind the words, clipped by the screen the way the tiles
+   clip theirs. */
+.welcome-art {
+  position: absolute; right: 0; bottom: 0; left: 40%; height: 320px;
+  overflow: hidden; pointer-events: none; opacity: 0.9;
+}
+
+.welcome-foot {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  margin-top: 40px;
+}
+.welcome-actions { display: flex; align-items: center; gap: 12px; }
+.welcome-actions .btn { width: auto; }
+.welcome-actions .ic svg { width: 14px; height: 14px; }
+.welcome-later { position: relative; z-index: 1; margin-top: 16px; align-self: flex-start; }
+.welcome-note { position: relative; z-index: 1; margin-top: 8px; }
+
+.welcome-dots { display: flex; gap: 8px; }
+.welcome-dot {
+  width: 8px; height: 8px; border-radius: 999px; flex: none;
+  /* --control-pressed disappears against the green of the first and last
+     steps; --subtle reads on every ground the intro uses. */
+  background: var(--subtle);
+  transition: width var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease);
+}
+.welcome-dot.on { width: 28px; background: var(--ink); }
+
+@media (max-width: 899px) {
+  /* The art is full width down here, and the footer was landing on top of it:
+     a Back button reading through a field of dots. The padding reserves the
+     band the art occupies so the two never share a row. */
+  .welcome { padding: 20px 20px 216px; }
+  .welcome-title { font-size: 34px; line-height: 40px; }
+  .welcome-text { font-size: 15px; line-height: 22px; }
+  .welcome-art { left: 0; height: 196px; }
+  .welcome-foot { flex-direction: column-reverse; align-items: stretch; gap: 20px; margin-top: 24px; }
+  .welcome-actions .btn { flex: 1 1 0; }
+  .welcome-dots { justify-content: center; }
+  .welcome-later, .welcome-note { align-self: center; text-align: center; }
+}
+
+/* ------------------------------------------------------------ settings --
+   A preference is a control that remembers, so it reads as a row with the
+   thing it changes on the right, not as a list item that happens to light up. */
+.pref-row {
+  display: flex; align-items: center; gap: 16px;
+  width: 100%; text-align: left; padding: 12px 0;
+}
+.pref-row + .pref-row { border-top: 1px solid var(--grid); }
+.pref-row .mark { flex: none; }
+.pref-choice { flex-wrap: wrap; row-gap: 12px; }
+.pref-choice .chip-row { flex: none; }
+
+.switch {
+  width: 44px; height: 26px; border-radius: 999px; flex: none; position: relative;
+  background: var(--control-pressed);
+  transition: background-color var(--t-fast) var(--ease);
+}
+.switch-knob {
+  position: absolute; top: 3px; left: 3px; width: 20px; height: 20px;
+  border-radius: 999px; background: var(--muted);
+  transition: left var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease);
+}
+.switch.on { background: var(--positive); }
+.switch.on .switch-knob { left: 21px; background: var(--canvas); }
+
+@media (max-width: 899px) {
+  .pref-choice .chip-row { width: 100%; }
+  .pref-choice .chip-row .chip { flex: 1 1 0; padding: 0 8px; }
+}
+
+/* ---------------------------------------------------------- the bucket --
+   Things picked out and not yet paid for. It lives in the sidebar with the
+   places rather than in a page header, because a list you fill as you browse
+   is no use if it is only visible where you filled it. */
+.nav-bucket .count {
+  min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px;
+  background: var(--inverse); color: var(--on-inverse);
+  font-size: 11px; font-weight: 600; line-height: 20px; text-align: center; flex: none;
+}
+.bucket-btn .dot { background: var(--inverse); color: var(--on-inverse); }
+
+.bucket-row {
+  display: flex; align-items: center; gap: 16px;
+  padding: 12px 0;
+}
+.bucket-row + .bucket-row { border-top: 1px solid var(--grid); }
+.bucket-field { width: 132px; flex: none; height: 44px; padding: 0 14px; }
+.bucket-amount { width: 100%; text-align: right; font-weight: 600; }
+
+@media (max-width: 899px) {
+  .bucket-row { flex-wrap: wrap; row-gap: 8px; }
+  .bucket-row .two-line { flex: 1 1 100%; }
+  .bucket-field { flex: 1 1 0; width: auto; }
+}
+
 /* ----------------------------------------------------------- the chart --
    One value over time, drawn the same way everywhere. The old version was a
    comb of fixed 5px bars with no axis, no gridlines and no hover: you could

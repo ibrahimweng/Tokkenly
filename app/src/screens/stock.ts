@@ -3,7 +3,7 @@ import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, kv, callout } from '../components/bits'
 import { find, type Instrument } from '../catalogue'
 import { barChart, type Range } from '../components/chart'
-import { state, actions, holding } from '../state'
+import { state, actions, holding, inBucket } from '../state'
 import { usd, pct, signed } from '../format'
 import { go } from '../router'
 import { toast } from '../components/sheet'
@@ -30,12 +30,31 @@ function priceChart(c: Instrument): HTMLElement {
   })
 }
 
+/** Buying now and deciding later are different intents, so they are different
+ *  buttons. This one puts a default amount against the company and leaves it
+ *  for the bucket; the amount is editable there. */
+function bucketAdd(c: Instrument): HTMLElement {
+  const already = inBucket(c.ticker)
+  return h('button', {
+    class: 'btn btn-secondary btn-sm',
+    text: already ? 'In your bucket · ' + usd(already.dollars, false) : 'Add to bucket',
+    on: {
+      click: () => {
+        if (already) { go('/bucket'); return }
+        actions.addToBucket(c.ticker, state.prefs.tradeDefault)
+        toast(`${usd(state.prefs.tradeDefault, false)} of ${c.name} is in your bucket`, 'success')
+        go('/invest/' + c.ticker.toLowerCase())
+      },
+    },
+  })
+}
+
 export function stockScreen(ticker: string): HTMLElement {
   const c = find(ticker)
   if (!c) {
     return shell('market', pageHeader('Not found'),
       h('p', { class: 'muted', text: 'No such company. Go back to Market and search for it.' }),
-      h('button', { class: 'btn btn-secondary btn-sm', text: 'Back to Market', on: { click: () => go('/market') } }))
+      h('button', { class: 'btn btn-secondary btn-sm', text: 'Back to Market', on: { click: () => go('/invest') } }))
   }
   const held = holding(c.ticker)
   const watching = state.watchlist.includes(c.ticker)
@@ -54,9 +73,9 @@ export function stockScreen(ticker: string): HTMLElement {
   return shell(
     'market',
     pageHeader(c.name,
-      h('div', { class: 'chip-row' }, follow,
+      h('div', { class: 'chip-row' }, follow, bucketAdd(c),
         h('button', { class: 'btn btn-primary btn-sm', text: 'Buy ' + c.ticker,
-          on: { click: () => go('/market/' + c.ticker.toLowerCase() + '/invest') } }))),
+          on: { click: () => go('/invest/' + c.ticker.toLowerCase() + '/invest') } }))),
     h('div', { class: 'row' },
       h('div', { class: 'stack col-main' },
         card(
@@ -103,10 +122,10 @@ export function stockScreen(ticker: string): HTMLElement {
                   text: signed((held.shares * c.price * c.dayPct) / 100) })))
             : h('span', { class: 'muted', text: 'You do not own any yet.' }),
           h('button', { class: 'btn btn-primary', text: 'Buy ' + c.ticker,
-            on: { click: () => go('/market/' + c.ticker.toLowerCase() + '/invest') } }),
+            on: { click: () => go('/invest/' + c.ticker.toLowerCase() + '/invest') } }),
           held && held.shares > 0
             ? h('button', { class: 'btn btn-secondary', text: 'Sell ' + c.ticker,
-                on: { click: () => go('/market/' + c.ticker.toLowerCase() + '/sell') } })
+                on: { click: () => go('/invest/' + c.ticker.toLowerCase() + '/sell') } })
             : null
         )))
   )

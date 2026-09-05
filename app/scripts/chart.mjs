@@ -1,9 +1,12 @@
 /* The chart at every width it has to survive, and the two things the comb
    never had: a value you can read off it, and a hover that names the point. */
 import { chromium } from 'playwright'
+import { seen } from './seen.mjs'
 const B = 'http://localhost:4173/#'
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const page = await b.newPage({ viewport: { width: 1440, height: 1000 } })
+// the chart lives on the detailed Home; Simple is the gateway
+await seen(page, { homeView: 'detailed' })
 page.setDefaultTimeout(6000)
 const errs = []
 page.on('pageerror', (e) => errs.push(String(e)))
@@ -74,7 +77,7 @@ await page.waitForTimeout(200)
 console.log('  leaving hides it:', await page.evaluate(() => document.querySelector('.ch-tip').hidden))
 
 console.log('\nSTOCK PAGE')
-await page.goto(B + '/market/aapl', { waitUntil: 'domcontentloaded' })
+await page.goto(B + '/invest/aapl', { waitUntil: 'domcontentloaded' })
 await page.waitForTimeout(400)
 const st = await read()
 console.log(`  bars ${st.bars}  ticks [${st.ticks.join(' ')}]  ${st.caption}`)

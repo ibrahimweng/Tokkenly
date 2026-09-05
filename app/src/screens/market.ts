@@ -4,9 +4,10 @@ import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, emptyState } from '../components/bits'
 import { table } from '../components/table'
 import { CATALOGUE, CATEGORIES, INDICES, PICKS, find, type Instrument } from '../catalogue'
-import { state } from '../state'
+import { state, actions, inBucket } from '../state'
 import { usd, pct } from '../format'
 import { go, current } from '../router'
+import { toast } from '../components/sheet'
 
 function tickerRow(ticker: string): HTMLElement {
   const c = find(ticker)
@@ -18,7 +19,7 @@ function tickerRow(ticker: string): HTMLElement {
     h('span', { class: 'two-line right' },
       h('span', { class: 't-body-strong', text: usd(c.price) }),
       h('small', { class: c.dayPct >= 0 ? 'pos' : 'muted', text: (c.dayPct >= 0 ? '+' : '') + pct(c.dayPct) })))
-  row.addEventListener('click', () => go('/market/' + c.ticker.toLowerCase()))
+  row.addEventListener('click', () => go('/invest/' + c.ticker.toLowerCase()))
   return row
 }
 
@@ -35,6 +36,24 @@ function rangeBar(c: Instrument): HTMLElement {
     h('span', { class: 'range-ends' },
       h('small', { text: usd(c.yearLow, false) }),
       h('small', { text: usd(c.yearHigh, false) })))
+}
+
+/** One tap from the list into the bucket, without leaving the list. */
+function bucketCell(c: Instrument): HTMLElement {
+  const inIt = !!inBucket(c.ticker)
+  const b = h('button', {
+    class: 'icon-btn', ariaLabel: inIt ? c.name + ' is in your bucket' : 'Add ' + c.name + ' to your bucket',
+    title: inIt ? 'In your bucket' : 'Add to bucket',
+    html: inIt ? icon.check() : icon.plus(),
+  })
+  if (inIt) b.classList.add('on')
+  b.addEventListener('click', (e) => {
+    e.stopPropagation()   // the row navigates; this button does not
+    if (inIt) { go('/bucket'); return }
+    actions.addToBucket(c.ticker, state.prefs.tradeDefault)
+    toast(`${usd(state.prefs.tradeDefault, false)} of ${c.name} is in your bucket`, 'success')
+  })
+  return b
 }
 
 export function marketScreen(): HTMLElement {
@@ -54,7 +73,7 @@ export function marketScreen(): HTMLElement {
     const dir = key === sortKey && sortDir === 'desc' ? 'asc' : 'desc'
     const q = new URLSearchParams(r.query)
     q.set('sort', key); q.set('dir', dir)
-    go('/market?' + q.toString())
+    go('/invest?' + q.toString())
   }
   // Size arrives as "$3.41T", which sorts as text into nonsense. Read it back
   // into a number so the biggest company is actually the biggest.
@@ -77,12 +96,12 @@ export function marketScreen(): HTMLElement {
     const q = new URLSearchParams(r.query)
     if (v) q.set(k, v); else q.delete(k)
     const s = q.toString()
-    go('/market' + (s ? '?' + s : ''))
+    go('/invest' + (s ? '?' + s : ''))
   }
 
   return shell(
     'market',
-    pageHeader('Market', h('span', { class: 'muted', text: 'Tokenised, so it trades 24/7' })),
+    pageHeader('Invest', h('span', { class: 'muted', text: 'Tokenised, so it trades 24/7' })),
     h('label', { class: 'field' },
       h('span', { html: icon.search() }),
       h('input', {
@@ -123,6 +142,7 @@ export function marketScreen(): HTMLElement {
                   { key: 'cap', label: 'Size', align: 'right', optional: true, sortable: true },
                   { key: 'yield', label: 'Yield', align: 'right', optional: true, sortable: true },
                   { key: 'pe', label: 'P/E', align: 'right', optional: true, sortable: true },
+                  { key: 'bucket', label: '', align: 'right' },
                 ],
                 ordered.map((c) => [
                   h('span', { class: 'two-line' },
@@ -135,13 +155,16 @@ export function marketScreen(): HTMLElement {
                   h('span', { class: 'muted nowrap', text: c.cap }),
                   h('span', { class: 'muted nowrap', text: c.dividend ? pct(c.dividend) : '—' }),
                   h('span', { class: 'muted nowrap', text: c.pe ? c.pe.toFixed(1) : '—' }),
+                  // Deciding while you scan the list is the point of a bucket,
+                  // so the list is where it can be filled.
+                  bucketCell(c),
                 ]),
-                (n) => go('/market/' + ordered[n].ticker.toLowerCase()),
+                (n) => go('/invest/' + ordered[n].ticker.toLowerCase()),
                 { current: { key: sortKey, dir: sortDir }, onSort }
               )
             : emptyState('Nothing matches that',
                 'Try another company, fund or ticker.',
-                { label: 'Clear the search', onClick: () => go('/market') })
+                { label: 'Clear the search', onClick: () => go('/invest') })
         )),
     h('div', { class: 'row equal' },
       card(
@@ -153,7 +176,7 @@ export function marketScreen(): HTMLElement {
               h('span', { class: 't-body-strong', text: c.name }),
               h('small', { text: p.line })),
             h('span', { class: 't-body-strong', text: usd(c.price) }))
-          row.addEventListener('click', () => go('/market/' + c.ticker.toLowerCase()))
+          row.addEventListener('click', () => go('/invest/' + c.ticker.toLowerCase()))
           return row
         })),
       card(cardHead('Your watchlist'), ...state.watchlist.map(tickerRow)),

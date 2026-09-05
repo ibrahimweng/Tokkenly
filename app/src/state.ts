@@ -3,6 +3,7 @@
  *  Opening figures match design.md 11b.4f. */
 
 import { reference } from './format'
+import { find } from './catalogue'
 
 export type ActivityKind = 'payment' | 'trade' | 'grow'
 
@@ -15,6 +16,38 @@ export interface Activity {
   at: string              // ISO
   note?: string
   settled: boolean
+}
+
+/** Everything the person can decide about how the product behaves. Grouped
+ *  rather than scattered through State so the Account screen has one thing to
+ *  read and one thing to reset. */
+export interface Prefs {
+  /** Where Home opens. Simple is three doors and the number; Detailed is the
+   *  chart, the positions and the rest. */
+  homeView: 'simple' | 'detailed'
+  theme: 'dark' | 'light'
+  /** The product is for Nigerians holding dollars, so the naira line beside a
+   *  figure is the setting people actually change. */
+  showNaira: boolean
+  /** What "Add to bucket" puts against a company before you edit it. */
+  tradeDefault: number
+  /** Ask again, above this, before anything leaves. 0 turns it off. */
+  confirmOver: number
+  notify: { payments: boolean; prices: boolean; earn: boolean; borrowing: boolean }
+}
+
+export const DEFAULT_PREFS: Prefs = {
+  homeView: 'simple',
+  theme: 'dark',
+  showNaira: true,
+  tradeDefault: 50,
+  confirmOver: 500,
+  notify: { payments: true, prices: true, earn: true, borrowing: true },
+}
+
+export interface BucketItem {
+  ticker: string
+  dollars: number
 }
 
 export interface Holding {
@@ -50,7 +83,7 @@ export interface Device {
 
 export interface State {
   signedIn: boolean
-  homeView: 'detailed' | 'simple'
+  prefs: Prefs
   person: { name: string; email: string; phone: string; dob: string; address: string }
   cash: number
   inEarn: number
@@ -59,22 +92,72 @@ export interface State {
   interestOwed: number
   borrowLimit: number
   rates: { earn: number; borrow: number; collateral: number }
+  /** What a transaction costs, as a percentage. The marketing sells this:
+   *  "the amount, the rate, the fee, and exactly what you receive, before you
+   *  confirm. Nothing folded into a worse rate." A product that answers that
+   *  with "free" is not being transparent, it is being vague — and the two
+   *  ship together. `fx` is nought because the naira rate on screen is the
+   *  rate you get; that is the "nothing folded in" half of the promise. */
+  fees: { trade: number; fx: number }
   holdings: Holding[]
   watchlist: string[]
+  /** Companies picked out and not yet paid for. A watchlist is a list of
+   *  things you are interested in; a bucket is a list of things you have
+   *  decided on, with an amount against each. */
+  bucket: BucketItem[]
   banks: Bank[]
   devices: Device[]
   activity: Activity[]
   notifications: Notif[]
+  /** Whether the intro has been seen. It gates the landing route only, so a
+   *  deep link still goes where it points. */
+  seenIntro: boolean
   cardWaitlist: boolean
   phraseWrittenDown: boolean
   ngnPerUsd: number
+}
+
+/* --------------------------------------------------------------- keeping --
+   The ledger is demo data and resets, which is the point of a prototype. The
+   preferences are not: a theme that forgets on reload, or an intro that plays
+   again every time the page is opened, is worse than not having the setting.
+   Only these two are kept, and a browser that refuses storage just gets the
+   defaults rather than an error. */
+const KEEP = 'tokkenly.prefs.v1'
+
+function remember(): void {
+  try {
+    localStorage.setItem(KEEP, JSON.stringify({ prefs: state.prefs, seenIntro: state.seenIntro }))
+  } catch { /* private windows and blocked storage are not a failure */ }
+}
+
+export function recall(): void {
+  try {
+    const raw = localStorage.getItem(KEEP)
+    if (!raw) return
+    const saved = JSON.parse(raw) as { prefs?: Partial<Prefs>; seenIntro?: boolean }
+    // Merged, not replaced: a preference added after this was written should
+    // arrive at its default rather than as undefined.
+    state.prefs = {
+      ...DEFAULT_PREFS, ...saved.prefs,
+      notify: { ...DEFAULT_PREFS.notify, ...(saved.prefs?.notify ?? {}) },
+    }
+    state.seenIntro = saved.seenIntro ?? false
+  } catch { /* unreadable or from an older shape: the defaults stand */ }
+}
+
+/** The only preference that lands on the document rather than in a screen. */
+export function applyTheme(): void {
+  if (typeof document !== 'undefined') {
+    document.documentElement.setAttribute('data-theme', state.prefs.theme)
+  }
 }
 
 const iso = (d: string) => new Date(d).toISOString()
 
 export const state: State = {
   signedIn: true,
-  homeView: 'detailed',
+  prefs: { ...DEFAULT_PREFS, notify: { ...DEFAULT_PREFS.notify } },
   person: {
     name: 'Chinaza Okoro',
     email: 'ibrahimweng0@gmail.com',
@@ -89,12 +172,14 @@ export const state: State = {
   interestOwed: 8.9,
   borrowLimit: 1860,
   rates: { earn: 4.8, borrow: 9.4, collateral: 140 },
+  fees: { trade: 0.5, fx: 0 },
   holdings: [
     { ticker: 'AAPL', name: 'Apple', shares: 23.42, price: 224.1, dayPct: 1.2 },
     { ticker: 'NVDA', name: 'Nvidia', shares: 26.94, price: 118.9, dayPct: 2.4 },
     { ticker: 'VOO', name: 'Vanguard S&P 500', shares: 5.6, price: 511.57, dayPct: 0.4 },
     { ticker: 'TSLA', name: 'Tesla', shares: 4.8, price: 248.5, dayPct: -0.8 },
   ],
+  bucket: [],
   watchlist: ['AAPL', 'NVDA', 'TSLA', 'MSFT', 'VOO'],
   banks: [
     { id: 'gt', name: 'GTBank', last4: '4471', holder: 'Chinaza Okoro' },
@@ -117,6 +202,7 @@ export const state: State = {
     { id: 'n5', kind: 'money', title: 'Payroll arrived',
       body: '$1,500.00 from Kuda ending 8820.', at: iso('2026-08-29T08:00'), read: true },
   ],
+  seenIntro: false,
   cardWaitlist: false,
   phraseWrittenDown: false,
   ngnPerUsd: 1500,
@@ -169,6 +255,47 @@ export const monthlyCost = (principal: number): number =>
 export const monthlyEarn = (principal: number): number =>
   (principal * state.rates.earn) / 100 / 12
 
+/** The naira line beside a dollar figure, when the person wants one. Add
+ *  money and Convert are *about* naira and always show it — this is only for
+ *  the asides, which is what the preference is offering to quieten. */
+/** The notifications the switches let through. A switch that changes nothing
+ *  is a switch that lies, so the panel and its count both read this rather
+ *  than state.notifications directly. */
+const NOTIFY_OF: Record<Notif['kind'], keyof Prefs['notify']> = {
+  money: 'payments', trade: 'prices', grow: 'earn', security: 'borrowing',
+}
+export const visibleNotifications = (): Notif[] =>
+  state.notifications.filter((n) => state.prefs.notify[NOTIFY_OF[n.kind]])
+
+export const nairaAside = (dollars: number): string | null =>
+  state.prefs.showNaira
+    ? `About ₦${Math.round(dollars * state.ngnPerUsd).toLocaleString('en-US')} at today’s indicative rate`
+    : null
+
+/* ------------------------------------------------------------------ fees --
+   The figure a person types is what they are investing. The fee is added on
+   top, so "$50 of Nvidia" buys $50 of Nvidia and costs $50.25 — rather than
+   buying $49.75 of it and leaving them to work out why. */
+export const tradeFee = (amount: number): number =>
+  Math.round(amount * state.fees.trade) / 100
+
+/** The most that can be invested once the fee has to fit in the cash too. */
+export const maxInvestable = (): number =>
+  Math.floor((state.cash / (1 + state.fees.trade / 100)) * 100) / 100
+
+export const bucketTotal = (): number =>
+  state.bucket.reduce((t, b) => t + b.dollars, 0)
+
+/** What the bucket costs all in — the fee is charged once on the whole
+ *  payment, not per company, which is the point of paying once. */
+export const bucketCost = (): number => bucketTotal() + tradeFee(bucketTotal())
+
+export const bucketShortfall = (): number =>
+  Math.max(0, bucketCost() - state.cash)
+
+export const inBucket = (ticker: string): BucketItem | undefined =>
+  state.bucket.find((b) => b.ticker === ticker)
+
 export const holding = (ticker: string): Holding | undefined =>
   state.holdings.find((h) => h.ticker === ticker)
 
@@ -181,6 +308,7 @@ export function subscribe(fn: Listener): () => void {
   return () => listeners.delete(fn)
 }
 function changed(): void {
+  remember()
   for (const fn of listeners) fn()
 }
 
@@ -211,8 +339,8 @@ export const actions = {
     if (any) changed()
   },
 
-  setHomeView(v: 'detailed' | 'simple') {
-    state.homeView = v
+  setHomeView(v: 'simple' | 'detailed') {
+    state.prefs.homeView = v
     changed()
   },
 
@@ -245,22 +373,46 @@ export const actions = {
     return a
   },
 
-  buy(ticker: string, dollars: number): Activity {
+  /** Buying something you do not already hold opens the position. It used to
+   *  take the money and add the shares only `if (h)`, so a first purchase —
+   *  the one the whole product is for — charged the wallet, created nothing,
+   *  and reported "you now own undefined shares". */
+  buy(ticker: string, dollars: number): { activity: Activity; shares: number; fee: number; invested: number } {
+    const c = find(ticker)
+    if (!c) throw new Error('No such instrument: ' + ticker)
+    // Never spend money that is not there, whatever the caller asks for —
+    // and the fee is part of what has to be there. The composer clamps too;
+    // this is the floor under it.
+    const spend = Math.max(0, Math.min(dollars, maxInvestable()))
+    const fee = tradeFee(spend)
+    const shares = spend / c.price
     const h = holding(ticker)
-    if (h) h.shares += dollars / h.price
-    state.cash -= dollars
-    const a = record({ kind: 'trade', who: h ? h.name : ticker, type: 'Bought', amount: -dollars })
+    if (h) h.shares += shares
+    else state.holdings.push({ ticker: c.ticker, name: c.name, shares, price: c.price, dayPct: c.dayPct })
+    state.cash -= spend + fee
+    const activity = record({ kind: 'trade', who: c.name, type: 'Bought', amount: -(spend + fee) })
     changed()
-    return a
+    return { activity, shares, fee, invested: spend }
   },
 
-  sell(ticker: string, dollars: number): Activity {
+  /** And selling is bounded by what is actually held, so a holding can never
+   *  go negative and the wallet can never be paid for shares that were not
+   *  there. A position sold out entirely leaves rather than sitting at zero. */
+  sell(ticker: string, dollars: number): { activity: Activity; shares: number; fee: number; proceeds: number } {
     const h = holding(ticker)
-    if (h) h.shares = Math.max(0, h.shares - dollars / h.price)
-    state.cash += dollars
-    const a = record({ kind: 'trade', who: h ? h.name : ticker, type: 'Sold', amount: dollars })
+    const c = find(ticker)
+    if (!h || !c) throw new Error('Nothing held in ' + ticker)
+    const value = Math.max(0, Math.min(dollars, h.shares * h.price))
+    const fee = tradeFee(value)
+    const shares = value / h.price
+    h.shares -= shares
+    if (h.shares < 1e-6) state.holdings.splice(state.holdings.indexOf(h), 1)
+    // Selling $100 puts $99.50 in the wallet: the fee comes out of what you
+    // get, not out of what you sold, which is the figure on the review.
+    state.cash += value - fee
+    const activity = record({ kind: 'trade', who: c.name, type: 'Sold', amount: value - fee })
     changed()
-    return a
+    return { activity, shares, fee, proceeds: value - fee }
   },
 
   borrow(amount: number): Activity {
@@ -295,6 +447,83 @@ export const actions = {
     const a = record({ kind: 'grow', who: 'Earn', type: 'Taken out', amount })
     changed()
     return a
+  },
+
+  finishIntro() {
+    state.seenIntro = true
+    changed()
+  },
+  replayIntro() {
+    state.seenIntro = false
+    changed()
+  },
+
+  /* ----- preferences ----- */
+  setPref<K extends keyof Prefs>(key: K, value: Prefs[K]) {
+    state.prefs[key] = value
+    if (key === 'theme') applyTheme()
+    changed()
+  },
+  setNotify(key: keyof Prefs['notify'], on: boolean) {
+    state.prefs.notify[key] = on
+    changed()
+  },
+  resetPrefs() {
+    state.prefs = { ...DEFAULT_PREFS, notify: { ...DEFAULT_PREFS.notify } }
+    applyTheme()
+    changed()
+  },
+
+  /* ----- the bucket ----- */
+  addToBucket(ticker: string, dollars: number) {
+    const it = state.bucket.find((b) => b.ticker === ticker)
+    if (it) it.dollars += dollars
+    else state.bucket.push({ ticker, dollars })
+    changed()
+  },
+  /** Deliberately does not broadcast. Every listener re-renders the whole
+   *  screen, and this is called from a field's own change handler — rebuilding
+   *  the screen out from under a focused input throws on the blur that
+   *  follows. Nothing outside the bucket screen shows these amounts, and that
+   *  screen repaints the parts that moved itself. */
+  setBucketAmount(ticker: string, dollars: number) {
+    const it = state.bucket.find((b) => b.ticker === ticker)
+    if (it) it.dollars = Math.max(0, Math.round(dollars * 100) / 100)
+  },
+  removeFromBucket(ticker: string) {
+    state.bucket = state.bucket.filter((b) => b.ticker !== ticker)
+    changed()
+  },
+  clearBucket() {
+    state.bucket = []
+    changed()
+  },
+  /** One payment, one order per company. The receipts have to stay per
+   *  company or a history row could never be reconciled against a holding. */
+  payBucket(): { refs: string[]; spent: number; lines: { ticker: string; shares: number }[] } {
+    const refs: string[] = []
+    const lines: { ticker: string; shares: number }[] = []
+    let spent = 0
+    // The fee is charged once on the whole payment rather than per company —
+    // that is what paying once is for — so the individual buys go through at
+    // no fee and the single charge is applied after.
+    const fee = tradeFee(bucketTotal())
+    const kept = state.fees.trade
+    state.fees.trade = 0
+    try {
+      for (const it of [...state.bucket]) {
+        if (it.dollars <= 0) continue
+        const { activity, shares } = actions.buy(it.ticker, it.dollars)
+        refs.push(activity.ref)
+        lines.push({ ticker: it.ticker, shares })
+        spent += Math.abs(activity.amount)
+      }
+    } finally { state.fees.trade = kept }
+    state.cash -= fee
+    spent += fee
+    state.bucket = []
+    changed()
+    return { refs, spent, lines }
   },
 
   toggleWatch(ticker: string) {

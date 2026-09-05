@@ -33,7 +33,7 @@ export function historyScreen(): HTMLElement {
     if (v) q.set(k, v)
     else q.delete(k)
     const s = q.toString()
-    go('/history' + (s ? '?' + s : ''))
+    go('/activity' + (s ? '?' + s : ''))
   }
 
   // Sorting is part of the address, so an ordered view can be linked and
@@ -44,7 +44,7 @@ export function historyScreen(): HTMLElement {
     const dir = key === sortKey && sortDir === 'desc' ? 'asc' : 'desc'
     const q = new URLSearchParams(r.query)
     q.set('sort', key); q.set('dir', dir)
-    go('/history?' + q.toString())
+    go('/activity?' + q.toString())
   }
   const cmp: Record<string, (a: Activity, b: Activity) => number> = {
     who: (a, b) => a.who.localeCompare(b.who),
@@ -73,7 +73,7 @@ export function historyScreen(): HTMLElement {
 
   return shell(
     'history',
-    pageHeader('History',
+    pageHeader('Activity',
       h('button', { class: 'btn btn-secondary btn-sm', on: { click: () => openSheet('export') } },
         h('span', { html: icon.download() }), h('span', { text: 'Export' }))),
     h('div', { class: 'row', style: { alignItems: 'center' } }, search, chips),
@@ -102,7 +102,7 @@ export function historyScreen(): HTMLElement {
       : term || active !== 'all'
         ? emptyState('Nothing matches that',
             'Try a different name, reference or amount.',
-            { label: 'Clear the search', onClick: () => go('/history') })
+            { label: 'Clear the search', onClick: () => go('/activity') })
         : emptyState('Nothing here yet',
             'Money you send or receive shows up here.', undefined, 'history')
   )
