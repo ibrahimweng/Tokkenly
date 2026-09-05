@@ -3,7 +3,7 @@ import './styles/base.css'
 import './styles/components.css'
 
 import { h } from './ui'
-import { start, current, go, type Route } from './router'
+import { start, current, go, openSheet, type Route } from './router'
 import { state, subscribe } from './state'
 import { onBreakpointChange } from './responsive'
 import { buildSheet } from './sheets'
@@ -17,7 +17,7 @@ import { historyScreen } from './screens/history'
 import { accountScreen, securityScreen, supportScreen } from './screens/settings'
 import { signInScreen, signUpScreen } from './screens/auth'
 import { sendScreen, receiveScreen, addMoneyScreen, convertScreen } from './screens/money'
-import { mapScreen } from './screens/map'
+import { allScreen } from './screens/all'
 
 const app = document.getElementById('app')!
 
@@ -46,7 +46,8 @@ const FLAT: Record<string, () => HTMLElement> = {
 function screenFor(r: Route): HTMLElement {
   const [a, b, c] = r.parts
 
-  if (a === 'map') return mapScreen()
+  // /map was the developer's route list. /all is the product's own index.
+  if (a === 'map' || a === 'all') return allScreen()
   if (a === 'signin') return signInScreen()
   if (a === 'signup') return signUpScreen()
   if (!state.signedIn) return signInScreen()
@@ -83,6 +84,15 @@ function render(r: Route): void {
   document.body.style.overflow = sheetEl ? 'hidden' : ''
   window.scrollTo(0, keepScroll)
 }
+
+/** Command K anywhere opens the jump-to overlay, and does not fight the
+ *  browser's own find. Registered once, not per render. */
+addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault()
+    if (current().sheet !== 'jump') openSheet('jump')
+  }
+})
 
 subscribe(() => render(current()))
 onBreakpointChange(() => render(current()))

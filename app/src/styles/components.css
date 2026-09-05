@@ -468,3 +468,82 @@
 .th-sort.on { color: var(--ink); }
 .th-sort.on .caret { opacity: 1; color: var(--positive); }
 th:last-child .th-sort { flex-direction: row-reverse; }
+
+/* ---------------------------------------------------------------- moving --
+   Four ways to get somewhere, all reading one registry: the trail above the
+   title, the tabs under it, the jump-to overlay, and the index at /all. */
+
+.crumbs { display: flex; align-items: center; gap: 8px; font-size: 12px; line-height: 16px; }
+.crumb { color: var(--muted); }
+.crumb:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.crumb.on { color: var(--ink); }
+.crumb-sep { display: inline-flex; color: var(--subtle); opacity: 0.6; }
+.crumb-sep svg { width: 12px; height: 12px; }
+
+.place-tabs {
+  display: flex; gap: 4px; flex-wrap: wrap;
+  border-bottom: 1px solid var(--control); padding-bottom: 0; margin-top: -8px;
+}
+.place-tab {
+  padding: 12px 16px; font-size: 13px; font-weight: 600; color: var(--muted);
+  border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap;
+}
+.place-tab:hover { color: var(--ink); }
+.place-tab[aria-current='page'] { color: var(--ink); border-bottom-color: var(--positive); }
+
+/* the jump-to overlay */
+.jump { padding: 0; gap: 0; overflow: hidden; }
+.jump-field {
+  display: flex; align-items: center; gap: 12px;
+  padding: 20px; border-bottom: 1px solid var(--control);
+}
+.jump-field input { width: 100%; font-size: 16px; }
+.jump-field .kbd { flex: none; }
+.kbd {
+  font-size: 11px; font-weight: 600; color: var(--muted);
+  border: 1px solid var(--control-pressed); border-radius: 6px; padding: 4px 8px;
+}
+.jump-list { max-height: 46vh; overflow: auto; padding: 8px; }
+.jump-group {
+  font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--muted); padding: 12px 12px 8px;
+}
+.jump-hit {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+  padding: 12px; border-radius: 12px; color: var(--ink);
+}
+.jump-hit:hover, .jump-hit[data-on='1'] { background: var(--control); }
+.jump-hit small { color: var(--muted); }
+.jump-foot {
+  display: flex; gap: 16px; padding: 12px 20px;
+  border-top: 1px solid var(--control); color: var(--muted); font-size: 12px;
+}
+
+/* the search box in the top of the page that opens it */
+.jump-open {
+  display: flex; align-items: center; gap: 10px;
+  height: 40px; padding: 0 12px 0 14px; border-radius: var(--r-pill);
+  background: var(--sunken); color: var(--muted); font-size: 13px; min-width: 220px;
+}
+.jump-open:hover { background: var(--control); color: var(--ink); }
+
+@media (max-width: 899px) {
+  .place-tabs { overflow-x: auto; flex-wrap: nowrap; margin-top: 0; }
+  .place-tabs::-webkit-scrollbar { display: none; }
+  .jump-open { min-width: 0; width: 40px; padding: 0; justify-content: center; }
+  .jump-open span:not(.ic) { display: none; }
+}
+
+/* the index at /all */
+.all-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px;
+  align-items: start;
+}
+.all-row { padding: 8px 10px; border-radius: 12px; }
+.all-row:hover { background: var(--control); }
+.all-row small { color: var(--muted); }
+
+/* A palette belongs near the top, where the eye already is, not halfway down
+   the page. Everything else stays centred. */
+.scrim.scrim-top { align-items: start; padding-top: 12vh; }
+@media (max-width: 899px) { .scrim.scrim-top { align-items: end; padding-top: 0; } }

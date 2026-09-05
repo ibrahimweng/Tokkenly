@@ -10,6 +10,7 @@ import { usd, naira, pct, shares as fmtShares, longWhen, when } from './format'
 import { type Route, closeSheet, replaceSheet, go } from './router'
 import { QA } from './screens/settings'
 import { peopleRows } from './screens/money'
+import { search } from './destinations'
 import { BEHIND_MORE } from './components/shell'
 
 /** How long a confirmation shows its spinner. Short enough not to annoy,
@@ -72,6 +73,70 @@ type Builder = (r: Route) => HTMLElement
 
 export const SHEETS: Record<string, Builder> = {
   /** The rest of the rail. Four places are tabs; these five are behind More. */
+  /** Jump to anything: a place, an action, a person you pay, something you
+   *  hold, or a reference off a receipt. Typing filters live; the list is
+   *  keyboard first, because that is the point of it. */
+  jump: () => {
+    const input = h('input', { placeholder: 'Search Tokkenly', ariaLabel: 'Search Tokkenly' })
+    const list = h('div', { class: 'jump-list' })
+    let hits = search('')
+    let cursor = 0
+
+    const paint = () => {
+      list.replaceChildren()
+      if (!hits.length) {
+        list.appendChild(emptyStateEl('Nothing by that name',
+          'Try a place, a person, a company or a reference.'))
+        return
+      }
+      let group = ''
+      hits.forEach((hit, i) => {
+        if (hit.group !== group) {
+          group = hit.group
+          list.appendChild(h('div', { class: 'jump-group', text: group }))
+        }
+        list.appendChild(h('button', {
+          class: 'jump-hit', dataset: { on: i === cursor ? '1' : '0' },
+          on: { click: () => { closeSheet(); go(hit.to) },
+                mouseenter: () => { cursor = i; mark() } },
+        },
+          h('span', { class: 'two-line grow' },
+            h('span', { class: 't-body-strong', text: hit.label }),
+            hit.hint ? h('small', { text: hit.hint }) : null),
+          h('span', { class: 'muted', html: icon.chevron() })))
+      })
+    }
+    const mark = () => {
+      const rows = list.querySelectorAll('.jump-hit')
+      rows.forEach((r, i) => r.setAttribute('data-on', i === cursor ? '1' : '0'))
+      rows[cursor]?.scrollIntoView({ block: 'nearest' })
+    }
+    input.addEventListener('input', () => {
+      hits = search(input.value); cursor = 0; paint()
+    })
+    input.addEventListener('keydown', (e) => {
+      const k = (e as KeyboardEvent).key
+      if (k === 'ArrowDown') { e.preventDefault(); cursor = Math.min(cursor + 1, hits.length - 1); mark() }
+      else if (k === 'ArrowUp') { e.preventDefault(); cursor = Math.max(cursor - 1, 0); mark() }
+      else if (k === 'Enter' && hits[cursor]) { e.preventDefault(); const to = hits[cursor].to; closeSheet(); go(to) }
+    })
+    paint()
+    setTimeout(() => input.focus(), 0)
+
+    const panel = sheet('',
+      h('div', { class: 'jump-field' }, h('span', { html: icon.search() }), input,
+        h('span', { class: 'kbd', text: 'Esc' })),
+      list,
+      h('div', { class: 'jump-foot' },
+        h('span', { text: '\u2191\u2193 to move' }),
+        h('span', { text: '\u21b5 to open' })))
+    // no title row on this one; the field is the title
+    panel.querySelector('.sheet-head')?.remove()
+    panel.querySelector('.sheet')?.classList.add('jump')
+    panel.classList.add('scrim-top')     // a palette sits high, not centred
+    return panel
+  },
+
   /** The bell's panel. Reading one marks it read; the count on the bell drops
    *  as you go, which is the whole point of a count. */
   notifications: () => {

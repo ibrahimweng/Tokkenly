@@ -35,6 +35,7 @@
   --sidebar-w: 240px;
   --nav-h: 64px;
   --screen-h: 1024px;
+  --content-max: 1200px;      /* the column 06 Desktop is drawn in */
   --content-pad-x: 32px;
   --content-pad-y: 24px;
 

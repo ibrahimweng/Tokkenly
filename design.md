@@ -1784,8 +1784,9 @@ scale.
     the alpha back on the object the call hands you, and never trust an overlay
     you have not measured. `clone()` does it too: a scrim copied from another
     screen arrived at full opacity and painted the page it was meant to dim
-    solid black. Whatever produces a paint, read the alpha back. See 11f.3
-    and 11f.10.
+    solid black. Whatever produces a paint, read the alpha back. It has now
+    happened three times, so the scrim sweep runs after every clone rather
+    than when something looks wrong. See 11f.3, 11f.10 and 11f.12.
 
 ## 11. The screens, by flow
 
@@ -3518,7 +3519,62 @@ The four new frames, `D17c Sell` included, pass the usual checks: no unbound
 fills, nothing off the four pixel grid, nothing clipped, no dialog past its
 frame.
 
-### 11f.11 Still open
+### 11f.11 A column, and four ways to move
+
+**The middle was stretching.** The desktop screens are drawn in a 1200 column,
+but `.content` had no cap, so it grew with the monitor. At 2560 the side card
+on Convert reached 1780 pixels beside a left card fixed at 456. `--content-max`
+is 1200 now and the column is centred, so 1440, 2000 and 2560 all render the
+screen the file draws.
+
+**Then four ways to get somewhere**, all reading one registry in
+`destinations.ts`. Four navigators that disagree are worse than one, so they
+share a source rather than each keeping a list:
+
+| | What it does |
+|---|---|
+| Breadcrumbs | `Wallet › Convert to naira` above the title, each step clickable |
+| Place tabs | the screens inside a place, under the header, the current one lit |
+| Jump to | ⌘K, or the search box in the header |
+| Everything | `/all`, every destination grouped by place |
+
+The overlay is the one worth describing. It is not a route list: it searches
+what she has as well as where she can go. Typing `borr` finds Borrow and Repay,
+`adaeze` finds the person and offers to pay her, `nvidia` finds what she holds,
+and `TKN-8F2K90` opens that receipt. Arrows move, Enter opens, Escape closes.
+
+`/map` was a developer's index of addresses and is gone. `/all` replaces it as
+the product's own, built from the registry, so a screen cannot be listed and
+unreachable, or reachable and unlisted.
+
+### 11f.12 What the audits caught this time
+
+Three things, and the third was the interesting one.
+
+**The sidebar was lighting the wrong row on thirteen desktop screens.** Every
+Wallet family screen — Send, Receive, Add money, Convert, their reviews and
+outcomes, Your banks — showed Home as the current place. A sweep set each to
+the place it belongs to. One lit row that matches the screen is rule 45's
+neighbour, and nothing had been checking it since the screens were first drawn.
+
+**The scrim lost its alpha again**, on the clone into `D20 Jump to`. Third time,
+same call. The sweep is now part of cloning rather than a reaction to a black
+rectangle.
+
+**And the contrast pass looked like it had found something system wide.** Six
+labels in the new components sat at 3.12:1, all painted `ink/subtle`, and the
+obvious reading was that every small caps heading in the product had the same
+fault. Counting first said otherwise: those six were the only `ink/subtle`
+texts on the whole desktop page, and all six were mine. The rest of the file
+uses `ink/muted` at 7.46:1. Nothing system wide, six new mistakes. They are
+`ink/muted` now, and the current breadcrumb is `ink/strong`, which is both
+legible and the right emphasis for where you are.
+
+Sixty nine spacing values in the new components were off the four pixel grid,
+because I wrote the CSS first and copied its numbers. Both sides are on the
+grid now: tabs at 12 and 16, the palette field at 20, its rows at 12.
+
+### 11f.13 Still open
 
 - The nav component's variants are still named `Money` and `Stocks` from the
   older product. They light the right icons; renaming breaks twenty nine
