@@ -480,16 +480,6 @@ th:last-child .th-sort { flex-direction: row-reverse; }
 .crumb-sep { display: inline-flex; color: var(--subtle); opacity: 0.6; }
 .crumb-sep svg { width: 12px; height: 12px; }
 
-.place-tabs {
-  display: flex; gap: 4px; flex-wrap: wrap;
-  border-bottom: 1px solid var(--control); padding-bottom: 0; margin-top: -8px;
-}
-.place-tab {
-  padding: 12px 16px; font-size: 13px; font-weight: 600; color: var(--muted);
-  border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap;
-}
-.place-tab:hover { color: var(--ink); }
-.place-tab[aria-current='page'] { color: var(--ink); border-bottom-color: var(--positive); }
 
 /* the jump-to overlay */
 .jump { padding: 0; gap: 0; overflow: hidden; }
@@ -528,8 +518,6 @@ th:last-child .th-sort { flex-direction: row-reverse; }
 .jump-open:hover { background: var(--control); color: var(--ink); }
 
 @media (max-width: 899px) {
-  .place-tabs { overflow-x: auto; flex-wrap: nowrap; margin-top: 0; }
-  .place-tabs::-webkit-scrollbar { display: none; }
   .jump-open { min-width: 0; width: 40px; padding: 0; justify-content: center; }
   .jump-open span:not(.ic) { display: none; }
 }
@@ -547,3 +535,17 @@ th:last-child .th-sort { flex-direction: row-reverse; }
    the page. Everything else stays centred. */
 .scrim.scrim-top { align-items: start; padding-top: 12vh; }
 @media (max-width: 899px) { .scrim.scrim-top { align-items: end; padding-top: 0; } }
+
+/* The header's controls stay side by side at every width. .row turns into a
+   column below the breakpoint, which stacked the search, the toggle and the
+   bell into three full width rows. */
+.header-actions { display: flex; align-items: center; gap: 12px; flex: none; }
+
+@media (max-width: 899px) {
+  /* keyboard hints on a device with no keyboard */
+  .jump-foot { display: none; }
+  .jump-field .kbd { display: none; }
+  .jump { max-height: 82vh; }
+  .jump-list { max-height: none; }
+  .header-actions { gap: 8px; }
+}

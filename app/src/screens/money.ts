@@ -1,6 +1,6 @@
 import { h } from '../ui'
 import { icon } from '../icons'
-import { shell, pageHeader, eyebrow } from '../components/shell'
+import { shell, pageHeader, eyebrow, renderBase } from '../components/shell'
 import { card, cardHead, kv, callout, emptyState } from '../components/bits'
 import { composerScreen } from '../components/composer'
 import { state } from '../state'
@@ -182,7 +182,7 @@ export function receiveScreen(): HTMLElement {
     toast('Address copied', 'success')
   }
 
-  return modalOver(walletScreen(), 'Receive money', () => go('/wallet'),
+  return modalOver(renderBase(walletScreen), 'Receive money', () => go('/wallet'),
     h('div', { class: 'stack-12', style: { alignItems: 'center' } },
       qr,
       h('span', { class: 'muted', text: 'Scan this to pay ' + state.person.name })),

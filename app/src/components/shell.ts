@@ -3,7 +3,7 @@ import { icon } from '../icons'
 import { state } from '../state'
 import { openSheet, go, current } from '../router'
 import { isMobile } from '../responsive'
-import { tabsFor, trailFor, PLACE_LABEL } from '../destinations'
+import { trailFor } from '../destinations'
 
 export type Place = 'home' | 'wallet' | 'market' | 'grow' | 'history' | 'account'
 
@@ -97,8 +97,8 @@ function topBar(): HTMLElement {
     h('span', { class: 'who-line' },
       h('small', { text: 'Good morning' }),
       h('strong', { text: state.person.name.split(' ')[0] })),
-    h('button', { class: 'icon-btn', html: icon.search(), ariaLabel: 'Search',
-      on: { click: () => go('/history') } }),
+    h('button', { class: 'icon-btn', html: icon.search(), ariaLabel: 'Search Tokkenly',
+      on: { click: () => openSheet('jump') } }),
     h('button', { class: 'icon-btn', html: icon.info(), ariaLabel: 'Support',
       on: { click: () => go('/support') } }))
 }
@@ -123,46 +123,22 @@ function rail(active: Place): HTMLElement {
 
 /* ---------------- the shell ---------------- */
 
+/** True while a screen is being drawn only to sit under a dialog. Such a base
+ *  must not claim the trail or light a tab: the thing on top of it is where
+ *  the person actually is. */
+let underOverlay = false
+export function renderBase(fn: () => HTMLElement): HTMLElement {
+  underOverlay = true
+  try { return fn() } finally { underOverlay = false }
+}
+
 export function shell(active: Place, ...bands: (Node | false | null)[]): HTMLElement {
   const content = h('main', { class: 'content' })
-  // The header comes first, then the tabs for the screens inside this place,
-  // then whatever the screen itself is. One place decides that, so no screen
-  // has to remember to draw its own tabs.
-  const [first, ...rest] = bands
-  append(content, [first])
-  const tabs = placeTabs(active)
-  if (tabs) content.appendChild(tabs)
-  append(content, rest)
+  append(content, bands)
   if (isMobile()) {
     return h('div', { class: 'screen' }, topBar(), content, rail(active))
   }
   return h('div', { class: 'screen' }, sidebar(active), content)
-}
-
-/** The screens inside a place, as a row of tabs. Places with nothing inside
- *  them get none, rather than a row of one. */
-function placeTabs(place: Place): HTMLElement | null {
-  const items = tabsFor(place)
-  if (items.length < 2) return null
-  const here = current()
-  const path = here.path
-  const sheet = here.sheet
-  const filter = here.query.get('filter')
-  const isOn = (to: string) => {
-    const [p, q] = to.split('?')
-    if (p !== path) return false
-    const want = q ? new URLSearchParams(q) : null
-    if (want?.get('sheet')) return want.get('sheet') === sheet
-    if (want?.get('filter')) return want.get('filter') === filter
-    return !filter && !sheet
-  }
-  const row = h('nav', { class: 'place-tabs', ariaLabel: PLACE_LABEL[place] + ' sections' })
-  for (const d of items) {
-    const a = link(d.to, 'place-tab', d.label)
-    if (isOn(d.to)) a.setAttribute('aria-current', 'page')
-    row.appendChild(a)
-  }
-  return row
 }
 
 /** Where you are, as a trail you can step back up. Drawn from the registry,
@@ -181,7 +157,7 @@ function breadcrumbs(): HTMLElement | null {
 }
 
 export function pageHeader(title: string, right?: Node | null): HTMLElement {
-  const crumbs = breadcrumbs()
+  const crumbs = underOverlay ? null : breadcrumbs()
   const row = h('div', { class: 'page-header-row' }, h('h1', { text: title }), right ?? null)
   if (!crumbs) return h('header', { class: 'page-header' }, row)
   return h('header', { class: 'page-header has-crumbs' }, crumbs, row)

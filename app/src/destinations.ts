@@ -11,8 +11,8 @@ export interface Destination {
   kind: 'place' | 'action' | 'screen'
   /** Words a person might type that are not in the label. */
   also?: string
-  /** Appears as a tab under its place's header. */
-  tab?: boolean
+  /** Worth showing in the palette before anyone types. */
+  primary?: boolean
   hint?: string
 }
 
@@ -22,33 +22,33 @@ export interface Destination {
 export const DESTINATIONS: Destination[] = [
   { label: 'Home', to: '/', place: 'home', kind: 'place', also: 'dashboard overview start' },
 
-  { label: 'Wallet', to: '/wallet', place: 'wallet', kind: 'place', tab: true, also: 'cash balance dollars' },
-  { label: 'Add money', to: '/addmoney', place: 'wallet', kind: 'action', tab: true, also: 'buy dollars fund top up naira deposit', hint: 'Naira in, dollars out' },
-  { label: 'Send money', to: '/send', place: 'wallet', kind: 'action', tab: true, also: 'pay transfer', hint: 'Pay a person or a wallet' },
-  { label: 'Receive money', to: '/receive', place: 'wallet', kind: 'action', tab: true, also: 'address qr get paid', hint: 'Your address and code' },
-  { label: 'Convert to naira', to: '/convert', place: 'wallet', kind: 'action', tab: true, also: 'cash out withdraw bank payout', hint: 'Dollars out, naira into your bank' },
-  { label: 'Your banks', to: '/wallet?sheet=banks', place: 'wallet', kind: 'screen', tab: true, also: 'account number gtbank kuda payout' },
+  { label: 'Wallet', to: '/wallet', place: 'wallet', kind: 'place', primary: true, also: 'cash balance dollars' },
+  { label: 'Add money', to: '/addmoney', place: 'wallet', kind: 'action', primary: true, also: 'buy dollars fund top up naira deposit', hint: 'Naira in, dollars out' },
+  { label: 'Send money', to: '/send', place: 'wallet', kind: 'action', primary: true, also: 'pay transfer', hint: 'Pay a person or a wallet' },
+  { label: 'Receive money', to: '/receive', place: 'wallet', kind: 'action', primary: true, also: 'address qr get paid', hint: 'Your address and code' },
+  { label: 'Convert to naira', to: '/convert', place: 'wallet', kind: 'action', primary: true, also: 'cash out withdraw bank payout', hint: 'Dollars out, naira into your bank' },
+  { label: 'Your banks', to: '/wallet?sheet=banks', place: 'wallet', kind: 'screen', primary: true, also: 'account number gtbank kuda payout' },
 
-  { label: 'Market', to: '/market', place: 'market', kind: 'place', tab: true, also: 'stocks shares invest browse' },
+  { label: 'Market', to: '/market', place: 'market', kind: 'place', primary: true, also: 'stocks shares invest browse' },
   { label: 'Apple', to: '/market/aapl', place: 'market', kind: 'screen', also: 'aapl stock company' },
   { label: 'Invest in Apple', to: '/market/aapl/invest', place: 'market', kind: 'action', also: 'buy aapl shares' },
   { label: 'Sell Apple', to: '/market/aapl/sell', place: 'market', kind: 'action', also: 'aapl shares' },
 
-  { label: 'Grow', to: '/grow', place: 'grow', kind: 'place', tab: true, also: 'earn borrow interest' },
-  { label: 'Move money into Earn', to: '/grow/earn', place: 'grow', kind: 'action', tab: true, also: 'save interest yield', hint: '4.8% a year, paid daily' },
-  { label: 'Take money out of Earn', to: '/grow/takeout', place: 'grow', kind: 'action', tab: true, also: 'withdraw earn', hint: 'Any time, no fee' },
-  { label: 'Borrow', to: '/grow/borrow', place: 'grow', kind: 'action', tab: true, also: 'loan against shares credit', hint: 'Against the shares you own' },
-  { label: 'Repay', to: '/grow/repay', place: 'grow', kind: 'action', tab: true, also: 'pay back loan owed', hint: 'Clear what you owe' },
+  { label: 'Grow', to: '/grow', place: 'grow', kind: 'place', primary: true, also: 'earn borrow interest' },
+  { label: 'Move money into Earn', to: '/grow/earn', place: 'grow', kind: 'action', primary: true, also: 'save interest yield', hint: '4.8% a year, paid daily' },
+  { label: 'Take money out of Earn', to: '/grow/takeout', place: 'grow', kind: 'action', primary: true, also: 'withdraw earn', hint: 'Any time, no fee' },
+  { label: 'Borrow', to: '/grow/borrow', place: 'grow', kind: 'action', primary: true, also: 'loan against shares credit', hint: 'Against the shares you own' },
+  { label: 'Repay', to: '/grow/repay', place: 'grow', kind: 'action', primary: true, also: 'pay back loan owed', hint: 'Clear what you owe' },
 
-  { label: 'History', to: '/history', place: 'history', kind: 'place', tab: true, also: 'activity statement transactions' },
-  { label: 'Payments', to: '/history?filter=payments', place: 'history', kind: 'screen', tab: true, also: 'sent received' },
-  { label: 'Trades', to: '/history?filter=trades', place: 'history', kind: 'screen', tab: true, also: 'bought sold shares' },
-  { label: 'Grow activity', to: '/history?filter=grow', place: 'history', kind: 'screen', tab: true, also: 'interest borrowed repaid' },
+  { label: 'History', to: '/history', place: 'history', kind: 'place', primary: true, also: 'activity statement transactions' },
+  { label: 'Payments', to: '/history?filter=payments', place: 'history', kind: 'screen', primary: true, also: 'sent received' },
+  { label: 'Trades', to: '/history?filter=trades', place: 'history', kind: 'screen', primary: true, also: 'bought sold shares' },
+  { label: 'Grow activity', to: '/history?filter=grow', place: 'history', kind: 'screen', primary: true, also: 'interest borrowed repaid' },
 
-  { label: 'Account', to: '/account', place: 'account', kind: 'place', tab: true, also: 'profile details name address' },
-  { label: 'Security', to: '/security', place: 'account', kind: 'screen', tab: true, also: 'pin face id recovery phrase devices sign out' },
-  { label: 'Support', to: '/support', place: 'account', kind: 'screen', tab: true, also: 'help questions contact email us' },
-  { label: 'Everything', to: '/all', place: 'account', kind: 'screen', tab: true, also: 'all screens index directory sitemap' },
+  { label: 'Account', to: '/account', place: 'account', kind: 'place', primary: true, also: 'profile details name address' },
+  { label: 'Security', to: '/security', place: 'account', kind: 'screen', primary: true, also: 'pin face id recovery phrase devices sign out' },
+  { label: 'Support', to: '/support', place: 'account', kind: 'screen', primary: true, also: 'help questions contact email us' },
+  { label: 'Everything', to: '/all', place: 'account', kind: 'screen', primary: true, also: 'all screens index directory sitemap' },
 ]
 
 export const PLACE_LABEL: Record<Place, string> = {
@@ -60,10 +60,6 @@ const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9 ]/g, '')
 
 /** The path without its query, which is how a destination is recognised. */
 const bare = (to: string) => to.split('?')[0]
-
-export function tabsFor(place: Place): Destination[] {
-  return DESTINATIONS.filter((d) => d.place === place && d.tab)
-}
 
 /** Where you are, as a trail you can step back up. */
 export function trailFor(path: string, query: URLSearchParams): Destination[] {
@@ -94,7 +90,7 @@ export interface Hit { label: string; to: string; group: string; hint?: string }
 export function search(raw: string): Hit[] {
   const q = norm(raw.trim())
   if (!q) {
-    return DESTINATIONS.filter((d) => d.kind !== 'screen' || d.tab)
+    return DESTINATIONS.filter((d) => d.kind !== 'screen' || d.primary)
       .slice(0, 8)
       .map((d) => ({ label: d.label, to: d.to, group: PLACE_LABEL[d.place], hint: d.hint }))
   }

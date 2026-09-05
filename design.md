@@ -1787,6 +1787,13 @@ scale.
     solid black. Whatever produces a paint, read the alpha back. It has now
     happened three times, so the scrim sweep runs after every clone rather
     than when something looks wrong. See 11f.3, 11f.10 and 11f.12.
+52. A component can be correct and still be wrong. The place tabs passed every
+    check: contrast, the four pixel grid, no overflow, one lit item, a scrolling
+    strip on the phone. None of that could see the only thing that mattered,
+    which is that the sidebar already listed those destinations and the row
+    said Wallet eight pixels under a sidebar that said Wallet. Audits answer
+    "is this built properly". They cannot answer "should this be here". Ask the
+    second question out loud, before drawing it into two pages. See 11f.13.
 
 ## 11. The screens, by flow
 
@@ -3527,16 +3534,17 @@ on Convert reached 1780 pixels beside a left card fixed at 456. `--content-max`
 is 1200 now and the column is centred, so 1440, 2000 and 2560 all render the
 screen the file draws.
 
-**Then four ways to get somewhere**, all reading one registry in
-`destinations.ts`. Four navigators that disagree are worse than one, so they
-share a source rather than each keeping a list:
+**Then three ways to get somewhere**, all reading one registry in
+`destinations.ts`. Navigators that disagree are worse than one, so they share a
+source rather than each keeping a list:
 
 | | What it does |
 |---|---|
 | Breadcrumbs | `Wallet › Convert to naira` above the title, each step clickable |
-| Place tabs | the screens inside a place, under the header, the current one lit |
-| Jump to | ⌘K, or the search box in the header |
+| Jump to | ⌘K on a desktop, the magnifier on a phone |
 | Everything | `/all`, every destination grouped by place |
+
+A fourth was built and then taken out again. See 11f.13.
 
 The overlay is the one worth describing. It is not a route list: it searches
 what she has as well as where she can go. Typing `borr` finds Borrow and Repay,
@@ -3574,7 +3582,37 @@ Sixty nine spacing values in the new components were off the four pixel grid,
 because I wrote the CSS first and copied its numbers. Both sides are on the
 grid now: tabs at 12 and 16, the palette field at 20, its rows at 12.
 
-### 11f.13 Still open
+### 11f.13 The tabs came out again
+
+A row of tabs under the page header, listing the screens inside a place, was
+the fourth navigator. It is gone.
+
+It was a second navigation layer for destinations the sidebar already carries.
+On Wallet the sidebar lit **Wallet** and then the row's first tab was also
+**Wallet**, so the same word appeared twice, eight pixels apart, in two
+different visual languages. On a phone it was worse: the rail already holds the
+places, and the row repeated them in a strip that had to scroll.
+
+It looked fine in isolation, which is how it got built and audited and drawn
+into two Figma pages before anybody said anything. Measuring it never caught it,
+because there was nothing wrong with it as a component: the contrast passed, the
+spacing landed on the grid, it scrolled rather than overflowed. What was wrong
+was that it should not have existed.
+
+Removed from the app, from `06 Desktop`, from `07 Mobile`, and the `Place tabs`
+component deleted from `02 Components` after checking nothing still pointed at
+it. The registry keeps its flag, renamed from `tab` to `primary`, because it is
+still the honest answer to "what should the palette list before anyone types".
+
+The three that remain do not overlap. The sidebar and the rail hold the places.
+The trail shows depth the sidebar cannot: `Market › Apple › Invest in Apple` is
+three levels the six-item rail has no way to express. The palette is the fast
+path. The index is the whole map, for when you do not know the name of the
+thing you want.
+
+Rule 52 comes out of this.
+
+### 11f.14 Still open
 
 - The nav component's variants are still named `Money` and `Stocks` from the
   older product. They light the right icons; renaming breaks twenty nine

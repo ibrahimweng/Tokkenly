@@ -121,10 +121,8 @@ console.log('MOVING AROUND  four navigators, one registry')
   ok('and the trail steps back up', p.url().endsWith('#/wallet'), new URL(p.url()).hash)
 
   await p.goto(B + '/convert', { waitUntil: 'networkidle' }); await p.waitForTimeout(200)
-  const tabs = await p.locator('.place-tab').allTextContents()
-  ok('the place shows its screens as tabs', tabs.length === 6, tabs.join(' | '))
-  ok('and lights the one you are on',
-     (await p.locator('.place-tab[aria-current="page"]').textContent()) === 'Convert to naira')
+  ok('and nothing repeats the sidebar under the title',
+     (await p.locator('.place-tab').count()) === 0)
 
   await p.keyboard.press('Meta+k'); await p.waitForTimeout(300)
   ok('cmd K opens the palette', (await p.locator('.jump').count()) === 1)
@@ -145,6 +143,46 @@ console.log('MOVING AROUND  four navigators, one registry')
   const rows = await p.locator('.all-row').count()
   ok('the index lists every destination', groups === 6 && rows >= 24, `${groups} groups, ${rows} rows`)
   await p.close()
+}
+
+console.log('MOVING AROUND, on a phone')
+{
+  const p = await page(390, 844)
+  await p.goto(B + '/wallet', { waitUntil: 'networkidle' }); await p.waitForTimeout(250)
+  const t = await p.evaluate(() => ({
+    tabs: document.querySelectorAll('.place-tab').length,
+    overflowX: Math.max(0, document.documentElement.scrollWidth - 390),
+  }))
+  ok('the rail is the only place navigation, and nothing overflows',
+     t.tabs === 0 && t.overflowX === 0, JSON.stringify(t))
+
+  // the magnifier used to open History, which is not what a magnifier means
+  await p.locator('.topbar .icon-btn').first().click(); await p.waitForTimeout(350)
+  ok('the search icon opens the palette', (await p.locator('.jump').count()) === 1)
+  const box = await p.evaluate(() => {
+    const r = document.querySelector('.jump').getBoundingClientRect()
+    return { w: Math.round(r.width), bottom: Math.round(r.bottom) }
+  })
+  ok('and it arrives from the bottom, full width', box.w === 390 && box.bottom === 844, JSON.stringify(box))
+  ok('with the keyboard hints hidden', (await p.locator('.jump-foot').isVisible().catch(() => false)) === false)
+  await p.locator('.jump-field input').fill('borr'); await p.waitForTimeout(250)
+  await p.locator('.jump-hit').first().click(); await p.waitForTimeout(350)
+  ok('and tapping a hit goes there', p.url().includes('/grow'), new URL(p.url()).hash)
+  await p.close()
+}
+
+console.log('A BASE UNDER A DIALOG IS NOT WHERE YOU ARE')
+{
+  for (const [w, route, wants] of [
+    [1600, '/convert', true], [1600, '/send', false], [1600, '/receive', false],
+    [390, '/convert', false],
+  ]) {
+    const p = await page(w, w === 390 ? 844 : 1000)
+    await p.goto(B + route, { waitUntil: 'networkidle' }); await p.waitForTimeout(220)
+    const has = await p.evaluate(() => !!document.querySelector('.crumbs'))
+    ok(`${w}px ${route} ${wants ? 'keeps' : 'drops'} its trail`, has === wants)
+    await p.close()
+  }
 }
 
 console.log('WIDTH  the middle is drawn in a 1200 column, whatever the monitor')
