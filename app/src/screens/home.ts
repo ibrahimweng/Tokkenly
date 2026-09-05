@@ -15,7 +15,7 @@ function viewToggle(): HTMLElement {
     h('button', {
       class: 'chip',
       text: label,
-      ariaPressed: state.homeView === v,
+      ariaPressed: state.prefs.homeView === v,
       on: { click: () => { actions.setHomeView(v); go('/') } },
     })
   return h('div', { class: 'chip-row' }, mk('simple', 'Simple'), mk('detailed', 'Detailed'))
@@ -72,7 +72,7 @@ function chart(): HTMLElement {
 }
 
 export function homeScreen(): HTMLElement {
-  return state.homeView === 'simple' ? gateway() : detailed()
+  return state.prefs.homeView === 'simple' ? gateway() : detailed()
 }
 
 function detailed(): HTMLElement {

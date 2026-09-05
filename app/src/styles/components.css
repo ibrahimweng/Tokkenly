@@ -674,6 +674,31 @@ th.right .th-sort { flex-direction: row-reverse; }
   .hero-legend { gap: 12px; flex-direction: column; }
 }
 
+/* ---------------------------------------------------------- the bucket --
+   Things picked out and not yet paid for. It lives in the sidebar with the
+   places rather than in a page header, because a list you fill as you browse
+   is no use if it is only visible where you filled it. */
+.nav-bucket .count {
+  min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px;
+  background: var(--inverse); color: var(--on-inverse);
+  font-size: 11px; font-weight: 600; line-height: 20px; text-align: center; flex: none;
+}
+.bucket-btn .dot { background: var(--inverse); color: var(--on-inverse); }
+
+.bucket-row {
+  display: flex; align-items: center; gap: 16px;
+  padding: 12px 0;
+}
+.bucket-row + .bucket-row { border-top: 1px solid var(--grid); }
+.bucket-field { width: 132px; flex: none; height: 44px; padding: 0 14px; }
+.bucket-amount { width: 100%; text-align: right; font-weight: 600; }
+
+@media (max-width: 899px) {
+  .bucket-row { flex-wrap: wrap; row-gap: 8px; }
+  .bucket-row .two-line { flex: 1 1 100%; }
+  .bucket-field { flex: 1 1 0; width: auto; }
+}
+
 /* ----------------------------------------------------------- the chart --
    One value over time, drawn the same way everywhere. The old version was a
    comb of fixed 5px bars with no axis, no gridlines and no hover: you could

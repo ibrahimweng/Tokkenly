@@ -16,6 +16,7 @@ export const icon = {
   arrowOut: () => svg('<path d="M7 17 17 7M17 14V7h-7"/>', 16),
   chevron: () => svg('<path d="m9 5 7 7-7 7"/>', 16),
   close: () => svg('<path d="M6 6l12 12M18 6 6 18"/>', 16),
+  bucket: () => svg('<path d="M4 8h16l-1.5 11a2 2 0 0 1-2 1.7H7.5a2 2 0 0 1-2-1.7L4 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>', 18),
   check: () => svg('<path d="m5 13 4.5 4.5L19 7"/>', 28),
   info: () => svg('<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>', 18),
   alert: () => svg('<path d="M12 4 2.5 20h19z"/><path d="M12 10v4M12 17h.01"/>', 18),

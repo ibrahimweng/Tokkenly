@@ -3,7 +3,7 @@ import { icon } from './icons'
 import { sheet, figure, panel, outcome, toast } from './components/sheet'
 import { callout as calloutEl, emptyState as emptyStateEl } from './components/bits'
 import {
-  state, actions, owed, monthlyCost, monthlyEarn, holding, type Activity,
+  state, actions, owed, monthlyCost, monthlyEarn, holding, bucketTotal, type Activity,
 } from './state'
 import { find } from './catalogue'
 import { usd, naira, pct, shares as fmtShares, longWhen, when } from './format'
@@ -535,6 +535,44 @@ export const SHEETS: Record<string, Builder> = {
     return done('Sold',
       `${fmtShares(num(r, 'sold'))} shares of ${c.name}. ${usd(a.amount)} is in your wallet.`, a,
       [['You hold now', left ? fmtShares(left.shares) + ' shares' : 'None — that was all of it']])
+  },
+
+  /* ----- the bucket ----- */
+  'bucket-review': () => {
+    const lines = state.bucket.map((b) => {
+      const c = find(b.ticker)!
+      return [c.name, `${usd(b.dollars)} · ${fmtShares(b.dollars / c.price)} shares`] as [string, string]
+    })
+    const total = bucketTotal()
+    return review({
+      title: 'Review',
+      figureLabel: 'You are buying', figureValue: usd(total),
+      rows: [
+        ...lines,
+        ['Fee', 'Free, Tokkenly covers it'],
+        ['Cash left after', usd(state.cash - total)],
+      ],
+      note: 'One payment, but each company gets its own receipt so you can find any of them later.',
+      action: `Buy all ${state.bucket.length} for ${usd(total)}`,
+      onConfirm: () => {
+        const { refs, spent, lines: got } = actions.payBucket()
+        replaceSheet('bucket-done', {
+          refs: refs.join(','), spent: String(spent),
+          got: got.map((g) => g.ticker + ':' + g.shares.toFixed(4)).join(','),
+        })
+      },
+    })
+  },
+  'bucket-done': (r) => {
+    const refs = str(r, 'refs').split(',').filter(Boolean)
+    const got = str(r, 'got').split(',').filter(Boolean).map((x) => x.split(':'))
+    return outcome(
+      'Bought',
+      `${usd(num(r, 'spent'))} across ${refs.length} ${refs.length === 1 ? 'company' : 'companies'}.`,
+      got.map(([t, sh]) => [find(t)?.name ?? t, fmtShares(Number(sh)) + ' shares'] as [string, string]),
+      { label: 'Done', onClick: () => { closeSheet(); go('/') } },
+      { label: 'See the receipts', onClick: () => { closeSheet(); go('/history?filter=trades') } }
+    )
   },
 
   /* ----- borrow ----- */

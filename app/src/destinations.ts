@@ -30,6 +30,8 @@ export const DESTINATIONS: Destination[] = [
   { label: 'Your banks', to: '/wallet?sheet=banks', place: 'wallet', kind: 'screen', primary: true, also: 'account number gtbank kuda payout' },
 
   { label: 'Market', to: '/market', place: 'market', kind: 'place', primary: true, also: 'stocks shares invest browse' },
+  { label: 'Your bucket', to: '/bucket', place: 'market', kind: 'screen', primary: true,
+    also: 'basket cart picked saved pay later checkout', hint: 'Companies you have picked, not yet paid for' },
   { label: 'Apple', to: '/market/aapl', place: 'market', kind: 'screen', also: 'aapl stock company' },
   { label: 'Invest in Apple', to: '/market/aapl/invest', place: 'market', kind: 'action', also: 'buy aapl shares' },
   { label: 'Sell Apple', to: '/market/aapl/sell', place: 'market', kind: 'action', also: 'aapl shares' },

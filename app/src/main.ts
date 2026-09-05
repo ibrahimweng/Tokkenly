@@ -18,6 +18,7 @@ import { accountScreen, securityScreen, supportScreen } from './screens/settings
 import { signInScreen, signUpScreen } from './screens/auth'
 import { sendScreen, receiveScreen, addMoneyScreen, convertScreen } from './screens/money'
 import { allScreen } from './screens/all'
+import { bucketScreen } from './screens/bucket'
 
 const app = document.getElementById('app')!
 
@@ -41,6 +42,7 @@ const FLAT: Record<string, () => HTMLElement> = {
   receive: receiveScreen,
   addmoney: addMoneyScreen,
   convert: convertScreen,
+  bucket: bucketScreen,
 }
 
 function screenFor(r: Route): HTMLElement {

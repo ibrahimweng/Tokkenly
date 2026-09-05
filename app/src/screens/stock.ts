@@ -3,7 +3,7 @@ import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, kv, callout } from '../components/bits'
 import { find, type Instrument } from '../catalogue'
 import { barChart, type Range } from '../components/chart'
-import { state, actions, holding } from '../state'
+import { state, actions, holding, inBucket } from '../state'
 import { usd, pct, signed } from '../format'
 import { go } from '../router'
 import { toast } from '../components/sheet'
@@ -27,6 +27,25 @@ function priceChart(c: Instrument): HTMLElement {
     title: c.ticker + ' over time',
     endValue: c.price,
     seed: c.ticker.charCodeAt(0) * 31,
+  })
+}
+
+/** Buying now and deciding later are different intents, so they are different
+ *  buttons. This one puts a default amount against the company and leaves it
+ *  for the bucket; the amount is editable there. */
+function bucketAdd(c: Instrument): HTMLElement {
+  const already = inBucket(c.ticker)
+  return h('button', {
+    class: 'btn btn-secondary btn-sm',
+    text: already ? 'In your bucket · ' + usd(already.dollars, false) : 'Add to bucket',
+    on: {
+      click: () => {
+        if (already) { go('/bucket'); return }
+        actions.addToBucket(c.ticker, state.prefs.tradeDefault)
+        toast(`${usd(state.prefs.tradeDefault, false)} of ${c.name} is in your bucket`, 'success')
+        go('/market/' + c.ticker.toLowerCase())
+      },
+    },
   })
 }
 
@@ -54,7 +73,7 @@ export function stockScreen(ticker: string): HTMLElement {
   return shell(
     'market',
     pageHeader(c.name,
-      h('div', { class: 'chip-row' }, follow,
+      h('div', { class: 'chip-row' }, follow, bucketAdd(c),
         h('button', { class: 'btn btn-primary btn-sm', text: 'Buy ' + c.ticker,
           on: { click: () => go('/market/' + c.ticker.toLowerCase() + '/invest') } }))),
     h('div', { class: 'row' },

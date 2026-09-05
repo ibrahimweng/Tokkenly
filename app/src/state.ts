@@ -18,6 +18,38 @@ export interface Activity {
   settled: boolean
 }
 
+/** Everything the person can decide about how the product behaves. Grouped
+ *  rather than scattered through State so the Account screen has one thing to
+ *  read and one thing to reset. */
+export interface Prefs {
+  /** Where Home opens. Simple is three doors and the number; Detailed is the
+   *  chart, the positions and the rest. */
+  homeView: 'simple' | 'detailed'
+  theme: 'dark' | 'light'
+  /** The product is for Nigerians holding dollars, so the naira line beside a
+   *  figure is the setting people actually change. */
+  showNaira: boolean
+  /** What "Add to bucket" puts against a company before you edit it. */
+  tradeDefault: number
+  /** Ask again, above this, before anything leaves. 0 turns it off. */
+  confirmOver: number
+  notify: { payments: boolean; prices: boolean; earn: boolean; borrowing: boolean }
+}
+
+export const DEFAULT_PREFS: Prefs = {
+  homeView: 'simple',
+  theme: 'dark',
+  showNaira: true,
+  tradeDefault: 50,
+  confirmOver: 500,
+  notify: { payments: true, prices: true, earn: true, borrowing: true },
+}
+
+export interface BucketItem {
+  ticker: string
+  dollars: number
+}
+
 export interface Holding {
   ticker: string
   name: string
@@ -51,7 +83,7 @@ export interface Device {
 
 export interface State {
   signedIn: boolean
-  homeView: 'detailed' | 'simple'
+  prefs: Prefs
   person: { name: string; email: string; phone: string; dob: string; address: string }
   cash: number
   inEarn: number
@@ -62,6 +94,10 @@ export interface State {
   rates: { earn: number; borrow: number; collateral: number }
   holdings: Holding[]
   watchlist: string[]
+  /** Companies picked out and not yet paid for. A watchlist is a list of
+   *  things you are interested in; a bucket is a list of things you have
+   *  decided on, with an amount against each. */
+  bucket: BucketItem[]
   banks: Bank[]
   devices: Device[]
   activity: Activity[]
@@ -71,13 +107,18 @@ export interface State {
   ngnPerUsd: number
 }
 
+/** The only preference that lands on the document rather than in a screen. */
+export function applyTheme(): void {
+  if (typeof document !== 'undefined') {
+    document.documentElement.setAttribute('data-theme', state.prefs.theme)
+  }
+}
+
 const iso = (d: string) => new Date(d).toISOString()
 
 export const state: State = {
   signedIn: true,
-  // Simple is where a new person lands: three doors and the number, not a
-  // chart and four cards of detail they have not asked for yet.
-  homeView: 'simple',
+  prefs: { ...DEFAULT_PREFS, notify: { ...DEFAULT_PREFS.notify } },
   person: {
     name: 'Chinaza Okoro',
     email: 'ibrahimweng0@gmail.com',
@@ -98,6 +139,7 @@ export const state: State = {
     { ticker: 'VOO', name: 'Vanguard S&P 500', shares: 5.6, price: 511.57, dayPct: 0.4 },
     { ticker: 'TSLA', name: 'Tesla', shares: 4.8, price: 248.5, dayPct: -0.8 },
   ],
+  bucket: [],
   watchlist: ['AAPL', 'NVDA', 'TSLA', 'MSFT', 'VOO'],
   banks: [
     { id: 'gt', name: 'GTBank', last4: '4471', holder: 'Chinaza Okoro' },
@@ -172,6 +214,15 @@ export const monthlyCost = (principal: number): number =>
 export const monthlyEarn = (principal: number): number =>
   (principal * state.rates.earn) / 100 / 12
 
+export const bucketTotal = (): number =>
+  state.bucket.reduce((t, b) => t + b.dollars, 0)
+
+export const bucketShortfall = (): number =>
+  Math.max(0, bucketTotal() - state.cash)
+
+export const inBucket = (ticker: string): BucketItem | undefined =>
+  state.bucket.find((b) => b.ticker === ticker)
+
 export const holding = (ticker: string): Holding | undefined =>
   state.holdings.find((h) => h.ticker === ticker)
 
@@ -214,8 +265,8 @@ export const actions = {
     if (any) changed()
   },
 
-  setHomeView(v: 'detailed' | 'simple') {
-    state.homeView = v
+  setHomeView(v: 'simple' | 'detailed') {
+    state.prefs.homeView = v
     changed()
   },
 
@@ -317,6 +368,64 @@ export const actions = {
     const a = record({ kind: 'grow', who: 'Earn', type: 'Taken out', amount })
     changed()
     return a
+  },
+
+  /* ----- preferences ----- */
+  setPref<K extends keyof Prefs>(key: K, value: Prefs[K]) {
+    state.prefs[key] = value
+    if (key === 'theme') applyTheme()
+    changed()
+  },
+  setNotify(key: keyof Prefs['notify'], on: boolean) {
+    state.prefs.notify[key] = on
+    changed()
+  },
+  resetPrefs() {
+    state.prefs = { ...DEFAULT_PREFS, notify: { ...DEFAULT_PREFS.notify } }
+    applyTheme()
+    changed()
+  },
+
+  /* ----- the bucket ----- */
+  addToBucket(ticker: string, dollars: number) {
+    const it = state.bucket.find((b) => b.ticker === ticker)
+    if (it) it.dollars += dollars
+    else state.bucket.push({ ticker, dollars })
+    changed()
+  },
+  /** Deliberately does not broadcast. Every listener re-renders the whole
+   *  screen, and this is called from a field's own change handler — rebuilding
+   *  the screen out from under a focused input throws on the blur that
+   *  follows. Nothing outside the bucket screen shows these amounts, and that
+   *  screen repaints the parts that moved itself. */
+  setBucketAmount(ticker: string, dollars: number) {
+    const it = state.bucket.find((b) => b.ticker === ticker)
+    if (it) it.dollars = Math.max(0, Math.round(dollars * 100) / 100)
+  },
+  removeFromBucket(ticker: string) {
+    state.bucket = state.bucket.filter((b) => b.ticker !== ticker)
+    changed()
+  },
+  clearBucket() {
+    state.bucket = []
+    changed()
+  },
+  /** One payment, one order per company. The receipts have to stay per
+   *  company or a history row could never be reconciled against a holding. */
+  payBucket(): { refs: string[]; spent: number; lines: { ticker: string; shares: number }[] } {
+    const refs: string[] = []
+    const lines: { ticker: string; shares: number }[] = []
+    let spent = 0
+    for (const it of [...state.bucket]) {
+      if (it.dollars <= 0) continue
+      const { activity, shares } = actions.buy(it.ticker, it.dollars)
+      refs.push(activity.ref)
+      lines.push({ ticker: it.ticker, shares })
+      spent += Math.abs(activity.amount)
+    }
+    state.bucket = []
+    changed()
+    return { refs, spent, lines }
   },
 
   toggleWatch(ticker: string) {
