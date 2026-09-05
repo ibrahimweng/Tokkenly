@@ -26,8 +26,15 @@ ul { margin: 0; padding: 0; list-style: none; }
   flex-direction: column;
   gap: 24px;
   padding: var(--content-pad-y) var(--content-pad-x);
+  /* The desktop screens are drawn in a 1200 column. Without a cap the middle
+     keeps growing with the monitor, and a side card that fills what is left
+     ends up three times the width of the card beside it. */
+  width: 100%;
+  max-width: var(--content-max);
+  margin-inline: auto;
 }
-.page-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.page-header { display: flex; flex-direction: column; gap: 8px; }
+.page-header-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .page-header h1 { margin: 0; font-size: 18px; line-height: 24px; font-weight: 600; }
 .eyebrow { display: flex; align-items: baseline; gap: 8px; color: var(--muted); }
 .eyebrow strong { color: var(--ink); font-weight: 600; }
@@ -61,7 +68,7 @@ ul { margin: 0; padding: 0; list-style: none; }
     gap: 24px;
     padding-bottom: calc(var(--nav-h) + 48px);
   }
-  .page-header { align-items: flex-start; }
+  .page-header-row { align-items: flex-start; }
   .page-header h1 { font-size: 22px; line-height: 28px; }
 
   /* every row becomes a stack, and every side column a full-width band */

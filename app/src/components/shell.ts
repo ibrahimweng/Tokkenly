@@ -3,6 +3,7 @@ import { icon } from '../icons'
 import { state } from '../state'
 import { openSheet, go, current } from '../router'
 import { isMobile } from '../responsive'
+import { tabsFor, trailFor, PLACE_LABEL } from '../destinations'
 
 export type Place = 'home' | 'wallet' | 'market' | 'grow' | 'history' | 'account'
 
@@ -25,7 +26,19 @@ export const BEHIND_MORE: { label: string; sub: string; to: string; ic: () => st
   { label: 'Security', sub: 'PIN, Face ID and recovery', to: '/security', ic: icon.lock },
   { label: 'Your banks', sub: 'Where your payouts land', to: '/wallet?sheet=banks', ic: icon.wallet },
   { label: 'Support', sub: state.person.email, to: '/support', ic: icon.mail },
+  { label: 'Everything', sub: 'Every screen, in one list', to: '/all', ic: icon.grid },
 ]
+
+/** The way in to the jump-to overlay for anyone not reaching for a keyboard. */
+export function jumpOpen(): HTMLElement {
+  return h('button', {
+    class: 'jump-open', ariaLabel: 'Search Tokkenly',
+    on: { click: () => openSheet('jump') },
+  },
+    h('span', { class: 'ic', html: icon.search() }),
+    h('span', { class: 'grow', text: 'Search' }),
+    h('span', { class: 'kbd', text: navigator.platform.includes('Mac') ? '\u2318K' : 'Ctrl K' }))
+}
 
 /** The bell from Figma D01. It carries the unread count and opens the panel. */
 export function bell(): HTMLElement {
@@ -112,15 +125,66 @@ function rail(active: Place): HTMLElement {
 
 export function shell(active: Place, ...bands: (Node | false | null)[]): HTMLElement {
   const content = h('main', { class: 'content' })
-  append(content, bands)
+  // The header comes first, then the tabs for the screens inside this place,
+  // then whatever the screen itself is. One place decides that, so no screen
+  // has to remember to draw its own tabs.
+  const [first, ...rest] = bands
+  append(content, [first])
+  const tabs = placeTabs(active)
+  if (tabs) content.appendChild(tabs)
+  append(content, rest)
   if (isMobile()) {
     return h('div', { class: 'screen' }, topBar(), content, rail(active))
   }
   return h('div', { class: 'screen' }, sidebar(active), content)
 }
 
+/** The screens inside a place, as a row of tabs. Places with nothing inside
+ *  them get none, rather than a row of one. */
+function placeTabs(place: Place): HTMLElement | null {
+  const items = tabsFor(place)
+  if (items.length < 2) return null
+  const here = current()
+  const path = here.path
+  const sheet = here.sheet
+  const filter = here.query.get('filter')
+  const isOn = (to: string) => {
+    const [p, q] = to.split('?')
+    if (p !== path) return false
+    const want = q ? new URLSearchParams(q) : null
+    if (want?.get('sheet')) return want.get('sheet') === sheet
+    if (want?.get('filter')) return want.get('filter') === filter
+    return !filter && !sheet
+  }
+  const row = h('nav', { class: 'place-tabs', ariaLabel: PLACE_LABEL[place] + ' sections' })
+  for (const d of items) {
+    const a = link(d.to, 'place-tab', d.label)
+    if (isOn(d.to)) a.setAttribute('aria-current', 'page')
+    row.appendChild(a)
+  }
+  return row
+}
+
+/** Where you are, as a trail you can step back up. Drawn from the registry,
+ *  so it can never name a screen that is not there. */
+function breadcrumbs(): HTMLElement | null {
+  const r = current()
+  const trail = trailFor(r.path, r.query)
+  if (trail.length < 2) return null
+  const nav = h('nav', { class: 'crumbs', ariaLabel: 'Where you are' })
+  trail.forEach((d, i) => {
+    if (i) nav.appendChild(h('span', { class: 'crumb-sep', html: icon.chevron() }))
+    if (i === trail.length - 1) nav.appendChild(h('span', { class: 'crumb on', text: d.label }))
+    else nav.appendChild(link(d.to, 'crumb', d.label))
+  })
+  return nav
+}
+
 export function pageHeader(title: string, right?: Node | null): HTMLElement {
-  return h('header', { class: 'page-header' }, h('h1', { text: title }), right ?? null)
+  const crumbs = breadcrumbs()
+  const row = h('div', { class: 'page-header-row' }, h('h1', { text: title }), right ?? null)
+  if (!crumbs) return h('header', { class: 'page-header' }, row)
+  return h('header', { class: 'page-header has-crumbs' }, crumbs, row)
 }
 
 export function eyebrow(label: string, value: string): HTMLElement {

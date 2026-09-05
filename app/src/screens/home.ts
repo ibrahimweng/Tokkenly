@@ -1,6 +1,6 @@
 import { h, link } from '../ui'
 import { icon } from '../icons'
-import { shell, pageHeader, bell } from '../components/shell'
+import { shell, pageHeader, bell, jumpOpen } from '../components/shell'
 import { card, cardHead, headLink, kv, amount, directionMark } from '../components/bits'
 import { table } from '../components/table'
 import { state, actions, holdingsValue, availableToBorrow, buyingPower } from '../state'
@@ -149,7 +149,7 @@ function detailed(): HTMLElement {
   return shell(
     'home',
     pageHeader(isMobile() ? '' : 'Good morning, ' + state.person.name.split(' ')[0],
-      h('div', { class: 'row', style: { gap: '12px', alignItems: 'center' } }, viewToggle(), bell())),
+      h('div', { class: 'row', style: { gap: '12px', alignItems: 'center' } }, jumpOpen(), viewToggle(), bell())),
     h('div', { class: 'row' },
       h('div', { class: 'stack', style: { width: '308px', flex: 'none' } },
         h('div', { class: 'stack-8' },
@@ -194,7 +194,7 @@ function gateway(): HTMLElement {
   return shell(
     'home',
     pageHeader(isMobile() ? '' : 'Good morning, ' + state.person.name.split(' ')[0],
-      h('div', { class: 'row', style: { gap: '12px', alignItems: 'center' } }, viewToggle(), bell())),
+      h('div', { class: 'row', style: { gap: '12px', alignItems: 'center' } }, jumpOpen(), viewToggle(), bell())),
     h('div', { class: 'stack-8' },
       h('span', { class: 't-caps subtle', text: 'Your money' }),
       h('span', { class: 't-display-xl', text: usd(state.cash + state.inEarn + holdingsValue()) }),
