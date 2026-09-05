@@ -102,6 +102,9 @@ export interface State {
   devices: Device[]
   activity: Activity[]
   notifications: Notif[]
+  /** Whether the intro has been seen. It gates the landing route only, so a
+   *  deep link still goes where it points. */
+  seenIntro: boolean
   cardWaitlist: boolean
   phraseWrittenDown: boolean
   ngnPerUsd: number
@@ -162,6 +165,7 @@ export const state: State = {
     { id: 'n5', kind: 'money', title: 'Payroll arrived',
       body: '$1,500.00 from Kuda ending 8820.', at: iso('2026-08-29T08:00'), read: true },
   ],
+  seenIntro: false,
   cardWaitlist: false,
   phraseWrittenDown: false,
   ngnPerUsd: 1500,
@@ -368,6 +372,15 @@ export const actions = {
     const a = record({ kind: 'grow', who: 'Earn', type: 'Taken out', amount })
     changed()
     return a
+  },
+
+  finishIntro() {
+    state.seenIntro = true
+    changed()
+  },
+  replayIntro() {
+    state.seenIntro = false
+    changed()
   },
 
   /* ----- preferences ----- */

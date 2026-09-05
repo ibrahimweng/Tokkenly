@@ -29,6 +29,12 @@ function preferences(): HTMLElement {
       h('button', { class: 'link quiet', text: 'Reset to defaults',
         on: { click: () => { actions.resetPrefs(); toast('Preferences are back to their defaults') } } })),
 
+    h('div', { class: 'pref-row' },
+      h('span', { class: 'two-line grow' },
+        h('span', { class: 't-body-strong', text: 'The introduction' }),
+        h('small', { text: 'Four screens on what a tokenised share is and how to buy one' })),
+      h('button', { class: 'btn btn-secondary btn-sm', text: 'Show it again',
+        on: { click: () => { actions.replayIntro(); go('/welcome/0') } } })),
     choice({
       label: 'Home screen', sub: 'Where Home opens when you arrive',
       options: [{ label: 'Simple', value: 'simple' }, { label: 'Detailed', value: 'detailed' }],

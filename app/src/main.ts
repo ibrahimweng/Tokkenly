@@ -18,6 +18,7 @@ import { accountScreen, securityScreen, supportScreen } from './screens/settings
 import { signInScreen, signUpScreen } from './screens/auth'
 import { sendScreen, receiveScreen, addMoneyScreen, convertScreen } from './screens/money'
 import { allScreen } from './screens/all'
+import { welcomeScreen } from './screens/welcome'
 import { bucketScreen } from './screens/bucket'
 
 const app = document.getElementById('app')!
@@ -53,6 +54,10 @@ function screenFor(r: Route): HTMLElement {
   if (a === 'signin') return signInScreen()
   if (a === 'signup') return signUpScreen()
   if (!state.signedIn) return signInScreen()
+  if (a === 'welcome') return welcomeScreen(Number(b ?? 0))
+  // The intro gates the landing route only. A deep link still goes where it
+  // points: being new is not a reason to be sent somewhere you did not ask for.
+  if (!a && !state.seenIntro) return welcomeScreen(0)
   if (!a) return homeScreen()
 
   const flat = FLAT[a]
