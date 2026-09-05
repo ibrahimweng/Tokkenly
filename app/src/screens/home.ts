@@ -1,6 +1,6 @@
 import { h, link } from '../ui'
 import { icon } from '../icons'
-import { shell, pageHeader } from '../components/shell'
+import { shell, pageHeader, bell } from '../components/shell'
 import { card, cardHead, headLink, kv, amount, directionMark } from '../components/bits'
 import { table } from '../components/table'
 import { state, actions, holdingsValue, availableToBorrow, buyingPower } from '../state'
@@ -36,39 +36,79 @@ function activityRows(limit: number) {
       h('span', { class: 'two-line' },
         h('span', { class: 't-body-strong', text: activityLabel(a) }),
         h('small', { text: a.ref + ' · ' + when(a.at) }))),
-    h('span', { class: 'chip', text: a.settled ? 'Settled' : 'Pending' }),
+    h('span', { class: 'pill', text: a.settled ? 'Settled' : 'Pending' }),
     amount(a.amount),
   ])
+}
+
+/** Six ranges, each with its own number of columns, its own axis and its own
+ *  change. A range switch that redraws nothing is a button that lies. */
+const RANGES: Record<string, { cols: number; axis: string[]; drift: number; vol: number; pct: number }> = {
+  // pct is stated, not derived from the drawn line. A noisy series read at its
+  // endpoints produced things like +51% in a month. The day and the year are
+  // the figures already on this screen: +$142.60 today, +17.28% all in.
+  '1D': { cols: 24, axis: ['9am', '12pm', '3pm', '6pm', '9pm'], drift: 0.04, vol: 0.05, pct: 1.16 },
+  '1W': { cols: 28, axis: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], drift: 0.08, vol: 0.07, pct: 2.4 },
+  '1M': { cols: 30, axis: ['Wk 1', 'Wk 2', 'Wk 3', 'Wk 4'], drift: 0.14, vol: 0.06, pct: 4.1 },
+  '3M': { cols: 45, axis: ['Jul', 'Aug', 'Sep'], drift: 0.3, vol: 0.07, pct: 8.7 },
+  '1Y': { cols: 72, axis: ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'], drift: 0.6, vol: 0.09, pct: 17.28 },
+  'ALL': { cols: 84, axis: ['2024', '2025', '2026'], drift: 0.78, vol: 0.11, pct: 24.6 },
+}
+
+/** Seeded per range, so a range always draws the same shape. Rule 43's
+ *  sibling: a figure a person can come back to must not move on its own. */
+function series(key: string): number[] {
+  const r = RANGES[key]
+  let seed = 7 + key.length * 31
+  const rand = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648)
+  return Array.from({ length: r.cols }, (_, i) => {
+    const t = i / (r.cols - 1)
+    return Math.max(0.06, 0.28 + t * r.drift + (rand() - 0.5) * r.vol)
+  })
 }
 
 function chart(): HTMLElement {
   // Twelve months of the portfolio, drawn as a dot column so a flat month
   // still reads as a month. design.md 8.12.
   const wrap = h('div', { class: 'card', style: { gap: '20px' } })
-  wrap.appendChild(h('div', { class: 'card-head' },
-    h('span', { class: 't-caps subtle', text: 'Portfolio over time' }),
-    h('div', { class: 'chip-row' },
-      ...['1D', '1W', '1M', '3M', '1Y', 'ALL'].map((p, i) =>
-        h('button', { class: 'chip', text: p, ariaPressed: i === 4 })))))
-
   const bars = h('div', { class: 'bars', style: { display: 'flex', alignItems: 'flex-end', gap: '3px', height: '196px' } })
-  let seed = 7
-  const rand = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648)
-  for (let i = 0; i < 72; i++) {
-    const t = i / 71
-    const v = 0.28 + t * 0.6 + (rand() - 0.5) * 0.12
-    bars.appendChild(h('div', {
-      style: {
-        width: '5px', borderRadius: '2px', flex: 'none',
-        height: Math.max(6, v * 196) + 'px',
-        background: i > 64 ? 'var(--ink)' : 'var(--control-pressed)',
-      },
-    }))
+  const axis = h('div', { style: { display: 'flex', justifyContent: 'space-between' } })
+  const delta = h('span', { class: 't-caption' })
+  const chips = h('div', { class: 'chip-row' })
+
+  const draw = (key: string) => {
+    const vals = series(key)
+    const live = Math.max(1, Math.round(vals.length * 0.1))
+    bars.replaceChildren(...vals.map((v, i) =>
+      h('div', {
+        style: {
+          width: '5px', borderRadius: '2px', flex: 'none',
+          height: Math.max(6, v * 196) + 'px',
+          background: i >= vals.length - live ? 'var(--ink)' : 'var(--control-pressed)',
+          transition: 'height 220ms cubic-bezier(0.2,0.8,0.2,1)',
+        },
+      })))
+    axis.replaceChildren(...RANGES[key].axis.map((m) =>
+      h('span', { class: 't-caption subtle', text: m })))
+    // What the range gained, against what it started from.
+    const change = RANGES[key].pct
+    const money = holdingsValue() - holdingsValue() / (1 + change / 100)
+    delta.className = 't-caption ' + (change >= 0 ? 'pos' : 'warn')
+    delta.textContent = `${change >= 0 ? '+' : ''}${usd(money)} (${change >= 0 ? '+' : ''}${pct(change)}) over ${key === 'ALL' ? 'all time' : key}`
+    for (const c of chips.children) {
+      (c as HTMLElement).setAttribute('aria-pressed', String(c.textContent === key))
+    }
   }
+
+  for (const key of Object.keys(RANGES)) {
+    chips.appendChild(h('button', { class: 'chip', text: key, on: { click: () => draw(key) } }))
+  }
+  wrap.appendChild(h('div', { class: 'card-head' },
+    h('span', { class: 't-caps subtle', text: 'Portfolio over time' }), chips))
+  wrap.appendChild(delta)
   wrap.appendChild(bars)
-  wrap.appendChild(h('div', { style: { display: 'flex', justifyContent: 'space-between' } },
-    ...['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'].map((m) =>
-      h('span', { class: 't-caption subtle', text: m }))))
+  wrap.appendChild(axis)
+  draw('1Y')
   return wrap
 }
 
@@ -108,7 +148,8 @@ function detailed(): HTMLElement {
 
   return shell(
     'home',
-    pageHeader(isMobile() ? '' : 'Good morning, ' + state.person.name.split(' ')[0], viewToggle()),
+    pageHeader(isMobile() ? '' : 'Good morning, ' + state.person.name.split(' ')[0],
+      h('div', { class: 'row', style: { gap: '12px', alignItems: 'center' } }, viewToggle(), bell())),
     h('div', { class: 'row' },
       h('div', { class: 'stack', style: { width: '308px', flex: 'none' } },
         h('div', { class: 'stack-8' },
@@ -152,7 +193,8 @@ function gateway(): HTMLElement {
   }
   return shell(
     'home',
-    pageHeader(isMobile() ? '' : 'Good morning, ' + state.person.name.split(' ')[0], viewToggle()),
+    pageHeader(isMobile() ? '' : 'Good morning, ' + state.person.name.split(' ')[0],
+      h('div', { class: 'row', style: { gap: '12px', alignItems: 'center' } }, viewToggle(), bell())),
     h('div', { class: 'stack-8' },
       h('span', { class: 't-caps subtle', text: 'Your money' }),
       h('span', { class: 't-display-xl', text: usd(state.cash + state.inEarn + holdingsValue()) }),

@@ -1,10 +1,10 @@
 import { h } from '../ui'
-import { icon } from '../icons'
 import { shell, pageHeader, eyebrow, type Place } from './shell'
 import { card, cardHead, kv, callout as calloutEl } from './bits'
 import { amountComposer, keypad } from './amount'
 import { isMobile } from '../responsive'
-import { current, closeSheet } from '../router'
+import { current, closeSheet, go } from '../router'
+import { modalOver } from './sheet'
 
 export interface ComposerSpec {
   place: Place
@@ -20,19 +20,29 @@ export interface ComposerSpec {
   callout: string
   action: (v: number) => string
   onAction: (v: number) => void
-  right: (v: number) => Node
+  right?: (v: number) => Node
   bottom?: Node
   /** The place the composer belongs to. On the phone the amount arrives as a
    *  sheet over this, because there is no second column to put context in. */
   base: () => HTMLElement
+  /** How it presents on a wide screen. Most composers are a screen of their
+   *  own, the way Figma draws Add money, Convert, Invest, Borrow, Earn, Repay
+   *  and Take out. Send is a dialog over the wallet, the way Figma draws D09.
+   *  The phone shows a sheet either way. */
+  present?: 'screen' | 'modal'
+  /** Where closing the dialog goes. Ignored when it presents as a screen. */
+  closeTo?: string
+  /** A row above the amount, for a dialog that needs to name its target. */
+  lede?: () => Node
 }
 
 export function composerScreen(spec: ComposerSpec): HTMLElement {
   const mobile = isMobile()
+  const overlaid = mobile || spec.present === 'modal'
 
-  // A review or an outcome sheet replaces the composer sheet rather than
-  // stacking on it, so the phone only ever shows one sheet at a time.
-  if (mobile && current().sheet) return spec.base()
+  // A review or an outcome replaces the composer rather than stacking on it,
+  // so only one thing is ever floating over the base.
+  if (overlaid && current().sheet) return spec.base()
 
   const comp = amountComposer({
     initial: spec.initial,
@@ -47,7 +57,7 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
 
   function paint(v: number): void {
     summaryBox.replaceChildren(...spec.summary(v).map(([k, val, cls]) => kv(k, val, cls ?? '')))
-    if (!mobile) rightBox.replaceChildren(spec.right(v))
+    if (!overlaid && spec.right) rightBox.replaceChildren(spec.right(v))
     button.textContent = spec.action(v)
     button.toggleAttribute('disabled', v <= 0 || v > spec.max)
   }
@@ -58,21 +68,19 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
   })
   paint(spec.initial)
 
-  if (mobile) {
-    const panel = h('div', { class: 'sheet' },
-      h('div', { class: 'grabber' }),
-      h('div', { class: 'sheet-head' },
-        h('h2', { text: spec.title }),
-        h('button', { class: 'close', ariaLabel: 'Back', html: icon.close(),
-          on: { click: () => history.back() } })),
+  if (overlaid) {
+    const leave = () => (spec.closeTo && !mobile ? go(spec.closeTo) : history.back())
+    const out = modalOver(spec.base(), spec.title, leave,
+      spec.lede ? spec.lede() : null,
       comp.el,
-      keypad(comp),
+      // The keypad is the phone's way in. A dialog has a keyboard already, and
+      // room for the sentence the phone has to drop.
+      mobile ? keypad(comp) : null,
       summaryBox,
+      mobile ? null : calloutEl(spec.callout),
       button)
-    const scrim = h('div', { class: 'scrim' }, panel)
-    const base = spec.base()
-    base.appendChild(scrim)
-    return base
+    if (mobile) out.querySelector('.sheet')?.prepend(h('div', { class: 'grabber' }))
+    return out
   }
 
   const left = card(

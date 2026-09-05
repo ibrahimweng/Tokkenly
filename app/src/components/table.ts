@@ -8,17 +8,35 @@ export interface Column {
   /** Dropped below the breakpoint. A phone has room for who and how much,
    *  and the rest is one tap away in the receipt. */
   optional?: boolean
+  /** A column you can order by. The header becomes a button. */
+  sortable?: boolean
 }
+
+export interface Sort { key: string; dir: 'asc' | 'desc' }
 
 export function table(
   cols: Column[],
   rows: (Node | string)[][],
-  onRow?: (i: number) => void
+  onRow?: (i: number) => void,
+  sorting?: { current: Sort | null; onSort: (key: string) => void }
 ): HTMLElement {
   const thead = h('thead')
   const tr = h('tr')
   for (const c of cols) {
-    const th = h('th', { text: c.label })
+    const live = sorting && c.sortable
+    const on = live && sorting.current?.key === c.key
+    const th = h('th')
+    if (live) {
+      th.appendChild(h('button', {
+        class: 'th-sort' + (on ? ' on' : ''),
+        ariaLabel: `Sort by ${c.label}`,
+        on: { click: () => sorting.onSort(c.key) },
+      },
+        h('span', { text: c.label }),
+        h('span', { class: 'caret', text: on ? (sorting.current!.dir === 'asc' ? '↑' : '↓') : '↕' })))
+    } else {
+      th.textContent = c.label
+    }
     if (c.align === 'right') th.style.textAlign = 'right'
     if (c.width) th.style.width = c.width
     if (c.optional) th.classList.add('opt')

@@ -25,6 +25,15 @@ export interface Holding {
   dayPct: number
 }
 
+export interface Notif {
+  id: string
+  kind: 'money' | 'trade' | 'grow' | 'security'
+  title: string
+  body: string
+  at: string
+  read: boolean
+}
+
 export interface Bank {
   id: string
   name: string
@@ -55,6 +64,7 @@ export interface State {
   banks: Bank[]
   devices: Device[]
   activity: Activity[]
+  notifications: Notif[]
   cardWaitlist: boolean
   phraseWrittenDown: boolean
   ngnPerUsd: number
@@ -95,6 +105,18 @@ export const state: State = {
     { id: 'iphone', name: 'iPhone 13', seen: 'Today 09:12', current: false },
     { id: 'pixel', name: 'Pixel 7', seen: '2 days ago', current: false },
   ],
+  notifications: [
+    { id: 'n1', kind: 'money', title: 'Adaeze Okonkwo paid you $120.00',
+      body: 'It is already in your wallet.', at: iso('2026-09-05T14:32'), read: false },
+    { id: 'n2', kind: 'trade', title: 'Your Apple order filled',
+      body: '1.87 shares at $224.10.', at: iso('2026-09-05T14:05'), read: false },
+    { id: 'n3', kind: 'grow', title: 'Earn paid you $0.16',
+      body: 'Interest lands every morning while your dollars sit in Earn.', at: iso('2026-09-04T00:05'), read: false },
+    { id: 'n4', kind: 'security', title: 'New sign in on Pixel 7',
+      body: 'Lagos, Nigeria. If this was not you, sign out everywhere.', at: iso('2026-09-03T21:10'), read: true },
+    { id: 'n5', kind: 'money', title: 'Payroll arrived',
+      body: '$1,500.00 from Kuda ending 8820.', at: iso('2026-08-29T08:00'), read: true },
+  ],
   cardWaitlist: false,
   phraseWrittenDown: false,
   ngnPerUsd: 1500,
@@ -111,6 +133,14 @@ export const state: State = {
     { ref: 'TKN-3V0A04', kind: 'payment', who: 'Tunde Bakare', type: 'Sent', amount: -30, at: iso('2026-08-22T10:22'), settled: true },
     { ref: 'TKN-2T9Y81', kind: 'payment', who: 'Data top up', type: 'Sent', amount: -12, at: iso('2026-08-20T18:35'), settled: true },
     { ref: 'TKN-2S4X70', kind: 'grow', who: 'Borrow', type: 'Borrowed', amount: 500, at: iso('2026-08-12T10:40'), settled: true },
+    { ref: 'TKN-2R7W58', kind: 'payment', who: 'Chidi Nwosu', type: 'Received', amount: 65, at: iso('2026-08-11T13:05'), settled: true },
+    { ref: 'TKN-1Q6V47', kind: 'payment', who: 'MTN airtime', type: 'Sent', amount: -8, at: iso('2026-08-09T19:48'), settled: true },
+    { ref: 'TKN-1P5U36', kind: 'trade', who: 'Vanguard S&P 500', type: 'Bought', amount: -300, at: iso('2026-08-07T15:22'), settled: true },
+    { ref: 'TKN-1N4T25', kind: 'payment', who: 'Ngozi Eze', type: 'Sent', amount: -150, at: iso('2026-08-05T11:30'), settled: true },
+    { ref: 'TKN-0M3S14', kind: 'grow', who: 'Earn', type: 'Moved in', amount: -740, at: iso('2026-08-03T09:15'), settled: true },
+    { ref: 'TKN-0L2R03', kind: 'payment', who: 'Ikeja Electric', type: 'Sent', amount: -34, at: iso('2026-08-01T07:40'), settled: true },
+    { ref: 'TKN-0K1Q92', kind: 'payment', who: 'Payroll', type: 'Received', amount: 1500, at: iso('2026-07-31T08:00'), settled: true },
+    { ref: 'TKN-0J0P81', kind: 'trade', who: 'Apple', type: 'Bought', amount: -560, at: iso('2026-07-29T14:12'), settled: true },
   ],
 }
 
@@ -170,6 +200,17 @@ function record(a: Omit<Activity, 'ref' | 'at' | 'settled'> & Partial<Activity>)
 }
 
 export const actions = {
+  readNotification(id: string) {
+    const n = state.notifications.find((x) => x.id === id)
+    if (n && !n.read) { n.read = true; changed() }
+  },
+
+  readAllNotifications() {
+    let any = false
+    for (const n of state.notifications) if (!n.read) { n.read = true; any = true }
+    if (any) changed()
+  },
+
   setHomeView(v: 'detailed' | 'simple') {
     state.homeView = v
     changed()

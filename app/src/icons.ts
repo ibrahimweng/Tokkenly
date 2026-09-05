@@ -19,6 +19,7 @@ export const icon = {
   check: () => svg('<path d="m5 13 4.5 4.5L19 7"/>', 28),
   info: () => svg('<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>', 18),
   alert: () => svg('<path d="M12 4 2.5 20h19z"/><path d="M12 10v4M12 17h.01"/>', 18),
+  bell: () => svg('<path d="M6 9a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5h-15S6 13 6 9Z"/><path d="M10 18a2 2 0 0 0 4 0"/>', 18),
   search: () => svg('<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/>', 18),
   download: () => svg('<path d="M12 4v10M8 11l4 4 4-4M5 19h14"/>', 18),
   send: () => svg('<path d="M21 3 10.5 13.5M21 3l-6.8 18-3.7-7.5L3 10.1z"/>', 18),

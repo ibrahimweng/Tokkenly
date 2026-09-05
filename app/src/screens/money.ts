@@ -8,7 +8,7 @@ import { walletScreen } from './wallet'
 import { usd, naira, when } from '../format'
 import { openSheet, current, go } from '../router'
 import { isMobile } from '../responsive'
-import { toast } from '../components/sheet'
+import { toast, modalOver } from '../components/sheet'
 
 const PEOPLE = ['Adaeze Okonkwo', 'Tunde Bakare', 'Chidi Nwosu', 'Ngozi Eze']
 
@@ -23,6 +23,24 @@ function lastPaid(name: string): string {
 
 /** Step one of Send on a phone. There is no second column to hold the list,
  *  so who comes first and how much follows as a sheet. Figma M07. */
+/** The same list the phone shows as a screen, as a sheet for the dialog's
+ *  Change row. One source of people, two presentations. */
+export function peopleRows(onPick: (who: string) => void): HTMLElement[] {
+  return [...PEOPLE]
+    .sort((a, b) => {
+      const ia = state.activity.findIndex((x) => x.who === a)
+      const ib = state.activity.findIndex((x) => x.who === b)
+      return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib)
+    })
+    .map((p) =>
+      h('button', { class: 'sheet-row', on: { click: () => onPick(p) } },
+        h('span', { class: 'avatar', text: initials(p) }),
+        h('span', { class: 'two-line' },
+          h('span', { class: 't-body-strong', text: p }),
+          h('small', { text: lastPaid(p) })),
+        h('span', { class: 'muted', html: icon.chevron() })))
+}
+
 export function sendWhoScreen(): HTMLElement {
   const r = current()
   const term = (r.query.get('q') ?? '').toLowerCase()
@@ -105,6 +123,21 @@ export function sendScreen(): HTMLElement {
   return composerScreen({
     place: 'wallet',
     base: walletScreen,
+    // Figma D09 draws Send as a dialog over the wallet, not a screen of its
+    // own. Every other composer is a screen, and those match already.
+    present: 'modal',
+    closeTo: '/wallet',
+    lede: () => h('div', { class: 'stack-8' },
+      h('span', { class: 't-caps subtle', text: 'To' }),
+      h('button', {
+        class: 'sheet-row', style: { background: 'var(--control)' },
+        on: { click: () => openSheet('pick-who') },
+      },
+        h('span', { class: 'avatar', text: initials(to) }),
+        h('span', { class: 'two-line' },
+          h('span', { class: 't-body-strong', text: to }),
+          h('small', { text: lastPaid(to) })),
+        h('span', { class: 'link quiet', text: 'Change' }))),
     title: 'Send money',
     eyebrow: ['Cash available', usd(state.cash)],
     cardLabel: 'How much',
@@ -118,8 +151,9 @@ export function sendScreen(): HTMLElement {
       { label: usd(120, false), value: 120 },
       { label: 'All', value: state.cash },
     ],
+    // No 'To' row: the lede above already names them, and the same fact twice
+    // in one dialog reads as a mistake.
     summary: () => [
-      ['To', to],
       ['Fee', 'Nothing, Tokkenly covers it'],
       ['Arrives', 'In about a minute'],
       ['Network', 'Base'],
@@ -127,74 +161,39 @@ export function sendScreen(): HTMLElement {
     callout: 'Payments run every day of the year, including public holidays.',
     action: (v) => 'Send ' + usd(v),
     onAction: (v) => openSheet('send-review', { v: String(v), to }),
-    right: () =>
-      card(
-        cardHead('Who it goes to'),
-        ...PEOPLE.map((p) =>
-          h('button', {
-            class: 'kv',
-            style: { textAlign: 'left', width: '100%' },
-            on: { click: () => go('/send?to=' + encodeURIComponent(p)) },
-          },
-            h('span', { class: 'who' },
-              h('span', { class: 'avatar', text: initials(p) }),
-              h('span', { class: 'two-line' },
-                h('span', { class: 't-body-strong', text: p }),
-                h('small', { text: lastPaid(p) }))),
-            h('span', { class: p === to ? 'pos t-body-strong' : 'muted', text: p === to ? 'Selected' : 'Pick' }))),
-        callout('Only people already in your list can be paid without a second check.')
-      ),
   })
 }
 
 export function receiveScreen(): HTMLElement {
   const address = '0x7a3F4b91Ce2D8a06F5b17d3E4c8B29aA5f0e9c21'
-  const qr = h('div', {
-    style: {
-      width: '220px', height: '220px', borderRadius: '16px', background: 'var(--inverse)',
-      display: 'grid', gridTemplateColumns: 'repeat(11, 1fr)', gap: '2px', padding: '14px',
-    },
-  })
+  const short = address.slice(0, 12) + '…' + address.slice(-4)
+
+  // A deterministic block pattern. It is not a real code, and the copy button
+  // is what actually carries the address.
+  const qr = h('div', { class: 'qr', ariaLabel: 'A code that resolves to your address' })
   let seed = 42
   for (let i = 0; i < 121; i++) {
     seed = (seed * 1103515245 + 12345) % 2147483648
-    const on = seed % 100 > 45
-    qr.appendChild(h('span', { style: { background: on ? '#0a0a0c' : 'transparent', borderRadius: '2px' } }))
+    qr.appendChild(h('span', { class: seed % 100 > 45 ? 'on' : '' }))
   }
 
-  return shell(
-    'wallet',
-    pageHeader('Receive money', eyebrow('Cash available', usd(state.cash))),
-    h('div', { class: 'row' },
-      card(
-        cardHead('Your address'),
-        h('div', { style: { display: 'grid', placeItems: 'center', padding: '8px 0' } }, qr),
-        h('p', { class: 'muted', style: { margin: '0', wordBreak: 'break-all' }, text: address }),
-        h('button', {
-          class: 'btn btn-primary', text: 'Copy the address',
-          on: {
-            click: () => {
-              navigator.clipboard?.writeText(address).catch(() => undefined)
-              toast('Address copied')
-            },
-          },
-        })
-      ),
-      h('div', { class: 'stack col-side' },
-        card(
-          cardHead('How to use it'),
-          kv('Network', 'Base only'),
-          kv('Asset', 'USDC'),
-          kv('Arrives', 'Usually within a minute'),
-          kv('Fee', 'Nothing on our side'),
-          callout('Base network only. Sending any other asset to this address loses it.', 'warning')
-        ),
-        card(
-          cardHead('Or ask by name'),
-          h('span', { class: 'muted', text: 'Anyone already on Tokkenly can pay you by searching your name. They do not need the address.' }),
-          h('button', { class: 'btn btn-secondary', text: 'Share my name', on: { click: () => toast('Sharing sheet would open here') } })
-        )))
-  )
+  const copy = () => {
+    navigator.clipboard?.writeText(address).catch(() => undefined)
+    toast('Address copied', 'success')
+  }
+
+  return modalOver(walletScreen(), 'Receive money', () => go('/wallet'),
+    h('div', { class: 'stack-12', style: { alignItems: 'center' } },
+      qr,
+      h('span', { class: 'muted', text: 'Scan this to pay ' + state.person.name })),
+    h('div', { class: 'stack-8' },
+      h('span', { class: 't-caps subtle', text: 'Your address' }),
+      h('div', { class: 'field', style: { justifyContent: 'space-between' } },
+        h('span', { class: 't-body-strong', text: short }),
+        h('button', { class: 'icon-btn', html: icon.copy(), ariaLabel: 'Copy the address',
+          on: { click: copy } }))),
+    callout('Base network only. Sending any other asset to this address loses it.', 'warning'),
+    h('button', { class: 'btn btn-primary', text: 'Copy address', on: { click: copy } }))
 }
 
 export function addMoneyScreen(): HTMLElement {
