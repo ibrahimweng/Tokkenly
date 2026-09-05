@@ -2968,6 +2968,36 @@ The staff panel is out of scope for now. It holds a list of users, a user in
 full, transactions, and a log of who looked at what. It is a different audience
 with different needs and it should not borrow the consumer layout unexamined.
 
+## 11d. The build
+
+The desktop product is written as well as drawn. `app/` holds a TypeScript
+build of every screen in section 11b, with the flows running end to end. It is
+not a click-through: the state is real, so borrowing moves money into the
+wallet, raises what is owed and drops the collateral cover, and History shows
+the entry a moment later. `npm install && npm run dev` runs it.
+
+**Three things the code enforces that a Figma file can only ask for.**
+
+Money in is green and signed, money out is neutral, because one function paints
+every amount in the product. Rule 43 stops being a habit and becomes arithmetic.
+
+Anything draggable is typeable, because the ruler and the field are one
+component that writes both ways. Rule 47 cannot be half-implemented.
+
+Nothing names a colour. `src/styles/tokens.css` carries the palette from section
+2 and every screen file reads from it, so rule 3 holds by construction.
+
+**A sheet is an address.** `#/grow/borrow?sheet=borrow-review&v=1150` opens the
+review over the composer and survives a reload, which means any step of any flow
+can be linked and reviewed on its own. `#/map` lists all of them, screens and
+sheets together, on one page.
+
+**It is checked by clicking it.** `scripts/flows.mjs` drives a real browser
+through five flows and asserts what the money did: borrow $600 and the wallet
+goes $2,480 to $3,080, repay it and the limit comes back, buy $250 of Apple and
+the holding goes 23.42 to 24.54 shares. `scripts/walk.mjs` opens all twenty four
+addresses and reports any page error. Both pass.
+
 ## 12. The prototype
 
 Both pages are wired for a click through. The floating navigation works on

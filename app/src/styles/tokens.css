@@ -1,0 +1,46 @@
+/* Tokens mirror design.md 2.3. Dark is the only mode the desktop product ships. */
+:root {
+  --canvas: #0a0a0c;
+  --surface: #1e1e22;        /* the sidebar ground, and nothing else */
+  --sunken: #161619;         /* every card in the main column */
+  --control: #2d2d32;
+  --control-pressed: #38383e;
+  --inverse: #dcdce0;        /* filled buttons */
+
+  --ink: #dcdce0;
+  --muted: #a6a6ad;
+  --subtle: #65656c;
+  --on-inverse: #0a0a0c;
+
+  --accent: #0e5f4c;
+  --positive: #3fd99b;
+  --warning: #e0b341;
+  --data-2: #a064db;
+
+  --tint-brand: #15241f;
+  --tint-positive: #10291f;
+  --tint-warning: #2a2211;
+  --scrim: rgba(5, 5, 6, 0.54);
+
+  --r-card: 20px;
+  --r-panel: 16px;
+  --r-sheet: 28px;
+  --r-pill: 999px;
+
+  --sidebar-w: 240px;
+  --screen-h: 1024px;
+  --content-pad-x: 36px;
+  --content-pad-y: 32px;
+
+  --font: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Type scale. Two weights only, per rule 1. */
+.t-display-xl { font-size: 40px; line-height: 52px; font-weight: 600; letter-spacing: -0.02em; }
+.t-display    { font-size: 32px; line-height: 40px; font-weight: 600; letter-spacing: -0.02em; }
+.t-title      { font-size: 18px; line-height: 24px; font-weight: 600; }
+.t-body       { font-size: 14px; line-height: 20px; font-weight: 400; }
+.t-body-strong{ font-size: 14px; line-height: 20px; font-weight: 600; }
+.t-caps       { font-size: 11px; line-height: 16px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+.t-caption    { font-size: 12px; line-height: 16px; font-weight: 400; }
