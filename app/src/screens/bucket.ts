@@ -24,7 +24,7 @@ export function bucketScreen(): HTMLElement {
       pageHeader('Your bucket'),
       card(emptyState('Nothing in the bucket yet',
         'Pick companies as you browse and pay for them together, once you are ready.',
-        { label: 'Go to the market', onClick: () => go('/market') })))
+        { label: 'Go to the market', onClick: () => go('/invest') })))
   }
 
   const rows = state.bucket.map((b) => {
@@ -75,7 +75,7 @@ export function bucketScreen(): HTMLElement {
   return shell('market',
     pageHeader('Your bucket',
       h('button', { class: 'link quiet', text: 'Empty it',
-        on: { click: () => { actions.clearBucket(); go('/market') } } })),
+        on: { click: () => { actions.clearBucket(); go('/invest') } } })),
     h('div', { class: 'row' },
       h('div', { class: 'stack col-main' },
         card(cardHead(state.bucket.length + (state.bucket.length === 1 ? ' company' : ' companies')),

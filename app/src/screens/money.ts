@@ -126,7 +126,7 @@ export function sendScreen(): HTMLElement {
     // Figma D09 draws Send as a dialog over the wallet, not a screen of its
     // own. Every other composer is a screen, and those match already.
     present: 'modal',
-    closeTo: '/wallet',
+    closeTo: '/transfer',
     lede: () => h('div', { class: 'stack-8' },
       h('span', { class: 't-caps subtle', text: 'To' }),
       h('button', {
@@ -182,7 +182,7 @@ export function receiveScreen(): HTMLElement {
     toast('Address copied', 'success')
   }
 
-  return modalOver(renderBase(walletScreen), 'Receive money', () => go('/wallet'),
+  return modalOver(renderBase(walletScreen), 'Receive money', () => go('/transfer'),
     h('div', { class: 'stack-12', style: { alignItems: 'center' } },
       qr,
       h('span', { class: 'muted', text: 'Scan this to pay ' + state.person.name })),
@@ -243,7 +243,7 @@ export function convertScreen(): HTMLElement {
   return composerScreen({
     place: 'wallet',
     base: walletScreen,
-    title: 'Convert to naira',
+    title: 'Withdraw to your bank',
     eyebrow: ['Cash available', usd(state.cash)],
     cardLabel: 'How much',
     cardRight: 'Cash ' + usd(state.cash),
@@ -263,7 +263,7 @@ export function convertScreen(): HTMLElement {
       ['Arrives', 'Usually within a minute'],
     ],
     callout: 'Payouts run every day. Weekend transfers can take a few minutes longer.',
-    action: (v) => 'Convert ' + usd(v),
+    action: (v) => 'Withdraw ' + usd(v),
     onAction: (v) => openSheet('convert-review', { v: String(v) }),
     right: (v) =>
       card(

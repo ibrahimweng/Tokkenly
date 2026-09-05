@@ -14,7 +14,7 @@ function orders(ticker?: string): HTMLElement {
   const rows = state.activity.filter((a) => a.kind === 'trade' && (!ticker || a.who === find(ticker)?.name))
   return card(
     cardHead('Recent orders',
-      h('button', { class: 'link', text: 'See all', on: { click: () => go('/history?filter=trades') } })),
+      h('button', { class: 'link', text: 'See all', on: { click: () => go('/activity?filter=trades') } })),
     table(
       [
         { key: 'w', label: 'What' }, { key: 'when', label: 'When', optional: true },
@@ -68,7 +68,7 @@ export function investScreen(ticker: string): HTMLElement {
       const held = holding(c.ticker)
       return card(
         cardHead('What you are buying',
-          h('button', { class: 'link', text: 'Change stock', on: { click: () => go('/market') } })),
+          h('button', { class: 'link', text: 'Change stock', on: { click: () => go('/invest') } })),
         h('span', { class: 't-title', text: c.name }),
         h('span', { class: 'muted', text: `${c.ticker} · listed in the United States` }),
         h('span', { class: 't-display-xl', text: usd(c.price) }),

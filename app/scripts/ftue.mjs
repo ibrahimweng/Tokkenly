@@ -62,7 +62,7 @@ console.log('LEAVING IT')
 console.log('A DEEP LINK IS NOT A NEW ARRIVAL')
 {
   const p = await page()
-  await p.goto(B + '/market/aapl', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
+  await p.goto(B + '/invest/aapl', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
   ok('it goes where it points, intro unseen', await p.evaluate(() => !document.querySelector('.welcome')))
   await p.close()
 }
@@ -72,8 +72,8 @@ console.log('FINISHING IT BUYS SOMETHING')
   const p = await page()
   await p.goto(B + '/welcome/3', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
   await p.getByRole('button', { name: 'Buy your first share' }).click(); await p.waitForTimeout(500)
-  ok('the last step hands you to the market',
-     (await p.evaluate(() => location.hash)).includes('market'), await p.evaluate(() => location.hash))
+  ok('the last step hands you to Invest',
+     (await p.evaluate(() => location.hash)).includes('invest'), await p.evaluate(() => location.hash))
   await p.close()
 }
 

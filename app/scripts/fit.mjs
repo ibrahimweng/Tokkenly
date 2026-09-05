@@ -3,7 +3,7 @@ const base = 'http://localhost:4173/#'
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const p = await b.newPage({ viewport: { width: 390, height: 844 } })
 const rows = []
-for (const hash of ['/grow/borrow','/grow/repay','/grow/earn','/grow/takeout','/send','/addmoney','/convert','/market/aapl/invest','/market/aapl/sell']) {
+for (const hash of ['/grow/borrow','/grow/repay','/grow/earn','/grow/takeout','/send','/addmoney','/withdraw','/invest/aapl/invest','/invest/aapl/sell']) {
   await p.goto(base + hash, { waitUntil: 'networkidle' })
   await p.waitForTimeout(160)
   const r = await p.evaluate(() => {

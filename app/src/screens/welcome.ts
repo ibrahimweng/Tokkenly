@@ -97,7 +97,7 @@ export function welcomeScreen(at: number): HTMLElement {
           : null,
         last
           ? h('button', { class: 'btn btn-primary btn-sm', text: 'Buy your first share',
-              on: { click: done('/market') } })
+              on: { click: done('/invest') } })
           : h('button', { class: 'btn btn-primary btn-sm',
               on: { click: () => go('/welcome/' + (i + 1)) } },
               h('span', { text: 'Next' }), h('span', { class: 'ic', html: icon.chevron() })))),

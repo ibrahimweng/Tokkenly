@@ -17,7 +17,7 @@ const page = async (w = 1440, h = 1024) => {
 }
 const money = (s) => Number(String(s).replace(/[^0-9.]/g, '')) || 0
 
-for (const [flow, route, verb] of [['BUY', '/market/aapl/invest', 'Buy'], ['SELL', '/market/aapl/sell', 'Sell']]) {
+for (const [flow, route, verb] of [['BUY', '/invest/aapl/invest', 'Buy'], ['SELL', '/invest/aapl/sell', 'Sell']]) {
   console.log(flow + '  ' + route)
   const p = await page()
   await p.goto(B + route, { waitUntil: 'domcontentloaded' })
@@ -109,11 +109,11 @@ console.log('AFTER THE TRADE  the ledger has to agree')
 {
   const p = await page()
   const cash = async () => {
-    await p.goto(B + '/wallet', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(350)
+    await p.goto(B + '/transfer', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(350)
     return money(await p.$eval('.hero-figure', (e) => e.textContent))
   }
   const before = await cash()
-  await p.goto(B + '/market/nvda/invest', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
+  await p.goto(B + '/invest/nvda/invest', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
   const i = p.locator('.amount-box input')
   await i.fill('200'); await i.dispatchEvent('input'); await p.waitForTimeout(250)
   await p.locator('.btn-primary').first().click(); await p.waitForTimeout(400)
@@ -122,7 +122,7 @@ console.log('AFTER THE TRADE  the ledger has to agree')
   // 200 invested plus the 0.5% fee: the ledger charges the total, not the amount
   ok('cash went down by the investment and its fee', Math.abs((before - after) - 201) < 0.02,
      `${before} → ${after}, expected −201.00`)
-  await p.goto(B + '/history?filter=trades', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
+  await p.goto(B + '/activity?filter=trades', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
   const rows = await p.evaluate(() => document.body.innerText)
   ok('the trade is in history at what it cost', /Nvidia|NVDA/.test(rows) && /201\.00/.test(rows))
   await p.close()
@@ -132,7 +132,7 @@ console.log('A FIRST BUY  the one the whole product is for')
 {
   const p = await page()
   // Coca-Cola is in the catalogue and not in the opening holdings
-  await p.goto(B + '/market/ko/invest', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
+  await p.goto(B + '/invest/ko/invest', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
   const i = p.locator('.amount-box input')
   await i.fill('100'); await i.dispatchEvent('input'); await p.waitForTimeout(250)
   await p.locator('.btn-primary').first().click(); await p.waitForTimeout(400)
@@ -140,7 +140,7 @@ console.log('A FIRST BUY  the one the whole product is for')
   const said = await p.evaluate(() => document.querySelector('.scrim')?.innerText.replace(/\n/g, ' ') ?? '')
   ok('it says how many shares arrived', /[\d.]+ shares of Coca-Cola/.test(said) && !/undefined/.test(said),
      said.slice(0, 70))
-  await p.goto(B + '/market/ko', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
+  await p.goto(B + '/invest/ko', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
   const held = await p.evaluate(() => document.body.innerText.match(/You hold[^\n]*/)?.[0] ?? 'no row')
   ok('and the position exists afterwards', !/None yet|no row/.test(held), held)
   await p.goto(B + '/', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
@@ -151,7 +151,7 @@ console.log('A FIRST BUY  the one the whole product is for')
 }
 
 console.log('PHONE  the same two flows at 390')
-for (const route of ['/market/aapl/invest', '/market/aapl/sell']) {
+for (const route of ['/invest/aapl/invest', '/invest/aapl/sell']) {
   const p = await page(390, 844)
   await p.goto(B + route, { waitUntil: 'domcontentloaded' })
   await p.waitForTimeout(400)

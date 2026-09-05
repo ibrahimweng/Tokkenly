@@ -34,6 +34,9 @@ function notFound(path: string): HTMLElement {
 /** Flat routes first, then the two that nest. Everything the product can show
  *  is reachable from this table, which is what makes every button honest. */
 const FLAT: Record<string, () => HTMLElement> = {
+  transfer: walletScreen,
+  activity: historyScreen,
+  withdraw: convertScreen,
   wallet: walletScreen,
   history: historyScreen,
   account: accountScreen,
@@ -63,7 +66,7 @@ function screenFor(r: Route): HTMLElement {
   const flat = FLAT[a]
   if (flat) return flat()
 
-  if (a === 'market') {
+  if (a === 'market' || a === 'invest') {
     if (!b) return marketScreen()
     if (c === 'invest') return investScreen(b)
     if (c === 'sell') return sellScreen(b)

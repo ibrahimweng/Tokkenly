@@ -30,10 +30,10 @@ for (const [route, title] of [['/send', 'Send money'], ['/receive', 'Receive mon
              behind: document.querySelector('.content .page-header h1')?.textContent,
              sidebar: getComputedStyle(document.querySelector('.sidebar')).display !== 'none' }
   })
-  ok(`${route} is a 480 dialog over the wallet`,
-     d.w === 480 && d.title === title && d.behind === 'Wallet' && d.sidebar, JSON.stringify(d))
+  ok(`${route} is a 480 dialog over Transfer`,
+     d.w === 480 && d.title === title && d.behind === 'Transfer' && d.sidebar, JSON.stringify(d))
   await p.keyboard.press('Escape'); await p.waitForTimeout(200)
-  ok(`${route} closes to the wallet`, p.url().endsWith('#/wallet'), new URL(p.url()).hash)
+  ok(`${route} closes to Transfer`, p.url().endsWith('#/transfer'), new URL(p.url()).hash)
   await p.close()
 }
 { // and still a bottom sheet on a phone
@@ -117,7 +117,7 @@ console.log('SORTING  ordering is part of the address')
 {
   const p = await page()
   const first = () => p.locator('tbody tr').first().textContent()
-  await p.goto(B + '/history', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(200)
+  await p.goto(B + '/activity', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(200)
   const n = await p.locator('tbody tr').count()
   const byDate = await first()
   await p.locator('.th-sort', { hasText: 'Amount' }).click(); await p.waitForTimeout(250)
@@ -135,13 +135,13 @@ console.log('SORTING  ordering is part of the address')
 console.log('MOVING AROUND  four navigators, one registry')
 {
   const p = await page(1600, 1000)
-  await p.goto(B + '/convert', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(250)
+  await p.goto(B + '/withdraw', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(250)
   const crumbs = (await p.locator('.crumb').allTextContents()).join(' > ')
-  ok('a trail says where you are', crumbs === 'Wallet > Convert to naira', crumbs)
+  ok('a trail says where you are', crumbs === 'Transfer > Withdraw to your bank', crumbs)
   await p.locator('.crumb').first().click(); await p.waitForTimeout(250)
-  ok('and the trail steps back up', p.url().endsWith('#/wallet'), new URL(p.url()).hash)
+  ok('and the trail steps back up', p.url().endsWith('#/transfer'), new URL(p.url()).hash)
 
-  await p.goto(B + '/convert', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(200)
+  await p.goto(B + '/withdraw', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(200)
   ok('and nothing repeats the sidebar under the title',
      (await p.locator('.place-tab').count()) === 0)
 
@@ -157,7 +157,7 @@ console.log('MOVING AROUND  four navigators, one registry')
   ok('it finds something you hold', (await find('nvidia')).some((x) => /Nvidia/.test(x)))
   await find('apple')
   await p.keyboard.press('ArrowDown'); await p.keyboard.press('Enter'); await p.waitForTimeout(350)
-  ok('arrows and enter go there', p.url().includes('/market/aapl'), new URL(p.url()).hash)
+  ok('arrows and enter go there', p.url().includes('/invest/aapl'), new URL(p.url()).hash)
 
   await p.goto(B + '/all', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(250)
   const groups = await p.locator('.all-grid .card').count()
@@ -169,7 +169,7 @@ console.log('MOVING AROUND  four navigators, one registry')
 console.log('MOVING AROUND, on a phone')
 {
   const p = await page(390, 844)
-  await p.goto(B + '/wallet', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(250)
+  await p.goto(B + '/transfer', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(250)
   const t = await p.evaluate(() => ({
     tabs: document.querySelectorAll('.place-tab').length,
     overflowX: Math.max(0, document.documentElement.scrollWidth - 390),
@@ -195,8 +195,8 @@ console.log('MOVING AROUND, on a phone')
 console.log('A BASE UNDER A DIALOG IS NOT WHERE YOU ARE')
 {
   for (const [w, route, wants] of [
-    [1600, '/convert', true], [1600, '/send', false], [1600, '/receive', false],
-    [390, '/convert', false],
+    [1600, '/withdraw', true], [1600, '/send', false], [1600, '/receive', false],
+    [390, '/withdraw', false],
   ]) {
     const p = await page(w, w === 390 ? 844 : 1000)
     await p.goto(B + route, { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(220)
@@ -210,7 +210,7 @@ console.log('WIDTH  the middle is drawn in a 1200 column, whatever the monitor')
 {
   for (const w of [1440, 2000, 2560]) {
     const p = await page(w, 1000)
-    await p.goto(B + '/convert', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(200)
+    await p.goto(B + '/withdraw', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(200)
     const m = await p.evaluate(() => {
       const g = (s) => { const e = document.querySelector(s); return e ? Math.round(e.getBoundingClientRect().width) : null }
       return { content: g('.content'), side: g('.stack.grow') }

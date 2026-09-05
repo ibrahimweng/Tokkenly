@@ -77,7 +77,7 @@ await page.waitForTimeout(200)
 console.log('  leaving hides it:', await page.evaluate(() => document.querySelector('.ch-tip').hidden))
 
 console.log('\nSTOCK PAGE')
-await page.goto(B + '/market/aapl', { waitUntil: 'domcontentloaded' })
+await page.goto(B + '/invest/aapl', { waitUntil: 'domcontentloaded' })
 await page.waitForTimeout(400)
 const st = await read()
 console.log(`  bars ${st.bars}  ticks [${st.ticks.join(' ')}]  ${st.caption}`)

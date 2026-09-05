@@ -6,7 +6,7 @@ import { chromium } from 'playwright'
 import { seen } from './seen.mjs'
 
 const B = 'http://localhost:4173/#'
-const ROUTES = ['/', '/wallet', '/market', '/market/aapl', '/grow', '/history',
+const ROUTES = ['/', '/transfer', '/invest', '/invest/aapl', '/grow', '/activity',
   '/settings', '/all', '/send', '/receive', '/account', '/bucket']
 
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })

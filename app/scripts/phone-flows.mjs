@@ -8,7 +8,7 @@ const log = []
 const text = async (s) => (await p.locator(s).first().textContent().catch(() => '')) ?? ''
 
 log.push('FLOW  Grow → Borrow with the keypad → review → confirm → History')
-await p.goto(base + '/wallet', { waitUntil: 'networkidle' })
+await p.goto(base + '/transfer', { waitUntil: 'networkidle' })
 log.push('  wallet before: ' + (await text('.card .t-display-xl')).trim())
 
 await p.goto(base + '/grow', { waitUntil: 'networkidle' })
@@ -40,7 +40,7 @@ await p.locator('.sheet .btn-secondary').click()
 await p.waitForTimeout(250)
 log.push('  landed:  ' + p.url().split('#')[1].split('?')[0] + ' with ' + (await text('.sheet-head h2')).trim())
 await p.keyboard.press('Escape')
-await p.goto(base + '/wallet', { waitUntil: 'networkidle' })
+await p.goto(base + '/transfer', { waitUntil: 'networkidle' })
 log.push('  wallet after:  ' + (await text('.card .t-display-xl')).trim())
 
 log.push('')

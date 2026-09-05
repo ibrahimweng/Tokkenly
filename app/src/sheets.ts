@@ -86,7 +86,7 @@ function done(
     line,
     [['Reference', a.ref], ['When', longWhen(a.at)], ...extra],
     { label: 'Done', onClick: closeSheet },
-    { label: 'View in History', onClick: () => { closeSheet(); go('/history?sheet=receipt&ref=' + a.ref) } }
+    { label: 'View in History', onClick: () => { closeSheet(); go('/activity?sheet=receipt&ref=' + a.ref) } }
   )
 }
 
@@ -479,7 +479,7 @@ export const SHEETS: Record<string, Builder> = {
     const bank = state.banks[0]
     return review({
       title: 'Review',
-      figureLabel: 'You are converting', figureValue: usd(v), amount: v,
+      figureLabel: 'You are withdrawing', figureValue: usd(v), amount: v,
       rows: [
         ['Withdrawing', usd(v)],
         ['Rate', '1 dollar = ' + naira(state.ngnPerUsd)],
@@ -489,7 +489,7 @@ export const SHEETS: Record<string, Builder> = {
         ['Arrives', 'Usually within a minute'],
       ],
       note: 'The naira amount is fixed once you confirm.',
-      action: 'Convert ' + usd(v),
+      action: 'Withdraw ' + usd(v),
       onConfirm: () => {
         const a = actions.convert(v, bank.id)
         replaceSheet('convert-done', { ref: a.ref })
@@ -498,7 +498,7 @@ export const SHEETS: Record<string, Builder> = {
   },
   'convert-done': (r) => {
     const a = state.activity.find((x) => x.ref === str(r, 'ref'))!
-    return done('Converted', `${naira(Math.abs(a.amount) * state.ngnPerUsd)} is on its way to ${a.who}.`, a)
+    return done('Withdrawn', `${naira(Math.abs(a.amount) * state.ngnPerUsd)} is on its way to ${a.who}.`, a)
   },
 
   /* ----- invest ----- */
@@ -608,7 +608,7 @@ export const SHEETS: Record<string, Builder> = {
       `${usd(num(r, 'spent'))} across ${refs.length} ${refs.length === 1 ? 'company' : 'companies'}.`,
       got.map(([t, sh]) => [find(t)?.name ?? t, fmtShares(Number(sh)) + ' shares'] as [string, string]),
       { label: 'Done', onClick: () => { closeSheet(); go('/') } },
-      { label: 'See the receipts', onClick: () => { closeSheet(); go('/history?filter=trades') } }
+      { label: 'See the receipts', onClick: () => { closeSheet(); go('/activity?filter=trades') } }
     )
   },
 

@@ -11,20 +11,24 @@ interface PlaceDef { id: Place; label: string; to: string; ic: () => string }
 
 /** Six places. On desktop they are a rail; on the phone the first four are
  *  tabs and the rest arrive behind More. Same six either way. */
+/* The names the product is called by everywhere else: the marketing site's
+   tabs are Home, Invest, Transfer, Activity. The ids stay as they were, so the
+   lit-row logic and every `place:` in the registry keep working, and the old
+   paths still resolve — a bookmark to /market is not a broken link. */
 const PLACES: PlaceDef[] = [
   { id: 'home', label: 'Home', to: '/', ic: icon.home },
-  { id: 'wallet', label: 'Wallet', to: '/wallet', ic: icon.wallet },
-  { id: 'market', label: 'Market', to: '/market', ic: icon.market },
+  { id: 'market', label: 'Invest', to: '/invest', ic: icon.market },
+  { id: 'wallet', label: 'Transfer', to: '/transfer', ic: icon.wallet },
   { id: 'grow', label: 'Grow', to: '/grow', ic: icon.grow },
-  { id: 'history', label: 'History', to: '/history', ic: icon.history },
+  { id: 'history', label: 'Activity', to: '/activity', ic: icon.history },
   { id: 'account', label: 'Account', to: '/account', ic: icon.account },
 ]
 const TABS = PLACES.slice(0, 4)
 export const BEHIND_MORE: { label: string; sub: string; to: string; ic: () => string }[] = [
-  { label: 'History', sub: 'Everything that has moved', to: '/history', ic: icon.history },
+  { label: 'Activity', sub: 'Everything that has moved', to: '/activity', ic: icon.history },
   { label: 'Account', sub: 'Your details and your address', to: '/account', ic: icon.account },
   { label: 'Security', sub: 'PIN, Face ID and recovery', to: '/security', ic: icon.lock },
-  { label: 'Your banks', sub: 'Where your payouts land', to: '/wallet?sheet=banks', ic: icon.wallet },
+  { label: 'Your banks', sub: 'Where your payouts land', to: '/transfer?sheet=banks', ic: icon.wallet },
   { label: 'Support', sub: state.person.email, to: '/support', ic: icon.mail },
   { label: 'Everything', sub: 'Every screen, in one list', to: '/all', ic: icon.grid },
 ]

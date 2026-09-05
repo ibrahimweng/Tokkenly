@@ -89,7 +89,7 @@ export function growScreen(): HTMLElement {
 function loanHistory(): HTMLElement {
   const rows = state.activity.filter((a) => a.kind === 'grow' && a.who === 'Borrow')
   return card(
-    cardHead('Your loans', h('button', { class: 'link', text: 'See all', on: { click: () => go('/history?filter=grow') } })),
+    cardHead('Your loans', h('button', { class: 'link', text: 'See all', on: { click: () => go('/activity?filter=grow') } })),
     table(
       [
         { key: 'w', label: 'What' }, { key: 'when', label: 'When', optional: true },
@@ -113,7 +113,7 @@ function loanHistory(): HTMLElement {
 function earnHistory(): HTMLElement {
   const rows = state.activity.filter((a) => a.kind === 'grow' && a.who === 'Earn')
   return card(
-    cardHead('Your earnings', h('button', { class: 'link', text: 'See all', on: { click: () => go('/history?filter=grow') } })),
+    cardHead('Your earnings', h('button', { class: 'link', text: 'See all', on: { click: () => go('/activity?filter=grow') } })),
     table(
       [
         { key: 'w', label: 'What' }, { key: 'when', label: 'When', optional: true },

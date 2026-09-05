@@ -63,7 +63,7 @@ export function walletScreen(): HTMLElement {
 
   return shell(
     'wallet',
-    pageHeader('Wallet', eyebrow('Buying power', usd(buyingPower()))),
+    pageHeader('Transfer', eyebrow('Buying power', usd(buyingPower()))),
     // The hero takes the whole column. It is the centrepiece of the page, and
     // sharing the width with the limits card left the two figures in it 20px
     // from wrapping onto separate lines — which they did, once the column came
@@ -74,9 +74,9 @@ export function walletScreen(): HTMLElement {
         h('div', { class: 'row equal' },
           way('Add money', 'Naira in, dollars out', icon.receive(), '/addmoney'),
           way('Send', 'Pay anyone, for nothing', icon.send(), '/send'),
-          way('Convert', 'Dollars out to a bank', icon.convert(), '/convert')),
+          way('Withdraw', 'Dollars out to your bank', icon.convert(), '/withdraw')),
         card(
-          cardHead('Still settling', headLink('See all', '/history')),
+          cardHead('Still settling', headLink('See all', '/activity')),
           pending.length
             ? h('div', { class: 'stack-12' }, ...pending.map((a) =>
                 h('div', { class: 'kv' },

@@ -15,7 +15,7 @@ await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 /* the first figure in a string: "$0.50 · 0.5%" is fifty cents, not 0.500.5 */
 const money = (s) => Number((String(s ?? '').match(/[\d,]+\.?\d*/) ?? ['0'])[0].replace(/,/g, '')) || 0
 const cash = async () => {
-  await p.goto(B + '/wallet', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(350)
+  await p.goto(B + '/transfer', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(350)
   return money(await p.$eval('.hero-figure', (e) => e.textContent))
 }
 /* the review panel renders each row as .cell with a caps label over a value,
@@ -27,7 +27,7 @@ const rows = () => p.evaluate(() =>
 
 console.log('BUYING  the amount, the fee, the total, and what you receive')
 const before = await cash()
-await p.goto(B + '/market/nvda/invest', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
+await p.goto(B + '/invest/nvda/invest', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
 const i = p.locator('.amount-box input')
 await i.fill('50'); await i.dispatchEvent('input'); await p.waitForTimeout(250)
 await p.locator('.btn-primary').first().click(); await p.waitForTimeout(450)
@@ -43,7 +43,7 @@ ok('the ledger charges the total, not the amount', Math.abs((before - after) - 5
    `${before} → ${after}, expected −50.25`)
 
 console.log('SELLING  the fee comes out of what you get')
-await p.goto(B + '/market/nvda/sell', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
+await p.goto(B + '/invest/nvda/sell', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
 const j = p.locator('.amount-box input')
 await j.fill('100'); await j.dispatchEvent('input'); await p.waitForTimeout(250)
 await p.locator('.btn-primary').first().click(); await p.waitForTimeout(450)
@@ -51,7 +51,7 @@ const r2 = await rows()
 ok('the sale is stated', money(r2['Sale']) === 100, r2['Sale'] ?? '')
 ok('you receive the sale less the fee', money(r2['You receive']) === 99.5, r2['You receive'] ?? '')
 const beforeSell = await cash()
-await p.goto(B + '/market/nvda/sell', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
+await p.goto(B + '/invest/nvda/sell', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
 const k = p.locator('.amount-box input')
 await k.fill('100'); await k.dispatchEvent('input'); await p.waitForTimeout(250)
 await p.locator('.btn-primary').first().click(); await p.waitForTimeout(450)
@@ -61,7 +61,7 @@ ok('and the wallet gets exactly that', Math.abs((afterSell - beforeSell) - 99.5)
    `${beforeSell} → ${afterSell}, expected +99.50`)
 
 console.log('THE CEILING  the fee has to fit too')
-await p.goto(B + '/market/aapl/invest', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
+await p.goto(B + '/invest/aapl/invest', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
 const l = p.locator('.amount-box input')
 await l.fill('999999'); await l.dispatchEvent('input'); await p.waitForTimeout(300)
 const capped = await p.evaluate(() => ({
@@ -83,9 +83,9 @@ ok('and it is none, not silence', /None/.test(r3['Fee'] ?? ''), r3['Fee'] ?? '')
 ok('with the rate on screen', !!r3['Rate'], r3['Rate'] ?? 'missing')
 
 console.log('THE BUCKET  one payment, one fee')
-await p.goto(B + '/market/aapl', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
+await p.goto(B + '/invest/aapl', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
 await p.getByRole('button', { name: 'Add to bucket' }).click(); await p.waitForTimeout(400)
-await p.goto(B + '/market/ko', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
+await p.goto(B + '/invest/ko', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
 await p.getByRole('button', { name: 'Add to bucket' }).click(); await p.waitForTimeout(400)
 await p.goto(B + '/bucket', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
 const sum = await p.evaluate(() => Object.fromEntries(

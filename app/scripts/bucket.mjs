@@ -19,15 +19,15 @@ ok('an empty bucket says so and offers a way on',
    await p.evaluate(() => /Nothing in the bucket/.test(document.body.innerText)))
 ok('the sidebar carries it on every screen', await p.evaluate(() => !!document.querySelector('.nav-bucket')))
 
-await p.goto(B + '/market', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
+await p.goto(B + '/invest', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
 await p.locator('.table tbody tr').first().locator('.icon-btn').click()
 await p.waitForTimeout(400)
-ok('a row adds without navigating away', (await p.evaluate(() => location.hash)).includes('market'), await p.evaluate(() => location.hash))
+ok('a row adds without navigating away', (await p.evaluate(() => location.hash)).includes('invest'), await p.evaluate(() => location.hash))
 ok('and the count goes up', (await count()) === '1', 'count ' + (await count()))
 
-await p.goto(B + '/market/nvda', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
+await p.goto(B + '/invest/nvda', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
 await p.getByRole('button', { name: 'Add to bucket' }).click(); await p.waitForTimeout(500)
-await p.goto(B + '/market/ko', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
+await p.goto(B + '/invest/ko', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
 await p.getByRole('button', { name: 'Add to bucket' }).click(); await p.waitForTimeout(500)
 ok('a stock page adds too', (await count()) === '3', 'count ' + (await count()))
 
@@ -66,7 +66,7 @@ await g.fill('100'); await g.dispatchEvent('change'); await p.waitForTimeout(500
 
 console.log('PAYING ONCE')
 const cashBefore = await (async () => {
-  await p.goto(B + '/wallet', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(350)
+  await p.goto(B + '/transfer', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(350)
   return money(await p.$eval('.hero-figure', (e) => e.textContent))
 })()
 await p.goto(B + '/bucket', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
@@ -82,12 +82,12 @@ ok('it confirms what arrived, company by company', /shares/.test(doneText), done
 await p.locator('.scrim .btn-primary').first().click(); await p.waitForTimeout(600)
 ok('the bucket empties', (await count()) === '0', 'count ' + (await count()))
 const cashAfter = await (async () => {
-  await p.goto(B + '/wallet', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(350)
+  await p.goto(B + '/transfer', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(350)
   return money(await p.$eval('.hero-figure', (e) => e.textContent))
 })()
 ok('and cash went down by the total, once', Math.abs((cashBefore - cashAfter) - total) < 0.05,
    `${cashBefore} → ${cashAfter}, total ${total}`)
-await p.goto(B + '/history?filter=trades', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
+await p.goto(B + '/activity?filter=trades', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
 const hist = await p.evaluate(() => document.body.innerText)
 ok('each company has its own receipt', /Apple/.test(hist) && /Nvidia/.test(hist))
 
@@ -95,7 +95,7 @@ console.log('PHONE')
 const m = await b.newPage({ viewport: { width: 390, height: 844 } })
 await seen(m)
 await m.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
-await m.goto(B + '/market/aapl', { waitUntil: 'domcontentloaded' }); await m.waitForTimeout(400)
+await m.goto(B + '/invest/aapl', { waitUntil: 'domcontentloaded' }); await m.waitForTimeout(400)
 await m.getByRole('button', { name: 'Add to bucket' }).click(); await m.waitForTimeout(500)
 await m.goto(B + '/bucket', { waitUntil: 'domcontentloaded' }); await m.waitForTimeout(400)
 ok('the phone top bar carries the bucket', await m.evaluate(() => !!document.querySelector('.bucket-btn')))
