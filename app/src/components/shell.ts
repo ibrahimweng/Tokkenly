@@ -27,6 +27,17 @@ export const BEHIND_MORE: { label: string; sub: string; to: string; ic: () => st
   { label: 'Support', sub: state.person.email, to: '/support', ic: icon.mail },
 ]
 
+/** The bell from Figma D01. It carries the unread count and opens the panel. */
+export function bell(): HTMLElement {
+  const unread = state.notifications.filter((n) => !n.read).length
+  const b = h('button', {
+    class: 'icon-btn bell', ariaLabel: unread ? unread + ' unread notifications' : 'Notifications',
+    html: icon.bell(), on: { click: () => openSheet('notifications') },
+  })
+  if (unread) b.appendChild(h('span', { class: 'dot', text: String(unread) }))
+  return b
+}
+
 /* ---------------- desktop rail ---------------- */
 
 export function sidebar(active: Place): HTMLElement {

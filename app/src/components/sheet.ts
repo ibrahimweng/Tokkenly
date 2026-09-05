@@ -37,6 +37,34 @@ export function sheet(title: string, ...body: (Node | false | null)[]): HTMLElem
   return scrim
 }
 
+/** A dialog over a screen, addressed by its own path rather than ?sheet=.
+ *  Send and Receive work this way: Figma draws them as D09 and D12, a modal
+ *  over the wallet, not as screens of their own. Closing goes somewhere real
+ *  because there is no sheet parameter to drop. */
+export function modalOver(
+  base: HTMLElement,
+  title: string,
+  onClose: () => void,
+  ...body: (Node | false | null)[]
+): HTMLElement {
+  const panel = h('div', { class: 'sheet' },
+    h('div', { class: 'sheet-head' },
+      h('h2', { text: title }),
+      h('button', { class: 'close', ariaLabel: 'Close', html: icon.close(), on: { click: onClose } })))
+  append(panel, body)
+  const scrim = h('div', {
+    class: 'scrim',
+    on: { click: (e) => { if (e.target === scrim) onClose() } },
+  }, panel)
+  const onKey = (e: KeyboardEvent) => {
+    if (!scrim.isConnected) { removeEventListener('keydown', onKey); return }
+    if (e.key === 'Escape') onClose()
+  }
+  addEventListener('keydown', onKey)
+  base.appendChild(scrim)
+  return base
+}
+
 export function figure(label: string, value: string, cls = ''): HTMLElement {
   return h('div', { class: 'figure' },
     h('span', { class: 't-caps subtle', text: label }),

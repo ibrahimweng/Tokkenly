@@ -3,7 +3,7 @@ import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
 import { amount, directionMark, emptyState } from '../components/bits'
 import { table } from '../components/table'
-import { state, type ActivityKind } from '../state'
+import { state, type ActivityKind, type Activity } from '../state'
 import { when } from '../format'
 import { go, current, openSheet } from '../router'
 
@@ -36,6 +36,25 @@ export function historyScreen(): HTMLElement {
     go('/history' + (s ? '?' + s : ''))
   }
 
+  // Sorting is part of the address, so an ordered view can be linked and
+  // reloaded the same way a filter or a sheet can.
+  const sortKey = r.query.get('sort') ?? 'date'
+  const sortDir = (r.query.get('dir') ?? 'desc') as 'asc' | 'desc'
+  const onSort = (key: string) => {
+    const dir = key === sortKey && sortDir === 'desc' ? 'asc' : 'desc'
+    const q = new URLSearchParams(r.query)
+    q.set('sort', key); q.set('dir', dir)
+    go('/history?' + q.toString())
+  }
+  const cmp: Record<string, (a: Activity, b: Activity) => number> = {
+    who: (a, b) => a.who.localeCompare(b.who),
+    type: (a, b) => a.type.localeCompare(b.type),
+    ref: (a, b) => a.ref.localeCompare(b.ref),
+    date: (a, b) => a.at.localeCompare(b.at),
+    amt: (a, b) => a.amount - b.amount,
+  }
+  const ordered = [...rows].sort((a, b) => (cmp[sortKey] ?? cmp.date)(a, b) * (sortDir === 'asc' ? 1 : -1))
+
   const search = h('label', { class: 'field grow' },
     h('span', { html: icon.search() }),
     h('input', {
@@ -58,16 +77,16 @@ export function historyScreen(): HTMLElement {
       h('button', { class: 'btn btn-secondary btn-sm', on: { click: () => openSheet('export') } },
         h('span', { html: icon.download() }), h('span', { text: 'Export' }))),
     h('div', { class: 'row', style: { alignItems: 'center' } }, search, chips),
-    rows.length
+    ordered.length
       ? table(
           [
-            { key: 'who', label: 'Who' },
-            { key: 'type', label: 'Type', optional: true },
-            { key: 'ref', label: 'Reference', optional: true },
-            { key: 'date', label: 'Date', optional: true },
-            { key: 'amt', label: 'Amount', align: 'right' },
+            { key: 'who', label: 'Who', sortable: true },
+            { key: 'type', label: 'Type', optional: true, sortable: true },
+            { key: 'ref', label: 'Reference', optional: true, sortable: true },
+            { key: 'date', label: 'Date', optional: true, sortable: true },
+            { key: 'amt', label: 'Amount', align: 'right', sortable: true },
           ],
-          rows.map((a) => [
+          ordered.map((a) => [
             h('span', { class: 'who' }, directionMark(a.amount),
               h('span', { class: 'two-line' },
                 h('span', { class: 't-body-strong', text: a.who }),
@@ -77,7 +96,8 @@ export function historyScreen(): HTMLElement {
             h('span', { class: 'muted', text: when(a.at) }),
             amount(a.amount),
           ]),
-          (i) => openSheet('receipt', { ref: rows[i].ref })
+          (i) => openSheet('receipt', { ref: ordered[i].ref }),
+          { current: { key: sortKey, dir: sortDir }, onSort }
         )
       : term || active !== 'all'
         ? emptyState('Nothing matches that',

@@ -3414,7 +3414,72 @@ otherwise. `/`, `/wallet`, `/market/aapl`, `/grow/borrow` and `/a/b/c` all boot
 the app with no failed requests; the last three would have lost their assets
 under the old base. `node_modules` comes to 63MB either way, so no browsers.
 
-### 11f.9 Still open
+### 11f.9 Made live
+
+Two things were wrong, and then the product went a step past the drawing.
+
+**Send and Receive were screens, and Figma draws them as dialogs.** `D09` and
+`D12` are `sidebar, content, scrim, modal`: a 480 wide dialog over the wallet.
+The app had built both as full screens with a second column. Every other
+composer is a screen in Figma too, so those were already right; only these two
+disagreed, which is what showed up as modals opening full width.
+
+The phone already did the right thing, so the fix was to let the composer
+choose its presentation rather than assume. `present: 'modal'` puts it over its
+base at any width; the phone keeps its grabber and keypad, the dialog gets the
+callout and the keyboard it already has. One `modalOver` helper now serves the
+composer, Receive, and anything else addressed by a path rather than a
+`?sheet=`.
+
+Building it surfaced a smaller fault: the dialog named the recipient in a `TO`
+row and then again in the summary. The same fact twice in one dialog reads as a
+mistake, so the summary row went. Changing who it goes to opens the same list
+the phone shows as a screen, from one `peopleRows` rather than two copies.
+
+**Every control was clicked, and the dead ones found.** A pass drove 14 routes,
+clicked every button, link, chip and row, and reported anything that moved
+nothing. Thirty two came back. Most were honest: clicking Home while on Home
+should do nothing, and the composer quick chips write to an input value rather
+than to the DOM, so the detector could not see them working. Two were real.
+
+The portfolio chart's ranges did nothing at all. `1D` through `ALL` were six
+chips with a hardcoded `aria-pressed` on `1Y` and one fixed series of 72
+columns behind them. Each range now has its own column count, its own axis and
+its own change, and the pressed chip follows.
+
+The first version read the change off the drawn line, endpoint to endpoint,
+which with noise reported `+51.6%` over a month. A stated figure replaced it,
+anchored to the numbers already on the screen: `1D` is the `+1.16%` in the
+hero, `1Y` is the `+17.28%` in Available.
+
+And two status pills were `span`s wearing `.chip`, so they took the hover and
+looked pressable. They are `.pill` now, which has no hover and no pointer.
+
+**Things the drawing has and the code did not.** Figma `D01` carries a bell in
+the header. There was none in the app, so there is now: an unread count on the
+badge, a panel that marks one read as you open it, mark all read, and a badge
+that disappears when it hits zero. Five notifications seeded across money,
+trades, Grow and security.
+
+History gained sortable columns. Ordering goes in the address like everything
+else here, so `?sort=amt&dir=asc` can be linked and survives a reload, and the
+caret shows which axis you are on. It has twenty rows to sort now rather than
+twelve. Only the activity feed grew: cash, holdings, what is owed and the
+borrow limit are settled figures and were left alone.
+
+**Still missing on the Figma side.** `Sell` had no desktop frame at all, though
+the phone has `M20`. It does now, `D17c Sell`, cloned from Invest with its copy
+turned from buying to selling. Export, the support answer and the contact sheet
+are still code-only.
+
+`scripts/live.mjs` drives all of it: both dialogs at 480 over the wallet and
+closing to it, the phone sheet keeping its grabber and keypad, Change picking a
+new recipient, three ranges drawing different columns with the pressed chip
+following, the notification count going down as you read and clearing on mark
+all, and sorting reordering, landing in the url and surviving a reload. Sixteen
+checks, no failures.
+
+### 11f.10 Still open
 
 - The nav component's variants are still named `Money` and `Stocks` from the
   older product. They light the right icons; renaming breaks twenty nine

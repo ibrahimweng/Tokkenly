@@ -426,3 +426,45 @@
 }
 .toast.success::before { background: var(--positive); }
 .toast.error::before { background: var(--negative); }
+
+/* The receive code. A grid of blocks on the inverse surface, sized so the
+   whole thing lands at the 160 the Figma modal draws. */
+.qr {
+  width: 160px; height: 160px; border-radius: 20px; background: var(--inverse);
+  display: grid; grid-template-columns: repeat(11, 1fr); gap: 2px; padding: 10px;
+}
+.qr span { border-radius: 2px; }
+.qr span.on { background: var(--on-inverse); }
+
+/* A status pill is not a control. It borrowed .chip and with it the hover, so
+   it looked pressable and was not. */
+.pill {
+  height: 32px; padding: 0 16px; border-radius: var(--r-pill);
+  background: var(--control); color: var(--muted);
+  font-size: 13px; font-weight: 600;
+  display: inline-flex; align-items: center; cursor: default;
+}
+
+/* the bell, and the count it carries */
+.bell { position: relative; }
+.bell .dot {
+  position: absolute; top: 2px; right: 2px; min-width: 16px; height: 16px;
+  padding: 0 4px; border-radius: 999px;
+  background: var(--positive); color: var(--on-inverse);
+  font-size: 10px; font-weight: 600; line-height: 16px; text-align: center;
+}
+.sheet-row.read { opacity: 0.55; }
+.sheet-row.read .mark { background: var(--sunken); }
+
+/* A sortable header is a control, so it says so. The caret shows the axis you
+   are on and which way it runs. */
+.th-sort {
+  display: inline-flex; align-items: center; gap: 6px;
+  font: inherit; color: inherit; letter-spacing: inherit; text-transform: inherit;
+  padding: 0 0 8px;
+}
+.th-sort:hover { color: var(--ink); }
+.th-sort .caret { opacity: 0.45; font-size: 10px; }
+.th-sort.on { color: var(--ink); }
+.th-sort.on .caret { opacity: 1; color: var(--positive); }
+th:last-child .th-sort { flex-direction: row-reverse; }
