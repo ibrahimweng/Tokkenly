@@ -3,6 +3,7 @@
   --canvas: #0a0a0c;
   --surface: #1e1e22;        /* the sidebar ground, and nothing else */
   --sunken: #161619;         /* every card in the main column */
+  --sunken-hover: #202024;   /* a row or a clickable card, one rung above the card it sits in */
   --control: #2d2d32;
   --control-pressed: #38383e;
   --inverse: #dcdce0;        /* filled buttons */
@@ -12,7 +13,11 @@
 
   --ink: #dcdce0;
   --muted: #a6a6ad;
-  --subtle: #65656c;
+  /* The label rung. It was #65656c, which is 3.1:1 on a card — under AA for
+     11px caps, and the whole product's eyebrows are 11px caps. Raised until
+     it clears 4.5:1 on every surface it lands on, hovered rows included,
+     while staying a visible rung below --muted. */
+  --subtle: #8e8e95;
   --on-inverse: #0a0a0c;
 
   --accent: #0e5f4c;
@@ -26,6 +31,17 @@
   --tint-warning: #2a2211;
   --tint-negative: #2b1710;
   --scrim: rgba(5, 5, 6, 0.54);
+
+  /* Shadows are tokens too, so rule 3 holds for the colour inside them. */
+  --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.45);
+  --shadow-float: 0 10px 30px rgba(0, 0, 0, 0.55);
+  --shadow-toast: 0 8px 30px rgba(0, 0, 0, 0.5);
+
+  /* Motion. One curve and one duration for every state change in the product,
+     so a hover, a press and a focus ring all move at the same speed. */
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --t-fast: 110ms;
+  --t-base: 160ms;
 
   --r-card: 20px;
   --r-panel: 16px;

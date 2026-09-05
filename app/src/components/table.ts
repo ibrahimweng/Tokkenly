@@ -37,7 +37,7 @@ export function table(
     } else {
       th.textContent = c.label
     }
-    if (c.align === 'right') th.style.textAlign = 'right'
+    if (c.align === 'right') th.classList.add('right')
     if (c.width) th.style.width = c.width
     if (c.optional) th.classList.add('opt')
     tr.appendChild(th)
@@ -49,7 +49,7 @@ export function table(
     const row = h('tr', onRow ? { on: { click: () => onRow(i) } } : {})
     cells.forEach((cell, j) => {
       const td = h('td')
-      if (cols[j]?.align === 'right') td.style.textAlign = 'right'
+      if (cols[j]?.align === 'right') td.classList.add('right')
       if (cols[j]?.optional) td.classList.add('opt')
       td.appendChild(typeof cell === 'string' ? document.createTextNode(cell) : cell)
       row.appendChild(td)

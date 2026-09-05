@@ -23,7 +23,6 @@
   padding: 10px 12px; border-radius: 12px;
   color: var(--muted); width: 100%; text-align: left;
 }
-.nav-row:hover { background: var(--control); color: var(--ink); }
 .nav-row[aria-current='page'] { background: var(--control); color: var(--ink); font-weight: 600; }
 .nav-row .ic { width: 18px; height: 18px; flex: none; opacity: 0.9; }
 .nav-gap { height: 12px; }
@@ -47,7 +46,6 @@
   display: flex; align-items: center; gap: 12px; padding: 8px;
   border-radius: 14px; width: 100%; text-align: left;
 }
-.whoami:hover { background: var(--control); }
 .avatar {
   width: 32px; height: 32px; border-radius: 999px; background: var(--inverse);
   color: var(--on-inverse); display: grid; place-items: center;
@@ -64,9 +62,7 @@
 .card.tight { padding: 16px; }
 .card-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .link { font-size: 14px; font-weight: 600; color: var(--ink); }
-.link:hover { text-decoration: underline; text-underline-offset: 3px; }
 .link.quiet { color: var(--muted); }
-.link.quiet:hover { color: var(--ink); }
 
 .kv { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
 .kv > span:first-child { color: var(--muted); }
@@ -90,17 +86,12 @@
    in the file is a button called Secondary here. Figma 02 Components, Button
    Variant=Primary|Secondary|Quiet|Destructive|Inverse. */
 .btn-primary { background: var(--inverse); color: var(--on-inverse); }
-.btn-primary:hover { background: var(--inverse-hover); }
 .btn-secondary { background: var(--control); color: var(--ink); }
-.btn-secondary:hover { background: var(--control-pressed); }
 .btn-quiet { background: none; color: var(--ink); }
-.btn-quiet:hover { background: var(--control); }
 /* Danger is quiet on purpose. Signing out everywhere matters, but a filled
    orange button shouts louder than the action deserves. */
 .btn-destructive { background: var(--control); color: var(--negative); }
-.btn-destructive:hover { background: var(--control-pressed); }
 .btn-inverse { background: var(--sand); color: var(--ink); }
-.btn-inverse:hover { background: var(--sand-hover); }
 .btn-sm { height: 40px; padding: 0 18px; width: auto; }
 .btn[disabled] { opacity: 0.4; cursor: not-allowed; }
 
@@ -108,7 +99,6 @@
   height: 32px; padding: 0 16px; border-radius: var(--r-pill);
   background: var(--control); color: var(--muted); font-size: 13px; font-weight: 600;
 }
-.chip:hover { background: var(--control-pressed); color: var(--ink); }
 .chip[aria-pressed='true'] { background: var(--inverse); color: var(--on-inverse); }
 .chip-row { display: flex; gap: 8px; flex-wrap: wrap; }
 
@@ -118,7 +108,8 @@
   background: var(--control); color: var(--ink); width: 100%;
 }
 .field input { width: 100%; }
-.field input::placeholder { color: var(--subtle); }
+/* a placeholder is text someone has to read to know what the field wants */
+.field input::placeholder { color: var(--muted); }
 
 /* ---------- amount composer ---------- */
 .amount-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
@@ -142,10 +133,19 @@
   text-transform: uppercase; color: var(--subtle); padding: 0 0 8px; font-family: var(--font);
 }
 .table td { padding: 12px 0; vertical-align: middle; }
+/* Seven columns in one card is a grid, and a grid needs gutters. Without
+   these every cell butted against the next, so a price ran straight into the
+   day's move: "+1.2%$164". The shorthand above only ever set the vertical
+   padding; the sides were nothing but the slack the browser had left over,
+   and at seven columns there was none. */
+.table th + th, .table td + td { padding-left: 20px; }
+/* Right belongs to the column, not to its position. Every table here already
+   declares align on its last column, so the two agree — but a right-hand
+   column in the middle of the row now aligns too. */
+.table th.right, .table td.right { text-align: right; }
 .table tbody tr { cursor: pointer; }
-.table tbody tr:hover td { background: rgba(255, 255, 255, 0.03); }
 .table td:first-child, .table th:first-child { padding-left: 12px; border-radius: 10px 0 0 10px; }
-.table td:last-child, .table th:last-child { padding-right: 12px; border-radius: 0 10px 10px 0; text-align: right; }
+.table td:last-child, .table th:last-child { padding-right: 12px; border-radius: 0 10px 10px 0; }
 .mark {
   width: 32px; height: 32px; border-radius: 999px; background: var(--control);
   display: grid; place-items: center; flex: none;
@@ -199,7 +199,7 @@
 .toast {
   background: var(--control-pressed); color: var(--ink); padding: 12px 20px;
   border-radius: 999px; font-size: 13px; font-weight: 600;
-  box-shadow: 0 8px 30px rgba(0,0,0,0.5); animation: rise 160ms ease-out;
+  box-shadow: var(--shadow-toast); animation: rise 160ms ease-out;
 }
 
 /* ---------- auth ---------- */
@@ -226,7 +226,6 @@
   width: 44px; height: 44px; border-radius: 999px; background: var(--sunken);
   display: grid; place-items: center; flex: none; color: var(--muted);
 }
-.icon-btn:hover { background: var(--control); color: var(--ink); }
 
 .railbar {
   display: none;
@@ -239,7 +238,7 @@
 .rail-pill {
   display: flex; gap: 4px; padding: 8px;
   background: var(--sunken); border-radius: 999px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+  box-shadow: var(--shadow-float);
 }
 .rail-tab {
   width: 48px; height: 48px; border-radius: 999px;
@@ -250,7 +249,7 @@
   width: 64px; height: 64px; border-radius: 999px; flex: none;
   background: var(--sunken); color: var(--muted);
   display: grid; place-items: center;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+  box-shadow: var(--shadow-float);
 }
 .rail-more[aria-expanded='true'] { background: var(--inverse); color: var(--on-inverse); }
 
@@ -264,7 +263,6 @@
   display: flex; align-items: center; gap: 16px;
   padding: 12px; border-radius: 16px; width: 100%; text-align: left;
 }
-.sheet-row:hover { background: var(--control); }
 .sheet-row .mark { background: var(--control); }
 .sheet-row .two-line { flex: 1; min-width: 0; }
 
@@ -294,6 +292,7 @@
   /* tables shed their quiet columns and keep the two that matter */
   .table th.opt, .table td.opt { display: none; }
   .table td { padding: 10px 0; }
+  .table th + th, .table td + td { padding-left: 12px; }
   .table td:first-child, .table th:first-child { padding-left: 8px; }
   .table td:last-child, .table th:last-child { padding-right: 8px; }
 
@@ -309,7 +308,6 @@
   height: 56px; border-radius: 16px; font-size: 20px; font-weight: 600;
   display: grid; place-items: center;
 }
-.key:hover { background: var(--control); }
 
 /* A chart is drawn at a fixed pitch for the desktop column. On a phone the
    bars share whatever width there is rather than running off the side. */
@@ -353,6 +351,26 @@
   .sheet .amount-box { padding: 4px 20px; }
   .sheet .amount-box input { font-size: 30px; line-height: 40px; width: 180px; }
   .sheet .chip-row .chip { flex: 1 1 0; padding: 0 8px; }
+}
+
+/* ---------------------------------------------------------------- motion --
+   One curve and one duration for every state change, so a hover, a press and
+   a focus ring all move at the same speed. 110ms is short enough that the
+   control never feels like it is answering late, and long enough that the
+   change reads as a change rather than a jump. Listed by selector rather
+   than applied with a wildcard: a transition on everything catches layout
+   properties too, and a card that eases its own width is a card that lags.
+   Figma 02 Components, Motion/state 110ms Ease out. */
+.nav-row, .whoami, .btn, .chip, .icon-btn, .close, .sheet-row, .sheet-row .mark,
+.key, .jump-hit, .jump-open, .all-row, .th-sort, .th-sort .caret, .crumb,
+.rail-tab, .rail-more, .link, a.link, a.card, label.field,
+.table tbody td, .table tbody .mark, .hero-bar .seg, .hero-legend .leg {
+  transition:
+    background-color var(--t-fast) var(--ease),
+    color var(--t-fast) var(--ease),
+    box-shadow var(--t-fast) var(--ease),
+    transform var(--t-fast) var(--ease),
+    opacity var(--t-fast) var(--ease);
 }
 
 /* ---------------------------------------------------------------- states --
@@ -463,11 +481,15 @@
   font: inherit; color: inherit; letter-spacing: inherit; text-transform: inherit;
   padding: 0 0 8px;
 }
-.th-sort:hover { color: var(--ink); }
-.th-sort .caret { opacity: 0.45; font-size: 10px; }
+/* The caret was faded to 0.45, which put a 10px glyph at 2.1:1 — a mark
+   carrying which way the sort runs, drawn too faint to read it from. It now
+   follows the label it belongs to, and turns positive when the column is on. */
+.th-sort .caret { font-size: 10px; }
 .th-sort.on { color: var(--ink); }
 .th-sort.on .caret { opacity: 1; color: var(--positive); }
-th:last-child .th-sort { flex-direction: row-reverse; }
+/* On a right-hand column the caret goes to the left of the label, so the
+   label's right edge lines up with the numbers under it. */
+th.right .th-sort { flex-direction: row-reverse; }
 
 /* ---------------------------------------------------------------- moving --
    Four ways to get somewhere, all reading one registry: the trail above the
@@ -475,7 +497,6 @@ th:last-child .th-sort { flex-direction: row-reverse; }
 
 .crumbs { display: flex; align-items: center; gap: 8px; font-size: 12px; line-height: 16px; }
 .crumb { color: var(--muted); }
-.crumb:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 .crumb.on { color: var(--ink); }
 .crumb-sep { display: inline-flex; color: var(--subtle); opacity: 0.6; }
 .crumb-sep svg { width: 12px; height: 12px; }
@@ -502,7 +523,8 @@ th:last-child .th-sort { flex-direction: row-reverse; }
   display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
   padding: 12px; border-radius: 12px; color: var(--ink);
 }
-.jump-hit:hover, .jump-hit[data-on='1'] { background: var(--control); }
+/* the keyboard cursor, which is not hover and does not want the hover guard */
+.jump-hit[data-on='1'] { background: var(--control); }
 .jump-hit small { color: var(--muted); }
 .jump-foot {
   display: flex; gap: 16px; padding: 12px 20px;
@@ -515,7 +537,6 @@ th:last-child .th-sort { flex-direction: row-reverse; }
   height: 40px; padding: 0 12px 0 14px; border-radius: var(--r-pill);
   background: var(--sunken); color: var(--muted); font-size: 13px; min-width: 220px;
 }
-.jump-open:hover { background: var(--control); color: var(--ink); }
 
 @media (max-width: 899px) {
   .jump-open { min-width: 0; width: 40px; padding: 0; justify-content: center; }
@@ -528,7 +549,6 @@ th:last-child .th-sort { flex-direction: row-reverse; }
   align-items: start;
 }
 .all-row { padding: 8px 10px; border-radius: 12px; }
-.all-row:hover { background: var(--control); }
 .all-row small { color: var(--muted); }
 
 /* A palette belongs near the top, where the eye already is, not halfway down
@@ -548,4 +568,170 @@ th:last-child .th-sort { flex-direction: row-reverse; }
   .jump { max-height: 82vh; }
   .jump-list { max-height: none; }
   .header-actions { gap: 8px; }
+}
+
+/* ---------------------------------------------------------- the wallet --
+   The centrepiece is not the number on its own. It is the number, and what
+   the number is made of, drawn to scale. */
+.hero-cash { padding: 32px; gap: 24px; }
+.hero-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
+.hero-figure { font-size: 56px; line-height: 64px; font-weight: 600; letter-spacing: -0.03em; }
+.hero-aside { text-align: right; align-items: flex-end; }
+
+.hero-bar { display: flex; gap: 3px; height: 12px; }
+.hero-bar .seg { border-radius: 999px; min-width: 8px; }
+.hero-bar .seg.a { background: var(--inverse); }
+.hero-bar .seg.b { background: var(--positive); }
+.hero-bar .seg.c { background: var(--control-pressed); }
+
+.hero-legend { display: flex; gap: 32px; flex-wrap: wrap; }
+.leg { display: flex; align-items: flex-start; gap: 10px; }
+.leg .dot { width: 10px; height: 10px; border-radius: 999px; flex: none; margin-top: 5px; }
+.leg .dot.a { background: var(--inverse); }
+.leg .dot.b { background: var(--positive); }
+.leg .dot.c { background: var(--control-pressed); }
+.leg small { color: var(--muted); }
+
+@media (max-width: 899px) {
+  .hero-cash { padding: 20px; gap: 20px; }
+  .hero-figure { font-size: 40px; line-height: 48px; }
+  .hero-top { flex-direction: column; gap: 16px; }
+  .hero-aside { text-align: left; align-items: flex-start; }
+  .hero-legend { gap: 12px; flex-direction: column; }
+}
+
+/* ---------------------------------------------------------- the market --
+   Where today's price sits inside the year it has had. The one thing a price
+   on its own cannot tell you. */
+.range { display: flex; flex-direction: column; gap: 5px; min-width: 116px; }
+.range-track {
+  position: relative; height: 4px; border-radius: 999px;
+  background: var(--control-pressed);
+}
+.range-at {
+  position: absolute; top: -3px; width: 3px; height: 10px; border-radius: 2px;
+  background: var(--ink); transform: translateX(-1px);
+}
+.range-ends { display: flex; justify-content: space-between; }
+.range-ends small { color: var(--subtle); font-size: 11px; line-height: 14px; }
+
+
+/* ----------------------------------------------------------------- hover --
+   Hover is the only state that answers before you commit, so it has to say
+   two things at once: this is pressable, and this is the thing you are
+   pointing at. Everything below is one of three strengths and nothing in
+   between:
+
+     step   a control moves to the next surface it already owns
+     wash   a row or a card takes the rung above the card it sits in
+     lift   a filled button or a card brightens and rises
+
+   All of it sits behind `hover: hover`. On a touch screen :hover latches
+   after a tap, so the row you just left stays lit while the next screen
+   draws, and the sheet you dismissed keeps a highlighted row behind it.
+   A pointer is the whole premise of the state; without one there is nothing
+   to answer. Disabled and busy controls opt out on their own — both carry
+   pointer-events: none, so none of these ever match them.
+
+   Figma 02 Components, every variant's State=Hover. */
+@media (hover: hover) and (pointer: fine) {
+
+  /* -- rows. The target is the whole row, so the whole row answers. -- */
+  .nav-row:hover { background: var(--control); color: var(--ink); }
+  /* the lit row is still pressable, so it still has somewhere to go */
+  .nav-row[aria-current='page']:hover { background: var(--control-pressed); }
+  .whoami:hover { background: var(--control); }
+  .sheet-row:hover { background: var(--control); }
+  .sheet-row:hover .mark { background: var(--control-pressed); }
+  .jump-hit:hover { background: var(--control); }
+  .all-row:hover { background: var(--control); }
+  .key:hover { background: var(--control); }
+
+  /* A table row is the widest hover in the product, and it used to be the
+     faintest: three per cent of white over a card is about two steps of
+     lightness, which is under what an eye finds unless it is told to look.
+     Now it takes the same rung every other row takes, and the disc at the
+     head of the row goes with it, so the row reads as one object rather
+     than a stripe passing behind one. */
+  .table tbody tr:hover td { background: var(--sunken-hover); }
+  .table tbody tr:hover .mark { background: var(--control-pressed); }
+
+  /* -- cards that are links. The three gateway tiles on Home had no hover at
+     all: a card 220 tall that navigates and never answers reads as a poster.
+     A card is an object, and an object you can pick comes forward. -- */
+  a.card:hover {
+    background: var(--sunken-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+  }
+  a.card:hover .promo-badge { background: var(--control-pressed); }
+
+  /* -- buttons. Each variant moves along the ramp it already lives on. -- */
+  .btn-primary:hover { background: var(--inverse-hover); }
+  .btn-secondary:hover { background: var(--control-pressed); }
+  .btn-quiet:hover { background: var(--control); }
+  .btn-destructive:hover { background: var(--control-pressed); }
+  .btn-inverse:hover { background: var(--sand-hover); }
+  /* A filled button also rises, and the shadow under it is what says so: on a
+     page this dark a lighter fill on its own is easy to miss. Quiet has no
+     surface of its own to raise, so it only gains one. */
+  .btn-primary:hover, .btn-secondary:hover, .btn-inverse:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-hover);
+  }
+
+  /* -- small controls -- */
+  .icon-btn:hover { background: var(--control); color: var(--ink); }
+  .close:hover { background: var(--inverse-hover); }
+  /* An unselected chip warms up. A selected one stays selected — turning it
+     grey under the pointer reads as "click to clear" on a control that does
+     not clear, so it brightens along its own ramp instead. */
+  .chip:not([aria-pressed='true']):hover { background: var(--control-pressed); color: var(--ink); }
+  .chip[aria-pressed='true']:hover { background: var(--inverse-hover); }
+  .rail-tab:hover { background: var(--control); color: var(--ink); }
+  .rail-tab[aria-current='page']:hover { background: var(--inverse-hover); color: var(--on-inverse); }
+  .rail-more:hover { background: var(--control); color: var(--ink); }
+  .th-sort:hover { color: var(--ink); }
+  .jump-open:hover { background: var(--control); color: var(--ink); }
+  /* Only the label form, because a .field is sometimes a read-only panel and
+     a panel that lights up is a panel that promises something. */
+  label.field:hover { background: var(--control-pressed); }
+
+  /* -- text. An underline, offset far enough to clear the descenders. -- */
+  a.link:hover, .link:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .link.quiet:hover { color: var(--ink); }
+  .crumb:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+
+  /* -- the wallet hero. Each band is drawn the size of the money in it, so
+     pointing at one holds it and lets the others fall back. It is the one
+     hover in the product that answers a question rather than an intent:
+     which part of this number is that. -- */
+  .hero-bar:hover .seg { opacity: 0.42; }
+  .hero-bar .seg:hover { opacity: 1; }
+  /* The band and its line in the legend are the same fact drawn twice, so
+     they answer together: point at either and the other holds while the rest
+     falls back. The legend sits after the bar in the document, and CSS only
+     reads forwards, so :has on the card is what joins them. A browser without
+     it drops these three rules and keeps the bar's own hover above. */
+  .hero-cash:has(.seg.a:hover) .leg:not(:nth-child(1)),
+  .hero-cash:has(.seg.b:hover) .leg:not(:nth-child(2)),
+  .hero-cash:has(.seg.c:hover) .leg:not(:nth-child(3)) { opacity: 0.45; }
+  .hero-cash:has(.leg:nth-child(1):hover) .seg:not(.a),
+  .hero-cash:has(.leg:nth-child(2):hover) .seg:not(.b),
+  .hero-cash:has(.leg:nth-child(3):hover) .seg:not(.c) { opacity: 0.42; }
+  .hero-cash:has(.leg:nth-child(1):hover) .leg:not(:nth-child(1)),
+  .hero-cash:has(.leg:nth-child(2):hover) .leg:not(:nth-child(2)),
+  .hero-cash:has(.leg:nth-child(3):hover) .leg:not(:nth-child(3)) { opacity: 0.45; }
+}
+
+/* ------------------------------------------------------- reduced motion --
+   The setting asks for less travel, not less feedback. Colour still changes,
+   fast enough to read as instant; the lifts stop moving and the sheets stop
+   arriving. The busy ring stays: it is the only thing that says the app is
+   working, and it turns in place. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 60ms !important; }
+  .scrim, .sheet, .toast { animation: none !important; }
+  a.card:hover, .btn:hover { transform: none !important; }
+  .sk { animation: none !important; opacity: 0.7; }
 }

@@ -16,6 +16,7 @@ type Props = {
   ariaCurrent?: string
   ariaPressed?: boolean | string
   ariaLabel?: string
+  title?: string
   dataset?: Record<string, string>
   style?: Partial<CSSStyleDeclaration>
   on?: Partial<{ [K in keyof HTMLElementEventMap]: (ev: HTMLElementEventMap[K]) => void }>
@@ -40,6 +41,7 @@ export function h<K extends keyof HTMLElementTagNameMap>(
   if (props.ariaCurrent) el.setAttribute('aria-current', props.ariaCurrent)
   if (props.ariaPressed !== undefined) el.setAttribute('aria-pressed', String(props.ariaPressed))
   if (props.ariaLabel) el.setAttribute('aria-label', props.ariaLabel)
+  if (props.title !== undefined) el.setAttribute('title', props.title)
   if (props.dataset) for (const [k, v] of Object.entries(props.dataset)) el.dataset[k] = v
   if (props.style) Object.assign(el.style, props.style)
   if (props.on) {
