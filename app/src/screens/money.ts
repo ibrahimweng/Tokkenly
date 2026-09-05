@@ -5,15 +5,78 @@ import { card, cardHead, kv, callout } from '../components/bits'
 import { composerScreen } from '../components/composer'
 import { state } from '../state'
 import { walletScreen } from './wallet'
-import { usd, naira } from '../format'
+import { usd, naira, when } from '../format'
 import { openSheet, current, go } from '../router'
+import { isMobile } from '../responsive'
 import { toast } from '../components/sheet'
 
 const PEOPLE = ['Adaeze Okonkwo', 'Tunde Bakare', 'Chidi Nwosu', 'Ngozi Eze']
 
+const initials = (name: string) => name.split(' ').map((s) => s[0]).join('')
+
+/** When someone was last paid, so the list is ordered by memory rather than
+ *  alphabet. Nothing beats "the person you paid on Tuesday". */
+function lastPaid(name: string): string {
+  const a = state.activity.find((x) => x.who === name && x.kind === 'payment')
+  return a ? (a.amount < 0 ? 'You sent ' : 'They sent ') + usd(Math.abs(a.amount)) + ' · ' + when(a.at) : 'No payments yet'
+}
+
+/** Step one of Send on a phone. There is no second column to hold the list,
+ *  so who comes first and how much follows as a sheet. Figma M07. */
+export function sendWhoScreen(): HTMLElement {
+  const rows = [...PEOPLE]
+    .sort((a, b) => {
+      const ia = state.activity.findIndex((x) => x.who === a)
+      const ib = state.activity.findIndex((x) => x.who === b)
+      return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib)
+    })
+    .map((p) =>
+      h('button', {
+        class: 'sheet-row',
+        on: { click: () => go('/send?to=' + encodeURIComponent(p)) },
+      },
+        h('span', { class: 'avatar', text: initials(p) }),
+        h('span', { class: 'two-line' },
+          h('span', { class: 't-body-strong', text: p }),
+          h('small', { text: lastPaid(p) })),
+        h('span', { class: 'muted', html: icon.chevron() })))
+
+  const address = h('input', { placeholder: 'Paste a Base address' })
+
+  return shell(
+    'wallet',
+    pageHeader('Send money', eyebrow('Cash available', usd(state.cash))),
+    h('label', { class: 'field' },
+      h('span', { html: icon.search() }),
+      h('input', { placeholder: 'Search a name' })),
+    card(
+      cardHead('People you can pay'),
+      h('div', { class: 'sheet-list' }, ...rows)
+    ),
+    card(
+      cardHead('Or send to an address'),
+      h('label', { class: 'field' }, address),
+      h('button', {
+        class: 'btn btn-quiet', text: 'Continue',
+        on: {
+          click: () => {
+            const v = address.value.trim()
+            if (v.length < 8) { toast('Paste a full Base address'); return }
+            go('/send?to=' + encodeURIComponent(v.slice(0, 6) + '…' + v.slice(-4)))
+          },
+        },
+      }),
+      callout('Base network only. Sending any other asset to this address loses it.', 'warning')
+    )
+  )
+}
+
 export function sendScreen(): HTMLElement {
   const r = current()
-  const to = r.query.get('to') ?? PEOPLE[0]
+  const chosen = r.query.get('to')
+  // On a phone, who comes first. On desktop the list is the right column.
+  if (isMobile() && !chosen && !r.sheet) return sendWhoScreen()
+  const to = chosen ?? PEOPLE[0]
   return composerScreen({
     place: 'wallet',
     base: walletScreen,
@@ -49,8 +112,10 @@ export function sendScreen(): HTMLElement {
             on: { click: () => go('/send?to=' + encodeURIComponent(p)) },
           },
             h('span', { class: 'who' },
-              h('span', { class: 'avatar', text: p.split(' ').map((s) => s[0]).join('') }),
-              h('span', { class: 't-body-strong', text: p })),
+              h('span', { class: 'avatar', text: initials(p) }),
+              h('span', { class: 'two-line' },
+                h('span', { class: 't-body-strong', text: p }),
+                h('small', { text: lastPaid(p) }))),
             h('span', { class: p === to ? 'pos t-body-strong' : 'muted', text: p === to ? 'Selected' : 'Pick' }))),
         callout('Only people already in your list can be paid without a second check.')
       ),

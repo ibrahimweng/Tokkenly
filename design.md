@@ -2803,6 +2803,15 @@ width they have rather than the width they were drawn at. `scripts/phone.mjs`
 measures `scrollWidth` against the viewport on every address, so that class of
 fault reports itself.
 
+**Send is two steps on a phone and one on desktop.** Desktop puts the list of
+people in the right column, so who and how much are decided on one screen. There
+is no right column on a phone, so `/send` shows the picker first and the amount
+arrives as a sheet once somebody is chosen. It is the same address either way:
+`/send` is the picker, `/send?to=Tunde%20Bakare` is the amount over it, and Back
+returns to the list rather than out of the flow. Each person carries when they
+were last paid, taken from the activity feed, because that is how people find
+the one they want.
+
 ## 11e. The phone
 
 `07 Mobile` carries the settled product at 390 by 844: forty seven screens, one
