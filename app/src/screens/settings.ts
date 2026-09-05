@@ -152,6 +152,11 @@ export function accountScreen(): HTMLElement {
             on: { click: () => toast('Your data is being prepared. We will email ' + p.email) } })
         ),
         card(
+          cardHead('Risk and disclosures'),
+          h('span', { class: 'muted', text: 'What you actually own, what it costs, what happens to your money if something goes wrong, and who to go to if we cannot put it right.' }),
+          h('button', { class: 'link', text: 'Read the disclosures', on: { click: () => go('/disclosures') } })
+        ),
+        card(
           cardHead('Closing your account'),
           h('span', { class: 'muted', text: 'Move your money out first. Anything sitting in Earn has to come out and any loan has to be repaid, then we can close the account and delete what we hold.' }),
           h('button', { class: 'link', text: 'Close my account', on: { click: () => openSheet('close') } })

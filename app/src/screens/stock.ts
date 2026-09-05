@@ -73,7 +73,9 @@ export function stockScreen(ticker: string): HTMLElement {
   return shell(
     'market',
     pageHeader(c.name,
-      h('div', { class: 'chip-row' }, follow, bucketAdd(c),
+      h('div', { class: 'chip-row' },
+        h('span', { class: 'pill', text: c.kind === 'etf' ? 'ETF' : 'Company' }),
+        follow, bucketAdd(c),
         h('button', { class: 'btn btn-primary btn-sm', text: 'Buy ' + c.ticker,
           on: { click: () => go('/invest/' + c.ticker.toLowerCase() + '/invest') } }))),
     h('div', { class: 'row' },

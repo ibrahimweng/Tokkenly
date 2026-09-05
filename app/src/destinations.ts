@@ -52,6 +52,8 @@ export const DESTINATIONS: Destination[] = [
     also: 'kyc nin bvn identity check limits raise lift', hint: 'Raises what you can move' },
   { label: 'Security', to: '/security', place: 'account', kind: 'screen', primary: true, also: 'pin face id recovery phrase devices sign out' },
   { label: 'Support', to: '/support', place: 'account', kind: 'screen', primary: true, also: 'help questions contact email us' },
+  { label: 'Risk and disclosures', to: '/disclosures', place: 'account', kind: 'screen', primary: true,
+    also: 'risk terms legal fees eligibility what you own custodian', hint: 'What you own, what it costs, what can go wrong' },
   { label: 'Everything', to: '/all', place: 'account', kind: 'screen', primary: true, also: 'all screens index directory sitemap' },
 ]
 

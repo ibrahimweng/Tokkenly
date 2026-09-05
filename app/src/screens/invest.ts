@@ -63,7 +63,9 @@ export function investScreen(ticker: string): HTMLElement {
       ['Total', usd(v + tradeFee(v))],
       ['You receive', fmtShares(v / c.price) + ' shares'],
     ],
-    callout: 'You are buying part of a share. Sell any part of it whenever you want.',
+    callout: c.kind === 'etf'
+      ? `A fund, not a company: one holding spread across ${c.holds ?? 'many'}. Its value can fall as well as rise, and you can get back less than you put in.`
+      : 'You are buying part of a share. Its value can fall as well as rise, and you can get back less than you put in.',
     action: (v) => `Buy ${usd(v)} of ${c.name}`,
     onAction: (v) => openSheet('invest-review', { v: String(v), t: c.ticker }),
     right: () => {
