@@ -1979,6 +1979,12 @@ alone.
 | D03d Earn | How much with the ruler, what it pays, and where the interest comes from |
 | D03e Earn review | The amount, the rate, when it pays, how to take it out |
 | D03f Earning | The outcome, with the reference |
+| D03g Repay | How much with the ruler, what is left owing, and what repaying frees up |
+| D03h Repay review | The amount, where it comes from, what is left, what that costs |
+| D03i Repaid | The outcome, with the reference |
+| D03j Take out | How much with the ruler, and what the rest carries on paying |
+| D03k Take out review | The amount, where it goes, when, and what you give up |
+| D03l Taken out | The outcome, with the reference |
 | D04 Market | Search, seven categories, three indices, five plain language picks, what is moving today, popular |
 | D05 Apple | The full chart, today's trading, growth and valuation, your position, trending, news |
 | D06 Account | Personal details, your address with its warning, verification, devices |
@@ -2507,9 +2513,8 @@ a state colour, per rule 41.
 because the row it was cloned from was an outgoing figure.
 
 **What still leads nowhere.** `See all` on both history bands, `See holdings` on
-the Borrow card and `See history` on the Earn card. Repaying a loan and taking
-money out of Earn are both named on these screens as things a person can do at
-any time, and neither has a screen yet.
+the Borrow card and `See history` on the Earn card. Repaying and taking money out
+were on this list until 11b.4i; both are drawn now.
 
 ### 11b.4g History, Account, Security and Support
 
@@ -2615,6 +2620,60 @@ fold, nothing below 4.5 to 1, no unbound fill, no gap or padding off the four
 grid, every amount coloured by direction, and every signed in screen lighting
 exactly one place in the rail.
 
+### 11b.4i Repay and take out, the way back
+
+Every screen in Grow said the same two things: repay any time, take money out any
+time. Neither had anywhere to go. A promise a screen makes often enough becomes a
+claim, and a claim with no screen behind it is the kind of thing a person finds
+out about at the worst moment.
+
+| Way back | Screens |
+| --- | --- |
+| Repay | `D03g Repay` · `D03h Repay review` · `D03i Repaid` |
+| Take out | `D03j Take out` · `D03k Take out review` · `D03l Taken out` |
+
+**Each is its forward flow with the direction reversed**, and deliberately so.
+Repay is the Borrow composer: the same ruler, the same typeable field, the same
+four summary rows, the same sheet shape. A person who has borrowed once already
+knows how to repay, because it is the screen they have seen. Three taps from the
+hub, four from anywhere.
+
+**Reversing a composer changes what the second column is for.** Borrow's right
+column is the risk, because the question there is what happens if the shares
+fall. Repay's is the cost, because the question here is what the debt is doing
+while it sits:
+
+| Repay | Left owing | Costs a month |
+| --- | --- | --- |
+| $100.00 | $288.90 | $2.26 |
+| $250.00 | $138.90 | $1.09 |
+| Everything | $0.00 | Nothing |
+
+Under it, the thing people get wrong about repaying: your limit goes back up by
+whatever you repay, and your shares were never sold either way.
+
+Take out does the same in the other direction. Earn's right column projects what
+the money will pay; Take out's projects what is left after the withdrawal pays,
+on $940 rather than $1,740. Its callout answers the only real worry, which is
+whether taking money out costs you the interest already earned. It does not.
+
+**Neither screen leads with a collateral bar.** Borrow earned one because 816%
+cover means something next to a 140% minimum. With $388.90 outstanding against
+$12,480.60 of shares the same bar reads 3,209%, which is a true number that
+teaches nothing. It was removed from the Repay clone, the same way it was removed
+from Earn.
+
+**The hub is the door.** `EARN` and `BORROW` each carry a link in their header
+row, named for where it goes: `Take out` and `Repay`. Rule 39 says a rail lists
+places; a card header link names an action, and it should be the action's own
+name rather than a description of it.
+
+**Two figures were nearly wrong.** The first draft put `Left earning $940.00` in
+Take out's summary and `$940.00` again as the right column's figure, and gave
+Repay a right column headed by `$388.90` when the page header already said it.
+Both were caught before they were drawn, by working the copy out against the
+duplicate figure check rather than after it.
+
 ### 11b.5 The desktop flows
 
 The screens used to sit loose on the page in a grid of four across. They now sit
@@ -2630,7 +2689,7 @@ a person meets them.
 | E. Send money | D09 Send, D10 Send review, D11 Send sent |
 | F. Buy and convert | D13 Add money, D14 Convert |
 | G. History and receipts | D02 History, D02a Receipt |
-| H. Grow and Stocks | D03 Grow, D04 Market, D05 Apple, D17 Invest, D03a–D03c Borrow, D03d–D03f Earn |
+| H. Grow and Stocks | D03 Grow, D04 Market, D05 Apple, D17 Invest, D03a–D03c Borrow, D03d–D03f Earn, D03g–D03i Repay, D03j–D03l Take out |
 | I. Account, security and support | D06 Account, D06a Change email, D07 Security, D07a Change PIN, D08 Support |
 
 **Wallet sits third, straight after Home**, for the same reason it sits second in
@@ -2838,11 +2897,8 @@ drawn on both as well. Portfolio and Withdrawals are still missing, though both
 fold into screens that exist: Portfolio into Home, Withdrawals into History with
 its filter.
 
-Repaying a loan and taking money out of Earn are the two gaps left by 11b.4f.
-Both are named on the Grow screens as things a person can do at any time, and a
-promise a screen makes is a screen somebody has to draw. Neither is hard: repay
-is the Borrow composer with the direction reversed, and taking money out of Earn
-is the Earn composer with the direction reversed.
+Repaying a loan and taking money out of Earn were the two gaps left by 11b.4f.
+Both are drawn now, as 11b.4i.
 
 The staff panel is out of scope for now. It holds a list of users, a user in
 full, transactions, and a log of who looked at what. It is a different audience
