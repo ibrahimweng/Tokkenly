@@ -1782,7 +1782,10 @@ scale.
     cent white lift over sand shipped as a solid white button. Nothing looked
     wrong in a sixty variant sheet; the contrast check found it at 1.37:1. Put
     the alpha back on the object the call hands you, and never trust an overlay
-    you have not measured. See 11f.3.
+    you have not measured. `clone()` does it too: a scrim copied from another
+    screen arrived at full opacity and painted the page it was meant to dim
+    solid black. Whatever produces a paint, read the alpha back. See 11f.3
+    and 11f.10.
 
 ## 11. The screens, by flow
 
@@ -3479,7 +3482,43 @@ following, the notification count going down as you read and clearing on mark
 all, and sorting reordering, landing in the url and surviving a reload. Sixteen
 checks, no failures.
 
-### 11f.10 Still open
+### 11f.10 The three sheets that were only ever code
+
+Export, the support answer and Email us existed in `sheets.ts` and nowhere in
+the file. Drawn now, each over the screen it opens from:
+
+| Frame | Over | Holds |
+|---|---|---|
+| `D02b Export` | History | rows, format, what it covers, where it goes, then Email me the file |
+| `D08a Answer` | Support | the question as the title, the answer, and Still stuck, email us |
+| `D08b Email us` | Support | address, reply time, hours, urgent, then Open my email app |
+
+All three were cloned from `D02a Receipt`, which already had the shape: a head,
+a panel of label and value cells, a callout and a button. Answer keeps only the
+head, a paragraph and a button, because that is all the code has.
+
+Two things went wrong, and both were worth the trouble.
+
+`D08 Support` is a horizontal auto layout, so appending a scrim to a copy of it
+put the scrim *beside* the sidebar rather than over the page. Both overlays
+need `layoutPositioning = 'ABSOLUTE'`, which is how Receipt holds its own.
+
+Then every one of them rendered as a black rectangle with a dialog on it. The
+scrim's paint carries `surface/scrim` at `opacity: 0.54`, and the clone arrived
+at `1`. This is rule 51 again from a different direction: it was
+`setBoundVariableForPaint` that dropped an alpha last time, and `clone()` this
+time. A sweep over every scrim on the page put the alpha back on four of them,
+and the fourth was `D07c Recovery phrase shown`, which had been sitting wrong
+since before this pass and which nobody had noticed.
+
+The Answer button also came through as Primary when the code calls it
+`btn-secondary`, so it is control fill and ink label now.
+
+The four new frames, `D17c Sell` included, pass the usual checks: no unbound
+fills, nothing off the four pixel grid, nothing clipped, no dialog past its
+frame.
+
+### 11f.11 Still open
 
 - The nav component's variants are still named `Money` and `Stocks` from the
   older product. They light the right icons; renaming breaks twenty nine
