@@ -59,11 +59,13 @@
   --nav-h: 64px;
   --screen-h: 1024px;
   --content-max: 1200px;      /* the column 06 Desktop is drawn in */
-  /* Figma 06 Desktop draws the content frame 1200 wide with 96 down each side
-     and 72 top and bottom, so the column inside it is 1008. The app was on
-     32/24, which is why the middle read as stretched next to the file. */
+  /* 06 Desktop draws the content frame 1200 wide with 96 down each side, so
+     the column inside it is 1008. The app was on 32, which is why the middle
+     read as stretched beside the file. The vertical stays at 24: the ask was
+     about the sides, and 72 top and bottom pushed 25 of the 48 screens past
+     the bottom of their frame. */
   --content-pad-x: 96px;
-  --content-pad-y: 72px;
+  --content-pad-y: 24px;
 
   --font: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
     'Helvetica Neue', Arial, sans-serif;
