@@ -3367,7 +3367,37 @@ so having none when disabled is right.
 button keeps its variant's fill, carries `opacity: 0.4`, and is never repainted
 to `--sunken`. Twenty five checks, no failures.
 
-### 11f.8 Still open
+### 11f.8 Deploying it
+
+The app lives in `app/`, and there is no `package.json` at the repository root,
+so an import that points Vercel at the root finds nothing to build.
+`vercel.json` at the root now says where to look:
+
+    installCommand   cd app && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install
+    buildCommand     cd app && npm run build
+    outputDirectory  app/dist
+    rewrites         /(.*) -> /index.html
+
+The skip flag matters. Playwright is a dev dependency and its install hook
+downloads about four hundred megabytes of browsers, which a deploy has no use
+for. Vercel installs dev dependencies by default, so without the flag every
+build pays for browsers it will never open.
+
+The rewrite is belt and braces. Routing is by hash, so `/` serves every screen
+already; the rewrite only covers someone typing a path without one. Vercel
+checks the filesystem before rewrites, so the hashed assets still resolve.
+
+Setting Root Directory to `app` in the dashboard works just as well and needs no
+file. If it is set, Vercel reads `app/vercel.json` and ignores the root one, so
+the two cannot fight.
+
+Verified the way it will actually run: a fresh clone, install with the flag,
+`npm run build`, then the built `dist` served by a plain static server with no
+Vite in the loop. Fifteen routes render, the borrow flow completes on the
+bundle, the phone picker lists four people and shows the rail, and there are no
+JavaScript errors and no failed requests.
+
+### 11f.9 Still open
 
 - The nav component's variants are still named `Money` and `Stocks` from the
   older product. They light the right icons; renaming breaks twenty nine
