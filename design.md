@@ -1,0 +1,3410 @@
+# Tokkenly design system
+
+This file is the reference for every screen in the Tokkenly mobile app. Read it
+before designing anything. If a value is not in this file, it does not go in the
+design. If something here is wrong, change this file first and then the design.
+
+## 0. The three hard rules
+
+These come before everything else. A screen that breaks one of them is wrong
+even if it looks fine.
+
+1. **Two font weights per screen.** Lato SemiBold and Lato Regular. Nothing else.
+2. **Every size and every gap is a multiple of 4.** Font sizes, line heights,
+   spacing, padding, heights and widths.
+3. **No mid tone surfaces.** A screen is near white or deep green, never a wash
+   of beige in between.
+
+Three things sit outside rule 2 on purpose. Letter spacing is optical correction
+rather than layout, so it is set by eye. The pill radius is not a measurement, it
+is fully round. And a width that comes from filling the space available is not a
+value anyone chose, so it does not need to land on the grid. Only the gaps and
+padding around it do.
+
+## 1. The direction
+
+Tokkenly is a light, precise financial app. Screens are near white. The ink is a
+deep forest green rather than black. One bright mint accent carries positive
+states. Sand appears only in small amounts.
+
+The look rests on two ideas.
+
+The first is precision. Data is laid out cleanly, codes are set in a monospace
+font, and numbers align. This is what makes a finance app feel dependable.
+
+The second is confidence. The number that matters is very large and everything
+around it is very small. There is almost nothing in between.
+
+## 2. Colour
+
+### 2.1 The eight approved brand values
+
+Fixed. Do not change them.
+
+| Name | Hex |
+| --- | --- |
+| Sand | `D5A578` |
+| Sand deep | `BE895C` |
+| Green | `105C4C` |
+| Green deep | `053329` |
+| Mint | `2BBD9B` |
+| Grey | `DDDED6` |
+| Orange | `F85113` |
+| Yellow | `F9D100` |
+
+### 2.2 The ratio
+
+The palette is kept. What changed is how much of each appears.
+
+- About 70 percent of a screen is near white or white surface.
+- About 20 percent is deep green ink, meaning text, icons and the primary button.
+- About 10 percent is accent, meaning mint, and occasionally sand.
+
+Sand is never a full screen background. Use it for one card or one badge at a
+time.
+
+### 2.3 Surface
+
+The page is pure white. Everything that sits on it carries a light grey step, so
+the shape of a card comes from its own surface. Nothing in this system is
+outlined. There are no border lines anywhere in the app.
+
+| Token | Value | Use |
+| --- | --- | --- |
+| `surface/canvas` | `FFFFFF` | The screen background. Pure white, always. |
+| `surface/default` | `FAFBFC` | Cards, sheets, fields and secondary buttons sitting on the canvas. |
+| `surface/sunken` | `F0F2F4` | Anything nested inside a `surface/default` surface. |
+| `surface/control` | `E9ECEF` | Anything a person taps that is not the primary button: secondary buttons and unselected chips. |
+| `surface/control-pressed` | `DDE2E6` | A control being held down. |
+| `surface/inverse` | `053329` | The camera feed, the brand mark, and the active navigation pill. Never a screen background. |
+| `surface/accent` | `2BBD9B` | The mint accent card. Once per screen. |
+| `surface/sand` | `D5A578` | The saturated sand. A badge, a chip, a small mark inside an accent card. Never the card itself. |
+| `surface/sand-soft` | `F7EFE7` | The sand accent card. Once per screen. Warm enough to read as an accent, pale enough to carry `ink/muted`. |
+| `surface/frost` | `FAFBFC` at 88% | Floating surfaces that content scrolls under. Always paired with a background blur of 24. |
+| `surface/scan` | `FFFFFF` | Behind a QR code. The one exception to the white rule, because a reader needs the quiet zone. The one token that does not change in dark mode. |
+| `surface/hero` | `053329` | The balance hero on the pending and first run Home screens. Its own token because it must not invert in dark mode. See 2.9a. |
+| `surface/hero-raised` | `094135` | Buttons sitting on that hero. |
+| `surface/camera` | `053329` | The viewfinder and the captured photo. A camera preview stays dark in both modes. |
+
+The greys are neutral, with no green cast. That is deliberate. If every surface
+is faintly green, the green stops reading as green when it actually appears.
+
+`FAFBFC` sits two percent away from white. That is a deliberate whisper. It is
+enough to shape a card at arm's length on a good screen, and it is not enough to
+survive a cheap panel in daylight. The system carries no fallback for that,
+because the fallback would be a line.
+
+That whisper works for a card and fails for a button. A card is large and has a
+24 radius, so two percent is enough to shape it. A 56 tall pill is small, and at
+two percent it reads as disabled rather than as something to tap. So controls
+get their own step at `E9ECEF`, which is far enough from white to look pressable
+at any size. Grey therefore does two different jobs at two different depths:
+`FAFBFC` and `F0F2F4` group things, `E9ECEF` invites a tap.
+
+Surfaces step down, never sideways. A `surface/default` card on the white canvas
+holds a `surface/sunken` panel. A `surface/sunken` panel holds nothing further.
+Two surfaces of the same value may never touch, because with no line between
+them there would be nothing left to tell them apart.
+
+Nothing on a screen is pure white except the canvas itself. If a card looks
+white, it is wrong.
+
+### 2.4 Ink
+
+| Token | Value | Contrast on canvas | Use |
+| --- | --- | --- | --- |
+| `ink/strong` | `053329` | 13.9 to 1 | Headings, values, body text. |
+| `ink/muted` | `4D6B65` | 5.8 to 1 | Labels, captions, secondary text. |
+| `ink/subtle` | `8EA39F` | 2.9 to 1 | Disabled text and placeholders only. |
+| `ink/inverse` | `FFFFFF` | on deep green | Text on `surface/inverse`. |
+| `ink/inverse-muted` | `A9C4BB` | 7.5 to 1 on deep green | Secondary text on deep green. |
+
+These are the light mode values. Every one of them has a dark mode partner and
+the dark figures are in 2.9.
+
+### 2.5 Edges
+
+There are no border lines. No card outline, no field outline, no list divider,
+no chart baseline, no chip edge. A shape is described by its own fill and by the
+space around it, and by nothing else. The grey border tokens were removed from
+the file so the line cannot come back by accident.
+
+Three strokes survive, and they are named here so nothing else can creep in.
+
+| Token | Value | Use |
+| --- | --- | --- |
+| `border/focus` | `105C4C` | The focused field and the selected row. 2px. |
+| `chart/grid` | `E9ECEF` | Vertical gridlines inside a chart, and nowhere else. 1px. |
+| `chart/tooltip` | `053329` | The dark card that shows a value on a chart. |
+
+An error field is the other exception, at 2px in `state/negative`, and it always
+appears with the helper text saying the same thing in words.
+
+The first two mark a state rather than draw a shape. The third is different. A
+chart is the one place in this product where a person reads data rather than
+glances at it, so a chart is allowed axes and gridlines. That exception is
+written out in 8.13 and it travels nowhere else.
+
+### 2.6 State
+
+Fill colours and text colours differ, because the bright brand values do not have
+enough contrast to be read as small text.
+
+| Token | Value | Use |
+| --- | --- | --- |
+| `state/positive` | `0C6B52` | Text and icons for money received. 5.45 to 1 on its own tint. |
+| `state/negative` | `A8380A` | Text and icons for errors. 5.13 to 1 on its own tint. |
+| `state/warning` | `7A5E00` | Text and icons for warnings. 5.37 to 1 on its own tint. |
+| `fill/positive` | `2BBD9B` | Solid mint fills, dots and large marks. |
+| `fill/negative` | `F85113` | Solid orange fills and large marks. |
+| `fill/warning` | `F9D100` | Solid yellow fills and large marks. |
+| `tint/positive` | `D8F1E8` | Success banner background. |
+| `tint/negative` | `FBDFD3` | Error banner background. |
+| `tint/warning` | `FBF0C9` | Warning banner background. |
+| `tint/brand` | `DCE9E3` | Quiet brand tint behind icons. |
+
+The tints are one step deeper than a card. They have to be, or a status banner
+sitting inside a card would read as part of the card.
+
+### 2.7 Contrast
+
+- Text below 24px must reach 4.5 to 1 against the surface behind it.
+- Text at 24px or larger must reach 3 to 1.
+- `ink/subtle` fails 4.5 to 1 on purpose. Use it only where the text carries no
+  information the person needs.
+- Never carry meaning with colour alone. A status pairs a colour with a word.
+
+Every text and surface pair in the file was measured after the greys were
+lightened. The worst case is `ink/muted` on `tint/negative` at 4.60 to 1, and
+every other pair sits above it. Lightening the greys moved every pair up.
+
+| Surface | Value | `ink/strong` | `ink/muted` |
+| --- | --- | --- | --- |
+| `surface/canvas` | `FFFFFF` | 13.89 | 5.82 |
+| `surface/default` | `FAFBFC` | 13.41 | 5.62 |
+| `surface/sunken` | `F0F2F4` | 12.38 | 5.19 |
+| `surface/control` | `E9ECEF` | 11.71 | 4.91 |
+| `surface/control-pressed` | `DDE2E6` | 10.65 | 4.46 |
+| `tint/brand` | `DCE9E3` | 11.12 | 4.66 |
+| `tint/positive` | `D8F1E8` | 11.68 | 4.90 |
+| `tint/negative` | `FBDFD3` | 10.98 | 4.60 |
+| `tint/warning` | `FBF0C9` | 12.18 | 5.10 |
+| `surface/sand-soft` | `F7EFE7` | 12.21 | 4.74 |
+| `surface/sand` | `D5A578` | 6.27 | 2.71 |
+
+`surface/sand` at `D5A578` carries `ink/strong` at 6.27 to 1 and nothing else.
+`ink/muted` on it is 2.71 to 1 and is never allowed. That is the reason the
+accent card is now `surface/sand-soft` and the saturated value survives only as
+a badge, where the one word on it is `ink/strong`.
+
+
+`ink/muted` on `surface/control-pressed` is the one pair below 4.5 to 1, at 4.46.
+Nothing uses it. A pressed control always carries `ink/strong`, which reaches
+10.65 to 1, and the pressed state lasts as long as a finger is down.
+
+Contrast is not the risk here. Every pair in use passes comfortably. The risk is
+surface against surface, which contrast ratios do not measure. `FAFBFC` on
+`FFFFFF` is 1.04 to 1. That number is the whole argument for the design and the
+whole argument against it.
+
+### 2.7a The check that catches this
+
+Rule 11 has been in this file from the start: never use `ink/subtle` for text a
+person needs to read. On 3 September both desktop Home screens were measured and
+each had **ten outright contrast failures**, all of them mine, all of them rule
+11:
+
+| What | Measured | Needed |
+| --- | --- | --- |
+| The range tabs `1D 1W 1M 1Y ALL` on `surface/sunken` | 2.57 to 1 | 4.5 |
+| The chart period labels `AUG` and `$6,240` | 2.37 to 1 | 4.5 |
+| The fund names on the sand card, set at 70% opacity | 3.62 to 1 | 4.5 |
+
+The lesson is not that the rule was missing. The rule was there and I broke it
+anyway, in five places per screen, because `8EA39F` looks fine next to a
+headline and only fails when it is measured. A rule nobody can test is a rule
+that gets broken.
+
+So the rule now has a test. Before any screen is called finished, walk every text
+node, composite its own opacity and every ancestor opacity against the nearest
+solid surface behind it, and compare the result against 4.5 to 1, or 3 to 1 for
+text at 24 or larger, or 18.66 and bold. Three things this catches that reading a
+screenshot does not:
+
+- **Opacity is contrast.** Text at `ink/strong` and 70% is not `ink/strong`. It
+  is whatever `ink/strong` mixed with the surface comes to, and on sand that is
+  3.62 to 1. Opacity below 1 on a text node is a contrast bug every time, so the
+  audit resets it rather than reporting it.
+- **The surface behind is rarely the canvas.** `ink/subtle` is 2.90 to 1 on
+  white and 2.38 to 1 on `surface/sunken`. The number in the ink table is the
+  best case, not the case.
+- **A component instance carries its own copies.** Fixing the dot column chart
+  component fixed 2 texts and 142 dots in one place. Fixing the screens had to
+  be done twice, once per screen, because Simple and Detailed are separate
+  frames.
+
+Both Home screens now report zero failures. The tightest text on either screen
+is the word "Market" at 5.62 to 1 against a 4.5 requirement.
+
+### 2.8 The data palette
+
+The brand palette carries meaning. Mint means money arrived, orange means
+something failed, yellow means take care. That is why none of them can also mean
+"the third series in a chart". A chart needs colours that mean nothing except
+"this is not that", and the system had none, which is why every chart in the
+first pass was a single thin green line.
+
+Five slots, in a fixed order that never changes:
+
+| Token | Value | Name |
+| --- | --- | --- |
+| `data/1` | `0F8F70` | teal |
+| `data/2` | `9333EA` | violet |
+| `data/3` | `C57A2E` | clay |
+| `data/4` | `2563EB` | blue |
+| `data/5` | `E11D74` | rose |
+
+Each has a soft partner, `data/1-soft` through `data/5-soft`, for the area under
+a line and for the empty dots in a matrix.
+
+The order is not a taste decision. It is the thing that keeps the chart readable
+to someone who cannot tell red from green. Colours are handed out in this order
+and never cycled, because neighbouring slots are the ones that end up touching,
+and this order is the one where every neighbouring pair stays far apart. The
+worst neighbouring pair is 19.2 apart under simulated protanopia and 33.9 apart
+under normal vision, against a target of 8 and a floor of 15.
+
+Two rules come out of that and both are hard:
+
+**Only the first three slots may be used where any two marks can sit side by
+side.** That means dot matrices, scatter plots and small multiples. Blue and
+violet are 1.3 apart under deuteranopia, which is nothing. They are safe in a
+line or a stacked bar because the fixed order keeps them two apart and they
+never touch. They are not safe where anything can neighbour anything. A fourth
+series in that kind of chart is not a new colour, it is a fourth chart or an
+"Other" group.
+
+**A data colour never touches text.** The tokens are scoped to fills and strokes
+only, so Figma will not even offer them for a text layer. A value, a label and a
+legend word all wear `ink/strong` or `ink/muted`. The coloured dot beside the
+word carries the identity, and the word carries the meaning, so colour is never
+the only thing telling two series apart.
+
+### 2.8a Charts are grey by default
+
+Having a data palette is not a reason to spend it.
+
+A chart is drawn in greys unless colour is carrying something a grey cannot.
+`ink/subtle` for a sparkline, `ink/strong` for the one line a card is about,
+`chart/grid` for the gridlines, and a faint wash of `ink/strong` for the area
+beneath. That is the whole language for most charts in the product.
+
+Colour appears in exactly two places. A stock being up or down, which is
+`state/positive` or `state/negative` on the number and its arrow. And the series
+of a chart that genuinely has to tell several things apart, which is where the
+five slots in 2.8 earn their place.
+
+The reason is that a chart on a dashboard is competing with the figure it exists
+to explain. The first version of the desktop Home had a six month chart in two
+strong colours, and it took the eye before the balance did. The chart was
+answering a smaller question more loudly than the screen was answering the big
+one. Greying it did not make it less useful. It made it stop shouting.
+
+The five colour palette stays in the system. It is for the charts that need it,
+which are fewer than they look.
+
+### 2.9 Dark mode
+
+The whole product is dark. It is built as a second **mode on the `Colour`
+variable collection**, not as a repaint. The collection now has two modes,
+`Light` and `Dark`, every one of the semantic tokens carries a value in both,
+and every page in the file is set to `Dark`. Nothing was recoloured by hand.
+
+That was only possible because the file was already disciplined: a sweep of all
+three screen pages found **11,559 bound fills and strokes and exactly two literal
+ones** — a stray `FAFBFC` frame and a stray black vector. Both are now bound. The
+lesson is worth keeping: a design system pays for itself the first time somebody
+asks for a theme.
+
+**The surface ramp inverts.** In light mode surfaces step *down* from white. In
+dark mode they step *up* from near black, because a card has to be lighter than
+the page when the page is dark.
+
+| Token | Light | Dark | Step from the one above |
+| --- | --- | --- | --- |
+| `surface/canvas` | `FFFFFF` | `0A0A0C` | — |
+| `surface/default` | `FAFBFC` | `1E1E22` | 1.19. The sidebar, and nothing in the main column |
+| `surface/sunken` | `F0F2F4` | `161619` | 1.10 from canvas. Every card in the main column |
+| `surface/control` | `E9ECEF` | `2D2D32` | 1.15 |
+| `surface/control-pressed` | `DDE2E6` | `38383E` | 1.19 |
+
+The dark steps are **larger** than the light ones. Light mode's canvas to card
+step is 1.04 to 1, which section 2.3 admits is a whisper. Dark mode cannot afford
+a whisper: there are still no border lines anywhere, so the surface step is the
+only thing separating a card from the page, and dark values compress. Every dark
+step is at least 1.12.
+
+**The two grounds were the same colour until 5 September.** Seventy five panels
+in the main column were painted `surface/default`, and so was the sidebar, so a
+card and the navigation were the same value and no amount of darkening one of
+them could separate them. The main column moved to `surface/sunken`, which now
+means one thing only: a card on the canvas. `surface/default` means the sidebar
+and nothing else.
+
+| | Step from canvas |
+| --- | --- |
+| Card, `surface/sunken` `161619` | 1.10 |
+| Sidebar, `surface/default` `1E1E22` | 1.19 |
+| Card against the sidebar | 1.09 |
+
+The sidebar went **up** while the card went **down**, which is the part that
+matters. Making the card darker alone would have left it sitting at the same
+value as the rail. A page and its navigation are two grounds, and two grounds
+need two values.
+
+**The dark card came down on 5 September**, from `232327` to `18181B` and then
+to `161619`. Every
+signed in screen paints its content area with nothing, so every card in the main
+column sits straight on `surface/canvas`, and at `232327` that was a step of
+1.25. One card at 1.25 is fine. Nine of them on a page reads as a grid of bright
+tiles with dark grout, and it gets worse the fuller the page gets. At `18181B`
+the step is 1.12, which is the same step the sidebar takes from the canvas, so a
+card and the sidebar now sit at the same distance from the page.
+
+Two things fell out of that change and both are improvements. `surface/control`
+on a card went from 1.14 to 1.29, so buttons and status pills separate from the
+card better than they did. And the promo panel in the sidebar, which sat on
+`surface/sunken` inside a lighter `surface/default`, would have vanished at the
+new value: it is `surface/canvas` now and reads as a well cut into the sidebar
+rather than a card raised off it. Same visible step, 1.13, opposite direction.
+A panel on a dark ground steps up. A panel on a lighter ground can step down.
+
+**The dark greys are neutral, and that was a correction.** The first dark build
+gave them a green cast, on the theory that a green tint would read as depth. It
+did not. It read as green. Every card, panel and control on every screen became a
+dark green box, and since surfaces are most of a screen by area, the brand colour
+ended up being the colour of the room rather than a thing in it. The note that
+came back was "the app looks too mint green", and it was correct. The ramp is now
+neutral, and the brand appears only where it does work.
+
+**Ink inverts with it.**
+
+| Token | Light | on light canvas | Dark | on dark canvas |
+| --- | --- | --- | --- | --- |
+| `ink/strong` | `053329` | 13.89 | `DCDCE0` | 14.48 |
+| `ink/muted` | `4D6B65` | 5.82 | `A6A6AD` | 8.18 |
+| `ink/subtle` | `8EA39F` | 2.90 | `65656C` | 3.34 |
+
+`ink/strong` is `DCDCE0`, not white. Pure white on near black is about 18 to 1
+and halates on an OLED panel; `DCDCE0` lands at 14.48, within a whisker of light
+mode's 13.89, so the two modes read as the same amount of contrast rather than
+one being harsher.
+
+`ink/subtle` still fails 4.5 to 1 on purpose, in both modes. Rule 11 is unchanged.
+
+**The inverse pair swaps ends.** In light mode `surface/inverse` and `ink/strong`
+are the same value, `053329`: a deep block carrying white text. Dark mode keeps
+that symmetry and flips it, so `surface/inverse` is `DCDCE0` and `ink/inverse` is
+`0A0A0C`: a pale block carrying dark text. The active navigation pill, the brand
+mark and every primary button therefore invert for free, and a primary button in
+dark mode is a pale pill with dark text, which is what it should be.
+
+#### 2.9a-0 How much brand there is allowed to be
+
+Green is a **mark**, never a material. On the desktop Home it now appears in
+exactly two roles and nowhere else:
+
+| Where | Token | Count on Home |
+| --- | --- | --- |
+| A gain, as a number | `state/positive` | 8 |
+| The pill around a gain | `tint/positive` | 3 |
+
+No green surface, no green button, no green card, no green cast. The one other
+place it is allowed is the active navigation item, because that is the app
+telling you where you are.
+
+The test is arithmetic, not taste: count the nodes carrying a brand token on a
+screen. If a surface token is among them, the brand has stopped being an accent.
+
+#### 2.9a What must not simply invert
+
+Three things break if `surface/inverse` is allowed to flip them, and each needed
+its own token. Their light values are identical to what was there before, so
+light mode did not change by a single pixel.
+
+| Token | What it is | Light | Dark |
+| --- | --- | --- | --- |
+| `surface/hero` | The balance hero on the pending and first run Home screens | `053329` | `1B1B1F` |
+| `surface/hero-raised` | The buttons sitting on that hero | `094135` | `2A2A30` |
+| `surface/camera` | The viewfinder and the captured photo | `053329` | `1E1E22` |
+| `surface/scrim` | Behind a modal. 54 percent | `001A14` | `050506` |
+| `ink/on-hero` | Text on any of those | `FFFFFF` | `DCDCE0` |
+| `ink/on-hero-muted` | Secondary text on any of those | `A9C4BB` | `A6A6AD` |
+
+The hero is the clearest case. Flipped, it became a 350 by 220 near white slab on
+an otherwise dark screen, which is a lot of light to throw at somebody, and worse,
+it made the **verification pending** state louder than the verified one. A state
+that means "you cannot send yet" must not shout at the person more than the state
+that means everything works.
+
+The viewfinder is the blunt one. A camera preview is dark because a camera
+preview is dark. `surface/camera` steps 1.17 up from the canvas so the block is
+still visible on a page with no border lines.
+
+**`surface/scan` stays `FFFFFF` in both modes.** It is the quiet zone behind a QR
+code, and a reader needs the light. This is the one token in the system that is
+deliberately identical in dark mode, and it is the reason the QR quiet zone is a
+separate token from `surface/canvas` in the first place.
+
+#### 2.9b The dark data palette
+
+The five data colours were re-derived, not tinted. Each was converted to OKLCH,
+its lightness set to **0.62** to land inside the 0.48 to 0.67 band the dark mode
+check requires, and its hue and chroma kept. They were then run through the same
+six-check validator as the light palette, against `surface/default` at `111D1A`.
+
+| Slot | Light | Dark | vs dark card |
+| --- | --- | --- | --- |
+| `data/1` teal | `0F8F70` | `009F7B` | 5.14 |
+| `data/2` violet | `9333EA` | `A064DB` | 4.40 |
+| `data/3` clay | `C57A2E` | `B4772E` | 4.63 |
+| `data/4` blue | `2563EB` | `5783DC` | 4.68 |
+| `data/5` rose | `E11D74` | `D54E86` | 4.33 |
+
+All six checks pass. The worst adjacent pair is rose against blue at ΔE 13.9
+under protanopia, comfortably above the 8.0 target.
+
+**The three slot cap carries over unchanged.** Under `--pairs all`, dark blue and
+dark violet collapse to ΔE 0.7 under deuteranopia, exactly as their light
+counterparts do. Rule 20 needs no dark mode exception, which is a good sign that
+the light palette was derived properly rather than picked.
+
+#### 2.9b-1 What a review found afterwards
+
+The dark mode work was audited screen by screen as it went, and a review after it
+was finished still turned up four things. Worth listing, because each is a
+different kind of miss.
+
+**The scrim was never a token.** Four modal screens carried a literal `001A14` at
+54 percent behind the sheet. Literal, so it ignored the mode; green, so it was
+the exact fault the neutral ramp had just fixed everywhere else. It is now
+`surface/scrim`, dark neutral in dark mode and unchanged in light. Rule 29 exists
+precisely for this and the sweep that wrote rule 29 had already run — it caught
+fills on shapes and text but this one hid behind a modal on screens the sweep had
+counted and the eye had not.
+
+**The overflow warnings were false.** Five frames were reported as overflowing
+their auto-layout. Every one of them has a `FILL` child, which shrinks to fit, so
+nothing clips. The checker summed each child's current width without asking
+whether that width was fixed. A layout check that does not read
+`layoutSizingHorizontal` will cry wolf on every well-built frame in the file.
+
+**The Foundation page documents a palette that no longer exists.** Its swatches
+are bound and follow the mode correctly, but the hex captions beside them are
+plain text. Twenty of them still read light values, and several of those
+(`55746E`, `0F7A5F`, `E6F7F1`) were stale before dark mode ever landed. A caption
+is not a token and nothing keeps it honest.
+
+**Two Home screens were two different products, and there was a third.** Fixed;
+see 11b.4a. The lesson is the one rule 34 nearly says and did not: a screen that
+exists in two states is two screens, and a screen painted behind a modal is a
+third. Rebuild one and you have signed up to rebuild all of them in the same
+pass.
+
+#### 2.9b-2 A chart with no scale, and two claims that were wrong
+
+The bar chart shipped with axis labels and no gridlines. `12.5K` through `2.5K`
+floated beside the plot at even pixel spacing rather than at their own values, so
+the numbers named nothing and a bar's height could not be read off them. Every
+chart in the file now draws a gridline per tick on a fixed 0 to 12.5K scale, in
+`chart/grid`, behind the bars, with each label seated on its own line. Six
+charts: both Home states and the four modal backgrounds.
+
+Two things reported in the same critique were **not true**, and measuring them is
+what showed it:
+
+- *"The tooltip covers the data it describes."* It overlaps **zero** bars. The
+  callout clears the highlighted range by 19 pixels.
+- *"There is dead space under the plot."* The card wraps the panel exactly
+  (`cardMinusPanel: 0`) and the 16 pixels below the lowest mark are the panel's
+  own bottom padding.
+
+Both came from reading a rendered screenshot instead of the node tree. A
+screenshot is evidence that something looks wrong; it is not evidence of what is
+wrong, and the difference is two false bug reports handed to the person who has
+to act on them.
+
+#### 8.12d The activity row
+
+The row was an icon, a name, a timestamp and an amount. The reference carried two
+more columns and both earn their place: **what state the money is in**, and
+**which account it moved through**.
+
+`Activity row` on `02 Components` is a six variant set,
+`Direction = In, Out` by `Status = Settled, Pending, Failed`. Every activity
+list on desktop is built from instances of it.
+
+| Slot | Content | Sizing |
+| --- | --- | --- |
+| mark | The direction glyph, 28 | fixed |
+| what | Name, and the reference and time beneath it | fill |
+| status | Settled, Pending or Failed | 72 fixed |
+| ref | The masked account, `•••• 2841` | 68 fixed |
+| amount | The figure, right aligned | 96 fixed |
+
+**The three right hand slots are fixed, not hugging.** Hugging made every row a
+different shape: the status pill started at a different x on each line because
+the amount beside it was a different length, so four rows of the same thing read
+as four unrelated rows. Fixed widths make them columns. `what` takes `FILL` and
+absorbs whatever the list is, which is 696 on the detailed Home, 1008 on the
+gateway and 504 in the send and receive panels.
+
+**Below 620 the account column is hidden.** Five columns do not fit in 504 and
+the account is the least load bearing of them.
+
+**The status pill is on every row, and it is grey most of the time.** Settled
+uses `surface/control` with `ink/muted`: a pill you can see but never read unless
+you want to. Only the states that need attention take colour, Pending on
+`tint/warning` and Failed on `tint/negative`. A status column where every row
+shouts is a column nobody scans, and green on every settled line would have put
+the brand colour back on 28 rows for no reason. See rule 33.
+
+**The amount colour rule.** Money in is `state/positive`, money out is
+`ink/strong`, and anything not settled is `ink/muted` whichever way it points.
+The last part is the older finding in 8.12c, kept: an amount that has not moved
+yet should not read as one that has.
+
+This rule is worth stating because it was not being followed. Applied by hand
+across five lists, it held on most rows and broke on two, and both breaks were on
+the detailed Home:
+
+| Row | Was | Should be |
+| --- | --- | --- |
+| `Bought ETH -$1,200.00` | `state/positive` | `ink/strong` |
+| `Dividend Received +$75.00` | `ink/strong` | `state/positive` |
+
+The larger of those is the biggest outflow on the screen, painted green. Nobody
+saw it for a week because there was no component to see it in. Fifty seven signed
+amounts across eighteen screens now obey the rule, and the check that proves it
+is two lines: read every text matching a signed figure, read the token painting
+it, and assert the pair. See rule 43.
+
+**What the same pass found elsewhere.** `D17 Invest` painted its order names
+`ink/muted` while the number beside them was `ink/strong`, so the row label was
+quieter than its own value. `D13 Add money` had invented its own words, `Done` in
+green and `Waiting for your transfer`, for the two states every other screen
+calls `Settled` and `Pending`, and green on a settled row is exactly what the
+grey pill exists to prevent. The gateway wrote `Friday at 08:00` where four other
+screens wrote `Fri at 08:00`.
+
+**The phone row is a different component.** `Transaction row` at `74:87` is
+320 by 56 with a 40 avatar and belongs to the mobile screens. It was not used by
+anything on desktop and still is not. Two widths, two components, on purpose.
+
+### 8.12e The quick action tile
+
+Three tiles in the hero band, beside the balance: Buy, Convert, Borrow. Send and
+Receive are already the hero's two buttons, so the tiles carry the three things
+you cannot do from there.
+
+Each is a card of `surface/default` at radius 20, padding 24, laid out
+`SPACE_BETWEEN` so the glyph sits at the top and the words at the bottom. The
+glyph is the standard 12 at stroke 2 inside a 48 `surface/control` circle. The
+label is `Title`, the line under it `Body` in `ink/muted`.
+
+They divide the hero's spare width by `FILL`, so the three are always equal and
+the band needs no hand-set widths. At 1128 with a 308 balance block they come out
+at 247 each.
+
+#### 2.9c What dark mode does not solve
+
+**Shadows are near invisible.** The file carries 59 drop shadows, all deep green
+at 10 percent, and on a near black canvas they do essentially nothing. They were
+left alone rather than rewritten, because a Figma effect colour does not follow a
+variable mode the way a fill does, so a dark shadow value would be wrong the
+moment anyone looks at light mode. This costs less than it sounds: section 7 says
+depth in this system comes from the surface step, and the surface steps in dark
+mode are larger than in light. The floating navigation still reads, because it is
+a lighter surface on a darker page. If shadows are ever needed in dark mode they
+have to become their own mode-aware token, not an edited effect.
+
+**Light mode is still there and still correct.** Every token has both values and
+the pages carry an explicit mode. Switching the file back is one setting per page,
+and no screen was flattened to get here.
+
+### 8.12f The halftone card
+
+The three get started cards on `D01c` carry a halftone dot field across the
+bottom of each. It came from a reference the client liked, a set of dark cards
+with a photograph rendered as a dot screen under the headline. Two things about
+that reference were taken and two were left.
+
+**Taken.** The dot field bleeding to the card edges, and the small pill with a
+chevron in place of a bare text link.
+
+**Left.** The serif headline, because this project has one family and two
+weights and rule 1 says so. And the reference palette, because the dark data
+colours here are already validated and a second set would not be.
+
+The field is not a picture. It is a scalar function sampled on a grid, and each
+sample becomes a circle whose diameter is the value at that point.
+
+| Part | Value |
+| --- | --- |
+| Card | 300 tall. Buy is 400 wide, Convert and Borrow are 280 |
+| Art plate | 140 tall, full width, pinned to the bottom edge, absolutely positioned inside the card |
+| Grid | 12 pitch |
+| Dot | 1.8 at the smallest, 10.6 at the largest, so the densest areas nearly touch |
+| Cut | Below 0.10 no dot is drawn at all, which is what makes the empty regions empty |
+| Dim dot | `ink/subtle` |
+| Bright dot | `ink/muted`, above 0.52 |
+| Accent | `data/2`, roughly five per card |
+
+The function is three sine waves whose frequencies do not divide into each
+other, so the pattern never repeats inside a card and reads as blobs rather than
+as stripes. The first attempt used two related waves and looked like a barcode.
+
+```
+f = 0.5 + 0.5*(0.55*sin(6.1u + 3.7v + 0.4)
+             + 0.30*sin(11.3u - 8.2v + 2.1)
+             + 0.15*sin(17.7u + 13.1v + 4.3))
+f = clamp((f - 0.32) / 0.46)          the stretch that creates real empty space
+t = f * (0.40 + 0.60 * v^0.7)          the fade that dissolves it under the text
+```
+
+**The three cards are one field, not three.** `u` is measured against a fixed
+400, not against each card's own width, and the three cards sample windows at 0,
+520 and 1040. So the dots are the same size and the same spacing on every card,
+and the pattern continues across the row instead of restarting. Normalising by
+each card's width instead would have squeezed the same number of blobs into the
+narrower cards, and the row would have read as three unrelated pictures.
+
+**The accent may not be a state colour.** The first build painted the accent
+dots `state/positive`, picked up from the delta figure above them. That put
+green dots a few hundred pixels under a green `+$142.60`, which implies the dots
+mean something and they do not. They are `data/2` now, which is a palette colour
+with no state attached to it. There is no chart on this screen, so nothing else
+is claiming that colour here. See rule 41.
+
+**Buy Stocks is the one card that is not neutral.** Buying shares is the click
+the product exists to earn, so that card carries a vertical gradient and the
+other two do not. Three stops, all bound to tokens: `surface/sunken` at 0,
+`surface/sunken` again at 0.42, then `surface/accent` at 1. The doubled stop is
+the whole trick. It holds the card neutral through the entire text block and
+only lets the green appear under the halftone, where nothing has to be read.
+
+That order was forced by measurement, not taste. `ink/muted` on a full
+`surface/accent` is 3.15 to 1, which fails. Sampled at the description's actual
+position on the finished gradient it is comfortably past 4.5. A gradient
+background has to be checked where the text really sits, because walking up the
+tree for the nearest solid fill skips straight past it and reports a pass that
+is not real. See rule 42.
+
+The card also carries the only filled pill on the screen. Convert and Borrow
+have plain text links. Colour alone would have been one signal; the button
+weight is the second, and it survives being seen by someone who cannot separate
+the green from the grey.
+
+Its dots are lifted one tone, `ink/muted` where the others are `ink/subtle` and
+`ink/strong` where the others are `ink/muted`, because the greens they sit on
+are lighter than the neutral cards.
+
+**Cost.** 677 dots across the three cards, 794 nodes on the screen in total.
+8.12b records that the dot column chart cost 572 and that the connection dropped
+at 826, so the three fields were generated in three calls rather than one and
+none exceeded 340. If the file starts to struggle, the pitch goes from 12 to 14
+and the count falls by about a third.
+
+**What was removed to make room.** Each card had a 48 badge above its title. The
+art is the card's identity now, so a second decorative mark above the words was
+one thing too many. The band grew from 228 to 300 and the gap between bands on
+`D01c` went from 48 to 40 to pay for it, which leaves 36 spare in the column.
+
+### 8.12g The follow button
+
+`Follow button` on `02 Components` is a two variant set, `State = Follow,
+Following`. It sits first in the actions row on a company page, before Buy and
+Sell.
+
+| Part | Value |
+| --- | --- |
+| Shape | 48 tall, pill radius, 20 padding left, 24 right, 8 gap |
+| Fill | `surface/sunken` in both states |
+| Follow | A plus glyph and the word, both `ink/strong` |
+| Following | A check glyph and the word, both `ink/muted` |
+
+**It has to be quieter than Buy and Sell**, which are `surface/control`. On the
+canvas that is a step of 1.45, where `surface/sunken` is 1.12. So the row reads
+Buy and Sell first and Follow second, which is the right order: following a
+company is not why anyone opened the page. Three pills at the same weight would
+have flattened the header into a row of equal choices.
+
+**Following is grey, not green.** A check in `state/positive` would have been the
+obvious choice and it is the wrong one. Green on this page already means the
+price went up, and 8.12d settled the same argument for the Settled pill: a state
+that needs no action does not take colour. The past tense of the word and the
+check together carry it.
+
+**The state is not free to choose.** `D04 Market` lists AAPL in the watchlist, so
+`D05 Apple` shows `Following`. Had it shown `Follow`, the two screens would have
+disagreed about the same fact, which is the class of defect 11b.4b and 8.12d were
+both written about. Any company page added later has to be checked against the
+watchlist the same way.
+
+**What this still owes.** The watchlist header carries a `See all` that leads
+nowhere, because there is no watchlist page. That is a smaller debt than the one
+this closes and it is recorded here rather than left to be found.
+
+### 8.12h The amount field
+
+`Amount field` on `02 Components` is a two variant set, `State = Resting,
+Focused`. It replaces the bare figure that used to sit above the ruler on `D09
+Send` and `D17 Invest`.
+
+| Part | Value |
+| --- | --- |
+| Shape | 72 tall, radius 16, 24 padding at the sides, hugs its value |
+| Resting | `surface/control` |
+| Focused | `surface/control-pressed`, and a 2 by 44 caret after the value |
+| Value | `Display XL` in `ink/strong` |
+
+**The figure was not a control before, and it looked like one.** A 48 point
+number centred over a ruler reads as output, not input, so the only way to set an
+amount was to drag. The field shape says the number can be typed. The ruler stays
+directly beneath it as the fast way in, and the line under both says so in
+words: *Type an amount, or drag the ruler.*
+
+**Typed is the source of truth.** Dragging writes into the field. Nothing else
+holds the value, so the two ways in cannot disagree.
+
+**What it cost on Invest.** The field is 20 taller than the bare figure and the
+hint added another 16, which pushed the `How much` card from 600 to 652 inside a
+row pinned at 600. The Buy button was cut in half and the overflow check did not
+see it, because the row clipped rather than overflowed. The rows hug now, the
+card gap came down from 20 to 16, the fraction note is one line, and the column
+gap is 20. The screen uses 1024 of 1024.
+
+### 8.15a Which rail is a sheet and which is a page
+
+The five money rails were split between sheets and pages with nothing saying
+which was which. The rule, stated once so it can be checked:
+
+**If the task needs you to consult something, it gets a page. If it only needs
+you to enter something, it gets a sheet.**
+
+| Rail | Shape | Why |
+| --- | --- | --- |
+| Send | Sheet | A person and an amount. Nothing to look up |
+| Receive | Sheet | An address to copy. Nothing to decide |
+| Add money | Page | The rate, the minimum, your bank, your recent orders |
+| Convert | Page | The rate, which bank it lands in, past conversions |
+| Invest | Page | The price, the chart, your position, what the fee is |
+
+A page-shaped rail still confirms in a sheet over itself, which is what 8.15
+already says about anything transactional.
+
+## 2b. The seventy twenty ten split
+
+Every screen is roughly seventy percent white, twenty percent light grey and ten
+percent green. The split is not a guideline to feel your way towards. It decides
+what may be green.
+
+**White is the page.** The canvas, and the inside of anything that is not a card.
+
+**Light grey is structure, and grey is also every control that is not primary.**
+`FAFBFC` on the canvas and `F0F2F4` nested inside it for cards, sheets, panels
+and fields. `E9ECEF` for secondary buttons and unselected chips. Grey does all
+of this alone, because there are no lines to help it.
+
+An unselected chip is grey, never a green tint. Green on a chip means it is the
+one you picked. If every chip is green, the selected one has nothing left to say.
+
+**Green is only these five things.**
+
+1. Primary buttons, filled.
+2. Secondary buttons, as the label only. The fill is grey.
+3. The selected state: the active navigation pill, a chosen chip, a selected row.
+4. A toggle that is on.
+5. Money that moved in the good direction, and the sparkline that shows it.
+
+Everything else that a person might expect to be green is grey. A circle behind
+a glyph is grey. The four action circles on home are grey. A row's icon is grey.
+A settings tile is grey. If every icon sits on green, green stops meaning
+anything and the amounts stop standing out, which is the one place on home where
+green has real work to do.
+
+The exceptions are the ones that carry a fact rather than a decoration: a status
+pill, an outcome badge, a toggle that is on, a progress bar, and the information
+callout. Those keep their colour because the colour is the message.
+
+Nothing else is green. A card is never green. A header band is never green. The
+balance sits on light grey with dark green figures, not on a green fill, because
+one green card on its own spends the whole ten percent.
+
+**Four screens are exempt** and always will be: the welcome screen and the three
+camera screens. A welcome is a moment rather than a page, and a camera needs a
+dark ground or the capture frame cannot be seen.
+
+The deep green is still the brand. It carries more weight at ten percent of the
+screen than it did at forty, because it now only ever means something.
+
+## 3. Typography
+
+### 3.1 The typeface
+
+| Role | Family | Weight |
+| --- | --- | --- |
+| Everything | Geist | SemiBold and Regular |
+
+One family, two weights, nothing else in the file. No serif, no second sans, no
+monospace companion. If a screen needs a different voice it gets a different
+size or a different weight, never a different family.
+
+Geist is released under the SIL Open Font License, so the same face ships on
+iOS, on Android and on the website. A platform font cannot do that.
+
+Its figures are cut tight with flat terminals, which is why a balance set in it
+reads as a number rather than as a word. That is the whole reason for the
+choice.
+
+**Codes do not line up in a column.** `Code/M` and `Code/S` set Geist like
+everything else, so a wallet address or a transaction hash has uneven character
+widths. This is accepted rather than solved, because one family is worth more
+than aligned hashes. Where a code truly has to align, turn on tabular figures
+rather than bringing a second family back.
+
+### 3.2 The scale
+
+Four sizes on the phone. A fifth exists on desktop and nowhere else.
+
+`12 → 14 → 18 → 36` on mobile, plus `48` on desktop.
+
+| Style | Size / line | Weight | Tracking | Use |
+| --- | --- | --- | --- | --- |
+| `Display XL` | 48 / 52 | SemiBold | -1.6 | Desktop only. The hero figure on a wide screen. One per screen. |
+| `Display` | 36 / 40 | SemiBold | -1.2 | The hero figure. One per screen, never two. |
+| `Title` | 18 / 24 | SemiBold | -0.4 | Screen title and section title. |
+| `Body strong` | 14 / 20 | SemiBold | -0.2 | Row title, button label, any value. |
+| `Body` | 14 / 20 | Regular | 0 | Sentences, explanations, subtitles. |
+| `Label caps` | 12 / 16 | SemiBold | +1.2 | Uppercase eyebrow above a value. |
+| `Label` | 12 / 16 | Regular | 0 | Timestamps, chips, captions, links. |
+
+Seven styles, six of which the phone uses. That is the whole system.
+
+`Display XL` exists because a 36 figure that filled a 390 screen looks modest on
+a 1440 one. It is the only concession desktop gets. Every other size, weight and
+tracking is identical on both, so one system covers two products.
+
+The sizes are not multiples of 4 and are not meant to be. The multiple of 4 rule
+governs spacing and the size of boxes. Type sits on its own scale, and every
+line height is a multiple of 4 so the text still lands on the grid.
+
+**12 is for metadata only.** A timestamp, a chip, an eyebrow, a reference number.
+Never a sentence a person has to read. The usual floor for body copy is 16 and
+this system sets it at 14, so the 12 has to stay out of the reading path or the
+screens become hard work. Nigerian apps are already criticised for small type.
+
+The jump from 18 to 36 is deliberate. There is no middle size to drift into, so a
+screen has one big thing and everything else is quiet.
+
+### 3.3 How to set an amount
+
+An amount is built from three parts, not typed as one string.
+
+- The currency symbol and any sign are the size below, in the muted ink.
+- The whole number is the full size and weight.
+- The decimals are the size below, in the muted ink.
+
+| Main | Symbol and decimals |
+| --- | --- |
+| 48 | 18 |
+| 36 | 18 |
+
+**Only `Display` composes.** Every other size is set flat, in one size and one
+colour. At 18 and below the two parts get too close to tell apart and it reads as
+fussy rather than considered.
+
+A composed amount is the one place a text style is overridden, because the parts
+need two sizes inside one node. There are 19 of them in the file and they are the
+only nodes not linked to a style. If that ever needs fixing, the answer is a
+component with two text nodes, not a third size.
+
+In a table or a list, amounts align right so the digits line up.
+
+### 3.4 The label and value pair
+
+The most used pattern in the app.
+
+- The label is `Label/Caps` in `ink/muted`, in capitals.
+- The value sits 4px below in `Heading/M`, in `ink/strong`.
+- Pairs sit in two columns, 20px between the columns and 20px between the rows.
+
+## 4. Spacing
+
+### 4.1 The scale
+
+`4, 8, 12, 16, 20, 24, 32, 40, 48, 56, 64, 72, 80`
+
+### 4.2 The rhythm
+
+Spacing carries grouping, so the size of a gap has to mean something.
+
+| Relationship | Gap |
+| --- | --- |
+| Between a label and its value | 4 |
+| Between an icon and its text | 8 |
+| Between fields in one group | 12 |
+| Between rows in a list | 16 |
+| Between a section title and its content | 16 |
+| Between one section and the next | 32 |
+| Above the primary button | 24 |
+
+A gap between sections is always at least twice the gap inside a section. If two
+groups have the same gap around them and inside them, a person cannot see where
+one ends.
+
+### 4.3 Screen layout
+
+| Measure | Value |
+| --- | --- |
+| Screen size | 390 by 844 |
+| Side padding | 20 |
+| Status bar | 56 |
+| App bar | 56 |
+| Bottom navigation | 88, including 24 of safe area |
+| Above the bottom button | 24 |
+| Bottom padding when scrolling | 32 |
+
+## 5. Shape
+
+| Token | Value | Use |
+| --- | --- | --- |
+| `radius/pill` | full | Buttons, chips, status pills, avatars, icon buttons. |
+| `radius/card` | 24 | Cards on the canvas. |
+| `radius/card-lg` | 28 | Large surfaces and the top of a bottom sheet. |
+| `radius/inner` | 16 | A panel nested inside a card, and text fields. |
+
+Every button is a full pill. Rounded rectangles are not used for buttons.
+
+## 6. Size
+
+| Token | Value | Use |
+| --- | --- | --- |
+| `size/icon-sm` | 16 | Small inline icon. |
+| `size/icon` | 20 | Default icon. |
+| `size/icon-lg` | 24 | Navigation and app bar icon. |
+| `size/touch-min` | 44 | Minimum touch target. |
+| `size/icon-button` | 44 | Circular secondary action. |
+| `size/avatar` | 40 | List row avatar. |
+| `size/action` | 56 | Circular action button under the balance. |
+| `size/button` | 56 | Primary and secondary button. |
+| `size/button-md` | 48 | Medium button. |
+| `size/field` | 56 | Text field. |
+| `size/row` | 64 | List row. |
+
+## 6b. Icons
+
+Icons carry state through shape, never through colour on its own.
+
+| State | Treatment |
+| --- | --- |
+| Inactive | Stroked outline, 2px, round caps and joins, `ink/muted`. |
+| Active | Solid filled glyph, no stroke. |
+| Not yet built | Stroked outline, 2px, `ink/subtle` at 40 percent opacity. |
+
+### 6b.1 The one icon size
+
+Every glyph is drawn at 12 by 12 with a 2 point stroke. There is no second size.
+A tall or wide glyph fits the 12 square on its longer side and keeps its
+proportions, so a chevron is 6 by 12 rather than a squashed 12 by 12.
+
+Draw on a 24 by 24 grid, then scale the whole glyph down to fit 12. Never resize
+a vector to fill a square box, because that stretches the artwork. Centre it in
+a fixed frame instead.
+
+The stroke stays at 2 after scaling. That is deliberate. At 12 the stroke is one
+sixth of the glyph, which is heavier than the usual one ninth, and it is what
+gives the set its weight. Two consequences follow.
+
+1. Pick open shapes. Fine interior detail closes up at this size, so a glyph
+   needs room between its strokes.
+2. Never lower the stroke to keep a detail. Simplify the drawing instead.
+
+The box the glyph sits in does not change with the glyph. It stays 16, 20 or 24
+and it stays on the multiple of 4 grid, so nothing in a row shifts and every tap
+target keeps its size. A 12 glyph in a 20 box is correct.
+
+The multiple of 4 rule stops at the edge of the 24 grid the glyph is drawn on.
+What happens inside an icon is artwork, not layout. A stroke can land on 7.5 and
+a corner can be 2.5, because those are drawing decisions, not spacing anyone
+reads.
+
+### 6b.2 Round badges
+
+A badge is a filled circle holding one glyph. With a 12 glyph the circle is 40.
+Anything larger leaves the glyph stranded in the middle. This covers the outcome
+screens, money sent, send failed, verified, under review and nothing here yet.
+
+The 64 circle in the floating navigation is not a badge. It is the More button,
+and it stays 64 because that is a tap target, not artwork.
+
+An icon set therefore needs two drawings of each glyph, one stroked and one
+filled. Pick shapes that fill cleanly. A house, a person, a set of bars and a
+grid all work. A thin pulse line does not.
+
+## 7. Depth
+
+Separation comes from surface colour and from space. Not from lines, and not
+from shadows. The only exceptions are a bottom sheet and a floating element,
+which both use `0 8 24 rgba(5, 51, 41, 0.10)`, because both of them float over
+content and a person has to read them as lifted.
+
+This leaves the system with two tools where most systems have four. Where a line
+would have done the work, the answer is a surface step or more space, and if
+neither is available the answer is that the two things did not need separating.
+
+There is exactly one gradient in the product: the area under a chart line, the
+line colour at 22 percent fading to nothing. It is part of the chart, not a
+surface. Nothing else is ever a gradient.
+
+## 8. Components
+
+### 8.1 Buttons
+
+| Property | Primary | Secondary | Quiet | Destructive | Inverse |
+| --- | --- | --- | --- | --- | --- |
+| Fill | `ink/strong` | `surface/control` | none | `state/negative` | `surface/sand` |
+| Label | `ink/inverse` | `ink/strong` | `ink/strong` | `ink/inverse` | `ink/strong` |
+| Border | none | none | none | none | none |
+| Height | 56 | 56 | 56 | 56 | 56 |
+| Radius | pill | pill | pill | pill | pill |
+| Type | `Heading/M` | `Heading/M` | `Heading/M` | `Heading/M` | `Heading/M` |
+
+Primary and Secondary must read as equal weight when they sit side by side, as
+Buy and Sell do. Secondary is pressed at `surface/control-pressed` and disabled
+at `surface/sunken` with an `ink/subtle` label, which is lighter than the
+enabled control on purpose, so a disabled button recedes rather than shouts.
+
+Use Inverse on a deep green screen, because a dark button on deep green
+disappears. A medium button is 48 tall and uses `Label/M`. There is no small
+button. Pressed is 88 percent opacity and disabled is 38 percent opacity on the
+whole button. Do not use a separate grey for either.
+
+
+#### Secondary
+
+White fill, a one pixel `surface/inverse` edge, and a `surface/inverse` label.
+Not a grey fill and not a green fill. Next to a solid green primary it reads as
+the quieter of the pair while still carrying the brand.
+
+#### Disabled
+
+A disabled control is inert, not faded. Never dim a live control with opacity,
+because a dark pill at 38 percent on a white page turns into a grey blob.
+
+| Variant | Fill | Label and icon |
+| --- | --- | --- |
+| Primary, Secondary, Destructive | `surface/sunken` | `ink/subtle` |
+| Quiet | none | `ink/subtle` |
+| Inverse | `surface/inverse-raised` | `ink/inverse-muted` |
+
+`ink/subtle` is below 4.5 to 1 on purpose here. A disabled control carries no
+action, so its label is the one place the rule does not apply.
+
+### 8.2 Icon button
+
+A 44 circle filled with `surface/control` holding a 12 glyph in `ink/strong`.
+The only shape for a secondary action in an app bar or beside a field. It uses
+the control grey and not the card grey, because it is tapped.
+
+The four action circles on home are the same idea at 56, with a `Label/M` caption
+under each one.
+
+### 8.3 Card
+
+`surface/default`, 24 radius, 20 padding. No border and no shadow. A panel
+nested inside it is `surface/sunken` at 16 radius with 16 padding. The radius is
+doing most of the work of telling you a card is there, so it is never reduced.
+
+### 8.4 List row
+
+56 tall with 8 padding top and bottom. A 40 circle in `surface/sunken` holding a
+12 glyph on the left, 8 gap, then
+the title in `Heading/M` and the caption in `Body/S` stacked with a 4 gap. The
+amount sits right in `Heading/L`.
+
+There is no divider. Rows are separated by an 8 gap, which puts 24 between one
+row's caption and the next row's title. That is the smallest gap that still
+reads as two rows rather than one paragraph.
+
+### 8.5a Chip
+
+32 tall, full round, 12 padding left and right, the label in `Label/M`.
+Unselected it is `surface/control` with an `ink/strong` label. Selected it is
+`surface/inverse` with an `ink/inverse` label. There is no third state and no
+border in either.
+
+The one exception is the "Later" pill in the More sheet, which is
+`surface/sunken` with `ink/muted` text. It sits lighter than a real chip because
+it is not a control and tapping it does nothing.
+
+### 8.5 Status pill
+
+Full round, 4 padding top and bottom, 12 left and right, a tint background, a 8px
+dot in the matching solid fill, 8 gap, then the word in `Label/M`.
+
+### 8.6 Text field
+
+56 tall, 16 radius. At rest it is a grey fill with no border, one step below
+whatever it sits on: `surface/default` on the canvas, `surface/sunken` on a card
+or a sheet. Focused it takes a 2px `border/focus` ring. On error it takes a 2px
+`state/negative` ring and the helper text turns `state/negative` at the same
+time. The label sits above in `Label/M` and `ink/muted` with an 8 gap.
+
+A field at rest is therefore a very quiet shape. The placeholder text is what
+tells a person it is a field, so it is never left empty.
+
+### 8.7 Floating navigation
+
+Two floating elements, 20 in from each side, 24 above the safe area, both 64
+tall. On the left a rounded group of destinations. On the right a single More
+button. Both use `surface/frost` with a background blur of 24 and the floating
+shadow.
+
+| Part | Value |
+| --- | --- |
+| Destinations | Home, Money, Grow, Stocks |
+| Group | padding 8, gap 4 between items, radius pill |
+| Inactive item | 48 by 48, glyph only, `ink/muted` outline |
+| Active item | 64 by 48 pill in `surface/inverse`, glyph filled in `ink/inverse` |
+| More | 64 circle, its own frosted element, gap 12 from the group |
+| Total width | 236 group plus 12 plus 64, inside the 350 available |
+
+The items carry no labels. Four destinations and a label on the active one does
+not fit in 350, and shrinking the type or the side inset to force it would cost
+more than the labels are worth. State is carried by the pill and by the glyph
+filling, which is shape, not colour.
+
+Money is one destination covering all four movements: buying, receiving,
+sending and converting. It exists because the phone has four slots and the
+product has eight places to go. Account and History are not on the bar at all;
+they live behind More, and More fills in `surface/inverse` when the person is
+somewhere that lives inside it, so the bar is never showing nothing as current.
+
+There are five states, one per destination plus More. A screen that sits behind
+a sheet keeps the state of the page underneath it.
+
+A screen that shows the navigation needs 88 of bottom padding, and no element in
+its body may reach below the top of the navigation at y 722. A bottom anchored
+button on such a screen is a collision, so actions on those screens live inside
+their cards.
+
+### 8.8 Balance and the home actions
+
+The balance sits directly on the canvas, not in a card, so the number is the
+loudest thing on the screen. `Label/Caps` above it, `Heading/XXL` for the amount
+with the symbol and decimals at 20, then `Body/S` for the naira value.
+
+Below it, with a 24 gap, sit the actions a person can actually take today. In
+Phase 1 that is two, so they are two equal buttons splitting the width with a 12
+gap, each 56 tall at pill radius, each holding a 20 icon, an 8 gap and a label in
+`Heading/M`.
+
+Send uses the Primary style and Receive uses Secondary, because sending is the
+action with consequence and receiving only shares an address.
+
+Nothing that is not built appears here. No greyed out tiles and no teasers. The
+roadmap lives behind More in the navigation and nowhere else.
+
+When a later phase ships, its action joins this row. At three or more the row
+returns to circular 56 actions with a `Label/M` word beneath each.
+
+### 8.9 The More sheet
+
+More is the only place a feature that is not built yet is allowed to appear. It
+is a bottom sheet, not a screen, so the person keeps their place behind it.
+
+| Part | Value |
+| --- | --- |
+| Surface | `surface/default`, top corners 28, no bottom corners |
+| Shadow | 0 by -8, blur 32, black at 12 percent |
+| Padding | 20 at the sides, 12 at the top, 40 at the bottom |
+| Grabber | 40 by 4 pill in `ink/subtle`, centred |
+| Gap between groups | 24 |
+| Scrim | `ink/strong` at 50 percent over the whole screen |
+
+The sheet holds two groups and they are never mixed.
+
+1. **Now.** Under a `Label/Caps` heading that reads "Now". Each item is a full
+   row with a 40 tile, a `Heading/M` title, a `Body/S` line saying what it does,
+   and a chevron. These open.
+2. **Later.** Under a `Label/Caps` heading that reads "Later". Each item is a
+   flat pill in `surface/sunken` with `ink/muted` text. No border, no tile, no
+   chevron, no shadow. A `Body/S` line under the group says plainly
+   that nothing there can be opened.
+
+Now holds History, Account, Security, Limits, Support and About Tokkenly. Later
+holds Bills and Spend, and nothing else.
+
+Converting to naira used to sit under Later. It was moved out when the code was
+read, because converting is live and has been for some time. A thing listed as
+not built when it works is the same failure as a thing listed as working when it
+is not, and it is worth checking this list against the code rather than against
+memory.
+
+The two groups must stay visibly different. A later item never borrows the row
+shape of a now item, because a row with a chevron promises that tapping it does
+something.
+
+The sheet covers the floating navigation while it is open. That is correct, and
+it has to be built that way: the navigation is drawn before the scrim so the
+scrim and the sheet land on top of it. Drawn in the other order the navigation
+punches through a sheet that is supposed to be modal.
+
+The grabber and the scrim are both ways out.
+
+### 8.10 Vertical composition
+
+A white page shows every loose gap, so nothing sits at an arbitrary height.
+
+1. A screen has at most one fixed spacer. Everything else that separates groups
+   is the body gap.
+2. Space that is left over goes into a flexible spacer, never into a fixed one.
+   A fixed 200 spacer is a guess. A flexible one is a rule.
+3. A screen whose job is one focal element between a header and a control puts a
+   flexible spacer on both sides of that element, so it centres. The PIN dots
+   work this way.
+4. An outcome screen, the kind that reports what happened, centres its whole
+   block the same way and anchors its actions to the bottom.
+5. Two stacked buttons are one group with a gap of 12, not two items in the body
+   rhythm.
+
+### 8.11 The covered phrase
+
+Before the recovery phrase is revealed it is not a blank panel. It shows the
+twelve word slots it is about to fill, redacted, at half opacity, with the lock
+and the label sitting on a small raised card in the middle. A person can see
+there is something there and what shape it takes.
+
+### 8.12 The four products
+
+The account is one balance with four products on top of it. Only Everyday is
+open.
+
+| Product | State | What it is |
+| --- | --- | --- |
+| Everyday | Open | Hold, send and receive digital dollars. Convert to naira, bills and spend are not built. |
+| Earn | Not open | A floating rate on the balance, compounding daily, no lockups. |
+| Borrow | Not open | Borrow against what you hold instead of selling it. Paid out in naira. |
+| Stocks | Not open | US stocks and funds in fractional shares, funded from the same balance. |
+
+There is one balance, not four. Stocks buys from the money you already hold, and
+Borrow lends against it. Nothing in the app should suggest a person moves money
+between four separate pots.
+
+Earn and Borrow share one page called Grow, because borrowing is priced off what
+you are earning on and the two only make sense next to each other. Stocks has
+its own page.
+
+Activity is no longer a destination in the navigation. It is reached by See all
+on the home screen and by a row in the More sheet, and it opens as a pushed
+screen with a back bar rather than a tab.
+
+## 13. What makes it beautiful
+
+The system so far says what is allowed. It does not say what is good. These are
+the tests a screen has to pass before it is finished.
+
+**One thing lands first.** Look at the screen for half a second and something
+should have caught the eye. If everything is the same weight, nothing is. The
+balance is that thing on home. A screen with no focal object is not calm, it is
+empty.
+
+**Colour is spent once, at full strength.** Deep green appears in one place per
+screen and does real work there. Spreading it thinly across five elements makes
+none of them read. A tint is not a weaker version of a colour, it is a different
+material.
+
+**Equal things get equal weight.** Receive and Send are the same size of
+decision, so one must not be a heavy filled pill next to a pale outline. When
+the design makes one look louder, it is making a claim about the product.
+
+**Density is a kindness.** A list of three payments separated by 16 of air reads
+as a rough draft. Tight rows read as a finished product and fit more on the
+screen. Air belongs between sections, not inside them. With no dividers to lean
+on, the gap inside a list has to stay smaller than the gap around it, or the
+list stops being a list.
+
+**The numbers are the product.** Money is set large, tracked tight, with the
+currency mark and the decimals stepped down. Everything around a number is
+smaller and quieter than the number.
+
+**Chrome recedes.** The status bar, the header and the navigation are furniture.
+They are never the most interesting thing on the screen.
+
+**Nothing is decorative.** Every mark carries information. If a shape can be
+removed and nothing is lost, remove it.
+
+**Space is structure.** Leftover space at the bottom of a screen is a mistake.
+Space that separates two ideas is a decision. The difference shows.
+
+
+### 8.12a The dashboard parts
+
+Five components carry the desktop dashboard. They live on `02 Components`.
+
+| Component | Variants | What it is |
+| --- | --- | --- |
+| Delta chip | Up, Down, Flat | The change against the last period. The arrow carries the direction, so a person who cannot see the colour still reads the sign. |
+| Legend item | Slot 1 to 5 | One series. A dot in its data colour and the name in `ink/muted`. |
+| Detail toggle | Simple, Detailed | The one control that governs how much the whole screen says. |
+| Amount ruler | one | A tick track you drag to set an amount. Used on Send and Invest. |
+| Stat card | Line, Segments, Dots | One headline figure, its change, and a small chart. |
+| Dot column chart | one | Two periods of dot columns in two tones of grey. See 8.12b. |
+
+The **Amount ruler** is the tactile part. It is 408 by 72, a tick every 8, and
+every fifth tick is taller. That taller tick is the whole point. It gives the
+drag a rhythm, so a person feels where they are instead of only reading it. The
+ticks fade toward both edges so the track reads as continuing past the card
+rather than stopping at a wall, and one bold line in the middle is the value
+under the finger. It belongs anywhere a person picks an amount, which is Send,
+Buy and Convert on both products.
+
+The **Stat card** is 360 by 176. Its three chart forms are not decoration. Line
+is for one series over time. Segments is for a total split into parts. Dots is
+for comparing three series, and three is the limit, because a dot matrix is a
+chart where any two dots can end up neighbours. See 2.8.
+
+All three cards in a row take the same form. Home's figures row began with
+Segments, Dots and Segments side by side, and a row that changes chart form card
+by card has to be read three times instead of once. The variants exist so that
+different rows on different pages can differ, not so that neighbours can. Home
+now uses Segments three times.
+
+### 8.12b The dot column chart
+
+**Superseded on Home, 4 September.** Desktop Home now uses the solid bar chart
+described in 11b.4a. This component still exists and the spec below still holds,
+but nothing on Home instances it any more.
+
+The chart that carried Home. It is 690 by 232 and it is made of 572 dots.
+
+| Part | Value |
+| --- | --- |
+| Column | One day. 69 of them, two months |
+| Dot | 4 across, on a 10 pitch, so there is as much gap as dot |
+| Rows | 20 in a 200 tall plot, and the columns start at zero |
+| Previous period | `ink/subtle` at full opacity |
+| Current period | `ink/strong` at full opacity |
+| Labels | The period in `Label caps` and its value in `Label`, in `ink/muted` for the previous period and `ink/strong` for the current one, under its own half |
+
+Neither the dots nor the labels carry opacity. The first build set the previous
+period to `ink/subtle` at 50 percent and the labels to `ink/subtle`, which put
+the labels at 2.37 to 1 on `surface/sunken`. Tone is a token, not a transparency:
+`ink/subtle` and `ink/strong` already differ enough to separate the two halves,
+and the labels have to be readable in both. See 2.7a and rule 28.
+
+Three things about it are deliberate.
+
+**The columns start at zero.** A column says "this much" by its height, so a
+column chart that starts anywhere else lies about the size of the difference. It
+works here because the account genuinely began near nothing two months ago. If
+that ever stops being true, this becomes a line chart, not a truncated column
+chart.
+
+**The two periods are told apart by tone, not by colour.** Pale for what has
+happened, solid for what is happening. That is one less thing for the palette to
+carry and it survives being printed or photocopied.
+
+**The texture is the reason it exists.** A smooth line and a dot column chart
+carry the same numbers. The dots read as a shape from a distance and as
+individual days up close, and they give the largest surface on the screen
+something to look at. That is what makes a quiet screen interesting rather than
+empty.
+
+It costs 572 nodes, which is heavy for a Figma file and slow to generate. The
+first build was 826 and the Figma connection dropped repeatedly while writing it,
+so it was cut to 69 columns. If the file starts to struggle again, the same look
+can be had with one rectangle per column at about a twentieth of the nodes,
+losing the individual dots at close range.
+
+### 8.12c When a thing becomes a component
+
+Four tests. A thing becomes a component when it passes any two.
+
+1. **It appears three times or more**, across at least two screens. Twice on one
+   screen is a copy, not a pattern.
+2. **Getting it wrong would be visible.** A delta chip with the arrow pointing
+   the wrong way, or a legend dot in the wrong slot, is a mistake a reader would
+   catch. Those are worth locking.
+3. **It carries a rule.** The legend item exists so slots are never cycled. The
+   delta chip exists so direction is never carried by colour alone. The
+   component is where the rule lives, so the rule cannot be forgotten by
+   whoever builds the next screen.
+4. **It has states.** Anything with an on and an off, or a rest and a pressed,
+   belongs in a variant set rather than being redrawn each time.
+
+And two tests for when it should **not** be a component.
+
+- **It is layout, not a part.** A row of three cards is an arrangement. Making
+  it a component freezes a decision that should stay free.
+- **The data is the whole thing.** A chart whose shape comes entirely from its
+  numbers cannot be reused without those numbers. The dot column chart is a
+  component anyway, because the form and the rules are the reusable part and the
+  numbers are placeholder, but that is a judgement call rather than a rule.
+
+The library at the time of writing: Sidebar, Activity row, Delta chip, Legend
+item, Detail toggle, Amount ruler, Stat card, Dot column chart, plus the older
+phone components.
+
+A component is also where a bug gets fixed once instead of thirty times. The
+`Transaction row` set had the amount on `ink/subtle` in its Pending and Failed
+variants, which is 2.90 to 1 in light mode and 3.83 in dark, and it was wrong in
+both. It reached five screens through instances and none of them showed it as
+their own defect. Both variants now use `ink/muted`, which keeps a pending or
+failed amount quieter than a settled one without dropping it below 4.5 to 1.
+Quiet is a token, not a transparency, and never `ink/subtle` when the quiet thing
+is a number somebody is looking for.
+
+### 8.13 Charts
+
+A chart is the one place in this product where a person reads data instead of
+glancing at it. It is therefore the one place allowed axes, gridlines and a
+gradient. None of that travels to the rest of the product.
+
+There are two sizes of chart and they follow different rules.
+
+#### The sparkline
+
+Inline in a card or a row, showing direction only. A 2 stroke in
+`state/positive` when the period is up and `state/negative` when it is down,
+with a gradient area under it. No axes, no gridlines, no labels, no tooltip. The
+number beside it says what it is worth.
+
+#### The full chart
+
+On a stock page, on either product. Every part below is required.
+
+| Part | Value |
+| --- | --- |
+| Plot | 624 by 288 on desktop, 294 by 200 on mobile |
+| Price axis | 5 labels in `Label` and `ink/muted`, right aligned, left of the plot |
+| Time axis | 4 to 6 labels in `Label` and `ink/muted`, under the plot, starting where the plot starts |
+| Gridlines | Vertical only, 1px `chart/grid`, evenly spaced. Never horizontal |
+| Line | 2 stroke, `state/positive` up or `state/negative` down, round cap and join |
+| Area | The line colour at 22 percent under the line, fading to nothing at the bottom |
+| Crosshair | 1px dashed `ink/subtle` at 50 percent, floor to ceiling |
+| Point | A 12 circle, white fill, 2 stroke in the line colour |
+| Tooltip | `chart/tooltip`, radius 12, the time in `Label` and `ink/inverse-muted`, then the values in `Body strong` and `ink/inverse` |
+| Periods | 7 chips on desktop, 5 on mobile, the standard chip from 8.5a |
+
+**Every line is a curve, never a run of straight segments.** Points are joined
+with a monotone cubic curve, which is smooth at every point and, unlike a plain
+spline, can never bulge past a real value. A chart that invents a high the stock
+never reached is a lie, however pretty it looks.
+
+**The tooltip never covers the line.** It sits above the point when there is
+room and beside it when there is not. It lives inside the plot, so it is also
+the one element that has to be checked against the card that clips it.
+
+**Chart insides are not held to the divide by four rule.** A point sits where its
+value puts it. The box around the chart still obeys the rule.
+
+### 8.14 Screens that scroll
+
+Most screens fit. Home does not, and should not.
+
+A screen whose job is a feed sets its body to hug its content and lets the list
+run under the floating navigation and off the bottom of the frame. The cut is the
+point. A list that stops neatly above the navigation tells a person there is
+nothing more, which on home is a lie.
+
+Two rules make the cut read as scrolling rather than as breakage.
+
+1. The cut lands inside a row, never on a section heading. A heading sliced in
+   half looks like a bug. A row sliced in half looks like a list.
+2. Nothing below the fold is the only copy of anything. Everything under the
+   navigation is also reachable another way.
+
+Every other screen still ends above the navigation, or above the bottom padding
+where there is no navigation.
+
+### 8.15 Sheets, not pages
+
+Anything transactional is a bottom sheet over the page that started it. The page
+stays behind, dimmed. A person never loses their place, and nothing in the app is
+more than four taps from home.
+
+Pages are only for destinations: home, Grow, Stocks, Account, Activity, Security
+and a stock in full. Everything else, fifteen screens of it, is a sheet.
+
+| Part | Value |
+| --- | --- |
+| Scrim | `ink/strong` at 50 percent over the whole page |
+| Sheet | `surface/default`, top corners 28, no bottom corners |
+| Shadow | 0 by -8, blur 32, black at 14 percent |
+| Padding | 20 at the sides, 12 at the top, 32 at the bottom |
+| Grabber | 40 by 4 pill in `ink/subtle`, centred |
+| Gap | 24 between blocks |
+| Header | Title on the left, a 32 close circle on the right. Outcome sheets have no header. |
+| Height | Hugs its content. Never more than 720, or it stops reading as a sheet. |
+
+Three things dismiss a sheet: the scrim, the close control and the grabber. All
+three are wired, because a person will reach for whichever is nearest.
+
+A sheet arrives from the bottom. A page pushes from the side. The transition is
+how a person knows which one they are in.
+
+### 8.16 The chain is not the product
+
+A person holding dollars should not have to learn what a chain is.
+
+| Where | What is shown |
+| --- | --- |
+| Home | A balance in dollars and a naira estimate. No token, no chain, no address. |
+| Send | Who, how much, the fee and when it arrives. No network row. |
+| Receive | The address, the network and the warning. This is the one place it all appears. |
+| A receipt | The reference and the transaction hash, because a receipt has to be complete. |
+| Account | The address, for anyone who wants it. |
+
+The Base warning on Receive stays and is not negotiable. Sending the wrong asset
+to that address loses the money, and a warning cannot be given for something the
+app never mentions.
+
+### 8.17 The QR code
+
+Drawn, not scaled. A code that has been resized has uneven modules and stops
+reading as a code.
+
+| Part | Value |
+| --- | --- |
+| Block | 160 square, radius 24, `surface/scan`, no border |
+| Grid | 15 by 15 modules at 8 each |
+| Quiet zone | 20 on every side |
+| Finder | 5 modules square, 1 module ring, 1 module centre, in three corners |
+| Modules | `ink/strong`, square, no rounding |
+
+If the block ever changes size, redraw it. Pick a module size and a count whose
+product plus the quiet zone lands on the new box, so every module stays whole.
+
+## 9. How this maps to the reference work
+
+Checked before the system was built. Every element in the references lands on the
+scale.
+
+| Reference element | Needs | Style |
+| --- | --- | --- |
+| Small label above a name | 11 | `Body/S` 12 |
+| A person's name in a header | 17 | `Heading/M` 16 |
+| An uppercase field label | 10 to 11 | `Label/Caps` 12 |
+| The main balance | 38 | `Heading/XXL` 40 |
+| The decimals on the balance | 21 | 20 |
+| Action labels under circular buttons | 11 | `Label/M` 12 |
+| An amount on a card | 20 | `Heading/L` 20 |
+| A section title | 16 | `Heading/M` 16 |
+| Bottom navigation labels | 10 | `Label/M` 12 |
+| A screen title such as "Invoice" | 26 | `Heading/XL` 28 |
+| A reference code such as IN-001 | 12 | `Code/S` 12 |
+| A value in a data table | 16 | `Heading/M` 16 |
+| A confirmation headline | 28 | `Heading/XL` 28 |
+| An event name on a ticket | 20 | `Heading/L` 20 |
+
+## 10. Rules that must not be broken
+
+1. Two font weights per screen. Geist SemiBold and Geist Regular.
+2. Every size and gap is a multiple of 4.
+3. Never use a colour, size, gap or radius that is not in this file.
+4. Never fill a whole screen with sand or any other mid tone.
+5. Never paint anything pure white except the canvas. A card that reads as
+   white has lost its surface step.
+6. Never use a rounded rectangle for a button. Buttons are pills.
+7. Never put more than one `Heading/XXL` on a screen.
+8. Never use the serif anywhere in the app.
+9. Never let a gap inside a group equal the gap around it.
+10. Never carry meaning with colour alone. An active icon fills, it does not
+    merely change colour.
+11. Never use `ink/subtle` for text a person needs to read.
+12. Never add a shadow except to a bottom sheet or a floating element.
+13. Never draw a line. No card outline, no field outline, no list divider, no
+    chip edge, no rule under a heading. Outside a chart the only strokes are a
+    2px green focus ring, a 2px error ring, and the glyphs themselves. If two
+    things need separating, step the surface or add space. A chart is the single
+    named exception, spelled out in 8.13, because reading a price is not the
+    same job as glancing at a card.
+14. Never nest more than three surface levels.
+15. Never compose an amount below 36. Set it flat.
+16. Never draw a glyph at any size but 12, and never at any stroke but 2. The
+    box around it changes, the glyph does not.
+17. Never put an unbuilt part of a product onto the home screen. It goes behind
+    More, under the "Later" heading, as a flat pill that carries no chevron and
+    opens nothing. A whole product may show a hint on home, because it has a
+    place in the navigation to lead to. The hint carries a "Soon" marker.
+18. A whole product is the exception. It may sit in the navigation before it
+    opens, because it is what the account grows into. While it is not open it
+    carries a "Not open yet" pill on its own page. A part of a product never
+    gets this exception, only a product does. **Superseded for Grow and Market
+    on 3 September**, which are now treated as live and carry no marker. See
+    11c.4a for what that costs.
+19. Never put a data colour on text. `data/1` to `data/5` are scoped to fills
+    and strokes so the picker will not offer them for a text layer. The dot
+    beside a word carries the identity, the word carries the meaning, and no
+    reader ever depends on colour alone.
+20. Never hand out data colours out of order, and never cycle them. The order is
+    what keeps the chart readable to a colour blind reader. Where any two marks
+    can end up neighbours, only the first three slots exist. See 2.8.
+21. Never size a card by eye. Measure what its content needs, then set the
+    height. Every card on the desktop Home was solved this way, which is why the
+    two states of it have different row heights.
+22. Never draw a chart in colour by default. Grey is the default and colour is
+    the exception, earned only by a rise or fall, or by a series that has to be
+    told apart from another. See 2.8a.
+23. Quiet is not the same as flat. A screen that has given up colour has to earn
+    its interest somewhere else, which means texture, a real range of scale, and
+    cards that are not all the same size. See 11b.4a.
+24. A note about one element is not a new direction for the screen. If someone
+    says a chart is too loud, quieten the chart. Do not quieten everything
+    around it as well. See 11b.4a for the time this went wrong.
+25. Colour belongs in many small places, not a few large ones. Bars, dots, chips
+    and legends, not card backgrounds. The one exception is the single accent
+    card the seventy twenty ten rule asks for, and there is only ever one.
+26. Never call a screen finished without measuring it. Walk every text node,
+    composite its opacity and its ancestors' against the surface behind it, and
+    check the ratio. Rule 11 was broken ten times on one screen because nobody
+    was measuring. See 2.7a.
+27. An accent card is a warm surface, not a saturated one. The card takes
+    `surface/sand-soft`, and the saturated `surface/sand` appears inside it in
+    one small place, such as a badge. A saturated card that big beats the chart
+    it sits beside, and the chart is the point of the screen.
+28. Never set text below full opacity. If it needs to recede, use `ink/muted`.
+    Opacity on a text node is a contrast bug wearing a hierarchy costume.
+29. Never paint a colour that is not bound to a variable. A literal fill is a
+    node that will not follow a theme, and you will not find it by looking. Two
+    of them survived in this file and both were only caught by a sweep. See 2.9.
+30. Never let a state that restricts a person shout louder than the state where
+    everything works. The verification pending hero was brighter than the
+    verified one for exactly as long as it took to measure it. See 2.9a.
+31. Never assume a token should invert just because the mode inverted. A camera
+    preview, a QR quiet zone and a brand hero each stay dark or stay light for a
+    reason that has nothing to do with the theme. Give them their own token
+    rather than bending `surface/inverse`. See 2.9a.
+32. Never tint the greys with the brand colour. Surfaces are most of a screen by
+    area, so a brand tint on them makes the brand the colour of the room instead
+    of a thing in it. The greys are neutral in both modes. See 2.9.
+33. The brand colour never fills a surface, with one exception, and the exception
+    has to be argued rather than assumed. It marks a number, a chip, or the place
+    you are standing in the navigation. If you can count brand-coloured nodes on
+    a screen and a surface token is among them, it has stopped being an accent.
+    See 2.9a-0. The exception is a single element that the whole screen exists to
+    push toward, at most one per screen, never repeated: on `D01c` that is the
+    Buy Stocks card. The sidebar promo failed the same test in the same week
+    because an advertisement is not what the screen is for. See 8.12f.
+34. Never show the same number twice on one screen as information. If a figure is
+    in the hero it does not also get a card, and it does not get a panel row that
+    can only ever restate it. A button may name the figure, because naming what
+    you are agreeing to is the button's job, not a second reading of the number.
+    See 11b.4e. This is what removed three cards from Home.
+35. A screen with two states is two screens, and a screen painted behind a modal
+    is another one. Rebuilding one of them commits you to all of them in the same
+    pass, or the file quietly accumulates generations. Home had three. See
+    11b.4a.
+36. An axis label without a gridline names nothing. If a chart carries values on
+    its edge, the reader has to be able to lay a straight edge from the number to
+    the mark. See 2.9b-2.
+37. Never report a defect you have only seen in a screenshot. Measure the node
+    first. Two of the findings in the 4 September critique were false and cost
+    the reader time. See 2.9b-2.
+38. Never size a child by FILL before its parent has a width. Fill is a share of
+    something, so a chain that has not resolved yet gives it nothing to share and
+    the child collapses to one pixel or runs to thousands. Give the containers
+    explicit widths, append the child, then size it. See 11b.4a-2.
+39. Navigation lists places, not tasks. A place has state you return to and an
+    address worth sharing. A task has an end, and when it ends you go back where
+    you were. Four of the nine desktop rail entries were verbs, and taking them
+    out is what let the rail drop to five. See 11b.2.
+40. Anything drawn on every screen is a component before it is drawn the second
+    time. The sidebar was seventeen hand built copies, so one edit changed one
+    screen and left sixteen lying. Repetition is the test, not complexity.
+    See 8.12c and 11b.2.
+41. Decoration never wears a state colour. A green dot means the same thing a
+    green number means, so the moment ornament borrows `state/positive` it starts
+    making a claim. Take the accent from the data palette instead. See 8.12f.
+42. Check contrast where the text actually sits. A contrast pass that walks up
+    the tree looking for the nearest solid fill steps straight over a gradient
+    and grades the text against something behind it. Sample the gradient at the
+    text's own position instead, or the report is worth nothing. See 8.12f.
+43. A rule applied by hand is not a rule. Green for money in and neutral for
+    money out held on six of eight rows, and one of the two that broke it was the
+    largest outflow on the screen painted as a gain. Put the rule in a variant so
+    the exceptions become impossible, then write the check that proves it. See
+    8.12d.
+44. A variant guards only while it is the right variant. Duplicating a row keeps
+    the variant of the row it was copied from, so retyping the words leaves the
+    colour behind: three rows added to Simple on 4 September put a green minus
+    and a neutral plus back on the screen within an hour of rule 43 being
+    written. The check is the guard, not the component. Run it after every edit,
+    not only after your own.
+45. Check the paint, not the name. A row named `inactive Wallet` was painted
+    active on three screens for a day, and the pass written to catch it read
+    layer names and reported everything clean. Names are a note somebody left.
+    The fill is what the reader sees. See 11b.4b.
+46. A clipped child is not an overflow, and the check will not find it. A frame
+    with `clipsContent` on simply cuts what will not fit, so the sums balance and
+    the Buy button is still missing half its height. Where a card can grow, its
+    row and its column have to hug, or the audit passes on a screen a person
+    cannot use. See 8.12h.
+47. Any control a person can drag must also be typeable. The ruler is faster and
+    the field is exact, and a design that offers only the fast one is a design
+    that cannot take 137.42. Dragging writes into the field, so the two never
+    disagree. See 8.12h.
+48. An audit is code, and code has bugs. Two of the three faults the Grow pass
+    reported were the checker's, not the file's. Green was compared against a
+    colour typed from memory rather than the resolved value of `state/positive`,
+    so four correct rows were called broken. The duplicate figure count read the
+    page sitting behind a scrim and the cells of a table column, where repeating
+    a number is the whole point. Resolve every constant out of the file, and give
+    every check the same scope a reader has. A check you have not doubted is a
+    second opinion you have not got. See 11b.4f.
+49. A link is a promise, and there are only three honest ways to keep it: point
+    it at something real, rename it so it names where it goes, or delete it. The
+    fourth, leaving it, is the one that ships. Twenty three links in this file
+    led nowhere, and the largest group of them was not a link problem at all: it
+    was History holding payments while three screens offered to show you loans,
+    earnings and trades in it. When several links break the same way, the
+    destination is usually what is wrong. See 11b.4j.
+50. Measure the thing, not the box around it. A pass that read `body.height` to
+    find content running under the rail flagged twenty five mobile screens. Most
+    of those bodies are fixed height and always read 844, and three more ended
+    in a deliberate spacer that the check counted as content. Six screens were
+    genuinely wrong, and the trim ran on nineteen that were not. Sum the children
+    and stop at the spacer. See 11f.2.
+51. A bound paint comes back with its alpha thrown away.
+    `setBoundVariableForPaint` returns a new paint at full opacity, so a ten per
+    cent white lift over sand shipped as a solid white button. Nothing looked
+    wrong in a sixty variant sheet; the contrast check found it at 1.37:1. Put
+    the alpha back on the object the call hands you, and never trust an overlay
+    you have not measured. See 11f.3.
+
+## 11. The screens, by flow
+
+Every screen sits inside a named section in Figma. A section holds one flow, a
+short note that says what the flow is for, and an arrow between each step. Where
+two screens are alternatives rather than steps there is no arrow between them.
+
+Every section is filled `surface/default`. That matters more than it sounds.
+Figma gives a new section a dark fill, and a white screen sitting on a dark
+section reads as a card with a heavy shadow behind it, which is not what the
+screen looks like. The pale fill lets the screen read as the white page it is.
+No screen sits loose on a page.
+
+### 11.1 Onboarding, page `03 Onboarding`
+
+| Flow | Screens |
+| --- | --- |
+| A. Set up a new account | Welcome, How this works, Recovery phrase hidden, Recovery phrase revealed, Confirm your phrase, Create a PIN, Confirm your PIN, Unlock with your face |
+| B. Confirm your mobile number | Your mobile number, Enter the code |
+| C. Verify your identity | Verify your identity, Choose NIN or BVN, Enter your NIN, Check your details, Photograph your ID, Check the photo, Take a selfie, Review and submit |
+| D. After you submit | Under review, Verified, More information needed |
+| E. Come back to your account | Restore your account |
+| F. Sign in and sign up | Sign in, Create account |
+
+Flow D holds three outcomes of the same check, so its screens carry no arrows.
+Flow F holds the two ways in, so its screens carry no arrows either.
+
+Every onboarding screen sits on `surface/canvas`. There are no deep green
+screens. Welcome used to be deep green and the three camera steps used to be
+deep green, and they are now white like the rest of the product. The only deep
+green left in the flow is the camera feed itself on Photograph your ID, Check
+the photo and Take a selfie. That block is not a background choice. It stands
+for what the lens is seeing before the picture is taken, so it has to be dark
+for the sand guide drawn on top of it to read.
+
+### 11.2 The app, page `04 App`
+
+| Flow | Screens |
+| --- | --- |
+| F. Home | Home verified, Home verification pending |
+| G. Receive money | Receive |
+| H. Send money | Send who, Send amount, Send review, Send sent, Send failed |
+| I. Activity and receipts | Activity, Transaction detail |
+| J. Account and security | Account, Security |
+| K. The More sheet | More |
+| L. First run and empty states | Home first run, Activity nothing yet |
+| M. Grow and Stocks | Grow, Stocks |
+| N. Earn and Borrow | Move money in, Borrow amount, Borrow review, Borrow done |
+| O. Buying and selling | Stock detail, Buy amount, Buy review, Buy done, Sell |
+| P. Money | Money, Buy, Convert |
+
+Flow F holds two states of one screen, so its screens carry no arrows. In flow H
+the last two screens are the two endings of the same send, so the arrow stops at
+the review screen. In flow P, Buy and Convert are two sheets that open from
+Money, so they are alternatives to each other and carry no arrows either.
+
+### 11.3 What every screen has to satisfy
+
+17. The frame is 390 by 844 and nothing spills past it.
+18. Side padding is 20. The status bar is 56 and an app bar, when there is one,
+   is another 56.
+19. A screen that shows the floating navigation ends its content 88 above the
+   bottom, and no element reaches into the navigation.
+20. A screen without the navigation ends its content 32 above the bottom.
+21. Two font weights, and every size and gap a multiple of 4.
+
+## 11b. The desktop product
+
+The desktop product is the same account on a wider screen. Same balance, same
+send and receive, same Grow and Stocks, same colours, same type, same rules.
+What changes is the shape of the page, because a monitor is not a phone held in
+one hand.
+
+### 11b.1 The canvas and the grid
+
+| Part | Value |
+| --- | --- |
+| Canvas | 1440 by 1024 |
+| Sidebar | 240, fixed, always visible |
+| Content | 1200 |
+| Content padding | 36 on each side |
+| Columns | 12 at 72 |
+| Gutter | 24 |
+
+The numbers close exactly: 240 plus 1200 is 1440, and 36 plus 864 of column plus
+264 of gutter plus 36 is 1200. Every one of them is a multiple of 4, so the
+divide by four rule survives the move to desktop untouched.
+
+Home uses an 8 and 4 split: 744 for the money column and 360 for the side
+column, with the 24 gutter between them.
+
+### 11b.2 The sidebar
+
+A sidebar is a list of places, not a list of tasks. A place has state you come
+back to and an address worth sharing. A task has an end, and when it ends you go
+back to where you were. The rail carried both until 4 September, and that was
+the cause of nearly everything wrong with it.
+
+**The six places.** `Home · Wallet · Market · Grow · History`, then `Account`
+on its own below them.
+
+Home is what you own. Wallet is the money itself and how it gets in and out.
+Market is what you could own. Grow is what your money can do while you hold it.
+History is what already happened. Account is who you are. Nothing else is a
+place.
+
+**Wallet sits second, above Market**, even though trading is what the product is
+for, because nobody can trade until they have funded the account. The rail is
+ordered by what a person does first, not by what matters most.
+
+Wallet passes the place test: it has state you return to, an address worth
+sharing, and content that outlives the visit. It carries balances, the ways
+money gets in and out, saved banks and cards, and what is still settling. It
+must not become a second portfolio page. 11c.4 records that Portfolio was folded
+into Home precisely because a second page of the same numbers is a page nobody
+needs, and a Wallet that leads with the total is that page again under a new
+name. Home answers how am I doing. Wallet answers where is my money and how do I
+add more.
+
+**`D18 Wallet` exists.** The rail entry was added on 4 September and the screen
+followed the same day. See 11b.4d.
+
+**The four money rails are not places.** Buy, Convert, Send and Receive used to
+sit in the rail and do not any more. They are buttons on Home, which is one
+click from anywhere, so the furthest any of them sits from any screen is two
+clicks. Every Home variant carries all four. Wallet does not change that. A
+wallet is where the money lives, not the act of moving it.
+
+**Security and Support are not places either.** Security is part of Account.
+Support lives behind the avatar, which is why the avatar now has a chevron and
+is a control rather than a label.
+
+| Part | Value |
+| --- | --- |
+| Width | 240 |
+| Fill | `surface/default` |
+| Padding | 20 at the sides, 32 at the top, 24 at the bottom |
+| Brand | A 32 mark in `surface/inverse` at radius 8, 12 gap, the name in `Title` |
+| Item | 40 tall, pill radius, 16 padding at the sides, a 12 glyph, 12 gap, the label in `Body strong` |
+| Wallet glyph | A billfold, a rounded rectangle with a fold line across the middle. The first draft was a rectangle with a clasp dot and read as the Market square at 12 |
+| Gap between items | 4 |
+| Gap between groups | 32 |
+| Selected item | `surface/inverse` fill, `ink/inverse` label and glyph |
+| Unselected item | No fill, `ink/muted` label and glyph |
+| Promo | 200 wide, radius 20, `surface/sunken`, a 48 badge, a title, one sentence and a link |
+| Footer | The avatar, the name, the state, and a chevron, pinned to the bottom |
+
+**It is one component now.** `Sidebar` on `02 Components` is a seven variant
+set, `State = Home, Wallet, Market, Grow, History, Account, None`. All seventeen desktop
+screens carry an instance of it. Before this it was seventeen hand built frames,
+which is how the rail came to say one thing on one screen and something else on
+sixteen others. A fix now happens once. The unbound badge fill was found by the
+audit and corrected in the master, and all seventeen screens took the fix
+without being touched.
+
+**Which state each screen carries.** A detail page keeps its parent selected, so
+`D05 Apple` and `D17 Invest` show Market. A task painted over Home keeps Home
+selected, so all four Send and Receive screens, `D13 Add money` and `D14 Convert`
+show Home. `D07 Security` shows Account because it is part of Account.
+`D08 Support` shows None, because it is reached from the avatar and is not a
+place in the rail.
+
+**The promo slot.** The bottom of the rail holds one card, currently the debit
+card. It is `surface/sunken` and flat. It was a green gradient painted straight
+onto the node with no token behind it, which broke two rules at once: the brand
+does not fill a surface, and nothing is painted unbound. An advertisement must
+never be the loudest thing in the navigation.
+
+**Why five and not nine.** On desktop the rail makes everything one click, so
+depth is not the cost. Width is. Nine permanent entries is a nine way decision
+taken on every screen, every time. 11c.4 records that the phone had eleven such
+entries, measured it, and cut to five. The same arithmetic applies here, and it
+is the reason desktop and mobile now agree about what a destination is instead
+of differing because one of them had room.
+
+The selected glyph does not fill on desktop, and on mobile it does. That is not
+an oversight. On mobile the glyph is alone, so filling it is the only way to
+show which one is active without relying on colour. On desktop the item carries
+a label and a pill, so the state is already carried by shape and not by colour
+alone.
+
+### 11b.3 What desktop does differently
+
+- **Scan is gone.** A person cannot point a monitor at a QR code. Home offers
+  Receive and Send, and nothing else.
+- **Receive and Send carry equal weight.** Both are `surface/control` pills of
+  the same size, because they are the same size of decision. Neither is filled
+  green, which would make a claim the product does not mean.
+- **Activity is a table, not a list.** It gains a `Label caps` heading row and a
+  Type column, because a wide screen has room to say what a payment was as well
+  as who it was with. There are still no dividers and no lines. Rows are 56 tall
+  with an 8 gap, exactly as on mobile.
+- **Home shows more.** Eight payments instead of three, and the side column
+  carries Stocks, Grow and the people you send to most.
+- **Home still shows no address, no token and no chain.** Rule 8.16 does not
+  relax because the screen got bigger.
+- **A sheet becomes a centred modal.** Same job, same content, different arrival.
+  480 wide, radius 28, 32 padding, `surface/default`, over the same
+  `ink/strong` scrim at 50 percent. It is centred in the window and it never
+  runs past the bottom of it.
+
+### 11b.4 The desktop screens
+
+| Screen | What it holds |
+| --- | --- |
+| D01 Home | Cash strip, the portfolio with its dot column chart, positions, activity, Borrow and Earn. Drawn in both Simple and Detailed |
+| D01c Home — gateway | A second Home, kept alongside the first. The amount, three cards to get started, recent activity, and space. See 11b.4a-2 |
+| D02 History | Search, three filters, export, twelve payments across five columns |
+| D03 Grow | What is in Grow, then Earn and Borrow side by side, each led by its rate, then six questions |
+| D03a Borrow | How much with the ruler, the terms, and what secures it with the cover bar |
+| D03b Borrow review | The amount, the rate, the monthly cost, the sell point |
+| D03c Borrowed | The outcome, with the reference |
+| D03d Earn | How much with the ruler, what it pays, and where the interest comes from |
+| D03e Earn review | The amount, the rate, when it pays, how to take it out |
+| D03f Earning | The outcome, with the reference |
+| D03g Repay | How much with the ruler, what is left owing, and what repaying frees up |
+| D03h Repay review | The amount, where it comes from, what is left, what that costs |
+| D03i Repaid | The outcome, with the reference |
+| D03j Take out | How much with the ruler, and what the rest carries on paying |
+| D03k Take out review | The amount, where it goes, when, and what you give up |
+| D03l Taken out | The outcome, with the reference |
+| D02a Receipt | One payment in full: who, the reference, when, the fee |
+| D19 Join the list | What the card is, and the address we will write to |
+| D06b Close account | The three things that have to happen first |
+| D07b Recovery phrase | Hidden by default, and what the words can do |
+| D07c Recovery phrase shown | The twelve words, once you have asked for them |
+| D14c Your banks | Where payouts go, and how to add another |
+| D04 Market | Search, seven categories, three indices, five plain language picks, what is moving today, popular |
+| D05 Apple | The full chart, today's trading, growth and valuation, your position, trending, news |
+| D06 Account | Personal details, your address with its warning, verification, devices |
+| D07 Security | How you get in, recovery, where you are signed in |
+| D08 Support | Common questions, how to reach a person, service state |
+| D09 Send | Who and how much, in one modal |
+| D10 Send review | What is about to happen, before it happens |
+| D11 Send sent | The outcome, with the reference |
+| D12 Receive | The drawn code, the address, the network warning |
+| D13 Add money | Naira in, dollars out, the rate, the moving minimum, recent orders |
+| D14 Convert | Dollars out, naira into a bank, capped by the balance, saved banks |
+| D15 Sign in | Google first, then email and password, on a 480 card centred on white |
+| D16 Create account | The same card, plus what happens next and the terms line |
+| D17 Invest | How much with the ruler, what you are buying with its price line, recent orders |
+| D18 Wallet | The cash you can spend, three ways to move it, what is still settling, your limits, and your banks |
+| D02a Receipt | One payment in full: who, the reference, when, the fee |
+| D06a Change email | Two fields and one button, the pattern behind every Change link |
+| D07a Change PIN | The PIN you have, the new one, and it typed twice |
+
+Every one of the numbered screens was checked: nothing runs past the frame,
+nothing falls below the fold, every gap and padding divides by four, and no grey
+line exists anywhere. `D01c` came later and carries its own audit in 11b.4a-2.
+
+The first twelve were drawn before the code was readable. D13 and D14 came
+after, and D15 and D16 after those. All sixteen sit on `surface/canvas`, and the
+fourteen that are signed in carry the same eleven sidebar entries from 11c.4.
+D15 and D16 carry no sidebar, because nobody is signed in yet.
+
+Five screens survive the audit in 11c unchanged: Home, Account, Security,
+Support and Receive. Activity becomes History and takes on the filter that
+replaces Withdrawals. Grow and Stocks keep their place but must lead somewhere
+honest. The send flow needs rebuilding around sending to a wallet, which is the
+only rail the product has. Portfolio and Withdrawals do not exist here yet.
+
+### 11b.4a Home is the portfolio
+
+Home has been rebuilt four times, and the fourth is the one to keep. Version
+three made the screen quiet, and quiet turned out to mean flat. The mistake was
+mine and it is worth recording, because it is easy to repeat.
+
+Two references were in play. One was a rich blue dashboard, sent with the words
+"make it more interesting". The other was a grey dot column card, sent later
+with the words "this chart is very distracting, make it a bit more subtle". The
+second reference was about **the chart**. I applied it to the whole screen and
+threw away everything the first reference asked for.
+
+The rule that comes out of it: **a note about one element is not a new direction
+for the screen.**
+
+| Band | Height | What it holds |
+| --- | --- | --- |
+| Header | 44 | The greeting, the Simple and Detailed toggle, notifications |
+| Figures | 176 | Portfolio, Today and Cash ready, three cards of 360 |
+| Over time | 344 | The dot column chart at 744, the sand pick at 360 |
+| Lists | 316 | Positions 456, activity 360, then Borrow and Earn stacked in 264 |
+
+**Colour is back, in many small places rather than a few large ones.** That is
+what the first reference actually does. The portfolio card carries a three part
+allocation bar in `data/1` to `data/3` with the holdings named. Today carries a
+two part bar in `state/positive` and `state/negative` with the up and down day
+counts beside it. Cash ready carries a single `data/4` fill on a
+`surface/sunken` track. None of it is a large coloured fill, so the screen still
+reads as green and white.
+
+**The chart stays grey.** It is the one element the second reference was about,
+and it is the largest, so it is the one thing that must not compete. See 8.12b.
+
+**One sand card, once.** The seventy twenty ten rule asks for about a tenth of a
+screen in accent, and version three had none. The accent is a single sand card
+carrying a market pick, which puts the warm moment on something worth looking at
+rather than on a control.
+
+#### The fifth pass, 3 September
+
+The note was "this doesn't have enough contrast and the page is now too busy",
+pointed at the sand card. Both halves of it were right, and both were
+measurable.
+
+Contrast: ten failures per screen, all of them rule 11. What was wrong and how
+it is checked from now on is 2.7a.
+
+Busy: three counts made it concrete. Three cards in the figures row carried
+three different chart forms, so the eye had to learn the row three times. Seven
+distinct hues sat inside 176 vertical pixels. The sand card held fourteen pieces
+of text and was the most saturated block on a screen whose hero is a grey chart.
+
+Four changes, and nothing else moved:
+
+| Change | Why |
+| --- | --- |
+| Today's thirty dot matrix became a two part bar | Three cards, one form. The row is read once, not three times. Thirty marks became two, and the dot texture belongs to the hero chart alone. |
+| Cash ready's two part bar became one fill on a track | Cash against total is one quantity, not two categories. Seven hues in the row became six. The bar no longer restates the portfolio figure sitting two cards to its left. |
+| The sand card lost its tickers and kept the fund names | It said "VOO" and "Vanguard S&P 500" on the same line. The plain name is the half a beginner can use, and the row went from three texts to two. |
+| The sand card went to `surface/sand-soft`, with the saturated sand kept as a "This week" badge | A 360 by 344 block of `D5A578` beat the chart beside it. Rules 25 and 27. |
+
+Text on the screen went from 85 nodes to 82, hues in the figures row from seven
+to six, and contrast failures from ten to zero.
+
+What was **not** done, deliberately: no card was removed, no row was
+re-proportioned, nothing was redesigned. Rule 24. The note named the sand card,
+so the work stayed on the sand card and on the two measurements that named
+themselves.
+
+**Scale runs from 36 to 12.** Three figures at Display, the lists at Body
+strong, the labels at Label. The cards are not a grid either: 360 three times,
+then 744 and 360, then 456, 360 and a stack of two.
+
+The send ruler is not on Home. It belongs on Send and on Invest, which is
+reached from the Invest control on the Cash ready card.
+
+#### The sixth pass, 4 September
+
+Two references came in together. A dark stock dashboard supplied the **shell**: a
+neutral near black, no green cast, colour only on gains. A light finance
+dashboard supplied the **layout**: a purpose line, a large amount and two buttons
+on the left, an amounts card on the right, one wide chart, a transactions list.
+The note attached to them was that the page was still busy and the boxes were too
+green. Both were acted on; the orange gradient in the second reference was not.
+
+| Band | Height | What it holds |
+| --- | --- | --- |
+| Hero | 200 | Purpose line, the portfolio value at Display XL, the day's change, Send and Receive. To the right, one 360 card holding cash, buying power and total gain |
+| Chart | 348 | Portfolio over time at 744, with Borrow and Earn stacked in 360 |
+| Lists | 288 | Your positions and Recent activity, 552 each |
+
+**The three stat cards are gone.** They held the portfolio value, the day's change
+and the cash figure, all of which now sit in the hero or in the amounts card
+beside it. A screen should not say a number twice.
+
+**The sand card is gone.** It was the last large block of colour on the page and it
+was competing with the chart for a job the chart already had.
+
+**The chart is bars now.** Solid columns, grey by default, with one month drawn in
+`ink/strong` and a callout above it carrying the value, a delta chip and the
+period. This replaces the dot column chart on Home. The dots were texture; the
+bars are a reading. Section 8.12b keeps the dot chart spec because the component
+still exists, but Home no longer uses it.
+
+**Send and Receive are the same pill.** Two identical filled buttons, because
+sending and receiving are the same size of decision. That is rule 12 in section
+13, and the reference happens to agree.
+
+Cards on the page went from ten to six, text nodes to 97, and the audit reports
+zero contrast failures, zero overflow, zero spacing off the four grid and zero
+clipped text.
+
+#### Both states, and the four backgrounds, 4 September
+
+The first pass rebuilt `D01 Home` and left `D01 Home — detailed` alone, which
+meant the Simple and Detailed toggle switched **design** rather than density, and
+the sand card the note had specifically objected to was still sitting on half of
+Home. Four modal screens made it worse by painting a third, older Home behind
+their scrim. Three generations of one screen.
+
+All of them now carry the same design. Detailed differs from Simple only in how
+much each line says:
+
+| | Simple | Detailed |
+| --- | --- | --- |
+| Delta line | `+$142.60 (1.16%) Today` | `… Today · +$1,840.60 (17.28%) all time` |
+| Amounts card | Cash, buying power, total gain | plus Invested, and the gain carries its percentage |
+| Positions | `Apple` | `Apple · 23.42 shares` |
+| Activity | `Today at 14:32` | `TXN-8F2K9G · Today at 14:32` |
+| Borrow | `Against your shares, 9.4% a year` | `9.4% a year · 140% collateral · sold below $2,604` |
+| Chart callout | value, delta, month | plus the month's high |
+
+`D09 Send`, `D10 Send review`, `D11 Send sent` and `D12 Receive` now paint the
+rebuilt Home behind their scrim, so the background of a modal is the screen you
+actually came from.
+
+The scrim itself was the quiet fault underneath all of this: a literal `001A14`
+at 54 percent on four screens, which is why the modal backgrounds still looked
+green after the ramp went neutral. It is `surface/scrim` now.
+
+Whole page, measured: 26 screens, 1,305 texts, zero contrast failures, zero
+overflow, zero spacing off the four grid, zero unbound fills.
+
+### 11b.4a-2 Simple, the other Home
+
+`D01c Home — gateway` (`565:135`) started as a second Home built to sit beside
+the first so the two could be compared and one chosen. That comparison is over.
+`D01 Home`, the original Simple screen, has been deleted, and this screen is
+Simple now. The page went from nineteen screens to eighteen.
+
+**The two are one destination with two views**, joined by the Simple and
+Detailed toggle. Detailed sits on the left of section B, Simple on the right,
+and Simple is where people land. Both carry the toggle, each showing its own
+side as selected. Before 4 September only Detailed had it, so a person landing
+on Simple had no way to reach the other view and no way back once they left.
+A pair of views needs the switch on both, or it is not a pair.
+
+They agree on every number they both show: the total, the day's change, and the
+four activity amounts they share. Detailed shows more, which is the point of it,
+and the greeting is the same on both because it is the same person at the same
+moment.
+
+The first Home answers "how am I doing". This one answers "what do I do next".
+It is a way in to the three things the sidebar cannot hold, and nothing else.
+
+What is on it, top to bottom:
+
+| Band | What it holds | Height |
+| --- | --- | --- |
+| greeting | `Good morning, Chinaza`, then one line of status | 72 |
+| portfolio | `TOTAL PORTFOLIO`, the amount at 48, the day's change | 104 |
+| get started | Buy, Convert and Borrow as three cards of 320 | 228 |
+| activity | Five rows and a `See all`, built from `Activity row` instances | 288 |
+
+Content is 1008 wide inside 96 of padding on each side and 72 top and bottom,
+with 48 between bands. That comes to 932 of the 1024 the frame gives, so about
+92 is left over at the bottom. The empty space is the design, not a gap left by
+accident.
+
+What is deliberately missing, and why:
+
+- No chart. The reading of a chart is the first Home's job.
+- No stat cards. Four numbers in a row is a dashboard, and this is not one.
+
+Each of the three cards carries a halftone dot field across its bottom 140. The
+three are windows onto one continuous field rather than three separate pictures,
+so the pattern runs across the row. See 8.12f.
+- No cash strip, no positions table, no Earn panel, no offers.
+- The activity rows were bare at first, a name, a time and an amount. They carry
+  the full treatment now, a direction glyph, the reference, a status pill and the
+  masked account, the same as Detailed. Two views of one destination should not
+  disagree about what a row is.
+
+Each of the three cards is the same shape: a 48 badge on `surface/control`, the
+verb as a title, one plain sentence saying what it is for, and a link at the
+bottom. The sentences are written for someone who has not used the product
+before. "Own a piece of Apple, Nvidia or a whole market fund. From $1." is the
+Buy card, not "Purchase fractional equities".
+
+The status line under the greeting first read "Your portfolio is up $142.60
+today", which put $142.60 on the screen twice, once there and once in the
+delta below the amount. That is rule 34, and the rule caught it in the audit
+rather than in a review. It reads "Everything is settled. Nothing needs your
+attention." now, and no figure on the screen appears more than once.
+
+Measured after the fixes: 127 nodes, zero contrast failures, zero overflow,
+zero gaps or paddings off the four grid, zero unbound fills, no data colour on
+text, no text below full opacity.
+
+The first attempt at this screen collapsed. The greeting came out 1872 tall and
+the cards came out one pixel wide, because `layoutSizingHorizontal = 'FILL'` was
+set on children whose parents did not have a resolved width yet. Fill is a
+share of something, and there was nothing to take a share of. The rebuild gives
+every container an explicit width, appends the child first and sizes it after,
+and none of it moved again. See rule 38.
+
+### 11b.4b The Market page
+
+`D04 Market` was `D04 Stocks`. It is where you go to find something to buy, and
+on 5 September it was rebuilt against how the category actually works.
+
+**The one thing nothing else in the category can say.** Bamboo, Trove and
+Risevest all trade real US equities, so they are shut from 9pm to 2:30pm the next
+afternoon in Lagos. A Nigerian who opens one of those at ten in the morning can
+do nothing for four and a half hours, and none of them says so on the browse
+screen. Tokkenly's stocks are tokenised and trade around the clock, so the page
+leads with `Open now · trades 24/7` in the header and says it again in plain
+words under the search: *Everything here trades any time, day or night. No
+opening bell, no waiting for New York.* That is the sentence the page exists to
+deliver.
+
+| Band | What it holds | Height |
+| --- | --- | --- |
+| page header | `Market`, and the open marker with a live dot | 28 |
+| search | One field across the full width, not a box in the corner | 52 |
+| why | The 24/7 line in plain words | 20 |
+| categories | All, Popular, Technology, Funds, Dividend, Energy, New | 24 |
+| markets | S&P 500, NASDAQ, DOW JONES with their sparklines | 100 |
+| columns | Your watchlist on the left, Moving today on the right | 384 |
+| collections | Worth a look, four plain language picks | 140 |
+
+952 of 1024 used.
+
+**Search stopped being a control in the page header** and became a band of its
+own across all 1128. Finding a company is the reason people open this page, and
+it was competing with a title for the corner.
+
+**The watchlist is new**, and it is the thing a returning person opens the page
+for. Five rows: ticker, company, price, change. It needed a follow action on the
+company page to mean anything, and `D05 Apple` carries one now. See 8.12g.
+
+**Moving today carries three tabs**, Gainers, Losers and Active, where the old
+page had only a list of things going up. A browse screen that can only show good
+news is not a market screen.
+
+**What survived unchanged.** The plain language collections. Nothing else in the
+category writes *One fund, five hundred companies* or *Companies that share their
+profit*, and they are the reason this page reads as built for someone who has
+never owned a share.
+
+**What went.** The four popular cards, which said the same thing as the watchlist
+with less information in more space, and the separate `Popular` heading above
+them.
+
+Two defects the rebuild surfaced. Four collection meta lines were `ink/subtle`
+at 3.06 to 1, which is the same trap 8.12c already records: quiet is a token, and
+never `ink/subtle` when the quiet thing is something a person is reading. And the
+sidebar showed **two** rows lit on `D04`, `D05` and `D17`, because the Wallet row
+added on 4 September was cloned from whatever Market row already existed in each
+variant, and in `State=Market` that row was the active one. The clone was named
+`inactive Wallet` and painted active. The first fix missed it by reading names.
+See rule 45.
+
+### 11b.4c Invest, and where the ruler lives
+
+`D17 Invest` is where the Amount ruler earns its place. It is reached from the
+Invest control on the Cash ready card on Home, and from any stock on the Market
+page. The sidebar shows Market as the active item, because Invest is a thing you
+do from the market rather than a separate destination. It has no entry of its
+own, since Buy already means something else in this product: turning naira into
+dollars.
+
+| Band | Height | What it holds |
+| --- | --- | --- |
+| Header | 44 | The title and the cash available |
+| Choose | 600 | How much at 456, what you are buying at 648 |
+| Orders | 260 | The last three orders in five columns |
+
+The left card is the tactile one. The amount in `Display XL`, the ruler under
+it, four quick amounts under that, then what the money actually buys: the number
+of shares, the price each, the fee and how long it takes. A `tint/brand` note
+says that a part of a share is a real thing you can sell, because that is the
+question a first time buyer asks and the answer is not obvious.
+
+The right card is the case for the purchase. The company, the price, a grey
+price line, and four facts. The chart is a line rather than dot columns, because
+a price history is a level rather than a flow, and a column that does not start
+at zero lies about the size of a move. See 8.12b.
+
+**The ruler now appears in two places.** On `D09 Send`, in the modal, where the
+amount used to be a plain field. And on `D17 Invest`, as the main control. It is
+not on Home. Home is where you see what you have; these are where you decide a
+number, and a ruler is only worth its space where there is a number to decide.
+
+While updating Send, the Home screen behind its modal was two versions out of
+date, so `D09`, `D10` and `D11` all have a current background again. That is a
+standing cost of drawing a modal over a real screen: the screen underneath keeps
+moving.
+
+### 11b.4d The Wallet page
+
+`D18 Wallet` (`643:1245`) is the page the rail entry has been pointing at since
+4 September. It closes the debt recorded in 11b.2.
+
+**Home answers how am I doing. Wallet answers where is my money and how do I add
+more.** That sentence decided everything on the page, and mostly it decided what
+is not on it. There is no portfolio total, no day's change, no positions and no
+chart. 11c.4 records that Portfolio was folded into Home because a second page
+of the same numbers is a page nobody needs, and a Wallet that opens with
+`$12,480.60` is that page again wearing a different name.
+
+| Band | What it holds | Height |
+| --- | --- | --- |
+| page header | `Wallet`, and `Add money` as the one filled button | 40 |
+| balance | `AVAILABLE TO SPEND`, the cash figure at 48, and one line of state | 104 |
+| rails | Send, Receive and Convert as three cards of 360 | 96 |
+| columns | In progress and Your limits on the left, Payment methods on the right | 458 |
+
+860 of 1024 used, so the page has 164 spare. It is a short page on purpose.
+
+**The hero figure is the cash, not the portfolio.** `$2,480.00` is what can be
+spent or invested today. It is the same number Home carries as one line inside
+its Available card, which is correct: a summary points at the page that owns the
+subject. Wallet owns cash.
+
+**`Add money` is in the header and nowhere else.** The rails row carries the
+other three movements, so no action appears twice. Buy is absent because buying
+is not a money movement, it is what the money is for, and it lives on Home and
+in Market.
+
+**In progress is the reason the page earns its place.** Two pending rows, built
+from `Activity row` instances in their Pending variants, and a line saying
+nothing else is waiting. Home never shows this and History buries it among
+everything that already finished. A person who wants to know whether their money
+has arrived has had nowhere to look until now.
+
+**Your limits** is the other thing no other screen carries: what you may send in
+a day, convert in a month, and add in a day, each with what is already used.
+
+**Two things were cut after the first build.** The right column had a debit card
+panel that repeated the promo already in the sidebar, which is the same offer
+twice on one screen. And the balance line read `$620.00 is on the way`, naming a
+figure the pending row underneath already carried. It reads `Two payments are
+still settling` now, and no figure appears twice on the page. See rule 34.
+
+Measured: 131 nodes, no contrast failures, no overflow, no spacing off the four
+grid, no unbound fills, and both amounts obey 8.12d.
+
+### 11b.4e The five rails, finished
+
+Send had three screens. Add money, Convert and Invest had one each, so the
+product could take a person's money without ever showing them what they were
+about to do or telling them it had worked. All five are complete now.
+
+| Rail | Screens |
+| --- | --- |
+| Send | `D09 Send` · `D10 Send review` · `D11 Send sent` |
+| Receive | `D12 Receive` |
+| Add money | `D13 Add money` · `D13a Add money review` · `D13b Add money added` |
+| Convert | `D14 Convert` · `D14a Convert review` · `D14b Convert done` |
+| Invest | `D17 Invest` · `D17a Invest review` · `D17b Invest bought` |
+
+**Every review and every outcome is a sheet**, including on the three rails that
+are pages, which is what 8.15 already required and 8.15a now explains. The page
+stays behind at 54 percent so a person can see what they were doing.
+
+**The shape is one shape.** A 480 sheet at radius 28 with 32 of padding. A head
+with the word and a close. A figure with a caps label and the amount. A panel of
+four labelled rows. One callout. One filled button naming the action and the
+amount. The outcome sheet swaps the figure for a 64 tick and adds a second,
+quieter button.
+
+**The four rows differ because the questions differ**, and that is the point of
+having them rather than one generic receipt:
+
+| Rail | What the panel answers |
+| --- | --- |
+| Send | Who, what it costs, when it lands |
+| Add money | What you pay in naira, which bank it leaves, the rate, when it lands |
+| Convert | What you get in naira, which bank it lands in, the rate, when |
+| Invest | How many shares, the price each, the fee, when it settles |
+
+**Two defects came out of the build.** Cloning a screen dropped the scrim's paint
+opacity from 0.54 to 1, so the first two sheets were solid black with nothing
+behind them. That is the same fault 2.9b-1 records from March: a bound paint
+loses its alpha unless the alpha is part of the object you bind. Every scrim on
+the page is checked now, and all ten carry 0.54.
+
+And `D05 Apple` and `D17 Invest` had been sitting at the same x inside section H
+since the day Invest was drawn, one on top of the other. Nobody saw it because
+the section is wider than a screen.
+
+**Rule 34, refined.** A confirm button may name the amount, because that is how a
+person knows what they are agreeing to. What it may not do is show the figure
+twice as *information*. `D10 Send review` did: the hero said `$120.00` and a row
+called THEY RECEIVE said `$120.00` underneath it. The fee is free, so the row
+could never say anything else. It is gone.
+
+### 11b.4f Grow, finished
+
+Grow was a hub with two dead ends. The Earn card had a button called `Move money
+in` that led nowhere, and the Borrow card had a button called `Borrow $1,150`
+that led nowhere and named an amount nobody had chosen. Both products now have a
+page and a two sheet chain, the same shape the five rails use.
+
+| Product | Screens |
+| --- | --- |
+| Borrow | `D03a Borrow` · `D03b Borrow review` · `D03c Borrowed` |
+| Earn | `D03d Earn` · `D03e Earn review` · `D03f Earning` |
+
+Three taps from the hub in both cases: the product button, `Continue`, then the
+confirm. Four from anywhere in the app, counting the sidebar.
+
+**The terms were invented and they should be read as invented.** Nothing in the
+codebase sets a rate, a collateral ratio or a payout schedule, so this document
+is the only place they exist, the way 11c.4a already flags the equities gap. What
+the design does guarantee is that they are the *same* invented numbers
+everywhere, which they were not before.
+
+| Fact | Settled at |
+| --- | --- |
+| Cash in the wallet | $2,480.00 |
+| In Earn | $1,240.00 |
+| Earn rate | 4.8% a year, paid every day |
+| Earned so far | +$18.60 |
+| Shares held | $12,480.60 |
+| Borrow limit | $1,860.00 in total |
+| Already borrowed | $380.00 |
+| Available to borrow | $1,480.00 |
+| Borrow rate | 9.4% a year |
+| Cover required | 140% of what is owed |
+| Interest owed so far | $8.90 |
+
+**Four screens disagreed with each other before this pass.** `D03 Grow` said
+Borrow was 8.2% a year; `D01 Home — detailed` said 9.4%. Grow said you borrow
+`Against $2,480.00 you hold`, which is the cash balance, not the shares the loan
+is actually secured on. Five screens carried a Borrow offer card reading
+`$1,860`, the full limit, on a person who has $380 out. And Earn's `Paid so far`
+and Borrow's `Interest so far` were both `$12.40`, one being money received and
+the other money owed.
+
+**The sell point is derived, so it stopped being quoted as a constant.** At 140%
+cover, $1,530 owed is sold below $2,142, and $1,860 owed is sold below $2,604.
+The old Home line quoted $2,604 next to a person who owed nothing, so Home now
+states the rule instead: `9.4% a year · 140% cover · repay any time`. Only the
+Borrow composer, where an amount has actually been chosen, names a figure.
+
+**Borrow's second column is the risk, not the product.** Invest puts the company
+on the right. Borrow puts what secures the loan: the shares, a cover bar with a
+notch at the minimum, three position rows, and a small table that answers the
+only question that matters.
+
+| Shares fall by | Worth | What happens |
+| --- | --- | --- |
+| 20% | $9,984.48 | Nothing changes |
+| 50% | $6,240.30 | Nothing changes |
+| 83% | $2,142.00 | We sell enough to cover |
+
+That last row repeats the sell point stated in the summary above the button. It
+is the one duplicate on the screen that earns its place, because the table is
+where the number comes from.
+
+**Earn's second column is where the money comes from.** A rate with no
+explanation behind it is the thing that makes people not use these products, so
+the card says plainly that the dollars sit in short term US government debt, that
+the rate moves with the market, and that it is neither fixed nor guaranteed.
+Above it, a projection: what $1,740 pays over a month, six months and a year.
+
+**The Grow hub was rebuilt around the two rates.** Each product card leads with
+its rate as a display figure rather than burying it in a row, then one line of
+what it is, then two numbers, then the button. Under both, six questions with
+plain answers, which is the only part of the page written for someone who has not
+decided yet.
+
+**The collateral meter is a bar, not a number.** 816% cover means nothing on its
+own. The bar fills to where the cover sits, with a notch at the minimum, so the
+distance between them is the message. The notch is painted `surface/canvas`, not
+a state colour, per rule 41.
+
+**Two of the three audit findings were the audit's.** They are written up as rule
+48. The one real fault was `+$18.60` sitting neutral on all three Earn screens,
+because the row it was cloned from was an outgoing figure.
+
+**What still leads nowhere.** `See all` on both history bands, `See holdings` on
+the Borrow card and `See history` on the Earn card. Repaying and taking money out
+were on this list until 11b.4i; both are drawn now.
+
+### 11b.4g History, Account, Security and Support
+
+Four screens that showed facts and offered nothing to do with them.
+
+| Screen | What was added |
+| --- | --- |
+| `D02a Receipt` | The sheet a History row opens. There was no way to see one payment in full |
+| `D06a Change email` | The form sheet behind Change. Three of the five personal details now carry one |
+| `D07a Change PIN` | The form sheet behind App PIN |
+
+**A row that shows a payment has to open the payment.** `D02 History` listed
+twelve and none of them led anywhere, so a person could see that $120.00 arrived
+and never find out who from beyond a first name. The receipt names the sender,
+the reference, the time and the fee, and says plainly that nothing about it is
+going to change now. Its figure is the one green Display XL in the file, because
+it is money in and rule 43 does not stop at small text.
+
+**Three of the five personal details are things a person changes.** Name and date
+of birth are what the NIN check verified, so they are facts. Mobile number, email
+and home address are not, and each now carries the same `Change` link the Invest
+card uses. The email sheet is the pattern: two fields, a note about what will
+never be asked for, and one button.
+
+**Support was telling people the truth from March.** It answered *When do Earn,
+Borrow and Stocks open* with *They are being built. Nothing is live yet*, on a
+product where all three are now drawn as working. That answer is gone. Five
+questions took its place, all of them raised by what 11b.4f built, and the page
+got a search because ten questions is a list you scan rather than read.
+
+**Security says what to do, not only what is set.** Two cards were added: the
+three steps to take if the phone is lost, and a flat statement that nobody at
+Tokkenly will ever ask for a PIN, a recovery phrase, or a code from a text
+message. That last one is the single most useful sentence on the page in a market
+where the fraud arrives by phone call.
+
+**Account gained the two things a finance app owes a person**: everything held
+about them, downloadable, and a plain account of what closing the account
+involves. Neither is decoration. Both were empty space before.
+
+**Four faults, all mine, all the same shape as ones already recorded.** The
+never-do paragraph was cloned from the amber recovery warning and kept its
+colour, so a calm statement arrived looking like an error, which is rule 41 from
+the other direction. The form fields were cloned out of the History filter, where
+they were `FILL` on the vertical axis of a horizontal row; dropped into a vertical
+sheet the same value collapsed them to nothing, which is rule 38 again. Their
+labels kept the centre alignment of the figure caps they were cloned from. And
+they were painted `surface/sunken`, the same value as the sheet, so the first
+render had three invisible inputs; they take `surface/control` now, the step a
+control on a card is supposed to sit on.
+
+**`D08 Support` was lighting no sidebar row at all.** Account and Security both
+light Account, because neither is a place in the rail. Support is reached the
+same way and now does the same. Rule 39 says the rail lists places, and a screen
+that is not a place still has to say which place it belongs to.
+
+### 11b.4h Detailed Home, made to fit
+
+`D01 Home — detailed` had run 1232 tall inside a 1024 frame since it was drawn.
+The bottom of Recent activity and the whole of the Available card were simply
+below the fold, and the audit never caught it because the frame clips rather than
+overflows, which is rule 46.
+
+Two hundred and eight had to come out. It came out of four places, none of them a
+squeeze:
+
+| Change | Reclaimed |
+| --- | --- |
+| Borrow and Earn, two near identical offer cards, became one Grow card | 136 |
+| Recent activity went from eight rows to four, of which five ever rendered | 208 |
+| The quick action cards stopped setting the summary height and started following it | 20 |
+| The line above the amount became the status line the gateway already uses | — |
+
+The page now measures 1024 of 1024 with nothing clipped.
+
+**The two offer cards were the easy 136.** Each was a caps label, a display figure
+and a caption, stacked, saying almost the same thing about two products that live
+on one page. One card called GROW, two sentences, one chevron. It also fixed the
+thing that made them wrong: they were the only place still quoting `$0.00 to
+date`, from before Earn had a history.
+
+**Recent activity keeps four rows and its `See all`.** Eight were in the file and
+five fitted. A card that promises eight and shows five is worse than one that
+shows four and points at History.
+
+**`Your positions` was painted a raw colour.** Not a token, a hex, which is why it
+alone on that page read green. Rule 3 has been in this document since March and
+the audit that would have caught it, the unbound fill check, was only ever run on
+screens as they were built. It is bound to `surface/sunken` now and the check runs
+across all thirty six desktop screens.
+
+**Buying power stopped adding up** when the borrow limit changed. $2,480 of cash
+plus $1,480 that can be borrowed is $3,960, not the $4,280 five screens were
+carrying.
+
+**One amount was the other kind of wrong.** `D18 Wallet` shows a bank transfer of
+`+$200.00` that is still in progress, painted neutral. Colour and state are two
+signals with two jobs: the chip says it has not landed, the colour says which way
+the money is going. It is green.
+
+**The file passes end to end now.** Thirty six desktop screens: nothing past the
+fold, nothing below 4.5 to 1, no unbound fill, no gap or padding off the four
+grid, every amount coloured by direction, and every signed in screen lighting
+exactly one place in the rail.
+
+### 11b.4i Repay and take out, the way back
+
+Every screen in Grow said the same two things: repay any time, take money out any
+time. Neither had anywhere to go. A promise a screen makes often enough becomes a
+claim, and a claim with no screen behind it is the kind of thing a person finds
+out about at the worst moment.
+
+| Way back | Screens |
+| --- | --- |
+| Repay | `D03g Repay` · `D03h Repay review` · `D03i Repaid` |
+| Take out | `D03j Take out` · `D03k Take out review` · `D03l Taken out` |
+
+**Each is its forward flow with the direction reversed**, and deliberately so.
+Repay is the Borrow composer: the same ruler, the same typeable field, the same
+four summary rows, the same sheet shape. A person who has borrowed once already
+knows how to repay, because it is the screen they have seen. Three taps from the
+hub, four from anywhere.
+
+**Reversing a composer changes what the second column is for.** Borrow's right
+column is the risk, because the question there is what happens if the shares
+fall. Repay's is the cost, because the question here is what the debt is doing
+while it sits:
+
+| Repay | Left owing | Costs a month |
+| --- | --- | --- |
+| $100.00 | $288.90 | $2.26 |
+| $250.00 | $138.90 | $1.09 |
+| Everything | $0.00 | Nothing |
+
+Under it, the thing people get wrong about repaying: your limit goes back up by
+whatever you repay, and your shares were never sold either way.
+
+Take out does the same in the other direction. Earn's right column projects what
+the money will pay; Take out's projects what is left after the withdrawal pays,
+on $940 rather than $1,740. Its callout answers the only real worry, which is
+whether taking money out costs you the interest already earned. It does not.
+
+**Neither screen leads with a collateral bar.** Borrow earned one because 816%
+cover means something next to a 140% minimum. With $388.90 outstanding against
+$12,480.60 of shares the same bar reads 3,209%, which is a true number that
+teaches nothing. It was removed from the Repay clone, the same way it was removed
+from Earn.
+
+**The hub is the door.** `EARN` and `BORROW` each carry a link in their header
+row, named for where it goes: `Take out` and `Repay`. Rule 39 says a rail lists
+places; a card header link names an action, and it should be the action's own
+name rather than a description of it.
+
+**Two figures were nearly wrong.** The first draft put `Left earning $940.00` in
+Take out's summary and `$940.00` again as the right column's figure, and gave
+Repay a right column headed by `$388.90` when the page header already said it.
+Both were caught before they were drawn, by working the copy out against the
+duplicate figure check rather than after it.
+
+### 11b.4j Links that led nowhere
+
+A link is a promise. Twenty three of them were not being kept.
+
+**Fifteen `See all` links pointed at a History that could not show what they
+promised.** `YOUR LOANS`, `YOUR EARNINGS` and `RECENT ORDERS` all offered to show
+you the rest, and `D02 History` held payments only: twelve rows, filtered All,
+Received, Sent. The fix was not to cut the links. It was that History had been
+wrong since it was drawn.
+
+**History is now the one place for everything.** The filters are `All`,
+`Payments`, `Trades` and `Grow`, and the table carries all three kinds: a payment
+in, an Apple buy, a Tesla sale, a day of Earn interest, a drawdown on the loan.
+That also closed a contradiction nobody had noticed. `D01 Home — detailed` has
+always shown `Bought AAPL` and `Sold TSLA` in Recent activity, and the History
+page those rows led to had no trades in it at all.
+
+**The direction arrows had to be re-derived.** They had been alternating in, out,
+in, out down the old list, which was right by luck rather than by rule. Ten of the
+twelve were wrong the moment the rows changed, so each is now set from the sign of
+its own amount. That is rule 43 again, in a column nobody thinks of as an amount.
+
+**The rest sorted into three piles.**
+
+| Fix | Links |
+| --- | --- |
+| Remove, the content is on the same page | `See history` ×6, `See loans` ×3, `See news`, the watchlist's `See all` |
+| Rename, so it names where it goes | `See holdings` → `Your positions` ×3, `View loan` / `View Earn` / `View order` → `View in History` ×5, `Change` → `Change stock` ×3 |
+| Build the destination | `D19 Join the list`, `D06b Close account`, `D07b Recovery phrase`, `D07c Recovery phrase shown`, `D14c Your banks` |
+
+**Removing is a fix, not a retreat.** `See history` sat in the header of the Earn
+card with the earnings table eight hundred pixels below it on the same screen.
+`See news` sat next to Apple's price with a `NEWS` band further down the same
+page. The watchlist's `See all` sat above a list of all five things in it. A link
+to something already visible is worse than no link, because it makes a person
+wonder what they are missing.
+
+**Two of the built screens are one flow.** A recovery phrase screen that shows the
+words by default is a screen that leaks them over somebody's shoulder, so `D07b`
+shows `Hidden` and states plainly what the words can do, and `D07c` shows them
+only after `Show the words` is pressed, with a button that says `I have written
+them down` rather than `Done`.
+
+**Closing an account is a sheet with no confirm button.** `D06b` does not offer a
+red `Delete` that a mis-tap can reach. It lists the three things that have to
+happen first, tells you records are kept for seven years because the law requires
+it, and ends in an email. Destructive and irreversible are not the same as fast.
+
+**Forty six desktop screens now pass**, and no text on any of them offers a
+destination that does not exist.
+
+### 11b.5 The desktop flows
+
+The screens used to sit loose on the page in a grid of four across. They now sit
+in named sections like the phone screens do, one section per flow, in the order
+a person meets them.
+
+| Flow | Screens |
+| --- | --- |
+| A. The way in | D15 Sign in, D16 Create account |
+| B. Home | D01 Home detailed, D01c Home gateway |
+| C. Wallet | D18 Wallet |
+| D. Receive money | D12 Receive |
+| E. Send money | D09 Send, D10 Send review, D11 Send sent |
+| F. Buy and convert | D13 Add money, D14 Convert |
+| G. History and receipts | D02 History, D02a Receipt |
+| H. Grow and Stocks | D03 Grow, D04 Market, D05 Apple, D17 Invest, D03a–D03c Borrow, D03d–D03f Earn, D03g–D03i Repay, D03j–D03l Take out |
+| I. Account, security and support | D06 Account, D06a Change email, D07 Security, D07a Change PIN, D08 Support |
+
+**Wallet sits third, straight after Home**, for the same reason it sits second in
+the rail: funding comes before anything a person can do with the money. The
+section letters are positions, not names, so they were all shifted rather than
+letting Wallet keep the letter it was built under.
+
+Arrows appear only between real steps. Flow E carries two, because the send is a
+chain. Flow H carries one, between Market and the company page it opens. Flows
+A, B, F and I hold alternatives rather than steps, so they carry none. B holds
+two views of one destination, which is not a step either.
+
+A desktop section is 60 of padding on each side, its note at 48 from the top,
+and its screens at 144. Screens sit 160 apart, and sections sit 240 apart. The
+phone pages use the same shape with 48 between screens, because the frames are
+narrower.
+
+### 11d.1 The build, on a phone
+
+`app/` is one codebase in two shapes. Above 900 pixels it is `06 Desktop`.
+Below, it is `07 Mobile`, and the difference is not a squeeze.
+
+| Desktop | Phone |
+| --- | --- |
+| Sidebar of six places | Top bar for identity, floating rail of four tabs, More for the other two |
+| Centred modal | Sheet from the bottom, full width, radius on the top corners only |
+| Composer is a page with context on the right | Composer is a sheet over the place it belongs to, because there is no right |
+| Ruler and a typed field | Ruler, a typed field, and a keypad |
+| Five column tables | Two columns, with what was dropped stacked under the name |
+
+**A composer knows what it sits over.** `ComposerSpec` gained one field, `base`,
+naming the screen the sheet belongs to: Borrow and Repay sit over Grow, Invest
+and Sell over the company page, Send and Convert over Wallet. On the phone the
+composer renders that screen and puts itself on top of it. When a review or an
+outcome opens, the composer sheet steps aside rather than stacking, so a phone
+only ever shows one sheet.
+
+**Fitting the button on the screen was the real work.** The first phone
+composer ran 928 tall in an 88vh sheet, which put `Borrow $1,150.00` below the
+fold on the one screen where the button is the point. The ruler shortened, the
+hint went because a keypad explains itself, and the callout moved to the review,
+which repeated it anyway. `scripts/fit.mjs` now asserts that every one of the
+nine composers has its button on screen at 390 by 844.
+
+**Four screens scrolled sideways** before the charts were told to share the
+width they have rather than the width they were drawn at. `scripts/phone.mjs`
+measures `scrollWidth` against the viewport on every address, so that class of
+fault reports itself.
+
+**Send is two steps on a phone and one on desktop.** Desktop puts the list of
+people in the right column, so who and how much are decided on one screen. There
+is no right column on a phone, so `/send` shows the picker first and the amount
+arrives as a sheet once somebody is chosen. It is the same address either way:
+`/send` is the picker, `/send?to=Tunde%20Bakare` is the amount over it, and Back
+returns to the list rather than out of the flow. Each person carries when they
+were last paid, taken from the activity feed, because that is how people find
+the one they want.
+
+## 11e. The phone
+
+`07 Mobile` carries the settled product at 390 by 844: forty seven screens, one
+for every place and every sheet on `06 Desktop`.
+
+**It is built on the phone language that already existed, not a new one.** Page
+`04 App` had twenty nine screens from before Grow, Wallet and Market were
+settled, and they had already solved the hard part: a 56 status bar, a body at 20
+of side padding with a 24 gap, and a floating navigation that is four tabs in a
+pill with a separate More button beside it. That component is reused unchanged.
+
+**Four tabs and a More button.** Home, Wallet, Market and Grow sit in the pill.
+More opens a bottom sheet holding History, Account, Security, Your banks,
+Support and About. Six places, the same six the desktop rail lists, reached the
+way a phone reaches them.
+
+The nav component's variants are still named `Money` and `Stocks` from the older
+product. They light the right icons, and renaming them would break the twenty
+nine instances on `04 App`, so they stay. What a variant is called is a note to
+whoever opens the file; what it paints is what a person sees. Rule 45, applied to
+a name that is wrong but harmless.
+
+**A composer is a bottom sheet, not a page.** This is the one real difference
+from desktop. There, Borrow and Earn are pages with the amount on the left and
+the context on the right. There is no right on a phone, so the context stays on
+the Grow screen and the amount arrives as a sheet over it, with a keypad. The
+review and the outcome are sheets over the same screen, so a person never leaves
+the place they started from.
+
+| Flow | Screens |
+| --- | --- |
+| Home | `M01` detailed, `M02` simple |
+| Wallet | `M03` |
+| Buy dollars | `M04` · `M05` review · `M06` bought |
+| Send | `M07` who · `M08` amount · `M09` review · `M10` sent |
+| Receive | `M11` |
+| Convert | `M12` · `M13` review · `M14` done |
+| Market | `M15` · `M16` a company · `M17` invest · `M18` review · `M19` bought · `M20` sell |
+| Grow | `M21` hub |
+| Earn | `M22` · `M23` review · `M24` moved in |
+| Take out | `M25` · `M26` review · `M27` taken out |
+| Borrow | `M28` · `M29` review · `M30` borrowed |
+| Repay | `M31` · `M32` review · `M33` repaid |
+| History | `M34` · `M35` receipt |
+| You | `M36` Account · `M37` change email · `M38` close account · `M39` Security · `M40` change PIN · `M41` recovery phrase · `M42` shown · `M43` Support · `M44` your banks · `M45` join the list |
+| The rail | `M46` More |
+
+**The way in is not repeated.** `03 Onboarding` already runs fourteen phone
+screens from welcome through the recovery phrase, the PIN, Face ID, the mobile
+number and the NIN check. It is better than the two cards the desktop uses.
+Section A on `07 Mobile` is a note pointing at it and nothing else.
+
+**The whole page was in the wrong colour mode for a while.** Every fill on those
+twenty nine screens is bound to a token, so nothing was painted wrong; the frames
+were simply resolving `Colour` in Light. One explicit mode on the page turned
+forty seven screens dark at once. A palette held in variables is worth the
+trouble on exactly the day you find that out.
+
+**What the copied screens were still saying.** Borrow at 8.2% a year against
+`$2,480 you hold`, a `$1,860` limit, `Paid so far +$12.40`, an `EVERYDAY` account
+label from before the product was called Tokkenly, and a `Not open yet` pill on a
+product that is now drawn as working. All of it is on the settled numbers now.
+Some of it was inside component instances, which the first sweep skipped, because
+a text override is still a text.
+
+**Three faults of my own, worth writing down.** The Grow hub's two new links,
+`Take out` and `Repay`, were put in the slot that holds a status pill, so they
+arrived amber with a dot: an action dressed as a warning, which is rule 41 from
+the other side. They are neutral controls now. The sweep that applied them
+matched `card > row` and hit the Account screens, overwriting a phone number with
+the word `Repay` on three of them. And Support, cloned from Security, inherited a
+toggle switch on `How long does a payment take`, because a list of questions and a
+list of settings have the same shape and only one of them is switchable.
+
+**Forty seven screens pass**: nothing below 4.5 to 1, no unbound fill, no gap or
+padding off the four grid, and every amount coloured by direction. Two
+placeholders and a button label were lifted off `ink/subtle`, and twenty figures
+that were money in were painted `state/positive`.
+
+## 11c. What the product actually does
+
+Everything above this section was designed before anyone had read the code. On
+2 September the frontend repository was finally readable, and it says the
+product is not quite the one the design assumed. This section records what is
+really there, so nothing after it is invented.
+
+Source: `tokkenly-frontend`, a workspace holding three applications and two
+shared packages. `apps/web` is the marketing site, exported as static HTML.
+`apps/dashboard` is the signed in product, rendered on a server because a
+session cookie has to be set by one. `apps/admin` is a separate panel for staff.
+
+### 11c.1 What a person can do today
+
+| Route | What it is |
+| --- | --- |
+| `/` | Home. Balance, recent movement |
+| `/buy` and `/buy/[id]` | Buying a balance with local currency |
+| `/deposit`, `/deposit/crypto`, `/deposit/crypto/address` | Receiving. Either buy with naira or receive on a chain |
+| `/send`, `/send/wallet`, `/send/recipient` | Sending out to a wallet |
+| `/convert` | Turning a balance into local currency, paid to a bank |
+| `/transactions` and `/transactions/[id]` | History, and one movement in full |
+| `/portfolio` | What is held, reached from the balance card |
+| `/withdrawals` and `/withdrawals/[id]` | Money on its way out, reached from a completed send |
+| `/settings` plus account, security, payout, alerts | Settings |
+
+Signing in is its own set: `login`, `signup`, `verify-email`,
+`forgot-password`, `reset-password`, `activate` and `locked`. It is an email
+and a password with a Google option, an emailed verification, and a lock that
+takes over after a period of no activity.
+
+### 11c.2 Facts that constrain every screen
+
+- **One asset. USDC and nothing else.** Naira and Tether appear in the registry
+  and are not supported.
+- **The interface returns no dollar valuation at all.** A balance is its own
+  dollar value because a USDC is a dollar. A second asset would need a rate
+  from somewhere that does not exist yet, so no screen may show a converted
+  total until it does.
+- **Buying and cashing out are separate corridors.** The countries the product
+  collects money in are not the same list as the ones it pays out to, and both
+  lists come from the server. A screen that names Nigeria in its own text is
+  wrong the day a second country opens.
+- **Buying is not capped by your balance.** Cashing out is. That is the whole
+  difference between the two amount screens.
+- **Verification gates whether money can move at all**, and it can also be
+  switched off entirely, in which case nothing is gated and no screen should
+  imply otherwise.
+- **Money leaving has six states, not three.** One of them means the payment
+  was sent to the network, has not been picked up, and is neither finished nor
+  failed. Calling that failed would tell someone their money is safe when it
+  may still be moving, and invite them to send it twice.
+- **An unrecognised state reads as in flight, never as failed.** The words that
+  mean trouble are a closed list. Anything outside it is far more likely to be
+  a new step than a new failure.
+
+### 11c.3 What the code disagrees with in this document
+
+Their team already cut the navigation from eleven destinations to five, and
+deleted the screens behind Cards, Earn, Markets, Borrow, Promotions, Pay Bills
+and Refer. Their stated reason was that a navigation full of things you cannot
+do is worse than no entry at all.
+
+This document said the opposite in rule 18. Rule 18 stood until 3 September:
+Grow and Stocks kept their place and carried a marker. On 3 September the
+markers were removed and both are treated as live, because trading is the
+selling point of the product. 11c.4a records that decision and the risk in it.
+
+### 11c.4 The routing, after the revamp
+
+Four ways money moves, each with its own destination, exactly as the code has
+them. Their names stay, because Buy, Receive, Send and Convert are already the
+words a person would use.
+
+| Rail | Route |
+| --- | --- |
+| Home | `/` |
+| Buy | `/buy` |
+| Receive | `/deposit` |
+| Send | `/send` |
+| Convert | `/convert` |
+| Grow | `/grow` |
+| Market | `/market`, was `/stocks` |
+| History | `/transactions` |
+
+Account sits at the bottom of the sidebar, away from the four above. Security
+is part of Account and Support is reached from the avatar, so neither is a rail
+entry any more. Buy, Receive, Send and Convert keep their routes but are reached
+from buttons rather than from the rail. See 11b.2.
+
+**Two screens stop being destinations.** Portfolio folds into Home, because the
+balance card is already there and a second page of the same numbers is a page
+nobody needs. Withdrawals folds into History, which gains a filter for
+everything, money in, and money out. Their detail pages stay, reached from a
+row, because a movement in full is worth its own address.
+
+**The phone cannot carry eight.** The tab bar holds four and a More control. It
+carries Home, Money, Grow and Stocks, and the Money screen is `27 Money` on the
+app page. Account and History moved behind More. Money is one destination covering all four
+movements, which frees two tabs for the products that are coming.
+
+That choice was made knowing its price, and the price is written here so nobody
+has to rediscover it. Paying somebody is the most common thing anyone does in
+this app, and it now costs one extra tap on a phone. Two of the four tabs lead
+to things that do not work yet. Their team had eleven such entries, measured the
+result and cut it to five. If the tabs are ever reconsidered, this is the
+paragraph to read first.
+
+Desktop used to carry all eight and does not any more. The rail holds five
+places and the four money rails are buttons, which is closer to what the phone
+does than what desktop did before. See 11b.2.
+
+**Grow and Stocks carry a marker in the rail itself**, a six pixel dot in
+`fill/warning` after the label. A destination that does not work should say so
+before it is opened, not after.
+
+### 11c.4a Stocks and lending are treated as live
+
+On 3 September the direction changed. Stocks trading is the selling point of the
+product, so it leads the desktop Home, and borrowing and lending come second.
+Every Not open yet marker has been removed: the two amber dots in the sidebar,
+the pill on the Grow page and the pill on the Market page.
+
+This is the riskiest thing in this file and it needs saying plainly.
+
+Section 11c.2 records what the code says, and the code says the opposite. There
+is one supported asset and it is USDC. There is no USD valuation anywhere in
+their API. The Markets, Earn and Borrow screens were deleted by their own team
+because they were coming soon against nothing. The design now shows a portfolio
+of five holdings, a borrowing rate, a collateral level and a liquidation price,
+and none of that exists in the code that was read on 2 September.
+
+Two things can make that fine and only two. Either the build is ahead of what
+was readable, or these screens ship at the same time as the product behind
+them. If neither is true, this is a design that promises a person their money is
+invested and earning when it is not, which is the exact failure the audit in 11c
+was written to catch.
+
+The decision was made by the person who owns the product, with the conflict
+stated. It is recorded here so nobody later mistakes it for something the code
+supported.
+
+### 11c.5 Signing in
+
+Google first, an email and a password underneath it. Their code already carries
+the Google control, so this is a change of layout and not of the server.
+
+The twenty two screens in section 11.1 describe a different product, one where
+a person holds their own recovery phrase. That is not what was built. Those
+screens stay in this file as a record and are not the plan.
+
+The verification screens are the exception and they survive, because the code
+does gate money movement on a verified account and has no screens for getting
+verified.
+
+Four screens now carry this. On the phone they are `23 Sign in` and
+`24 Create account`. On desktop they are `D15 Sign in` and `D16 Create account`.
+All four share the same order. The Google button comes first as a full width
+control on `surface/control`. Under it sits the label `OR USE YOUR EMAIL` in
+`Label caps` and `ink/muted`, which does the work a divider line would do
+without drawing a line. Then the email field, then the password field with a
+Show control inside it. The primary button is last.
+
+Sign in adds a Forgot your password link above the button and a link to create
+an account below it. Create account adds the terms sentence under the button and
+a link back to sign in. Neither screen shows the floating navigation, because
+there is no account to navigate yet.
+
+Desktop puts all of this on a 480 wide card in `surface/default`, centred on
+`surface/canvas`, with the fields in `surface/sunken`. The phone uses the full
+width inside the usual 20 of side padding.
+
+The example address in every field is `ibrahimweng0@gmail.com`.
+
+### 11c.5a Sending
+
+Paying a person stays the front door, with sending to a wallet behind it.
+
+The code has only the wallet rail. Sending to another Tokkenly account by its
+reference was withdrawn, so the person flow in this file is ahead of what
+ships and needs that rail brought back before any of it can be built.
+
+### 11c.6 Not designed yet
+
+Buy and Convert are now drawn on both products, as `D13` and `D14` on desktop
+and as `28 Buy` and `29 Convert` on the phone. Signing in and signing up are
+drawn on both as well. Portfolio and Withdrawals are still missing, though both
+fold into screens that exist: Portfolio into Home, Withdrawals into History with
+its filter.
+
+Repaying a loan and taking money out of Earn were the two gaps left by 11b.4f.
+Both are drawn now, as 11b.4i.
+
+The staff panel is out of scope for now. It holds a list of users, a user in
+full, transactions, and a log of who looked at what. It is a different audience
+with different needs and it should not borrow the consumer layout unexamined.
+
+## 11d. The build
+
+The desktop product is written as well as drawn. `app/` holds a TypeScript
+build of every screen in section 11b, with the flows running end to end. It is
+not a click-through: the state is real, so borrowing moves money into the
+wallet, raises what is owed and drops the collateral cover, and History shows
+the entry a moment later. `npm install && npm run dev` runs it.
+
+**Three things the code enforces that a Figma file can only ask for.**
+
+Money in is green and signed, money out is neutral, because one function paints
+every amount in the product. Rule 43 stops being a habit and becomes arithmetic.
+
+Anything draggable is typeable, because the ruler and the field are one
+component that writes both ways. Rule 47 cannot be half-implemented.
+
+Nothing names a colour. `src/styles/tokens.css` carries the palette from section
+2 and every screen file reads from it, so rule 3 holds by construction.
+
+**A sheet is an address.** `#/grow/borrow?sheet=borrow-review&v=1150` opens the
+review over the composer and survives a reload, which means any step of any flow
+can be linked and reviewed on its own. `#/map` lists all of them, screens and
+sheets together, on one page.
+
+**It is checked by clicking it.** `scripts/flows.mjs` drives a real browser
+through five flows and asserts what the money did: borrow $600 and the wallet
+goes $2,480 to $3,080, repay it and the limit comes back, buy $250 of Apple and
+the holding goes 23.42 to 24.54 shares. `scripts/walk.mjs` opens all twenty four
+addresses and reports any page error. Both pass.
+
+## 12. The prototype
+
+Both pages are wired for a click through. The floating navigation works on
+every screen that carries it, the send flow runs from picking a person to the
+receipt, and the onboarding screens run in a straight line.
+
+Figma does not allow a prototype link to cross from one page to another, so the
+onboarding prototype ends at Verified and the app prototype starts at Home.
+Testers open them as two separate runs.
+
+Starting points are set. Onboarding opens at Welcome or at Restore your
+account. The app opens at Home or at a brand new account.
+
+## 11f. Tightening, and the states nobody had drawn
+
+Three jobs in one pass: put the Send picker into the phone file, tighten the
+main column on the desktop, and draw the interaction states that existed in the
+code but had never been designed. Figma first, then the same changes in the app,
+so the record and the product stay the same thing.
+
+### 11f.1 The Send picker, as a screen
+
+`M07 Send — who` already existed, but as a sheet over the wallet listing three
+people by phone number. The app had moved on: the picker is a screen, it lists
+four people, and each line says when you last exchanged money with them rather
+than repeating a number you never dial.
+
+The screen was rebuilt to match. A back chevron and the title, the cash you have
+on the right, a search field, a card of people ordered by how recently money
+moved, and a second card for pasting a Base address. The scrim and sheet are
+gone, so it is a screen and not a modal.
+
+Two things came out of rendering the live app beside it. Tunde's line wrapped to
+a second line, which made his row eight pixels taller than his neighbours; a
+list of people whose rows are different heights reads as a mistake, so the name
+and the line under it now truncate. And the search box did nothing at all. It is
+the only search in the product that was never wired, which is its own kind of
+dead link: it now filters on Enter through `?q=`, the same way History, Market
+and Support already did, and finds an empty state when nobody matches.
+
+### 11f.2 Tighter, on both sides of the breakpoint
+
+The sidebar was left alone. The main column lost, across all forty five desktop
+screens:
+
+| What | Was | Now | Times |
+|---|---|---|---|
+| Page padding | 32 / 36 | 24 / 32 | 41 |
+| Page header to content | 32 | 24 | 35 |
+| Card padding | 24 | 20 | 110 |
+| Panel padding | 32 | 24 | 66 |
+| Between stacked cards | 24 | 16 | 53 |
+| Hero to the action tiles | 96 | 32 | 1 |
+
+Two hundred and seventy five changes. Security got 112 pixels back, Account 88,
+Home 52. Nothing overflows: the only casualty was `Vanguard S&P 500 · 5.60
+shares`, which ran 16 pixels past its column once the padding shrank, and now
+fills its column and truncates.
+
+The phone got the same treatment and a real fix. Nineteen screens had their rail
+at 722 and twenty six at 748; they are all at 748 now, which is
+`844 − 64 − 32`, clear of the home indicator. Six screens had content running
+past the bottom of the frame, by up to 88 pixels. All forty six now fit, with
+nothing clipped and nothing hiding behind the rail.
+
+The app carries the same numbers: `--content-pad-x` 36 → 32, `--content-pad-y`
+32 → 24, `.content` gap 32 → 24, `.card` padding 24 → 20, `.stack` gap 24 → 16,
+`.row` gap 24 → 20, and the rail at `bottom: 32px` so it lands at 748 in an 844
+viewport, exactly where Figma puts it.
+
+### 11f.3 The states
+
+`Button` carried Default, Pressed and Disabled. It now carries six states across
+five variants and two sizes, sixty in all:
+
+| State | What it does |
+|---|---|
+| Default | the resting fill |
+| Hover | Primary lifts to `surface/inverse-hover`, Secondary and Quiet step up the grey ramp, the coloured ones take a six per cent white lift |
+| Focused | the default, ringed in `border/focus` at 2px outside |
+| Pressed | 0.88, as before |
+| Loading | the default, with a ring turning where the label sits |
+| Disabled | `surface/sunken` and `ink/subtle`, as before |
+
+`surface/inverse-hover` is new: `#ececed` in dark, `#02231c` in light. It exists
+because the app was painting `#ececed` as a raw hex in `.btn-filled:hover`,
+which is the one thing rule 3 forbids. `Icon button` had no states at all and
+now has four, forty eight variants.
+
+Three components that never existed:
+
+- **Empty state**, three reasons — No results, Nothing yet, Failed
+- **Toast**, three types — Info, Success, Error
+- **Skeleton row**, for the shape of an answer before the answer
+
+In the app, the states audit found rather more missing than the file did. There
+was no `:active` anywhere, `[disabled]` styling existed only on `.btn`, and
+there was no loading, no error and no empty state of any kind. Three searches
+fell back to a grey sentence and one fell back to nothing.
+
+All of it is there now, and `scripts/states.mjs` drives every one of them in a
+real browser: hover changes the fill to the token and not a hex, Tab draws a 2px
+ring, a real mouse press reads 0.88, a zero amount disables the action and stops
+taking clicks, confirming shows a spinner and then the outcome, three searches
+find an empty state that can clear itself, the picker filters, and a short Base
+address is marked red where it was typed rather than in a toast that has already
+gone by. Fifteen checks, no failures.
+
+The loading state is real rather than decorative. Every confirmation in the
+product goes through one `review()` helper, so the spinner was added once, and
+money now takes `CONFIRM_MS` to move.
+
+### 11f.4 What the audits caught that the eye did not
+
+Two faults, both recorded as rules.
+
+The mobile overflow pass read `body.height` and flagged twenty five screens.
+Thirty one of the forty six bodies are fixed height and always read 844, and
+three more end in a spacer frame that the check counted as content. Six screens
+were genuinely wrong. The trim ran on nineteen that were not — they look fine,
+and they are now on the same scale as the desktop, but the trigger was a bad
+measurement and not a design decision. Rule 50.
+
+The contrast pass found `Inverse, Hover` at 1.37:1. The six per cent white lift
+had shipped at full opacity, because `setBoundVariableForPaint` returns a paint
+with the alpha reset to one. Two variants were solid white buttons and I had
+looked straight at them in a sixty variant sheet without seeing it. Rule 51.
+
+After both fixes: no unbound fills outside the section frames, no spacing off
+the four pixel grid, no clipped text, one overflow in forty five desktop screens
+and none in forty six mobile ones, and no contrast failure in a hundred and
+eight button variants. The tightest passing figures are the Disabled states at
+3.12:1, which WCAG exempts.
+
+### 11f.5 The app bar, and what the buttons are called
+
+Two of the four open items closed.
+
+**M07 carries the real bar.** It had a back chevron sitting in the body, which
+worked but was the only sub screen not using the `App bar` component. The bar
+costs 56 pixels and the screen had 16, so the cash line went with it: how much
+you have belongs to the step that asks for an amount, not the step that asks
+who. Content now ends at 736 with the rail at 748.
+
+Six other bars were carrying stale titles from whatever screen they were cloned
+from. History and Receipt both said `Activity`; Invest, Invest review, Invest
+bought and Sell all said `Apple`. Fixed.
+
+**The button names stop lying.** The two vocabularies had crossed:
+
+| The app said | It actually was | Figma calls it |
+|---|---|---|
+| `btn-filled` | inverse fill, dark label | Primary |
+| `btn-quiet` | control fill, ink label | **Secondary** |
+| `btn-danger` | control fill, warning label | nothing |
+| — | transparent, ink label | Quiet |
+| — | sand fill | Inverse |
+
+Counting the instances settled which way to move. Figma's Primary has 71 uses,
+Secondary 47, Quiet 21, Inverse 2 — and **Destructive has none at all**. It was
+drawn and never used. Meanwhile the app's `btn-danger` was a real, used pattern
+with no variant to its name: a quiet danger, control fill with a coloured label,
+on the two Sign out buttons.
+
+So the file already had the answer and the code had the usage. Destructive in
+Figma now is the quiet danger the product actually ships, the app renames to
+Figma's five, and both sides mean the same thing by the same word:
+
+| Class | Fill | Label | Uses |
+|---|---|---|---|
+| `btn-primary` | `--inverse` | `--on-inverse` | 9 files |
+| `btn-secondary` | `--control` | `--ink` | 10 files |
+| `btn-quiet` | none | `--ink` | the empty state action |
+| `btn-destructive` | `--control` | `--negative` | Sign out, and closing an account |
+| `btn-inverse` | `--sand` | `--ink` | Figma only, on `03 Onboarding` |
+
+Two variants had no use anywhere and now have one. `btn-quiet` took the empty
+state's action, because a second filled grey on a grey card is one surface too
+many. `btn-destructive` took `Email us to close it`, which is the commit point
+of the close account flow and had been wearing the primary button all along.
+
+`--sand` and `--sand-hover` are new, and `surface/sand-hover` is new in Figma.
+The Inverse hover had been the last overlay paint in the set, which is exactly
+the shape of the fault in rule 51, so it is a flat token on both sides now and
+there is no overlay left to lose its alpha.
+
+`scripts/states.mjs` grew a parity check: it builds each of the five classes in
+the page and compares the computed fill and label against the value the Figma
+variant resolves to in dark. Twenty one checks, no failures.
+
+### 11f.6 The pill that was not broken
+
+The rendered variant sheet showed two black pills with no label, in a set where
+every other cell reads fine. They are `Destructive/Large/Disabled` and
+`Destructive/Medium/Disabled`: `surface/sunken` at `#161619`, which is 1.28:1
+against the `#0a0a0c` canvas, with `ink/subtle` text at 3.12:1. Nothing is
+wrong with them. At sheet scale a legitimately dim state reads as a hole.
+
+Rule 48 said an audit is code and code has bugs. This is the other direction:
+the audit was right twice and the eye was wrong. Both checks — structure and
+contrast — passed on those cells before and after.
+
+That reading did expose a real fault, now fixed. See 11f.7.
+
+### 11f.7 Disabled keeps its own colour
+
+Figma painted Disabled as `surface/sunken` with `ink/subtle` text. Every card in
+the main column is also `surface/sunken`, so a disabled button sitting in one
+was the same colour as the card it sat on: 1.00 to 1, no shape at all. That is
+what made two cells in the variant sheet look like holes.
+
+The app had it right. A disabled button keeps its own colour and loses its
+weight, at `opacity: 0.4`. Ten Button variants and the Text field now do the
+same, which also puts them in step with Icon button, which was already 0.4. One
+number governs disabled everywhere.
+
+What it buys, measured against a `surface/sunken` card:
+
+| Variant | Was | Now |
+|---|---|---|
+| Primary | 1.00 | **3.12** |
+| Inverse | 1.00 | **1.36** |
+| Secondary | 1.00 | 1.10 |
+| Destructive | 1.00 | 1.10 |
+| Quiet | 1.00 | 1.00, and correctly so |
+
+Primary is the clear win. Secondary and Destructive stay subtle because the gap
+between `surface/control` and `surface/sunken` is small to begin with: an
+*enabled* Secondary on a sunken card is only 1.29 to 1. Their shape was never
+the signal. Their label is, and it drops from 10.1 to 1 down to 2.9 to 1 when
+disabled, which is unmistakable. Quiet has no fill when it is enabled either,
+so having none when disabled is right.
+
+`scripts/states.mjs` now asserts the rule rather than the colour: a disabled
+button keeps its variant's fill, carries `opacity: 0.4`, and is never repainted
+to `--sunken`. Twenty five checks, no failures.
+
+### 11f.8 Deploying it
+
+The app lives in `app/`, and there is no `package.json` at the repository root,
+so an import that points Vercel at the root finds nothing to build.
+`vercel.json` at the root now says where to look:
+
+    installCommand   cd app && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install
+    buildCommand     cd app && npm run build
+    outputDirectory  app/dist
+    rewrites         /(.*) -> /index.html
+
+The skip flag matters. Playwright is a dev dependency and its install hook
+downloads about four hundred megabytes of browsers, which a deploy has no use
+for. Vercel installs dev dependencies by default, so without the flag every
+build pays for browsers it will never open.
+
+The rewrite is belt and braces. Routing is by hash, so `/` serves every screen
+already; the rewrite only covers someone typing a path without one. Vercel
+checks the filesystem before rewrites, so the hashed assets still resolve.
+
+Setting Root Directory to `app` in the dashboard works just as well and needs no
+file. If it is set, Vercel reads `app/vercel.json` and ignores the root one, so
+the two cannot fight.
+
+Verified the way it will actually run: a fresh clone, install with the flag,
+`npm run build`, then the built `dist` served by a plain static server with no
+Vite in the loop. Fifteen routes render, the borrow flow completes on the
+bundle, the phone picker lists four people and shows the rail, and there are no
+JavaScript errors and no failed requests.
+
+### 11f.9 Still open
+
+- The nav component's variants are still named `Money` and `Stocks` from the
+  older product. They light the right icons; renaming breaks twenty nine
+  instances on `04 App`.
+- `M36 Account` is the one screen behind More without an `App bar`, where
+  Security and Support have one. Account is a place in the app's model and the
+  rail is the way back, so it may be right; History has a bar and is also a
+  place, so the tier is not applied consistently either way.
+- Grow's rate, collateral ratio and payout schedule are still invented. See
+  11b.4f.

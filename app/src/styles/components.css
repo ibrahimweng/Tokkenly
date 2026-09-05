@@ -1,0 +1,428 @@
+/* ---------- sidebar ---------- */
+.sidebar {
+  width: var(--sidebar-w);
+  flex: none;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 16px;
+  gap: 24px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+.brand { display: flex; align-items: center; gap: 12px; padding: 4px; }
+.brand-mark {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: var(--inverse); color: var(--on-inverse);
+  display: grid; place-items: center; font-weight: 600; font-size: 13px;
+}
+.nav { display: flex; flex-direction: column; gap: 4px; }
+.nav-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px; border-radius: 12px;
+  color: var(--muted); width: 100%; text-align: left;
+}
+.nav-row:hover { background: var(--control); color: var(--ink); }
+.nav-row[aria-current='page'] { background: var(--control); color: var(--ink); font-weight: 600; }
+.nav-row .ic { width: 18px; height: 18px; flex: none; opacity: 0.9; }
+.nav-gap { height: 12px; }
+
+.promo {
+  margin-top: auto;
+  background: var(--sunken);
+  border-radius: var(--r-card);
+  padding: 20px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.promo-badge {
+  width: 32px; height: 32px; border-radius: 10px; background: var(--control);
+  display: grid; place-items: center;
+}
+.promo h3 { margin: 0; font-size: 15px; line-height: 20px; font-weight: 600; }
+.promo p { margin: 0; color: var(--muted); font-size: 12px; line-height: 16px; }
+.promo button { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 13px; }
+
+.whoami {
+  display: flex; align-items: center; gap: 12px; padding: 8px;
+  border-radius: 14px; width: 100%; text-align: left;
+}
+.whoami:hover { background: var(--control); }
+.avatar {
+  width: 32px; height: 32px; border-radius: 999px; background: var(--inverse);
+  color: var(--on-inverse); display: grid; place-items: center;
+  font-size: 11px; font-weight: 600; flex: none;
+}
+
+/* ---------- cards ---------- */
+.card {
+  background: var(--sunken);
+  border-radius: var(--r-card);
+  padding: 20px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.card.tight { padding: 16px; }
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.link { font-size: 14px; font-weight: 600; color: var(--ink); }
+.link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.link.quiet { color: var(--muted); }
+.link.quiet:hover { color: var(--ink); }
+
+.kv { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+.kv > span:first-child { color: var(--muted); }
+.kv > span:last-child { font-weight: 600; text-align: right; }
+
+.callout {
+  display: flex; gap: 12px; align-items: flex-start;
+  background: var(--tint-brand); border-radius: var(--r-panel);
+  padding: 16px 20px; color: var(--muted); font-size: 13px; line-height: 18px;
+}
+.callout.warning { background: var(--tint-warning); color: var(--warning); }
+.callout .ic { flex: none; margin-top: 1px; }
+
+/* ---------- buttons ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 56px; padding: 0 24px; border-radius: var(--r-pill);
+  font-weight: 600; font-size: 14px; width: 100%;
+}
+/* Five variants, named the way Figma names them, so a button called Secondary
+   in the file is a button called Secondary here. Figma 02 Components, Button
+   Variant=Primary|Secondary|Quiet|Destructive|Inverse. */
+.btn-primary { background: var(--inverse); color: var(--on-inverse); }
+.btn-primary:hover { background: var(--inverse-hover); }
+.btn-secondary { background: var(--control); color: var(--ink); }
+.btn-secondary:hover { background: var(--control-pressed); }
+.btn-quiet { background: none; color: var(--ink); }
+.btn-quiet:hover { background: var(--control); }
+/* Danger is quiet on purpose. Signing out everywhere matters, but a filled
+   orange button shouts louder than the action deserves. */
+.btn-destructive { background: var(--control); color: var(--negative); }
+.btn-destructive:hover { background: var(--control-pressed); }
+.btn-inverse { background: var(--sand); color: var(--ink); }
+.btn-inverse:hover { background: var(--sand-hover); }
+.btn-sm { height: 40px; padding: 0 18px; width: auto; }
+.btn[disabled] { opacity: 0.4; cursor: not-allowed; }
+
+.chip {
+  height: 32px; padding: 0 16px; border-radius: var(--r-pill);
+  background: var(--control); color: var(--muted); font-size: 13px; font-weight: 600;
+}
+.chip:hover { background: var(--control-pressed); color: var(--ink); }
+.chip[aria-pressed='true'] { background: var(--inverse); color: var(--on-inverse); }
+.chip-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.field {
+  display: flex; align-items: center; gap: 12px;
+  height: 48px; padding: 0 20px; border-radius: var(--r-panel);
+  background: var(--control); color: var(--ink); width: 100%;
+}
+.field input { width: 100%; }
+.field input::placeholder { color: var(--subtle); }
+
+/* ---------- amount composer ---------- */
+.amount-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.amount-box {
+  background: var(--control); border-radius: var(--r-panel);
+  padding: 8px 24px; display: flex; align-items: center; justify-content: center;
+}
+.amount-box input {
+  font-size: 40px; line-height: 52px; font-weight: 600; letter-spacing: -0.02em;
+  text-align: center; width: 260px;
+}
+.amount-note { color: var(--muted); font-size: 12px; }
+.ruler { width: 100%; height: 72px; position: relative; cursor: ew-resize; user-select: none; }
+.ruler canvas { width: 100%; height: 100%; display: block; }
+.hint { text-align: center; color: var(--subtle); font-size: 12px; }
+
+/* ---------- tables ---------- */
+.table { width: 100%; border-collapse: collapse; }
+.table th {
+  text-align: left; font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--subtle); padding: 0 0 8px; font-family: var(--font);
+}
+.table td { padding: 12px 0; vertical-align: middle; }
+.table tbody tr { cursor: pointer; }
+.table tbody tr:hover td { background: rgba(255, 255, 255, 0.03); }
+.table td:first-child, .table th:first-child { padding-left: 12px; border-radius: 10px 0 0 10px; }
+.table td:last-child, .table th:last-child { padding-right: 12px; border-radius: 0 10px 10px 0; text-align: right; }
+.mark {
+  width: 32px; height: 32px; border-radius: 999px; background: var(--control);
+  display: grid; place-items: center; flex: none;
+}
+.who { display: flex; align-items: center; gap: 12px; }
+.two-line { display: flex; flex-direction: column; }
+.two-line small { color: var(--muted); font-size: 12px; }
+
+/* ---------- meter ---------- */
+.meter-track {
+  height: 8px; border-radius: 999px; background: var(--control);
+  position: relative; overflow: hidden;
+}
+.meter-fill { position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: var(--positive); }
+.meter-tick { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--canvas); }
+
+/* ---------- sheets ---------- */
+.scrim {
+  position: fixed; inset: 0; background: var(--scrim);
+  display: grid; place-items: center; padding: 24px; z-index: 40;
+  animation: fade 140ms ease-out;
+}
+.sheet {
+  width: 480px; max-width: 100%; max-height: calc(100vh - 48px); overflow: auto;
+  background: var(--sunken); border-radius: var(--r-sheet); padding: 32px;
+  display: flex; flex-direction: column; gap: 24px;
+  animation: rise 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.sheet-head h2 { margin: 0; font-size: 18px; line-height: 24px; font-weight: 600; }
+.close {
+  width: 32px; height: 32px; border-radius: 999px; background: var(--inverse);
+  color: var(--on-inverse); display: grid; place-items: center; flex: none;
+}
+.figure { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+.panel {
+  background: var(--control); border-radius: var(--r-panel); padding: 20px;
+  display: flex; flex-direction: column; gap: 20px;
+}
+.panel .cell { display: flex; flex-direction: column; gap: 4px; }
+.tick {
+  width: 64px; height: 64px; border-radius: 999px; background: var(--positive);
+  color: var(--canvas); display: grid; place-items: center; margin: 0 auto;
+}
+@keyframes fade { from { opacity: 0 } to { opacity: 1 } }
+@keyframes rise { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: none } }
+
+/* ---------- toast ---------- */
+.toast-rail { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 60;
+  display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.toast {
+  background: var(--control-pressed); color: var(--ink); padding: 12px 20px;
+  border-radius: 999px; font-size: 13px; font-weight: 600;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5); animation: rise 160ms ease-out;
+}
+
+/* ---------- auth ---------- */
+.auth { min-height: 100vh; display: grid; place-items: center; padding: 32px; }
+.auth-card {
+  width: 480px; max-width: 100%; background: var(--sunken);
+  border-radius: var(--r-sheet); padding: 32px; display: flex; flex-direction: column; gap: 24px;
+}
+
+/* ---------------------------------------------------------------- phone --
+   The rail: four tabs in a pill, and a More button beside it. Reused from
+   the phone language on Figma page 04 App. */
+.topbar {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px 0;
+}
+.topbar .avatar { width: 40px; height: 40px; }
+.topbar .who-line { flex: 1; min-width: 0; }
+.topbar .who-line small { display: block; color: var(--muted); font-size: 12px; }
+.topbar .who-line strong { font-size: 15px; }
+.icon-btn {
+  width: 44px; height: 44px; border-radius: 999px; background: var(--sunken);
+  display: grid; place-items: center; flex: none; color: var(--muted);
+}
+.icon-btn:hover { background: var(--control); color: var(--ink); }
+
+.railbar {
+  display: none;
+  position: fixed; left: 0; right: 0; bottom: 32px; z-index: 30;
+  padding: 0 20px;
+  justify-content: center; gap: 12px;
+  pointer-events: none;
+}
+.railbar > * { pointer-events: auto; }
+.rail-pill {
+  display: flex; gap: 4px; padding: 8px;
+  background: var(--sunken); border-radius: 999px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+}
+.rail-tab {
+  width: 48px; height: 48px; border-radius: 999px;
+  display: grid; place-items: center; color: var(--muted);
+}
+.rail-tab[aria-current='page'] { width: 64px; background: var(--inverse); color: var(--on-inverse); }
+.rail-more {
+  width: 64px; height: 64px; border-radius: 999px; flex: none;
+  background: var(--sunken); color: var(--muted);
+  display: grid; place-items: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+}
+.rail-more[aria-expanded='true'] { background: var(--inverse); color: var(--on-inverse); }
+
+.grabber {
+  width: 40px; height: 4px; border-radius: 999px; background: var(--control-pressed);
+  margin: 0 auto 4px;
+}
+
+.sheet-list { display: flex; flex-direction: column; gap: 4px; }
+.sheet-row {
+  display: flex; align-items: center; gap: 16px;
+  padding: 12px; border-radius: 16px; width: 100%; text-align: left;
+}
+.sheet-row:hover { background: var(--control); }
+.sheet-row .mark { background: var(--control); }
+.sheet-row .two-line { flex: 1; min-width: 0; }
+
+/* In a list of people, a name and the line under it truncate rather than wrap.
+   A row that grows a second line is taller than its neighbours, and a list
+   whose rows are different heights reads as a mistake. Scoped to .sheet-row:
+   elsewhere a two-line block is meant to wrap, as the support answers do. */
+.sheet-row .two-line > * { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Long content shrinks inside its row instead of pushing the row wide. */
+.who, .two-line { min-width: 0; }
+
+@media (max-width: 899px) {
+  .sidebar { display: none; }
+  .topbar { display: flex; }
+  .railbar { display: flex; }
+
+  /* a sheet arrives from the bottom and keeps the width of the phone */
+  .scrim { align-items: end; padding: 0; }
+  .sheet {
+    width: 100%; max-width: 100%;
+    border-radius: var(--r-sheet) var(--r-sheet) 0 0;
+    max-height: 88vh; padding: 12px 20px 32px;
+    animation: slideup 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .sheet-head { padding-top: 8px; }
+
+  /* tables shed their quiet columns and keep the two that matter */
+  .table th.opt, .table td.opt { display: none; }
+  .table td { padding: 10px 0; }
+  .table td:first-child, .table th:first-child { padding-left: 8px; }
+  .table td:last-child, .table th:last-child { padding-right: 8px; }
+
+  .amount-box input { width: 200px; font-size: 34px; line-height: 44px; }
+  .chip-row { gap: 6px; }
+  .btn { height: 52px; }
+}
+@keyframes slideup { from { transform: translateY(100%) } to { transform: none } }
+
+/* a numeric keypad, the way the phone enters an amount */
+.keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.key {
+  height: 56px; border-radius: 16px; font-size: 20px; font-weight: 600;
+  display: grid; place-items: center;
+}
+.key:hover { background: var(--control); }
+
+/* A chart is drawn at a fixed pitch for the desktop column. On a phone the
+   bars share whatever width there is rather than running off the side. */
+.bars { min-width: 0; }
+@media (max-width: 899px) {
+  .bars > * { flex: 1 1 0 !important; width: auto !important; min-width: 0 !important; }
+  .auth-card { width: 100%; padding: 24px; }
+  .auth { padding: 20px; }
+  .keypad { margin: 0 -4px; }
+}
+
+/* Tiles stay side by side on a phone, because three of them across is the
+   shape people reach for. Everything else in a .row stacks. */
+@media (max-width: 899px) {
+  .page-header h1:empty { display: none; }
+  .row.tiles { flex-direction: row; gap: 8px; }
+  .row.tiles > * { width: auto !important; flex: 1 1 0 !important; min-width: 0; }
+  .tile { padding: 16px; gap: 10px; border-radius: 20px; min-height: 0 !important; }
+  .tile .spacer { display: none; }
+  .tile .t-title { font-size: 15px; line-height: 20px; }
+  .tile .muted { display: none; }
+  .tile .promo-badge { width: 40px; height: 40px; }
+}
+
+@media (max-width: 899px) {
+  /* a card header with controls gives them their own line rather than
+     squeezing the label into two words per row */
+  .card-head { flex-wrap: wrap; row-gap: 12px; }
+  .card-head > .chip-row { width: 100%; }
+  .card-head > .chip-row .chip { flex: 1 1 0; padding: 0 8px; }
+}
+
+/* The composer sheet has to fit a phone with its button reachable, so the
+   ruler shortens, the hint goes (the keypad says it), and the callout waits
+   for the review, which repeats it anyway. */
+@media (max-width: 899px) {
+  .sheet { gap: 16px; }
+  .sheet .ruler { height: 44px; }
+  .sheet .hint { display: none; }
+  .sheet .key { height: 48px; }
+  .sheet .amount-box { padding: 4px 20px; }
+  .sheet .amount-box input { font-size: 30px; line-height: 40px; width: 180px; }
+  .sheet .chip-row .chip { flex: 1 1 0; padding: 0 8px; }
+}
+
+/* ---------------------------------------------------------------- states --
+   Every control answers four ways: hover lifts it, focus rings it, pressing
+   sinks it, disabled takes it out of the conversation. Figma 02 Components,
+   Button State=Default|Hover|Focused|Pressed|Loading|Disabled. */
+
+/* Pressed is the same 0.88 the Figma Pressed variants carry. Grey controls
+   also step up the ramp, which is what the Secondary variant does. */
+.btn:active, .icon-btn:active, .nav-row:active, .rail-tab:active,
+.rail-more:active, .sheet-row:active, .key:active, .chip:active,
+.whoami:active, .link:active { opacity: 0.88; }
+.btn-secondary:active, .btn-quiet:active, .btn-destructive:active,
+.icon-btn:active, .chip:active, .key:active,
+.sheet-row:active, .nav-row:active { background: var(--control-pressed); }
+
+/* One disabled rule for everything, not just .btn */
+.btn[disabled], .chip[disabled], .icon-btn[disabled],
+.field.disabled, button[disabled] {
+  opacity: 0.4; cursor: not-allowed; pointer-events: none;
+}
+
+/* Loading keeps the label and turns a ring beside it, so the button never
+   changes width and the page never jumps. */
+.btn.is-busy { pointer-events: none; }
+.btn.is-busy::before {
+  content: ''; width: 16px; height: 16px; border-radius: 999px; flex: none;
+  border: 2px solid currentColor; border-right-color: transparent;
+  animation: spin 700ms linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* A field that is wrong says so where the mistake was made, not in a toast
+   that has already gone by. */
+.field.error { box-shadow: inset 0 0 0 1px var(--negative); }
+.field-error {
+  display: flex; align-items: center; gap: 6px;
+  color: var(--negative); font-size: 12px; line-height: 16px;
+}
+
+/* ---------- empty ----------
+   Figma 02 Components, Empty state Reason=No results|Nothing yet|Failed. */
+.empty {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  padding: 32px 24px; text-align: center;
+}
+.empty .mark { width: 48px; height: 48px; background: var(--control); }
+.empty h3 { margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; }
+.empty p { margin: 0; color: var(--muted); font-size: 12px; line-height: 16px; max-width: 32ch; }
+.empty .btn { width: auto; height: 40px; padding: 0 18px; margin-top: 4px; }
+
+/* ---------- skeleton ----------
+   Shown while something is on its way, so the shape of the answer arrives
+   before the answer does. Figma 02 Components, Skeleton row. */
+.skeleton-list { display: flex; flex-direction: column; gap: 8px; }
+.skeleton-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; }
+.skeleton-row .lines { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.sk {
+  background: var(--control); border-radius: 4px; flex: none;
+  animation: pulse 1200ms ease-in-out infinite;
+}
+.sk.disc { width: 40px; height: 40px; border-radius: 999px; }
+@keyframes pulse { 0%, 100% { opacity: 1 } 50% { opacity: 0.55 } }
+
+/* ---------- toast tone ----------
+   Figma 02 Components, Toast Type=Info|Success|Error. */
+.toast { display: flex; align-items: center; gap: 8px; }
+.toast::before {
+  content: ''; width: 8px; height: 8px; border-radius: 999px;
+  background: var(--muted); flex: none;
+}
+.toast.success::before { background: var(--positive); }
+.toast.error::before { background: var(--negative); }
