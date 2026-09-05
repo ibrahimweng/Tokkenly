@@ -11,13 +11,16 @@ const ok = (label, pass, detail = '') =>
 const page = async (w = 1440, h = 1024) => {
   const p = await b.newPage({ viewport: { width: w, height: h } })
   p.on('pageerror', (e) => errs.push(String(e)))
+  p.setDefaultTimeout(8000)
+  // the webfont host is unreachable from here, and networkidle waits for it
+  await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   return p
 }
 
 console.log('DIALOGS  Figma draws D09 Send and D12 Receive over the wallet')
 for (const [route, title] of [['/send', 'Send money'], ['/receive', 'Receive money']]) {
   const p = await page()
-  await p.goto(B + route, { waitUntil: 'networkidle' }); await p.waitForTimeout(200)
+  await p.goto(B + route, { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(200)
   const d = await p.evaluate(() => {
     const s = document.querySelector('.scrim > .sheet')
     return { w: s ? Math.round(s.getBoundingClientRect().width) : 0,
@@ -33,7 +36,7 @@ for (const [route, title] of [['/send', 'Send money'], ['/receive', 'Receive mon
 }
 { // and still a bottom sheet on a phone
   const p = await page(390, 844)
-  await p.goto(B + '/send?to=Tunde%20Bakare', { waitUntil: 'networkidle' }); await p.waitForTimeout(200)
+  await p.goto(B + '/send?to=Tunde%20Bakare', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(200)
   const grabber = await p.locator('.sheet .grabber').count()
   const keypad = await p.locator('.sheet .keypad').count()
   ok('the phone still gets a sheet with a grabber and a keypad', grabber === 1 && keypad === 1)
@@ -41,7 +44,7 @@ for (const [route, title] of [['/send', 'Send money'], ['/receive', 'Receive mon
 }
 { // changing the recipient without leaving
   const p = await page()
-  await p.goto(B + '/send', { waitUntil: 'networkidle' }); await p.waitForTimeout(200)
+  await p.goto(B + '/send', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(200)
   await p.locator('.sheet-row').first().click(); await p.waitForTimeout(250)
   const listed = await p.locator('.sheet-row').count()
   await p.locator('.sheet-row').nth(1).click(); await p.waitForTimeout(250)
@@ -53,33 +56,49 @@ for (const [route, title] of [['/send', 'Send money'], ['/receive', 'Receive mon
 console.log('CHART  a range that redraws nothing is a button that lies')
 {
   const p = await page()
-  await p.goto(B + '/', { waitUntil: 'networkidle' }); await p.waitForTimeout(200)
+  await p.goto(B + '/', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(200)
   const read = () => p.evaluate(() => {
-    const chart = document.querySelector('.bars')?.closest('.card')
+    const chart = document.querySelector('.ch-bars')?.closest('.card')
     return {
-      bars: chart?.querySelectorAll('.bars > *').length,
+      bars: chart?.querySelectorAll('.ch-bar').length,
+      // the bar count follows the width now, so what has to change with the
+      // range is the scale, the dates and the figure — not how many marks
+      ticks: [...chart.querySelectorAll('.ch-tick')].map((e) => e.textContent).join(' '),
+      axis: [...chart.querySelectorAll('.ch-axis span')].map((e) => e.textContent).join(' '),
       on: chart?.querySelector('.chip[aria-pressed="true"]')?.textContent,
       delta: chart?.querySelector('.t-caption')?.textContent?.slice(0, 40),
     }
   })
   const y = await read()
-  const chartChip = (t) => p.locator('.bars').locator('xpath=ancestor::*[contains(@class,"card")][1]')
+  const chartChip = (t) => p.locator('.ch-bars').locator('xpath=ancestor::*[contains(@class,"card")][1]')
     .locator('.chip', { hasText: t }).first()
-  await chartChip('1M').click(); await p.waitForTimeout(250)
+  await chartChip('1M').click(); await p.waitForTimeout(300)
   const m = await read()
-  await chartChip('ALL').click(); await p.waitForTimeout(250)
+  await chartChip('ALL').click(); await p.waitForTimeout(300)
   const a = await read()
-  ok('each range draws its own columns', y.bars !== m.bars && m.bars !== a.bars,
-     `1Y ${y.bars}, 1M ${m.bars}, ALL ${a.bars}`)
+  ok('every bar has a value axis behind it', y.ticks.length > 0 && y.ticks.includes('$'), y.ticks)
+  ok('the axis rescales to the range', y.ticks !== m.ticks && m.ticks !== a.ticks,
+     `1Y ${y.ticks} | 1M ${m.ticks}`)
+  ok('the dates under it follow too', y.axis !== m.axis, `1Y ${y.axis}`)
   ok('the pressed chip follows', m.on === '1M' && a.on === 'ALL', `${m.on} then ${a.on}`)
   ok('and the change is read off the range', y.delta !== m.delta, m.delta ?? '')
+
+  // the hover, which the comb never had
+  const box = await p.locator('.ch-bars').boundingBox()
+  await p.mouse.move(box.x + box.width * 0.4, box.y + box.height * 0.6)
+  await p.waitForTimeout(200)
+  const tip = await p.evaluate(() => {
+    const t = document.querySelector('.ch-tip')
+    return t.hidden ? null : { text: t.innerText.replace(/\n/g, ' '), lit: document.querySelectorAll('.ch-bar.on').length }
+  })
+  ok('pointing at a bar says what it was worth', !!tip && tip.lit === 1, tip ? tip.text : 'no tooltip')
   await p.close()
 }
 
 console.log('NOTIFICATIONS  a count that does not go down is decoration')
 {
   const p = await page()
-  await p.goto(B + '/', { waitUntil: 'networkidle' }); await p.waitForTimeout(200)
+  await p.goto(B + '/', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(200)
   const start = await p.locator('.bell .dot').textContent()
   await p.locator('.bell').click(); await p.waitForTimeout(250)
   const rows = await p.locator('.sheet-row').count()
@@ -96,7 +115,7 @@ console.log('SORTING  ordering is part of the address')
 {
   const p = await page()
   const first = () => p.locator('tbody tr').first().textContent()
-  await p.goto(B + '/history', { waitUntil: 'networkidle' }); await p.waitForTimeout(200)
+  await p.goto(B + '/history', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(200)
   const n = await p.locator('tbody tr').count()
   const byDate = await first()
   await p.locator('.th-sort', { hasText: 'Amount' }).click(); await p.waitForTimeout(250)
@@ -106,7 +125,7 @@ console.log('SORTING  ordering is part of the address')
   ok('history has something to sort', n >= 20, `${n} rows`)
   ok('sorting by amount reorders', byDate !== desc && desc !== asc)
   ok('the direction is in the url', p.url().includes('sort=amt&dir=asc'), new URL(p.url()).hash)
-  await p.reload({ waitUntil: 'networkidle' }); await p.waitForTimeout(250)
+  await p.reload({ waitUntil: 'domcontentloaded' }); await p.waitForTimeout(250)
   ok('and it survives a reload', (await first()) === asc)
   await p.close()
 }
@@ -114,13 +133,13 @@ console.log('SORTING  ordering is part of the address')
 console.log('MOVING AROUND  four navigators, one registry')
 {
   const p = await page(1600, 1000)
-  await p.goto(B + '/convert', { waitUntil: 'networkidle' }); await p.waitForTimeout(250)
+  await p.goto(B + '/convert', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(250)
   const crumbs = (await p.locator('.crumb').allTextContents()).join(' > ')
   ok('a trail says where you are', crumbs === 'Wallet > Convert to naira', crumbs)
   await p.locator('.crumb').first().click(); await p.waitForTimeout(250)
   ok('and the trail steps back up', p.url().endsWith('#/wallet'), new URL(p.url()).hash)
 
-  await p.goto(B + '/convert', { waitUntil: 'networkidle' }); await p.waitForTimeout(200)
+  await p.goto(B + '/convert', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(200)
   ok('and nothing repeats the sidebar under the title',
      (await p.locator('.place-tab').count()) === 0)
 
@@ -138,7 +157,7 @@ console.log('MOVING AROUND  four navigators, one registry')
   await p.keyboard.press('ArrowDown'); await p.keyboard.press('Enter'); await p.waitForTimeout(350)
   ok('arrows and enter go there', p.url().includes('/market/aapl'), new URL(p.url()).hash)
 
-  await p.goto(B + '/all', { waitUntil: 'networkidle' }); await p.waitForTimeout(250)
+  await p.goto(B + '/all', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(250)
   const groups = await p.locator('.all-grid .card').count()
   const rows = await p.locator('.all-row').count()
   ok('the index lists every destination', groups === 6 && rows >= 24, `${groups} groups, ${rows} rows`)
@@ -148,7 +167,7 @@ console.log('MOVING AROUND  four navigators, one registry')
 console.log('MOVING AROUND, on a phone')
 {
   const p = await page(390, 844)
-  await p.goto(B + '/wallet', { waitUntil: 'networkidle' }); await p.waitForTimeout(250)
+  await p.goto(B + '/wallet', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(250)
   const t = await p.evaluate(() => ({
     tabs: document.querySelectorAll('.place-tab').length,
     overflowX: Math.max(0, document.documentElement.scrollWidth - 390),
@@ -178,7 +197,7 @@ console.log('A BASE UNDER A DIALOG IS NOT WHERE YOU ARE')
     [390, '/convert', false],
   ]) {
     const p = await page(w, w === 390 ? 844 : 1000)
-    await p.goto(B + route, { waitUntil: 'networkidle' }); await p.waitForTimeout(220)
+    await p.goto(B + route, { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(220)
     const has = await p.evaluate(() => !!document.querySelector('.crumbs'))
     ok(`${w}px ${route} ${wants ? 'keeps' : 'drops'} its trail`, has === wants)
     await p.close()
@@ -189,7 +208,7 @@ console.log('WIDTH  the middle is drawn in a 1200 column, whatever the monitor')
 {
   for (const w of [1440, 2000, 2560]) {
     const p = await page(w, 1000)
-    await p.goto(B + '/convert', { waitUntil: 'networkidle' }); await p.waitForTimeout(200)
+    await p.goto(B + '/convert', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(200)
     const m = await p.evaluate(() => {
       const g = (s) => { const e = document.querySelector(s); return e ? Math.round(e.getBoundingClientRect().width) : null }
       return { content: g('.content'), side: g('.stack.grow') }

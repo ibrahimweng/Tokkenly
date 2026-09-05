@@ -33,6 +33,10 @@
   --dot-mid: #a6a6ad;
   --dot-lit: #dcdce0;
 
+  /* A gridline is a landmark, not a mark. It sits one step off the card so it
+     reads as behind the bars rather than among them. */
+  --grid: #26262b;
+
   --tint-brand: #15241f;
   --tint-positive: #10291f;
   --tint-warning: #2a2211;
