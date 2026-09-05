@@ -15,6 +15,7 @@ a.link:hover { text-decoration: underline; text-underline-offset: 3px; }
 input { font: inherit; color: inherit; background: none; border: 0; }
 input:focus { outline: none; }
 ul { margin: 0; padding: 0; list-style: none; }
+[hidden] { display: none !important; }
 :focus-visible { outline: 2px solid var(--positive); outline-offset: 2px; border-radius: 6px; }
 
 .screen { display: flex; min-height: 100vh; }
@@ -23,7 +24,7 @@ ul { margin: 0; padding: 0; list-style: none; }
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 24px;
   padding: var(--content-pad-y) var(--content-pad-x);
 }
 .page-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
@@ -31,10 +32,10 @@ ul { margin: 0; padding: 0; list-style: none; }
 .eyebrow { display: flex; align-items: baseline; gap: 8px; color: var(--muted); }
 .eyebrow strong { color: var(--ink); font-weight: 600; }
 
-.row { display: flex; gap: 24px; align-items: flex-start; }
+.row { display: flex; gap: 20px; align-items: flex-start; }
 .row > .col-main { flex: 1 1 0; min-width: 0; }
 .row > .col-side { width: 360px; flex: none; }
-.stack { display: flex; flex-direction: column; gap: 24px; }
+.stack { display: flex; flex-direction: column; gap: 16px; }
 .stack-16 { display: flex; flex-direction: column; gap: 16px; }
 .stack-12 { display: flex; flex-direction: column; gap: 12px; }
 .stack-8  { display: flex; flex-direction: column; gap: 8px; }

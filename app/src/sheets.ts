@@ -11,6 +11,10 @@ import { type Route, closeSheet, replaceSheet, go } from './router'
 import { QA } from './screens/settings'
 import { BEHIND_MORE } from './components/shell'
 
+/** How long a confirmation shows its spinner. Short enough not to annoy,
+ *  long enough that the state is real rather than decorative. */
+export const CONFIRM_MS = 350
+
 const num = (r: Route, k: string, d = 0): number => Number(r.query.get(k) ?? d) || d
 const str = (r: Route, k: string, d = ''): string => r.query.get(k) ?? d
 
@@ -30,7 +34,19 @@ function review(opts: {
     figure(opts.figureLabel, opts.figureValue),
     panel(...opts.rows),
     calloutEl(opts.note),
-    h('button', { class: 'btn btn-filled', text: opts.action, on: { click: opts.onConfirm } })
+    // Money takes a moment to move. The button says so, rather than pretending
+    // the ledger changed the instant it was pressed. Figma Button State=Loading.
+    h('button', {
+      class: 'btn btn-filled', text: opts.action,
+      on: {
+        click: (e) => {
+          const b = e.currentTarget as HTMLButtonElement
+          if (b.classList.contains('is-busy')) return
+          b.classList.add('is-busy')
+          setTimeout(opts.onConfirm, CONFIRM_MS)
+        },
+      },
+    })
   )
 }
 

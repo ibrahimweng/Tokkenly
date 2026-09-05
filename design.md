@@ -1771,6 +1771,18 @@ scale.
     was History holding payments while three screens offered to show you loans,
     earnings and trades in it. When several links break the same way, the
     destination is usually what is wrong. See 11b.4j.
+50. Measure the thing, not the box around it. A pass that read `body.height` to
+    find content running under the rail flagged twenty five mobile screens. Most
+    of those bodies are fixed height and always read 844, and three more ended
+    in a deliberate spacer that the check counted as content. Six screens were
+    genuinely wrong, and the trim ran on nineteen that were not. Sum the children
+    and stop at the spacer. See 11f.2.
+51. A bound paint comes back with its alpha thrown away.
+    `setBoundVariableForPaint` returns a new paint at full opacity, so a ten per
+    cent white lift over sand shipped as a solid white button. Nothing looked
+    wrong in a sixty variant sheet; the contrast check found it at 1.37:1. Put
+    the alpha back on the object the call hands you, and never trust an overlay
+    you have not measured. See 11f.3.
 
 ## 11. The screens, by flow
 
@@ -3130,3 +3142,137 @@ Testers open them as two separate runs.
 
 Starting points are set. Onboarding opens at Welcome or at Restore your
 account. The app opens at Home or at a brand new account.
+
+## 11f. Tightening, and the states nobody had drawn
+
+Three jobs in one pass: put the Send picker into the phone file, tighten the
+main column on the desktop, and draw the interaction states that existed in the
+code but had never been designed. Figma first, then the same changes in the app,
+so the record and the product stay the same thing.
+
+### 11f.1 The Send picker, as a screen
+
+`M07 Send — who` already existed, but as a sheet over the wallet listing three
+people by phone number. The app had moved on: the picker is a screen, it lists
+four people, and each line says when you last exchanged money with them rather
+than repeating a number you never dial.
+
+The screen was rebuilt to match. A back chevron and the title, the cash you have
+on the right, a search field, a card of people ordered by how recently money
+moved, and a second card for pasting a Base address. The scrim and sheet are
+gone, so it is a screen and not a modal.
+
+Two things came out of rendering the live app beside it. Tunde's line wrapped to
+a second line, which made his row eight pixels taller than his neighbours; a
+list of people whose rows are different heights reads as a mistake, so the name
+and the line under it now truncate. And the search box did nothing at all. It is
+the only search in the product that was never wired, which is its own kind of
+dead link: it now filters on Enter through `?q=`, the same way History, Market
+and Support already did, and finds an empty state when nobody matches.
+
+### 11f.2 Tighter, on both sides of the breakpoint
+
+The sidebar was left alone. The main column lost, across all forty five desktop
+screens:
+
+| What | Was | Now | Times |
+|---|---|---|---|
+| Page padding | 32 / 36 | 24 / 32 | 41 |
+| Page header to content | 32 | 24 | 35 |
+| Card padding | 24 | 20 | 110 |
+| Panel padding | 32 | 24 | 66 |
+| Between stacked cards | 24 | 16 | 53 |
+| Hero to the action tiles | 96 | 32 | 1 |
+
+Two hundred and seventy five changes. Security got 112 pixels back, Account 88,
+Home 52. Nothing overflows: the only casualty was `Vanguard S&P 500 · 5.60
+shares`, which ran 16 pixels past its column once the padding shrank, and now
+fills its column and truncates.
+
+The phone got the same treatment and a real fix. Nineteen screens had their rail
+at 722 and twenty six at 748; they are all at 748 now, which is
+`844 − 64 − 32`, clear of the home indicator. Six screens had content running
+past the bottom of the frame, by up to 88 pixels. All forty six now fit, with
+nothing clipped and nothing hiding behind the rail.
+
+The app carries the same numbers: `--content-pad-x` 36 → 32, `--content-pad-y`
+32 → 24, `.content` gap 32 → 24, `.card` padding 24 → 20, `.stack` gap 24 → 16,
+`.row` gap 24 → 20, and the rail at `bottom: 32px` so it lands at 748 in an 844
+viewport, exactly where Figma puts it.
+
+### 11f.3 The states
+
+`Button` carried Default, Pressed and Disabled. It now carries six states across
+five variants and two sizes, sixty in all:
+
+| State | What it does |
+|---|---|
+| Default | the resting fill |
+| Hover | Primary lifts to `surface/inverse-hover`, Secondary and Quiet step up the grey ramp, the coloured ones take a six per cent white lift |
+| Focused | the default, ringed in `border/focus` at 2px outside |
+| Pressed | 0.88, as before |
+| Loading | the default, with a ring turning where the label sits |
+| Disabled | `surface/sunken` and `ink/subtle`, as before |
+
+`surface/inverse-hover` is new: `#ececed` in dark, `#02231c` in light. It exists
+because the app was painting `#ececed` as a raw hex in `.btn-filled:hover`,
+which is the one thing rule 3 forbids. `Icon button` had no states at all and
+now has four, forty eight variants.
+
+Three components that never existed:
+
+- **Empty state**, three reasons — No results, Nothing yet, Failed
+- **Toast**, three types — Info, Success, Error
+- **Skeleton row**, for the shape of an answer before the answer
+
+In the app, the states audit found rather more missing than the file did. There
+was no `:active` anywhere, `[disabled]` styling existed only on `.btn`, and
+there was no loading, no error and no empty state of any kind. Three searches
+fell back to a grey sentence and one fell back to nothing.
+
+All of it is there now, and `scripts/states.mjs` drives every one of them in a
+real browser: hover changes the fill to the token and not a hex, Tab draws a 2px
+ring, a real mouse press reads 0.88, a zero amount disables the action and stops
+taking clicks, confirming shows a spinner and then the outcome, three searches
+find an empty state that can clear itself, the picker filters, and a short Base
+address is marked red where it was typed rather than in a toast that has already
+gone by. Fifteen checks, no failures.
+
+The loading state is real rather than decorative. Every confirmation in the
+product goes through one `review()` helper, so the spinner was added once, and
+money now takes `CONFIRM_MS` to move.
+
+### 11f.4 What the audits caught that the eye did not
+
+Two faults, both recorded as rules.
+
+The mobile overflow pass read `body.height` and flagged twenty five screens.
+Thirty one of the forty six bodies are fixed height and always read 844, and
+three more end in a spacer frame that the check counted as content. Six screens
+were genuinely wrong. The trim ran on nineteen that were not — they look fine,
+and they are now on the same scale as the desktop, but the trigger was a bad
+measurement and not a design decision. Rule 50.
+
+The contrast pass found `Inverse, Hover` at 1.37:1. The six per cent white lift
+had shipped at full opacity, because `setBoundVariableForPaint` returns a paint
+with the alpha reset to one. Two variants were solid white buttons and I had
+looked straight at them in a sixty variant sheet without seeing it. Rule 51.
+
+After both fixes: no unbound fills outside the section frames, no spacing off
+the four pixel grid, no clipped text, one overflow in forty five desktop screens
+and none in forty six mobile ones, and no contrast failure in a hundred and
+eight button variants. The tightest passing figures are the Disabled states at
+3.12:1, which WCAG exempts.
+
+### 11f.5 Still open
+
+- The nav component's variants are still named `Money` and `Stocks` from the
+  older product. They light the right icons; renaming breaks twenty nine
+  instances on `04 App`.
+- `M07` uses a back chevron in the body rather than the `App bar` component the
+  other sub screens use. The bar costs 56 pixels and the screen has 16 to spare.
+- Grow's rate, collateral ratio and payout schedule are still invented. See
+  11b.4f.
+- The app's button classes are `filled`, `quiet` and `danger`; Figma's variants
+  are Primary, Secondary, Quiet, Destructive and Inverse. They do not map one to
+  one, and nothing in the product uses Inverse.

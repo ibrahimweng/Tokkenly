@@ -6,6 +6,7 @@
   --control: #2d2d32;
   --control-pressed: #38383e;
   --inverse: #dcdce0;        /* filled buttons */
+  --inverse-hover: #ececed;  /* one step further from the page than --inverse */
 
   --ink: #dcdce0;
   --muted: #a6a6ad;
@@ -14,12 +15,14 @@
 
   --accent: #0e5f4c;
   --positive: #3fd99b;
+  --negative: #ff8a5c;
   --warning: #e0b341;
   --data-2: #a064db;
 
   --tint-brand: #15241f;
   --tint-positive: #10291f;
   --tint-warning: #2a2211;
+  --tint-negative: #2b1710;
   --scrim: rgba(5, 5, 6, 0.54);
 
   --r-card: 20px;
@@ -30,8 +33,8 @@
   --sidebar-w: 240px;
   --nav-h: 64px;
   --screen-h: 1024px;
-  --content-pad-x: 36px;
-  --content-pad-y: 32px;
+  --content-pad-x: 32px;
+  --content-pad-y: 24px;
 
   --font: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
     'Helvetica Neue', Arial, sans-serif;

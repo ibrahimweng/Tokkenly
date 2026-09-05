@@ -24,7 +24,7 @@ log.push('  keypad typed: ' + (await p.locator('.amount-box input').inputValue()
 log.push('  button says:  ' + (await text('.sheet .btn-filled')).trim())
 
 await p.locator('.sheet .btn-filled').click()
-await p.waitForTimeout(220)
+await p.waitForTimeout(600)
 log.push('  review:  ' + (await text('.sheet-head h2')).trim() + ' / ' + (await text('.sheet .figure .t-display-xl')).trim())
 const reviewFits = await p.evaluate(() => {
   const btn = document.querySelector('.sheet .btn-filled')
@@ -34,7 +34,7 @@ const reviewFits = await p.evaluate(() => {
 log.push('  review button on screen: ' + reviewFits)
 
 await p.locator('.sheet .btn-filled').click()
-await p.waitForTimeout(220)
+await p.waitForTimeout(600)
 log.push('  outcome: ' + (await text('.sheet .t-title')).trim() + ' — ' + (await text('.sheet .figure .muted')).trim())
 await p.locator('.sheet .btn-quiet').click()
 await p.waitForTimeout(250)

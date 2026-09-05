@@ -1,7 +1,7 @@
 import { h } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader, eyebrow } from '../components/shell'
-import { card, cardHead, kv, callout } from '../components/bits'
+import { card, cardHead, kv, callout, emptyState } from '../components/bits'
 import { composerScreen } from '../components/composer'
 import { state } from '../state'
 import { walletScreen } from './wallet'
@@ -24,48 +24,73 @@ function lastPaid(name: string): string {
 /** Step one of Send on a phone. There is no second column to hold the list,
  *  so who comes first and how much follows as a sheet. Figma M07. */
 export function sendWhoScreen(): HTMLElement {
-  const rows = [...PEOPLE]
+  const r = current()
+  const term = (r.query.get('q') ?? '').toLowerCase()
+  const setTerm = (v: string) => go('/send' + (v ? '?q=' + encodeURIComponent(v) : ''))
+
+  const people = [...PEOPLE]
     .sort((a, b) => {
       const ia = state.activity.findIndex((x) => x.who === a)
       const ib = state.activity.findIndex((x) => x.who === b)
       return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib)
     })
-    .map((p) =>
-      h('button', {
-        class: 'sheet-row',
-        on: { click: () => go('/send?to=' + encodeURIComponent(p)) },
-      },
-        h('span', { class: 'avatar', text: initials(p) }),
-        h('span', { class: 'two-line' },
-          h('span', { class: 't-body-strong', text: p }),
-          h('small', { text: lastPaid(p) })),
-        h('span', { class: 'muted', html: icon.chevron() })))
+    .filter((p) => !term || p.toLowerCase().includes(term))
+
+  const rows = people.map((p) =>
+    h('button', {
+      class: 'sheet-row',
+      on: { click: () => go('/send?to=' + encodeURIComponent(p)) },
+    },
+      h('span', { class: 'avatar', text: initials(p) }),
+      h('span', { class: 'two-line' },
+        h('span', { class: 't-body-strong', text: p }),
+        h('small', { text: lastPaid(p) })),
+      h('span', { class: 'muted', html: icon.chevron() })))
 
   const address = h('input', { placeholder: 'Paste a Base address' })
+  const addressField = h('label', { class: 'field' }, address)
+  const addressError = h('small', { class: 'field-error', hidden: true },
+    h('span', { html: icon.alert() }), h('span', { text: 'Paste a full Base address' }))
+  const submitAddress = () => {
+    const v = address.value.trim()
+    // The mistake is shown where it was made, not in a toast that has gone by.
+    const bad = v.length < 8
+    addressField.classList.toggle('error', bad)
+    addressError.hidden = !bad
+    if (bad) { address.focus(); return }
+    go('/send?to=' + encodeURIComponent(v.slice(0, 6) + '…' + v.slice(-4)))
+  }
+  address.addEventListener('input', () => {
+    addressField.classList.remove('error')
+    addressError.hidden = true
+  })
 
   return shell(
     'wallet',
     pageHeader('Send money', eyebrow('Cash available', usd(state.cash))),
     h('label', { class: 'field' },
       h('span', { html: icon.search() }),
-      h('input', { placeholder: 'Search a name' })),
+      h('input', {
+        placeholder: 'Search a name', value: r.query.get('q') ?? '',
+        on: {
+          keydown: (e) => {
+            if ((e as KeyboardEvent).key === 'Enter') setTerm((e.target as HTMLInputElement).value)
+          },
+        },
+      })),
     card(
       cardHead('People you can pay'),
-      h('div', { class: 'sheet-list' }, ...rows)
+      rows.length
+        ? h('div', { class: 'sheet-list' }, ...rows)
+        : emptyState('Nobody by that name',
+            'Search another name, or send to an address below.',
+            { label: 'Clear the search', onClick: () => go('/send') })
     ),
     card(
       cardHead('Or send to an address'),
-      h('label', { class: 'field' }, address),
-      h('button', {
-        class: 'btn btn-quiet', text: 'Continue',
-        on: {
-          click: () => {
-            const v = address.value.trim()
-            if (v.length < 8) { toast('Paste a full Base address'); return }
-            go('/send?to=' + encodeURIComponent(v.slice(0, 6) + '…' + v.slice(-4)))
-          },
-        },
-      }),
+      addressField,
+      addressError,
+      h('button', { class: 'btn btn-quiet', text: 'Continue', on: { click: submitAddress } }),
       callout('Base network only. Sending any other asset to this address loses it.', 'warning')
     )
   )

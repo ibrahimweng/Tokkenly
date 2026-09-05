@@ -30,10 +30,10 @@ log.push('  back →   ' + (await p.locator('.page-header h1').textContent()) + 
 await p.locator('.sheet-row', { hasText: 'Adaeze' }).click()
 await p.waitForTimeout(200)
 await p.locator('.sheet .btn-filled').click()
-await p.waitForTimeout(200)
+await p.waitForTimeout(600)
 log.push('  review:  ' + (await p.locator('.sheet-head h2').textContent()))
 await p.locator('.sheet .btn-filled').click()
-await p.waitForTimeout(200)
+await p.waitForTimeout(600)
 log.push('  outcome: ' + (await p.locator('.sheet .t-title').textContent()))
 
 // desktop is unchanged: one screen, picker on the right

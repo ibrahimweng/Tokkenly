@@ -30,6 +30,37 @@ export function callout(text: string, kind: 'brand' | 'warning' = 'brand'): HTML
     h('span', { text }))
 }
 
+/** Nothing to show, and a reason why. Figma 02 Components, Empty state.
+ *  A list that renders as blank space reads as a bug; this reads as an answer. */
+export function emptyState(
+  title: string,
+  body: string,
+  action?: { label: string; onClick: () => void },
+  glyph: 'search' | 'history' | 'alert' = 'search',
+): HTMLElement {
+  return h('div', { class: 'empty' },
+    h('span', { class: 'mark', html: icon[glyph]() }),
+    h('h3', { text: title }),
+    h('p', { text: body }),
+    action ? h('button', { class: 'btn btn-quiet', text: action.label, on: { click: action.onClick } }) : null)
+}
+
+/** The shape of an answer, before the answer. Figma 02 Components, Skeleton row. */
+export function skeletonList(rows = 4): HTMLElement {
+  const row = () => h('div', { class: 'skeleton-row' },
+    h('span', { class: 'sk disc' }),
+    h('span', { class: 'lines' },
+      h('span', { class: 'sk', style: { width: '160px', height: '12px' } }),
+      h('span', { class: 'sk', style: { width: '96px', height: '10px' } })),
+    h('span', { class: 'sk', style: { width: '72px', height: '12px' } }))
+  return h('div', { class: 'skeleton-list' }, ...Array.from({ length: rows }, row))
+}
+
+/** A control that is working. The label stays put so the page never jumps. */
+export function busy(btn: HTMLButtonElement, on: boolean): void {
+  btn.classList.toggle('is-busy', on)
+}
+
 export function filled(label: string, onClick: () => void, disabled = false): HTMLButtonElement {
   return h('button', { class: 'btn btn-filled', disabled, on: { click: onClick } }, label)
 }

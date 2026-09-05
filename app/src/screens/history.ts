@@ -1,7 +1,7 @@
 import { h } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
-import { amount, directionMark } from '../components/bits'
+import { amount, directionMark, emptyState } from '../components/bits'
 import { table } from '../components/table'
 import { state, type ActivityKind } from '../state'
 import { when } from '../format'
@@ -79,6 +79,11 @@ export function historyScreen(): HTMLElement {
           ]),
           (i) => openSheet('receipt', { ref: rows[i].ref })
         )
-      : h('p', { class: 'muted', text: 'Nothing matches that. Try another name, reference or amount.' })
+      : term || active !== 'all'
+        ? emptyState('Nothing matches that',
+            'Try a different name, reference or amount.',
+            { label: 'Clear the search', onClick: () => go('/history') })
+        : emptyState('Nothing here yet',
+            'Money you send or receive shows up here.', undefined, 'history')
   )
 }

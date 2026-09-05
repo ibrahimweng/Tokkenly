@@ -1,7 +1,7 @@
 import { h } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader, eyebrow } from '../components/shell'
-import { card, cardHead, kv, callout } from '../components/bits'
+import { card, cardHead, kv, callout, emptyState } from '../components/bits'
 import { state, actions } from '../state'
 import { usd } from '../format'
 import { openSheet, go, current } from '../router'
@@ -217,7 +217,9 @@ export function supportScreen(): HTMLElement {
                       h('span', { class: 't-body-strong', text: q }),
                       h('small', { text: a }))),
                   h('span', { class: 'muted', html: icon.chevron() })))
-            : [h('span', { class: 'muted', text: 'Nothing matches that. Email us and a person will answer.' })])
+            : [emptyState('Nothing matches that',
+                'No answer here covers it. A person will.',
+                { label: 'Email us', onClick: () => openSheet('contact') })])
         )),
       h('div', { class: 'stack col-side' },
         card(

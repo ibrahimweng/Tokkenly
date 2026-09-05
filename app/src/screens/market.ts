@@ -1,7 +1,7 @@
 import { h } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
-import { card, cardHead } from '../components/bits'
+import { card, cardHead, emptyState } from '../components/bits'
 import { CATALOGUE, CATEGORIES, INDICES, PICKS, find } from '../catalogue'
 import { state } from '../state'
 import { usd, pct } from '../format'
@@ -75,7 +75,9 @@ export function marketScreen(): HTMLElement {
                 row.addEventListener('click', () => go('/market/' + c.ticker.toLowerCase()))
                 return row
               })
-            : [h('span', { class: 'muted', text: 'Nothing matches that.' })])
+            : [emptyState('Nothing matches that',
+                'Try another company, fund or ticker.',
+                { label: 'Clear the search', onClick: () => go('/market') })])
         ),
         card(
           cardHead('Where people start'),

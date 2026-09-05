@@ -58,10 +58,10 @@
 .card {
   background: var(--sunken);
   border-radius: var(--r-card);
-  padding: 24px;
+  padding: 20px;
   display: flex; flex-direction: column; gap: 16px;
 }
-.card.tight { padding: 20px; }
+.card.tight { padding: 16px; }
 .card-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .link { font-size: 14px; font-weight: 600; color: var(--ink); }
 .link:hover { text-decoration: underline; text-underline-offset: 3px; }
@@ -87,7 +87,7 @@
   font-weight: 600; font-size: 14px; width: 100%;
 }
 .btn-filled { background: var(--inverse); color: var(--on-inverse); }
-.btn-filled:hover { background: #ececed; }
+.btn-filled:hover { background: var(--inverse-hover); }
 .btn-quiet { background: var(--control); color: var(--ink); }
 .btn-quiet:hover { background: var(--control-pressed); }
 .btn-danger { background: var(--control); color: var(--warning); }
@@ -220,7 +220,7 @@
 
 .railbar {
   display: none;
-  position: fixed; left: 0; right: 0; bottom: 16px; z-index: 30;
+  position: fixed; left: 0; right: 0; bottom: 32px; z-index: 30;
   padding: 0 20px;
   justify-content: center; gap: 12px;
   pointer-events: none;
@@ -257,6 +257,14 @@
 .sheet-row:hover { background: var(--control); }
 .sheet-row .mark { background: var(--control); }
 .sheet-row .two-line { flex: 1; min-width: 0; }
+
+/* In a list of people, a name and the line under it truncate rather than wrap.
+   A row that grows a second line is taller than its neighbours, and a list
+   whose rows are different heights reads as a mistake. Scoped to .sheet-row:
+   elsewhere a two-line block is meant to wrap, as the support answers do. */
+.sheet-row .two-line > * { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Long content shrinks inside its row instead of pushing the row wide. */
+.who, .two-line { min-width: 0; }
 
 @media (max-width: 899px) {
   .sidebar { display: none; }
@@ -336,3 +344,74 @@
   .sheet .amount-box input { font-size: 30px; line-height: 40px; width: 180px; }
   .sheet .chip-row .chip { flex: 1 1 0; padding: 0 8px; }
 }
+
+/* ---------------------------------------------------------------- states --
+   Every control answers four ways: hover lifts it, focus rings it, pressing
+   sinks it, disabled takes it out of the conversation. Figma 02 Components,
+   Button State=Default|Hover|Focused|Pressed|Loading|Disabled. */
+
+/* Pressed is the same 0.88 the Figma Pressed variants carry. Grey controls
+   also step up the ramp, which is what the Secondary variant does. */
+.btn:active, .icon-btn:active, .nav-row:active, .rail-tab:active,
+.rail-more:active, .sheet-row:active, .key:active, .chip:active,
+.whoami:active, .link:active { opacity: 0.88; }
+.btn-quiet:active, .icon-btn:active, .chip:active, .key:active,
+.sheet-row:active, .nav-row:active { background: var(--control-pressed); }
+
+/* One disabled rule for everything, not just .btn */
+.btn[disabled], .chip[disabled], .icon-btn[disabled],
+.field.disabled, button[disabled] {
+  opacity: 0.4; cursor: not-allowed; pointer-events: none;
+}
+
+/* Loading keeps the label and turns a ring beside it, so the button never
+   changes width and the page never jumps. */
+.btn.is-busy { pointer-events: none; }
+.btn.is-busy::before {
+  content: ''; width: 16px; height: 16px; border-radius: 999px; flex: none;
+  border: 2px solid currentColor; border-right-color: transparent;
+  animation: spin 700ms linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* A field that is wrong says so where the mistake was made, not in a toast
+   that has already gone by. */
+.field.error { box-shadow: inset 0 0 0 1px var(--negative); }
+.field-error {
+  display: flex; align-items: center; gap: 6px;
+  color: var(--negative); font-size: 12px; line-height: 16px;
+}
+
+/* ---------- empty ----------
+   Figma 02 Components, Empty state Reason=No results|Nothing yet|Failed. */
+.empty {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  padding: 32px 24px; text-align: center;
+}
+.empty .mark { width: 48px; height: 48px; background: var(--control); }
+.empty h3 { margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; }
+.empty p { margin: 0; color: var(--muted); font-size: 12px; line-height: 16px; max-width: 32ch; }
+.empty .btn { width: auto; height: 40px; padding: 0 18px; margin-top: 4px; }
+
+/* ---------- skeleton ----------
+   Shown while something is on its way, so the shape of the answer arrives
+   before the answer does. Figma 02 Components, Skeleton row. */
+.skeleton-list { display: flex; flex-direction: column; gap: 8px; }
+.skeleton-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; }
+.skeleton-row .lines { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.sk {
+  background: var(--control); border-radius: 4px; flex: none;
+  animation: pulse 1200ms ease-in-out infinite;
+}
+.sk.disc { width: 40px; height: 40px; border-radius: 999px; }
+@keyframes pulse { 0%, 100% { opacity: 1 } 50% { opacity: 0.55 } }
+
+/* ---------- toast tone ----------
+   Figma 02 Components, Toast Type=Info|Success|Error. */
+.toast { display: flex; align-items: center; gap: 8px; }
+.toast::before {
+  content: ''; width: 8px; height: 8px; border-radius: 999px;
+  background: var(--muted); flex: none;
+}
+.toast.success::before { background: var(--positive); }
+.toast.error::before { background: var(--negative); }

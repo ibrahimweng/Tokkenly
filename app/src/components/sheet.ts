@@ -76,12 +76,12 @@ export function outcome(
 }
 
 let toastRail: HTMLElement | null = null
-export function toast(message: string): void {
+export function toast(message: string, tone: 'info' | 'success' | 'error' = 'info'): void {
   if (!toastRail) {
     toastRail = h('div', { class: 'toast-rail' })
     document.body.appendChild(toastRail)
   }
-  const t = h('div', { class: 'toast', text: message })
+  const t = h('div', { class: 'toast' + (tone === 'info' ? '' : ' ' + tone), text: message })
   toastRail.appendChild(t)
   setTimeout(() => t.remove(), 2600)
 }

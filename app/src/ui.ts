@@ -11,6 +11,7 @@ type Props = {
   value?: string
   placeholder?: string
   disabled?: boolean
+  hidden?: boolean
   inputmode?: string
   ariaCurrent?: string
   ariaPressed?: boolean | string
@@ -32,6 +33,7 @@ export function h<K extends keyof HTMLElementTagNameMap>(
   if (props.href !== undefined) el.setAttribute('href', props.href)
   if (props.type !== undefined) el.setAttribute('type', props.type)
   if (props.value !== undefined) (el as HTMLInputElement).value = props.value
+  if (props.hidden !== undefined) el.hidden = props.hidden
   if (props.placeholder !== undefined) el.setAttribute('placeholder', props.placeholder)
   if (props.disabled) el.setAttribute('disabled', 'true')
   if (props.inputmode) el.setAttribute('inputmode', props.inputmode)
