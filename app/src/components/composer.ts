@@ -1,5 +1,5 @@
 import { h } from '../ui'
-import { shell, pageHeader, eyebrow, type Place } from './shell'
+import { shell, pageHeader, eyebrow, renderBase, type Place } from './shell'
 import { card, cardHead, kv, callout as calloutEl } from './bits'
 import { amountComposer, keypad } from './amount'
 import { isMobile } from '../responsive'
@@ -42,7 +42,7 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
 
   // A review or an outcome replaces the composer rather than stacking on it,
   // so only one thing is ever floating over the base.
-  if (overlaid && current().sheet) return spec.base()
+  if (overlaid && current().sheet) return renderBase(spec.base)
 
   const comp = amountComposer({
     initial: spec.initial,
@@ -70,7 +70,7 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
 
   if (overlaid) {
     const leave = () => (spec.closeTo && !mobile ? go(spec.closeTo) : history.back())
-    const out = modalOver(spec.base(), spec.title, leave,
+    const out = modalOver(renderBase(spec.base), spec.title, leave,
       spec.lede ? spec.lede() : null,
       comp.el,
       // The keypad is the phone's way in. A dialog has a keyboard already, and
