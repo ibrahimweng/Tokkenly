@@ -43,6 +43,13 @@ export interface ChartSpec {
    *  on a tokenised share and a single figure only shows it as of now. */
   mark?: number
   markLabel?: string
+  /** How the series is drawn. Candles for a share, because open, high, low and
+   *  close are four real facts about a traded thing and the gap between them
+   *  is what a trader reads. A line for a portfolio, because a savings balance
+   *  has a value rather than an intraday range: drawing one as candles put a
+   *  trader's instrument on a saver's screen and made the busiest block on
+   *  Home out of a number that only goes up and down slowly. */
+  shape?: 'candles' | 'area'
 }
 
 export interface Candle { o: number; h: number; l: number; c: number }
@@ -171,6 +178,8 @@ export function barChart(spec: ChartSpec): HTMLElement {
   const bars = h('div', { class: 'ch-bars' })
   const overlay = h('div', { class: 'ch-overlay' })
   const tip = h('div', { class: 'ch-tip', hidden: true })
+  /** Where the pointer is, on a line that has no bars to light up. */
+  const cursor = h('span', { class: 'ch-cursor', hidden: true })
   const plot = h('div', { class: 'ch-plot', style: { height: height + 'px' } }, grid, bars, overlay, tip)
   // Open, high, low, close and the change, above the plot — four numbers of
   // precision the marks alone cannot give, and the line every trading screen
@@ -219,7 +228,8 @@ export function barChart(spec: ChartSpec): HTMLElement {
       h('div', { class: 'ch-line', style: { bottom: at(v) + '%' } },
         h('span', { class: 'ch-tick', text: compact(v, step) }))))
 
-    bars.replaceChildren(...candles.map((k, i) => {
+    if (spec.shape === 'area') drawArea()
+    else bars.replaceChildren(...candles.map((k, i) => {
       const up = k.c >= k.o
       const bodyTop = Math.max(at(k.o), at(k.c))
       const bodyLow = Math.min(at(k.o), at(k.c))
@@ -230,6 +240,37 @@ export function barChart(spec: ChartSpec): HTMLElement {
         h('span', { class: 'ch-body',
           style: { bottom: bodyLow + '%', height: Math.max(1.2, bodyTop - bodyLow) + '%' } }))
     }))
+
+    /** One filled shape under one line, and a dot on the end. The fill fades
+     *  out downwards rather than sitting as a slab, because the area under a
+     *  balance line is not a quantity — it is there to give the line a body. */
+    function drawArea(): void {
+      const n2 = vals.length
+      const pt = (v: number, i: number) => `${(i / (n2 - 1)) * 100},${100 - at(v)}`
+      const line = vals.map(pt).join(' L ')
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+      svg.setAttribute('class', 'ch-svg')
+      svg.setAttribute('viewBox', '0 0 100 100')
+      svg.setAttribute('preserveAspectRatio', 'none')
+      svg.setAttribute('aria-hidden', 'true')
+      const id = 'chfill' + Math.random().toString(36).slice(2, 8)
+      svg.innerHTML =
+        `<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">` +
+        `<stop offset="0%" stop-color="currentColor" stop-opacity="0.28"/>` +
+        `<stop offset="100%" stop-color="currentColor" stop-opacity="0"/>` +
+        `</linearGradient></defs>` +
+        `<path d="M ${line} L 100,100 L 0,100 Z" fill="url(#${id})" stroke="none"/>` +
+        `<path d="M ${line}" fill="none" stroke="currentColor" stroke-width="2" ` +
+        `vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/>`
+      // The end of the line is where the money is now, so it gets a mark. Its
+      // own element rather than an SVG circle: the viewBox is stretched to the
+      // plot, and a circle inside it would come out an ellipse.
+      const end = h('span', { class: 'ch-end',
+        style: { left: '100%', bottom: at(vals[n2 - 1]) + '%' } })
+      bars.replaceChildren(svg, end, cursor)
+      bars.classList.toggle('up', spec.endValue >= candles[0].o)
+      bars.classList.toggle('down', spec.endValue < candles[0].o)
+    }
 
     // The real price of the share behind the token, drawn across the whole
     // period so the gap is a shape rather than a single figure.
@@ -266,7 +307,8 @@ export function barChart(spec: ChartSpec): HTMLElement {
 
     // The four numbers are the latest period at full resolution — a fixed
     // slice of time — not the last bucket, whose width depends on the window.
-    paintOhlc(full[full.length - 1], from)
+    if (spec.shape === 'area') ohlc.replaceChildren()
+    else paintOhlc(full[full.length - 1], from)
 
     plot.setAttribute('role', 'img')
     plot.setAttribute('aria-label',
@@ -279,6 +321,9 @@ export function barChart(spec: ChartSpec): HTMLElement {
     }
   }
 
+  /** Open, high, low and close are four facts about a traded thing. A balance
+   *  has none of them, so the row is not drawn at all on a line chart rather
+   *  than being filled with numbers that do not mean anything. */
   function paintOhlc(k: Candle | undefined, from: number): void {
     if (!k) return
     const d = k.c - k.o
@@ -294,16 +339,19 @@ export function barChart(spec: ChartSpec): HTMLElement {
   let lit = -1
   const show = (i: number) => {
     if (i === lit || i < 0 || i >= vals.length) return
-    if (lit >= 0) bars.children[lit]?.classList.remove('on')
+    const areaMode = spec.shape === 'area'
+    if (lit >= 0 && !areaMode) bars.children[lit]?.classList.remove('on')
     lit = i
-    const bar = bars.children[i] as HTMLElement
-    bar.classList.add('on')
+    if (areaMode) {
+      cursor.hidden = false
+      cursor.style.left = (i / (vals.length - 1)) * 100 + '%'
+    } else (bars.children[i] as HTMLElement).classList.add('on')
     const from = candles[0].o
     const k = candles[i]
     const d = vals[i] - from
     // The readout follows the pointer, so the four numbers are the candle you
     // are on rather than the last one.
-    paintOhlc(k, from)
+    if (spec.shape !== 'area') paintOhlc(k, from)
     tip.replaceChildren(
       h('span', { class: 't-body-strong', text: usd(vals[i]) }),
       h('span', { class: (d >= 0 ? 'pos' : 'warn') + ' t-caption',
@@ -311,15 +359,18 @@ export function barChart(spec: ChartSpec): HTMLElement {
       h('span', { class: 'muted t-caption', text: range.fmt(dateAt(range, i / (vals.length - 1))) }))
     tip.hidden = false
     // clamped so it never hangs off either edge of the card
-    const x = bar.offsetLeft + bar.offsetWidth / 2
+    const x = spec.shape === 'area'
+      ? (i / (vals.length - 1)) * bars.clientWidth
+      : (bars.children[i] as HTMLElement).offsetLeft + (bars.children[i] as HTMLElement).offsetWidth / 2
     tip.style.left = Math.min(Math.max(x, tip.offsetWidth / 2), plot.clientWidth - tip.offsetWidth / 2) + 'px'
   }
   const hide = () => {
-    if (lit >= 0) bars.children[lit]?.classList.remove('on')
+    if (lit >= 0 && spec.shape !== 'area') bars.children[lit]?.classList.remove('on')
+    cursor.hidden = true
     lit = -1
     tip.hidden = true
     // A chart that never got a width to draw against has no candles to report.
-    if (candles.length) paintOhlc(full[full.length - 1], candles[0].o)
+    if (candles.length && spec.shape !== 'area') paintOhlc(full[full.length - 1], candles[0].o)
   }
   bars.addEventListener('pointermove', (e) => {
     const r = bars.getBoundingClientRect()

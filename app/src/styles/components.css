@@ -1477,3 +1477,20 @@ th.right .th-sort { flex-direction: row-reverse; }
   margin: 20px 0 0; text-align: center; max-width: 420px;
   color: var(--muted); font-size: 12px; line-height: 18px;
 }
+
+/* ---------------------------------------------------- the portfolio line --
+   A share is drawn as candles because open, high, low and close are four real
+   facts about a traded thing. A savings balance has one value, so it gets a
+   line with a body under it and a mark where the money is now. */
+.ch-bars.up { color: var(--positive); }
+.ch-bars.down { color: var(--warning); }
+.ch-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.ch-end {
+  position: absolute; width: 9px; height: 9px; border-radius: 999px;
+  background: currentColor; transform: translate(-50%, 50%);
+  box-shadow: 0 0 0 3px var(--sunken);
+}
+.ch-cursor {
+  position: absolute; top: 0; bottom: 0; width: 1px;
+  background: var(--subtle); transform: translateX(-50%);
+}

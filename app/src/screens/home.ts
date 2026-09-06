@@ -101,6 +101,7 @@ function chart(): HTMLElement {
     initial: '1Y',
     title: 'Portfolio over time',
     endValue: state.cash + state.inEarn + holdingsValue(),
+    shape: 'area',
   }))
 }
 
