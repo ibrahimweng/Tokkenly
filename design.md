@@ -4213,8 +4213,8 @@ The brief was to come at this the way a design associate brought in to make a
 product market-ready would: criticise everything, name what is wrong rather
 than what could be nicer, and rank it. The pass produced forty-four numbered
 findings across six tiers, ordered by what a person loses if it is not fixed
-rather than by how hard it is. All six are built and are what follows, bar one
-item held back on purpose.
+rather than by how hard it is. All six are built, all forty-four items are
+settled, and what follows is what changed.
 
 The tiering rule worth keeping: **tier 0 is not "the important ones", it is the
 ones where the product says something untrue.** Everything in it was a screen
@@ -4689,8 +4689,11 @@ amounts.
 proposed replacing it with a meaningful one. `art.ts` holds three hand-composed
 12px grids lifted cell for cell from Figma 06 Desktop D01c with the accent
 cells placed by hand, and the file argues explicitly against generating them.
-The item is unbuilt and stays that way pending a decision, because "make the
-art mean something" is a proposal to redraw artwork somebody made deliberately.
+The item was held back pending a decision, because "make the art mean
+something" read as a proposal to redraw artwork somebody made deliberately. It
+was built once that decision came, and without generating anything: see
+11g.18. The finding was right that the fields carried no information. It was
+wrong about the only way to give them some.
 
 75. **The audit is not exempt from the audit.** Two of the three were wrong in
     the direction that made the finding sound worse, which is the direction an
@@ -4935,10 +4938,56 @@ a card — which is the filler this item is about.
     something they should have been. The third is short because it is short,
     and the right response to that is to leave it alone.
 
-### 11g.18 Still open
+### 11g.18 The dot fields, keyed to the money they are doors to
 
-- All forty-four items are settled except one: item 30, the dot art, is
-  deliberately unbuilt. See 11g.10.
+The last of the forty-four, and the one held back until it was asked for,
+because the audit's answer to it was wrong. It proposed generating the fields
+from data. That would have thrown the artwork away: 11f.18 records how these
+were made — three 12px grids lifted cell for cell from D01c, 677 dots,
+composed rather than computed — and the argument there still stands. A formula
+that came close would be a different picture.
+
+**So nothing is generated.** Not one dot moves and not one changes size. The
+composition Figma drew is the top of the scale, and the account decides how
+much of it is awake. The three doors are the three places money can be, so
+together they read as one portfolio spread across three tiles: what is in
+shares, what is cash, and what is working in Earn. On the seeded account that
+is 77, 15 and 8 per cent, and the three fields look nothing like each other
+for the first time.
+
+Two things had to be right for it to be a reading rather than a mood.
+
+**A field keyed straight to its proportion goes dark.** On an account holding
+most of its money in one place, two of the three doors would have read as
+broken rather than as informative. The value moves the level between a floor
+and the whole field, so the quietest door is still a picture.
+
+**A sleeping cell needs a rung of its own.** The first version dimmed each tone
+by one step — c to b, b to a — which reads well until you notice that a dim
+cell has nowhere to go. Moving $1,000 into Earn changed that tile's level and
+not one pixel of it, because the cells being woken were composed dim in the
+first place. `--dot-sleep` is a fourth rung nothing else uses, in both themes.
+
+The field stays `aria-hidden` and always will: a dot field is not a thing to
+read a figure off. Each tile says its reading in words instead. The sentence is
+the reading; the field is the feeling of it.
+
+83. **Data-driven does not have to mean generated.** The choice looked like
+    one between a composed picture that means nothing and a computed one that
+    means something. It was a false choice: the composition can be the scale
+    and the data can be the level, and then the artwork is not competing with
+    the information, it is carrying it.
+
+84. **An encoding is only as good as its worst case.** Dimming by one rung
+    was a defensible rule that happened to encode nothing on the tile whose
+    data moved, and the test that caught it was moving money and looking, not
+    reading the code.
+
+### 11g.19 Still open
+
+- All forty-four items are settled. Item 30 was held back until it was asked
+  for, and was then built without generating anything: see 11g.18, and 11g.10
+  for why the audit's own account of it was wrong.
 - The composer's two columns are 722 against 336 and stay that way. See 11g.17.
 - Sign-in refuses the password `wrong` and accepts everything else, which is a
   prototype's shape of a real check, not a real one.
