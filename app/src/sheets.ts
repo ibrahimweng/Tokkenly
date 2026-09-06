@@ -5,6 +5,7 @@ import { callout as calloutEl, emptyState as emptyStateEl } from './components/b
 import {
   state, actions, owed, monthlyCost, monthlyEarn, holding, bucketTotal,
   visibleNotifications, tradeFee, weakPin, ratePassword, type Activity,
+  takeQuote, quoteLive, type Quote,
 } from './state'
 import { pinPad } from './components/pinpad'
 import { find, discount } from './catalogue'
@@ -36,14 +37,40 @@ function review(opts: {
    *  this needs a deliberate second step. Omit for anything that is not a
    *  payment out. */
   amount?: number
+  /** A rate this sheet is honouring, for the two flows that change currency.
+   *  The rows, the button and what confirming does are all functions of it,
+   *  because all three change when the quote does. When present, the plain
+   *  `rows`, `action` and `onConfirm` above are not used. */
+  hold?: {
+    rows: (q: Quote) => [string, string][]
+    action: (q: Quote) => string
+    onConfirm: (q: Quote) => void
+  }
 }): HTMLElement {
-  const button = h('button', { class: 'btn btn-primary', text: opts.action })
+  // The quote this sheet is honouring, if it is honouring one. Held in a
+  // variable rather than read fresh, because that is the difference between a
+  // rate that is held and a rate that merely says it is.
+  let quote: Quote | null = opts.hold ? takeQuote() : null
+  const rowsNow = (): [string, string][] =>
+    opts.hold && quote ? opts.hold.rows(quote) : opts.rows
+  const actionNow = (): string =>
+    opts.hold && quote ? opts.hold.action(quote) : opts.action
+  const confirmNow = (): void => {
+    if (opts.hold && quote) opts.hold.onConfirm(quote)
+    else opts.onConfirm()
+  }
+
+  const button = h('button', { class: 'btn btn-primary', text: actionNow() })
   button.addEventListener('click', () => {
     if (button.classList.contains('is-busy') || button.hasAttribute('disabled')) return
+    // A quote that ran out between the sheet opening and the button being
+    // pressed must not be spent. The countdown below normally takes the button
+    // away first; this is the floor under it.
+    if (quote && !quoteLive(quote)) return
     // Money takes a moment to move. The button says so, rather than pretending
     // the ledger changed the instant it was pressed. Figma Button State=Loading.
     button.classList.add('is-busy')
-    setTimeout(opts.onConfirm, CONFIRM_MS)
+    setTimeout(confirmNow, CONFIRM_MS)
   })
 
   // The preference is "ask for your PIN above X". It was a tickbox, which is
@@ -54,6 +81,101 @@ function review(opts: {
   const limit = state.prefs.confirmOver
   const big = limit > 0 && (opts.amount ?? 0) > limit
 
+  /** The four digits that stand in front of a large movement, as a block that
+   *  replaces itself with the button once they are right. A function rather
+   *  than a value because a held-rate sheet builds a fresh one per quote. */
+  function pinGate(): HTMLElement {
+    const gate = h('div', { class: 'stack-8 pin-gate' })
+    const ask = (error?: string) => {
+      if (actions.pinLocked()) {
+        gate.replaceChildren(
+          h('span', { class: 't-caps subtle', text: 'Locked' }),
+          h('span', { class: 'field-error',
+            text: 'Five wrong tries. Set a new PIN from Account before moving this much.' }),
+          h('button', { class: 'btn btn-secondary', text: 'Go to Security',
+            on: { click: () => { closeSheet(); go('/account/security') } } }))
+        return
+      }
+      const pad = pinPad({
+        hint: `Over your ${usd(limit, false)} check, so this one needs your PIN.`,
+        onFull: (v) => {
+          if (!actions.checkPin(v)) {
+            ask(actions.pinLocked()
+              ? 'Locked'
+              : 'Wrong PIN. ' + (5 - state.security.wrongPin) + ' tries left.')
+            return
+          }
+          // Correct: the pad gives way to the button that names the amount, so
+          // what is about to happen is still on screen when it happens.
+          gate.replaceChildren(button)
+          button.focus()
+        },
+      })
+      gate.replaceChildren(
+        h('span', { class: 't-caps subtle', text: 'Authorise with your PIN' }),
+        pad.el)
+      if (error) pad.reject(error)
+    }
+    ask()
+    return gate
+  }
+
+  /* ---- a rate that is actually held ---------------------------------- */
+  if (opts.hold) {
+    const rows = h('div')
+    const clock = h('div', { class: 'hold' })
+    const foot = h('div', { class: 'stack-12' })
+    const el = sheet(
+      opts.title,
+      figure(opts.figureLabel, opts.figureValue),
+      rows, clock, foot)
+
+    let timer = 0
+    const draw = (): void => {
+      rows.replaceChildren(panel(...rowsNow()))
+      button.textContent = actionNow()
+      // A held rate does not exempt a large withdrawal from the PIN. The gate
+      // is rebuilt with each quote, so a rate taken and left to expire cannot
+      // leave an already-authorised button sitting there for the next one.
+      foot.replaceChildren(big ? pinGate() : button)
+      clock.classList.remove('expired')
+      tick()
+      clearInterval(timer)
+      timer = setInterval(tick, 1000) as unknown as number
+    }
+    let mounted = false
+    function tick(): void {
+      // The sheet can be closed while the clock is running, and an interval
+      // that outlives what it was counting for is a leak with a timer on it.
+      // The check waits for the first mount: the opening call happens while
+      // the sheet is still being assembled and is not in the document yet, and
+      // bailing there left the clock blank for its first second.
+      if (mounted && !el.isConnected) { clearInterval(timer); return }
+      if (el.isConnected) mounted = true
+      const left = quote ? quote.until - Date.now() : 0
+      if (left > 0) {
+        const s = Math.ceil(left / 1000)
+        clock.replaceChildren(
+          h('span', { html: icon.info() }),
+          h('span', { text: `This rate is held for ${s} more second${s === 1 ? '' : 's'}.` }))
+        return
+      }
+      clearInterval(timer)
+      clock.classList.add('expired')
+      clock.replaceChildren(
+        h('span', { html: icon.alert() }),
+        h('span', { text: 'That rate has run out. Take a new one to carry on.' }))
+      // The button goes rather than greying: a dead control you can still
+      // press is how a stale rate gets spent.
+      foot.replaceChildren(h('button', {
+        class: 'btn btn-primary', text: 'Get a new rate',
+        on: { click: () => { quote = takeQuote(); draw() } },
+      }))
+    }
+    draw()
+    return el
+  }
+
   if (!big) {
     return sheet(
       opts.title,
@@ -63,45 +185,12 @@ function review(opts: {
       button)
   }
 
-  const gate = h('div', { class: 'stack-8 pin-gate' })
-  const askPin = (error?: string) => {
-    if (actions.pinLocked()) {
-      gate.replaceChildren(
-        h('span', { class: 't-caps subtle', text: 'Locked' }),
-        h('span', { class: 'field-error',
-          text: 'Five wrong tries. Set a new PIN from Account before moving this much.' }),
-        h('button', { class: 'btn btn-secondary', text: 'Go to Security',
-          on: { click: () => { closeSheet(); go('/account/security') } } }))
-      return
-    }
-    const pad = pinPad({
-      hint: `Over your ${usd(limit, false)} check, so this one needs your PIN.`,
-      onFull: (v) => {
-        if (!actions.checkPin(v)) {
-          askPin(actions.pinLocked()
-            ? 'Locked'
-            : 'Wrong PIN. ' + (5 - state.security.wrongPin) + ' tries left.')
-          return
-        }
-        // Correct: the pad gives way to the button that names the amount, so
-        // what is about to happen is still on screen when it happens.
-        gate.replaceChildren(button)
-        button.focus()
-      },
-    })
-    gate.replaceChildren(
-      h('span', { class: 't-caps subtle', text: 'Authorise with your PIN' }),
-      pad.el)
-    if (error) pad.reject(error)
-  }
-  askPin()
-
   return sheet(
     opts.title,
     figure(opts.figureLabel, opts.figureValue),
     panel(...opts.rows),
     calloutEl(opts.note),
-    gate
+    pinGate()
   )
 }
 
@@ -631,19 +720,22 @@ export const SHEETS: Record<string, Builder> = {
     return review({
       title: 'Review',
       figureLabel: 'You are buying', figureValue: usd(v), amount: v,
-      rows: [
-        ['You pay', naira(v * state.ngnPerUsd)],
-        ['Rate', '1 dollar = ' + naira(state.ngnPerUsd)],
-        ['Fee', 'None — the rate above is the rate you get'],
-        ['You receive', usd(v)],
-        ['From', bank.name + ' •••• ' + bank.last4],
-        ['Lands', 'In about a minute'],
-      ],
-      note: 'This rate is held for ninety seconds.',
-      action: 'Buy ' + usd(v),
-      onConfirm: () => {
-        const a = actions.addMoney(v, bank.id)
-        replaceSheet('add-done', { ref: a.ref })
+      rows: [], action: '', onConfirm: () => {},
+      note: '',
+      hold: {
+        rows: (q) => [
+          ['You pay', naira(v * q.rate)],
+          ['Rate', '1 dollar = ' + naira(q.rate)],
+          ['Fee', 'None — the rate above is the rate you get'],
+          ['You receive', usd(v)],
+          ['From', bank.name + ' •••• ' + bank.last4],
+          ['Lands', 'In about a minute'],
+        ],
+        action: () => 'Buy ' + usd(v),
+        onConfirm: () => {
+          const a = actions.addMoney(v, bank.id)
+          replaceSheet('add-done', { ref: a.ref })
+        },
       },
     })
   },
@@ -659,25 +751,32 @@ export const SHEETS: Record<string, Builder> = {
     return review({
       title: 'Review',
       figureLabel: 'You are withdrawing', figureValue: usd(v), amount: v,
-      rows: [
-        ['Withdrawing', usd(v)],
-        ['Rate', '1 dollar = ' + naira(state.ngnPerUsd)],
-        ['Fee', 'None — the rate above is the rate you get'],
-        ['You receive', naira(v * state.ngnPerUsd)],
-        ['Into', bank.name + ' •••• ' + bank.last4],
-        ['Arrives', 'Usually within a minute'],
-      ],
-      note: 'The naira amount is fixed once you confirm.',
-      action: 'Withdraw ' + usd(v),
-      onConfirm: () => {
-        const a = actions.convert(v, bank.id)
-        replaceSheet('convert-done', { ref: a.ref })
+      rows: [], action: '', onConfirm: () => {},
+      note: '',
+      hold: {
+        rows: (q) => [
+          ['Withdrawing', usd(v)],
+          ['Rate', '1 dollar = ' + naira(q.rate)],
+          ['Fee', 'None — the rate above is the rate you get'],
+          ['You receive', naira(v * q.rate)],
+          ['Into', bank.name + ' •••• ' + bank.last4],
+          ['Arrives', 'Usually within a minute'],
+        ],
+        action: () => 'Withdraw ' + usd(v),
+        onConfirm: (q) => {
+          const a = actions.convert(v, bank.id)
+          replaceSheet('convert-done', { ref: a.ref, rate: String(q.rate) })
+        },
       },
     })
   },
   'convert-done': (r) => {
     const a = state.activity.find((x) => x.ref === str(r, 'ref'))!
-    return done('Withdrawn', `${naira(Math.abs(a.amount) * state.ngnPerUsd)} is on its way to ${a.who}.`, a)
+    // The rate that was honoured, not the indicative one. Confirming against a
+    // held quote and then being told a different naira figure is the exact
+    // thing the hold exists to prevent.
+    const rate = num(r, 'rate', state.ngnPerUsd)
+    return done('Withdrawn', `${naira(Math.abs(a.amount) * rate)} is on its way to ${a.who}.`, a)
   },
 
   /* ----- invest ----- */

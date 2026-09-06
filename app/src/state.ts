@@ -419,6 +419,37 @@ export const nairaAside = (dollars: number): string | null =>
     ? `About ₦${Math.round(dollars * state.ngnPerUsd).toLocaleString('en-US')} at today’s indicative rate`
     : null
 
+/* ------------------------------------------------------------- the quote --
+   "The rate is held for ninety seconds" was a sentence with nothing behind
+   it: no clock, no expiry, and no way to be given a new one, so the promise
+   was decoration on a screen whose whole job is to be believed about a rate.
+   A quote is the rate at a moment, and it stops being honoured. */
+
+export interface Quote {
+  /** Naira per dollar, fixed for the life of this quote. */
+  rate: number
+  /** When it stops being honoured, in epoch milliseconds. */
+  until: number
+}
+
+export const RATE_HOLD_MS = 90_000
+
+/** Where a re-quote's rate comes from. Stepped through a fixed sequence
+ *  rather than drawn at random, because a figure on screen must not move on
+ *  its own — it moves when you ask for a new one, which is what a hold is
+ *  for. The first quote of a session is the indicative rate exactly, so the
+ *  review agrees with the composer you just came from. */
+const DRIFT = [0, 0.004, -0.003, 0.007, -0.005, 0.002]
+let quoteSeq = 0
+
+export function takeQuote(): Quote {
+  const rate = Math.round(state.ngnPerUsd * (1 + DRIFT[quoteSeq % DRIFT.length]))
+  quoteSeq += 1
+  return { rate, until: Date.now() + RATE_HOLD_MS }
+}
+
+export const quoteLive = (q: Quote): boolean => q.until > Date.now()
+
 /* ------------------------------------------------------------ the limits --
    One place, so the card that states a limit and the thing that enforces it
    are the same number. */

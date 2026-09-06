@@ -95,6 +95,18 @@
 .callout.warning { background: var(--tint-warning); color: var(--warning); }
 .callout .ic { flex: none; margin-top: 1px; }
 
+/* The clock on a held rate. It takes the callout's shape because it sits
+   where the callout would, and its own colour because a countdown is a live
+   thing rather than a note — and it goes amber when it runs out, which is the
+   one moment on the sheet that changes what you are allowed to do. */
+.hold {
+  display: flex; gap: 12px; align-items: center;
+  background: var(--tint-brand); border-radius: var(--r-panel);
+  padding: 14px 20px; color: var(--muted); font-size: 13px; line-height: 18px;
+}
+.hold .ic { flex: none; }
+.hold.expired { background: var(--tint-warning); color: var(--warning); }
+
 /* A task the account has not finished, on the screen it lands on. Tinted
    rather than filled, and in the brand rather than the warning: verifying is
    an invitation to lift a limit, not an alarm about a fault. Pressable, so it

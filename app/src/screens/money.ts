@@ -231,7 +231,7 @@ export function addMoneyScreen(): HTMLElement {
       ['From', bank.name + ' •••• ' + bank.last4],
       ['Lands', 'In about a minute'],
     ],
-    callout: 'The rate is held for ninety seconds once you confirm.',
+    callout: 'The rate above is indicative. You get a firm one at the review, held for ninety seconds.',
     action: (v) => 'Buy ' + usd(v),
     onAction: (v) => openSheet('add-review', { v: String(v) }),
     right: (v) =>
@@ -276,7 +276,7 @@ export function convertScreen(): HTMLElement {
       ['Into', bank.name + ' •••• ' + bank.last4],
       ['Arrives', 'Usually within a minute'],
     ],
-    callout: 'Payouts run every day. Weekend transfers can take a few minutes longer.',
+    callout: 'You get a firm rate at the review, held for ninety seconds. Payouts run every day.',
     action: (v) => 'Withdraw ' + usd(v),
     onAction: (v) => openSheet('convert-review', { v: String(v) }),
     right: (v) =>
