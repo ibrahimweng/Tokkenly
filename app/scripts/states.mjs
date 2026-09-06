@@ -1,7 +1,7 @@
 /* Every state the product claims to have, exercised in a real browser.
    Figma 02 Components: Button, Icon button, Text field, Empty state, Toast. */
 import { chromium } from 'playwright'
-import { seen } from './seen.mjs'
+import { seen, fresh } from './seen.mjs'
 
 const B = 'http://localhost:4173/#'
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
@@ -181,6 +181,56 @@ const sunken = await page.evaluate(() =>
   getComputedStyle(document.documentElement).getPropertyValue('--sunken').trim())
 ok('and none of them is repainted to --sunken',
    dim.primary.bg !== sunken && dim.secondary.bg !== sunken, sunken)
+
+console.log('THE FIRST SCREEN, AND ITS THREE STATES')
+{
+  // A fresh page, because the point of these is somebody who has not been here
+  // and cannot be seeded past the screen they are looking at.
+  const a = await b.newPage({ viewport: { width: 1440, height: 1000 } })
+  await fresh(a)
+  a.on('pageerror', (e) => errors.push(String(e)))
+  await a.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
+  const err = () => a.evaluate(() => {
+    const e = document.querySelector('.field-error')
+    return e && !e.hidden ? e.innerText.replace(/\n/g, ' ').trim() : null
+  })
+  const land = async (r) => { await a.goto(B + r, { waitUntil: 'domcontentloaded' }); await a.waitForTimeout(400) }
+
+  await land('/signin')
+  ok('it says why anybody should hand this product money',
+     (await a.evaluate(() => document.querySelectorAll('.promise').length)) === 3
+     && /down as well as up/.test(await a.evaluate(() => document.querySelector('.auth-warn')?.textContent ?? '')))
+  ok('and the email field does not arrive holding somebody else\u2019s address',
+     !/@/.test(await a.evaluate(() => document.querySelector('input[type=email]')?.placeholder ?? '')),
+     await a.evaluate(() => document.querySelector('input[type=email]')?.placeholder ?? ''))
+  // The one button that is not email was wearing an envelope.
+  ok('and Google is not offered under a picture of an envelope',
+     await a.evaluate(() => {
+       const btn = [...document.querySelectorAll('button')].find((x) => /Continue with Google/.test(x.textContent))
+       return !!btn && !btn.querySelector('svg')
+     }))
+
+  await a.locator('.btn-primary').click(); await a.waitForTimeout(250)
+  ok('an empty field is named where it is empty', (await err()) !== null, await err())
+  await a.locator('input[type=email]').fill('a@b.co')
+  await a.locator('input[type=password]').fill('wrong')
+  await a.locator('.btn-primary').click(); await a.waitForTimeout(150)
+  ok('the button says it is working', /is-busy/.test(await a.evaluate(() => document.querySelector('.btn-primary')?.className ?? '')))
+  await a.waitForTimeout(900)
+  ok('and a refusal leaves you on the screen with the reason',
+     /do not recognise/.test((await err()) ?? '') && (await a.evaluate(() => location.hash)).includes('signin'),
+     await err())
+
+  // A password you cannot see is how somebody resets one they had right.
+  await a.locator('.reveal').click(); await a.waitForTimeout(200)
+  ok('the password can be looked at',
+     await a.evaluate(() => [...document.querySelectorAll('.field input')].some((i) => i.type === 'text')))
+
+  await a.evaluate(() => window.dispatchEvent(new Event('offline'))); await a.waitForTimeout(200)
+  await a.locator('.btn-primary').click(); await a.waitForTimeout(300)
+  ok('and nothing is sent with no connection', /No connection/.test((await err()) ?? ''), await err())
+  await a.close()
+}
 
 console.log('\nERRORS: ' + (errors.length ? errors.join(' | ') : 'none'))
 await b.close()

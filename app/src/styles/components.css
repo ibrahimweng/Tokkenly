@@ -292,13 +292,47 @@
 }
 
 /* ---------- auth ---------- */
+/* The form, and the answer to the question the form is asking. It was a card
+   alone in the middle of an empty canvas — 480px of inputs on a 1440 screen
+   with nothing beside it, and the one screen where somebody decides whether to
+   hand this product money had nothing to say about why they should. */
 .auth {
-  min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr);
-  place-items: center; padding: 32px;
+  min-height: 100vh; display: grid;
+  grid-template-columns: minmax(0, 480px) minmax(0, 380px);
+  gap: 64px; justify-content: center; align-items: center; padding: 48px 32px;
 }
 .auth-card {
-  width: 480px; max-width: 100%; background: var(--sunken);
+  width: 100%; background: var(--sunken);
   border-radius: var(--r-sheet); padding: 32px; display: flex; flex-direction: column; gap: 24px;
+}
+.auth-aside { display: flex; flex-direction: column; gap: 20px; align-self: center; }
+.promise { display: flex; gap: 12px; align-items: flex-start; }
+.promise .mark { flex: none; }
+.promise small { line-height: 18px; }
+.auth-warn {
+  margin: 0; display: flex; gap: 10px; align-items: flex-start;
+  color: var(--warning); font-size: 12px; line-height: 18px;
+}
+.auth-warn svg { width: 16px; height: 16px; flex: none; }
+/* A sentence in ink at the foot of a list reads as a closing line, not a way
+   through. The chevron is what says it goes somewhere. */
+.auth-more { display: flex; align-items: center; gap: 8px; text-align: left; align-self: flex-start; }
+.auth-more svg { width: 14px; height: 14px; flex: none; }
+
+.auth-or { display: flex; align-items: center; gap: 12px; }
+.auth-or .rule { flex: 1; height: 1px; background: var(--control); }
+.auth-forgot { display: flex; justify-content: flex-end; margin-top: -4px; }
+/* Inside the field, where the thing it reveals is. */
+.reveal {
+  flex: none; width: 32px; height: 32px; border-radius: 999px;
+  display: grid; place-items: center; color: var(--muted);
+}
+
+@media (max-width: 1023px) {
+  /* One column, and the promises sit under the form rather than beside it —
+     a stranger on a phone scrolls past the card to reach them, which is the
+     right order: the form is what they came for. */
+  .auth { grid-template-columns: minmax(0, 480px); gap: 32px; padding: 32px 20px; }
 }
 
 /* ---------------------------------------------------------------- phone --
@@ -1445,7 +1479,7 @@ th.right .th-sort { flex-direction: row-reverse; }
 .pw-note.bad { color: var(--negative); }
 .pw-note.good { color: var(--positive); }
 .pw-eye { flex: none; font-size: 13px; }
-.auth-aside { display: flex; justify-content: flex-end; margin-top: -4px; }
+
 
 /* The PIN standing in for the confirm button. Centred like the pad it holds,
    because a left-aligned caps label over a centred pad reads as two things. */
@@ -1580,10 +1614,6 @@ th.right .th-sort { flex-direction: row-reverse; }
 .risk-link { margin: 0; text-align: center; }
 /* Under the sign-in card rather than inside it: it is about the company, not
    about the form. */
-.auth-legal {
-  margin: 20px 0 0; text-align: center; max-width: 420px;
-  color: var(--muted); font-size: 12px; line-height: 18px;
-}
 
 /* ---------------------------------------------------- the portfolio line --
    A share is drawn as candles because open, high, low and close are four real

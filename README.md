@@ -72,5 +72,12 @@ the pennies:
 It applies to payments and trades — the movements with somebody else in the
 middle. Moving your own money between your own buckets has nobody to decline it.
 
+Signing in works the same way. Any email and password gets you in, except one:
+
+| Password | What happens |
+|---|---|
+| `wrong` | the sign-in is refused, and says so under the fields. |
+| anything else | you are in, after the moment it takes to look busy. |
+
 Running them needs a Chromium. Either `npx playwright install chromium` or
 point `executablePath` at one you already have.
