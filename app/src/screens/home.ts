@@ -75,8 +75,22 @@ export function homeScreen(): HTMLElement {
   return state.prefs.homeView === 'simple' ? gateway() : detailed()
 }
 
+/** What a range's change is worth in money, read off the same table the chart
+ *  on this screen draws from. A figure stated beside a chart and the chart
+ *  itself have to be the same claim. */
+function gainOver(key: string, endValue: number): { amount: number; pct: number } {
+  const r = RANGES.find((x) => x.key === key) ?? RANGES[RANGES.length - 1]
+  return { amount: endValue - endValue / (1 + r.pct / 100), pct: r.pct }
+}
+
 function detailed(): HTMLElement {
-  const value = holdingsValue()
+  // The same number Simple shows, because it is the same account. This view
+  // used to show holdings alone under no label at all, so switching Simple to
+  // Detailed appeared to delete the cash and the Earn balance — $16,229.18
+  // became $12,509.18 with nothing to explain it.
+  const value = state.cash + state.inEarn + holdingsValue()
+  const move = dayMove()
+  const all = gainOver('ALL', value)
   const positions = card(
     cardHead('Your positions', headLink('Invest', '/invest')),
     ...state.holdings.map((p) => {
@@ -102,7 +116,10 @@ function detailed(): HTMLElement {
     cardHead('Available'),
     kv('Cash', usd(state.cash)),
     kv('Buying power', usd(buyingPower())),
-    kv('Total gain', h('span', { class: 'pos t-body-strong', text: signed(1840.6) + ' (17.28%)' }))
+    kv('Total gain', h('span', {
+      class: (all.amount >= 0 ? 'pos' : 'warn') + ' t-body-strong',
+      text: `${signed(all.amount)} (${all.pct >= 0 ? '+' : ''}${pct(all.pct)})`,
+    }))
   )
 
   return shell(
@@ -113,8 +130,11 @@ function detailed(): HTMLElement {
       h('div', { class: 'stack', style: { width: '308px', flex: 'none' } },
         h('div', { class: 'stack-8' },
           h('span', { class: 'muted', text: 'Everything is settled. Nothing needs your attention.' }),
+          h('span', { class: 't-caps subtle', text: 'Total portfolio' }),
           h('span', { class: 't-display-xl', text: usd(value) }),
-          h('span', {}, h('span', { class: 'pos t-body-strong', text: signed(142.6) + ' (1.16%)' }),
+          h('span', {},
+            h('span', { class: (move.amount >= 0 ? 'pos' : 'warn') + ' t-body-strong',
+              text: `${move.amount >= 0 ? '+' : ''}${usd(move.amount)} (${move.amount >= 0 ? '+' : ''}${pct(move.pct)})` }),
             h('span', { class: 'muted', text: '  Today' }))),
         h('div', { class: 'chip-row' },
           h('button', { class: 'btn btn-primary btn-sm', text: 'Send', on: { click: () => go('/send') } }),
