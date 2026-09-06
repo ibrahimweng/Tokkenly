@@ -1412,3 +1412,41 @@ th.right .th-sort { flex-direction: row-reverse; }
      the end of the first line. It fits on one once the description is gone. */
   .table .name-line { white-space: nowrap; }
 }
+
+/* ------------------------------------------------------------- the tablet --
+   There was one breakpoint, at 899, so everything from a 900px window to a
+   1440px monitor got the same 240px sidebar and the same gutters. On a
+   1024x768 iPad that left about 688px of content: the three doors on Home
+   crushed, "Borrow or Lend" wrapped to two lines, and the dot field cropped
+   to a sliver. The whole middle of the device range was designed for neither
+   end of it.
+
+   Between 900 and 1199 the sidebar keeps its places and gives up its width —
+   icon over name, the way the phone's rail now reads — and the gutters come
+   in. That is about 200px back, which is the difference between three doors
+   and three slots. */
+@media (min-width: 900px) and (max-width: 1199px) {
+  :root { --sidebar-w: 88px; --content-pad-x: 32px; }
+
+  .sidebar { padding: 20px 8px; gap: 16px; align-items: center; }
+  .brand { justify-content: center; padding: 4px 0; }
+  .brand strong { display: none; }
+
+  .nav { width: 100%; }
+  .nav-row {
+    flex-direction: column; gap: 4px; padding: 10px 4px; text-align: center;
+    font-size: 10px; line-height: 12px; font-weight: 600;
+  }
+  /* The bucket row borrows .grow from the wide layout to push its count to the
+     far edge; stacked, that would stretch the word instead. */
+  .nav-row .grow { flex: none; }
+  .nav-bucket .count { position: absolute; }
+  .nav-bucket { position: relative; }
+
+  /* A card with a heading, a paragraph and a button does not fit in 72px, and
+     shrinking it to fit would leave an advert nobody can read. */
+  .promo { display: none; }
+
+  .whoami { justify-content: center; padding: 8px 0; }
+  .whoami .two-line, .whoami .muted { display: none; }
+}
