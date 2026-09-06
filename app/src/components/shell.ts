@@ -27,6 +27,7 @@ const PLACES: PlaceDef[] = [
 const TABS = PLACES.slice(0, 4)
 export const BEHIND_MORE: { label: string; sub: string; to: string; ic: () => string }[] = [
   { label: 'Activity', sub: 'Everything that has moved', to: '/activity', ic: icon.history },
+  { label: 'Notifications', sub: 'What we have told you', to: '/activity?filter=alerts', ic: icon.bell },
   { label: 'Account', sub: 'Your details and your address', to: '/account', ic: icon.account },
   { label: 'Security', sub: 'PIN, Face ID and recovery', to: '/security', ic: icon.lock },
   { label: 'Your banks', sub: 'Where your payouts land', to: '/transfer?sheet=banks', ic: icon.wallet },
@@ -58,12 +59,14 @@ export function bucketButton(): HTMLElement {
   return b
 }
 
-/** The bell from Figma D01. It carries the unread count and opens the panel. */
+/** The bell from Figma D01. It carries the unread count and now goes to the
+ *  place that holds them rather than floating a panel over whatever you were
+ *  doing: notifications are a section of Activity, at /activity?filter=alerts. */
 export function bell(): HTMLElement {
   const unread = visibleNotifications().filter((n) => !n.read).length
   const b = h('button', {
     class: 'icon-btn bell', ariaLabel: unread ? unread + ' unread notifications' : 'Notifications',
-    html: icon.bell(), on: { click: () => openSheet('notifications') },
+    html: icon.bell(), on: { click: () => go('/activity?filter=alerts') },
   })
   if (unread) b.appendChild(h('span', { class: 'dot', text: String(unread) }))
   return b

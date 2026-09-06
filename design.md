@@ -5168,7 +5168,40 @@ without the test noticing.
     header is where controls go to be forgotten: near the logo, far from the
     work, in a row of four where none of them is about anything on the page.
 
-### 11g.25 Still open
+### 11g.25 The bell's panel becomes a place
+
+Notifications were a modal. Five announcements floated over whatever screen the
+bell happened to be on, dismissed by the same gesture that dismisses a payment
+you are halfway through, and reachable from one header — Home's. On a phone
+that meant the only route to them was going Home first.
+
+They are a section of Activity now, behind a chip of their own, and the unread
+count moved from the bell onto the chip. Beside the money rather than mixed
+into it: a notification has no amount and no reference, so a row of it in the
+table would mean two empty columns and a sort by amount that cannot order it.
+The bell still exists and still carries the count; it navigates rather than
+opening a panel. The phone's More list gained a row to them, which it never
+had.
+
+Every row now goes to the thing it is about. "Adaeze Okonkwo paid you $120.00"
+opens that receipt, in place, on the screen you are already on; the sign-in
+notice goes to Security; the interest one goes to Grow. A row that greys out
+and does nothing else is a list of things you have already read, which is not
+what anybody opens a notification for.
+
+Two nouns nearly collided. The Account group of switches is also called
+Notifications, and rule 37 says one noun per thing — but these are two things:
+the messages, and the switches that decide which get sent. They are told apart
+in the palette by their group and by a hint each ("What we have told you",
+"Choose what is worth a buzz") rather than by renaming one of them into
+something nobody says out loud.
+
+93. **A modal is for a task, not for a list.** A panel that only shows things
+    has no commit, nothing to cancel, and no reason to take the screen — and
+    being a panel, it can only be reached from wherever somebody thought to put
+    the button.
+
+### 11g.26 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from
   using the product afterwards. Item 30 was held back until it was asked for,

@@ -48,6 +48,8 @@ export const DESTINATIONS: Destination[] = [
   { label: 'Payments', to: '/activity?filter=payments', place: 'history', kind: 'screen', primary: true, also: 'sent received' },
   { label: 'Trades', to: '/activity?filter=trades', place: 'history', kind: 'screen', primary: true, also: 'bought sold shares' },
   { label: 'Grow activity', to: '/activity?filter=grow', place: 'history', kind: 'screen', primary: true, also: 'interest borrowed repaid' },
+  { label: 'Notifications', to: '/activity?filter=alerts', place: 'history', kind: 'screen', primary: true,
+    also: 'alerts bell unread told me announcements sign in filled', hint: 'What we have told you' },
 
   { label: 'Account', to: '/account', place: 'account', kind: 'place', primary: true, also: 'profile settings preferences options' },
   // Every settings group is its own address, so the palette can take somebody
@@ -57,7 +59,10 @@ export const DESTINATIONS: Destination[] = [
   { label: 'Preferences', to: '/account/preferences', place: 'account', kind: 'screen', primary: true,
     also: 'theme dark light home screen simple detailed naira bucket default intro' },
   { label: 'Notifications', to: '/account/notifications', place: 'account', kind: 'screen', primary: true,
-    also: 'alerts buzz push prices payments earn borrowing' },
+    also: 'alerts buzz push prices payments earn borrowing',
+    // Two screens carry the word: the ones you were sent, and the switches
+    // that decide which get sent. The hint is what tells them apart in a list.
+    hint: 'Choose what is worth a buzz' },
   { label: 'Security', to: '/account/security', place: 'account', kind: 'screen', primary: true,
     also: 'pin password face id recovery phrase devices sign out everywhere' },
   { label: 'Change your PIN', to: '/account/security?sheet=pin', place: 'account', kind: 'action', primary: true,

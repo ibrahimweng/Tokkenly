@@ -109,11 +109,16 @@ await p.getByRole('button', { name: /Money landing/ }).click(); await p.waitForT
 await at('/')
 const after = await p.evaluate(() => document.querySelector('.bell .dot')?.textContent ?? '0')
 ok('turning one off changes what reaches you', before !== after, `${before} → ${after}`)
-await p.locator('.bell').click(); await p.waitForTimeout(400)
-ok('and the panel agrees with the bell',
-   !/Received|payment/i.test(await p.evaluate(() => document.querySelector('.scrim')?.innerText ?? '')),
-   (await p.evaluate(() => document.querySelector('.scrim')?.innerText?.replace(/\n/g, ' ').slice(0, 60) ?? '')))
-await p.keyboard.press('Escape'); await p.waitForTimeout(300)
+await p.locator('.bell').click(); await p.waitForTimeout(500)
+ok('the bell goes to the section rather than floating a panel',
+   (await p.evaluate(() => location.hash)) === '#/activity?filter=alerts' &&
+   (await p.locator('.scrim').count()) === 0,
+   await p.evaluate(() => location.hash))
+// The two money ones. "paid you" would also catch Earn's daily interest,
+// which is a grow notification and is meant to still be here.
+ok('and the section agrees with the bell',
+   !/Adaeze|Payroll/i.test(await p.evaluate(() => document.querySelector('.alert-list')?.innerText ?? '')),
+   (await p.evaluate(() => document.querySelector('.alert-list')?.innerText?.replace(/\n/g, ' ').slice(0, 60) ?? '')))
 await notifs()
 await p.getByRole('button', { name: /Money landing/ }).click(); await p.waitForTimeout(300)
 

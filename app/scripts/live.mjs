@@ -109,14 +109,28 @@ console.log('NOTIFICATIONS  a count that does not go down is decoration')
   const p = await page()
   await p.goto(B + '/', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(200)
   const start = await p.locator('.bell .dot').textContent()
-  await p.locator('.bell').click(); await p.waitForTimeout(250)
-  const rows = await p.locator('.sheet-row').count()
-  await p.locator('.sheet-row:not(.read)').first().click(); await p.waitForTimeout(250)
-  const after = await p.locator('.bell .dot').textContent()
+  await p.locator('.bell').click(); await p.waitForTimeout(400)
+  // No longer a panel over Home: the bell is a way to a section of Activity,
+  // and the count moves from the bell to the chip that opens it.
+  ok('the bell is a way to somewhere, not a panel',
+     (await p.evaluate(() => location.hash)) === '#/activity?filter=alerts' &&
+     (await p.locator('.scrim').count()) === 0, await p.evaluate(() => location.hash))
+  ok('the chip carries the count',
+     (await p.locator('.chip-count').textContent()) === start, start)
+  // Reading one opens what it is about, which is the point of the row.
+  await p.locator('.set-row.alert:not(.read)').first().click(); await p.waitForTimeout(500)
+  ok('and a row goes to the thing it is about',
+     (await p.evaluate(() => location.hash)).includes('sheet=receipt'),
+     await p.evaluate(() => location.hash))
+  await p.keyboard.press('Escape'); await p.waitForTimeout(350)
+  const after = await p.locator('.chip-count').textContent()
   ok('reading one drops the count', Number(after) === Number(start) - 1, `${start} then ${after}`)
-  await p.locator('.link', { hasText: 'Mark all read' }).click(); await p.waitForTimeout(250)
-  ok('mark all read clears the badge', (await p.locator('.bell .dot').count()) === 0)
-  ok('and the panel says so', (await p.locator('.sheet .muted').first().textContent()) === 'All caught up')
+  await p.locator('.link', { hasText: 'Mark all read' }).click(); await p.waitForTimeout(300)
+  ok('mark all read clears it', (await p.locator('.chip-count').count()) === 0)
+  ok('and the section says so',
+     /All caught up/.test(await p.evaluate(() => document.querySelector('.card-head')?.innerText ?? '')))
+  await p.goto(B + '/', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(250)
+  ok('and the bell agrees', (await p.locator('.bell .dot').count()) === 0)
   await p.close()
 }
 

@@ -14,7 +14,9 @@ await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 const at = async (r) => { await p.goto(B + r, { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(450) }
 
 console.log('A SHEET IS A DIALOG')
-await at('/?sheet=notifications')
+// The bell's panel used to be the dialog under test here. It is a section of
+// Activity now, so the generic list-in-a-dialog is More.
+await at('/?sheet=more')
 {
   const d = await p.evaluate(() => {
     const el = document.querySelector('.sheet')
@@ -161,7 +163,7 @@ console.log('WHAT A THUMB CAN HIT')
   for (const r of ['/', '/transfer', '/invest', '/invest/aapl', '/grow', '/activity', '/bucket',
     '/account', '/account/preferences', '/account/payments', '/account/security', '/account/details',
     '/send', '/receive', '/addmoney', '/withdraw', '/verify', '/all', '/disclosures',
-    '/invest/aapl/invest', '/grow/borrow', '/?sheet=notifications']) {
+    '/invest/aapl/invest', '/grow/borrow', '/?sheet=more', '/activity?filter=alerts']) {
     await m.goto(B + r, { waitUntil: 'domcontentloaded' }); await m.waitForTimeout(400)
     for (const x of await m.evaluate(() => {
       const out = []

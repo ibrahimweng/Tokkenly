@@ -4,7 +4,7 @@ import { sheet, figure, panel, outcome, toast } from './components/sheet'
 import { callout as calloutEl, emptyState as emptyStateEl, skeletonList } from './components/bits'
 import {
   state, actions, owed, monthlyCost, monthlyEarn, holding, bucketTotal,
-  visibleNotifications, tradeFee, weakPin, ratePassword, type Activity,
+  tradeFee, weakPin, ratePassword, type Activity,
   requestQuote, quoteLive, settlement, grossOf, type Quote,
 } from './state'
 import { pinPad } from './components/pinpad'
@@ -360,34 +360,6 @@ export const SHEETS: Record<string, Builder> = {
     panel.querySelector('.sheet')?.classList.add('jump')
     panel.classList.add('scrim-top')     // a palette sits high, not centred
     return panel
-  },
-
-  /** The bell's panel. Reading one marks it read; the count on the bell drops
-   *  as you go, which is the whole point of a count. */
-  notifications: () => {
-    const list = visibleNotifications()
-    const unread = list.filter((n) => !n.read).length
-    const GLYPH = { money: icon.wallet, trade: icon.market, grow: icon.grow, security: icon.lock }
-    return sheet('Notifications',
-      h('div', { class: 'sheet-head', style: { marginTop: '-8px' } },
-        h('span', { class: 'muted', text: unread ? unread + ' unread' : 'All caught up' }),
-        unread
-          ? h('button', { class: 'link', text: 'Mark all read',
-              on: { click: () => actions.readAllNotifications() } })
-          : null),
-      list.length
-        ? h('div', { class: 'sheet-list' },
-            ...list.map((n) =>
-              h('button', {
-                class: 'sheet-row' + (n.read ? ' read' : ''),
-                on: { click: () => actions.readNotification(n.id) },
-              },
-                h('span', { class: 'mark', html: GLYPH[n.kind]() }),
-                h('span', { class: 'two-line' },
-                  h('span', { class: 't-body-strong', text: n.title }),
-                  h('small', { text: n.body })),
-                h('span', { class: 'muted t-caption nowrap', text: when(n.at) }))))
-        : emptyStateEl('Nothing yet', 'Payments, orders and sign ins show up here.', undefined, 'history'))
   },
 
   /** Change who a payment goes to, without leaving the dialog. */

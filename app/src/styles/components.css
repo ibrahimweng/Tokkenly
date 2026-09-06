@@ -177,6 +177,9 @@
 .chip {
   height: 32px; padding: 0 16px; border-radius: var(--r-pill);
   background: var(--control); color: var(--muted); font-size: 13px; font-weight: 600;
+  /* A chip can carry a count beside its label. Inline-flex rather than the
+     block default, so the two sit on the baseline instead of stacking. */
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
 }
 .chip[aria-pressed='true'] { background: var(--inverse); color: var(--on-inverse); }
 .chip-row { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -1644,6 +1647,50 @@ th.right .th-sort { flex-direction: row-reverse; }
   .set-row { padding: 14px 10px; gap: 12px; }
   .set-value { font-size: 13px; }
 }
+/* ------------------------------------------------------- notifications ----
+   The bell's panel, unpacked onto Activity. It borrows the settings row —
+   a mark, two lines and a chevron is the same anatomy — but its second line
+   is a sentence rather than a value, so it wraps where a setting's does not.
+   Read rows stand down; they are still there, and still worth a second look
+   at 2am, but they are not what the screen is for. */
+.alert-list { display: flex; flex-direction: column; gap: 4px; }
+.head-state { display: flex; align-items: center; gap: 12px; }
+.set-row.alert { align-items: flex-start; padding: 12px; }
+.set-row.alert .mark { background: var(--control); margin-top: 1px; }
+.set-row.alert .who { gap: 14px; align-items: flex-start; }
+.set-row.alert .two-line small { white-space: normal; }
+.set-row.alert .set-chev { margin-top: 8px; }
+.set-row.alert > .t-caption { margin-top: 3px; }
+/* On a phone the title is the line worth reading, so it wraps and the time
+   drops under it. The other way round — which is what the settings row does by
+   default — gave "Adaeze Okonk…" over three lines of the sentence beneath it. */
+@media (max-width: 899px) {
+  /* Grid rather than a wrapping flex row: with flex the chevron dropped to a
+     line of its own whenever the title wrapped, which is exactly the rows
+     where it was most needed. */
+  .set-row.alert {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 12px; row-gap: 2px;
+  }
+  .set-row.alert .two-line > * { white-space: normal; }
+  .set-row.alert .who { grid-area: 1 / 1; }
+  .set-row.alert .set-chev { grid-area: 1 / 2; align-self: start; margin-top: 6px; }
+  .set-row.alert > .t-caption { grid-area: 2 / 1 / 3 / 3; padding-left: 46px; margin-top: 0; }
+}
+.set-row.read { opacity: 0.55; }
+.set-row.read .mark { background: var(--sunken); }
+
+/* The count the bell used to carry, now on the chip that opens them. */
+.chip-count {
+  min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px;
+  display: inline-grid; place-items: center;
+  background: var(--positive); color: var(--on-inverse);
+  font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums;
+}
+/* Selected, the chip is already inverse; a green pill on top of it would be
+   two loud things. It borrows the chip's own ink. */
+.chip[aria-pressed='true'] .chip-count { background: var(--inverse); color: var(--on-inverse); }
+
 /* A flag on a settings row is a call to action, not a value. Short by design,
    and it never shrinks, because "Do …" is not a call to anything. */
 .warn-chip {

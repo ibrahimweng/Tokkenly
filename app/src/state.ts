@@ -187,6 +187,12 @@ export interface Notif {
   body: string
   at: string
   read: boolean
+  /** What it is about. A notification that says money arrived and then does
+   *  nothing when you press it is a dead end — the row is the shortest route
+   *  anybody has to the receipt. `ref` opens that receipt in place; `to` is
+   *  for the ones that are not about a transaction. */
+  ref?: string
+  to?: string
 }
 
 export interface Bank {
@@ -360,15 +366,20 @@ export const state: State = {
   ],
   notifications: [
     { id: 'n1', kind: 'money', title: 'Adaeze Okonkwo paid you $120.00',
-      body: 'It is already in your wallet.', at: iso('2026-09-05T14:32'), read: false },
+      body: 'It is already in your wallet.', at: iso('2026-09-05T14:32'), read: false,
+      ref: 'TKN-8F2K90' },
     { id: 'n2', kind: 'trade', title: 'Your Apple order filled',
-      body: '1.87 shares at $224.10.', at: iso('2026-09-05T14:05'), read: false },
+      body: '1.87 shares at $224.10.', at: iso('2026-09-05T14:05'), read: false,
+      ref: 'TKN-8E4J77' },
     { id: 'n3', kind: 'grow', title: 'Earn paid you $0.16',
-      body: 'Interest lands every morning while your dollars sit in Earn.', at: iso('2026-09-04T00:05'), read: false },
+      body: 'Interest lands every morning while your dollars sit in Earn.', at: iso('2026-09-04T00:05'), read: false,
+      to: '/grow' },
     { id: 'n4', kind: 'security', title: 'New sign in on Pixel 7',
-      body: 'Lagos, Nigeria. If this was not you, sign out everywhere.', at: iso('2026-09-03T21:10'), read: true },
+      body: 'Lagos, Nigeria. If this was not you, sign out everywhere.', at: iso('2026-09-03T21:10'), read: true,
+      to: '/account/security' },
     { id: 'n5', kind: 'money', title: 'Payroll arrived',
-      body: '$1,500.00 from Kuda ending 8820.', at: iso('2026-08-29T08:00'), read: true },
+      body: '$1,500.00 from Kuda ending 8820.', at: iso('2026-08-29T08:00'), read: true,
+      ref: 'TKN-6C9H77' },
   ],
   seenIntro: false,
   cardWaitlist: false,
