@@ -8,7 +8,7 @@ import { table } from '../components/table'
 import {
   state, actions, holdingsValue, availableToBorrow, buyingPower, verified, LIMITS,
 } from '../state'
-import { usd, signed, when, pct, shares, activityLabel } from '../format'
+import { usd, signed, when, pct, shares, greeting, activityLabel } from '../format'
 import { go } from '../router'
 import { isMobile } from '../responsive'
 
@@ -157,8 +157,9 @@ function detailed(): HTMLElement {
 
   return shell(
     'home',
-    pageHeader(isMobile() ? '' : 'Good morning, ' + state.person.name.split(' ')[0],
-      h('div', { class: 'header-actions' }, jumpOpen(), viewToggle(), bell())),
+    pageHeader(greeting() + ', ' + state.person.name.split(' ')[0],
+      h('div', { class: 'header-actions' },
+        isMobile() ? null : jumpOpen(), viewToggle(), bell())),
     verifyTask(),
     h('div', { class: 'row' },
       h('div', { class: 'stack', style: { width: '308px', flex: 'none' } },
@@ -225,9 +226,12 @@ function gateway(): HTMLElement {
     h('header', { class: 'page-header' },
       h('div', { class: 'page-header-row' },
         h('div', { class: 'stack-12' },
-          h('h1', { class: 't-display', text: 'Good morning, ' + state.person.name.split(' ')[0] }),
+          h('h1', { class: 't-display', text: greeting() + ', ' + state.person.name.split(' ')[0] }),
           h('span', { class: 'muted', text: standing() })),
-        h('div', { class: 'header-actions' }, jumpOpen(), viewToggle(), bell()))),
+        h('div', { class: 'header-actions' },
+          // The phone's top bar already carries a search; two of them 40px
+          // apart is not twice as findable.
+          isMobile() ? null : jumpOpen(), viewToggle(), bell()))),
     verifyTask(),
     h('div', { class: 'headline' },
       h('div', { class: 'stack-8' },

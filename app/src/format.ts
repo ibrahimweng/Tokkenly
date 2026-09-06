@@ -36,6 +36,16 @@ export const shares = (n: number): string =>
 export const naira = (n: number): string =>
   '₦' + Math.round(n).toLocaleString('en-US')
 
+/** Morning, afternoon or evening, by the clock on the device. It was the
+ *  fixed string "Good morning", which is a small lie at eleven at night and
+ *  the kind that makes everything else on the screen easier to doubt. */
+export function greeting(): string {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Good morning'
+  if (hour < 18) return 'Good afternoon'
+  return 'Good evening'
+}
+
 export function when(iso: string): string {
   const d = new Date(iso)
   const now = new Date()

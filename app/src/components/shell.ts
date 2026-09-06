@@ -117,14 +117,17 @@ function whoami(): HTMLElement {
 
 /* ---------------- phone chrome ---------------- */
 
+/** The phone's chrome: who you are, and the three things that are the same on
+ *  every screen. It used to greet you here as well, so Home ran "Good morning,
+ *  Chinaza" twice within 180px — once in this bar and once as its own title —
+ *  and carried two search buttons 40px apart. A greeting belongs on the screen
+ *  that opens the day, not above the Activity list. */
 function topBar(): HTMLElement {
   const initials = state.person.name.split(' ').map((s) => s[0]).join('')
   return h('header', { class: 'topbar' },
     h('button', { class: 'avatar', text: initials, ariaLabel: 'Account',
       on: { click: () => go('/account') } }),
-    h('span', { class: 'who-line' },
-      h('small', { text: 'Good morning' }),
-      h('strong', { text: state.person.name.split(' ')[0] })),
+    h('span', { class: 'grow' }),
     h('button', { class: 'icon-btn', html: icon.search(), ariaLabel: 'Search Tokkenly',
       on: { click: () => openSheet('jump') } }),
     bucketButton(),
