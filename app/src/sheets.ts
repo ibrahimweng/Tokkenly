@@ -5,7 +5,7 @@ import { callout as calloutEl, emptyState as emptyStateEl, skeletonList } from '
 import {
   state, actions, owed, monthlyCost, monthlyEarn, holding, bucketTotal,
   visibleNotifications, tradeFee, weakPin, ratePassword, type Activity,
-  requestQuote, quoteLive, type Quote,
+  requestQuote, quoteLive, settlement, type Quote,
 } from './state'
 import { pinPad } from './components/pinpad'
 import { find, discount } from './catalogue'
@@ -79,6 +79,13 @@ function review(opts: {
     // payment landed when nothing left the building.
     if (!state.online) {
       refuse('No connection, so this has not been sent. Nothing has left your account. Try again when you are back.')
+      return
+    }
+    // The other side can say no, and when it does nothing is written: the
+    // ledger is not touched, the sheet stays where it is, and the reason is on
+    // screen rather than in a toast that has gone by the time you look up.
+    if (settlement(opts.amount ?? 0) === 'declined') {
+      refuse('Your bank declined this one. Nothing has left your account. Check with them, or try a smaller amount.')
       return
     }
     // A quote that ran out between the sheet opening and the button being
@@ -249,12 +256,25 @@ function review(opts: {
   )
 }
 
+/** The end of a flow. It used to assert success on every one of them; a
+ *  movement that has not come back confirmed says so instead, and says what
+ *  that means, because "we do not know yet" is a state a person can act on and
+ *  a false "Sent" is not. */
 function done(
   title: string,
   line: string,
   a: Activity,
   extra: [string, string][] = []
 ): HTMLElement {
+  if (!a.settled) {
+    return outcome(
+      'Still settling',
+      'We did not get a confirmation in time. It may still land, so it is in your activity as unsettled and nothing has been sent twice.',
+      [['Reference', a.ref], ['When', longWhen(a.at)], ...extra],
+      { label: 'Done', onClick: closeSheet },
+      { label: 'Watch it in Activity',
+        onClick: () => { closeSheet(); go('/activity?sheet=receipt&ref=' + a.ref) } })
+  }
   return outcome(
     title,
     line,

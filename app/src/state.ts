@@ -434,6 +434,33 @@ export const nairaAside = (dollars: number): string | null => {
   return `About ${naira(dollars * state.ngnPerUsd)} at today\u2019s indicative rate`
 }
 
+/* ------------------------------------------------------------ settlement --
+   Every flow in this product succeeded. There was no declined payment, no
+   timeout, no reversal, and toast() carried an 'error' tone that nothing ever
+   called — which meant the one thing people actually judge a money app on,
+   how it behaves when something goes wrong, had never been designed.
+
+   Which movements fail is deterministic rather than random. A prototype that
+   declines one payment in ten is unusable for a demo and untestable in a
+   suite; a rule you can aim at makes every path reachable on purpose. The
+   convention is the one payment sandboxes use — a magic value — carried on
+   the cents, so any amount can be turned into a failure by changing the
+   pennies:
+
+     .99  the bank says no. Nothing moves.
+     .98  no answer in time. It may still land, so it is recorded as
+          unsettled rather than claimed either way.
+
+   Everything else settles. */
+export type Settlement = 'ok' | 'declined' | 'pending'
+
+export function settlement(amount: number): Settlement {
+  const cents = Math.round(Math.abs(amount) * 100) % 100
+  if (cents === 99) return 'declined'
+  if (cents === 98) return 'pending'
+  return 'ok'
+}
+
 /* ----------------------------------------------------------- your money --
    A figure that is yours, which the privacy switch can take off the screen.
    One function, so a balance somebody forgot to cover is not one call site
@@ -565,10 +592,13 @@ function changed(): void {
 }
 
 function record(a: Omit<Activity, 'ref' | 'at' | 'settled'> & Partial<Activity>): Activity {
+  // A movement that left the building can come back unconfirmed. Interest and
+  // moves between your own buckets cannot: there is nobody else in them.
+  const outward = a.kind === 'payment' || a.kind === 'trade'
   const entry: Activity = {
     ref: a.ref ?? reference(),
     at: a.at ?? new Date().toISOString(),
-    settled: a.settled ?? true,
+    settled: a.settled ?? (outward ? settlement(a.amount) !== 'pending' : true),
     kind: a.kind,
     who: a.who,
     type: a.type,
