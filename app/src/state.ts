@@ -193,6 +193,11 @@ export interface Device {
 
 export interface State {
   signedIn: boolean
+  /** Whether the browser believes it can reach the network. Not a guarantee —
+   *  navigator.onLine is true on a wifi that goes nowhere — but it catches the
+   *  common case, and on the connections this product is for the common case
+   *  is most of them. Kept in state so every screen reads one answer. */
+  online: boolean
   /** Whether this app session has been unlocked. Kept in sessionStorage, not
    *  localStorage: an unlock that outlives the tab is not a lock, and a lock
    *  that outlives a reload of a tab you never closed is an annoyance. The
@@ -300,6 +305,7 @@ const today = (): string =>
 
 export const state: State = {
   signedIn: true,
+  online: typeof navigator === 'undefined' ? true : navigator.onLine,
   unlocked: false,
   prefs: { ...DEFAULT_PREFS, notify: { ...DEFAULT_PREFS.notify } },
   security: { ...DEFAULT_SECURITY },
@@ -450,6 +456,21 @@ export function takeQuote(): Quote {
 
 export const quoteLive = (q: Quote): boolean => q.until > Date.now()
 
+/** How long asking for a rate takes. The only thing in this prototype that
+ *  models a round trip, and it is the right one to model: a rate is the one
+ *  figure the product cannot know on its own, and the moment it has to fetch
+ *  one is the moment a dropped signal costs somebody money. */
+export const QUOTE_MS = 450
+
+export function requestQuote(): Promise<Quote> {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      if (!state.online) reject(new Error('offline'))
+      else resolve(takeQuote())
+    }, QUOTE_MS)
+  })
+}
+
 /* ------------------------------------------------------------ the limits --
    One place, so the card that states a limit and the thing that enforces it
    are the same number. */
@@ -539,6 +560,14 @@ function record(a: Omit<Activity, 'ref' | 'at' | 'settled'> & Partial<Activity>)
 }
 
 export const actions = {
+  /** The connection came or went. Nothing else in the app polls for this:
+   *  the browser tells us, and every screen re-reads from here. */
+  setOnline(v: boolean) {
+    if (state.online === v) return
+    state.online = v
+    changed()
+  },
+
   readNotification(id: string) {
     const n = state.notifications.find((x) => x.id === id)
     if (n && !n.read) { n.read = true; changed() }

@@ -1,11 +1,11 @@
 import { h } from './ui'
 import { icon } from './icons'
 import { sheet, figure, panel, outcome, toast } from './components/sheet'
-import { callout as calloutEl, emptyState as emptyStateEl } from './components/bits'
+import { callout as calloutEl, emptyState as emptyStateEl, skeletonList } from './components/bits'
 import {
   state, actions, owed, monthlyCost, monthlyEarn, holding, bucketTotal,
   visibleNotifications, tradeFee, weakPin, ratePassword, type Activity,
-  takeQuote, quoteLive, type Quote,
+  requestQuote, quoteLive, type Quote,
 } from './state'
 import { pinPad } from './components/pinpad'
 import { find, discount } from './catalogue'
@@ -50,7 +50,8 @@ function review(opts: {
   // The quote this sheet is honouring, if it is honouring one. Held in a
   // variable rather than read fresh, because that is the difference between a
   // rate that is held and a rate that merely says it is.
-  let quote: Quote | null = opts.hold ? takeQuote() : null
+  // Null until the rate has been fetched. A quote is asked for, not assumed.
+  let quote: Quote | null = null
   const rowsNow = (): [string, string][] =>
     opts.hold && quote ? opts.hold.rows(quote) : opts.rows
   const actionNow = (): string =>
@@ -60,13 +61,31 @@ function review(opts: {
     else opts.onConfirm()
   }
 
+  // Why this confirmation cannot go through, if it cannot. Sits under the
+  // button and takes its place in the flow, rather than arriving as a toast
+  // that has gone by the time you look up.
+  const refusal = h('div', { class: 'hold expired', hidden: true })
+  const refuse = (why: string) => {
+    refusal.hidden = false
+    refusal.replaceChildren(h('span', { html: icon.alert() }), h('span', { text: why }))
+  }
+
   const button = h('button', { class: 'btn btn-primary', text: actionNow() })
   button.addEventListener('click', () => {
     if (button.classList.contains('is-busy') || button.hasAttribute('disabled')) return
+    // Nothing may move while there is no connection. Every one of these
+    // confirmations writes to a local ledger and reports success, which on a
+    // dropped signal is the worst thing a money app can do: tell somebody a
+    // payment landed when nothing left the building.
+    if (!state.online) {
+      refuse('No connection, so this has not been sent. Nothing has left your account. Try again when you are back.')
+      return
+    }
     // A quote that ran out between the sheet opening and the button being
     // pressed must not be spent. The countdown below normally takes the button
     // away first; this is the floor under it.
     if (quote && !quoteLive(quote)) return
+    refusal.hidden = true
     // Money takes a moment to move. The button says so, rather than pretending
     // the ledger changed the instant it was pressed. Figma Button State=Loading.
     button.classList.add('is-busy')
@@ -128,9 +147,44 @@ function review(opts: {
     const el = sheet(
       opts.title,
       figure(opts.figureLabel, opts.figureValue),
-      rows, clock, foot)
+      rows, clock, refusal, foot)
 
     let timer = 0
+
+    /** Asking. The rows are a skeleton rather than an empty panel, because the
+     *  shape of the answer arriving is the difference between a slow screen and
+     *  a broken one — and this was the component the product had written and
+     *  never once called. */
+    const ask = (): void => {
+      clearInterval(timer)
+      quote = null
+      refusal.hidden = true
+      rows.replaceChildren(skeletonList(3))
+      clock.className = 'hold'
+      clock.replaceChildren(h('span', { html: icon.info() }),
+        h('span', { text: 'Getting you a rate.' }))
+      foot.replaceChildren()
+      requestQuote().then((q) => { quote = q; draw() }).catch(fail)
+    }
+
+    /** It did not arrive. Says which of the two reasons it was, and offers the
+     *  only thing that helps. Nothing has moved: the confirm button does not
+     *  exist in this state, so there is nothing to press by mistake. */
+    const fail = (): void => {
+      clearInterval(timer)
+      // The skeleton goes with the attempt. Leaving it under an error message
+      // says "still loading" and "it failed" at the same time.
+      rows.replaceChildren()
+      clock.className = 'hold expired'
+      clock.replaceChildren(h('span', { html: icon.alert() }),
+        h('span', { text: state.online
+          ? 'Could not get a rate just now. Nothing has been sent.'
+          : 'No connection, so there is no rate to hold. Nothing has been sent.' }))
+      foot.replaceChildren(h('button', {
+        class: 'btn btn-secondary', text: 'Try again', on: { click: ask },
+      }))
+    }
+
     const draw = (): void => {
       rows.replaceChildren(panel(...rowsNow()))
       button.textContent = actionNow()
@@ -168,11 +222,10 @@ function review(opts: {
       // The button goes rather than greying: a dead control you can still
       // press is how a stale rate gets spent.
       foot.replaceChildren(h('button', {
-        class: 'btn btn-primary', text: 'Get a new rate',
-        on: { click: () => { quote = takeQuote(); draw() } },
+        class: 'btn btn-primary', text: 'Get a new rate', on: { click: ask },
       }))
     }
-    draw()
+    ask()
     return el
   }
 
@@ -182,6 +235,7 @@ function review(opts: {
       figure(opts.figureLabel, opts.figureValue),
       panel(...opts.rows),
       calloutEl(opts.note),
+      refusal,
       button)
   }
 
@@ -190,6 +244,7 @@ function review(opts: {
     figure(opts.figureLabel, opts.figureValue),
     panel(...opts.rows),
     calloutEl(opts.note),
+    refusal,
     pinGate()
   )
 }

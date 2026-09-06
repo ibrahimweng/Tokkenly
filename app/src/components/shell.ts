@@ -169,13 +169,26 @@ export function renderBase(fn: () => HTMLElement): HTMLElement {
   try { return fn() } finally { underOverlay = false }
 }
 
+/** A bar across the top when there is no connection. It says what still works
+ *  as well as what does not, because "offline" on its own reads as "the app is
+ *  broken" when in fact everything you can read is still here — it is only
+ *  moving money that has to wait. Announced, because a person who cannot see
+ *  the bar is exactly the person who most needs to know before they press a
+ *  button that will not work. */
+function offlineBar(): HTMLElement | null {
+  if (state.online) return null
+  return h('div', { class: 'offline-bar', role: 'status', ariaLive: 'polite' },
+    h('span', { class: 'ic', html: icon.alert() }),
+    h('span', { text: 'No connection. You can still look around; moving money has to wait.' }))
+}
+
 export function shell(active: Place, ...bands: (Node | false | null)[]): HTMLElement {
   const content = h('main', { class: 'content' })
   append(content, bands)
   if (isMobile()) {
-    return h('div', { class: 'screen' }, topBar(), content, rail(active))
+    return h('div', { class: 'screen' }, offlineBar(), topBar(), content, rail(active))
   }
-  return h('div', { class: 'screen' }, sidebar(active), content)
+  return h('div', { class: 'screen' }, sidebar(active), offlineBar(), content)
 }
 
 /** Where you are, as a trail you can step back up. Drawn from the registry,

@@ -131,6 +131,13 @@ addEventListener('keydown', (e) => {
   }
 })
 
+// The one genuinely asynchronous fact in the product: whether there is a
+// connection. On a Lagos commute this changes several times a trip, and a
+// money app that does not notice will happily tell somebody a payment went
+// through while the phone was holding no signal at all.
+addEventListener('online', () => actions.setOnline(true))
+addEventListener('offline', () => actions.setOnline(false))
+
 recall()
 applyTheme()
 subscribe(() => render(current()))

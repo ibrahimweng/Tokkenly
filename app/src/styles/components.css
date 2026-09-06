@@ -1450,3 +1450,19 @@ th.right .th-sort { flex-direction: row-reverse; }
   .whoami { justify-content: center; padding: 8px 0; }
   .whoami .two-line, .whoami .muted { display: none; }
 }
+
+/* No connection. Full width above everything, in the warning tint, and it
+   holds a place in the layout rather than floating: a bar that covers the
+   first line of the page to tell you the page is fine is its own small joke. */
+.offline-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 20px;
+  background: var(--tint-warning); color: var(--warning);
+  font-size: 13px; line-height: 18px; font-weight: 600;
+}
+.offline-bar .ic { flex: none; }
+@media (min-width: 900px) {
+  /* Beside the sidebar rather than over it, so the rail stays reachable. */
+  .screen > .offline-bar { position: fixed; top: 0; left: var(--sidebar-w); right: 0; z-index: 40; }
+  .screen:has(> .offline-bar) > .content { padding-top: 62px; }
+}
