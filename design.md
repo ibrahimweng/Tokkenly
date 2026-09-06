@@ -4206,3 +4206,510 @@ because the sweep did not include the sign-in screens. It does now.
   from — which the button does not.
 - Face ID is a button that succeeds after half a second. WebAuthn would make
   it real and is out of scope for a prototype with no server.
+
+## 11g. An outside pass, and four tiers of it built
+
+The brief was to come at this the way a design associate brought in to make a
+product market-ready would: criticise everything, name what is wrong rather
+than what could be nicer, and rank it. The pass produced forty-four numbered
+findings across five tiers, ordered by what a person loses if it is not fixed
+rather than by how hard it is. Tiers 0 to 3 are built and are what follows;
+tier 4 is accessibility and tier 5 is finish.
+
+The tiering rule worth keeping: **tier 0 is not "the important ones", it is the
+ones where the product says something untrue.** Everything in it was a screen
+stating a number that was wrong, or a control that did not do what it said. A
+thing that is merely ugly waits.
+
+### 11g.1 Six things that were wrong, not weak
+
+**A button that shrinks is a height that was a wish.** `.btn` set 56px and was
+almost always the last child of a flex column — a sheet, a card, a composer —
+and a flex item shrinks along the main axis unless it is told not to. Measured:
+the buy sheet's confirm was 30px on a 390 phone, and Send's was 20px and below
+the fold on a 1366×768 laptop. Both of them the one control their screen exists
+to offer. `flex: none`, and anything that genuinely needs to flex says so after
+the rule.
+
+**A composer opened above its own ceiling.** The screen handed it a comfortable
+figure — $500 of a share, $300 out to a bank — without knowing what the account
+is allowed to move, and an unverified account is allowed $250. So the field
+read $500, the receipt priced $500, and the button was dead, with nothing on
+screen saying why: the sentence that explains a cap only appeared once you had
+touched something. It opens at `min(initial, max)` now and the first paint
+carries the reason when the opening figure had to come down. Buy and Withdraw
+both said DISABLED on first load for every new account.
+
+That sentence costs about 38px, which pushed the buy sheet past the bottom of a
+phone once the button was allowed its real height — so the action stops taking
+part in the scroll and sticks to the foot of the sheet. The fit was a
+coincidence anyway, one row away from breaking.
+
+**One account, two totals.** Simple showed cash, Earn and holdings under TOTAL
+PORTFOLIO. Detailed showed the holdings alone, under no label, with the day's
+move and the total gain as literals. The toggle appeared to delete $3,720,
+disagreed with itself about the day by $3.50, and the two literals would have
+gone on saying +$142.60 and +$1,840.60 however the holdings moved. Detailed
+derives all three now, and reads total gain off the range table its own chart
+draws from.
+
+**A price was a fact about the browser window.** The series was generated at
+whatever bar count the row had room for, so Apple's year high came out $224.50
+at 1440, $224.54 at 1280, $224.69 at 1100 and $224.55 on a phone. Reloading
+agreed with itself only because the generator is seeded; resizing did not, and
+the same person checking the same share on a laptop and then a phone was shown
+two different histories. The range is built at a fixed resolution now and
+folded into however many candles the width can hold — the buckets partition the
+whole series and drop nothing, so both ends, the high and the low come out the
+same at every width.
+
+The caption had a second fault in the same sentence: its baseline was `vals[0]`,
+which holds closes, so the dollar half measured close-to-now while the
+percentage beside it measured open-to-now. With both fixed, Home's all-time
+caption and its Total gain agree: +$3,204.16 (+24.6%) in each.
+
+**Home said nothing was waiting on an account that had not verified.** The
+standing line was the fixed string "Everything is settled. Nothing needs your
+attention." — on an account whose limits were a tenth of what they could be and
+for whom Buy and Withdraw were both shut because of it. The line reads state
+now, and the task sits on Home in both views. It is not dismissible: it has two
+flows shut, and the way to be rid of it is to do it.
+
+Grow had the same shape. The hero was labelled "In Grow" and showed the Earn
+balance alone while $380 of borrowing and $8.90 of interest were on the books
+and named nowhere on the screen.
+
+**A limit that stops the safer thing.** Sending, adding money, converting out
+and buying all answered to the movement ceiling. Drawing on the credit line did
+not, so an unverified account could take a $1,150 loan while being stopped from
+buying $300 of a share. A drawdown puts money in the wallet that was not there
+before, so it crosses the boundary a deposit crosses; it answers to the same
+ceiling now. Repaying and moving in and out of Earn stay uncapped, because
+those are your own money moving between your own buckets and a limit that
+blocked a repayment would hold somebody at 9.4% for the sake of a cap meant to
+protect them. The rule is written beside `movementCeiling()` so the next flow
+added has somewhere to look.
+
+64. **A ceiling the opening figure ignores is a screen arguing with itself.**
+    Three surfaces stated the same transaction at once — the field, the
+    receipt and the button — and only the button knew about the cap, so it
+    expressed the disagreement as a dead control with no explanation.
+
+65. **A figure that moves with the window is a fact about the window.** Nothing
+    about the year high changed between 1100 and 1440; the sampling did. Any
+    figure read off generated data has to be read off the same data at every
+    size, or it is describing the renderer.
+
+### 11g.2 Money that adds up
+
+Tier 1 was arithmetic and vocabulary: seven places where the figures were
+individually defensible and collectively incoherent.
+
+**Money you have and money you could owe do not add up.** The wallet hero drew
+cash, Earn and "Could borrow" as three segments of one bar and totalled all
+three: "$5,200.00 in total" on an account holding $3,720. A credit limit
+rendered as a third kind of balance, same unit, same scale, with a sentence
+underneath saying so in words. The bar is what you hold now; borrowing capacity
+keeps its place, because it is what turns a balance into buying power, but it
+is named as borrowing. Buying power was also printed twice, 60px apart.
+
+**Borrowing is money in that is not yours.** Rule 43 has two cases, green for
+money in and neutral for money out, and a drawdown satisfies the first — the
+wallet does go up — so $500 borrowed at 9.4% rendered exactly like a $1,500
+payday in the list where a person reviews what happened to their money. Three
+cases now: it keeps the plus, because the money arrived, and loses the green,
+because it is a debt. The test lives next to `signed()` and `amount()` takes
+the entry rather than the figure, so a call site cannot decide for itself which
+case it is in — which is what rule 43 was about.
+
+**Every cost in money, on the screen where you decide.** The buy composer
+quoted the gap to the real share as a bare percentage among dollar figures: the
+one cost on the screen that is not a fee, and the only one you could not read
+in money. It says both now, "$0.42 · 0.17%", and stays out of the total because
+it is inside the price per share rather than a charge on top. Add money and
+Withdraw showed no fee row at all, against a pitch that promises "the amount,
+the rate, the fee, and exactly what you receive, before you confirm". And the
+receipt asserted "Fee: None" on every entry including the trades that charged
+half a per cent — the one document a person keeps, wrong about the one thing it
+is kept for. The fee is recorded on the movement now rather than recomputed, so
+a receipt from last month states the fee that was charged then.
+
+**The gap to the real share was printed three ways.** The stock page put a sign
+and a word in one sentence — "−0.17% above $223.72" — which cannot both be
+true. The market table printed a bare "−0.17%" in a column of prices, where a
+signed percentage reads as a price move: a buyer scanning it saw Apple down and
+Nvidia up, when it meant Apple's token costs 0.17% over the real share and
+Nvidia's is 0.42% under. The figure loses its sign and the word carries the
+direction.
+
+**A what-if that ignored the buy.** Composing $250 of Apple, the "If it moves"
+table read 23.42 shares in all three rows — the holding you arrived with. It
+projects the position the order would leave now: 24.5356 shares at $250,
+23.8662 at $100, moving as the amount moves.
+
+**One quantity, three renderings.** 2.2311 in the receipt, 23.42 in the card
+beside it, 23.42 sh in the table under that. Three renderings of one number
+read as three kinds of number, which is bad for a product whose whole
+proposition is owning a fraction of a share. `shares()` carries the rule: two
+decimals always so a column lines up, up to four more when the figure is small
+enough to need them. "sh" is gone.
+
+**A ninety-second hold with nothing behind it.** "The rate is held for ninety
+seconds once you confirm" had no clock, no expiry and no way to be given a new
+one — a sentence about a rate, on the two screens whose whole job is to be
+believed about a rate. A quote is a thing with an end now. When it runs out the
+confirm button is *replaced* by "Get a new rate" rather than greyed, because a
+dead control you can still press is how a stale rate gets spent. A re-quote
+steps through a fixed sequence rather than being drawn at random, so a figure
+on screen never moves on its own; it moves when you ask.
+
+Two faults surfaced building it. The held branch returned before the PIN gate,
+so a withdrawal over the ask-again figure would have gone through without it —
+the gate is a shared function now and is rebuilt per quote. And the withdrawal
+outcome reported the indicative rate rather than the one it honoured, which is
+the exact surprise a hold exists to prevent.
+
+66. **A cost stated as a percentage among dollar figures is the one cost on the
+    screen nobody can act on.** Every other line was money. The reader has to
+    stop and do arithmetic on precisely the number the product would rather
+    they did not look at.
+
+67. **A promise with no mechanism is worse than no promise.** Nothing enforced
+    the ninety seconds, so the sentence was load-bearing for trust and carried
+    by nothing at all.
+
+### 11g.3 The phone, and the middle of the range
+
+**The floating rail was covering content with a hard edge.** Measured at rest
+on a 390×844 phone: a whole Activity row — Nvidia, bought 26 August, −$380.00 —
+the borrow rate on Grow, the Dow figure on Invest and the Convert tile's own
+call to action. Covered flat, so the page did not look like it carried on
+underneath; it looked like it stopped. A fade says it carries on, behind the
+pill in the rail's own stacking context, deaf to the pointer. The reserved band
+at the foot of the scroll clears the fade as well as the rail.
+
+**Four unlabelled glyphs in a capsule is a memory test**, in a product whose
+thesis is teaching somebody their first share. The sidebar has said Home,
+Invest, Transfer and Grow in words since the start; the phone, where most of
+these people will be, said nothing. Icon over name, and the lit tab is told
+apart by its fill rather than by being fatter than its neighbours. Below 400
+the rail gives up its side gutters before it gives up a word — 360 is what most
+budget Android phones actually are, and "Transfer" is the longest of the four.
+
+**Nothing above the fold on the shopping screen was shoppable.** The first
+stock sat about 805px down an 844px screen, under a title, a search field, a
+paragraph repeating the title, seven filter chips on three rows, and three
+full-width cards for the S&P, the Nasdaq and the Dow. The paragraph goes, the
+chips become one scrolling row, the indices become a strip you push sideways,
+and both bleed to the edges so a card mid-scroll is not clipped by a gutter it
+cannot cross. The first company lands at 464px and four rows fit above the rail
+at 390 and at 360.
+
+**One greeting, one search.** Mobile Home said "Good morning, Chinaza" in the
+top bar and again as its own title 180px below, and carried two search buttons
+40px apart: roughly 200px of the screen with the least of it, spent saying
+things twice. And it was the fixed string "Good morning" at every hour of the
+day. A product asking to be believed about money should not be visibly wrong
+about what time it is.
+
+**Four ways to enter one number is indecision, not generosity.** A field, a
+drag-ruler, four quick chips and a keypad, stacked, pushing the confirm off the
+bottom. The phone keeps the keypad and the chips, which are the two a thumb
+wants; the ruler goes, because at 390 it is sixty-five unlabelled lines with no
+range, no unit and no scale. The buy sheet's content came down from 788px to
+732. The desktop keeps it, where it is the only way to move the figure without
+typing, and its caption now says what it does and where it stops.
+
+**The middle of the device range was designed for neither end.** There was one
+breakpoint, at 899, so a 900px window and a 1440px monitor got the same 240px
+sidebar and the same 96px gutters. On a 1024×768 iPad that left about 688px of
+content: the three doors on Home crushed to slots, "Borrow or Lend" wrapped to
+two lines, the dot field cropped to a sliver. Between 900 and 1199 the sidebar
+keeps its places and gives up its width — icon over name, the way the phone's
+rail now reads — and the gutters come in to 32. Content at 1024 goes from 688px
+to 936. The promo card goes at this width rather than shrinking: a heading, a
+paragraph and a button squeezed into 72px is an advert nobody can read.
+
+68. **A range with one breakpoint has two designs and pretends to have one.**
+    Everything between them is an interpolation nobody looked at. The tablet
+    tier was not a new idea; it was the admission that 900 to 1199 existed.
+
+### 11g.4 What it does when it goes wrong
+
+**Nothing in the product knew whether there was a connection.** Every
+confirmation wrote to the ledger and reported success, so on a dropped signal —
+which on a Lagos commute happens several times a trip — the app would tell
+somebody a payment had landed while the phone was holding no signal at all.
+That is the worst thing a money app can say.
+
+The browser's own `online` and `offline` events write to state, and the bar
+says what still works as well as what does not, because "offline" alone reads
+as "the app is broken" when everything you can read is still there. Every
+review refuses in place, under the receipt, with the wallet unchanged and the
+URL still on the review. And the rate becomes a request: a quote is the one
+figure the product cannot know on its own, so it is the honest place to model a
+round trip — skeleton rows while it waits, two named reasons if it fails, no
+confirm button in that state so there is nothing to press by mistake.
+`skeletonList()` had been in the codebase since the start and had never once
+been called.
+
+**Every flow in this product succeeded.** No decline, no timeout, no reversal,
+and `toast()` carried an `'error'` tone nothing had ever called — so the thing
+people actually judge a money app on had never been designed. Two failures now,
+both in the one seam every confirmation passes through.
+
+Declined: the sheet stays where it is, the reason is on screen under the
+receipt rather than in a toast that has gone by the time you look up, and
+nothing is written.
+
+Unanswered is the honest one and the harder one. It may still land, so the
+movement is recorded unsettled rather than claimed either way. That turned on a
+whole chain the product had built and could never reach: Home's standing line
+says "One payment is still settling", the Activity row wears its Pending pill,
+the wallet's Still Settling card has something in it for the first time, and
+the receipt reads "Still settling. It usually clears within a minute." All of
+that UI existed. Nothing could produce the state it was for.
+
+Which movements fail is deterministic, on the cents, the way a payment sandbox
+uses a magic value: `.99` declines, `.98` goes unanswered. A prototype that
+declines one payment in ten is unusable for a demo and untestable in a suite.
+It is in the README so the team can aim at it.
+
+69. **A product where nothing can fail has not designed the half people judge
+    it on.** Eleven screens of success and no failure state is not an
+    optimistic product, it is an unfinished one — and the giveaway was a whole
+    chain of pending UI that no code path could reach.
+
+### 11g.5 Risk where it is taken, and a balance you can cover
+
+**The best writing in the product was two screens from where it mattered.**
+`/disclosures` says what a tokenised share actually is, that it is held with a
+regulated custodian, that you get the exposure and not the voting rights, what
+happens to your money if the custodian or Tokkenly fails, and who to escalate
+to. It was reachable from two text links buried in settings. It is now under
+the button that takes the risk — buying, selling and borrowing each carry a
+quiet line to it beneath the confirm — and under the sign-in and sign-up cards.
+
+Deliberately not on Add money, Withdraw or Send. Those move your own money
+between your own accounts and carry none of what that page describes, and noise
+is how people learn to skip the ones that matter.
+
+**Balances come off the screen.** People here check their money on buses and in
+queues, and a $16,229 figure at 48px is readable from the next seat. One
+function decides what is covered, so a balance somebody forgot to wrap is not
+one call site away from undoing the whole thing. What is yours goes — the
+portfolio, cash, Earn, what you owe, every amount in Activity, and the naira
+line under a dollar figure, because covering one and printing the other in
+naira covers nothing. What is not yours stays: share prices, index levels, the
+rates, the limits. Hiding public figures protects nobody and makes the screen
+useless. The switch sits next to the figure it covers as well as in
+Preferences, because the moment you want it is the moment somebody sits down
+beside you and Account is four taps away. Tooltips and aria-labels are covered
+too: a balance read out to a screen reader is still a balance on the screen.
+
+### 11g.6 Two charts, and naira as a currency
+
+**A balance is a line; a share is candles.** Home drew the portfolio as
+candlesticks — open, high, low and close, four numbers per period. A savings
+balance does not have an intraday range. It has a value, and the four numbers
+under the chart were filled with figures that meant nothing about it. It also
+made the busiest, most saturated block on Home out of the calmest data in the
+product, which is the wrong way round. The portfolio is a line now with a soft
+body under it and a mark where the money is; no OHLC row, because there is
+nothing honest to put in it. The stock page keeps its candles, because those
+four are real facts about a traded thing.
+
+**Naira is a currency, not an ornament.** The audit left this as a product
+decision; the call is that for a product whose README opens "Stablecoin and
+stocks, for Nigeria", naira is the unit people here think in and dollars are
+the thing they bought with it. It was an aside behind a toggle, real on two
+screens out of twenty-four, which is localisation done to a product rather than
+a product built for a place. Every balance the app states carries it now.
+
+And the rate stops being a fact of nature. It is the one number here a person
+cannot check for themselves, so Transfer says what it is and when it was taken:
+"₦1,500 to the dollar · indicative, quoted 09:40". A rate with no time and no
+name on it is a rumour.
+
+The preference stays, because wanting one currency on screen is a real
+preference rather than a default to be argued with — and because the decision
+reverses cleanly if it is the wrong one.
+
+70. **A preference is where a decision goes when nobody will make it.** Naira
+    was a switch because deciding whether this is a Nigerian product or an
+    American one with a Nigerian option is harder than shipping both. Two of
+    the twenty-four screens honoured the switch, which is the tell: nobody
+    owned it.
+
+### 11g.7 A palette that knows about things, and motion that carries the eye
+
+**The palette did not know the catalogue.** Typing "Microsoft" found nothing
+unless you already owned some, which is the wrong way round for the search box
+on a shop. Every company and fund is findable now, by ticker, by name or by
+what it is — "health" finds Johnson & Johnson — and the ones you hold stay
+under Your shares rather than appearing twice. An amount is a thing you can
+type as well: "50" offers Send, Add and Withdraw with the figure already in
+them.
+
+Only when the *whole* query is an amount. Stripping the digits out of anything
+turned the reference TKN-8F2K90 into "Send $8,290.00" — a suggestion nobody
+asked for, attached to a number that does not exist. And hits were in source
+order, so the destination registry always outranked the company being looked
+for; a label that starts with what you typed comes first.
+
+**Motion had one curve and one duration and no choreography.** That discipline
+was already right. What was missing is that after a payment the balance simply
+became a different number, with nothing connecting the figure you were looking
+at to the one you are looking at now. The balance travels now — sending $120
+walks the wallet from $2,480.00 through $2,439.54, $2,403.26 and $2,383.83 —
+and the portfolio line draws itself, its ground fading up under it with the end
+mark arriving last. `pathLength` normalises the stroke so a year and a day take
+the same time to draw. Both stop under `prefers-reduced-motion`.
+
+**The first version of that was half broken and the suite half hid it.** The
+app rebuilds the whole tree twice in a row, once for the state and once for the
+route, and the discarded render was writing the *destination* into the memory
+on its way out. Whichever render got a frame first decided the outcome: usually
+the survivor read from and to as the same number and painted the answer, so
+Home travelled and the wallet jumped. Occasionally it raced the other way and
+the wallet travelled for real — which is when `bucket.mjs`, reading
+`.hero-figure` a fixed 350ms after a navigation and comparing to within five
+cents, failed. One defect, showing up as a missing animation on half the
+screens and as an intermittent test failure on the other half.
+
+The memory holds the figure actually on screen now, updated frame by frame, so
+a discarded render leaves it where the eye last saw it and the next one carries
+on from there. A generation per key stops two runs writing to one key at once.
+
+71. **Motion earns its place by connecting two states, not by decorating one.**
+    Everything here already animated; nothing carried anything across a change.
+    The cheapest thing in interface design that reads as expensive is also the
+    only one a person feels without being able to name it.
+
+### 11g.8 An intro that ends on a choice
+
+The intro made four claims and then handed you an empty market with a button
+saying "Buy your first share", which is not a thing the market screen does. A
+person finished onboarding having done nothing, holding four claims they had no
+way to check, on a screen answering a question they had not asked.
+
+**The last step stops talking.** It offers the three companies the market
+already puts forward, each with what the starting amount actually buys of it —
+`$50 buys 0.223115 shares` — which is screen one's claim made good on something
+you can press. Pressing one puts it in the bucket, ends the intro and lands on
+the bucket with the pick in it: one deliberate press from a first purchase,
+with the amount and the total in front of you.
+
+**Picking is not buying, and it stays that way.** Onboarding is the worst place
+to slide somebody into a financial commitment, so the money decision stays in
+the composer where the cost is stated. The screen says nothing is bought until
+you say so, and the suite proves it by reading the wallet before and after.
+
+**Screen one stopped quoting the person's balance.** It ended on "You have
+$2,480.00 ready to spend." — an account balance, to the cent, told to somebody
+who has not added a naira. On a real first run it is either untrue or it is
+somebody else's money, and either way it teaches a person that the figures here
+are decoration. The claim above it is about a share price, so it says the share
+price and what a dollar buys of one, which anybody can go and check.
+
+The pick step drops the dot art and lays the three across the width. The other
+steps carry decoration bottom-right and a solid Next; this one is deliberately
+unlike them, because it asks rather than tells — and a pressable card floating
+on a field of dots reads as ornament, which is the opposite of what these are.
+
+72. **An intro that ends on a slogan ends nowhere.** Four claims and a button
+    to a screen that cannot honour it is a carousel, not an onboarding. The
+    test of the last step is whether anything is different afterwards.
+
+### 11g.9 What the suites were not testing
+
+**Six suites were driving the lock screen.** The app lock landed and six of the
+seven suites that build their own page stopped seeding the unlock, so every
+route they visited was the PIN pad. Three failed loudly. The other three did
+not, which was worse:
+
+    fit    reported "no sheet" for all nine composers, and passed
+    phone  measured overflow on 23 routes, all of them the lock screen
+    walk   screenshotted 24 routes, all of them the lock screen
+
+Fixing that surfaced staleness underneath from changes that predate the lock:
+`flows` read the wallet's cash from `.t-display-xl`, which the hero stopped
+using when it was rewritten; walked the rail by its old names, Wallet, Market
+and History; clicked two controls that had moved to their own addresses when
+Account became an index; and read the holding from "the first `.kv` in the side
+column", which the token card above it turned into Liquidity — an unchanging
+number reported twice as the holding, without ever failing.
+
+**Two more were reporting on nothing.** `fit` measured `/send` on the phone,
+which is the list of people rather than a composer, so it printed "no sheet"
+and checked no fit at all; it measures the sheet one step in now. And `walk`
+had no font refusal, so this sandbox's unreachable Google Fonts arrived in its
+ERRORS line as if the app had raised them.
+
+**And three were reading a figure while it moved.** `bucket`, `fees` and
+`trade` all compared the wallet before and after a movement, sampled a fixed
+350ms after a navigation — `trade` to within two cents. `seen.mjs` gained
+`settled()`, which polls until the text repeats itself and then takes it.
+
+**Contrast had never been measured on the intro at all.** `seen()` seeds a
+returning visitor, which is exactly what skips the intro, so the one part of
+the product that puts text on a green gradient was the one part never checked.
+The same shape of gap as 11f.37, where the sweep had never covered the sign-in
+screens: a suite's seeding decides what it can reach, and what it cannot reach
+is invisible rather than reported. Four steps, both themes, and the card under
+the pointer: 17 texts on the pick step, nothing below AA.
+
+73. **A gate that reports on a screen nobody asked it about is not a gate.**
+    Passing is not evidence. Three suites passed while looking at a PIN pad,
+    and the only thing that separated them from the three that failed was
+    whether their assertions happened to be satisfiable by the wrong screen.
+
+74. **Reading a figure that moves, at a fixed time, is a coin toss.** It was
+    stable only for as long as the animation was broken. Fixing the product
+    would have broken three suites; both faults came from the same commit.
+
+### 11g.10 Where the audit was wrong
+
+An audit is a document with claims in it, and it does not get to skip the
+check it is applying. Three findings did not survive contact with the code.
+
+**The buy premium was misquoted.** The audit said the gap to the real share was
+"about 85¢" on a $250 order and implied it was missing from the total. It is
+$0.42, and it is correctly absent from the total: it is embedded in the price
+per share rather than added on top, and the total is what leaves the wallet.
+What was actually wrong was quoting it as a bare percentage — which is the
+finding that survived.
+
+**The palette already searched more than the routes.** The audit said it knew
+only the twenty-four destinations. It had searched holdings, people paid and
+receipt references since it was written. The real gaps were the catalogue and
+amounts.
+
+**The dot art is not generated.** The audit's item 30 assumed a formula and
+proposed replacing it with a meaningful one. `art.ts` holds three hand-composed
+12px grids lifted cell for cell from Figma 06 Desktop D01c with the accent
+cells placed by hand, and the file argues explicitly against generating them.
+The item is unbuilt and stays that way pending a decision, because "make the
+art mean something" is a proposal to redraw artwork somebody made deliberately.
+
+75. **The audit is not exempt from the audit.** Two of the three were wrong in
+    the direction that made the finding sound worse, which is the direction an
+    audit is biased in. Checking the three cost twenty minutes and removed one
+    item, corrected another and stopped a third from vandalising a deliberate
+    piece of work.
+
+### 11g.11 Still open
+
+- Tier 4 (accessibility, items 31–36) and tier 5 (finish, items 37–44) are not
+  started.
+- Item 30, the dot art, is deliberately unbuilt. See 11g.10.
+- Item 07, receive handles, needs a backend and a naming policy.
+- Rate history — a chart of the naira against the dollar, the missing half of
+  item 23 — needs a series the product does not have.
+- Everything in 11f.38 that has not been superseded still stands, and the file
+  is now further behind: Figma has none of the last four tiers either.
+- The tablet tier is defined by the sidebar and the gutters. Nothing has been
+  drawn for it in Figma, so 900–1199 exists in CSS and nowhere else.
+- `settlement()` decides failure on the cents. That is right for a prototype
+  and wrong for anything else, and the seam is one function wide when a real
+  backend arrives.
