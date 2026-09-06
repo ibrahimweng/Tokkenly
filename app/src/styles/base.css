@@ -106,7 +106,10 @@ ul { margin: 0; padding: 0; list-style: none; }
   .screen { display: block; }
   .content {
     gap: 24px;
-    padding-bottom: calc(var(--nav-h) + 48px);
+    /* The rail sits 32 up and is 64 tall, and the fade above it reaches
+       another 52. The last row of a list has to clear all three, or scrolling
+       to the bottom still leaves something dimmed under the gradient. */
+    padding-bottom: calc(var(--nav-h) + 84px);
   }
   .page-header-row { align-items: flex-start; }
   .page-header h1 { font-size: 22px; line-height: 28px; }

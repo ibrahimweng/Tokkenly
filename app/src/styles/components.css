@@ -300,6 +300,20 @@
   pointer-events: none;
 }
 .railbar > * { pointer-events: auto; }
+/* A floating bar is still a bar. Measured at rest on a 390x844 phone it was
+   covering a whole Activity row, the borrow rate on Grow, the Dow figure on
+   Invest and the Convert tile's own call to action — and covering them with a
+   hard edge, so the page looked like it stopped there rather than continued
+   underneath. The fade is what says it continues: the content dissolves into
+   the canvas before the pill instead of being cut by it. Behind the pill in
+   the rail's own stacking context, above the page, and deaf to the pointer. */
+.railbar::before {
+  content: '';
+  position: fixed; left: 0; right: 0; bottom: 0; height: 148px;
+  background: linear-gradient(to top, var(--canvas) 46%, transparent);
+  pointer-events: none;
+  z-index: -1;
+}
 .rail-pill {
   display: flex; gap: 4px; padding: 8px;
   background: var(--sunken); border-radius: 999px;
