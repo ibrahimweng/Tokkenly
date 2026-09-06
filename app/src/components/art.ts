@@ -12,6 +12,9 @@ export interface ArtSpec { cols: number; size: string[]; tone: string[] }
 
 const TONE: Record<string, string> = {
   a: 'var(--dot-dim)', b: 'var(--dot-mid)', c: 'var(--dot-lit)', p: 'var(--data-2)',
+  /* Not a composed tone. Nothing in the three fields is written as 'z'; it is
+     what a cell takes when the account has not woken it. */
+  z: 'var(--dot-sleep)',
 }
 
 /** 34 × 12 at 12px, so 408 × 144 drawn into the 400 × 140 Figma clips it to. */
@@ -113,7 +116,29 @@ export const BORROW: ArtSpec = {
 
 const CELL = 12
 
-export function dotArt(spec: ArtSpec): SVGSVGElement {
+/** A cell that is not awake keeps its place and its size and gives up its
+ *  tone. Every tone, to the same rung — the first version dimmed each one by a
+ *  step, which reads well until you notice that a dim cell has nowhere to go:
+ *  moving $1,000 into Earn changed that tile's level and changed not one pixel
+ *  of it, because the cells being woken were composed dim in the first place.
+ *  A gauge whose sensitivity depends on where the artist happened to put the
+ *  light is not a gauge. */
+const SLEEP = 'z'
+
+/** How much of a field is awake.
+ *
+ *  Never none of it. A field keyed straight to a proportion goes almost dark
+ *  on an account holding most of its money somewhere else, and two of the
+ *  three doors on Home would have read as broken rather than as informative:
+ *  the seeded account is 77% shares, 15% cash, 7.6% Earn. So the value moves
+ *  the level between a floor and the whole thing. At the top it is exactly the
+ *  field Figma drew — the composition is the top of the scale, not one variant
+ *  of it. */
+const FLOOR = 0.45
+export const level = (part: number, whole: number): number =>
+  FLOOR + (1 - FLOOR) * (whole > 0 ? Math.max(0, Math.min(1, part / whole)) : 0)
+
+export function dotArt(spec: ArtSpec, at = 1): SVGSVGElement {
   const NS = 'http://www.w3.org/2000/svg'
   const w = spec.cols * CELL
   const hgt = spec.size.length * CELL
@@ -127,17 +152,31 @@ export function dotArt(spec: ArtSpec): SVGSVGElement {
   svg.setAttribute('aria-hidden', 'true')
   svg.setAttribute('focusable', 'false')
 
-  spec.size.forEach((row, y) => {
-    for (let x = 0; x < spec.cols; x++) {
+  // Filled from the bottom, because that is the dense end of every one of
+  // these fields and the end they are anchored to. Counted in dots rather than
+  // in rows, so each step of the level adds the same amount of ink whatever
+  // shape the row happens to be — and crossed within a row rather than at its
+  // edge, so the boundary runs diagonally instead of drawing a line across the
+  // picture.
+  const dots = spec.size.reduce((n, row) => n + [...row].filter((ch) => ch !== '0').length, 0)
+  const wake = at >= 1 ? dots : Math.round(dots * Math.max(0, at))
+  let seen = 0
+
+  for (let y = spec.size.length - 1; y >= 0; y--) {
+    const row = spec.size[y]
+    for (let x = spec.cols - 1; x >= 0; x--) {
       const d = parseInt(row[x] ?? '0', 36)
       if (!d) continue
+      seen += 1
       const c = document.createElementNS(NS, 'circle')
       c.setAttribute('cx', String(x * CELL + CELL / 2))
       c.setAttribute('cy', String(y * CELL + CELL / 2))
       c.setAttribute('r', String(d / 2))
-      c.setAttribute('fill', TONE[spec.tone[y]?.[x] ?? 'b'] ?? TONE.b)
+      const tone = spec.tone[y]?.[x] ?? 'b'
+      const key = seen <= wake ? tone : SLEEP
+      c.setAttribute('fill', TONE[key] ?? TONE.b)
       svg.appendChild(c)
     }
-  })
+  }
   return svg
 }

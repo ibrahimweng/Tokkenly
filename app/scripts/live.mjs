@@ -227,5 +227,57 @@ console.log('WIDTH  the middle is drawn in a 1200 column, whatever the monitor')
   }
 }
 
+console.log('THE DOT FIELDS  decoration that has been given something to say')
+{
+  const p = await b.newPage({ viewport: { width: 1440, height: 1000 } })
+  await seen(p, { homeView: 'simple' })
+  p.on('pageerror', (e) => errs.push(String(e)))
+  await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
+  const read = async () => {
+    await p.goto(B + '/', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(600)
+    return p.evaluate(() => [...document.querySelectorAll('.gate')].map((g) => {
+      let awake = 0, asleep = 0
+      for (const c of g.querySelectorAll('circle')) {
+        if (/dot-sleep/.test(c.getAttribute('fill') ?? '')) asleep += 1
+        else awake += 1
+      }
+      return { says: g.querySelector('.gate-reads')?.textContent ?? '', awake, asleep }
+    }))
+  }
+  const before = await read()
+  ok('all three doors carry a field', before.length === 3)
+  // The three slices of one portfolio, one door each, so no two of them can
+  // be the same picture on an account with its money in more than one place.
+  ok('and each one says which slice it is keyed to',
+     before.every((g) => /% of your money in/.test(g.says)), before.map((g) => g.says).join(' | '))
+  ok('no two are at the same level',
+     new Set(before.map((g) => g.awake)).size === 3, before.map((g) => g.awake + '/' + (g.awake + g.asleep)).join(' '))
+  // A gauge that does not move is a picture. $1,000 out of cash and into Earn
+  // has to show up on the two doors it is about, and not on the third.
+  await p.goto(B + '/grow/earn', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(500)
+  const amt = p.locator('.amount-box input')
+  await amt.fill('1000'); await amt.dispatchEvent('input'); await p.waitForTimeout(250)
+  await p.locator('.btn-primary').first().click(); await p.waitForTimeout(500)
+  await p.locator('.scrim .btn-primary').first().click(); await p.waitForTimeout(1000)
+  await p.keyboard.press('Escape'); await p.waitForTimeout(300)
+  const after = await read()
+  ok('moving money wakes one field and quiets another',
+     after[1].awake < before[1].awake && after[2].awake > before[2].awake,
+     before.map((g, i) => `${g.awake}\u2192${after[i].awake}`).join(' '))
+  ok('and leaves the one it is not about alone', after[0].awake === before[0].awake)
+  ok('the words follow the field', after[2].says !== before[2].says,
+     `${before[2].says} \u2192 ${after[2].says}`)
+  // No account, no reading: the intro shows the field exactly as it is drawn.
+  const w = await b.newPage({ viewport: { width: 1440, height: 900 } })
+  await w.addInitScript(`try { localStorage.removeItem('tokkenly.prefs.v1'); sessionStorage.setItem('tokkenly.unlocked','1') } catch {}`)
+  await w.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
+  await w.goto(B + '/welcome/0', { waitUntil: 'domcontentloaded' }); await w.waitForTimeout(600)
+  ok('the intro shows the field as composed, with nothing asleep in it',
+     (await w.evaluate(() => [...document.querySelectorAll('.welcome-art circle')]
+       .filter((c) => /dot-sleep/.test(c.getAttribute('fill') ?? '')).length)) === 0)
+  await w.close()
+  await p.close()
+}
+
 console.log('\nERRORS: ' + (errs.length ? errs.join(' | ') : 'none'))
 await b.close()

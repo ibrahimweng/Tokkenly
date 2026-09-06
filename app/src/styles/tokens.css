@@ -32,6 +32,13 @@
   --dot-dim: #65656c;
   --dot-mid: #a6a6ad;
   --dot-lit: #dcdce0;
+  /* A fourth rung below the field's own three, for the part of a gateway tile's
+     field that the account has not woken. It has to be a rung nothing else uses,
+     because a cell that is asleep has to look asleep whatever tone it was
+     composed in — dimming each tone by one step left the change invisible
+     wherever the composition was already dim, which is most of the top of every
+     field. Visible against the card, and clearly quieter than --dot-dim. */
+  --dot-sleep: #3a3a40;
 
   /* A gridline is a landmark, not a mark. It sits one step off the card so it
      reads as behind the bars rather than among them. */
@@ -115,6 +122,8 @@
   --dot-dim: #b8b8b2;
   --dot-mid: #8a8a84;
   --dot-lit: #33333a;
+  /* Lighter still, because this ramp runs the other way on paper. */
+  --dot-sleep: #e2e2dc;
 
   /* A shadow on a light page is a real shadow, not a hole. */
   --shadow-hover: 0 6px 20px rgba(24, 24, 20, 0.14);

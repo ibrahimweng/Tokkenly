@@ -1,7 +1,7 @@
 import { h, link, countTo } from '../ui'
 import { icon } from '../icons'
 import { barChart, type Range } from '../components/chart'
-import { dotArt, BUY, CONVERT, BORROW, type ArtSpec } from '../components/art'
+import { dotArt, level, BUY, CONVERT, BORROW, type ArtSpec } from '../components/art'
 import { shell, pageHeader, bell, jumpOpen } from '../components/shell'
 import { card, cardHead, headLink, kv, amount, directionMark, privacyToggle } from '../components/bits'
 import { table } from '../components/table'
@@ -210,23 +210,40 @@ function detailed(): HTMLElement {
   )
 }
 
+/** What each door's field is keyed to, in words. Rounded to whole per cent
+ *  because that is the precision a field of dots can carry, and because a door
+ *  is not the place for two decimal places. */
+function whereItIs(part: number, whole: number, what: string): string {
+  if (whole <= 0) return 'Nothing here yet'
+  const share = Math.round((part / whole) * 100)
+  if (share === 0 && part > 0) return `Under 1% of your money ${what}`
+  return `${share}% of your money ${what}`
+}
+
 /** Figma 06 Desktop, D01c Home — gateway. Three tiles, 400 / 288 / 288 in a
  *  1008 column with 16 between them, each 300 tall with 28 of padding, and a
  *  dot field bleeding to the bottom edge. The first one is wider and carries
  *  the gradient, because buying a share is the thing this screen is for. */
 function gateway(): HTMLElement {
   const tile = (
-    opts: { title: string; sub: string; cta: string; to: string; art: ArtSpec; lead?: boolean },
+    opts: { title: string; sub: string; cta: string; to: string; art: ArtSpec
+            lead?: boolean; reads: string; at: number },
   ) => {
     const a = link(opts.to, 'card gate' + (opts.lead ? ' gate-lead' : ''))
     a.style.textDecoration = 'none'
     a.appendChild(h('div', { class: 'gate-words' },
       h('span', { class: 't-title', text: opts.title }),
-      h('span', { class: 'muted', text: opts.sub })))
+      h('span', { class: 'muted', text: opts.sub }),
+      // The field is decoration that has been given something to say, so what
+      // it says is written down as well. It stays aria-hidden and always will:
+      // a dot field is not a thing to read a figure off. The sentence is the
+      // reading; the field is the feeling of it. Up here with the words rather
+      // than at the foot of the tile, which is where the field is.
+      h('span', { class: 'gate-reads t-caption', text: opts.reads })))
     a.appendChild(h('span', { class: 'gate-cta' },
       h('span', { text: opts.cta }),
       h('span', { class: 'ic', html: icon.chevron() })))
-    a.appendChild(h('div', { class: 'gate-art' }, dotArt(opts.art)))
+    a.appendChild(h('div', { class: 'gate-art' }, dotArt(opts.art, opts.at)))
     return a
   }
   // Two rows, the way D01c has them: the greeting carries the name and the
@@ -262,17 +279,28 @@ function gateway(): HTMLElement {
       h('div', { class: 'headline-actions' },
         link('/send', 'btn btn-primary btn-wide', 'Send'),
         link('/receive', 'btn btn-secondary btn-wide', 'Receive'))),
+    // The three fields answer to the three places money can be, so together
+    // they are one reading of the portfolio spread across three doors: what is
+    // in shares, what is cash, and what is working in Earn. The composition
+    // Figma drew is the full field, and the account decides how much of it is
+    // awake. Nothing moves and nothing is resized — the picture is the picture.
     h('div', { class: 'gates' },
       tile({ lead: true, art: BUY, to: '/invest', title: 'Buy Stocks', cta: 'Buy shares',
-        sub: 'Own a piece of Apple, Nvidia or a whole market fund. From $1.' }),
+        sub: 'Own a piece of Apple, Nvidia or a whole market fund. From $1.',
+        reads: whereItIs(holdingsValue(), total, 'in shares'),
+        at: level(holdingsValue(), total) }),
       // Its own copy describes both directions — "between naira and dollars" —
       // which is the Transfer place rather than the Withdraw action it used to
       // open. A door labelled "Convert money" that lands on a screen headed
       // "Withdraw to your bank" is the promise in rule 49 half kept.
       tile({ art: CONVERT, to: '/transfer', title: 'Convert Cash', cta: 'Move money',
-        sub: 'Move between naira and dollars at the rate you see.' }),
+        sub: 'Move between naira and dollars at the rate you see.',
+        reads: whereItIs(state.cash, total, 'in cash'),
+        at: level(state.cash, total) }),
       tile({ art: BORROW, to: '/grow', title: 'Borrow or Lend', cta: 'See your limit',
-        sub: 'Borrow against your shares without selling them.' })),
+        sub: 'Borrow against your shares without selling them.',
+        reads: whereItIs(state.inEarn, total, 'in Earn'),
+        at: level(state.inEarn, total) })),
     // D01c draws the activity straight onto the canvas, with no card behind
     // it — the tiles above are the objects on this screen, and a fourth panel
     // under them flattens all four.
