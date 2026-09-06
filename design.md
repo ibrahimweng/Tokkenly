@@ -5234,7 +5234,106 @@ opens Send on a phone.
     becomes true. Choosing an amount is not that moment, and a dialog around it
     only removes the room the choice needed.
 
-### 11g.27 Still open
+### 11g.27 Can somebody send a share to somebody else?
+
+Researched rather than guessed, because the answer decides whether a Send
+screen ever holds anything but dollars. What follows is what the market does
+today, what it would take here, and a recommendation. Nothing has been built.
+
+**The incumbents mostly say no, and the ones that say yes say it on paper.**
+
+The rail in the United States is ACATS, and ACATS moves an account, or part of
+one, between two firms *for the same beneficial owner*. The names have to
+match. A change of owner is a different animal: it needs a stock power, a
+medallion signature guarantee above a threshold, and manual handling at both
+ends.
+
+- **Robinhood** does not support transferring, gifting or receiving assets to
+  or from another person's account at all. Its "gift stock" is a referral
+  promotion, not a transfer.
+- **Interactive Brokers** accepts position transfers only between accounts of
+  like ownership and identical title. Third-party transfers are not permitted
+  except donations to qualified charities; anything else goes to Compliance and
+  may be refused.
+- **Fidelity** does it, and is the clearest example of what it costs: a form
+  called *Transfer Shares as a Gift — Nonretirement* for shares leaving to
+  another firm, and a separate internal form for Fidelity to Fidelity.
+- **Trading 212** does not do it. It is an open feature request on their forum.
+
+The pattern is worth stating plainly: **every platform that optimised for speed
+turned this off, and the platforms that kept it kept it as paperwork.** The
+obstacle is not technical. A change of beneficial ownership pulls in AML and
+source-of-funds checks on a transfer nobody paid for, gift reporting, and a
+cost basis the receiving firm has to inherit — a same-name ACATS carries the
+basis automatically, a gift does not.
+
+**The tokenised platforms split three ways, and only one of them can do it.**
+
+1. **Free token, gated mint and redeem.** Backed's xStocks, as sold through
+   Kraken and Bybit. KYC sits at the issuer for minting and redeeming; once
+   minted the token is an ordinary SPL or ERC-20 and can be withdrawn to a
+   self-custody wallet and moved anywhere. So yes, one holder can send one to
+   another person. The catch is the other half of the same decision: xStocks
+   are for non-US persons only, and redemption for the real share is limited to
+   KYC'd qualified investors dealing with Backed directly. Retail exits by
+   selling, not by redeeming.
+2. **Whitelisted token, gated transfer.** Dinari's dShares, on ERC-3643. The
+   whitelist is in the contract, so a transfer to an unverified address
+   reverts. Person to person works only between two verified wallets.
+3. **Closed book, no transfer at all.** Robinhood's EU stock tokens cannot be
+   moved to another broker, wallet or platform. You sell to get out.
+
+**Could we do it?**
+
+Technically, almost for free. The product already holds positions as tokens on
+Base and already has a Send screen with a people list and an address field.
+Sending 1.68 NVDA is the same transaction as sending $120; the difference is
+which contract's transfer is called. The composer would count in shares
+instead of dollars, and the receipt already knows how to say both.
+
+Legally, it depends on two things, neither of which is code.
+
+The first is the issuer's transfer restrictions, which we do not control. On a
+Backed-style token it already works. On a Dinari-style token it works only
+between wallets the issuer has whitelisted, which in practice means Tokkenly
+user to Tokkenly user. On a Robinhood-style token it cannot be done at all.
+
+The second is Nigerian law. The Investments and Securities Act 2025 classifies
+digital assets, tokenised real-world assets included, as securities; platforms
+that facilitate them need SEC Nigeria licensing, and the 2026 guidelines put
+₦1bn of capital behind a Digital Asset Offering Platform and ₦2bn behind an
+exchange or custodian, to be met by 30 June 2027. So this sits inside a
+securities perimeter, not a payments one, and a user-to-user transfer is a
+change of beneficial ownership. That drags in recipient KYC before delivery,
+travel-rule data on the transfer, a source-and-purpose question above a
+threshold, and a cost basis the product has no concept of today. And it cannot
+be undone: cash sent to the wrong address is bad, and shares sent to the wrong
+address are bad and have moved in price by the time anybody notices.
+
+**Three ways to answer it, in rising order of cost.**
+
+- **A. Don't move the security.** "Send Chinaza $50 towards Apple." One
+  payment, nothing changes owner, no licence question. This is what most of the
+  market does. Cheapest, safest, weakest.
+- **B. Send inside Tokkenly only.** Both sides verified, both wallets ours, the
+  transfer is a movement against a token we already hold. It fits the app that
+  exists: the Send screen has the people list already, and the recipient is
+  KYC'd by definition. It also lets the product refuse honestly — an unverified
+  recipient gets a screen that says why, not a failed transaction.
+- **C. Send to any Base address.** Only possible on a free-floating token, and
+  it makes us the point at which a security leaves the regulated perimeter.
+  Not before a licence and an opinion naming which token classes are eligible.
+
+**B, with A as the fallback** — "they are not on Tokkenly yet: send the cash
+and an invitation instead" — is the recommendation. And the first thing to
+build is not the transfer; it is the refusal, because the refusal is the part
+that has to be right on day one.
+
+Open questions for the person deciding: A, B or C; and whether sending shares
+belongs on the Send screen as a second thing it can carry, or as its own action
+from a holding.
+
+### 11g.28 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from
   using the product afterwards. Item 30 was held back until it was asked for,
@@ -5264,6 +5363,9 @@ opens Send on a phone.
   recorded as one in 11g.11. A product that did not rebuild its whole tree
   would return focus to the control that opened the dialog.
 - Item 07, receive handles, needs a backend and a naming policy.
+- Sending a share to another person is researched and not built. 11g.27 has the
+  market survey and three options; the recommendation is "inside Tokkenly
+  only", and the decision has not been made.
 - Rate history — a chart of the naira against the dollar, the missing half of
   item 23 — needs a series the product does not have.
 - Everything in 11f.38 that has not been superseded still stands, and the file
