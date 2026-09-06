@@ -304,7 +304,17 @@ export const leftThisMonth = (): number =>
   Math.max(0, limits().monthly - state.usedThisMonth)
 
 /** The most a single movement can be: the single-payment cap, or whatever is
- *  left of the month, whichever runs out first. */
+ *  left of the month, whichever runs out first.
+ *
+ *  What answers to it, so the rule stops drifting: anything that crosses the
+ *  boundary of the account. Sending, adding money, converting out, buying a
+ *  share, and drawing on the credit line — a drawdown puts money in the wallet
+ *  that was not there before, and it was the one outflow left uncapped, so an
+ *  unverified account could take a $1,150 loan while being stopped from buying
+ *  $300 of a share. What does not answer to it: moving your own money between
+ *  your own buckets — into Earn, out of Earn — and repaying. A limit that
+ *  blocked a repayment would hold someone at 9.4% for the sake of a cap that
+ *  exists to protect them. */
 export const movementCeiling = (): number =>
   Math.min(limits().single, leftThisMonth())
 
@@ -489,6 +499,7 @@ export const actions = {
   },
 
   borrow(amount: number): Activity {
+    actions.countAgainstLimit(amount)
     state.borrowed += amount
     state.cash += amount
     const a = record({ kind: 'grow', who: 'Borrow', type: 'Borrowed', amount })

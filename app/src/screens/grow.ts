@@ -6,7 +6,7 @@ import { table } from '../components/table'
 import { amount } from '../components/bits'
 import {
   state, holdingsValue, owed, availableToBorrow, cover, sellPoint,
-  monthlyCost, monthlyEarn,
+  monthlyCost, monthlyEarn, movementCeiling, ceilingLabel,
 } from '../state'
 import { usd, pct, signed, when } from '../format'
 import { go, openSheet } from '../router'
@@ -175,7 +175,13 @@ export function borrowScreen(): HTMLElement {
     cardLabel: 'How much',
     cardRight: 'Available ' + usd(avail),
     initial: Math.min(1150, avail),
-    max: avail,
+    // Drawing on a credit line puts money in the wallet that was not there
+    // before, so it crosses the account boundary the same way a deposit or a
+    // share purchase does, and it answers to the same ceiling. Without this an
+    // unverified account could take a $1,150 loan while being stopped from
+    // buying $300 of a share — the riskier of the two being the one left open.
+    max: Math.min(avail, movementCeiling()),
+    maxLabel: ceilingLabel(avail, 'What your shares will lend against'),
     note: 'Repay any time. No fee for repaying early.',
     quick: [
       { label: usd(500, false), value: 500 },
