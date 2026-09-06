@@ -81,8 +81,16 @@ export function investScreen(ticker: string): HTMLElement {
       : 'You are buying part of a share. Its value can fall as well as rise, and you can get back less than you put in.',
     action: (v) => `Buy ${usd(v)} of ${c.name}`,
     onAction: (v) => openSheet('invest-review', { v: String(v), t: c.ticker }),
-    right: () => {
+    right: (v) => {
       const held = holding(c.ticker)
+      const now = held?.shares ?? 0
+      // The holding this order would leave you with, not the one you arrived
+      // with. All three rows used to read the current position, so a what-if
+      // table on a buy screen answered a question nobody had asked: it told
+      // you what your existing shares would do and said nothing about the ones
+      // you were in the middle of buying.
+      const after = now + v / c.price
+      const worth = (mult: number) => usd(after * c.price * mult)
       return card(
         cardHead('What you are buying',
           h('button', { class: 'link', text: 'Change stock', on: { click: () => go('/invest') } })),
@@ -94,13 +102,14 @@ export function investScreen(ticker: string): HTMLElement {
           kv('Year low', usd(c.yearLow)),
           kv('Year high', usd(c.yearHigh)),
           kv('Dividend', pct(c.dividend, 2) + ' a year'),
-          kv('You hold', held ? held.shares.toFixed(2) + ' shares' : 'None yet')),
-        scenarios('If it moves',
-          ['Moves', 'Your holding', 'Worth'],
+          kv('You hold', now ? fmtShares(now) + ' shares' : 'None yet'),
+          kv('After this order', fmtShares(after) + ' shares')),
+        scenarios('If it moves, after this order',
+          ['Moves', 'You would hold', 'Worth'],
           [
-            ['+10%', (held?.shares ?? 0).toFixed(2) + ' sh', usd((held?.shares ?? 0) * c.price * 1.1)],
-            ['Flat', (held?.shares ?? 0).toFixed(2) + ' sh', usd((held?.shares ?? 0) * c.price)],
-            ['−10%', (held?.shares ?? 0).toFixed(2) + ' sh', usd((held?.shares ?? 0) * c.price * 0.9)],
+            ['+10%', fmtShares(after) + ' shares', worth(1.1)],
+            ['Flat', fmtShares(after) + ' shares', worth(1)],
+            ['−10%', fmtShares(after) + ' shares', worth(0.9)],
           ])
       )
     },
