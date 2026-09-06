@@ -871,8 +871,32 @@ th.right .th-sort { flex-direction: row-reverse; }
 .welcome-actions { display: flex; align-items: center; gap: 12px; }
 .welcome-actions .btn { width: auto; }
 .welcome-actions .ic svg { width: 14px; height: 14px; }
-.welcome-later { position: relative; z-index: 1; margin-top: 16px; align-self: flex-start; }
 .welcome-note { position: relative; z-index: 1; margin-top: 8px; }
+
+/* The step where the intro stops talking. No dot field behind it: three real
+   companies are the picture. The other steps carry decoration bottom-right and
+   a solid Next; this one is deliberately unlike them, because it is the one
+   asking for something rather than saying something — and a pressable card
+   floating on a field of dots reads as ornament, which is the opposite of what
+   these are. Across the width rather than stacked, so the width is spent on
+   the choice instead of on nothing. */
+.welcome.picking .welcome-body { max-width: none; }
+.welcome-picks {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px; margin-top: 8px; max-width: 920px;
+}
+.welcome-pick {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
+  text-align: left; padding: 20px;
+  transition: border-color var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
+}
+.welcome-pick:hover { border-color: var(--accent); }
+.welcome-pick:active { transform: scale(0.995); }
+/* The claim from screen one, made good on a company you can press. Not green:
+   green is money arriving (design.md 43), and this is money leaving. It is
+   also a choice screen, and a green figure on a choice reads as a
+   recommendation rather than a fact. */
+.welcome-pick-buys { margin-top: 4px; color: var(--ink); }
 
 .welcome-dots { display: flex; gap: 8px; }
 .welcome-dot {
@@ -895,7 +919,14 @@ th.right .th-sort { flex-direction: row-reverse; }
   .welcome-foot { flex-direction: column-reverse; align-items: stretch; gap: 20px; margin-top: 24px; }
   .welcome-actions .btn { flex: 1 1 0; }
   .welcome-dots { justify-content: center; }
-  .welcome-later, .welcome-note { align-self: center; text-align: center; }
+  .welcome-note { align-self: center; text-align: center; }
+  /* Nothing is behind this one, so the band the art reserves is dead space,
+     and the three cards need it. */
+  .welcome.picking { padding-bottom: 24px; }
+  .welcome.picking .welcome-title { font-size: 30px; line-height: 36px; }
+  .welcome.picking .welcome-body { gap: 12px; }
+  .welcome-picks { grid-template-columns: 1fr; gap: 12px; }
+  .welcome-pick { padding: 14px 16px; gap: 6px; }
 }
 
 /* ------------------------------------------------------------ settings --

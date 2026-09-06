@@ -112,6 +112,30 @@ for (const [label, wrong] of [['/lock', 0], ['/lock (locked out)', 5]]) {
   await lp.close()
 }
 
+/* The intro is the other screen seen() cannot reach, for the same reason: it
+   is what a returning visitor is seeded past. It has never been measured, and
+   it is the one part of the product that puts text on a green gradient — and
+   now three pressable cards on it too. */
+for (const theme of THEMES)
+for (const step of [0, 1, 2, 3]) {
+  const wp = await b.newPage({ viewport: { width: 1440, height: 1000 } })
+  await wp.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
+  await wp.addInitScript(`try {
+    localStorage.setItem('tokkenly.prefs.v1', JSON.stringify({
+      seenIntro: false, prefs: { theme: '${theme}' }, security: {} }))
+    sessionStorage.setItem('tokkenly.unlocked', '1')
+  } catch {}`)
+  await wp.goto(B + '/welcome/' + step, { waitUntil: 'domcontentloaded' })
+  await wp.waitForTimeout(300)
+  for (const t of await sweep(wp)) if (t.ratio < t.need) bad.push({ route: theme + ' /welcome/' + step, ...t })
+  const card = await wp.$('.welcome-pick')
+  if (card) {
+    await card.hover(); await wp.waitForTimeout(250)
+    for (const t of await sweep(wp)) if (t.ratio < t.need) bad.push({ route: theme + ' /welcome/' + step + ' (hovered)', ...t })
+  }
+  await wp.close()
+}
+
 const already = new Set()
 const uniq = bad.filter((x) => { const k = x.route.split(' ')[0] + x.sel + x.ratio; if (already.has(k)) return false; already.add(k); return true })
 console.log(uniq.length ? 'BELOW AA:' : 'BELOW AA: none')
