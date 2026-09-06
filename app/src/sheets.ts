@@ -8,7 +8,7 @@ import {
 } from './state'
 import { pinPad } from './components/pinpad'
 import { find, discount } from './catalogue'
-import { usd, naira, pct, shares as fmtShares, longWhen, when } from './format'
+import { usd, naira, pct, shares as fmtShares, longWhen, when, isDrawdown } from './format'
 import { type Route, closeSheet, replaceSheet, go } from './router'
 import { QA } from './screens/settings'
 import { peopleRows } from './screens/money'
@@ -256,7 +256,8 @@ export const SHEETS: Record<string, Builder> = {
     const inbound = a.amount >= 0
     return sheet(
       'Receipt',
-      figure(a.type, (inbound ? '+' : '−') + usd(Math.abs(a.amount)), inbound ? 'pos' : ''),
+      figure(a.type, (inbound ? '+' : '−') + usd(Math.abs(a.amount)),
+        inbound && !isDrawdown(a) ? 'pos' : ''),
       panel(
         [inbound ? 'From' : 'To', a.who],
         ['Reference', a.ref],

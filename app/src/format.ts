@@ -8,6 +8,14 @@ export const usd = (n: number, cents = true): string =>
  *  minus. design.md rule 43, in one place so it cannot drift. */
 export const signed = (n: number): string => (n >= 0 ? '+' : '−') + usd(Math.abs(n))
 
+/** Rule 43's third case: money in that is not yours. A drawdown raises the
+ *  wallet, so it satisfied "money in" and took the green — $500 borrowed at
+ *  9.4% rendered exactly like a $1,500 payday. It keeps the plus, because the
+ *  money did arrive, and loses the green, because it is a debt. Here rather
+ *  than at either call site, so the two cannot disagree about what a loan is. */
+export const isDrawdown = (a: { kind: string; who: string; type: string }): boolean =>
+  a.kind === 'grow' && a.who === 'Borrow' && a.type === 'Borrowed'
+
 export const pct = (n: number, dp = 1): string => n.toFixed(dp) + '%'
 
 export const shares = (n: number): string =>

@@ -94,7 +94,7 @@ export function historyScreen(): HTMLElement {
             h('span', { class: 'muted', text: a.type }),
             h('span', { class: 'muted', text: a.ref }),
             h('span', { class: 'muted', text: when(a.at) }),
-            amount(a.amount),
+            amount(a),
           ]),
           (i) => openSheet('receipt', { ref: ordered[i].ref }),
           { current: { key: sortKey, dir: sortDir }, onSort }

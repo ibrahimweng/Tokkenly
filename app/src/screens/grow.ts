@@ -131,7 +131,7 @@ function loanHistory(): HTMLElement {
         h('span', { class: 'muted', text: when(a.at) }),
         h('span', { class: 'muted', text: pct(state.rates.borrow) }),
         h('span', { class: 'muted', text: a.ref }),
-        amount(a.amount),
+        amount(a),
       ]),
       (i) => openSheet('receipt', { ref: rows[i].ref })
     )
@@ -155,7 +155,7 @@ function earnHistory(): HTMLElement {
         h('span', { class: 'muted', text: when(a.at) }),
         h('span', { class: 'muted', text: pct(state.rates.earn) }),
         h('span', { class: 'muted', text: a.ref }),
-        amount(a.amount),
+        amount(a),
       ]),
       (i) => openSheet('receipt', { ref: rows[i].ref })
     )

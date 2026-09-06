@@ -94,7 +94,7 @@ export function walletScreen(): HTMLElement {
                     h('span', { class: 'two-line' },
                       h('span', { class: 't-body-strong', text: activityLabel(a) }),
                       h('small', { text: when(a.at) }))),
-                  amount(a.amount))))
+                  amount(a))))
             : h('span', { class: 'muted', text: 'Nothing is in flight. Everything you have sent or received has landed.' })
         )),
       h('div', { class: 'stack col-side' },

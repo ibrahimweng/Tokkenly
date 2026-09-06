@@ -1,6 +1,6 @@
 import { h, link } from '../ui'
 import { icon } from '../icons'
-import { signed } from '../format'
+import { signed, isDrawdown } from '../format'
 
 export function card(...children: (Node | false | null)[]): HTMLElement {
   const el = h('section', { class: 'card' })
@@ -71,10 +71,18 @@ export function quiet(label: string, onClick: () => void): HTMLButtonElement {
   return h('button', { class: 'btn btn-secondary', on: { click: onClick } }, label)
 }
 
-/** Money in is green and signed. Money out is neutral. One function, so the
- *  rule cannot be applied by hand and get it wrong. Rule 43. */
-export function amount(n: number): HTMLElement {
-  return h('span', { class: n >= 0 ? 'pos t-body-strong' : 't-body-strong', text: signed(n) })
+/** Money in is green, money out is neutral — and borrowing is the third case
+ *  rule 43 did not have. A drawdown is money in, so it took the green and
+ *  rendered identically to being paid: $500 borrowed at 9.4% looked exactly
+ *  like a $1,500 payday, same colour, same plus, same inbound arrow. It keeps
+ *  the plus, because the money did arrive in the wallet, and loses the green,
+ *  because it is a debt rather than a gain.
+ *
+ *  It takes the entry rather than the figure so a call site cannot decide for
+ *  itself which case it is in, which is the whole point of rule 43. */
+export function amount(a: { amount: number; kind: string; who: string; type: string }): HTMLElement {
+  const green = a.amount >= 0 && !isDrawdown(a)
+  return h('span', { class: (green ? 'pos ' : '') + 't-body-strong', text: signed(a.amount) })
 }
 
 export function directionMark(n: number): HTMLElement {

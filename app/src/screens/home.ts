@@ -72,7 +72,7 @@ function activityRows(limit: number) {
         h('span', { class: 't-body-strong', text: activityLabel(a) }),
         h('small', { text: a.ref + ' · ' + when(a.at) }))),
     h('span', { class: 'pill', text: a.settled ? 'Settled' : 'Pending' }),
-    amount(a.amount),
+    amount(a),
   ])
 }
 

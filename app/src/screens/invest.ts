@@ -26,7 +26,7 @@ function orders(ticker?: string): HTMLElement {
           h('small', { class: 'phone-only', text: when(a.at) })),
         h('span', { class: 'muted', text: when(a.at) }),
         h('span', { class: 'muted', text: a.ref }),
-        amount(a.amount),
+        amount(a),
       ]),
       (i) => openSheet('receipt', { ref: rows[i].ref })
     )
