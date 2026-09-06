@@ -1,8 +1,8 @@
 import { h } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
-import { card, cardHead, headLink, kv, callout, amount, directionMark } from '../components/bits'
-import { state, buyingPower, availableToBorrow, nairaAside, limits, leftThisMonth, verified } from '../state'
+import { card, cardHead, headLink, kv, callout, amount, directionMark, privacyToggle } from '../components/bits'
+import { state, buyingPower, availableToBorrow, nairaAside, limits, leftThisMonth, verified, money } from '../state'
 import { usd, when, activityLabel } from '../format'
 import { go, openSheet } from '../router'
 
@@ -37,32 +37,32 @@ function cashHero(): HTMLElement {
     h('div', { class: 'hero-top' },
       h('div', { class: 'stack-8' },
         h('span', { class: 't-caps subtle', text: 'Cash you can spend' }),
-        h('span', { class: 'hero-figure', text: usd(state.cash) }),
+        h('span', { class: 'hero-figure', text: money(state.cash) }),
         nairaAside(state.cash)
           ? h('span', { class: 'muted', text: nairaAside(state.cash)! })
           : null),
       h('div', { class: 'stack-8 hero-aside' },
         h('span', { class: 't-caps subtle', text: 'Buying power' }),
-        h('span', { class: 't-display', text: usd(buyingPower()) }),
+        h('span', { class: 't-display', text: money(buyingPower()) }),
         h('span', { class: 'muted',
-          text: `Your cash plus the ${usd(availableToBorrow())} your shares would lend against` }))),
+          text: `Your cash plus the ${money(availableToBorrow())} your shares would lend against` }))),
 
     h('div', { class: 'hero-bar', ariaLabel: 'How your money is arranged' },
       ...parts.map((p) =>
         h('span', { class: 'seg ' + p.cls, style: { flex: String(Math.max(p.value, 1)) },
-          ariaLabel: `${p.label} ${usd(p.value)}`,
-          title: `${p.label} — ${usd(p.value)}. ${p.hint}.` }))),
+          ariaLabel: `${p.label} ${money(p.value)}`,
+          title: `${p.label} — ${money(p.value)}. ${p.hint}.` }))),
 
     h('div', { class: 'hero-legend' },
       ...parts.map((p) =>
         h('div', { class: 'leg' },
           h('span', { class: 'dot ' + p.cls }),
           h('span', { class: 'two-line' },
-            h('span', { class: 't-body-strong', text: `${p.label} ${usd(p.value)}` }),
+            h('span', { class: 't-body-strong', text: `${p.label} ${money(p.value)}` }),
             h('small', { text: p.hint }))))),
 
     h('span', { class: 'subtle t-caption',
-      text: `${usd(total)} in total across your wallet and Earn. Borrowing is credit, not balance, so it is not in this figure.` })
+      text: `${money(total)} in total across your wallet and Earn. Borrowing is credit, not balance, so it is not in this figure.` })
   )
 }
 
@@ -73,7 +73,7 @@ export function walletScreen(): HTMLElement {
     'wallet',
     // No eyebrow: it printed buying power 60px above the card that prints
     // buying power, which reads as two facts rather than one repeated.
-    pageHeader('Transfer'),
+    pageHeader('Transfer', privacyToggle()),
     // The hero takes the whole column. It is the centrepiece of the page, and
     // sharing the width with the limits card left the two figures in it 20px
     // from wrapping onto separate lines — which they did, once the column came
@@ -101,8 +101,8 @@ export function walletScreen(): HTMLElement {
         card(
           cardHead('Your limits'),
           kv('Monthly', usd(limits().monthly, false)),
-          kv('Used this month', usd(state.usedThisMonth)),
-          kv('Left this month', usd(leftThisMonth())),
+          kv('Used this month', money(state.usedThisMonth)),
+          kv('Left this month', money(leftThisMonth())),
           kv('One payment', usd(limits().single, false)),
           // The card that states a limit is the place to lift it.
           verified()

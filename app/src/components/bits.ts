@@ -1,6 +1,7 @@
 import { h, link } from '../ui'
 import { icon } from '../icons'
 import { signed, isDrawdown } from '../format'
+import { state, actions, MASK } from '../state'
 
 export function card(...children: (Node | false | null)[]): HTMLElement {
   const el = h('section', { class: 'card' })
@@ -82,7 +83,24 @@ export function quiet(label: string, onClick: () => void): HTMLButtonElement {
  *  itself which case it is in, which is the whole point of rule 43. */
 export function amount(a: { amount: number; kind: string; who: string; type: string }): HTMLElement {
   const green = a.amount >= 0 && !isDrawdown(a)
-  return h('span', { class: (green ? 'pos ' : '') + 't-body-strong', text: signed(a.amount) })
+  return h('span', { class: (green ? 'pos ' : '') + 't-body-strong',
+    text: state.prefs.hideBalances ? MASK : signed(a.amount) })
+}
+
+/** The switch that takes your balances off the screen, sitting next to a
+ *  figure rather than buried in settings — the moment you want it is the
+ *  moment somebody sits down beside you, and Account is four taps away. It is
+ *  also in Preferences, because a control you found by accident once is a
+ *  control you cannot find again on purpose. */
+export function privacyToggle(): HTMLElement {
+  const on = state.prefs.hideBalances
+  return h('button', {
+    class: 'icon-btn eye-btn',
+    ariaLabel: on ? 'Show your balances' : 'Hide your balances',
+    ariaPressed: on,
+    html: on ? icon.eyeOff() : icon.eye(),
+    on: { click: () => actions.toggleBalances() },
+  })
 }
 
 export function directionMark(n: number): HTMLElement {

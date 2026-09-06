@@ -4,7 +4,7 @@ import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, kv, callout } from '../components/bits'
 import { find, markGap, type Instrument } from '../catalogue'
 import { barChart, type Range } from '../components/chart'
-import { state, actions, holding, inBucket } from '../state'
+import { state, actions, holding, inBucket, money, MASK } from '../state'
 import { usd, pct, signed, shares } from '../format'
 import { go } from '../router'
 import { toast } from '../components/sheet'
@@ -175,10 +175,11 @@ export function stockScreen(ticker: string): HTMLElement {
           cardHead('Your position'),
           held && held.shares > 0
             ? h('div', { class: 'stack-12' },
-                kv('You hold', shares(held.shares) + ' shares'),
-                kv('Worth', usd(held.shares * c.price)),
+                kv('You hold', state.prefs.hideBalances ? MASK : shares(held.shares) + ' shares'),
+                kv('Worth', money(held.shares * c.price)),
                 kv('Today', h('span', { class: c.dayPct >= 0 ? 'pos t-body-strong' : 't-body-strong',
-                  text: signed((held.shares * c.price * c.dayPct) / 100) })))
+                  text: state.prefs.hideBalances
+                    ? MASK : signed((held.shares * c.price * c.dayPct) / 100) })))
             : h('span', { class: 'muted', text: 'You do not own any yet.' }),
           h('button', { class: 'btn btn-primary', text: 'Buy ' + c.ticker,
             on: { click: () => go('/invest/' + c.ticker.toLowerCase() + '/invest') } }),

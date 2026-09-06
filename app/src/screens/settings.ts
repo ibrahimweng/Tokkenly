@@ -94,6 +94,11 @@ function preferencesBody(): (Node | null)[] {
         sub: 'An indicative figure at today’s rate, next to the dollar amount',
         get: () => p.showNaira, set: (v) => { actions.setPref('showNaira', v); back() },
       }),
+      toggle({
+        label: 'Hide my balances', ic: icon.eye(),
+        sub: 'Cover every figure that is yours. Prices and rates stay put',
+        get: () => p.hideBalances, set: () => { actions.toggleBalances(); back() },
+      }),
       choice({
         label: 'Add to bucket', sub: 'What goes against a company before you edit it',
         options: [25, 50, 100, 250].map((v) => ({ label: usd(v, false), value: String(v) })),

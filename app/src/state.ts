@@ -2,7 +2,7 @@
  *  here, so a flow that moves money changes every screen that mentions it.
  *  Opening figures match design.md 11b.4f. */
 
-import { reference } from './format'
+import { reference, usd, naira } from './format'
 import { find } from './catalogue'
 
 export type ActivityKind = 'payment' | 'trade' | 'grow'
@@ -38,6 +38,11 @@ export interface Prefs {
   tradeDefault: number
   /** Ask again, above this, before anything leaves. 0 turns it off. */
   confirmOver: number
+  /** Take your balances off the screen. People check their money on buses and
+   *  in queues here, and a $16,229 figure at 48px is readable from the next
+   *  seat. Prices, rates and limits are not covered: they are public, and
+   *  hiding them helps nobody. */
+  hideBalances: boolean
   notify: { payments: boolean; prices: boolean; earn: boolean; borrowing: boolean }
 }
 
@@ -47,6 +52,7 @@ export const DEFAULT_PREFS: Prefs = {
   showNaira: true,
   tradeDefault: 50,
   confirmOver: 500,
+  hideBalances: false,
   notify: { payments: true, prices: true, earn: true, borrowing: true },
 }
 
@@ -420,10 +426,25 @@ const NOTIFY_OF: Record<Notif['kind'], keyof Prefs['notify']> = {
 export const visibleNotifications = (): Notif[] =>
   state.notifications.filter((n) => state.prefs.notify[NOTIFY_OF[n.kind]])
 
-export const nairaAside = (dollars: number): string | null =>
-  state.prefs.showNaira
-    ? `About ₦${Math.round(dollars * state.ngnPerUsd).toLocaleString('en-US')} at today’s indicative rate`
-    : null
+export const nairaAside = (dollars: number): string | null => {
+  if (!state.prefs.showNaira) return null
+  // Covered along with the dollar figure it sits under: hiding one and
+  // printing the other in naira is not hiding anything.
+  if (state.prefs.hideBalances) return `${MASK} at today\u2019s indicative rate`
+  return `About ${naira(dollars * state.ngnPerUsd)} at today\u2019s indicative rate`
+}
+
+/* ----------------------------------------------------------- your money --
+   A figure that is yours, which the privacy switch can take off the screen.
+   One function, so a balance somebody forgot to cover is not one call site
+   away from undoing the whole feature. */
+export const MASK = '\u2022\u2022\u2022\u2022\u2022\u2022'
+
+export const money = (n: number, cents = true): string =>
+  state.prefs.hideBalances ? MASK : usd(n, cents)
+
+export const moneyNaira = (n: number): string =>
+  state.prefs.hideBalances ? MASK : naira(n)
 
 /* ------------------------------------------------------------- the quote --
    "The rate is held for ninety seconds" was a sentence with nothing behind
@@ -577,6 +598,11 @@ export const actions = {
     let any = false
     for (const n of state.notifications) if (!n.read) { n.read = true; any = true }
     if (any) changed()
+  },
+
+  toggleBalances() {
+    state.prefs.hideBalances = !state.prefs.hideBalances
+    changed()
   },
 
   setHomeView(v: 'simple' | 'detailed') {

@@ -3,10 +3,10 @@ import { icon } from '../icons'
 import { barChart, type Range } from '../components/chart'
 import { dotArt, BUY, CONVERT, BORROW, type ArtSpec } from '../components/art'
 import { shell, pageHeader, bell, jumpOpen } from '../components/shell'
-import { card, cardHead, headLink, kv, amount, directionMark } from '../components/bits'
+import { card, cardHead, headLink, kv, amount, directionMark, privacyToggle } from '../components/bits'
 import { table } from '../components/table'
 import {
-  state, actions, holdingsValue, availableToBorrow, buyingPower, verified, LIMITS,
+  state, actions, holdingsValue, availableToBorrow, buyingPower, verified, LIMITS, money,
 } from '../state'
 import { usd, signed, when, pct, shares, greeting, activityLabel } from '../format'
 import { go } from '../router'
@@ -132,7 +132,7 @@ function detailed(): HTMLElement {
           h('span', { class: 't-body-strong', text: p.ticker }),
           h('small', { text: `${p.name} · ${shares(p.shares)} shares` })),
         h('span', { class: 'two-line right' },
-          h('span', { class: 't-body-strong', text: usd(p.shares * p.price) }),
+          h('span', { class: 't-body-strong', text: money(p.shares * p.price) }),
           h('small', { class: p.dayPct >= 0 ? 'pos' : 'muted', text: (p.dayPct >= 0 ? '+' : '') + pct(p.dayPct) })))
       row.addEventListener('click', () => go('/invest/' + p.ticker.toLowerCase()))
       return row
@@ -147,8 +147,8 @@ function detailed(): HTMLElement {
 
   const available = card(
     cardHead('Available'),
-    kv('Cash', usd(state.cash)),
-    kv('Buying power', usd(buyingPower())),
+    kv('Cash', money(state.cash)),
+    kv('Buying power', money(buyingPower())),
     kv('Total gain', h('span', {
       class: (all.amount >= 0 ? 'pos' : 'warn') + ' t-body-strong',
       text: `${signed(all.amount)} (${all.pct >= 0 ? '+' : ''}${pct(all.pct)})`,
@@ -159,17 +159,17 @@ function detailed(): HTMLElement {
     'home',
     pageHeader(greeting() + ', ' + state.person.name.split(' ')[0],
       h('div', { class: 'header-actions' },
-        isMobile() ? null : jumpOpen(), viewToggle(), bell())),
+        isMobile() ? null : jumpOpen(), viewToggle(), privacyToggle(), bell())),
     verifyTask(),
     h('div', { class: 'row' },
       h('div', { class: 'stack', style: { width: '308px', flex: 'none' } },
         h('div', { class: 'stack-8' },
           h('span', { class: 'muted', text: standing() }),
           h('span', { class: 't-caps subtle', text: 'Total portfolio' }),
-          h('span', { class: 't-display-xl', text: usd(value) }),
+          h('span', { class: 't-display-xl', text: money(value) }),
           h('span', {},
             h('span', { class: (move.amount >= 0 ? 'pos' : 'warn') + ' t-body-strong',
-              text: `${move.amount >= 0 ? '+' : ''}${usd(move.amount)} (${move.amount >= 0 ? '+' : ''}${pct(move.pct)})` }),
+              text: `${move.amount >= 0 ? '+' : ''}${money(move.amount)} (${move.amount >= 0 ? '+' : ''}${pct(move.pct)})` }),
             h('span', { class: 'muted', text: '  Today' }))),
         h('div', { class: 'chip-row' },
           h('button', { class: 'btn btn-primary btn-sm', text: 'Send', on: { click: () => go('/send') } }),
@@ -231,15 +231,15 @@ function gateway(): HTMLElement {
         h('div', { class: 'header-actions' },
           // The phone's top bar already carries a search; two of them 40px
           // apart is not twice as findable.
-          isMobile() ? null : jumpOpen(), viewToggle(), bell()))),
+          isMobile() ? null : jumpOpen(), viewToggle(), privacyToggle(), bell()))),
     verifyTask(),
     h('div', { class: 'headline' },
       h('div', { class: 'stack-8' },
         h('span', { class: 't-caps subtle', text: 'Total portfolio' }),
-        h('span', { class: 't-figure', text: usd(total) }),
+        h('span', { class: 't-figure', text: money(total) }),
         h('span', { class: 'delta' },
           h('span', { class: (move.amount >= 0 ? 'pos' : 'warn') + ' t-body-strong',
-            text: `${move.amount >= 0 ? '+' : ''}${usd(move.amount)} (${move.amount >= 0 ? '+' : ''}${pct(move.pct)})` }),
+            text: `${move.amount >= 0 ? '+' : ''}${money(move.amount)} (${move.amount >= 0 ? '+' : ''}${pct(move.pct)})` }),
           h('span', { class: 'muted', text: 'today' }))),
       h('div', { class: 'headline-actions' },
         link('/send', 'btn btn-primary btn-wide', 'Send'),
