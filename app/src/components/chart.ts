@@ -166,6 +166,33 @@ export function foldCandles(full: Candle[], n: number): Candle[] {
   return out
 }
 
+/** A share's shape, small enough to sit in a receipt.
+ *
+ *  No axis, no labels, no hover — a sparkline is not a chart you read figures
+ *  off, it is the answer to "has this been going up or down", which is exactly
+ *  the question somebody has the moment after they bought some. It draws from
+ *  the same seeded series the full chart draws from, so the little line and
+ *  the big one are the same claim about the same company. */
+export function sparkline(r: Range, endValue: number, seed = 7): HTMLElement {
+  const N = 40
+  const vals = candlesFor(r, endValue, N, seed).map((k) => k.c)
+  const lo = Math.min(...vals)
+  const hi = Math.max(...vals)
+  const span = Math.max(hi - lo, 0.0001)
+  const at = (v: number) => 100 - ((v - lo) / span) * 100
+  const pts = vals.map((v, i) => `${(i / (N - 1)) * 100},${at(v)}`).join(' L ')
+  const up = vals[vals.length - 1] >= vals[0]
+  const tone = up ? 'var(--positive)' : 'var(--warning)'
+  const box = h('div', { class: 'spark' + (up ? ' up' : ' down') })
+  box.innerHTML =
+    `<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">` +
+    `<path d="M ${pts} L 100,100 L 0,100 Z" fill="${tone}" opacity="0.12" stroke="none"/>` +
+    `<path d="M ${pts}" fill="none" stroke="${tone}" stroke-width="2" ` +
+    `vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round"/>` +
+    `</svg>`
+  return box
+}
+
 export function barChart(spec: ChartSpec): HTMLElement {
   const height = spec.height ?? 200
   let range = spec.ranges.find((r) => r.key === spec.initial) ?? spec.ranges[0]

@@ -152,7 +152,7 @@ export function search(raw: string): Hit[] {
   }
   for (const a of state.activity) {
     if (norm(a.ref).includes(q)) {
-      hits.push({ label: a.ref, to: '/history?sheet=receipt&ref=' + a.ref, group: 'Receipts',
+      hits.push({ label: a.ref, to: '/activity?sheet=receipt&ref=' + a.ref, group: 'Receipts',
                   hint: `${a.type} · ${a.who}` })
     }
   }

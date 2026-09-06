@@ -5,16 +5,21 @@ import { callout as calloutEl, emptyState as emptyStateEl, skeletonList } from '
 import {
   state, actions, owed, monthlyCost, monthlyEarn, holding, bucketTotal,
   visibleNotifications, tradeFee, weakPin, ratePassword, type Activity,
-  requestQuote, quoteLive, settlement, type Quote,
+  requestQuote, quoteLive, settlement, grossOf, type Quote,
 } from './state'
 import { pinPad } from './components/pinpad'
-import { find, discount } from './catalogue'
+import { find, discount, CATALOGUE } from './catalogue'
+import { sparkline, type Range } from './components/chart'
 import { usd, naira, pct, shares as fmtShares, longWhen, when, isDrawdown } from './format'
 import { type Route, closeSheet, replaceSheet, go } from './router'
 import { QA } from './screens/settings'
 import { peopleRows } from './screens/money'
 import { search } from './destinations'
 import { BEHIND_MORE } from './components/shell'
+
+/** One year, which is the span a receipt's sparkline should show: long enough
+ *  to be a shape rather than a squiggle, short enough to be about now. */
+const YEAR: Range = { key: '1Y', days: 365, pct: 17.28, vol: 0.09, fmt: () => '', over: 'this year' }
 
 /** How long a confirmation shows its spinner. Short enough not to annoy,
  *  long enough that the state is real rather than decorative. */
@@ -272,15 +277,18 @@ function done(
       'We did not get a confirmation in time. It may still land, so it is in your activity as unsettled and nothing has been sent twice.',
       [['Reference', a.ref], ['When', longWhen(a.at)], ...extra],
       { label: 'Done', onClick: closeSheet },
-      { label: 'Watch it in Activity',
-        onClick: () => { closeSheet(); go('/activity?sheet=receipt&ref=' + a.ref) } })
+      // In place. Opening a receipt used to close this sheet, navigate to
+      // Activity and open it there — so asking "what exactly happened" moved
+      // you off the screen you were on to answer it. The record is a dialog;
+      // it belongs over whatever you are looking at.
+      { label: 'See the record', onClick: () => replaceSheet('receipt', { ref: a.ref }) })
   }
   return outcome(
     title,
     line,
     [['Reference', a.ref], ['When', longWhen(a.at)], ...extra],
     { label: 'Done', onClick: closeSheet },
-    { label: 'View in History', onClick: () => { closeSheet(); go('/activity?sheet=receipt&ref=' + a.ref) } }
+    { label: 'See the record', onClick: () => replaceSheet('receipt', { ref: a.ref }) }
   )
 }
 
@@ -418,12 +426,35 @@ export const SHEETS: Record<string, Builder> = {
     const a = state.activity.find((x) => x.ref === str(r, 'ref'))
     if (!a) return sheet('Receipt', h('p', { class: 'muted', text: 'That reference is not in your history.' }))
     const inbound = a.amount >= 0
+    // A trade's receipt is about a company, so it says which one, what it is
+    // worth now, what shape it has been in, and what you hold of it. The old
+    // one said "Apple, −$420.00" and stopped, which is the one document a
+    // person keeps being the least informative screen in the product.
+    const c = a.kind === 'trade' ? CATALOGUE.find((x) => x.name === a.who) : undefined
+    const held = c ? holding(c.ticker) : undefined
     return sheet(
       'Receipt',
       figure(a.type, (inbound ? '+' : '−') + usd(Math.abs(a.amount)),
         inbound && !isDrawdown(a) ? 'pos' : ''),
+      c ? h('div', { class: 'receipt-co' },
+        h('span', { class: 'two-line grow' },
+          h('span', { class: 't-body-strong', text: `${c.ticker} · ${c.name}` }),
+          h('small', { text: c.kind === 'etf' ? `A fund of ${c.holds ?? 'many'} companies` : c.plain })),
+        h('span', { class: 'two-line right' },
+          h('span', { class: 't-body-strong', text: usd(c.price) }),
+          h('small', { class: c.dayPct >= 0 ? 'pos' : 'warn',
+            text: (c.dayPct >= 0 ? '+' : '') + pct(c.dayPct) + ' today' }))) : null,
+      c ? sparkline(YEAR, c.price, c.ticker.charCodeAt(0)) : null,
       panel(
         [inbound ? 'From' : 'To', a.who],
+        // The amount, the fee and the total, the way the composer stated them
+        // before the button was pressed — a receipt that reorganises the
+        // arithmetic is a receipt somebody has to check.
+        ...(c ? [
+          [a.type === 'Sold' ? 'Sale' : 'Investment', usd(grossOf(a))] as [string, string],
+          ['Shares', fmtShares(grossOf(a) / c.price)] as [string, string],
+          ['Price each', usd(c.price)] as [string, string],
+        ] : []),
         ['Reference', a.ref],
         ['When', longWhen(a.at)],
         // The receipt used to say "None" on every entry, including the trades
@@ -434,7 +465,11 @@ export const SHEETS: Record<string, Builder> = {
         // "None — the rate above is what you get" was written for a currency
         // conversion and printed on everything, including a loan drawdown with
         // no rate anywhere on the sheet. None is the whole answer.
-        ['Fee', a.fee ? usd(a.fee) : 'None']
+        ['Fee', a.fee ? usd(a.fee) : 'None'],
+        ...(c ? [[a.type === 'Sold' ? 'You received' : 'Total',
+          usd(Math.abs(a.amount))] as [string, string]] : []),
+        ...(c && held ? [['You hold now',
+          `${fmtShares(held.shares)} shares · ${usd(held.shares * c.price)}`] as [string, string]] : [])
       ),
       calloutEl(a.settled
         ? 'Settled. Nothing about this payment is going to change now.'
@@ -442,7 +477,15 @@ export const SHEETS: Record<string, Builder> = {
       h('button', {
         class: 'btn btn-primary', text: 'Download receipt',
         on: { click: () => toast('Receipt saved as ' + a.ref + '.pdf') },
-      })
+      }),
+      // The ways on. A receipt is where somebody has just answered "what did I
+      // buy"; the next two questions are "how is it doing" and "what do I hold
+      // altogether", and both were a dismissal and a hunt away.
+      h('div', { class: 'receipt-on' },
+        c ? h('button', { class: 'btn btn-secondary', text: 'See ' + c.name,
+          on: { click: () => { closeSheet(); go('/invest/' + c.ticker.toLowerCase()) } } }) : null,
+        h('button', { class: 'btn btn-secondary', text: 'Your portfolio',
+          on: { click: () => { closeSheet(); go('/') } } }))
     )
   },
 

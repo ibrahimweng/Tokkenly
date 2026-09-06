@@ -174,7 +174,14 @@ export function outcome(
   primary: { label: string; onClick: () => void },
   secondary?: { label: string; onClick: () => void }
 ): HTMLElement {
-  return sheet(
+  // The reveal. Deliberately not confetti: this is the moment money left the
+  // account, and an animation that rewards that is one working for the product
+  // against the person — which is what Robinhood's confetti on executed orders
+  // was found to be. What is celebrated here is completion, not the trade. The
+  // green washes up from the foot of the sheet, the tick draws itself, and the
+  // words and the record arrive after it in that order, because that is the
+  // order somebody reads them in.
+  const el = sheet(
     '',
     h('div', { class: 'tick', html: icon.check() }),
     h('div', { class: 'figure' },
@@ -189,6 +196,8 @@ export function outcome(
       ? h('button', { class: 'btn btn-secondary', text: secondary.label, on: { click: secondary.onClick } })
       : null
   )
+  el.querySelector('.sheet')?.classList.add('sheet-done')
+  return el
 }
 
 let toastRail: HTMLElement | null = null

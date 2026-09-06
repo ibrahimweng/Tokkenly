@@ -306,6 +306,55 @@
 @keyframes fade { from { opacity: 0 } to { opacity: 1 } }
 @keyframes rise { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: none } }
 
+/* ---------- the outcome, revealed ----------
+
+   The moment after money moved. Not confetti: an animation that rewards
+   spending is one working for the product against the person, which is what
+   Robinhood's confetti on executed orders was found to be. What is celebrated
+   here is completion — the thing is done, here is what it was.
+
+   Four parts on one curve, in the order somebody reads them: the green washes
+   up from the foot of the sheet, the tick draws itself, the words arrive, and
+   the record arrives last. The whole thing is under 900ms, because a
+   confirmation that makes you wait to read it is a confirmation that has
+   forgotten what it is for. */
+.sheet-done { position: relative; overflow: hidden; }
+.sheet-done::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg,
+    transparent 0%, transparent 34%, var(--tint-positive) 82%, var(--accent) 100%);
+  opacity: 0;
+}
+.sheet-done > * { position: relative; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .sheet-done::before { animation: wash 700ms var(--ease) both; }
+  /* The tick is one path, so it can be drawn rather than faded. */
+  .sheet-done .tick svg path {
+    stroke-dasharray: 32; stroke-dashoffset: 32;
+    animation: draw 420ms var(--ease) 180ms both;
+  }
+  .sheet-done .tick { animation: pop 340ms var(--ease) both; }
+  .sheet-done .figure { animation: rise 420ms var(--ease) 300ms both; }
+  .sheet-done .panel { animation: rise 420ms var(--ease) 420ms both; }
+  .sheet-done > .btn { animation: rise 380ms var(--ease) 540ms both; }
+  .sheet-done > .btn + .btn { animation-delay: 600ms; }
+}
+@keyframes wash { from { opacity: 0 } to { opacity: 0.55 } }
+@keyframes draw { to { stroke-dashoffset: 0 } }
+@keyframes pop {
+  0% { opacity: 0; transform: scale(0.7) }
+  60% { opacity: 1; transform: scale(1.06) }
+  to { opacity: 1; transform: scale(1) }
+}
+
+/* The company a trade's receipt is about, and the shape it has been in. */
+.receipt-co { display: flex; align-items: flex-start; gap: 16px; }
+.spark { height: 56px; width: 100%; }
+.spark svg { width: 100%; height: 100%; display: block; }
+.receipt-on { display: flex; gap: 12px; }
+.receipt-on .btn { flex: 1 1 0; }
+
 /* ---------- toast ---------- */
 .toast-rail { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 60;
   display: flex; flex-direction: column; gap: 8px; align-items: center; }

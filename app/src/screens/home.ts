@@ -10,7 +10,7 @@ import {
   bucketTotal, bucketCost,
 } from '../state'
 import { usd, signed, when, pct, shares, greeting, activityLabel } from '../format'
-import { go } from '../router'
+import { go, openSheet } from '../router'
 import { isMobile } from '../responsive'
 
 /** The line under the greeting, which used to assert that nothing needed
@@ -225,7 +225,7 @@ function detailed(): HTMLElement {
           table(
             [{ key: 'who', label: '' }, { key: 'state', label: '' }, { key: 'amt', label: '', align: 'right' }],
             activityRows(4),
-            (i) => go('/activity?sheet=receipt&ref=' + state.activity[i].ref)
+            (i) => openSheet('receipt', { ref: state.activity[i].ref })
           )
         )),
       h('div', { class: 'stack col-side' }, growCard, positions, available))
@@ -332,7 +332,7 @@ function gateway(): HTMLElement {
       table(
         [{ key: 'who', label: '' }, { key: 'state', label: '' }, { key: 'amt', label: '', align: 'right' }],
         activityRows(5),
-        (i) => go('/activity?sheet=receipt&ref=' + state.activity[i].ref)
+        (i) => openSheet('receipt', { ref: state.activity[i].ref })
       )
     )
   )

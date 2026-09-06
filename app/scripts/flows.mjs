@@ -1,5 +1,5 @@
 import { chromium } from 'playwright'
-import { seen } from './seen.mjs'
+import { seen, settled } from './seen.mjs'
 const base = 'http://localhost:4173/#'
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const page = await browser.newPage({ viewport: { width: 1440, height: 1024 } })
@@ -32,7 +32,7 @@ async function clickText(t, opts = {}) {
 /* ---- flow 1: borrow, end to end, and check the money actually moved ---- */
 log.push('FLOW 1  Grow → Borrow → review → confirm → receipt')
 await page.goto(base + '/transfer', { waitUntil: 'networkidle' })
-const cashBefore = await text('.hero-figure')
+const cashBefore = (await settled(page, '.hero-figure')).trim()
 await step('wallet cash before: ' + cashBefore.trim())
 
 await page.goto(base + '/grow', { waitUntil: 'networkidle' })
@@ -48,14 +48,19 @@ await step('sheet: ' + (await text('.sheet-head h2')).trim() + ' / ' + (await te
 await page.locator('.sheet .btn-primary').click()
 await page.waitForTimeout(600)
 await step('outcome: ' + (await text('.sheet .t-title')).trim() + ' — ' + (await text('.sheet .figure .muted')).trim())
-await page.locator('.sheet .btn-secondary').click()   // View in History
+await page.locator('.sheet .btn-secondary').click()   // See the record
 await page.waitForTimeout(250)
-await step('landed on ' + page.url().split('#')[1].split('?')[0] + ' with sheet ' + (await text('.sheet-head h2')).trim())
+// In place: the record opens over the screen you were on rather than
+// navigating you to Activity to read it.
+await step('record opened on ' + page.url().split('#')[1].split('?')[0] + ', still: ' + (await text('.sheet-head h2')).trim())
 await page.keyboard.press('Escape')
 await page.waitForTimeout(150)
 
 await page.goto(base + '/transfer', { waitUntil: 'networkidle' })
-await step('wallet cash after: ' + (await text('.hero-figure')).trim())
+// The wallet's figure travels to its new value, so a read taken a fixed
+// moment after arriving is a read of the animation. This suite reports rather
+// than asserts, so it printed the old balance and nothing failed.
+await step('wallet cash after: ' + (await settled(page, '.hero-figure')).trim())
 
 /* ---- flow 2: repay it back ---- */
 log.push('')

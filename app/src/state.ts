@@ -585,6 +585,18 @@ export const tradeFee = (amount: number): number =>
 export const maxInvestable = (): number =>
   Math.floor((state.cash / (1 + state.fees.trade / 100)) * 100) / 100
 
+/** What a trade was before its fee — the figure the person typed.
+ *
+ *  A movement records what left or arrived, which for a buy is the amount plus
+ *  the fee and for a sell is the proceeds after it. Reading shares back off
+ *  the recorded amount without undoing that gives the wrong count: a $200 buy
+ *  of Nvidia was written as −$201.00 and read back as 1.6905 shares when
+ *  1.6821 were bought. The rule lives here, beside buy() and sell(), because a
+ *  receipt derived one way and a trade recorded another is how a document
+ *  ends up disagreeing with the thing it documents. */
+export const grossOf = (a: Activity): number =>
+  a.type === 'Sold' ? Math.abs(a.amount) + (a.fee ?? 0) : Math.abs(a.amount) - (a.fee ?? 0)
+
 export const bucketTotal = (): number =>
   state.bucket.reduce((t, b) => t + b.dollars, 0)
 
