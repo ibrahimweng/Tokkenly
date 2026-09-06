@@ -445,8 +445,8 @@
    for the review, which repeats it anyway. */
 @media (max-width: 899px) {
   .sheet { gap: 16px; }
-  .sheet .ruler { height: 44px; }
-  .sheet .hint { display: none; }
+  /* The ruler and its hint are not rendered on a phone at all now, so the
+     rules that used to shorten one and hide the other have nothing to do. */
   .sheet .key { height: 48px; }
   .sheet .amount-box { padding: 4px 20px; }
   .sheet .amount-box input { font-size: 30px; line-height: 40px; width: 180px; }
