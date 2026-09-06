@@ -3,7 +3,7 @@ import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, emptyState } from '../components/bits'
 import { table } from '../components/table'
-import { CATALOGUE, CATEGORIES, INDICES, PICKS, find, discount, type Instrument } from '../catalogue'
+import { CATALOGUE, CATEGORIES, INDICES, PICKS, find, discount, markGap, type Instrument } from '../catalogue'
 import { state, actions, inBucket } from '../state'
 import { usd, pct } from '../format'
 import { go, current } from '../router'
@@ -171,8 +171,8 @@ export function marketScreen(): HTMLElement {
                   // site's first numeric column, and it is the one number a
                   // tokenised product cannot honestly leave out.
                   h('span', { class: 'two-line right' },
-                    h('span', { class: (discount(c) >= 0 ? 'pos' : 'warn') + ' t-body-strong nowrap',
-                      text: (discount(c) >= 0 ? '+' : '') + pct(discount(c), 2) }),
+                    h('span', { class: (markGap(c).over ? 'warn' : 'pos') + ' t-body-strong nowrap',
+                      text: markGap(c).pct + ' ' + markGap(c).word }),
                     h('small', { text: usd(c.mark) })),
                   rangeBar(c),
                   h('span', { class: 'muted nowrap', text: c.cap }),

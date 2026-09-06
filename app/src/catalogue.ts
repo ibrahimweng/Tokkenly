@@ -60,6 +60,19 @@ export const CATALOGUE: Instrument[] = [
 export const discount = (c: Instrument): number =>
   c.mark ? ((c.mark - c.price) / c.mark) * 100 : 0
 
+/** How that gap reads on screen. The figure is unsigned and the word carries
+ *  the direction, because a signed percentage in a price column gets read as a
+ *  price move: "−0.17%" beside Apple looked like a fall when it meant you were
+ *  paying 0.17% over the real share, and the stock page put the sign and the
+ *  word in one sentence — "−0.17% above $223.72" — which cannot both be true.
+ *  One helper, so the table, the stock page and the composer cannot drift into
+ *  three conventions again. */
+export function markGap(c: Instrument): { pct: string; word: string; over: boolean } {
+  const d = discount(c)
+  const over = d < 0
+  return { pct: Math.abs(d).toFixed(2) + '%', word: over ? 'above' : 'below', over }
+}
+
 export const CATEGORIES = ['Popular', 'ETFs', 'Technology', 'Steady', 'Consumer', 'Health', 'Everything']
 
 export const INDICES = [

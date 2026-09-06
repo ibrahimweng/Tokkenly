@@ -2,7 +2,7 @@ import { h } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, kv, callout } from '../components/bits'
-import { find, discount, type Instrument } from '../catalogue'
+import { find, markGap, type Instrument } from '../catalogue'
 import { barChart, type Range } from '../components/chart'
 import { state, actions, holding, inBucket } from '../state'
 import { usd, pct, signed } from '../format'
@@ -58,13 +58,11 @@ function bucketAdd(c: Instrument): HTMLElement {
  *  this is the number that decides whether the price on screen is a good one,
  *  and leaving it out is the one omission a trader would call dishonest. */
 function markLine(c: Instrument): HTMLElement {
-  const d = discount(c)
-  const cheap = d >= 0
+  const g = markGap(c)
   return h('span', { class: 'mark-line' },
-    h('span', { class: (cheap ? 'pos' : 'warn') + ' t-body-strong',
-      text: (cheap ? '+' : '') + pct(d, 2) }),
+    h('span', { class: (g.over ? 'warn' : 'pos') + ' t-body-strong', text: g.pct }),
     h('span', { class: 'muted t-caption',
-      text: `${cheap ? 'below' : 'above'} ${usd(c.mark)}, the real ${c.name} price` }))
+      text: `${g.word} ${usd(c.mark)}, the real ${c.name} price` }))
 }
 
 /** Four windows in a row. One percentage cannot tell a fresh move from a
