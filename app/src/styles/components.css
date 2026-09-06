@@ -314,16 +314,38 @@
   pointer-events: none;
   z-index: -1;
 }
+/* The pill used to shrink-wrap four circles. With words in it that leaves
+   "Transfer" clipped, so it takes the width the row has left over instead —
+   capped, because a capsule stretched across a wide phone stops reading as a
+   floating control and starts reading as a bar. */
 .rail-pill {
-  display: flex; gap: 4px; padding: 8px;
+  display: flex; gap: 2px; padding: 6px;
   background: var(--sunken); border-radius: 999px;
   box-shadow: var(--shadow-float);
+  flex: 1 1 auto; min-width: 0; max-width: 340px;
 }
+/* Icon over name. The tab was a 48px circle that grew to 64 when it was the
+   one you were on; with a word under the icon the width is set by the word,
+   so they share the room evenly and the lit one is told apart by its fill
+   rather than by being fatter than its neighbours. */
 .rail-tab {
-  width: 48px; height: 48px; border-radius: 999px;
-  display: grid; place-items: center; color: var(--muted);
+  flex: 1 1 0; min-width: 0;
+  height: 52px; padding: 0 2px; border-radius: 999px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  color: var(--muted);
 }
-.rail-tab[aria-current='page'] { width: 64px; background: var(--inverse); color: var(--on-inverse); }
+.rail-tab .ic { display: grid; place-items: center; height: 18px; }
+.rail-label {
+  font-size: 10px; line-height: 12px; font-weight: 600; letter-spacing: 0.01em;
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.rail-tab[aria-current='page'] { background: var(--inverse); color: var(--on-inverse); }
+/* 360 is the width most budget Android phones actually are, and "Transfer" is
+   the longest of the four. Below 400 the rail gives up its side gutters
+   before it gives up a word. */
+@media (max-width: 399px) {
+  .railbar { padding: 0 12px; gap: 8px; }
+}
 .rail-more {
   width: 64px; height: 64px; border-radius: 999px; flex: none;
   background: var(--sunken); color: var(--muted);

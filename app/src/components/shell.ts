@@ -135,8 +135,13 @@ function topBar(): HTMLElement {
 function rail(active: Place): HTMLElement {
   const pill = h('div', { class: 'rail-pill' })
   for (const p of TABS) {
-    const tab = h('button', { class: 'rail-tab', html: p.ic(), ariaLabel: p.label,
-      on: { click: () => go(p.to) } })
+    // The name, not only the icon. Four unlabelled glyphs is a memory test,
+    // and this product's whole thesis is teaching somebody their first share
+    // — the sidebar has said Home, Invest, Transfer, Grow in words since the
+    // start, and the phone is where most of these people will actually be.
+    const tab = h('button', { class: 'rail-tab', on: { click: () => go(p.to) } },
+      h('span', { class: 'ic', html: p.ic() }),
+      h('span', { class: 'rail-label', text: p.label }))
     if (p.id === active) tab.setAttribute('aria-current', 'page')
     pill.appendChild(tab)
   }
