@@ -91,9 +91,16 @@ console.log('CHART  a range that redraws nothing is a button that lies')
   await p.waitForTimeout(200)
   const tip = await p.evaluate(() => {
     const t = document.querySelector('.ch-tip')
-    return t.hidden ? null : { text: t.innerText.replace(/\n/g, ' '), lit: document.querySelectorAll('.ch-candle.on').length }
+    if (t.hidden) return null
+    // Candles light the one you are on; a line moves a cursor to it. Either
+    // way exactly one thing on the plot marks where the pointer is.
+    const cursor = document.querySelector('.ch-cursor')
+    return {
+      text: t.innerText.replace(/\n/g, ' '),
+      marked: document.querySelectorAll('.ch-candle.on').length + (cursor && !cursor.hidden ? 1 : 0),
+    }
   })
-  ok('pointing at a bar says what it was worth', !!tip && tip.lit === 1, tip ? tip.text : 'no tooltip')
+  ok('pointing at a point says what it was worth', !!tip && tip.marked === 1, tip ? tip.text : 'no tooltip')
   await p.close()
 }
 
