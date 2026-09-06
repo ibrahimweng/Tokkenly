@@ -4207,14 +4207,14 @@ because the sweep did not include the sign-in screens. It does now.
 - Face ID is a button that succeeds after half a second. WebAuthn would make
   it real and is out of scope for a prototype with no server.
 
-## 11g. An outside pass, and five tiers of it built
+## 11g. An outside pass, and all six tiers of it built
 
 The brief was to come at this the way a design associate brought in to make a
 product market-ready would: criticise everything, name what is wrong rather
 than what could be nicer, and rank it. The pass produced forty-four numbered
 findings across six tiers, ordered by what a person loses if it is not fixed
-rather than by how hard it is. Tiers 0 to 4 are built and are what follows;
-tier 5 is finish.
+rather than by how hard it is. All six are built and are what follows, bar one
+item held back on purpose.
 
 The tiering rule worth keeping: **tier 0 is not "the important ones", it is the
 ones where the product says something untrue.** Everything in it was a screen
@@ -4806,10 +4806,142 @@ back in.
     of ring: at the density this chart actually draws, the hollow candle would
     have been a filled candle with a slightly different colour.
 
-### 11g.14 Still open
+### 11g.14 Tier 5: the ones nobody files a bug for
 
-- Tier 5 (finish, items 37–44) is not started.
-- Item 30, the dot art, is deliberately unbuilt. See 11g.10.
+Eight items, individually small and collectively the difference between
+nearly-finished and finished.
+
+**One name per thing.** Add money had five surfaces and three names: the
+registry, the breadcrumb, the palette and the wallet tile called it Add money;
+the screen called itself Buy dollars, the button said Buy, and the review said
+"You are buying". The place called Invest was still the Market in two leaves —
+an empty bucket offering to send you "to the market", a missing company
+offering "back to Market". And Home's third door said "Convert money" and
+opened a screen headed "Withdraw to your bank"; its own copy describes both
+directions, which is the Transfer place rather than the Withdraw action, so
+that is where it goes now.
+
+**Preferences was six settings in five shapes.** Half the rows had a glyph and
+half did not, the introduction was a hand-built div rather than a control, and
+two chip groups sat identical to each other while one sets a starting amount
+and the other decides when the product stops and asks who is holding the
+phone. Every row is glyph, label, description, control now, and the two chip
+groups tell themselves apart by a bucket and a padlock before the words do.
+
+Two flex faults surfaced doing it, and the first is worth writing down:
+`.grow` is `flex: 1 1 auto`, so a label's basis is the width of its longest
+sentence. On a wrapping row that pushes the label onto a line of its own and
+leaves the glyph sitting alone above it — on exactly the settings whose
+description runs past one line, and only those, which is why it looked
+arbitrary rather than broken.
+
+**The Settled pill was on all twenty activity rows**, which is a column of
+grey rather than a status. It appears only when there is something to say.
+
+**The chart's overlay was inset by nothing**, so it spanned the plot including
+the 56px gutter the y-axis labels live in: the real-price line started
+underneath them and its tag sat on top of one. "$220" read through a purple
+badge on every stock page, in both themes, at every width. Two of the four
+things this item listed were already gone — Account's eyebrow stopped
+overlapping its title when Account became an index, and the Low label stopped
+being under the rail when item 15 gave the rail a fade. Checked rather than
+assumed.
+
+79. **A label placed relative to a container is placed relative to its
+    padding too.** The overlay was correct about the plot and wrong about the
+    gutter, and the gutter is where the labels are.
+
+### 11g.15 The first screen, and what it was not saying
+
+Sign-in was the least designed screen in the product and the first one a
+stranger sees: a 480px card alone in the middle of a 1440px canvas, a Google
+button wearing an envelope, the seeded person's own address in the email
+placeholder, a password field with no way to check what you typed, no error
+state, no loading state, and nothing answering the question the screen is
+actually asking — why would I give these people my money.
+
+The answer was already written and was two links away. Three statements from
+`/disclosures` sit beside the form now, in their own words, with the first line
+of the disclosures under them as the counterweight: shares go down as well as
+up, nothing here is a savings account. A screen carrying three reassurances and
+no risk is an advert.
+
+The form has states. Empty fields are named where they are empty, the button
+goes busy, a refusal leaves you on the screen with the reason under the fields,
+and offline refuses like every other action. Which sign-in fails is
+deterministic — the password `wrong` — the same idea as the cents rule, and in
+the README beside it. The password can be looked at, because typing ten
+characters you cannot see on a phone keyboard and then being told only that it
+was wrong is how somebody resets a password they had right the second time.
+
+The envelope is gone rather than replaced: it said "email" on the one button
+that is not email, and drawing somebody else's mark from memory is a worse
+answer than drawing none.
+
+80. **Every claim on a sign-in screen should exist somewhere else in the
+    product.** One that appears only there is a marketing claim, and a money
+    product cannot afford to make its first statement its least accountable.
+
+### 11g.16 Serving our own type, and what that revealed
+
+Two weights of Geist came from `fonts.googleapis.com` with no local copy.
+`display=swap` meant nothing ever blocked on it, which is exactly why this
+never looked broken — but on the connections this market has, a real share of
+sessions rendered the whole product in `ui-sans-serif`. Measured, "$2,480.00"
+at 48/600 is 245px in Geist and 192 in the fallback: a quarter narrower, on a
+screen where every figure is a number. Those sessions were not seeing a
+slightly different font. They were seeing a different design.
+
+Two files, 46KB together, because Google serves Geist as a variable font — one
+face covers 400 and 600. Both subsets are kept: latin-ext holds U+20A0–20AB
+and the naira sign is U+20A6, so dropping it to save 16KB would take ₦ out of
+a product for Nigeria.
+
+Which means every fit and overflow figure in this repository had been measured
+in the wrong font. Re-run in the real one: the composer sheets grew — Borrow's
+content from 740 to 786, Invest's to 814 — and the button is still on screen on
+all nine, which is what the sticky footer from item 02 was for.
+
+81. **A fallback that never blocks is a fallback nobody notices shipping.**
+    The failure mode of a webfont is not a blank screen, it is a different
+    product rendered to a fraction of your users, and no test will find it
+    while the tests are rendering the fallback too.
+
+### 11g.17 Filling a hole with the thing that was missing
+
+Three screens ended halfway down the window with one column trailing the other,
+and in two of them the empty space and a missing answer were the same hole.
+
+Transfer listed what was still in flight — usually nothing — and stopped. It
+was also the only screen in the product about your cash that never showed what
+had happened to it: Home carries a recent list, the wallet did not. Verify sat
+under a 192px card with four hundred pixels of nothing below it, and somebody
+about to type a national ID number into a phone has three questions, all three
+of which were already answered elsewhere in this product.
+
+Add money and Withdraw now carry their recent movements, the way Invest and
+Sell already carry their recent orders. The first version filtered on `kind ===
+'payment' && amount > 0`, which put "Received Adaeze Okonkwo" under a heading
+reading "Money you have added" — a card wrong about the one thing it was for.
+And it is not rendered at all when there is nothing in it.
+
+What is not fixed, and is not pretended otherwise: the composer's own two
+columns still come out 722 against 336. A tall form beside a short context card
+is the shape of that pattern, and the only way to balance it would be to invent
+a card — which is the filler this item is about.
+
+82. **Dead space is a symptom; the diagnosis is usually a missing answer.**
+    Two of these three screens were short because they were not saying
+    something they should have been. The third is short because it is short,
+    and the right response to that is to leave it alone.
+
+### 11g.18 Still open
+
+- All forty-four items are settled except one: item 30, the dot art, is
+  deliberately unbuilt. See 11g.10.
+- The composer's two columns are 722 against 336 and stay that way. See 11g.17.
+- Sign-in refuses the password `wrong` and accepts everything else, which is a
+  prototype's shape of a real check, not a real one.
 - Tier 4 covered what was absent. What it did not do is put the product in
   front of a real screen reader: every assertion in `a11y.mjs` is about the
   DOM, and a tree that is correct on paper can still read badly aloud.
