@@ -5,7 +5,10 @@ const p = await b.newPage({ viewport: { width: 390, height: 844 } })
 const rows = []
 for (const hash of ['/grow/borrow','/grow/repay','/grow/earn','/grow/takeout','/send','/addmoney','/withdraw','/invest/aapl/invest','/invest/aapl/sell']) {
   await p.goto(base + hash, { waitUntil: 'networkidle' })
-  await p.waitForTimeout(160)
+  // Past the 200ms slideup. Measuring at 160 caught the sheet mid-travel and
+  // reported the button below the fold about one run in three, which is worse
+  // than not checking: a gate that cries wolf gets ignored.
+  await p.waitForTimeout(320)
   const r = await p.evaluate(() => {
     const sheet = document.querySelector('.sheet')
     const btn = sheet && sheet.querySelector('.btn-primary')

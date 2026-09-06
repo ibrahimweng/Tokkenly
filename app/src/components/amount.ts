@@ -42,7 +42,10 @@ export function amountComposer(opts: {
   note?: string
   quick?: { label: string; value: number }[]
 }): AmountComposer {
-  let value = opts.initial
+  // The composer never holds a figure above its own ceiling, not even the one
+  // it was handed. A screen that asks to open at more than the account can
+  // move gets the ceiling, and the caller is told to say why.
+  let value = Math.min(opts.max, Math.max(0, opts.initial))
   const subs: ((v: number, capped: boolean) => void)[] = []
 
   const input = h('input', {

@@ -382,6 +382,19 @@
   .sheet .amount-box { padding: 4px 20px; }
   .sheet .amount-box input { font-size: 30px; line-height: 40px; width: 180px; }
   .sheet .chip-row .chip { flex: 1 1 0; padding: 0 8px; }
+
+  /* Shortening the parts above got the button on screen, but only just, and
+     only for the sheets as they were: the buy sheet went over the moment it
+     had to carry a sentence saying why the amount had stopped at the limit.
+     A fit that close is a coincidence waiting to be broken by a sixth row.
+     So the action stops taking part in the scroll. The ring is the sheet's
+     own ground at the width of its padding, so what scrolls underneath does
+     not appear beside or below the button. */
+  .sheet { padding-bottom: 20px; }
+  .sheet > .btn:last-child {
+    position: sticky; bottom: 0;
+    box-shadow: 0 0 0 20px var(--sunken);
+  }
 }
 
 /* ---------------------------------------------------------------- motion --

@@ -48,8 +48,17 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
   // so only one thing is ever floating over the base.
   if (overlaid && current().sheet) return renderBase(spec.base)
 
+  // What the composer can actually open at. A screen asks for a comfortable
+  // starting figure — $500 of a share, $300 out to a bank — without knowing
+  // what this account is allowed to move, and an unverified account is
+  // allowed $250. Opening above the ceiling left the field reading $500, the
+  // receipt costing $500, and the button dead, with nothing on screen saying
+  // why. Open at the ceiling instead, and say so.
+  const opening = Math.min(spec.initial, spec.max)
+  const openedCapped = spec.initial > spec.max
+
   const comp = amountComposer({
-    initial: spec.initial,
+    initial: opening,
     max: spec.max,
     note: spec.note,
     quick: spec.quick,
@@ -77,7 +86,7 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
     const v = comp.get()
     if (v > 0 && v <= spec.max) spec.onAction(v)
   })
-  paint(spec.initial)
+  paint(opening, openedCapped)
 
   if (overlaid) {
     const leave = () => (spec.closeTo && !mobile ? go(spec.closeTo) : history.back())
