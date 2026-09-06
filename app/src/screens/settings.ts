@@ -162,10 +162,16 @@ function securityBody(): (Node | null)[] {
         () => openSheet('password')),
       toggle({ label: 'Face ID', sub: 'Unlock without typing your PIN', ic: icon.face(),
         get: () => s.faceId, set: (v) => actions.setSecurity('faceId', v) }),
-      toggle({ label: 'Ask for the PIN when the app opens',
-        sub: 'Off means anyone holding your unlocked phone is already in',
+      toggle({ label: 'Lock the app',
+        sub: 'Asks for your PIN when you open it, and after two minutes away. Off means anyone holding your unlocked phone is already in.',
         ic: icon.alert(),
-        get: () => s.appLock, set: (v) => actions.setSecurity('appLock', v) })),
+        get: () => s.appLock, set: (v) => actions.setSecurity('appLock', v) }),
+      // A lock you can only reach by waiting is a lock nobody tests. This is
+      // also the button somebody wants when they hand the phone over.
+      s.appLock
+        ? h('button', { class: 'btn btn-secondary btn-sm', text: 'Lock now',
+            on: { click: () => actions.lock() } })
+        : null),
     card(
       cardHead('Recovery'),
       actionRow('Recovery phrase',

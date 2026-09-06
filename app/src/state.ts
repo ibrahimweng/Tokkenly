@@ -188,6 +188,11 @@ export interface Device {
 
 export interface State {
   signedIn: boolean
+  /** Whether this app session has been unlocked. Kept in sessionStorage, not
+   *  localStorage: an unlock that outlives the tab is not a lock, and a lock
+   *  that outlives a reload of a tab you never closed is an annoyance. The
+   *  tab closing is the cold start the lock exists for. */
+  unlocked: boolean
   prefs: Prefs
   security: Security
   person: { name: string; email: string; phone: string; dob: string; address: string }
@@ -235,20 +240,29 @@ export interface State {
    Only these two are kept, and a browser that refuses storage just gets the
    defaults rather than an error. */
 const KEEP = 'tokkenly.prefs.v1'
+const SESSION = 'tokkenly.unlocked'
+
+/** How long the app may sit in the background before it wants the PIN again.
+ *  A lock that only fires on a cold start protects a phone that has been
+ *  turned off, which is not the phone anybody loses. */
+export const IDLE_LOCK_MS = 2 * 60 * 1000
 
 function remember(): void {
   try {
     localStorage.setItem(KEEP, JSON.stringify({
       prefs: state.prefs, seenIntro: state.seenIntro,
-      // The wrong-attempt count is deliberately not kept: a lockout that
-      // survives a reload is a lockout a person cannot clear, and this has no
-      // server to clear it for them.
-      security: { ...state.security, wrongPin: 0 },
+      // The attempt count is kept. A lockout a reload clears is not a
+      // lockout — and there is a way out that does not need a server: the
+      // password. Signing in unlocks, and unlocking resets the count.
+      security: state.security,
     }))
   } catch { /* private windows and blocked storage are not a failure */ }
 }
 
 export function recall(): void {
+  try {
+    state.unlocked = sessionStorage.getItem(SESSION) === '1'
+  } catch { /* no session storage: the lock simply asks again */ }
   try {
     const raw = localStorage.getItem(KEEP)
     if (!raw) return
@@ -261,7 +275,7 @@ export function recall(): void {
       ...DEFAULT_PREFS, ...saved.prefs,
       notify: { ...DEFAULT_PREFS.notify, ...(saved.prefs?.notify ?? {}) },
     }
-    state.security = { ...DEFAULT_SECURITY, ...saved.security, wrongPin: 0 }
+    state.security = { ...DEFAULT_SECURITY, ...saved.security }
     state.seenIntro = saved.seenIntro ?? false
   } catch { /* unreadable or from an older shape: the defaults stand */ }
 }
@@ -281,6 +295,7 @@ const today = (): string =>
 
 export const state: State = {
   signedIn: true,
+  unlocked: false,
   prefs: { ...DEFAULT_PREFS, notify: { ...DEFAULT_PREFS.notify } },
   security: { ...DEFAULT_SECURITY },
   person: {
@@ -776,11 +791,26 @@ export const actions = {
 
   signIn() {
     state.signedIn = true
-    changed()
+    // Getting in with the password is getting in. Asking for the PIN
+    // immediately afterwards is asking the same question twice.
+    actions.unlock()
   },
 
   signOut() {
     state.signedIn = false
+    actions.lock()
+  },
+
+  unlock() {
+    state.unlocked = true
+    state.security.wrongPin = 0
+    try { sessionStorage.setItem(SESSION, '1') } catch { /* fine */ }
+    changed()
+  },
+
+  lock() {
+    state.unlocked = false
+    try { sessionStorage.removeItem(SESSION) } catch { /* fine */ }
     changed()
   },
 }

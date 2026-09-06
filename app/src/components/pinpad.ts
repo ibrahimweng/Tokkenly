@@ -11,7 +11,7 @@ import { icon } from '../icons'
  *  input, so asking for a Continue tap after the fourth is asking twice. */
 export interface PinPad {
   el: HTMLElement
-  /** Empties the dots and refocuses, for a second attempt or a next step. */
+  /** Empties the dots, for a second attempt or a next step. */
   reset: () => void
   /** Shakes, clears, and puts a message under the dots. */
   reject: (message: string) => void
@@ -23,7 +23,6 @@ export function pinPad(opts: {
   onFull: (pin: string) => void
   /** A line under the dots that is not an error — what this PIN is for. */
   hint?: string
-  autofocus?: boolean
 }): PinPad {
   let value = ''
   const dots = h('div', { class: 'pin-dots', role: 'status', ariaLabel: 'No digits entered' })
@@ -68,22 +67,32 @@ export function pinPad(opts: {
   pad.appendChild(h('button', { class: 'key', type: 'button', html: icon.back(),
     ariaLabel: 'Delete', on: { click: back } }))
 
-  // On a desktop there is a keyboard, and a pad you can only click is a pad
-  // that makes somebody reach for the mouse to type four numbers.
-  const el = h('div', { class: 'pinpad', tabIndex: 0 }, dots, note, pad)
-  el.addEventListener('keydown', (e) => {
-    const k = (e as KeyboardEvent).key
-    if (/^\d$/.test(k)) { press(k); e.preventDefault() }
-    else if (k === 'Backspace') { back(); e.preventDefault() }
-  })
+  const el = h('div', { class: 'pinpad' }, dots, note, pad)
+
+  // Typing goes through the document, not through a focused element. A pad
+  // that has to be focused first either needs a ring around it — which makes
+  // four dots read as a text field — or an autofocus, which puts that ring up
+  // before anybody has touched a key. Neither is right on a screen where the
+  // pad is the only thing there is to do.
+  //
+  // Self-cleaning: this app replaces a screen wholesale rather than unmounting
+  // it, so the listener drops itself the moment its pad leaves the document.
+  const onKey = (e: KeyboardEvent) => {
+    if (!el.isConnected) { document.removeEventListener('keydown', onKey); return }
+    const t = e.target as HTMLElement | null
+    // Somebody typing into a field is typing into a field.
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return
+    if (/^\d$/.test(e.key)) { press(e.key); e.preventDefault() }
+    else if (e.key === 'Backspace') { back(); e.preventDefault() }
+  }
+  document.addEventListener('keydown', onKey)
 
   paint()
-  if (opts.autofocus !== false) setTimeout(() => el.focus(), 60)
 
   return {
     el,
     value: () => value,
-    reset: () => { value = ''; paint(); el.focus() },
+    reset: () => { value = ''; paint() },
     reject: (message: string) => {
       value = ''
       paint()
@@ -93,7 +102,6 @@ export function pinPad(opts: {
       // reflow, or a second failure in a row does not re-run the animation
       void dots.offsetWidth
       dots.classList.add('shake')
-      el.focus()
     },
   }
 }

@@ -228,7 +228,10 @@
 }
 
 /* ---------- auth ---------- */
-.auth { min-height: 100vh; display: grid; place-items: center; padding: 32px; }
+.auth {
+  min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr);
+  place-items: center; padding: 32px;
+}
 .auth-card {
   width: 480px; max-width: 100%; background: var(--sunken);
   border-radius: var(--r-sheet); padding: 32px; display: flex; flex-direction: column; gap: 24px;
@@ -1147,11 +1150,7 @@ th.right .th-sort { flex-direction: row-reverse; }
 /* ---------------------------------------------------------------- the PIN --
    Four dots and a pad. The dots are the whole readout: a filled one says how
    far you are without putting a digit on a screen somebody can see. */
-.pinpad {
-  display: flex; flex-direction: column; align-items: center; gap: 16px;
-  outline: none;
-}
-.pinpad:focus-visible .pin-dots { box-shadow: 0 0 0 2px var(--ink); border-radius: 999px; }
+.pinpad { display: flex; flex-direction: column; align-items: center; gap: 16px; }
 .pin-dots { display: flex; gap: 16px; padding: 8px 12px; }
 .pin-dot {
   width: 14px; height: 14px; border-radius: 999px; flex: none;
@@ -1260,3 +1259,30 @@ th.right .th-sort { flex-direction: row-reverse; }
 .pin-gate { align-items: center; }
 .pin-gate > .t-caps { align-self: flex-start; }
 .pin-gate > .btn { width: 100%; }
+
+/* ------------------------------------------------------------- the lock --
+   The whole screen, and nothing on it but who you are and the way in. No
+   balance, no notifications, no navigation: everything the lock exists to
+   keep from the person holding the phone. */
+/* minmax(0, 1fr), not the implicit `auto`. An auto column is sized to the
+   max-content of its item, so the card's own `max-width: 100%` resolves
+   against its own 400px and constrains nothing — the card hung 30px off a
+   390 screen. `.auth` had the same bug and had never been swept. */
+.lock {
+  min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr);
+  place-items: center; padding: 32px;
+}
+.lock-card {
+  width: 400px; max-width: 100%; background: var(--sunken);
+  border-radius: var(--r-sheet); padding: 32px;
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+}
+.lock-avatar { width: 56px; height: 56px; font-size: 18px; }
+.lock-mark { width: 56px; height: 56px; background: var(--tint-warning); color: var(--warning); }
+.lock-card .pinpad { width: 100%; }
+.lock-face { width: 100%; justify-content: center; gap: 10px; }
+.lock-card > .btn { width: 100%; }
+@media (max-width: 899px) {
+  .lock { padding: 20px; align-content: center; }
+  .lock-card { padding: 24px; }
+}
