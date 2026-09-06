@@ -181,6 +181,32 @@
 .chip[aria-pressed='true'] { background: var(--inverse); color: var(--on-inverse); }
 .chip-row { display: flex; gap: 8px; flex-wrap: wrap; }
 
+/* ---------- search ----------
+   The field, and the panel of closest matches under it. The panel is absolute
+   so the page does not jump as it opens and closes: a list of results that
+   pushes the results down the screen is a list fighting itself. */
+.search { position: relative; }
+.suggest {
+  position: absolute; left: 0; right: 0; top: calc(100% + 8px); z-index: 40;
+  background: var(--surface); border: 1px solid var(--control);
+  border-radius: var(--r-panel); padding: 8px;
+  box-shadow: var(--shadow-float);
+  max-height: 320px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.suggest-group { padding: 8px 12px 4px; }
+.suggest-row {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  min-height: 44px; padding: 8px 12px; border-radius: 10px;
+  text-align: left; font-size: 14px; color: var(--ink);
+}
+.suggest-row .suggest-hint { flex: none; font-size: 13px; }
+.suggest-row .two-line small { font-size: 12px; line-height: 16px; }
+/* The keyboard cursor and the pointer land on the same treatment, so moving
+   between the two does not look like two different lists. */
+.suggest-row.on { background: var(--control); }
+.search-note { margin: 0; }
+
 .field {
   display: flex; align-items: center; gap: 12px;
   height: 48px; padding: 0 20px; border-radius: var(--r-panel);
@@ -1350,6 +1376,7 @@ th.right .th-sort { flex-direction: row-reverse; }
   }
 
   /* -- small controls -- */
+  .suggest-row:hover { background: var(--control); }
   .icon-btn:hover { background: var(--control); color: var(--ink); }
   .close:hover { background: var(--inverse-hover); }
   /* An unselected chip warms up. A selected one stays selected — turning it

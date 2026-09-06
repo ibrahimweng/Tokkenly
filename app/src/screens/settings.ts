@@ -2,6 +2,8 @@ import { h } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader, eyebrow } from '../components/shell'
 import { card, cardHead, kv, callout, emptyState, toggle, choice, prefAction } from '../components/bits'
+import { searchField, searchNote } from '../components/search'
+import { rank, onlyNear } from '../match'
 import { state, actions, verified, LIMITS } from '../state'
 import { usd } from '../format'
 import { openSheet, go, current } from '../router'
@@ -276,37 +278,56 @@ const QA: [string, string][] = [
   ['Why is my payment still settling', 'The network is busy. It clears on its own, usually within a minute'],
 ]
 
+/** The answers, lifted out so the search can repaint them without rebuilding
+ *  the page around the field being typed into. */
+function qaCard(list: readonly (readonly [string, string])[], term: string): HTMLElement {
+  return card(
+    cardHead('Common questions'),
+    searchNote(term, list.length, onlyNear(term, [...list], ([q, a]) => [q, a])),
+    ...(list.length
+      ? list.map(([q, a]) =>
+          h('button', { class: 'set-row', on: { click: () => openSheet('answer', { q }) } },
+            h('span', { class: 'who' },
+              h('span', { class: 'mark', html: icon.info() }),
+              h('span', { class: 'two-line' },
+                h('span', { class: 't-body-strong', text: q }),
+                h('small', { text: a }))),
+            h('span', { class: 'muted set-chev', html: icon.chevron() })))
+      : [emptyState('Nothing matches that',
+          'No answer here covers it. A person will.',
+          { label: 'Email us', onClick: () => openSheet('contact') })]))
+}
+
 function supportBody(): (Node | null)[] {
   const r = current()
-  const term = (r.query.get('q') ?? '').toLowerCase()
-  const list = QA.filter(([q, a]) => !term || (q + ' ' + a).toLowerCase().includes(term))
+  const term = r.query.get('q') ?? ''
+  const FIELDS = ([q, a]: readonly [string, string]) => [q, a]
   const at = (v: string) => '/account/support' + (v ? '?q=' + encodeURIComponent(v) : '')
+
+  // The answers narrow as you type, and the panel goes straight to one — a
+  // question you can see the answer to is faster than a filtered list of
+  // questions you still have to open.
+  const answers = h('div', { class: 'stack' })
+  const paint = (t: string): void => {
+    const list = t.trim() ? rank(t, QA, FIELDS) : [...QA]
+    answers.replaceChildren(qaCard(list, t))
+  }
+  paint(term)
+
   return [
-    h('label', { class: 'field' },
-      h('span', { html: icon.search() }),
-      h('input', {
-        placeholder: 'Search help', value: r.query.get('q') ?? '',
-        on: {
-          keydown: (e) => {
-            if ((e as KeyboardEvent).key !== 'Enter') return
-            go(at((e.target as HTMLInputElement).value))
-          },
-        },
+    searchField({
+      placeholder: 'Search help',
+      value: term,
+      // The answer on the row as well as the question. Typing "recovry" finds
+      // "What happens if I lose my phone", which reads as a wrong answer until
+      // you can see that the answer is the recovery phrase.
+      suggest: (t) => rank(t, QA, FIELDS).slice(0, 6).map(([q, a]) => ({
+        label: q, sub: a, group: 'Answers', pick: () => openSheet('answer', { q }),
       })),
-    card(
-      cardHead('Common questions'),
-      ...(list.length
-        ? list.map(([q, a]) =>
-            h('button', { class: 'set-row', on: { click: () => openSheet('answer', { q }) } },
-              h('span', { class: 'who' },
-                h('span', { class: 'mark', html: icon.info() }),
-                h('span', { class: 'two-line' },
-                  h('span', { class: 't-body-strong', text: q }),
-                  h('small', { text: a }))),
-              h('span', { class: 'muted set-chev', html: icon.chevron() })))
-        : [emptyState('Nothing matches that',
-            'No answer here covers it. A person will.',
-            { label: 'Email us', onClick: () => openSheet('contact') })])),
+      onType: paint,
+      onCommit: (v) => go(at(v)),
+    }),
+    answers,
     card(
       cardHead('Talk to a person'),
       actionRow('Email us', state.person.email + ' · replies within one working day',

@@ -3,6 +3,8 @@ import { icon } from '../icons'
 import { shell, pageHeader, eyebrow, renderBase } from '../components/shell'
 import { card, cardHead, kv, callout, emptyState, fieldError, amount } from '../components/bits'
 import { table } from '../components/table'
+import { searchField, searchNote } from '../components/search'
+import { rank, onlyNear } from '../match'
 import { composerScreen } from '../components/composer'
 import { state, movementCeiling, ceilingLabel } from '../state'
 
@@ -47,7 +49,7 @@ export function peopleRows(onPick: (who: string) => void): HTMLElement[] {
 
 export function sendWhoScreen(): HTMLElement {
   const r = current()
-  const term = (r.query.get('q') ?? '').toLowerCase()
+  const term = r.query.get('q') ?? ''
   const setTerm = (v: string) => go('/send' + (v ? '?q=' + encodeURIComponent(v) : ''))
 
   const people = [...PEOPLE]
@@ -56,18 +58,34 @@ export function sendWhoScreen(): HTMLElement {
       const ib = state.activity.findIndex((x) => x.who === b)
       return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib)
     })
-    .filter((p) => !term || p.toLowerCase().includes(term))
 
-  const rows = people.map((p) =>
+  const PEOPLE_FIELDS = (n: string) => [n, lastPaid(n)]
+  const row = (n: string) =>
     h('button', {
       class: 'sheet-row',
-      on: { click: () => go('/send?to=' + encodeURIComponent(p)) },
+      on: { click: () => go('/send?to=' + encodeURIComponent(n)) },
     },
-      h('span', { class: 'avatar', text: initials(p) }),
+      h('span', { class: 'avatar', text: initials(n) }),
       h('span', { class: 'two-line' },
-        h('span', { class: 't-body-strong', text: p }),
-        h('small', { text: lastPaid(p) })),
-      h('span', { class: 'muted', html: icon.chevron() })))
+        h('span', { class: 't-body-strong', text: n }),
+        h('small', { text: lastPaid(n) })),
+      h('span', { class: 'muted', html: icon.chevron() }))
+
+  // The list narrows as you type. The address is only touched on Enter,
+  // because a route change rebuilds the tree and takes the focus with it.
+  const peopleCard = h('div', { class: 'stack' })
+  const paint = (t: string): void => {
+    const found = t.trim() ? rank(t, people, PEOPLE_FIELDS) : people
+    peopleCard.replaceChildren(card(
+      cardHead('People you can pay'),
+      searchNote(t, found.length, onlyNear(t, found, PEOPLE_FIELDS)),
+      found.length
+        ? h('div', { class: 'sheet-list' }, ...found.map(row))
+        : emptyState('Nobody by that name',
+            'Search another name, or send to an address below.',
+            { label: 'Clear the search', onClick: () => go('/send') })))
+  }
+  paint(term)
 
   const address = h('input', { placeholder: 'Paste a Base address' })
   const addressField = h('label', { class: 'field' }, address)
@@ -91,24 +109,21 @@ export function sendWhoScreen(): HTMLElement {
   return shell(
     'wallet',
     pageHeader('Send money', eyebrow('Cash available', usd(state.cash))),
-    h('label', { class: 'field' },
-      h('span', { html: icon.search() }),
-      h('input', {
-        placeholder: 'Search a name', value: r.query.get('q') ?? '',
-        on: {
-          keydown: (e) => {
-            if ((e as KeyboardEvent).key === 'Enter') setTerm((e.target as HTMLInputElement).value)
-          },
-        },
+    searchField({
+      placeholder: 'Search a name',
+      value: r.query.get('q') ?? '',
+      // Picking a name here is the whole screen: it goes straight to the
+      // composer with that person already in it.
+      suggest: (t) => rank(t, people, PEOPLE_FIELDS).slice(0, 7).map((n) => ({
+        label: n,
+        hint: 'Send money',
+        group: 'People',
+        pick: () => go('/send?to=' + encodeURIComponent(n)),
       })),
-    card(
-      cardHead('People you can pay'),
-      rows.length
-        ? h('div', { class: 'sheet-list' }, ...rows)
-        : emptyState('Nobody by that name',
-            'Search another name, or send to an address below.',
-            { label: 'Clear the search', onClick: () => go('/send') })
-    ),
+      onType: paint,
+      onCommit: setTerm,
+    }),
+    peopleCard,
     card(
       cardHead('Or send to an address'),
       addressField,

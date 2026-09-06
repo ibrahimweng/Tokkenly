@@ -2,6 +2,8 @@ import { h } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, emptyState } from '../components/bits'
+import { searchField, searchNote } from '../components/search'
+import { rank, onlyNear } from '../match'
 import { table } from '../components/table'
 import { CATALOGUE, CATEGORIES, INDICES, PICKS, find, discount, markGap, type Instrument } from '../catalogue'
 import { state, actions, inBucket } from '../state'
@@ -66,16 +68,72 @@ function countOf(list: Instrument[]): string {
   return bits.join(' · ')
 }
 
+/** The list itself. Lifted out of the screen so the search can repaint it
+ *  without rebuilding the page around the field being typed into. */
+function tableOf(rows: Instrument[],
+                 sort: { key: string; dir: 'asc' | 'desc'; onSort: (k: string) => void }): HTMLElement {
+  return table(
+    [
+      { key: 'name', label: 'Name', sortable: true },
+      { key: 'price', label: 'Price', align: 'right', sortable: true },
+      { key: 'day', label: 'Today', align: 'right', sortable: true },
+      { key: 'disc', label: 'vs real', align: 'right', optional: true, sortable: true },
+      { key: 'range', wide: true, label: 'Year range', optional: true },
+      { key: 'cap', wide: true, label: 'Size', align: 'right', optional: true, sortable: true },
+      { key: 'yield', wide: true, label: 'Yield', align: 'right', optional: true, sortable: true },
+      { key: 'holders', wide: true, label: 'Holders', align: 'right', optional: true, sortable: true },
+      { key: 'bucket', label: '', align: 'right' },
+    ],
+    rows.map((c) => [
+      h('span', { class: 'two-line' },
+        h('span', { class: 'name-line' },
+          h('span', { class: 't-body-strong', text: `${c.ticker} · ${c.name}` }),
+          c.kind === 'etf' ? h('span', { class: 'tag', text: 'ETF' }) : null),
+        // The one-line description is what the company does. On a
+        // phone the name cell is about 180px and the sentence
+        // wrapped to four lines, which turned a list of companies
+        // into a wall. It is on the stock page, one tap away.
+        h('small', { class: 'desk-only', text: c.plain })),
+      h('span', { class: 't-body-strong nowrap', text: usd(c.price) }),
+      h('span', { class: (c.dayPct >= 0 ? 'pos' : 'warn') + ' t-body-strong nowrap',
+        text: (c.dayPct >= 0 ? '+' : '') + pct(c.dayPct) }),
+      // What the token costs against the share it tracks, and the
+      // share's own price under it. The pair is the reference
+      // site's first numeric column, and it is the one number a
+      // tokenised product cannot honestly leave out.
+      h('span', { class: 'two-line right' },
+        h('span', { class: (markGap(c).over ? 'warn' : 'pos') + ' t-body-strong nowrap',
+          text: markGap(c).pct + ' ' + markGap(c).word }),
+        h('small', { text: usd(c.mark) })),
+      rangeBar(c),
+      h('span', { class: 'muted nowrap', text: c.cap }),
+      h('span', { class: 'muted nowrap', text: c.dividend ? pct(c.dividend) : '—' }),
+      h('span', { class: 'two-line right' },
+        h('span', { class: 'muted nowrap', text: (c.holders / 1000).toFixed(1) + 'K' }),
+        h('small', { class: c.holdersPct >= 0 ? 'pos' : 'warn',
+          text: (c.holdersPct >= 0 ? '+' : '') + pct(c.holdersPct) })),
+      // Deciding while you scan the list is the point of a bucket,
+      // so the list is where it can be filled.
+      bucketCell(c),
+    ]),
+    (n) => go('/invest/' + rows[n].ticker.toLowerCase()),
+    { current: { key: sort.key, dir: sort.dir }, onSort: sort.onSort }
+  )
+}
+
 export function marketScreen(): HTMLElement {
   const r = current()
   const cat = r.query.get('cat') ?? 'Popular'
   const term = (r.query.get('q') ?? '').toLowerCase()
 
-  const list = CATALOGUE.filter((c) => {
-    if (term) return (c.ticker + ' ' + c.name).toLowerCase().includes(term)
-    if (cat === 'Everything') return true
-    return c.tags.includes(cat)
-  })
+  // Ranked rather than filtered. "Micrsoft" found nothing before, and a list
+  // of companies that answers a dropped letter with silence is a list that
+  // makes people type more carefully rather than one that helps them.
+  const FIELDS = (c: Instrument) => [c.ticker, c.name, c.plain, c.tags.join(' ')]
+  const listFor = (t: string): Instrument[] =>
+    t.trim()
+      ? rank(t, CATALOGUE, FIELDS)
+      : CATALOGUE.filter((c) => cat === 'Everything' || c.tags.includes(cat))
 
   const sortKey = r.query.get('sort') ?? 'cap'
   const sortDir = (r.query.get('dir') ?? 'desc') as 'asc' | 'desc'
@@ -101,8 +159,28 @@ export function marketScreen(): HTMLElement {
     disc: (a, b) => discount(a) - discount(b),
     holders: (a, b) => a.holders - b.holders,
   }
-  const ordered = [...list].sort((a, b) =>
-    (cmp[sortKey] ?? cmp.cap)(a, b) * (sortDir === 'asc' ? 1 : -1))
+  // The results repaint themselves rather than the screen doing it. This app
+  // rebuilds its whole tree on a route change, and a rebuilt tree takes the
+  // focus out of the field somebody is still typing in — which is the same
+  // fault the bucket's amount field hit and for the same reason. So the
+  // address is only touched on Enter, and typing repaints this one card.
+  const results = h('div', { class: 'stack' })
+  const paint = (t: string): void => {
+    const rows = listFor(t)
+    const sorted = [...rows].sort((a, b) =>
+      (cmp[sortKey] ?? cmp.cap)(a, b) * (sortDir === 'asc' ? 1 : -1))
+    results.replaceChildren(
+      card(
+        cardHead(t.trim() ? 'Results' : cat,
+          h('span', { class: 'muted t-caption', text: countOf(rows) })),
+        searchNote(t, rows.length, onlyNear(t, rows, FIELDS)),
+        rows.length ? tableOf(sorted, { key: sortKey, dir: sortDir, onSort }) : emptyState('Nothing matches that',
+          'Try another company, fund or ticker.',
+          { label: 'Clear the search', onClick: () => go('/invest') })
+      ))
+  }
+
+  paint(term)
 
   const setQuery = (k: string, v: string) => {
     const q = new URLSearchParams(r.query)
@@ -114,13 +192,21 @@ export function marketScreen(): HTMLElement {
   return shell(
     'market',
     pageHeader('Invest', h('span', { class: 'muted', text: 'Tokenised, so it trades 24/7' })),
-    h('label', { class: 'field' },
-      h('span', { html: icon.search() }),
-      h('input', {
-        placeholder: 'Search a company or a fund',
-        value: r.query.get('q') ?? '',
-        on: { keydown: (e) => { if ((e as KeyboardEvent).key === 'Enter') setQuery('q', (e.target as HTMLInputElement).value) } },
+    searchField({
+      placeholder: 'Search a company or a fund',
+      value: r.query.get('q') ?? '',
+      // Straight to the company. On the one screen that sells companies, the
+      // fastest answer to typing a name is that company's own page, not a
+      // one-row table with its name in it.
+      suggest: (t) => rank(t, CATALOGUE, FIELDS).slice(0, 7).map((c) => ({
+        label: `${c.ticker} · ${c.name}`,
+        hint: usd(c.price),
+        group: c.kind === 'etf' ? 'Funds' : 'Companies',
+        pick: () => go('/invest/' + c.ticker.toLowerCase()),
       })),
+      onType: paint,
+      onCommit: (v) => setQuery('q', v),
+    }),
     // The paragraph says what the header already says — "Tokenised, so it
     // trades 24/7" — and on a phone the two of them together cost 90px of the
     // one screen that is meant to show you things you can buy.
@@ -147,62 +233,7 @@ export function marketScreen(): HTMLElement {
     // company data cannot share 730px with a side column: the cells collide
     // and the year range lands on top of the price. It takes the full width,
     // and the three reading cards line up underneath it.
-    h('div', { class: 'stack' },
-        card(
-          cardHead(term ? 'Results' : cat,
-            h('span', { class: 'muted t-caption', text: countOf(list) })),
-          list.length
-            ? table(
-                [
-                  { key: 'name', label: 'Name', sortable: true },
-                  { key: 'price', label: 'Price', align: 'right', sortable: true },
-                  { key: 'day', label: 'Today', align: 'right', sortable: true },
-                  { key: 'disc', label: 'vs real', align: 'right', optional: true, sortable: true },
-                  { key: 'range', wide: true, label: 'Year range', optional: true },
-                  { key: 'cap', wide: true, label: 'Size', align: 'right', optional: true, sortable: true },
-                  { key: 'yield', wide: true, label: 'Yield', align: 'right', optional: true, sortable: true },
-                  { key: 'holders', wide: true, label: 'Holders', align: 'right', optional: true, sortable: true },
-                  { key: 'bucket', label: '', align: 'right' },
-                ],
-                ordered.map((c) => [
-                  h('span', { class: 'two-line' },
-                    h('span', { class: 'name-line' },
-                      h('span', { class: 't-body-strong', text: `${c.ticker} · ${c.name}` }),
-                      c.kind === 'etf' ? h('span', { class: 'tag', text: 'ETF' }) : null),
-                    // The one-line description is what the company does. On a
-                    // phone the name cell is about 180px and the sentence
-                    // wrapped to four lines, which turned a list of companies
-                    // into a wall. It is on the stock page, one tap away.
-                    h('small', { class: 'desk-only', text: c.plain })),
-                  h('span', { class: 't-body-strong nowrap', text: usd(c.price) }),
-                  h('span', { class: (c.dayPct >= 0 ? 'pos' : 'warn') + ' t-body-strong nowrap',
-                    text: (c.dayPct >= 0 ? '+' : '') + pct(c.dayPct) }),
-                  // What the token costs against the share it tracks, and the
-                  // share's own price under it. The pair is the reference
-                  // site's first numeric column, and it is the one number a
-                  // tokenised product cannot honestly leave out.
-                  h('span', { class: 'two-line right' },
-                    h('span', { class: (markGap(c).over ? 'warn' : 'pos') + ' t-body-strong nowrap',
-                      text: markGap(c).pct + ' ' + markGap(c).word }),
-                    h('small', { text: usd(c.mark) })),
-                  rangeBar(c),
-                  h('span', { class: 'muted nowrap', text: c.cap }),
-                  h('span', { class: 'muted nowrap', text: c.dividend ? pct(c.dividend) : '—' }),
-                  h('span', { class: 'two-line right' },
-                    h('span', { class: 'muted nowrap', text: (c.holders / 1000).toFixed(1) + 'K' }),
-                    h('small', { class: c.holdersPct >= 0 ? 'pos' : 'warn',
-                      text: (c.holdersPct >= 0 ? '+' : '') + pct(c.holdersPct) })),
-                  // Deciding while you scan the list is the point of a bucket,
-                  // so the list is where it can be filled.
-                  bucketCell(c),
-                ]),
-                (n) => go('/invest/' + ordered[n].ticker.toLowerCase()),
-                { current: { key: sortKey, dir: sortDir }, onSort }
-              )
-            : emptyState('Nothing matches that',
-                'Try another company, fund or ticker.',
-                { label: 'Clear the search', onClick: () => go('/invest') })
-        )),
+    results,
     h('div', { class: 'row equal' },
       card(
         cardHead('Where people start'),
