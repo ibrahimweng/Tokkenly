@@ -1,7 +1,12 @@
 import { chromium } from 'playwright'
+import { seen } from './seen.mjs'
 const base = 'http://localhost:4173/#'
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const p = await b.newPage({ viewport: { width: 390, height: 844 } })
+// Since the app lock landed, a page that does not seed the unlock drives
+// the PIN pad instead of the product. This suite was measuring the lock
+// screen and reporting on it.
+await seen(p)
 const rows = []
 for (const hash of ['/grow/borrow','/grow/repay','/grow/earn','/grow/takeout','/send','/addmoney','/withdraw','/invest/aapl/invest','/invest/aapl/sell']) {
   await p.goto(base + hash, { waitUntil: 'networkidle' })

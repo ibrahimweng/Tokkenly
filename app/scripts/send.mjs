@@ -1,4 +1,5 @@
 import { chromium } from 'playwright'
+import { seen } from './seen.mjs'
 const base = 'http://localhost:4173/#'
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const errs = []
@@ -6,6 +7,10 @@ const log = []
 
 // phone: who first, then how much
 const p = await b.newPage({ viewport: { width: 390, height: 844 } })
+// Since the app lock landed, a page that does not seed the unlock drives
+// the PIN pad instead of the product. This suite was measuring the lock
+// screen and reporting on it.
+await seen(p)
 p.on('pageerror', (e) => errs.push('phone pageerror: ' + e.message))
 await p.goto(base + '/send', { waitUntil: 'networkidle' })
 await p.waitForTimeout(200)
@@ -38,6 +43,7 @@ log.push('  outcome: ' + (await p.locator('.sheet .t-title').textContent()))
 
 // desktop is unchanged: one screen, picker on the right
 const d = await b.newPage({ viewport: { width: 1440, height: 1024 } })
+await seen(d)
 d.on('pageerror', (e) => errs.push('desktop pageerror: ' + e.message))
 await d.goto(base + '/send', { waitUntil: 'networkidle' })
 await d.waitForTimeout(200)
