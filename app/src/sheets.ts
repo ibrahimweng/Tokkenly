@@ -794,7 +794,7 @@ export const SHEETS: Record<string, Builder> = {
     const bank = state.banks[0]
     return review({
       title: 'Review',
-      figureLabel: 'You are buying', figureValue: usd(v), amount: v,
+      figureLabel: 'You are adding', figureValue: usd(v), amount: v,
       rows: [], action: '', onConfirm: () => {},
       note: '',
       hold: {
@@ -806,7 +806,7 @@ export const SHEETS: Record<string, Builder> = {
           ['From', bank.name + ' •••• ' + bank.last4],
           ['Lands', 'In about a minute'],
         ],
-        action: () => 'Buy ' + usd(v),
+        action: () => 'Add ' + usd(v),
         onConfirm: () => {
           const a = actions.addMoney(v, bank.id)
           replaceSheet('add-done', { ref: a.ref })
@@ -860,7 +860,7 @@ export const SHEETS: Record<string, Builder> = {
     const c = find(str(r, 't'))!
     return review({
       title: 'Review',
-      figureLabel: 'You are buying', figureValue: usd(v), amount: v,
+      figureLabel: 'You are adding', figureValue: usd(v), amount: v,
       // The amount, the fee, the total and exactly what you receive, in that
       // order, before you confirm. Nothing folded into a worse price.
       rows: [

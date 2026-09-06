@@ -597,6 +597,9 @@
 
 /* A status pill is not a control. It borrowed .chip and with it the hover, so
    it looked pressable and was not. */
+/* Pending is the only status a row wears, so it is worth seeing. Grey said
+   nothing when every row wore it; amber says something now that one does. */
+.pill.warn { background: var(--tint-warning); color: var(--warning); }
 .pill {
   height: 32px; padding: 0 16px; border-radius: var(--r-pill);
   background: var(--control); color: var(--muted);
@@ -966,8 +969,28 @@ th.right .th-sort { flex-direction: row-reverse; }
 }
 .pref-row + .pref-row { border-top: 1px solid var(--grid); }
 .pref-row .mark { flex: none; }
+/* .grow is flex: 1 1 auto, so the label's basis is the full width of its
+   longest sentence. On a wrapping row that pushed it onto a line of its own
+   and left the glyph sitting alone above it — on every setting whose
+   description ran past one line, and only those, which is why it looked
+   arbitrary. A zero basis lets it take what is left instead. */
+.pref-row .two-line { flex: 1 1 0; min-width: 0; }
+/* Wide, the chips sit on the right like every other control on this list —
+   the description wraps to make room rather than the chips dropping to a line
+   of their own, so all six settings read as one row repeated. Narrow, they
+   take their own line, because four chips and a sentence do not share 350px. */
 .pref-choice { flex-wrap: wrap; row-gap: 12px; }
-.pref-choice .chip-row { flex: none; }
+.pref-choice .chip-row { flex: none; margin-left: auto; }
+.pref-choice > .two-line { max-width: 240px; }
+/* Four values is a wide control, and the row is 625px inside its card. The
+   chips give up their side padding and the description wraps, which is what it
+   takes for every setting on the list to answer in the same place. */
+.pref-choice .chip { padding: 0 12px; }
+@media (max-width: 1199px) {
+  .pref-choice > .two-line { max-width: none; }
+  .pref-choice .chip-row { width: 100%; margin-left: 0; }
+  .pref-choice .chip { flex: 1 1 0; padding: 0 8px; }
+}
 
 .switch {
   width: 44px; height: 26px; border-radius: 999px; flex: none; position: relative;
@@ -985,6 +1008,11 @@ th.right .th-sort { flex-direction: row-reverse; }
 @media (max-width: 899px) {
   .pref-choice .chip-row { width: 100%; }
   .pref-choice .chip-row .chip { flex: 1 1 0; padding: 0 8px; }
+  /* A button is as wide as its words, and beside a two-line label on a 350px
+     row it squeezes the label into a column four words wide. It takes its own
+     line down here, the way the chips do. */
+  .pref-act { flex-wrap: wrap; row-gap: 12px; }
+  .pref-act > .btn { width: 100%; }
 }
 
 /* ---------------------------------------------------------- the bucket --

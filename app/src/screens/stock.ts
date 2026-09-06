@@ -109,8 +109,8 @@ export function stockScreen(ticker: string): HTMLElement {
   const c = find(ticker)
   if (!c) {
     return shell('market', pageHeader('Not found'),
-      h('p', { class: 'muted', text: 'No such company. Go back to Market and search for it.' }),
-      h('button', { class: 'btn btn-secondary btn-sm', text: 'Back to Market', on: { click: () => go('/invest') } }))
+      h('p', { class: 'muted', text: 'No such company. Go back to Invest and search for it.' }),
+      h('button', { class: 'btn btn-secondary btn-sm', text: 'Back to Invest', on: { click: () => go('/invest') } }))
   }
   const held = holding(c.ticker)
   const watching = state.watchlist.includes(c.ticker)

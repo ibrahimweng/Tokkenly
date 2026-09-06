@@ -1,7 +1,7 @@
 import { h } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader, eyebrow } from '../components/shell'
-import { card, cardHead, kv, callout, emptyState, toggle, choice } from '../components/bits'
+import { card, cardHead, kv, callout, emptyState, toggle, choice, prefAction } from '../components/bits'
 import { state, actions, verified, LIMITS } from '../state'
 import { usd } from '../format'
 import { openSheet, go, current } from '../router'
@@ -72,21 +72,22 @@ function preferencesBody(): (Node | null)[] {
     card(
       cardHead('How the product opens'),
       choice({
-        label: 'Home screen', sub: 'Where Home opens when you arrive',
+        label: 'Home screen', sub: 'Where Home opens when you arrive', ic: icon.home(),
         options: [{ label: 'Simple', value: 'simple' }, { label: 'Detailed', value: 'detailed' }],
         get: () => p.homeView, set: (v) => actions.setHomeView(v as 'simple' | 'detailed'),
       }),
       choice({
         label: 'Theme', sub: 'Dark is the default. Light is for bright rooms and printing.',
+        ic: icon.theme(),
         options: [{ label: 'Dark', value: 'dark' }, { label: 'Light', value: 'light' }],
         get: () => p.theme, set: (v) => actions.setPref('theme', v as 'dark' | 'light'),
       }),
-      h('div', { class: 'pref-row' },
-        h('span', { class: 'two-line grow' },
-          h('span', { class: 't-body-strong', text: 'The introduction' }),
-          h('small', { text: 'Four screens on what a tokenised share is and how to buy one' })),
-        h('button', { class: 'btn btn-secondary btn-sm', text: 'Show it again',
-          on: { click: () => { actions.replayIntro(); go('/welcome/0') } } }))),
+      prefAction({
+        label: 'The introduction', ic: icon.info(),
+        sub: 'Four screens on what a tokenised share is and how to buy one',
+        action: 'Show it again',
+        onClick: () => { actions.replayIntro(); go('/welcome/0') },
+      })),
     card(
       cardHead('Money'),
       toggle({
@@ -99,13 +100,18 @@ function preferencesBody(): (Node | null)[] {
         sub: 'Cover every figure that is yours. Prices and rates stay put',
         get: () => p.hideBalances, set: () => { actions.toggleBalances(); back() },
       }),
+      // These two were four grey chips each, side by side, identical to look
+      // at — and one sets a starting amount while the other decides when the
+      // product stops and asks who is holding the phone. The glyphs say which
+      // is which before the words do.
       choice({
         label: 'Add to bucket', sub: 'What goes against a company before you edit it',
+        ic: icon.bucket(),
         options: [25, 50, 100, 250].map((v) => ({ label: usd(v, false), value: String(v) })),
         get: () => String(p.tradeDefault), set: (v) => actions.setPref('tradeDefault', Number(v)),
       }),
       choice({
-        label: 'Ask for your PIN above',
+        label: 'Ask for your PIN above', ic: icon.lock(),
         sub: 'Anything larger needs your four digits — buying, selling or sending',
         options: [
           { label: usd(250, false), value: '250' }, { label: usd(500, false), value: '500' },

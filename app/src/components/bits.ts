@@ -151,13 +151,15 @@ export function statLine(label: string, value: string, cls = ''): HTMLElement {
 export function toggle(opts: {
   label: string
   sub: string
-  ic?: string
+  /** Required. Half these rows had a glyph and half did not, which is what
+   *  made a list of six settings read as five different kinds of thing. */
+  ic: string
   get: () => boolean
   set: (on: boolean) => void
 }): HTMLElement {
   const knob = h('span', { class: 'switch' }, h('span', { class: 'switch-knob' }))
   const row = h('button', { class: 'pref-row' },
-    opts.ic ? h('span', { class: 'mark', html: opts.ic }) : null,
+    h('span', { class: 'mark', html: opts.ic }),
     h('span', { class: 'two-line grow' },
       h('span', { class: 't-body-strong', text: opts.label }),
       h('small', { text: opts.sub })),
@@ -178,6 +180,7 @@ export function toggle(opts: {
 export function choice(opts: {
   label: string
   sub: string
+  ic: string
   options: { label: string; value: string }[]
   get: () => string
   set: (v: string) => void
@@ -198,8 +201,28 @@ export function choice(opts: {
   }
   paint()
   return h('div', { class: 'pref-row pref-choice' },
+    h('span', { class: 'mark', html: opts.ic }),
     h('span', { class: 'two-line grow' },
       h('span', { class: 't-body-strong', text: opts.label }),
       h('small', { text: opts.sub })),
     chips)
+}
+
+/** The third shape: a setting whose control is a button rather than a switch
+ *  or a set of values — replaying the intro is the only one. Same anatomy as
+ *  the other two, so a settings list is one row repeated rather than five
+ *  arrangements of the same parts. */
+export function prefAction(opts: {
+  label: string
+  sub: string
+  ic: string
+  action: string
+  onClick: () => void
+}): HTMLElement {
+  return h('div', { class: 'pref-row pref-act' },
+    h('span', { class: 'mark', html: opts.ic }),
+    h('span', { class: 'two-line grow' },
+      h('span', { class: 't-body-strong', text: opts.label }),
+      h('small', { text: opts.sub })),
+    h('button', { class: 'btn btn-secondary btn-sm', text: opts.action, on: { click: opts.onClick } }))
 }

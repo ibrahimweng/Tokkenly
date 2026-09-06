@@ -24,7 +24,7 @@ export function bucketScreen(): HTMLElement {
       pageHeader('Your bucket'),
       card(emptyState('Nothing in the bucket yet',
         'Pick companies as you browse and pay for them together, once you are ready.',
-        { label: 'Go to the market', onClick: () => go('/invest') })))
+        { label: 'Go to Invest', onClick: () => go('/invest') })))
   }
 
   const rows = state.bucket.map((b) => {

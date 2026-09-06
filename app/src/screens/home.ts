@@ -82,7 +82,11 @@ function activityRows(limit: number) {
       h('span', { class: 'two-line' },
         h('span', { class: 't-body-strong', text: activityLabel(a) }),
         h('small', { text: a.ref + ' · ' + when(a.at) }))),
-    h('span', { class: 'pill', text: a.settled ? 'Settled' : 'Pending' }),
+    // A pill on every row is not a status, it is a column of grey. Twenty rows
+    // all said "Settled", which is what a finished payment does — so the pill
+    // carried no information and sat between the description and the figure
+    // while carrying none. It now appears only when there is something to say.
+    a.settled ? h('span') : h('span', { class: 'pill warn', text: 'Pending' }),
     amount(a),
   ])
 }
@@ -261,7 +265,11 @@ function gateway(): HTMLElement {
     h('div', { class: 'gates' },
       tile({ lead: true, art: BUY, to: '/invest', title: 'Buy Stocks', cta: 'Buy shares',
         sub: 'Own a piece of Apple, Nvidia or a whole market fund. From $1.' }),
-      tile({ art: CONVERT, to: '/withdraw', title: 'Convert Cash', cta: 'Convert money',
+      // Its own copy describes both directions — "between naira and dollars" —
+      // which is the Transfer place rather than the Withdraw action it used to
+      // open. A door labelled "Convert money" that lands on a screen headed
+      // "Withdraw to your bank" is the promise in rule 49 half kept.
+      tile({ art: CONVERT, to: '/transfer', title: 'Convert Cash', cta: 'Move money',
         sub: 'Move between naira and dollars at the rate you see.' }),
       tile({ art: BORROW, to: '/grow', title: 'Borrow or Lend', cta: 'See your limit',
         sub: 'Borrow against your shares without selling them.' })),

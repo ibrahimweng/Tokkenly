@@ -206,7 +206,11 @@ export function addMoneyScreen(): HTMLElement {
   return composerScreen({
     place: 'wallet',
     base: walletScreen,
-    title: 'Buy dollars',
+    // The registry, the breadcrumb, the palette and the wallet tile all call
+    // this Add money. The screen called itself Buy dollars, its button said
+    // Buy, and its review said "You are buying" — five surfaces, three names,
+    // for one thing a person does once a week.
+    title: 'Add money',
     eyebrow: ['Cash available', usd(state.cash)],
     cardLabel: 'How much',
     cardRight: 'Minimum ' + usd(10, false),
@@ -233,7 +237,7 @@ export function addMoneyScreen(): HTMLElement {
       ['Lands', 'In about a minute'],
     ],
     callout: 'The rate above is indicative. You get a firm one at the review, held for ninety seconds.',
-    action: (v) => 'Buy ' + usd(v),
+    action: (v) => 'Add ' + usd(v),
     onAction: (v) => openSheet('add-review', { v: String(v) }),
     right: (v) =>
       card(
