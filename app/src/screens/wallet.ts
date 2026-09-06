@@ -1,6 +1,6 @@
 import { h } from '../ui'
 import { icon } from '../icons'
-import { shell, pageHeader, eyebrow } from '../components/shell'
+import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, headLink, kv, callout, amount, directionMark } from '../components/bits'
 import { state, buyingPower, availableToBorrow, nairaAside, limits, leftThisMonth, verified } from '../state'
 import { usd, when, activityLabel } from '../format'
@@ -16,13 +16,20 @@ function way(label: string, sub: string, ic: string, to: string): HTMLElement {
 }
 
 /** The centrepiece of the wallet. Not just the number: what the number is
- *  made of. Cash, what is working in Earn, and what the shares would lend
- *  against, drawn to scale so the proportions are readable at a glance. */
+ *  made of. Cash and what is working in Earn, drawn to scale so the
+ *  proportions are readable at a glance.
+ *
+ *  What is deliberately not in the bar is what the shares would lend against.
+ *  It used to be a third segment, which made a credit limit look like a third
+ *  kind of balance and let the caption total all three: "$5,200.00 in total"
+ *  on an account holding $3,720. Money you have and money you could owe do not
+ *  add up, and a single bar said they did. Borrowing capacity is still on the
+ *  screen — it is what turns the balance into buying power — but it is named
+ *  as borrowing, on its own line, beside a figure that says so. */
 function cashHero(): HTMLElement {
   const parts = [
     { label: 'Cash', value: state.cash, cls: 'a', hint: 'Ready to spend or send' },
     { label: 'In Earn', value: state.inEarn, cls: 'b', hint: 'Earning ' + state.rates.earn + '% a year' },
-    { label: 'Could borrow', value: availableToBorrow(), cls: 'c', hint: 'Against the shares you own' },
   ]
   const total = parts.reduce((t, p) => t + p.value, 0)
 
@@ -37,7 +44,8 @@ function cashHero(): HTMLElement {
       h('div', { class: 'stack-8 hero-aside' },
         h('span', { class: 't-caps subtle', text: 'Buying power' }),
         h('span', { class: 't-display', text: usd(buyingPower()) }),
-        h('span', { class: 'muted', text: 'Cash plus what you could borrow' }))),
+        h('span', { class: 'muted',
+          text: `Your cash plus the ${usd(availableToBorrow())} your shares would lend against` }))),
 
     h('div', { class: 'hero-bar', ariaLabel: 'How your money is arranged' },
       ...parts.map((p) =>
@@ -54,7 +62,7 @@ function cashHero(): HTMLElement {
             h('small', { text: p.hint }))))),
 
     h('span', { class: 'subtle t-caption',
-      text: `${usd(total)} in total across your wallet, Earn and what your shares would lend against.` })
+      text: `${usd(total)} in total across your wallet and Earn. Borrowing is credit, not balance, so it is not in this figure.` })
   )
 }
 
@@ -63,7 +71,9 @@ export function walletScreen(): HTMLElement {
 
   return shell(
     'wallet',
-    pageHeader('Transfer', eyebrow('Buying power', usd(buyingPower()))),
+    // No eyebrow: it printed buying power 60px above the card that prints
+    // buying power, which reads as two facts rather than one repeated.
+    pageHeader('Transfer'),
     // The hero takes the whole column. It is the centrepiece of the page, and
     // sharing the width with the limits card left the two figures in it 20px
     // from wrapping onto separate lines — which they did, once the column came
