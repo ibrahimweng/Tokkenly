@@ -70,7 +70,9 @@ for (const [what, re] of [
   ['where to complain', /regulator/i],
 ]) ok('it covers ' + what, re.test(d))
 await at('/account')
-ok('Account links to it', /Read the disclosures/.test(await text()))
+ok('Account lists it as a group', /Risk and legal/.test(await text()))
+await at('/account/legal')
+ok('and the group links to it', /Read the disclosures/.test(await text()))
 await at('/all')
 ok('and the index lists it', /Risk and disclosures/.test(await text()))
 

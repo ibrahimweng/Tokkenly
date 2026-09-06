@@ -16,6 +16,10 @@ type Props = {
   ariaCurrent?: string
   ariaPressed?: boolean | string
   ariaLabel?: string
+  ariaLive?: string
+  role?: string
+  /** For a div that has to take the keyboard — the PIN pad is one. */
+  tabIndex?: number
   title?: string
   dataset?: Record<string, string>
   style?: Partial<CSSStyleDeclaration>
@@ -41,6 +45,9 @@ export function h<K extends keyof HTMLElementTagNameMap>(
   if (props.ariaCurrent) el.setAttribute('aria-current', props.ariaCurrent)
   if (props.ariaPressed !== undefined) el.setAttribute('aria-pressed', String(props.ariaPressed))
   if (props.ariaLabel) el.setAttribute('aria-label', props.ariaLabel)
+  if (props.ariaLive) el.setAttribute('aria-live', props.ariaLive)
+  if (props.role) el.setAttribute('role', props.role)
+  if (props.tabIndex !== undefined) el.tabIndex = props.tabIndex
   if (props.title !== undefined) el.setAttribute('title', props.title)
   if (props.dataset) for (const [k, v] of Object.entries(props.dataset)) el.dataset[k] = v
   if (props.style) Object.assign(el.style, props.style)

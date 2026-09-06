@@ -1,11 +1,15 @@
 /* Every state the product claims to have, exercised in a real browser.
    Figma 02 Components: Button, Icon button, Text field, Empty state, Toast. */
 import { chromium } from 'playwright'
+import { seen } from './seen.mjs'
 
 const B = 'http://localhost:4173/#'
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const errors = []
 const page = await b.newPage({ viewport: { width: 1440, height: 1024 } })
+// This suite is about what a button looks like, not about arriving, so it
+// arrives as somebody who has been here before: intro seen, tab unlocked.
+await seen(page)
 page.on('pageerror', (e) => errors.push(String(e)))
 
 const bg = (h) => page.evaluate((el) => getComputedStyle(el).backgroundColor, h)

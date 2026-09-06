@@ -4,8 +4,9 @@ import { sheet, figure, panel, outcome, toast } from './components/sheet'
 import { callout as calloutEl, emptyState as emptyStateEl } from './components/bits'
 import {
   state, actions, owed, monthlyCost, monthlyEarn, holding, bucketTotal,
-  visibleNotifications, tradeFee, type Activity,
+  visibleNotifications, tradeFee, weakPin, ratePassword, type Activity,
 } from './state'
+import { pinPad } from './components/pinpad'
 import { find, discount } from './catalogue'
 import { usd, naira, pct, shares as fmtShares, longWhen, when } from './format'
 import { type Route, closeSheet, replaceSheet, go } from './router'
@@ -45,33 +46,62 @@ function review(opts: {
     setTimeout(opts.onConfirm, CONFIRM_MS)
   })
 
-  // The preference is "ask again above X". A second sheet for that would be a
-  // second thing to dismiss; a tick on this one is a deliberate act that
-  // cannot be muscle-memoried through.
+  // The preference is "ask for your PIN above X". It was a tickbox, which is
+  // a thing a thumb learns to hit without reading — and a tickbox proves
+  // nothing about who is holding the phone. Four digits do. Above the figure
+  // the button is replaced by the pad, so there is no button left to press
+  // out of habit.
   const limit = state.prefs.confirmOver
   const big = limit > 0 && (opts.amount ?? 0) > limit
-  let agreed = false
-  const check = h('span', { class: 'agree-box' })
-  const agree = h('button', { class: 'agree' }, check,
-    h('span', { text: `Yes, ${opts.figureValue.startsWith('$') ? 'move ' : ''}${opts.figureValue}. This is over my ${usd(limit, false)} check.` }))
-  if (big) {
-    button.setAttribute('disabled', 'true')
-    agree.addEventListener('click', () => {
-      agreed = !agreed
-      check.classList.toggle('on', agreed)
-      agree.setAttribute('aria-pressed', String(agreed))
-      button.toggleAttribute('disabled', !agreed)
-    })
-    agree.setAttribute('aria-pressed', 'false')
+
+  if (!big) {
+    return sheet(
+      opts.title,
+      figure(opts.figureLabel, opts.figureValue),
+      panel(...opts.rows),
+      calloutEl(opts.note),
+      button)
   }
+
+  const gate = h('div', { class: 'stack-8 pin-gate' })
+  const askPin = (error?: string) => {
+    if (actions.pinLocked()) {
+      gate.replaceChildren(
+        h('span', { class: 't-caps subtle', text: 'Locked' }),
+        h('span', { class: 'field-error',
+          text: 'Five wrong tries. Set a new PIN from Account before moving this much.' }),
+        h('button', { class: 'btn btn-secondary', text: 'Go to Security',
+          on: { click: () => { closeSheet(); go('/account/security') } } }))
+      return
+    }
+    const pad = pinPad({
+      hint: `Over your ${usd(limit, false)} check, so this one needs your PIN.`,
+      onFull: (v) => {
+        if (!actions.checkPin(v)) {
+          askPin(actions.pinLocked()
+            ? 'Locked'
+            : 'Wrong PIN. ' + (5 - state.security.wrongPin) + ' tries left.')
+          return
+        }
+        // Correct: the pad gives way to the button that names the amount, so
+        // what is about to happen is still on screen when it happens.
+        gate.replaceChildren(button)
+        button.focus()
+      },
+    })
+    gate.replaceChildren(
+      h('span', { class: 't-caps subtle', text: 'Authorise with your PIN' }),
+      pad.el)
+    if (error) pad.reject(error)
+  }
+  askPin()
 
   return sheet(
     opts.title,
     figure(opts.figureLabel, opts.figureValue),
     panel(...opts.rows),
     calloutEl(opts.note),
-    big ? agree : null,
-    button
+    gate
   )
 }
 
@@ -329,20 +359,160 @@ export const SHEETS: Record<string, Builder> = {
       }))
   },
 
-  pin: () =>
-    sheet('Change your PIN',
+  /** Three steps on one pad, not three password fields. A PIN is four digits
+   *  and a keypad is how four digits are typed; a text input with dots in it
+   *  is a form pretending to be a lock.
+   *
+   *  The weak-PIN check fires the moment the fourth digit lands, not on save.
+   *  Being told at the end that the number you just confirmed twice was never
+   *  allowed is the version people abandon. */
+  pin: () => {
+    const wrap = h('div', { class: 'stack' })
+    let chosen = ''
+
+    const step = (
+      title: string, hint: string,
+      onFull: (pin: string, pad: ReturnType<typeof pinPad>) => void,
+      error?: string,
+    ) => {
+      const pad = pinPad({ hint, onFull: (v) => onFull(v, pad) })
+      wrap.replaceChildren(
+        h('span', { class: 't-caps subtle', text: title }),
+        pad.el)
+      if (error) pad.reject(error)
+    }
+
+    const askAgain = () => step('Type it again', 'The same four digits once more',
+      (v) => {
+        if (v !== chosen) {
+          // Back to choosing, not to confirming again. Two entries disagreed
+          // and there is no way to know which one was the slip — so the one
+          // that gets retyped is the one that decides the PIN.
+          askNew('Those did not match. Pick your new PIN again.')
+          return
+        }
+        actions.setPin(chosen)
+        toast('Your PIN has been changed')
+        closeSheet()
+      })
+
+    const askNew = (error?: string) => step('Your new PIN', 'Four digits you will remember',
+      (v, pad) => {
+        const why = weakPin(v, state.person.dob)
+        if (why) { pad.reject(why); return }
+        if (v === state.security.pin) {
+          pad.reject('That is the PIN you already have.')
+          return
+        }
+        chosen = v
+        askAgain()
+      }, error)
+
+    step('The PIN you use now', 'So we know it is you',
+      (v, pad) => {
+        if (actions.checkPin(v)) { askNew(); return }
+        pad.reject(actions.pinLocked()
+          ? 'Too many tries. Use your recovery phrase to set a new one.'
+          : 'That is not your PIN. ' + (5 - state.security.wrongPin) + ' tries left.')
+      })
+
+    return sheet('Change your PIN',
+      wrap,
+      calloutEl('If you forget your PIN you will need your recovery phrase to get back in.'))
+  },
+
+  /** Length over composition. A rule demanding a capital and a symbol reliably
+   *  produces Password1!, which is eleven characters of nothing; length is
+   *  what actually costs an attacker time. So the readout is a sentence about
+   *  what would make this one better, not a coloured bar with a word on it. */
+  password: () => {
+    const cur = h('input', { type: 'password', placeholder: 'The one you use now' })
+    const next = h('input', { type: 'password', placeholder: 'Ten characters or more' })
+    const note = h('span', { class: 'muted t-caption pw-note', text: 'Ten characters at least. Length beats punctuation.' })
+    const save = h('button', { class: 'btn btn-primary', text: 'Save the password', disabled: true })
+
+    const eye = (input: HTMLInputElement) => h('button', {
+      class: 'link quiet pw-eye', text: 'Show', ariaLabel: 'Show the password',
+      on: {
+        click: (e) => {
+          e.preventDefault()
+          const btn = e.currentTarget as HTMLButtonElement
+          const hidden = input.getAttribute('type') === 'password'
+          input.setAttribute('type', hidden ? 'text' : 'password')
+          btn.textContent = hidden ? 'Hide' : 'Show'
+          btn.setAttribute('aria-label', (hidden ? 'Hide' : 'Show') + ' the password')
+        },
+      },
+    })
+
+    const grade = () => {
+      const v = next.value
+      const r = ratePassword(v, state.person.name)
+      note.textContent = v ? r.text : 'Ten characters at least. Length beats punctuation.'
+      note.className = 'muted t-caption pw-note' + (v && !r.ok ? ' bad' : v && r.ok ? ' good' : '')
+      if (r.ok && v) save.removeAttribute('disabled')
+      else save.setAttribute('disabled', 'true')
+    }
+    next.addEventListener('input', grade)
+
+    save.addEventListener('click', () => {
+      if (cur.value !== state.security.password) {
+        toast('That is not your current password')
+        cur.focus()
+        return
+      }
+      actions.setPassword(next.value)
+      toast('Your password has been changed')
+      closeSheet()
+    })
+
+    return sheet('Change your password',
+      h('div', { class: 'stack-8' },
+        h('span', { class: 't-caps subtle', text: 'The password you use now' }),
+        h('label', { class: 'field' }, cur, eye(cur))),
+      h('div', { class: 'stack-8' },
+        h('span', { class: 't-caps subtle', text: 'Your new password' }),
+        h('label', { class: 'field' }, next, eye(next)),
+        note),
+      calloutEl('Your other devices will ask for the new one next time they open the app.'),
+      save)
+  },
+
+  /** The half of the password loop people actually hit. Two states, because
+   *  a form that vanishes on submit leaves you wondering whether it worked.
+   *
+   *  It says the code was sent whether or not the address is one we know.
+   *  Telling a stranger "no account with that email" tells them which of the
+   *  addresses they are trying is real. */
+  forgot: (r) => {
+    if (str(r, 'sent') === '1') {
+      return outcome(
+        'A link is on its way',
+        `If ${state.person.email} has an account, a link to set a new password is in it now.`,
+        [['It works once', 'and expires in an hour'],
+         ['Nothing arrived?', 'Look in spam, then try again'],
+         ['Wrong address?', 'Use the one you signed up with']],
+        { label: 'Back to sign in', onClick: () => closeSheet() })
+    }
+    const email = h('input', { type: 'email', placeholder: 'The email you signed up with',
+      value: state.person.email })
+    return sheet('Set a new password',
       h('p', { class: 'muted', style: { margin: '0' },
-        text: 'Six digits. Not your date of birth, and not six of the same number.' }),
-      ...['PIN you use now', 'New PIN', 'Type it again'].map((l, i) =>
-        h('div', { class: 'stack-8' },
-          h('span', { class: 't-caps subtle', text: l }),
-          h('label', { class: 'field' },
-            h('input', { type: 'password', placeholder: i === 0 ? '••••••' : 'Six digits' })))),
-      calloutEl('If you forget your PIN you will need your recovery phrase to get back in.'),
+        text: 'We will email you a link. It works once, and it expires in an hour.' }),
+      h('div', { class: 'stack-8' },
+        h('span', { class: 't-caps subtle', text: 'Email' }),
+        h('label', { class: 'field' }, email)),
+      calloutEl('We will never email you asking for your PIN or your recovery phrase. If a message does, it is not from us.'),
       h('button', {
-        class: 'btn btn-primary', text: 'Save the new PIN',
-        on: { click: () => { toast('Your PIN has been changed'); closeSheet() } },
-      })),
+        class: 'btn btn-primary', text: 'Email me a link',
+        on: {
+          click: () => {
+            if (!email.value.includes('@')) { toast('That does not look like an email'); return }
+            replaceSheet('forgot', { sent: '1' })
+          },
+        },
+      }))
+  },
 
   phrase: () =>
     sheet('Your recovery phrase',
@@ -563,6 +733,10 @@ export const SHEETS: Record<string, Builder> = {
         ['Lands in', 'Your wallet'],
       ],
       note: 'Whatever you keep carries on tracking the price.',
+      // A sale does not leave the account, but neither does a purchase, and
+      // the purchase is gated. Somebody who set "ask above $500" would not
+      // expect $900 of their holding to be liquidated without being asked.
+      amount: v,
       action: `Sell ${usd(v)} of ${c.name}`,
       onConfirm: () => {
         const { activity, shares } = actions.sell(c.ticker, v)

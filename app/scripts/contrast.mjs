@@ -7,7 +7,14 @@ import { seen } from './seen.mjs'
 
 const B = 'http://localhost:4173/#'
 const ROUTES = ['/', '/transfer', '/invest', '/invest/aapl', '/grow', '/activity',
-  '/settings', '/all', '/send', '/receive', '/account', '/bucket', '/verify', '/disclosures']
+  '/all', '/send', '/receive', '/bucket', '/verify', '/disclosures', '/signin',
+  // Account is eight screens now, and the two locks are sheets over one of
+  // them. '/settings' was in this list and has never been a route.
+  '/account', '/account/details', '/account/preferences', '/account/notifications',
+  '/account/security', '/account/payments', '/account/verification',
+  '/account/support', '/account/legal',
+  '/account/security?sheet=pin', '/account/security?sheet=password',
+  '/invest/aapl/invest']
 
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const page = await b.newPage({ viewport: { width: 1440, height: 1000 } })
@@ -19,7 +26,7 @@ page.setDefaultTimeout(8000)
 const noFonts = (pg) => pg.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 await noFonts(page)
 
-const sweep = async () => page.evaluate(() => {
+const MEASURE = () => {
   const num = (s) => (s.match(/[-\d.]+/g) || []).map(Number)
   const lin = (c) => { c /= 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4 }
   const lum = ([r, g, b]) => 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
@@ -45,6 +52,11 @@ const sweep = async () => page.evaluate(() => {
     if (!t) continue
     const s = getComputedStyle(el)
     if (s.visibility === 'hidden' || s.display === 'none') continue
+    // WCAG 1.4.3 exempts text that is part of an inactive control, and the
+    // product dims disabled buttons to 0.4 on purpose (design.md 11f.7) —
+    // the dimness is the signal. Measuring them reports the convention as a
+    // failure on every screen that opens with a button waiting for input.
+    if (el.closest('[disabled]')) continue
     const r = el.getBoundingClientRect()
     if (!r.width || !r.height) continue
     /* element opacity fades the text as much as the ground */
@@ -60,7 +72,8 @@ const sweep = async () => page.evaluate(() => {
     out.push({ text: t.slice(0, 40), sel: el.tagName.toLowerCase() + (el.className && typeof el.className === 'string' ? '.' + el.className.split(' ').join('.') : ''), px, ratio: +ratio.toFixed(2), need: large ? 3 : 4.5 })
   }
   return out
-})
+}
+const sweep = (pg = page) => pg.evaluate(MEASURE)
 
 const bad = []
 /* Both themes. A light palette is not a dark one inverted, so it has to be
@@ -80,6 +93,23 @@ for (const r of ROUTES) {
     await row.hover(); await page.waitForTimeout(250)
     for (const t of await sweep()) if (t.ratio < t.need) bad.push({ route: theme + ' ' + r + ' (row hovered)', ...t })
   }
+}
+
+/* The lock is the one screen `seen()` cannot reach, since seeding a returning
+   visitor is exactly what unlocks it. Both of its states, on its own page. */
+for (const theme of THEMES)
+for (const [label, wrong] of [['/lock', 0], ['/lock (locked out)', 5]]) {
+  const lp = await b.newPage({ viewport: { width: 1440, height: 1000 } })
+  await lp.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
+  await lp.addInitScript(`try {
+    localStorage.setItem('tokkenly.prefs.v1', JSON.stringify({
+      seenIntro: true, prefs: { theme: '${theme}' }, security: { wrongPin: ${wrong} } }))
+    sessionStorage.removeItem('tokkenly.unlocked')
+  } catch {}`)
+  await lp.goto(B + '/', { waitUntil: 'domcontentloaded' })
+  await lp.waitForTimeout(300)
+  for (const t of await sweep(lp)) if (t.ratio < t.need) bad.push({ route: theme + ' ' + label, ...t })
+  await lp.close()
 }
 
 const already = new Set()

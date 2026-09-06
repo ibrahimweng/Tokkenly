@@ -1,11 +1,15 @@
 /* The first thing a new person sees, walked the way a new person walks it. */
 import { chromium } from 'playwright'
+import { fresh, seen } from './seen.mjs'
 const B = 'http://localhost:4173/#'
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const errs = []
 const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
 const page = async (w = 1440, h = 900) => {
   const p = await b.newPage({ viewport: { width: w, height: h } })
+  // New, but unlocked: signing up gets you in, and the intro is about the
+  // product rather than the device.
+  await fresh(p)
   p.on('pageerror', (e) => errs.push(String(e)))
   p.setDefaultTimeout(6000)
   await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
@@ -53,7 +57,7 @@ console.log('LEAVING IT')
   ok('skip lands on Home', await p.evaluate(() => !!document.querySelector('.sidebar')))
   await p.goto(B + '/', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
   ok('and it does not come back', await p.evaluate(() => !document.querySelector('.welcome')))
-  await p.goto(B + '/account', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
+  await p.goto(B + '/account/preferences', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
   await p.getByRole('button', { name: 'Show it again' }).click(); await p.waitForTimeout(400)
   ok('but Account can bring it back', await p.evaluate(() => !!document.querySelector('.welcome')))
   await p.close()
