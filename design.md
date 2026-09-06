@@ -4088,7 +4088,95 @@ to twenty-three.
   two of them got wider assertions than they had before rather than a
   find-and-replace on the URL.
 
-### 11f.34 Still open
+### 11f.35 The lock, and what a lock screen may show
+
+The switch was honoured as a setting and enforced by nothing. It enforces now:
+above the sign-in gate and before everything the account can see, including
+the intro, because the lock is about the device and the intro is about the
+product.
+
+**It may show three things: who is signed in, the pad, and the way in.** The
+temptation on a lock screen is a greeting with the balance in it, or the
+notification count, or the day's move — every one of which hands the contents
+of the account to the exact person the lock exists for. The suite asserts the
+absence: no figure, no bell, no navigation. It does say whose phone it is,
+because unlocking somebody else's account by accident is its own confusion.
+
+**Unlocking lands where you were going.** The address underneath is left
+alone, so a deep link that was locked opens on the link rather than dropping
+you on Home.
+
+**Where the unlock is kept decides what the lock means.** In memory, and every
+reload asks again — accurate to a cold start, unusable in practice.
+`localStorage`, and it never asks again, which is not a lock. `sessionStorage`
+is the honest middle: the tab closing is the cold start, and a reload of a tab
+you never closed is not one.
+
+That only covers a phone that has been switched off, which is not the phone
+anybody loses — so two minutes hidden and it asks again. The tab being hidden
+is the closest a browser has to a pocket.
+
+**A lock you can only reach by waiting is a lock nobody tests**, so Security
+has a Lock now. It is also the button somebody wants when they hand the phone
+across a table. It locks in place without touching the address, so unlocking
+returns to Security rather than to Home.
+
+61. **A setting that nothing reads is not a feature at half done, it is a
+    claim.** The switch said the app would ask for a PIN when it opened. It
+    had said that for as long as the switch existed.
+
+### 11f.36 Two ways to be wrong about a lockout
+
+**The recovery button handed out five more guesses.** The locked-out state
+first offered "Use my recovery phrase", which cleared the attempt count to
+open the phrase sheet — so anybody who pressed it got five fresh tries, and
+then five more. The lockout has to cost something. The password is the only
+route offered now, and it is a real one: signing in unlocks, and unlocking
+resets the count.
+
+**And the count did not survive a reload.** It was deliberately not persisted,
+on the reasoning that a lockout with no server to clear it is a lockout a
+person cannot escape. That reasoning stopped being true the moment the
+password route existed. It is kept now, so a reload does not buy five more
+guesses either.
+
+The suite reported the second of these as a failure I nearly accepted: its own
+`addInitScript` re-seeded storage on every navigation, including the reload
+under test, so it was wiping the count it was checking. The app was right and
+the harness was lying. Seeding once through the page rather than on every init
+is what separated them.
+
+62. **When a test and the code disagree, one of them is wrong and it is worth
+    a minute to find out which.** Four times this session it was the test.
+    Twice it was the code. Guessing would have been right about two thirds of
+    the time and wrong in both directions.
+
+### 11f.37 A pad that has to be focused looks like a form
+
+The dots had a focus ring, because the pad was a `tabindex` div that focused
+itself on mount so a desktop user could type. On the lock screen — where the
+pad is the only thing on the page — that ring turned four dots into what read
+as a text input, before anybody had touched a key.
+
+Typing goes through the document now. No focus, no ring, no autofocus, and the
+keyboard still works: the listener ignores events whose target is an input, a
+textarea or anything contenteditable, so the password sheet's fields keep
+their own digits. It drops itself the moment its pad leaves the document,
+because this app replaces a screen wholesale rather than unmounting it and a
+listener per render would pile up.
+
+**And a grid column sized to `auto` takes its item's max-content width.** The
+lock card is `width: 400px; max-width: 100%` inside `display: grid;
+place-items: center` — and `100%` resolved against the 400px column the card
+had itself created, constraining nothing. It hung 30px off a 390 screen.
+`grid-template-columns: minmax(0, 1fr)` fixes it. `.auth` has carried the
+identical bug since it was written, at 480px, and had never been caught
+because the sweep did not include the sign-in screens. It does now.
+
+63. **`max-width: 100%` is a promise about the parent, and an auto grid track
+    is not a parent that keeps promises.** It sizes itself to the child.
+
+### 11f.38 Still open
 
 - The nav component's variants are still named `Money` and `Stocks` from the
   older product. Renaming breaks 29 instances on `04 App`.
@@ -4106,10 +4194,15 @@ to twenty-three.
   phone lists cash as a row inside the holdings list, one "everything you own"
   list rather than our Wallet/positions split; and their down-moves are red
   where ours are amber.
-- The app lock switch is honoured as a setting but there is no lock screen
-  yet: nothing asks for the PIN on open, only on a payment.
 - The PIN and the password are held in the clear, because there is no server.
   A real one sends the password and never stores it, and keeps the PIN in the
   device's secure enclave. The shapes are the same.
 - Figma has none of this: the file still draws Account as the two-column wall
-  of cards, and has no PIN pad, no password sheet and no settings rail.
+  of cards, and has no PIN pad, no password sheet, no settings rail and no
+  lock screen.
+- Lock now lives in Security and has no address of its own. A `/lock` route
+  would be findable from the palette, but unlocking would land back on
+  `/lock`, so it would need to redirect and would lose the screen you came
+  from — which the button does not.
+- Face ID is a button that succeeds after half a second. WebAuthn would make
+  it real and is out of scope for a prototype with no server.

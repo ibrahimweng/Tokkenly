@@ -10,7 +10,10 @@ const ROUTES = ['/', '/invest', '/invest/aapl', '/invest/voo', '/invest/aapl/inv
   '/wallet', '/transfer', '/grow', '/activity', '/bucket',
   '/account', '/account/details', '/account/preferences', '/account/notifications',
   '/account/security', '/account/payments', '/account/verification',
-  '/account/support', '/account/legal']
+  '/account/support', '/account/legal',
+  // The auth screens had never been swept, which is how a 480px card on a
+  // 390px phone went unnoticed for as long as it did.
+  '/signin', '/signup']
 
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 let bad = 0

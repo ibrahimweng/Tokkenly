@@ -4,7 +4,7 @@ import './styles/components.css'
 
 import { h } from './ui'
 import { start, current, go, openSheet, type Route } from './router'
-import { state, subscribe, applyTheme, recall } from './state'
+import { state, actions, subscribe, applyTheme, recall, IDLE_LOCK_MS } from './state'
 import { onBreakpointChange } from './responsive'
 import { buildSheet } from './sheets'
 import { homeScreen } from './screens/home'
@@ -22,6 +22,7 @@ import { welcomeScreen } from './screens/welcome'
 import { verifyScreen } from './screens/verify'
 import { disclosuresScreen } from './screens/disclosures'
 import { bucketScreen } from './screens/bucket'
+import { lockScreen } from './screens/lock'
 
 const app = document.getElementById('app')!
 
@@ -57,6 +58,11 @@ function screenFor(r: Route): HTMLElement {
   if (a === 'signin') return signInScreen()
   if (a === 'signup') return signUpScreen()
   if (!state.signedIn) return signInScreen()
+  // The lock is about the device, so it comes before everything the account
+  // can see — the intro included. The address is left alone underneath it, so
+  // unlocking lands on the deep link somebody actually followed rather than
+  // dropping them on Home.
+  if (state.security.appLock && !state.unlocked) return lockScreen()
   if (a === 'welcome') return welcomeScreen(Number(b ?? 0))
   if (a === 'verify') return verifyScreen(b ?? 'what')
   // The intro gates the landing route only. A deep link still goes where it
@@ -103,6 +109,18 @@ function render(r: Route): void {
   document.body.style.overflow = sheetEl ? 'hidden' : ''
   window.scrollTo(0, keepScroll)
 }
+
+/** A lock that only fires on a cold start protects a phone that has been
+ *  turned off, which is not the phone anybody loses. Two minutes away and it
+ *  asks again — the tab being hidden is the closest this has to a pocket. */
+let hiddenAt = 0
+addEventListener('visibilitychange', () => {
+  if (document.hidden) { hiddenAt = Date.now(); return }
+  if (!hiddenAt) return
+  const away = Date.now() - hiddenAt
+  hiddenAt = 0
+  if (state.security.appLock && state.unlocked && away > IDLE_LOCK_MS) actions.lock()
+})
 
 /** Command K anywhere opens the jump-to overlay, and does not fight the
  *  browser's own find. Registered once, not per render. */
