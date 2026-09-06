@@ -4,7 +4,7 @@ import { sheet, figure, panel, outcome, toast } from './components/sheet'
 import { callout as calloutEl, emptyState as emptyStateEl, skeletonList } from './components/bits'
 import {
   state, actions, owed, monthlyCost, monthlyEarn, holding, bucketTotal,
-  tradeFee, weakPin, ratePassword, type Activity,
+  tradeFee, weakPin, ratePassword, LIMITS, type Activity,
   requestQuote, quoteLive, settlement, grossOf, type Quote,
 } from './state'
 import { pinPad } from './components/pinpad'
@@ -360,6 +360,41 @@ export const SHEETS: Record<string, Builder> = {
     panel.querySelector('.sheet')?.classList.add('jump')
     panel.classList.add('scrim-top')     // a palette sits high, not centred
     return panel
+  },
+
+  /** Putting away one of Home's standing reminders.
+   *
+   *  It asks, because one of the two is what lifts an account's limits and a
+   *  stray tap on a close button is not a decision about that. And it says
+   *  where the thing still lives, so putting the reminder away is understood
+   *  as hiding a reminder rather than as cancelling the thing it reminds you
+   *  of — which is the mistake this dialog exists to prevent. */
+  'put-away': (r) => {
+    const id = str(r, 'task')
+    const n = state.bucket.length
+    const what = id === 'verify'
+      ? {
+          title: 'Put away the verification reminder?',
+          body: 'Your account stays unverified, and the limits stay with it: ' +
+            `${usd(LIMITS.none.single, false)} at once and ${usd(LIMITS.none.monthly, false)} a month. ` +
+            'You can still verify from Account whenever you want.',
+          rows: [['Where it still lives', 'Account · Verification']] as [string, string][],
+        }
+      : {
+          title: 'Put away the bucket reminder?',
+          body: `Nothing leaves your bucket. The ${n} ${n === 1 ? 'company stays' : 'companies stay'} in it, ` +
+            'and it is still in the sidebar and on every Invest screen. This only stops Home mentioning it.',
+          rows: [['Where it still lives', 'Your bucket']] as [string, string][],
+        }
+    return sheet(what.title,
+      h('span', { class: 'muted', text: what.body }),
+      panel(...what.rows),
+      calloutEl('Both reminders come back from Preferences.'),
+      h('button', { class: 'btn btn-primary', text: 'Keep it on Home', on: { click: closeSheet } }),
+      h('button', {
+        class: 'btn btn-secondary', text: 'Put it away',
+        on: { click: () => { actions.putAwayTask(id); closeSheet() } },
+      }))
   },
 
   /** Change who a payment goes to, without leaving the dialog. */

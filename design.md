@@ -5381,7 +5381,57 @@ derived, because the flag is the whole rule.
     somebody meets on their first attempt, it is the one a regulator reads,
     and it is the one that is still missing when a feature ships late.
 
-### 11g.29 Still open
+### 11g.29 Two reminders, moved and made dismissible
+
+Home opened with two standing rows above everything: verify your identity, and
+three companies are waiting in your bucket. Above the balance, above the doors
+— which is where a bank puts the thing it wants from you rather than the thing
+you came for.
+
+They sit under the doors now and against the recent activity, in both
+compositions. Somebody arriving sees what they came for; somebody who has done
+it meets the reminder on the way out.
+
+And they can be put away, which they could not be before. A reminder that
+cannot be dismissed is an advert, and this one is on the screen the product
+opens on. Not by a stray tap though: one of the two is what lifts an account's
+limits, so the close asks first, and what it asks names what is being hidden
+and what is not — the account stays unverified and the limits stay with it; the
+bucket keeps every company in it and only Home stops mentioning them. Each says
+where the thing still lives.
+
+It is a preference, so it survives a reload, and Preferences grows a row that
+counts what is hidden and brings it back. The row is absent when nothing is,
+because a control for a state nobody is in is noise.
+
+96. **Anything that stands on a screen uninvited must be dismissible, and
+    anything dismissible in one press must ask.** The two halves are one rule:
+    without the first it is an advert, and without the second it is a trapdoor
+    under the one thing that lifts a limit.
+
+### 11g.30 The card that stops a payment, made to look like it
+
+"Your limits" was four rows of a table in a plain panel, beside another plain
+panel listing bank accounts. Four numbers of equal weight, none of them the one
+anybody wants, on the card that is actually stopping payments on an unverified
+account.
+
+It leads with what is left, because that is the question. Under it, a bar for
+how much of the month has gone — which no arrangement of four numbers shows as
+fast — amber while the ceiling is one you have not lifted. Then the two
+supporting figures, then the way to lift it.
+
+Unverified it takes the same tint as the reminder on Home, because it is the
+same subject and the same offer, and one of them should not be a notice while
+the other is furniture. Verified it goes calm and loses the button: a limit you
+are nowhere near is information, not a warning.
+
+`spentBar` is not `meter`. The meter auto-scales and carries a tick, because a
+cover ratio has no natural ceiling and has a minimum worth marking. A month's
+allowance has both, and a bar that rescales itself is a bar that cannot be
+compared with the same bar yesterday.
+
+### 11g.31 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from
   using the product afterwards. Item 30 was held back until it was asked for,

@@ -137,9 +137,25 @@
 /* `.card` is a flex column, so the direction has to be said again here or the
    icon, the words and the chevron stack instead of sitting in a line. */
 .task {
-  flex-direction: row; align-items: center; gap: 16px;
+  flex-direction: row; align-items: center; gap: 8px;
   padding: 16px 20px; text-decoration: none;
   background: var(--tint-brand);
+}
+/* The row is a link with a button beside it rather than one thing, so the
+   whole row still goes where it says and the close still closes. */
+.task-main {
+  display: flex; align-items: center; gap: 16px;
+  flex: 1 1 auto; min-width: 0; text-decoration: none; color: inherit;
+}
+/* Quiet at rest against the tinted row, and it takes a surface under the
+   pointer like every other icon button. */
+/* Scoped past .icon-btn's own surface: a filled circle beside the chevron
+   made two marks of equal weight at the end of the row, one of which throws
+   the row away. It takes a surface only under the pointer. */
+.task .task-close { flex: none; background: transparent; }
+.task .task-close svg { width: 14px; height: 14px; }
+@media (hover: hover) {
+  .task .task-close:hover { background: var(--sunken); color: var(--ink); }
 }
 .task .task-ic {
   flex: none; width: 40px; height: 40px; border-radius: 12px;
@@ -275,6 +291,17 @@
 }
 .meter-fill { position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: var(--positive); }
 .meter-tick { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--canvas); }
+/* Spending against a ceiling you have not lifted is not a good-news bar. */
+.meter-track.warn .meter-fill { background: var(--warning); }
+/* The bar sits inside a tinted card, where --control is the card's own
+   surface at a different lightness and the track disappears into it. */
+.limits-open .meter-track { background: var(--canvas); }
+
+/* The card that is actually stopping a payment does not look like the list of
+   bank accounts beside it. Same tint as the reminder on Home, because it is
+   the same subject and the same offer. */
+.card.limits-open { background: var(--tint-brand); }
+.card.limits-open .t-caps { color: var(--muted); }
 
 /* ---------- sheets ---------- */
 .scrim {

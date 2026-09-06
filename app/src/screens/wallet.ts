@@ -1,7 +1,7 @@
 import { h, countTo } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
-import { card, cardHead, headLink, kv, callout, amount, directionMark, figureWithEye } from '../components/bits'
+import { card, cardHead, headLink, kv, callout, amount, directionMark, figureWithEye, spentBar } from '../components/bits'
 import { table } from '../components/table'
 import { state, buyingPower, availableToBorrow, inNaira, rateLine, limits, leftThisMonth, verified, money } from '../state'
 import { usd, when, activityLabel } from '../format'
@@ -110,6 +110,41 @@ function cashHero(): HTMLElement {
   )
 }
 
+/** What is left of the month, and what is stopping you.
+ *
+ *  It was four rows of a table in a plain panel beside another plain panel —
+ *  four numbers of equal weight, none of which was the one anybody wants. On
+ *  an unverified account this card is the thing that actually stops a payment,
+ *  and it looked exactly like the list of bank accounts next to it.
+ *
+ *  The figure is what is left, because that is the question. The bar is how
+ *  much of the month has gone, which no arrangement of four numbers can show
+ *  as fast. And unverified it takes the same tint as the reminder on Home,
+ *  because it is the same subject and one of them should not be a notice while
+ *  the other is furniture. Verified there is nothing to lift, so it goes calm:
+ *  a limit you are not near is information, not a warning. */
+function limitsCard(): HTMLElement {
+  const done = verified()
+  const left = leftThisMonth()
+  const c = card(
+    cardHead('Your limits',
+      h('span', { class: 'pill' + (done ? ' pos' : ' warn'), text: done ? 'Verified' : 'Not verified' })),
+    h('div', { class: 'stack-8' },
+      h('span', { class: 't-display', text: money(left) }),
+      h('span', { class: 'muted',
+        text: `left of your ${usd(limits().monthly, false)} this month` }),
+      spentBar(state.usedThisMonth, limits().monthly, done ? '' : 'warn')),
+    kv('Used this month', money(state.usedThisMonth)),
+    kv('One payment', usd(limits().single, false)),
+    // The card that states a limit is the place to lift it.
+    done
+      ? callout('These reset on the first of the month.')
+      : h('button', { class: 'btn btn-primary', text: 'Verify to lift these',
+          on: { click: () => go('/verify') } }))
+  if (!done) c.classList.add('limits-open')
+  return c
+}
+
 export function walletScreen(): HTMLElement {
   const pending = state.activity.filter((a) => !a.settled)
 
@@ -143,18 +178,7 @@ export function walletScreen(): HTMLElement {
         ),
         moved()),
       h('div', { class: 'stack col-side' },
-        card(
-          cardHead('Your limits'),
-          kv('Monthly', usd(limits().monthly, false)),
-          kv('Used this month', money(state.usedThisMonth)),
-          kv('Left this month', money(leftThisMonth())),
-          kv('One payment', usd(limits().single, false)),
-          // The card that states a limit is the place to lift it.
-          verified()
-            ? callout('These are the verified limits. They reset on the first of the month.')
-            : h('button', { class: 'btn btn-primary btn-sm', text: 'Verify to lift these',
-                on: { click: () => go('/verify') } })
-        ),
+        limitsCard(),
         card(
           cardHead('Payment methods', h('button', { class: 'link', text: 'Add a bank', on: { click: () => openSheet('banks') } })),
           ...state.banks.map((b) =>

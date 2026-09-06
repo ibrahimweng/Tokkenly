@@ -32,16 +32,43 @@ function standing(): string {
  *  was named on Transfer and on Account, and nowhere on the screen everyone
  *  lands on. Not dismissible: it is shut two flows, and the way to be rid of
  *  it is to do it — hiding it would leave the app broken and quiet about it. */
+/** A standing reminder on Home, and the way to be rid of it.
+ *
+ *  These sat above everything — above the balance, above the doors — which is
+ *  where a bank puts the thing it wants from you rather than the thing you
+ *  came for. They sit under the doors now, against the activity, which is
+ *  where somebody looks after they have done what they came to do.
+ *
+ *  And they can be put away. A reminder that cannot be dismissed is an advert,
+ *  and this one is on the screen the product opens on. Not by a stray tap
+ *  though: one of these is what lifts a limit, so it asks first and says where
+ *  the thing still lives. */
+function taskRow(opts: {
+  id: string; to: string; ic: string; title: string; sub: string
+}): HTMLElement | null {
+  if (state.prefs.putAway.includes(opts.id)) return null
+  const a = link(opts.to, 'task-main')
+  a.appendChild(h('span', { class: 'task-ic', html: opts.ic }))
+  a.appendChild(h('span', { class: 'two-line grow' },
+    h('span', { class: 't-body-strong', text: opts.title }),
+    h('small', { class: 'muted', text: opts.sub })))
+  a.appendChild(h('span', { class: 'muted', html: icon.chevron() }))
+  // A sibling of the link, not a child of it: a button inside an anchor is
+  // neither valid nor clickable in the way anybody expects.
+  return h('div', { class: 'card task' }, a,
+    h('button', {
+      class: 'icon-btn task-close', ariaLabel: 'Put this away',
+      html: icon.close(), on: { click: () => openSheet('put-away', { task: opts.id }) },
+    }))
+}
+
 function verifyTask(): HTMLElement | null {
   if (verified()) return null
-  const a = link('/verify/what', 'card task')
-  a.appendChild(h('span', { class: 'task-ic', html: icon.lock() }))
-  a.appendChild(h('span', { class: 'two-line grow' },
-    h('span', { class: 't-body-strong', text: 'Verify to lift your limits' }),
-    h('small', { class: 'muted',
-      text: `A NIN or a BVN, and a minute. Until then you can move ${usd(LIMITS.none.single, false)} at once and ${usd(LIMITS.none.monthly, false)} a month.` })))
-  a.appendChild(h('span', { class: 'muted', html: icon.chevron() }))
-  return a
+  return taskRow({
+    id: 'verify', to: '/verify/what', ic: icon.lock(),
+    title: 'Verify to lift your limits',
+    sub: `A NIN or a BVN, and a minute. Until then you can move ${usd(LIMITS.none.single, false)} at once and ${usd(LIMITS.none.monthly, false)} a month.`,
+  })
 }
 
 /** What is picked out and not yet paid for.
@@ -53,15 +80,18 @@ function verifyTask(): HTMLElement | null {
 function waiting(): HTMLElement | null {
   const n = state.bucket.length
   if (!n) return null
-  const a = link('/bucket', 'card task')
-  a.appendChild(h('span', { class: 'task-ic', html: icon.bucket() }))
-  a.appendChild(h('span', { class: 'two-line grow' },
-    h('span', { class: 't-body-strong',
-      text: `${n} ${n === 1 ? 'company is' : 'companies are'} waiting in your bucket` }),
-    h('small', { class: 'muted',
-      text: `${money(bucketTotal())} to invest, ${money(bucketCost())} all in. One payment buys the lot.` })))
-  a.appendChild(h('span', { class: 'muted', html: icon.chevron() }))
-  return a
+  return taskRow({
+    id: 'bucket', to: '/bucket', ic: icon.bucket(),
+    title: `${n} ${n === 1 ? 'company is' : 'companies are'} waiting in your bucket`,
+    sub: `${money(bucketTotal())} to invest, ${money(bucketCost())} all in. One payment buys the lot.`,
+  })
+}
+
+/** The pair, as one band. Below the doors and against the activity in both
+ *  compositions, so the screen reads the same way whichever one is on. */
+function tasks(): HTMLElement | null {
+  const rows = [verifyTask(), waiting()].filter(Boolean) as HTMLElement[]
+  return rows.length ? h('div', { class: 'stack-12' }, ...rows) : null
 }
 
 /** A balance that carries the eye from the old figure to the new one. Keyed,
@@ -197,8 +227,6 @@ function detailed(): HTMLElement {
     pageHeader(greeting() + ', ' + state.person.name.split(' ')[0],
       h('div', { class: 'header-actions' },
         isMobile() ? null : jumpOpen(), viewToggle(), bell())),
-    verifyTask(),
-    waiting(),
     h('div', { class: 'row' },
       h('div', { class: 'stack', style: { width: '308px', flex: 'none' } },
         h('div', { class: 'stack-8' },
@@ -217,6 +245,7 @@ function detailed(): HTMLElement {
         quickAction('Buy', 'Shares and funds', icon.buy(), '/invest'),
         quickAction('Convert', 'Naira and dollars', icon.convert(), '/withdraw'),
         quickAction('Borrow', 'Against your shares', icon.download(), '/grow/borrow'))),
+    tasks(),
     h('div', { class: 'row' },
       h('div', { class: 'stack col-main' },
         chart(),
@@ -288,8 +317,6 @@ function gateway(): HTMLElement {
           // The phone's top bar already carries a search; two of them 40px
           // apart is not twice as findable.
           isMobile() ? null : jumpOpen(), viewToggle(), bell()))),
-    verifyTask(),
-    waiting(),
     h('div', { class: 'headline' },
       h('div', { class: 'stack-8' },
         h('span', { class: 't-caps subtle', text: 'Total portfolio' }),
@@ -324,6 +351,7 @@ function gateway(): HTMLElement {
         sub: 'Borrow against your shares without selling them.',
         reads: whereItIs(state.inEarn, total, 'in Earn'),
         at: level(state.inEarn, total) })),
+    tasks(),
     // D01c draws the activity straight onto the canvas, with no card behind
     // it — the tiles above are the objects on this screen, and a fourth panel
     // under them flattens all four.

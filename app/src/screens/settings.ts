@@ -155,7 +155,17 @@ function preferencesBody(): (Node | null)[] {
         sub: 'Four screens on what a tokenised share is and how to buy one',
         action: 'Show it again',
         onClick: () => { actions.replayIntro(); go('/welcome/0') },
-      })),
+      }),
+      // Only when there is something to bring back. A row reading "0 hidden"
+      // is a control for a state nobody is in.
+      p.putAway.length
+        ? prefAction({
+            label: 'Reminders on Home', ic: icon.bell(),
+            sub: p.putAway.length === 1 ? 'One is put away' : p.putAway.length + ' are put away',
+            action: 'Show them again',
+            onClick: () => { actions.showTasksAgain(); toast('They are back on Home') },
+          })
+        : null),
     card(
       cardHead('Money'),
       toggle({

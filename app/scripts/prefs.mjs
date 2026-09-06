@@ -101,6 +101,60 @@ console.log('HIDE MY BALANCES  the switch, and where it sits')
      (await p.getByRole('button', { name: /Hide my balances/ }).count()) === 1)
 }
 
+console.log('THE REMINDERS ON HOME  where they sit, and how to be rid of them')
+{
+  // Its own page: the verify reminder only exists on an unverified account,
+  // and this suite verified the shared one on the first line.
+  const t = await b.newPage({ viewport: { width: 1440, height: 1300 } })
+  await seen(t)
+  t.on('pageerror', (e) => errs.push(String(e)))
+  t.setDefaultTimeout(6000)
+  await t.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
+  const home = async () => { await t.goto(B + '/', { waitUntil: 'domcontentloaded' }); await t.waitForTimeout(450) }
+  await home()
+  const o = await t.evaluate(() =>
+    [...document.querySelectorAll('main > *')].map((e) => String(e.className || e.tagName).split(' ')[0]))
+  // They used to sit above the balance and the doors, which is where a bank
+  // puts what it wants from you rather than what you came for.
+  ok('they sit under the doors and against the activity',
+     o.indexOf('gates') >= 0 && o.indexOf('gates') < o.indexOf('stack-12') &&
+     o.indexOf('stack-12') < o.indexOf('stack-8'), o.join(' > '))
+  ok('the row still goes where it says, and has a way to be put away',
+     (await t.locator('.task .task-main').count()) >= 1 &&
+     (await t.locator('.task .task-close').count()) >= 1)
+  const rows = () => t.locator('.task').count()
+  const before = await rows()
+  await t.locator('.task-close').first().click(); await t.waitForTimeout(450)
+  const asked = await t.evaluate(() => document.querySelector('.sheet')?.innerText.replace(/\n/g, ' ') ?? '')
+  // One of these is what lifts an account's limits. It asks first, and it says
+  // what is being hidden and what is not.
+  ok('it asks before it goes', /Put away/.test(asked), asked.slice(0, 44))
+  ok('and says what stays behind', /still verify from Account|Nothing leaves your bucket/.test(asked))
+  ok('and where it still lives', /Where it still lives/i.test(asked))
+  await t.getByRole('button', { name: 'Keep it on Home' }).click(); await t.waitForTimeout(400)
+  ok('keeping it keeps it', (await rows()) === before)
+  await t.locator('.task-close').first().click(); await t.waitForTimeout(400)
+  await t.getByRole('button', { name: 'Put it away' }).click(); await t.waitForTimeout(450)
+  ok('putting it away takes it off Home', (await rows()) === before - 1, `${before} → ${await rows()}`)
+  // A preference, so it survives a reload. seen() re-seeds prefs on every
+  // fresh document, so what was written is read back rather than reloaded.
+  ok('and it is written down, not held in a variable',
+     (await t.evaluate(() =>
+       JSON.parse(localStorage.getItem('tokkenly.prefs.v1') ?? '{}').prefs?.putAway ?? [])).length === 1)
+  await t.goto(B + '/account/preferences', { waitUntil: 'domcontentloaded' }); await t.waitForTimeout(450)
+  const back = await t.evaluate(() => [...document.querySelectorAll('.pref-row')]
+    .map((e) => e.innerText.replace(/\n/g, ' · ')).find((x) => /Reminders on Home/.test(x)) ?? '')
+  ok('Preferences offers the way back, and counts them', /One is put away/.test(back), back || 'no row')
+  await t.locator('.pref-row', { hasText: 'Reminders on Home' }).getByText('Show them again').click()
+  await t.waitForTimeout(400)
+  await home()
+  ok('and it brings them back', (await rows()) === before)
+  await t.goto(B + '/account/preferences', { waitUntil: 'domcontentloaded' }); await t.waitForTimeout(450)
+  ok('the row goes away when there is nothing to bring back',
+     !(await t.evaluate(() => document.body.innerText)).includes('Reminders on Home'))
+  await t.close()
+}
+
 console.log('NOTIFICATIONS')
 await at('/')
 const before = await p.evaluate(() => document.querySelector('.bell .dot')?.textContent ?? '0')

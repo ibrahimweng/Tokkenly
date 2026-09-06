@@ -176,6 +176,16 @@ export function directionMark(n: number): HTMLElement {
   return h('span', { class: 'mark', html: n >= 0 ? icon.arrowIn() : icon.arrowOut() })
 }
 
+/** How much of a fixed allowance is gone. Not `meter`: that one auto-scales
+ *  and carries a tick, because a cover ratio has no natural ceiling and a
+ *  minimum worth marking. A month's allowance has both — the scale is the
+ *  allowance and there is nothing to mark. */
+export function spentBar(part: number, whole: number, cls = ''): HTMLElement {
+  const filled = whole > 0 ? Math.max(0, Math.min(100, (part / whole) * 100)) : 0
+  return h('div', { class: 'meter-track ' + cls },
+    h('div', { class: 'meter-fill', style: { width: filled + '%' } }))
+}
+
 export function meter(valuePct: number, minPct: number): HTMLElement {
   const scale = Math.max(valuePct, minPct) * 1.1
   const fill = Math.min(100, (valuePct / scale) * 100)

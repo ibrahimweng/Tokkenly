@@ -50,6 +50,12 @@ export interface Prefs {
    *  seat. Prices, rates and limits are not covered: they are public, and
    *  hiding them helps nobody. */
   hideBalances: boolean
+  /** Which of Home's standing reminders have been put away. A reminder you
+   *  cannot dismiss is an advert, and this one is on the screen the product
+   *  opens on — but it is also the thing that lifts a limit, so it is put away
+   *  deliberately rather than by a stray tap, and there is a way back to it.
+   *  A preference, so it survives a reload and one control brings them back. */
+  putAway: string[]
   notify: { payments: boolean; prices: boolean; earn: boolean; borrowing: boolean }
 }
 
@@ -60,6 +66,7 @@ export const DEFAULT_PREFS: Prefs = {
   tradeDefault: 50,
   confirmOver: 500,
   hideBalances: false,
+  putAway: [],
   notify: { payments: true, prices: true, earn: true, borrowing: true },
 }
 
@@ -328,6 +335,7 @@ export function recall(): void {
     state.prefs = {
       ...DEFAULT_PREFS, ...saved.prefs,
       notify: { ...DEFAULT_PREFS.notify, ...(saved.prefs?.notify ?? {}) },
+      putAway: [...(saved.prefs?.putAway ?? [])],
     }
     state.security = { ...DEFAULT_SECURITY, ...saved.security }
     state.seenIntro = saved.seenIntro ?? false
@@ -916,6 +924,15 @@ export const actions = {
     state.prefs.notify[key] = on
     changed()
   },
+  putAwayTask(id: string) {
+    if (!state.prefs.putAway.includes(id)) state.prefs.putAway.push(id)
+    changed()
+  },
+  showTasksAgain() {
+    state.prefs.putAway = []
+    changed()
+  },
+
   resetPrefs() {
     state.prefs = { ...DEFAULT_PREFS, notify: { ...DEFAULT_PREFS.notify } }
     applyTheme()
