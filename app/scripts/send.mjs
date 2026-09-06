@@ -41,7 +41,7 @@ await p.locator('.sheet .btn-primary').click()
 await p.waitForTimeout(600)
 log.push('  outcome: ' + (await p.locator('.sheet .t-title').textContent()))
 
-// desktop is unchanged: one screen, picker on the right
+// desktop: one screen, the amount on the left and who on the right
 const d = await b.newPage({ viewport: { width: 1440, height: 1024 } })
 await seen(d)
 d.on('pageerror', (e) => errs.push('desktop pageerror: ' + e.message))
@@ -51,7 +51,11 @@ log.push('')
 log.push('DESKTOP  /send')
 log.push('  title:  ' + (await d.locator('.page-header h1').textContent()))
 log.push('  composer on page: ' + (await d.locator('.card .amount-box').count())
-       + ', picker rows: ' + (await d.locator('.col-side .kv, .stack.grow .kv').count()))
+       + ', people beside it: ' + (await d.locator('.stack.grow .sheet-row').count())
+       + ', dialogs: ' + (await d.locator('.scrim').count()))
+log.push('  paying:  ' + (await d.locator('.col-compose .sheet-row .t-body-strong').first().textContent()))
+log.push('  and an address field for anyone not listed: '
+       + (await d.locator('.stack.grow input[placeholder*="address"]').count()))
 
 console.log(log.join('\n'))
 console.log('\nERRORS: ' + (errs.length ? errs.join('\n') : 'none'))

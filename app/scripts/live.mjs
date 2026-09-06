@@ -19,21 +19,26 @@ const page = async (w = 1440, h = 1024) => {
   return p
 }
 
-console.log('DIALOGS  Figma draws D09 Send and D12 Receive over the wallet')
-for (const [route, title] of [['/send', 'Send money'], ['/receive', 'Receive money']]) {
+console.log('COMPOSING IS A SCREEN  every way of moving money, the same way')
+for (const [route, title] of [
+  ['/send?to=Tunde%20Bakare', 'Send money'], ['/receive', 'Receive money'],
+  ['/addmoney', 'Add money'], ['/withdraw', 'Withdraw to your bank'],
+  ['/invest/aapl/invest', 'Invest'], ['/grow/borrow', 'Borrow'],
+  ['/grow/earn', 'Earn'], ['/grow/repay', 'Repay'],
+]) {
   const p = await page()
-  await p.goto(B + route, { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(200)
-  const d = await p.evaluate(() => {
-    const s = document.querySelector('.scrim > .sheet')
-    return { w: s ? Math.round(s.getBoundingClientRect().width) : 0,
-             title: s?.querySelector('h2')?.textContent,
-             behind: document.querySelector('.content .page-header h1')?.textContent,
-             sidebar: getComputedStyle(document.querySelector('.sidebar')).display !== 'none' }
-  })
-  ok(`${route} is a 480 dialog over Transfer`,
-     d.w === 480 && d.title === title && d.behind === 'Transfer' && d.sidebar, JSON.stringify(d))
-  await p.keyboard.press('Escape'); await p.waitForTimeout(200)
-  ok(`${route} closes to Transfer`, p.url().endsWith('#/transfer'), new URL(p.url()).hash)
+  await p.goto(B + route, { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(250)
+  const d = await p.evaluate(() => ({
+    dialog: !!document.querySelector('.scrim > .sheet'),
+    h1: document.querySelector('.content .page-header h1')?.textContent,
+    trail: !!document.querySelector('.crumbs'),
+  }))
+  // Send and Receive were dialogs over the wallet and the other six were
+  // screens, which meant the one composer that most needs a list beside it had
+  // nowhere to put one. One rule now: composing is a place, committing is a
+  // dialog over the place.
+  ok(`${route} is a screen of its own`,
+     !d.dialog && d.h1 === title && d.trail, JSON.stringify(d))
   await p.close()
 }
 { // and still a bottom sheet on a phone
@@ -44,14 +49,18 @@ for (const [route, title] of [['/send', 'Send money'], ['/receive', 'Receive mon
   ok('the phone still gets a sheet with a grabber and a keypad', grabber === 1 && keypad === 1)
   await p.close()
 }
-{ // changing the recipient without leaving
+{ // changing the recipient without leaving the screen
   const p = await page()
-  await p.goto(B + '/send', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(200)
-  await p.locator('.sheet-row').first().click(); await p.waitForTimeout(250)
-  const listed = await p.locator('.sheet-row').count()
-  await p.locator('.sheet-row').nth(1).click(); await p.waitForTimeout(250)
-  const to = await p.locator('.sheet .t-body-strong').first().textContent()
-  ok('Change opens the list and picks a new recipient', listed >= 4 && !!to, `${listed} listed, now ${to}`)
+  await p.goto(B + '/send?to=Tunde%20Bakare', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(250)
+  const people = p.locator('.stack.grow .sheet-row')
+  const listed = await people.count()
+  const before = await p.locator('.col-compose .sheet-row .t-body-strong').first().textContent()
+  await people.nth(0).click(); await p.waitForTimeout(300)
+  const after = await p.locator('.col-compose .sheet-row .t-body-strong').first().textContent()
+  // The list is the column beside the amount, not a dialog opened from a
+  // Change link that opened from a dialog.
+  ok('the column beside it picks who you are paying',
+     listed >= 4 && !!after && after !== before, `${listed} listed, ${before} → ${after}`)
   await p.close()
 }
 
@@ -216,7 +225,7 @@ console.log('MOVING AROUND, on a phone')
 console.log('A BASE UNDER A DIALOG IS NOT WHERE YOU ARE')
 {
   for (const [w, route, wants] of [
-    [1600, '/withdraw', true], [1600, '/send', false], [1600, '/receive', false],
+    [1600, '/withdraw', true], [1600, '/send', true], [1600, '/receive', true],
     [390, '/withdraw', false],
   ]) {
     const p = await page(w, w === 390 ? 844 : 1000)

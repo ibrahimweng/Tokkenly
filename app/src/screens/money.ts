@@ -1,6 +1,6 @@
 import { h } from '../ui'
 import { icon } from '../icons'
-import { shell, pageHeader, eyebrow, renderBase } from '../components/shell'
+import { shell, pageHeader, eyebrow } from '../components/shell'
 import { card, cardHead, kv, callout, emptyState, fieldError, amount } from '../components/bits'
 import { table } from '../components/table'
 import { searchField, searchNote } from '../components/search'
@@ -14,7 +14,7 @@ import { usd, naira, when, activityLabel } from '../format'
 import { openSheet, current, go } from '../router'
 
 import { isMobile } from '../responsive'
-import { toast, modalOver } from '../components/sheet'
+import { toast } from '../components/sheet'
 
 const PEOPLE = ['Adaeze Okonkwo', 'Tunde Bakare', 'Chidi Nwosu', 'Ngozi Eze']
 
@@ -47,7 +47,11 @@ export function peopleRows(onPick: (who: string) => void): HTMLElement[] {
         h('span', { class: 'muted', html: icon.chevron() })))
 }
 
-export function sendWhoScreen(): HTMLElement {
+/** Who you can pay, and a field for anybody you cannot. On a phone this is the
+ *  first screen of Send; on a wide one it is the column beside the composer,
+ *  so choosing who and saying how much are one screen rather than a dialog
+ *  that opens another dialog to change its own target. */
+function sendSide(opts: { search: boolean }): HTMLElement {
   const r = current()
   const term = r.query.get('q') ?? ''
   const setTerm = (v: string) => go('/send' + (v ? '?q=' + encodeURIComponent(v) : ''))
@@ -106,23 +110,23 @@ export function sendWhoScreen(): HTMLElement {
     addressError.hidden = true
   })
 
-  return shell(
-    'wallet',
-    pageHeader('Send money', eyebrow('Cash available', usd(state.cash))),
-    searchField({
-      placeholder: 'Search a name',
-      value: r.query.get('q') ?? '',
-      // Picking a name here is the whole screen: it goes straight to the
-      // composer with that person already in it.
-      suggest: (t) => rank(t, people, PEOPLE_FIELDS).slice(0, 7).map((n) => ({
-        label: n,
-        hint: 'Send money',
-        group: 'People',
-        pick: () => go('/send?to=' + encodeURIComponent(n)),
-      })),
-      onType: paint,
-      onCommit: setTerm,
-    }),
+  return h('div', { class: 'stack' },
+    opts.search
+      ? searchField({
+          placeholder: 'Search a name',
+          value: r.query.get('q') ?? '',
+          // Picking a name here is the whole screen: it goes straight to the
+          // composer with that person already in it.
+          suggest: (t) => rank(t, people, PEOPLE_FIELDS).slice(0, 7).map((n) => ({
+            label: n,
+            hint: 'Send money',
+            group: 'People',
+            pick: () => go('/send?to=' + encodeURIComponent(n)),
+          })),
+          onType: paint,
+          onCommit: setTerm,
+        })
+      : null,
     peopleCard,
     card(
       cardHead('Or send to an address'),
@@ -130,8 +134,14 @@ export function sendWhoScreen(): HTMLElement {
       addressError,
       h('button', { class: 'btn btn-secondary', text: 'Continue', on: { click: submitAddress } }),
       callout('Base network only. Sending any other asset to this address loses it.', 'warning')
-    )
-  )
+    ))
+}
+
+export function sendWhoScreen(): HTMLElement {
+  return shell(
+    'wallet',
+    pageHeader('Send money', eyebrow('Cash available', usd(state.cash))),
+    sendSide({ search: true }))
 }
 
 export function sendScreen(): HTMLElement {
@@ -140,24 +150,28 @@ export function sendScreen(): HTMLElement {
   // On a phone, who comes first. On desktop the list is the right column.
   if (isMobile() && !chosen && !r.sheet) return sendWhoScreen()
   const to = chosen ?? PEOPLE[0]
+  // Built once and handed back on every repaint: the amount changing must not
+  // wipe an address somebody is halfway through pasting.
+  const side = isMobile() ? null : sendSide({ search: false })
   return composerScreen({
     place: 'wallet',
     base: walletScreen,
-    // Figma D09 draws Send as a dialog over the wallet, not a screen of its
-    // own. Every other composer is a screen, and those match already.
-    present: 'modal',
-    closeTo: '/transfer',
+    right: () => side!,
+    // On a phone the sheet is all there is, so the row opens a picker. On a
+    // wide screen the list is the column beside it, and a Change that opens a
+    // dialog to do what the next column already does is a second way to the
+    // same place.
     lede: () => h('div', { class: 'stack-8' },
       h('span', { class: 't-caps subtle', text: 'To' }),
-      h('button', {
+      h(side ? 'div' : 'button', {
         class: 'sheet-row', style: { background: 'var(--control)' },
-        on: { click: () => openSheet('pick-who') },
+        on: side ? {} : { click: () => openSheet('pick-who') },
       },
         h('span', { class: 'avatar', text: initials(to) }),
         h('span', { class: 'two-line' },
           h('span', { class: 't-body-strong', text: to }),
           h('small', { text: lastPaid(to) })),
-        h('span', { class: 'link quiet', text: 'Change' }))),
+        side ? null : h('span', { class: 'link quiet', text: 'Change' }))),
     title: 'Send money',
     eyebrow: ['Cash available', usd(state.cash)],
     cardLabel: 'How much',
@@ -185,6 +199,34 @@ export function sendScreen(): HTMLElement {
   })
 }
 
+/** What people have sent you. Receive was a dialog with a code in it and
+ *  nothing else; the question straight after "here is my address" is "did the
+ *  last one arrive", and the answer was two screens away. */
+function received(): HTMLElement | null {
+  const rows = state.activity.filter((a) => a.kind === 'payment' && a.amount > 0).slice(0, 5)
+  if (!rows.length) return null
+  return card(
+    cardHead('Money people have sent you',
+      h('button', { class: 'link', text: 'See all',
+        on: { click: () => go('/activity?filter=payments') } })),
+    table(
+      [
+        { key: 'w', label: 'Who' }, { key: 'when', label: 'When', optional: true },
+        { key: 'ref', label: 'Reference', optional: true }, { key: 'amt', label: 'Amount', align: 'right' },
+      ],
+      rows.map((a) => [
+        h('span', { class: 'two-line' },
+          h('span', { class: 't-body-strong', text: a.who }),
+          h('small', { class: 'phone-only', text: when(a.at) })),
+        h('span', { class: 'muted', text: when(a.at) }),
+        h('span', { class: 'muted', text: a.ref }),
+        amount(a),
+      ]),
+      (i) => openSheet('receipt', { ref: rows[i].ref })
+    )
+  )
+}
+
 export function receiveScreen(): HTMLElement {
   const address = WALLET
   const short = address.slice(0, 12) + '…' + address.slice(-4)
@@ -203,18 +245,37 @@ export function receiveScreen(): HTMLElement {
     toast('Address copied', 'success')
   }
 
-  return modalOver(renderBase(walletScreen), 'Receive money', () => go('/transfer'),
+  // A screen, like every other way of moving money. It was a dialog, which
+  // meant the warning about the network — the one line here that costs real
+  // money to get wrong — lived in a box you dismiss, and an address nobody
+  // could link somebody to.
+  const left = card(
+    cardHead('Your address', h('span', { class: 'muted', text: 'Base' })),
     h('div', { class: 'stack-12', style: { alignItems: 'center' } },
       qr,
       h('span', { class: 'muted', text: 'Scan this to pay ' + state.person.name })),
-    h('div', { class: 'stack-8' },
-      h('span', { class: 't-caps subtle', text: 'Your address' }),
-      h('div', { class: 'field', style: { justifyContent: 'space-between' } },
-        h('span', { class: 't-body-strong', text: short }),
-        h('button', { class: 'icon-btn', html: icon.copy(), ariaLabel: 'Copy the address',
-          on: { click: copy } }))),
-    callout('Base network only. Sending any other asset to this address loses it.', 'warning'),
-    h('button', { class: 'btn btn-primary', text: 'Copy address', on: { click: copy } }))
+    h('div', { class: 'field', style: { justifyContent: 'space-between' } },
+      h('span', { class: 't-body-strong', text: short }),
+      h('button', { class: 'icon-btn', html: icon.copy(), ariaLabel: 'Copy the address',
+        on: { click: copy } })),
+    h('button', { class: 'btn btn-primary', text: 'Copy address', on: { click: copy } }),
+    callout('Base network only. Sending any other asset to this address loses it.', 'warning'))
+  left.classList.add('col-compose')
+
+  return shell(
+    'wallet',
+    pageHeader('Receive money', eyebrow('Cash available', usd(state.cash))),
+    h('div', { class: 'row' }, left,
+      h('div', { class: 'stack grow' },
+        card(
+          cardHead('What happens when somebody pays you'),
+          kv('Network', 'Base'),
+          kv('Fee', 'None, either side'),
+          kv('Arrives', 'In about a minute, any day of the week'),
+          kv('Held as', 'Dollars in your wallet'),
+          h('span', { class: 'muted t-caption',
+            text: 'Anybody with a Base wallet can pay this address. They do not need a Tokkenly account.' })),
+        received())))
 }
 
 /** What has come in this way before, or gone out this way before. Invest and

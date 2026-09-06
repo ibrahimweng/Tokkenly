@@ -5201,7 +5201,40 @@ something nobody says out loud.
     being a panel, it can only be reached from wherever somebody thought to put
     the button.
 
-### 11g.26 Still open
+### 11g.26 Composing is a screen, committing is a dialog
+
+Eight ways of moving money, and two of them were dialogs. Send and Receive
+opened over the wallet; Add money, Withdraw, Invest, Sell, Earn, Take out,
+Borrow and Repay were screens of their own. Nothing separated the two groups
+except which one Figma happened to draw as D09 and D12.
+
+It cost both of them something real. Send is the one composer that needs a list
+beside it — who you are paying — and as a dialog it had nowhere to put one, so
+picking a person meant a "Change" link that opened a second dialog on top of
+the first. Receive is a page anybody might want to send to somebody else, and
+as a dialog it had no address to link to; its warning about the network — the
+one line on that screen that costs real money to get wrong — sat in a box you
+dismiss.
+
+Both are screens now, and the option that let a composer be a dialog is gone
+from `ComposerSpec` rather than left unused. Send is the amount on the left and
+the people plus an address field on the right; the Change link stands down at
+that width, because a link that opens a dialog to do what the next column
+already does is a second way to one place. Receive is the code and the address
+on the left, what happens when somebody pays you and the last four payments in
+on the right.
+
+The phone is unchanged and was already consistent: every composer is a sheet
+over its place, because there is no second column to put context in. Receive
+composes nothing, so it is a screen at both widths — as is the people list that
+opens Send on a phone.
+
+94. **Composing is a place; committing is a dialog over it.** The review, the
+    PIN and the outcome take the screen because they are the moment something
+    becomes true. Choosing an amount is not that moment, and a dialog around it
+    only removes the room the choice needed.
+
+### 11g.27 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from
   using the product afterwards. Item 30 was held back until it was asked for,

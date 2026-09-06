@@ -55,9 +55,17 @@ await p.keyboard.press('Escape'); await p.waitForTimeout(500)
 }
 
 console.log('A COMPOSER THAT PRESENTS AS ONE IS ONE')
-await at('/send?to=Tunde Bakare')
+// On a wide screen every composer is a screen now, so the case under test —
+// a composer drawn as a dialog — is the phone's.
+const phone = await b.newPage({ viewport: { width: 390, height: 844 } })
+await seen(phone)
+phone.on('pageerror', (e) => errs.push(String(e)))
+phone.setDefaultTimeout(6000)
+await phone.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
+await phone.goto(B + '/send?to=Tunde Bakare', { waitUntil: 'domcontentloaded' })
+await phone.waitForTimeout(450)
 {
-  const d = await p.evaluate(() => {
+  const d = await phone.evaluate(() => {
     const el = document.querySelector('.sheet')
     const by = el?.getAttribute('aria-labelledby')
     const screen = document.querySelector('#app > .screen')
@@ -76,6 +84,7 @@ await at('/send?to=Tunde Bakare')
   ok('named by its own heading', d.named === 'Send money', d.named ?? 'unnamed')
   ok('focus lands in it', d.focused)
   ok('and nothing beside it is left reachable', d.loose.length === 0, d.loose.join(', ') || 'all inert')
+  await phone.close()
 }
 
 console.log('HEADINGS ARE A LADDER')

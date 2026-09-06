@@ -29,14 +29,9 @@ export interface ComposerSpec {
   /** The place the composer belongs to. On the phone the amount arrives as a
    *  sheet over this, because there is no second column to put context in. */
   base: () => HTMLElement
-  /** How it presents on a wide screen. Most composers are a screen of their
-   *  own, the way Figma draws Add money, Convert, Invest, Borrow, Earn, Repay
-   *  and Take out. Send is a dialog over the wallet, the way Figma draws D09.
-   *  The phone shows a sheet either way. */
-  present?: 'screen' | 'modal'
-  /** Where closing the dialog goes. Ignored when it presents as a screen. */
-  closeTo?: string
-  /** A row above the amount, for a dialog that needs to name its target. */
+  /** A row above the amount, for a composer that has to name its target.
+   *  Send is the only one: the others are about your own money and the title
+   *  says which pot. */
   lede?: () => Node
   /** Whether this flow carries the risks the disclosures describe. Buying,
    *  selling and borrowing do; moving your own money between your own
@@ -53,9 +48,25 @@ function riskLink(): HTMLElement {
       on: { click: () => go('/disclosures') } }))
 }
 
+/* ---------------------------------------------------------------------------
+   One rule, both ways round.
+
+   Composing is a screen; committing is a dialog. Every composer in the product
+   is a place with an address, a title and room for the context beside it —
+   what the loan does if the shares fall, what the last five orders were, who
+   you can pay. Send and Receive were the two exceptions: dialogs over the
+   wallet, so the one composer that most needs a list beside it had nowhere to
+   put one, and Receive's warning about the network sat in a box you dismissed
+   rather than on a page you can link somebody to.
+
+   The phone has no second column, so there a composer is a sheet over its
+   place — uniformly, all eight of them. The review, the PIN and the outcome
+   are dialogs at every width, because those are commits.
+   --------------------------------------------------------------------------- */
+
 export function composerScreen(spec: ComposerSpec): HTMLElement {
   const mobile = isMobile()
-  const overlaid = mobile || spec.present === 'modal'
+  const overlaid = mobile
 
   // A review or an outcome replaces the composer rather than stacking on it,
   // so only one thing is ever floating over the base.
@@ -103,8 +114,7 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
   paint(opening, openedCapped)
 
   if (overlaid) {
-    const leave = () => (spec.closeTo && !mobile ? go(spec.closeTo) : history.back())
-    const out = modalOver(renderBase(spec.base), spec.title, leave,
+    const out = modalOver(renderBase(spec.base), spec.title, () => history.back(),
       spec.lede ? spec.lede() : null,
       comp.el, capNote,
       // The keypad is the phone's way in. A dialog has a keyboard already, and
@@ -120,6 +130,7 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
 
   const left = card(
     cardHead(spec.cardLabel, h('span', { class: 'muted', text: spec.cardRight })),
+    spec.lede ? spec.lede() : null,
     comp.el, capNote, summaryBox, calloutEl(spec.callout), button,
     spec.risky ? riskLink() : null)
   // A stated width, not an inline one: the stacking rule has to be able to
