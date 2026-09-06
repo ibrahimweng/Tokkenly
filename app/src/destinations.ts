@@ -1,5 +1,6 @@
-import { shares } from './format'
+import { shares, usd } from './format'
 import { state } from './state'
+import { CATALOGUE } from './catalogue'
 
 export type Place = 'home' | 'wallet' | 'market' | 'grow' | 'history' | 'account'
 
@@ -155,5 +156,36 @@ export function search(raw: string): Hit[] {
                   hint: `${a.type} · ${a.who}` })
     }
   }
-  return hits.slice(0, 12)
+
+  // Everything you could buy, not only what you already hold. This is a
+  // product for buying shares, and typing "Microsoft" found nothing unless
+  // you owned some — which is the wrong way round for a search box on a shop.
+  const held = new Set(state.holdings.map((p) => p.ticker))
+  for (const c of CATALOGUE) {
+    if (held.has(c.ticker)) continue          // already listed under Your shares
+    if (!norm(`${c.ticker} ${c.name} ${c.tags.join(' ')}`).includes(q)) continue
+    hits.push({ label: `${c.ticker} · ${c.name}`, to: '/invest/' + c.ticker.toLowerCase(),
+                group: c.kind === 'etf' ? 'Funds' : 'Companies', hint: usd(c.price) })
+  }
+
+  // A number in the query is an amount, and the three things you can do with
+  // one are two keystrokes away rather than a screen and a keypad away.
+  // Only when the whole query is an amount. Stripping the non-digits out of
+  // anything turned the reference TKN-8F2K90 into "Send $8,290.00", which is
+  // a suggestion nobody asked for attached to a number that does not exist.
+  const asAmount = raw.trim().match(/^\$?\s*([\d,]+(?:\.\d{1,2})?)$/)
+  if (asAmount && Number(asAmount[1].replace(/,/g, '')) > 0) {
+    const v = Number(asAmount[1].replace(/,/g, ''))
+    hits.unshift(
+      { label: `Send ${usd(v)}`, to: '/send?v=' + v, group: 'Move money', hint: 'Pick who, then confirm' },
+      { label: `Add ${usd(v)}`, to: '/addmoney?v=' + v, group: 'Move money', hint: 'Naira in, dollars out' },
+      { label: `Withdraw ${usd(v)}`, to: '/withdraw?v=' + v, group: 'Move money', hint: 'Dollars out to your bank' },
+    )
+  }
+
+  // A name that starts with what you typed is a better answer than one that
+  // merely contains it, and the list was in source order — so the destination
+  // registry always outranked the company you were actually looking for.
+  const starts = (hit: Hit) => (norm(hit.label).startsWith(q) ? 0 : 1)
+  return hits.sort((a, b) => starts(a) - starts(b)).slice(0, 12)
 }
