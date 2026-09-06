@@ -5144,7 +5144,31 @@ nothing else could reach it; it is a constant beside `LIMITS` now.
     address row broke it in the smallest possible way and nobody noticed for
     eleven screens.
 
-### 11g.24 Still open
+### 11g.24 The switch against the number
+
+The privacy switch lived in two page headers, in a row with search, a view
+toggle and the bell — three hundred pixels from the figure it covers, reading
+as one more piece of chrome. On Grow it was not on the screen at all, so the
+one place a balance is masked by default had no way to uncover it short of four
+taps into Preferences.
+
+It sits on the figure's own line now, on the four screens with a headline
+balance and nowhere else: Home in both views, Transfer, Grow. Quiet at rest —
+a filled circle beside a 40px number is a second thing to look at — and it
+takes its surface under the pointer, the way a control should. One per screen,
+because it is one setting: a second eye on the same page would suggest two
+things to cover.
+
+`prefs.mjs` now covers it, which nothing did before. The test names the figure
+as "whatever the switch was paired with", so the pairing cannot be broken
+without the test noticing.
+
+92. **A control belongs beside the thing it changes, and only there.** Rule 91
+    said this about an address row. It is worth its own number because the
+    header is where controls go to be forgotten: near the logo, far from the
+    work, in a row of four where none of them is about anything on the page.
+
+### 11g.25 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from
   using the product afterwards. Item 30 was held back until it was asked for,
@@ -5160,9 +5184,10 @@ nothing else could reach it; it is a constant beside `LIMITS` now.
   wherever it was filled. What it still cannot do is take a payment from
   anything but the wallet balance: "add money" and "buy the bucket" are two
   errands where a card or a bank debit at the point of purchase would be one.
-- The privacy switch is in two page headers and on Grow it is nowhere, so the
-  one screen where a balance is masked by default has no way to uncover it
-  short of Preferences. That is the next item.
+- The privacy switch covers the headline figure on four screens. Every other
+  masked figure in the product — a position on a company page, an amount in a
+  history row — follows the same setting and has no switch of its own, which is
+  deliberate: see 11g.24.
 - The composer's two columns are 722 against 336 and stay that way. See 11g.17.
 - Sign-in refuses the password `wrong` and accepts everything else, which is a
   prototype's shape of a real check, not a real one.

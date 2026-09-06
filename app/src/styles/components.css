@@ -832,6 +832,14 @@ th.right .th-sort { flex-direction: row-reverse; }
    column below the breakpoint, which stacked the search, the toggle and the
    bell into three full width rows. */
 .header-actions { display: flex; align-items: center; gap: 12px; flex: 0 1 auto; flex-wrap: wrap; }
+/* A figure and the switch that covers it, on one line. The switch is quiet at
+   rest — a filled circle beside a 40px number reads as a second thing to look
+   at — and takes its surface under the pointer, where a control should. */
+.figure-eye { display: flex; align-items: center; gap: 4px; }
+.figure-eye .eye-btn { background: transparent; }
+@media (hover: hover) {
+  .figure-eye .eye-btn:hover { background: var(--control); color: var(--ink); }
+}
 
 
 @media (max-width: 899px) {

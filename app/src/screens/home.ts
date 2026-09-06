@@ -3,7 +3,7 @@ import { icon } from '../icons'
 import { barChart, type Range } from '../components/chart'
 import { dotArt, level, BUY, CONVERT, BORROW, type ArtSpec } from '../components/art'
 import { shell, pageHeader, bell, jumpOpen } from '../components/shell'
-import { card, cardHead, headLink, kv, amount, directionMark, privacyToggle } from '../components/bits'
+import { card, cardHead, headLink, kv, amount, directionMark, figureWithEye } from '../components/bits'
 import { table } from '../components/table'
 import {
   state, actions, holdingsValue, availableToBorrow, buyingPower, verified, LIMITS, money, inNaira,
@@ -196,7 +196,7 @@ function detailed(): HTMLElement {
     'home',
     pageHeader(greeting() + ', ' + state.person.name.split(' ')[0],
       h('div', { class: 'header-actions' },
-        isMobile() ? null : jumpOpen(), viewToggle(), privacyToggle(), bell())),
+        isMobile() ? null : jumpOpen(), viewToggle(), bell())),
     verifyTask(),
     waiting(),
     h('div', { class: 'row' },
@@ -204,7 +204,7 @@ function detailed(): HTMLElement {
         h('div', { class: 'stack-8' },
           h('span', { class: 'muted', text: standing() }),
           h('span', { class: 't-caps subtle', text: 'Total portfolio' }),
-          moneyFigure('t-display-xl', 'home.total', value),
+          figureWithEye(moneyFigure('t-display-xl', 'home.total', value)),
           inNaira(value) ? h('span', { class: 'muted t-caption', text: inNaira(value)! }) : null,
           h('span', {},
             h('span', { class: (move.amount >= 0 ? 'pos' : 'warn') + ' t-body-strong',
@@ -287,13 +287,13 @@ function gateway(): HTMLElement {
         h('div', { class: 'header-actions' },
           // The phone's top bar already carries a search; two of them 40px
           // apart is not twice as findable.
-          isMobile() ? null : jumpOpen(), viewToggle(), privacyToggle(), bell()))),
+          isMobile() ? null : jumpOpen(), viewToggle(), bell()))),
     verifyTask(),
     waiting(),
     h('div', { class: 'headline' },
       h('div', { class: 'stack-8' },
         h('span', { class: 't-caps subtle', text: 'Total portfolio' }),
-        moneyFigure('t-figure', 'home.total', total),
+        figureWithEye(moneyFigure('t-figure', 'home.total', total)),
         inNaira(total) ? h('span', { class: 'muted t-caption', text: inNaira(total)! }) : null,
         h('span', { class: 'delta' },
           h('span', { class: (move.amount >= 0 ? 'pos' : 'warn') + ' t-body-strong',

@@ -146,7 +146,7 @@ export function amount(a: { amount: number; kind: string; who: string; type: str
  *  moment somebody sits down beside you, and Account is four taps away. It is
  *  also in Preferences, because a control you found by accident once is a
  *  control you cannot find again on purpose. */
-export function privacyToggle(): HTMLElement {
+function privacyToggle(): HTMLElement {
   const on = state.prefs.hideBalances
   return h('button', {
     class: 'icon-btn eye-btn',
@@ -155,6 +155,21 @@ export function privacyToggle(): HTMLElement {
     html: on ? icon.eyeOff() : icon.eye(),
     on: { click: () => actions.toggleBalances() },
   })
+}
+
+/** The figure, and the switch that covers it, on one line.
+ *
+ *  The switch used to live in the page header: the far corner of the screen
+ *  from the number it acts on, in a row with search, a view toggle and the
+ *  bell, where it read as one more piece of chrome. On Grow it was not on the
+ *  screen at all — so the one place a balance is masked by default had no way
+ *  to uncover it short of four taps into Preferences.
+ *
+ *  It sits against the figure now, on the four screens with a headline balance
+ *  and nowhere else. One per screen, because the switch is one setting: a
+ *  second eye on the same page would suggest two things to cover. */
+export function figureWithEye(figure: HTMLElement): HTMLElement {
+  return h('div', { class: 'figure-eye' }, figure, privacyToggle())
 }
 
 export function directionMark(n: number): HTMLElement {

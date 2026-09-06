@@ -1,7 +1,7 @@
 import { h, countTo } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
-import { card, cardHead, headLink, kv, callout, amount, directionMark, privacyToggle } from '../components/bits'
+import { card, cardHead, headLink, kv, callout, amount, directionMark, figureWithEye } from '../components/bits'
 import { table } from '../components/table'
 import { state, buyingPower, availableToBorrow, inNaira, rateLine, limits, leftThisMonth, verified, money } from '../state'
 import { usd, when, activityLabel } from '../format'
@@ -76,7 +76,7 @@ function cashHero(): HTMLElement {
     h('div', { class: 'hero-top' },
       h('div', { class: 'stack-8' },
         h('span', { class: 't-caps subtle', text: 'Cash you can spend' }),
-        cashFigure(),
+        figureWithEye(cashFigure()),
         inNaira(state.cash)
           ? h('span', { class: 'stack-8' },
               h('span', { class: 'muted', text: inNaira(state.cash)! }),
@@ -117,7 +117,7 @@ export function walletScreen(): HTMLElement {
     'wallet',
     // No eyebrow: it printed buying power 60px above the card that prints
     // buying power, which reads as two facts rather than one repeated.
-    pageHeader('Transfer', privacyToggle()),
+    pageHeader('Transfer'),
     // The hero takes the whole column. It is the centrepiece of the page, and
     // sharing the width with the limits card left the two figures in it 20px
     // from wrapping onto separate lines — which they did, once the column came

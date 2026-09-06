@@ -3,7 +3,7 @@ import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, kv, meter } from '../components/bits'
 import { composerScreen, scenarios } from '../components/composer'
 import { table } from '../components/table'
-import { amount } from '../components/bits'
+import { amount, figureWithEye } from '../components/bits'
 import {
   state, holdingsValue, owed, availableToBorrow, cover, sellPoint,
   monthlyCost, monthlyEarn, movementCeiling, ceilingLabel, money, MASK, inNaira,
@@ -54,7 +54,7 @@ function growHero(): HTMLElement {
     h('div', { class: 'hero-top' },
       h('div', { class: 'stack-8' },
         h('span', { class: 't-caps subtle', text: 'In Earn' }),
-        h('span', { class: 'hero-figure', text: money(state.inEarn) }),
+        figureWithEye(h('span', { class: 'hero-figure', text: money(state.inEarn) })),
         inNaira(state.inEarn) ? h('span', { class: 'muted t-caption', text: inNaira(state.inEarn)! }) : null,
         h('span', { class: 'muted',
           text: `Earning ${pct(state.rates.earn)} a year, paid every day. Nothing is locked up.` })),

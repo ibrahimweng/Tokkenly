@@ -54,6 +54,53 @@ ok('but Convert still shows naira, because that is what it is about',
 await acct()
 await p.getByRole('button', { name: /Show naira beside dollars/ }).click(); await p.waitForTimeout(300)
 
+console.log('HIDE MY BALANCES  the switch, and where it sits')
+{
+  const MASK = '\u2022\u2022\u2022\u2022\u2022\u2022'
+  // Every screen with a headline balance carries the switch, on the figure's
+  // own line rather than in the header three hundred pixels away. Grow is the
+  // reason this is a test: it masked a balance and offered no way to uncover
+  // it short of four taps into Preferences.
+  // The figure is whichever element the switch was paired with, which is the
+  // point: the test cannot name one without naming the other.
+  const sel = '.figure-eye > :first-child'
+  for (const route of ['/', '/transfer', '/grow']) {
+    await at(route)
+    const where = await p.evaluate(() => {
+      const e = document.querySelector('.eye-btn')
+      if (!e) return null
+      return { figure: !!e.closest('.figure-eye'), header: !!e.closest('.page-header'),
+               n: document.querySelectorAll('.eye-btn').length }
+    })
+    ok(`${route} carries it, beside the figure`,
+       !!where && where.figure && !where.header && where.n === 1,
+       where ? `${where.n} eye, in ${where.figure ? 'the figure' : 'the header'}` : 'no eye')
+    // and the button next to the number covers that number
+    const read = () => p.evaluate((q) => document.querySelector(q)?.textContent ?? '', sel)
+    const shown = await read()
+    await p.locator('.eye-btn').first().click(); await p.waitForTimeout(350)
+    const hidden = await read()
+    await p.locator('.eye-btn').first().click(); await p.waitForTimeout(350)
+    const back = await read()
+    ok(`  and it covers the figure it sits on`,
+       hidden === MASK && back === shown, `${shown} → ${hidden} → ${back}`)
+  }
+  // One switch, one setting: covering on Home covers everywhere.
+  await at('/')
+  await p.locator('.eye-btn').first().click(); await p.waitForTimeout(350)
+  await at('/grow')
+  ok('one switch, not one per screen',
+     (await p.evaluate(() => document.querySelector('.hero-figure')?.textContent)) === MASK)
+  ok('and it says which way it is pointing',
+     (await p.evaluate(() => document.querySelector('.eye-btn')?.getAttribute('aria-pressed'))) === 'true')
+  await p.locator('.eye-btn').first().click(); await p.waitForTimeout(350)
+  // Preferences still has it, because a control found by accident once is a
+  // control you cannot find again on purpose.
+  await acct()
+  ok('Preferences still holds it too',
+     (await p.getByRole('button', { name: /Hide my balances/ }).count()) === 1)
+}
+
 console.log('NOTIFICATIONS')
 await at('/')
 const before = await p.evaluate(() => document.querySelector('.bell .dot')?.textContent ?? '0')
