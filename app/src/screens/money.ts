@@ -1,13 +1,14 @@
 import { h } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader, eyebrow, renderBase } from '../components/shell'
-import { card, cardHead, kv, callout, emptyState, fieldError } from '../components/bits'
+import { card, cardHead, kv, callout, emptyState, fieldError, amount } from '../components/bits'
+import { table } from '../components/table'
 import { composerScreen } from '../components/composer'
 import { state, movementCeiling, ceilingLabel } from '../state'
 
 const ceilingLabel2 = (byBalance: number) => ceilingLabel(byBalance, 'The most you can move here')
 import { walletScreen } from './wallet'
-import { usd, naira, when } from '../format'
+import { usd, naira, when, activityLabel } from '../format'
 import { openSheet, current, go } from '../router'
 
 import { isMobile } from '../responsive'
@@ -201,6 +202,46 @@ export function receiveScreen(): HTMLElement {
     h('button', { class: 'btn btn-primary', text: 'Copy address', on: { click: copy } }))
 }
 
+/** What has come in this way before, or gone out this way before. Invest and
+ *  Sell already carry their recent orders under the composer; these two
+ *  carried nothing, and the question after "how much" is usually "what did I
+ *  do last time".
+ *
+ *  Identified by the note the action writes, not by the sign on the amount.
+ *  The first version filtered on `kind === 'payment' && amount > 0`, which put
+ *  "Received Adaeze Okonkwo" and "Received Payroll" under a heading reading
+ *  "Money you have added" — a card that was wrong about the one thing it was
+ *  for. Money somebody sent you is not money you added.
+ *
+ *  Nothing to show means no card. A screen that ends with an empty panel
+ *  explaining that it is empty is worse composed than one that ends. */
+const NOTE = { in: 'Bought dollars', out: 'Converted to naira' } as const
+
+function pastMoves(which: 'in' | 'out'): HTMLElement | null {
+  const rows = state.activity.filter((a) => a.note === NOTE[which]).slice(0, 5)
+  if (!rows.length) return null
+  return card(
+    cardHead(which === 'in' ? 'Money you have added' : 'Money you have taken out',
+      h('button', { class: 'link', text: 'See all',
+        on: { click: () => go('/activity?filter=payments') } })),
+    table(
+      [
+        { key: 'w', label: 'What' }, { key: 'when', label: 'When', optional: true },
+        { key: 'ref', label: 'Reference', optional: true }, { key: 'amt', label: 'Amount', align: 'right' },
+      ],
+      rows.map((a) => [
+        h('span', { class: 'two-line' },
+          h('span', { class: 't-body-strong', text: activityLabel(a) }),
+          h('small', { class: 'phone-only', text: when(a.at) })),
+        h('span', { class: 'muted', text: when(a.at) }),
+        h('span', { class: 'muted', text: a.ref }),
+        amount(a),
+      ]),
+      (i) => openSheet('receipt', { ref: rows[i].ref })
+    )
+  )
+}
+
 export function addMoneyScreen(): HTMLElement {
   const bank = state.banks[0]
   return composerScreen({
@@ -251,6 +292,7 @@ export function addMoneyScreen(): HTMLElement {
           kv('Name', bank.holder)),
         h('button', { class: 'link', text: 'Use another bank', on: { click: () => openSheet('banks') } })
       ),
+    bottom: pastMoves('in') ?? undefined,
   })
 }
 
@@ -299,5 +341,6 @@ export function convertScreen(): HTMLElement {
         }),
         h('span', { class: 'muted t-caption', html: icon.info() + ' A bank account has to be in your own name.' })
       ),
+    bottom: pastMoves('out') ?? undefined,
   })
 }

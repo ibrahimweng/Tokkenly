@@ -87,8 +87,10 @@ for (const r of ROUTES) {
   await page.waitForTimeout(250)
   for (const t of await sweep()) if (t.ratio < t.need) bad.push({ route: theme + ' ' + r, ...t })
 
-  /* and again with a row under the pointer, because the wash moves the ground */
-  const row = await page.$('.table tbody tr td')
+  /* and again with a row under the pointer, because the wash moves the ground.
+     Not on a route that opens a sheet: the scrim is over the row, the hover
+     never lands, and the suite times out rather than reporting anything. */
+  const row = await page.$('.scrim') ? null : await page.$('.table tbody tr td')
   if (row) {
     await row.hover(); await page.waitForTimeout(250)
     for (const t of await sweep()) if (t.ratio < t.need) bad.push({ route: theme + ' ' + r + ' (row hovered)', ...t })

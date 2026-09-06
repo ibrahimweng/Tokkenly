@@ -2,6 +2,7 @@ import { h, countTo } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, headLink, kv, callout, amount, directionMark, privacyToggle } from '../components/bits'
+import { table } from '../components/table'
 import { state, buyingPower, availableToBorrow, inNaira, rateLine, limits, leftThisMonth, verified, money } from '../state'
 import { usd, when, activityLabel } from '../format'
 import { go, openSheet } from '../router'
@@ -32,6 +33,36 @@ function cashFigure(): HTMLElement {
   if (state.prefs.hideBalances) el.textContent = money(state.cash)
   else countTo(el, 'wallet.cash', state.cash, (n) => money(n))
   return el
+}
+
+/** What has actually moved through this wallet.
+ *
+ *  The screen listed what is still in flight — which is usually nothing — and
+ *  then stopped, leaving a column that ended 160px above the one beside it. It
+ *  was also the only screen in the product about your cash that never showed
+ *  what happened to it: Home has a recent list, the wallet did not. The empty
+ *  space and the missing list were the same hole. */
+function moved(): HTMLElement {
+  const rows = state.activity.filter((a) => a.kind === 'payment').slice(0, 6)
+  return card(
+    cardHead('Money in and out', headLink('See all', '/activity?filter=payments')),
+    rows.length
+      ? table(
+          [{ key: 'who', label: 'Who' }, { key: 'when', label: 'When', optional: true },
+           { key: 'ref', label: 'Reference', optional: true }, { key: 'amt', label: 'Amount', align: 'right' }],
+          rows.map((a) => [
+            h('span', { class: 'who' }, directionMark(a.amount),
+              h('span', { class: 'two-line' },
+                h('span', { class: 't-body-strong', text: activityLabel(a) }),
+                h('small', { class: 'phone-only', text: when(a.at) }))),
+            h('span', { class: 'muted', text: when(a.at) }),
+            h('span', { class: 'muted', text: a.ref }),
+            amount(a),
+          ]),
+          (i) => openSheet('receipt', { ref: rows[i].ref })
+        )
+      : h('span', { class: 'muted', text: 'Nothing has moved through this wallet yet.' })
+  )
 }
 
 function cashHero(): HTMLElement {
@@ -109,7 +140,8 @@ export function walletScreen(): HTMLElement {
                       h('small', { text: when(a.at) }))),
                   amount(a))))
             : h('span', { class: 'muted', text: 'Nothing is in flight. Everything you have sent or received has landed.' })
-        )),
+        ),
+        moved()),
       h('div', { class: 'stack col-side' },
         card(
           cardHead('Your limits'),
