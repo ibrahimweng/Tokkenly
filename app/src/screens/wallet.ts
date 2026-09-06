@@ -1,4 +1,4 @@
-import { h } from '../ui'
+import { h, countTo } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, headLink, kv, callout, amount, directionMark, privacyToggle } from '../components/bits'
@@ -26,6 +26,14 @@ function way(label: string, sub: string, ic: string, to: string): HTMLElement {
  *  add up, and a single bar said they did. Borrowing capacity is still on the
  *  screen — it is what turns the balance into buying power — but it is named
  *  as borrowing, on its own line, beside a figure that says so. */
+/** The wallet's own figure, travelling rather than jumping when money moves. */
+function cashFigure(): HTMLElement {
+  const el = h('span', { class: 'hero-figure' })
+  if (state.prefs.hideBalances) el.textContent = money(state.cash)
+  else countTo(el, 'wallet.cash', state.cash, (n) => money(n))
+  return el
+}
+
 function cashHero(): HTMLElement {
   const parts = [
     { label: 'Cash', value: state.cash, cls: 'a', hint: 'Ready to spend or send' },
@@ -37,7 +45,7 @@ function cashHero(): HTMLElement {
     h('div', { class: 'hero-top' },
       h('div', { class: 'stack-8' },
         h('span', { class: 't-caps subtle', text: 'Cash you can spend' }),
-        h('span', { class: 'hero-figure', text: money(state.cash) }),
+        cashFigure(),
         inNaira(state.cash)
           ? h('span', { class: 'stack-8' },
               h('span', { class: 'muted', text: inNaira(state.cash)! }),

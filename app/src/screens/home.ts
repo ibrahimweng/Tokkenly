@@ -1,4 +1,4 @@
-import { h, link } from '../ui'
+import { h, link, countTo } from '../ui'
 import { icon } from '../icons'
 import { barChart, type Range } from '../components/chart'
 import { dotArt, BUY, CONVERT, BORROW, type ArtSpec } from '../components/art'
@@ -41,6 +41,17 @@ function verifyTask(): HTMLElement | null {
       text: `A NIN or a BVN, and a minute. Until then you can move ${usd(LIMITS.none.single, false)} at once and ${usd(LIMITS.none.monthly, false)} a month.` })))
   a.appendChild(h('span', { class: 'muted', html: icon.chevron() }))
   return a
+}
+
+/** A balance that carries the eye from the old figure to the new one. Keyed,
+ *  so the two Home views share one memory and switching between them is not
+ *  read as the money changing. */
+function moneyFigure(cls: string, key: string, value: number): HTMLElement {
+  const el = h('span', { class: cls })
+  // Nothing to count to when the figure is covered.
+  if (state.prefs.hideBalances) el.textContent = money(value)
+  else countTo(el, key, value, (n) => money(n))
+  return el
 }
 
 function viewToggle(): HTMLElement {
@@ -167,7 +178,7 @@ function detailed(): HTMLElement {
         h('div', { class: 'stack-8' },
           h('span', { class: 'muted', text: standing() }),
           h('span', { class: 't-caps subtle', text: 'Total portfolio' }),
-          h('span', { class: 't-display-xl', text: money(value) }),
+          moneyFigure('t-display-xl', 'home.total', value),
           inNaira(value) ? h('span', { class: 'muted t-caption', text: inNaira(value)! }) : null,
           h('span', {},
             h('span', { class: (move.amount >= 0 ? 'pos' : 'warn') + ' t-body-strong',
@@ -238,7 +249,7 @@ function gateway(): HTMLElement {
     h('div', { class: 'headline' },
       h('div', { class: 'stack-8' },
         h('span', { class: 't-caps subtle', text: 'Total portfolio' }),
-        h('span', { class: 't-figure', text: money(total) }),
+        moneyFigure('t-figure', 'home.total', total),
         inNaira(total) ? h('span', { class: 'muted t-caption', text: inNaira(total)! }) : null,
         h('span', { class: 'delta' },
           h('span', { class: (move.amount >= 0 ? 'pos' : 'warn') + ' t-body-strong',

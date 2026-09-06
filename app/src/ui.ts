@@ -79,3 +79,62 @@ export function link(to: string, cls: string, ...children: Child[]): HTMLAnchorE
   append(a, children)
   return a
 }
+
+
+/* ------------------------------------------------------------- continuity --
+   The product has one curve and one duration for every state change, which is
+   the right discipline and was already done. What it had none of is
+   choreography: after a trade the balance simply became a different number,
+   with nothing to connect the figure you were looking at to the figure you are
+   looking at now. Carrying the eye across that gap is the cheapest thing in
+   interface design that reads as expensive, and the only one here a person
+   feels without being able to name it. */
+
+/** What each keyed figure was showing last time it was drawn. The app rebuilds
+ *  the DOM on every state change, so the previous value cannot be read back
+ *  off the element — it has to be remembered. */
+const lastShown = new Map<string, number>()
+
+const still = (): boolean =>
+  typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
+
+/** A figure that travels to its new value rather than jumping to it. The first
+ *  paint never animates: arriving on a screen is not a change. */
+export function countTo(
+  el: HTMLElement,
+  key: string,
+  to: number,
+  fmt: (n: number) => string,
+): void {
+  const from = lastShown.get(key)
+  if (from === undefined || from === to || still()) {
+    lastShown.set(key, to)
+    el.textContent = fmt(to)
+    return
+  }
+
+  // Start from where the last figure was, so the first frame is continuous
+  // with what was on screen rather than a jump followed by a crawl back.
+  el.textContent = fmt(from)
+
+  const MS = 520
+  let begun = 0
+  const step = (now: number): void => {
+    if (!el.isConnected) {
+      // This render was thrown away before it was ever seen — the app rebuilds
+      // the whole tree and can do it twice in a row, once for the state and
+      // once for the route. Leave the memory where it was so the render that
+      // survives is the one that does the travelling; consuming the change
+      // here is what made the balance jump.
+      if (begun) lastShown.set(key, to)
+      return
+    }
+    if (!begun) { begun = now; lastShown.set(key, to) }
+    const t = Math.min(1, (now - begun) / MS)
+    // The same shape as --ease: quick away, settling at the end.
+    const eased = 1 - Math.pow(1 - t, 3)
+    el.textContent = fmt(from + (to - from) * eased)
+    if (t < 1) requestAnimationFrame(step)
+  }
+  requestAnimationFrame(step)
+}

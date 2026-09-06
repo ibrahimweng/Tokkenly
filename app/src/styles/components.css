@@ -1494,3 +1494,19 @@ th.right .th-sort { flex-direction: row-reverse; }
   position: absolute; top: 0; bottom: 0; width: 1px;
   background: var(--subtle); transform: translateX(-50%);
 }
+
+/* The line arrives by being drawn, and the ground under it and the mark on
+   its end follow it in. A chart that appears whole is a picture; one that
+   draws is the same information with the shape of the story kept. It runs
+   once, on each redraw — a range chip is a new question, so it gets a new
+   answer rather than a cross-fade. */
+.ch-line { stroke-dasharray: 1; stroke-dashoffset: 0; animation: ch-draw 620ms var(--ease); }
+@keyframes ch-draw { from { stroke-dashoffset: 1 } to { stroke-dashoffset: 0 } }
+.ch-svg path:first-of-type { animation: ch-fade 620ms var(--ease); }
+@keyframes ch-fade { from { opacity: 0 } to { opacity: 1 } }
+.ch-end { animation: ch-pop 620ms var(--ease); }
+@keyframes ch-pop { 0%, 55% { opacity: 0; transform: translate(-50%, 50%) scale(0.4) } to { opacity: 1; transform: translate(-50%, 50%) scale(1) } }
+
+@media (prefers-reduced-motion: reduce) {
+  .ch-line, .ch-svg path:first-of-type, .ch-end { animation: none; }
+}

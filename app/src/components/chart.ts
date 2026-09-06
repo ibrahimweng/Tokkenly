@@ -260,8 +260,12 @@ export function barChart(spec: ChartSpec): HTMLElement {
         `<stop offset="100%" stop-color="currentColor" stop-opacity="0"/>` +
         `</linearGradient></defs>` +
         `<path d="M ${line} L 100,100 L 0,100 Z" fill="url(#${id})" stroke="none"/>` +
-        `<path d="M ${line}" fill="none" stroke="currentColor" stroke-width="2" ` +
-        `vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/>`
+        // pathLength normalises the line to 1 whatever its real length, so one
+        // dash rule draws any range in the same time rather than a year taking
+        // longer than a day.
+        `<path class="ch-line" pathLength="1" d="M ${line}" fill="none" ` +
+        `stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke" ` +
+        `stroke-linejoin="round" stroke-linecap="round"/>`
       // The end of the line is where the money is now, so it gets a mark. Its
       // own element rather than an SVG circle: the viewBox is stretched to the
       // plot, and a circle inside it would come out an ellipse.
