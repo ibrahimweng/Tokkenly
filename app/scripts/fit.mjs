@@ -8,7 +8,10 @@ const p = await b.newPage({ viewport: { width: 390, height: 844 } })
 // screen and reporting on it.
 await seen(p)
 const rows = []
-for (const hash of ['/grow/borrow','/grow/repay','/grow/earn','/grow/takeout','/send','/addmoney','/withdraw','/invest/aapl/invest','/invest/aapl/sell']) {
+// '/send' on the phone is the list of people, not a composer — measuring it
+// reported 'no sheet' and checked nothing. The sheet is one step further in,
+// once somebody is picked, so that is the route with a button to fit.
+for (const hash of ['/grow/borrow','/grow/repay','/grow/earn','/grow/takeout','/send?to=Tunde Bakare','/addmoney','/withdraw','/invest/aapl/invest','/invest/aapl/sell']) {
   await p.goto(base + hash, { waitUntil: 'networkidle' })
   // Past the 200ms slideup. Measuring at 160 caught the sheet mid-travel and
   // reported the button below the fold about one run in three, which is worse

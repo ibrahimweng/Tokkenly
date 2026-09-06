@@ -2,7 +2,7 @@
    Every step asks the same three questions: can I tell what will happen, can
    I get out, and does the number that lands match the number I agreed to. */
 import { chromium } from 'playwright'
-import { seen } from './seen.mjs'
+import { seen, settled } from './seen.mjs'
 const B = 'http://localhost:4173/#'
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const errs = []
@@ -109,8 +109,8 @@ console.log('AFTER THE TRADE  the ledger has to agree')
 {
   const p = await page()
   const cash = async () => {
-    await p.goto(B + '/transfer', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(350)
-    return money(await p.$eval('.hero-figure', (e) => e.textContent))
+    await p.goto(B + '/transfer', { waitUntil: 'domcontentloaded' })
+    return money(await settled(p, '.hero-figure'))
   }
   const before = await cash()
   await p.goto(B + '/invest/nvda/invest', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)

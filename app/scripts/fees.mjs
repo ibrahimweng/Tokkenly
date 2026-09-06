@@ -2,7 +2,7 @@
    receive, before you confirm." That is a promise about arithmetic, so it is
    checked as arithmetic: what the review says must be what the ledger does. */
 import { chromium } from 'playwright'
-import { seen, verify } from './seen.mjs'
+import { seen, verify, settled } from './seen.mjs'
 const B = 'http://localhost:4173/#'
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const errs = []
@@ -15,8 +15,8 @@ await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 /* the first figure in a string: "$0.50 · 0.5%" is fifty cents, not 0.500.5 */
 const money = (s) => Number((String(s ?? '').match(/[\d,]+\.?\d*/) ?? ['0'])[0].replace(/,/g, '')) || 0
 const cash = async () => {
-  await p.goto(B + '/transfer', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(350)
-  return money(await p.$eval('.hero-figure', (e) => e.textContent))
+  await p.goto(B + '/transfer', { waitUntil: 'domcontentloaded' })
+  return money(await settled(p, '.hero-figure'))
 }
 /* the review panel renders each row as .cell with a caps label over a value,
    and the label is uppercased by CSS, so match on the text the DOM holds */

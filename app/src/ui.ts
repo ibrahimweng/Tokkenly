@@ -90,10 +90,17 @@ export function link(to: string, cls: string, ...children: Child[]): HTMLAnchorE
    interface design that reads as expensive, and the only one here a person
    feels without being able to name it. */
 
-/** What each keyed figure was showing last time it was drawn. The app rebuilds
- *  the DOM on every state change, so the previous value cannot be read back
- *  off the element — it has to be remembered. */
+/** What each keyed figure is showing right now. The app rebuilds the DOM on
+ *  every state change, so the figure on screen cannot be read back off the
+ *  element — it has to be remembered. The memory tracks the painted number
+ *  frame by frame, not the destination: a render thrown away halfway through
+ *  its travel hands the next one the figure the eye actually last saw. */
 const lastShown = new Map<string, number>()
+
+/** Which run owns each key. A rebuild starts a new one, and the old loop steps
+ *  aside rather than fighting it for the same element's text. */
+const owner = new Map<string, number>()
+let runs = 0
 
 const still = (): boolean =>
   typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -106,8 +113,14 @@ export function countTo(
   to: number,
   fmt: (n: number) => string,
 ): void {
+  const mine = ++runs
+  owner.set(key, mine)
+
   const from = lastShown.get(key)
-  if (from === undefined || from === to || still()) {
+  // Half a cent apart is the same figure: the memory carries fractions the
+  // formatter rounds away, and travelling between two identical strings is
+  // half a second of nothing.
+  if (from === undefined || Math.abs(to - from) < 0.005 || still()) {
     lastShown.set(key, to)
     el.textContent = fmt(to)
     return
@@ -120,20 +133,18 @@ export function countTo(
   const MS = 520
   let begun = 0
   const step = (now: number): void => {
-    if (!el.isConnected) {
-      // This render was thrown away before it was ever seen — the app rebuilds
-      // the whole tree and can do it twice in a row, once for the state and
-      // once for the route. Leave the memory where it was so the render that
-      // survives is the one that does the travelling; consuming the change
-      // here is what made the balance jump.
-      if (begun) lastShown.set(key, to)
-      return
-    }
-    if (!begun) { begun = now; lastShown.set(key, to) }
+    // Superseded, or this render was thrown away — the app rebuilds the whole
+    // tree and can do it twice in a row, once for the state and once for the
+    // route. Stop, leaving the memory on the last figure painted so the render
+    // that survives carries on from there instead of landing.
+    if (owner.get(key) !== mine || !el.isConnected) return
+    if (!begun) begun = now
     const t = Math.min(1, (now - begun) / MS)
     // The same shape as --ease: quick away, settling at the end.
     const eased = 1 - Math.pow(1 - t, 3)
-    el.textContent = fmt(from + (to - from) * eased)
+    const at = t < 1 ? from + (to - from) * eased : to
+    lastShown.set(key, at)
+    el.textContent = fmt(at)
     if (t < 1) requestAnimationFrame(step)
   }
   requestAnimationFrame(step)

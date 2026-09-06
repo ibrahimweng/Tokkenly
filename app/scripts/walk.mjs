@@ -8,9 +8,18 @@ const page = await browser.newPage({ viewport: { width: 1440, height: 1024 } })
 // the PIN pad instead of the product. This suite was measuring the lock
 // screen and reporting on it.
 await seen(page)
+// No Google Fonts in here, and the reset it fails with was being reported as a
+// page error of the app's own. Refuse the request instead, as every other suite
+// does, so ERRORS means the product.
+await page.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 const errors = []
 page.on('pageerror', (e) => errors.push('pageerror: ' + e.message))
-page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text()) })
+page.on('console', (m) => {
+  // The refusal above is ours, and the browser logs it. Anything from a font
+  // host is that, not the app.
+  if (m.type() !== 'error' || /fonts\.(googleapis|gstatic)\.com/.test(m.location()?.url ?? '')) return
+  errors.push('console: ' + m.text())
+})
 
 async function shot(hash, name) {
   await page.goto(base + hash, { waitUntil: 'networkidle' })
