@@ -1,11 +1,11 @@
 import { h } from '../ui'
 import { icon } from '../icons'
-import { shell, pageHeader, eyebrow } from '../components/shell'
+import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, kv, callout, emptyState, toggle, choice, prefAction } from '../components/bits'
 import { searchField, searchNote } from '../components/search'
 import { rank, onlyNear } from '../match'
-import { state, actions, verified, LIMITS } from '../state'
-import { usd } from '../format'
+import { state, actions, verified, LIMITS, WALLET } from '../state'
+import { usd, initialsOf } from '../format'
 import { openSheet, go, current } from '../router'
 import { toast } from '../components/sheet'
 import { isSplit } from '../responsive'
@@ -39,24 +39,90 @@ interface Group {
 
 /* ---------------- personal details ---------------- */
 
-function editable(label: string, value: string, field: 'email' | 'phone' | 'address'): HTMLElement {
+/** A value with the one thing you would do to it. The action is on the row it
+ *  belongs to rather than at the foot of the card, so "Change" can never be
+ *  ambiguous about which of five lines it changes. */
+function detailRow(label: string, value: string, action: string, onClick: () => void): HTMLElement {
   return h('div', { class: 'kv' },
     h('span', { text: label }),
     h('span', { class: 'kv-edit' },
       h('span', { class: 't-body-strong', text: value }),
-      h('button', { class: 'link', text: 'Change', on: { click: () => openSheet('edit', { field }) } })))
+      h('button', { class: 'link', text: action, on: { click: onClick } })))
+}
+
+const editable = (label: string, value: string, field: 'email' | 'phone' | 'address'): HTMLElement =>
+  detailRow(label, value, 'Change', () => openSheet('edit', { field }))
+
+/** Who this account belongs to, as a person rather than as five rows of a
+ *  table. The group used to open with a card headed "Personal details" under
+ *  a page headed "Personal details" under a crumb reading "Personal details" —
+ *  three copies of a title and not one fact about whose account it is. A face,
+ *  a name, and where you stand with us reads as a profile and costs the same
+ *  height the third title was already taking. */
+function profileHead(): HTMLElement {
+  const p = state.person
+  const city = p.address.split(',').map((s) => s.trim()).filter(Boolean).slice(-1)[0]
+  return h('div', { class: 'profile' },
+    h('span', { class: 'avatar avatar-lg', text: initialsOf(p.name) }),
+    h('div', { class: 'stack-8 grow' },
+      h('div', { class: 'profile-name' },
+        h('strong', { class: 't-title', text: p.name }),
+        // Where you stand, unless the banner is already saying it: on a split
+        // screen and on the index an unverified account gets the amber bar
+        // two inches above this line, and "Not verified" twice is one time
+        // too many. Verified there is no banner, so the badge always shows.
+        verified()
+          ? h('span', { class: 'pill pos', text: 'Verified' })
+          : isSplit() ? null : h('span', { class: 'pill warn', text: 'Not verified' })),
+      h('small', { class: 'muted',
+        text: `With Tokkenly since ${p.joined}${city ? ' · ' + city : ''}` })))
+}
+
+/** The address, middle-elided and copyable. Same anatomy as the token address
+ *  on a company page, because they are the same kind of thing. */
+function addressRow(address: string, said: string): HTMLElement {
+  return h('button', { class: 'addr', on: { click: () => {
+    navigator.clipboard?.writeText(address).catch(() => {})
+    toast(said)
+  } } },
+    h('span', { class: 'grow', text: address.slice(0, 10) + '…' + address.slice(-6) }),
+    h('span', { class: 'muted', html: icon.copy() }))
+}
+
+/** The three facts about this account that are not personal details and not
+ *  settings either: where money reaches you, where it leaves to, and how much
+ *  of it you are allowed to move. Each names the group that owns it rather
+ *  than repeating its controls here. */
+function thisAccountCard(): HTMLElement {
+  const bank = state.banks[0]
+  const lim = verified() ? LIMITS.verified : LIMITS.none
+  return card(
+    cardHead('This account'),
+    h('div', { class: 'stack-8' },
+      h('span', { class: 't-caps subtle', text: 'Your wallet address' }),
+      addressRow(WALLET, 'Your address is copied'),
+      h('span', { class: 'muted t-caption',
+        text: 'Dollars sent to this address on Base land in your wallet.' })),
+    detailRow('Payouts land in', bank ? bank.name + ' ' + '••••' + ' ' + bank.last4 : 'No bank yet',
+      bank ? 'Change' : 'Add a bank', () => go('/account/payments')),
+    verified()
+      ? kv('You can move', `${usd(lim.single, false)} at a time`)
+      : detailRow('You can move', `${usd(lim.single, false)} at a time`, 'Raise it', () => go('/verify')),
+    kv('This month', `${usd(state.usedThisMonth, false)} of ${usd(lim.monthly, false)}`))
 }
 
 function detailsBody(): (Node | null)[] {
   const p = state.person
   return [
+    profileHead(),
     card(
-      cardHead('Personal details'),
+      cardHead('Your details'),
       kv('Full name', p.name),
       kv('Date of birth', p.dob),
       editable('Mobile number', p.phone, 'phone'),
       editable('Email', p.email, 'email'),
       editable('Home address', p.address, 'address')),
+    thisAccountCard(),
     card(
       cardHead('What we hold about you'),
       h('span', { class: 'muted', text: 'You can download all of it whenever you want: your details, every payment you have made, and every document you sent us.' }),
@@ -243,7 +309,7 @@ function paymentsBody(): (Node | null)[] {
 function verificationBody(): (Node | null)[] {
   if (verified()) {
     return [card(
-      cardHead('Verification', h('span', { class: 'chip pos', text: 'Verified' })),
+      cardHead('Verification', h('span', { class: 'pill pos', text: 'Verified' })),
       kv('Checked with', state.kyc.method ?? 'NIN'),
       kv('Number', 'ending ' + (state.kyc.last4 ?? '••••')),
       kv('Checked on', state.kyc.checkedOn ?? ''),
@@ -399,13 +465,6 @@ function verifyBanner(): HTMLElement | null {
       on: { click: () => go('/verify') } }))
 }
 
-/** Verified, the header says so. Unverified it says nothing, because the
- *  banner two inches below already says it, at length, with the way out. */
-function accountEyebrow(): HTMLElement | null {
-  if (!verified()) return null
-  return eyebrow('Verified', (state.kyc.method ?? 'NIN') + ' checked ' + (state.kyc.checkedOn ?? ''))
-}
-
 function indexList(activeKey?: string): HTMLElement {
   return h('nav', { class: 'set-list' + (activeKey ? ' rail' : ''), ariaLabel: 'Account settings' },
     ...GROUPS.map((g) => h('button', {
@@ -438,7 +497,7 @@ export function accountScreen(sub?: string): HTMLElement {
   if (!group) {
     if (isSplit()) return accountScreen(GROUPS[0].key)
     return shell('account',
-      pageHeader('Account', accountEyebrow()),
+      pageHeader('Account'),
       verifyBanner(),
       indexList(),
       footer())
@@ -448,16 +507,22 @@ export function accountScreen(sub?: string): HTMLElement {
   // changes is one click each instead of two.
   if (isSplit()) {
     return shell('account',
-      pageHeader('Account', accountEyebrow()),
+      // No trail: the row it would name is lit two inches to the left. And no
+      // eyebrow: it read "Verified · NIN checked 6 Sept" beside a rail row
+      // reading "Verification · Verified" beside a profile badge reading
+      // "Verified". The row and the badge are enough; the date belongs to the
+      // group that owns the check.
+      pageHeader('Account', null, { crumbs: false }),
       verifyBanner(),
       h('div', { class: 'row set-split' },
         h('div', { class: 'stack set-col' }, indexList(group.key), footer()),
         h('div', { class: 'stack grow set-panel' }, ...group.body())))
   }
 
-  // Narrow: one group fills the screen, with the way back in the trail.
+  // Narrow: one group fills the screen, and the way back is one step rather
+  // than a trail whose last name was the page title repeated.
   return shell('account',
-    pageHeader(group.label),
+    pageHeader(group.label, null, { back: { label: 'Account', to: '/account' } }),
     h('div', { class: 'stack col-main' }, ...group.body()))
 }
 

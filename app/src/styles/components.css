@@ -613,7 +613,7 @@
    Figma 02 Components, Motion/state 110ms Ease out. */
 .nav-row, .whoami, .btn, .chip, .icon-btn, .close, .sheet-row, .sheet-row .mark,
 .key, .jump-hit, .jump-open, .all-row, .th-sort, .th-sort .caret, .crumb,
-.rail-tab, .rail-more, .link, a.link, a.card, label.field,
+.rail-tab, .rail-more, .link, a.link, a.card, label.field, .page-back,
 .table tbody td, .table tbody .mark, .hero-bar .seg, .hero-legend .leg {
   transition:
     background-color var(--t-fast) var(--ease),
@@ -709,6 +709,7 @@
 /* Pending is the only status a row wears, so it is worth seeing. Grey said
    nothing when every row wore it; amber says something now that one does. */
 .pill.warn { background: var(--tint-warning); color: var(--warning); }
+.pill.pos { background: var(--tint-positive); color: var(--positive); }
 .pill {
   height: 32px; padding: 0 16px; border-radius: var(--r-pill);
   background: var(--control); color: var(--muted);
@@ -753,6 +754,24 @@ th.right .th-sort { flex-direction: row-reverse; }
 .crumb.on { color: var(--ink); }
 .crumb-sep { display: inline-flex; color: var(--subtle); opacity: 0.6; }
 .crumb-sep svg { width: 12px; height: 12px; }
+
+/* One step up, where a trail would not have earned its line. It carries the
+   parent's name rather than the word "Back", so it says where it goes; and it
+   is one target instead of two, which on a phone is the whole argument. */
+.page-back {
+  display: inline-flex; align-items: center; align-self: flex-start;
+  gap: 6px; margin-left: -8px; padding: 4px 8px;
+  border-radius: var(--r-panel); color: var(--muted);
+  font-size: 13px; line-height: 18px; font-weight: 600;
+}
+.page-back .ic { display: inline-flex; }
+.page-back svg { width: 16px; height: 16px; }
+@media (hover: hover) {
+  .page-back:hover { color: var(--ink); background: var(--sunken); }
+}
+@media (max-width: 899px) {
+  .page-back { min-height: 44px; }
+}
 
 
 /* the jump-to overlay */
@@ -813,6 +832,7 @@ th.right .th-sort { flex-direction: row-reverse; }
    column below the breakpoint, which stacked the search, the toggle and the
    bell into three full width rows. */
 .header-actions { display: flex; align-items: center; gap: 12px; flex: 0 1 auto; flex-wrap: wrap; }
+
 
 @media (max-width: 899px) {
   /* keyboard hints on a device with no keyboard */
@@ -1222,6 +1242,10 @@ th.right .th-sort { flex-direction: row-reverse; }
   display: flex; align-items: center; gap: 12px; width: 100%;
   padding: 10px 14px; border-radius: var(--r-panel);
   background: var(--control); color: var(--ink);
+  /* A button centres its text, so the address sat in the middle of its own
+     field with the copy button adrift at the end — the one control on the row
+     nowhere near the thing it copies. */
+  text-align: left;
   font-size: 13px; font-variant-numeric: tabular-nums;
 }
 .addr svg { width: 14px; height: 14px; }
@@ -1580,6 +1604,22 @@ th.right .th-sort { flex-direction: row-reverse; }
 }
 .set-banner .warn-mark { background: transparent; color: var(--warning); flex: none; }
 .set-banner .two-line small { color: var(--ink); opacity: 0.78; }
+
+/* Your own details, as a profile rather than as the first five rows of a
+   table. The avatar is the same one the sidebar and the phone's top bar use,
+   at the one size where initials read as a face. */
+.profile { display: flex; align-items: center; gap: 16px; padding: 4px 0; }
+.avatar.avatar-lg { width: 64px; height: 64px; font-size: 20px; }
+.profile-name {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap; row-gap: 8px;
+}
+.profile-name strong { font-size: 22px; line-height: 28px; letter-spacing: -0.01em; }
+.profile .pill { height: 26px; padding: 0 12px; font-size: 12px; }
+@media (max-width: 899px) {
+  .profile { gap: 14px; }
+  .avatar.avatar-lg { width: 56px; height: 56px; font-size: 18px; }
+  .profile-name strong { font-size: 20px; line-height: 26px; }
+}
 
 /* Sign out is not a setting and does not sit among them. */
 .set-foot {

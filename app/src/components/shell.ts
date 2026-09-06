@@ -1,6 +1,7 @@
 import { h, link, append } from '../ui'
 import { icon } from '../icons'
 import { state, visibleNotifications } from '../state'
+import { initialsOf } from '../format'
 import { openSheet, go, current } from '../router'
 import { isMobile } from '../responsive'
 import { trailFor } from '../destinations'
@@ -109,9 +110,8 @@ export function sidebar(active: Place): HTMLElement {
 }
 
 function whoami(): HTMLElement {
-  const initials = state.person.name.split(' ').map((s) => s[0]).join('')
   return h('button', { class: 'whoami', on: { click: () => go('/account') } },
-    h('span', { class: 'avatar', text: initials }),
+    h('span', { class: 'avatar', text: initialsOf(state.person.name) }),
     h('span', { class: 'two-line grow' },
       h('span', { class: 't-body-strong', text: state.person.name }),
       h('small', { text: state.kyc.status === 'verified' ? 'Verified' : 'Not verified' })),
@@ -126,9 +126,8 @@ function whoami(): HTMLElement {
  *  and carried two search buttons 40px apart. A greeting belongs on the screen
  *  that opens the day, not above the Activity list. */
 function topBar(): HTMLElement {
-  const initials = state.person.name.split(' ').map((s) => s[0]).join('')
   return h('header', { class: 'topbar' },
-    h('button', { class: 'avatar', text: initials, ariaLabel: 'Account',
+    h('button', { class: 'avatar', text: initialsOf(state.person.name), ariaLabel: 'Account',
       on: { click: () => go('/account') } }),
     h('span', { class: 'grow' }),
     h('button', { class: 'icon-btn', html: icon.search(), ariaLabel: 'Search Tokkenly',
@@ -225,11 +224,30 @@ function breadcrumbs(): HTMLElement | null {
   return nav
 }
 
-export function pageHeader(title: string, right?: Node | null): HTMLElement {
-  const crumbs = underOverlay ? null : breadcrumbs()
+/** A trail is for a parent you cannot see. Where the parent is already on the
+ *  screen — a settings rail lit beside its panel — the trail restates it, and
+ *  on a phone it restated the page title word for word one line above it. Two
+ *  ways out of that, and a screen picks one:
+ *
+ *  `crumbs: false`  the parent is visible; say nothing.
+ *  `back`           the parent is a screen away; one step back, at 44px,
+ *                   beats a 37px trail nobody can hit. */
+export interface HeaderOpts {
+  crumbs?: boolean
+  back?: { label: string; to: string }
+}
+
+export function pageHeader(title: string, right?: Node | null, opts: HeaderOpts = {}): HTMLElement {
+  const b = opts.back
+  const back = b
+    ? h('button', { class: 'page-back', on: { click: () => go(b.to) } },
+        h('span', { class: 'ic', html: icon.back() }), h('span', { text: b.label }))
+    : null
+  const crumbs = back || opts.crumbs === false || underOverlay ? null : breadcrumbs()
   const row = h('div', { class: 'page-header-row' }, h('h1', { text: title }), right ?? null)
-  if (!crumbs) return h('header', { class: 'page-header' }, row)
-  return h('header', { class: 'page-header has-crumbs' }, crumbs, row)
+  if (crumbs) return h('header', { class: 'page-header has-crumbs' }, crumbs, row)
+  if (back) return h('header', { class: 'page-header' }, back, row)
+  return h('header', { class: 'page-header' }, row)
 }
 
 export function eyebrow(label: string, value: string): HTMLElement {

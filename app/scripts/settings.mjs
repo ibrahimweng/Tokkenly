@@ -43,8 +43,76 @@ console.log('THE INDEX  eight rows, not ten cards')
   // The whole point of the value column: no row may truncate it away.
   ok('none of the values is cut off', !rows.some((r) => r.value.includes('…')),
      rows.filter((r) => r.value.includes('…')).map((r) => r.label).join(', ') || 'none cut')
+  // The wall was the index itself: ten cards where eight rows would do. The
+  // panel beside it is allowed cards — that is what a panel is for — so the
+  // question is whether the column holding the list has any.
   ok('the old wall of cards is gone',
-     (await p.locator('main .card').count()) <= 2, await p.locator('main .card').count() + ' cards')
+     (await p.locator('main .set-col .card').count()) === 0 &&
+     (await p.locator('main .set-list .set-row').count()) === 8,
+     await p.locator('main .set-col .card').count() + ' cards beside the list')
+  await p.close()
+}
+
+console.log('WHERE YOU ARE  said once, by whatever is already on the screen')
+{
+  const p = await page()
+  for (const g of GROUPS) {
+    await at(p, '/account/' + g)
+    const said = await p.evaluate(() => ({
+      crumbs: !!document.querySelector('.crumbs'),
+      lit: document.querySelector('.set-row.on .t-body-strong')?.textContent ?? '',
+      h1: document.querySelector('h1')?.textContent ?? '',
+    }))
+    // Wide: the lit row is the answer, so a trail restating it is a second
+    // copy of a fact already on screen.
+    ok(`  wide /account/${g} says it once`, !said.crumbs && !!said.lit && said.h1 === 'Account')
+  }
+  const m = await page(390, 844)
+  for (const g of GROUPS) {
+    await at(m, '/account/' + g)
+    const said = await m.evaluate(() => {
+      const b = document.querySelector('.page-back')
+      return {
+        crumbs: !!document.querySelector('.crumbs'),
+        back: b?.innerText.trim() ?? '',
+        tall: b ? Math.round(b.getBoundingClientRect().height) : 0,
+        h1: document.querySelector('h1')?.textContent ?? '',
+      }
+    })
+    // Narrow: the trail's last name was the page title, word for word, one
+    // line above it. One step up in its place, and it is hittable.
+    ok(`  narrow /account/${g} offers one step up`,
+       !said.crumbs && said.back === 'Account' && said.tall >= 44 && said.h1 !== 'Account',
+       `${said.back || 'no back'} ${said.tall}px over "${said.h1}"`)
+  }
+  await m.locator('.page-back').click(); await m.waitForTimeout(300)
+  ok('  and it lands on the index', (await m.evaluate(() => location.hash)) === '#/account')
+  await p.close(); await m.close()
+}
+
+console.log('PERSONAL DETAILS IS A PROFILE')
+{
+  const p = await page()
+  await at(p, '/account/details')
+  const prof = await p.evaluate(() => document.querySelector('.profile')?.innerText.replace(/\n/g, ' · ') ?? '')
+  ok('it opens with who this is', /Chinaza Okoro/.test(prof) && /since/.test(prof), prof)
+  ok('with a monogram, not a placeholder',
+     (await p.evaluate(() => document.querySelector('.profile .avatar')?.textContent)) === 'CO')
+  const acct = await p.evaluate(() =>
+    [...document.querySelectorAll('.card')].find((c) => /THIS ACCOUNT/.test(c.innerText))?.innerText.replace(/\n/g, ' · ') ?? '')
+  ok('and the three facts that are this product, not this person',
+     /0x/.test(acct) && /Payouts land in/.test(acct) && /You can move/.test(acct), acct.slice(0, 110))
+  // The address is the one thing here nobody retypes by hand.
+  ok('the address reads from its left edge, where the copy button is not',
+     (await p.evaluate(() => getComputedStyle(document.querySelector('.addr')).textAlign)) === 'left')
+  // Unverified the amber banner says it at length; the badge would be a
+  // second copy. Verified there is no banner, so the badge carries it.
+  ok('the status is stated once', !/Not verified/.test(prof), prof)
+  await verify(p)
+  await at(p, '/account/details')
+  ok('and verified, by the profile',
+     /Verified/.test(await p.evaluate(() => document.querySelector('.profile')?.innerText ?? '')) &&
+     (await p.locator('.page-header .eyebrow').count()) === 0)
   await p.close()
 }
 

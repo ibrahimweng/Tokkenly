@@ -90,3 +90,9 @@ export function activityLabel(a: { kind: string; type: string; who: string }): s
   }
   return map[a.type] ?? a.type
 }
+
+/** A name as a monogram. Three screens draw the same avatar — the sidebar, the
+ *  phone's top bar and the profile — and three copies of one split is how the
+ *  three end up disagreeing about a middle name. */
+export const initialsOf = (name: string): string =>
+  name.split(' ').filter(Boolean).map((s) => s[0]).join('').slice(0, 2).toUpperCase()

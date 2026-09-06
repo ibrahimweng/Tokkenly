@@ -6,7 +6,7 @@ import { table } from '../components/table'
 import { searchField, searchNote } from '../components/search'
 import { rank, onlyNear } from '../match'
 import { composerScreen } from '../components/composer'
-import { state, movementCeiling, ceilingLabel } from '../state'
+import { state, movementCeiling, ceilingLabel, WALLET } from '../state'
 
 const ceilingLabel2 = (byBalance: number) => ceilingLabel(byBalance, 'The most you can move here')
 import { walletScreen } from './wallet'
@@ -186,7 +186,7 @@ export function sendScreen(): HTMLElement {
 }
 
 export function receiveScreen(): HTMLElement {
-  const address = '0x7a3F4b91Ce2D8a06F5b17d3E4c8B29aA5f0e9c21'
+  const address = WALLET
   const short = address.slice(0, 12) + '…' + address.slice(-4)
 
   // A deterministic block pattern. It is not a real code, and the copy button

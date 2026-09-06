@@ -5044,15 +5044,125 @@ between two values and a green that snaps on reads as a bug.
     standing still on one tile, which left the hover with nowhere to go and no
     choice but to paint over it.
 
-### 11g.21 Still open
+### 11g.21 Celebrating the choice, not the trade
 
-- All forty-four items are settled. Item 30 was held back until it was asked
-  for, and was then built without generating anything: see 11g.18, and 11g.10
-  for why the audit's own account of it was wrong.
-- Two things the audit missed entirely and the person using it did not: that
-  every search field was a dead control until Enter (11g.19), and that the
-  gateway tiles had spent their one gradient standing still (11g.20). An audit
-  reads a build; it does not use one.
+The ask was confetti — GSAP was named — when a company goes in the bucket and
+again when one is bought. Half of that is a bad idea with a paper trail:
+Robinhood put confetti on executed trades, a securities regulator's complaint
+named it as gamifying investing, and it came out of the product in 2021. This
+app tells somebody their first share is not a lottery ticket. It cannot then
+throw a party the moment they buy one.
+
+So the celebration moved one step earlier. Adding a company to the bucket is
+choosing, not committing: nothing has been paid, nothing can go wrong, and it
+is exactly the moment a person is deciding whether this is for them. Fourteen
+bits fan up from the button, fall under gravity and fade — 900ms, and nothing
+in the page moves. Buying gets the other treatment: the outcome sheet resolves
+rather than appears, a wash of colour up to the accent, the tick drawn rather
+than stamped, then the figure, the panel and the buttons rising in turn. It
+reads as a settling.
+
+No dependency. GSAP is about 70KB for a burst that is thirty lines of canvas
+and four keyframes, on a product that has just self-hosted its own typeface to
+keep third parties out of it. Both effects sit inside
+`prefers-reduced-motion: no-preference`.
+
+Two things the build got wrong on the way. The burst never appeared, because
+`addToBucket` broadcasts and every listener rebuilds the whole tree — the
+button was detached and its rectangle was zeros by the time `celebrate` ran.
+It is called before the action now, at both sites. And the toast that used to
+confirm the add landed on top of the new standing bar: three confirmations of
+one press. The toast went; the bar is a live region, so the announcement
+survived.
+
+88. **Celebrate the decision, not the transaction.** A burst on a completed
+    trade tells somebody the outcome was good. Nobody knows that yet, least of
+    all the product.
+
+### 11g.22 A receipt worth opening, opened where you are
+
+The old receipt was a list of fields and a button that threw you onto another
+screen. It now says what was bought: ticker and name, the one plain line about
+the company, the price and the day's move, a year sparkline behind it, then
+investment, shares, price each, reference, when, fee, total and what you hold
+now. It ends with a way on to the company and to the portfolio, because a
+record you cannot act on is a dead end.
+
+And it opens in place. "See the record" used to navigate to `/activity` first
+and open the sheet there; it replaces the sheet on whatever screen you were on
+now, so a receipt read from a buy on the stock page leaves you on the stock
+page — with a link inside it to where the record lives. Home's receipt rows do
+the same.
+
+One number was wrong the whole time. Shares were derived from the fee-inclusive
+amount, so a $200 buy of Nvidia read 1.6905 shares where 1.6821 were bought.
+`grossOf()` lives beside `buy()` and `sell()` now, so the figure a receipt
+derives and the figure a trade records cannot drift apart.
+
+89. **A modal opens on the screen you are on.** Navigating first, then opening,
+    loses the place the person was and makes the dismiss button a trap door.
+    The way to the modal's home screen belongs inside the modal.
+
+### 11g.23 An account that says who you are, once
+
+Opening Personal details on a phone produced three copies of its own title
+within 100px: a crumb reading `Account › Personal details`, an `<h1>` reading
+Personal details, and a card headed PERSONAL DETAILS. Under them were five rows
+of a table. Nothing on the screen said whose account it was.
+
+The trail goes. A trail is for a parent you cannot see — on a wide screen the
+settings rail is lit two inches to the left, so it said nothing new; on a phone
+its last name was the page title word for word. In its place on the phone is
+one step up, carrying the parent's name, at 44px rather than the trail's 37.
+`pageHeader` takes `{ crumbs: false }` or `{ back }` and every other screen in
+the product keeps its trail, because on those the parent really is off screen.
+
+The group itself is a profile now: the monogram at 64px, the name, where you
+stand with us, and how long you have been here. Then the details, then the
+three facts that are this product rather than this person — the wallet address
+that money reaches you at, the bank payouts land in, and what the account is
+allowed to move — each naming the group that owns it rather than repeating its
+controls.
+
+Three more copies of one word went with it. "Verified" was in the page header
+eyebrow, on the rail row, and on the profile badge at the same time; the badge
+and the row are enough, and the date of the check belongs to the group that
+owns the check. Unverified, the badge does not appear on a screen where the
+amber banner is already saying it at length.
+
+Two things surfaced on the way. `.addr` is a `<button>`, so it had been
+centring the token address on every company page while the copy button sat
+adrift at its end — the one control on that row nowhere near what it copies.
+And the wallet address existed as a literal inside the Receive screen, where
+nothing else could reach it; it is a constant beside `LIMITS` now.
+
+90. **A trail is for a parent you cannot see.** Where the parent is on the
+    screen — a lit rail, a tab strip — the trail restates it, and the restating
+    costs a line at the top of every page.
+
+91. **A control belongs beside the thing it changes.** Stated here because the
+    address row broke it in the smallest possible way and nobody noticed for
+    eleven screens.
+
+### 11g.24 Still open
+
+- All forty-four items of the audit are settled, and seven more that came from
+  using the product afterwards. Item 30 was held back until it was asked for,
+  and was then built without generating anything: see 11g.18, and 11g.10 for
+  why the audit's own account of it was wrong.
+- Four things the audit missed entirely and the person using it did not: that
+  every search field was a dead control until Enter (11g.19), that the gateway
+  tiles had spent their one gradient standing still (11g.20), that a receipt
+  named the wrong number of shares (11g.22), and that Account said its own name
+  three times before saying anybody else's (11g.23). An audit reads a build; it
+  does not use one.
+- The bucket can be filled and paid for in one go, and now says so from
+  wherever it was filled. What it still cannot do is take a payment from
+  anything but the wallet balance: "add money" and "buy the bucket" are two
+  errands where a card or a bank debit at the point of purchase would be one.
+- The privacy switch is in two page headers and on Grow it is nowhere, so the
+  one screen where a balance is masked by default has no way to uncover it
+  short of Preferences. That is the next item.
 - The composer's two columns are 722 against 336 and stay that way. See 11g.17.
 - Sign-in refuses the password `wrong` and accepts everything else, which is a
   prototype's shape of a real check, not a real one.

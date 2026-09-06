@@ -161,6 +161,12 @@ export const LIMITS = {
   verified: { monthly: 10000, single: 2500 },
 }
 
+/** The account's address on Base. On a tokenised product this is closer to
+ *  identity than to a setting — it is what somebody pays to and what a block
+ *  explorer knows you by — so it lives here rather than as a literal inside
+ *  the Receive screen, where the profile could not reach it. */
+export const WALLET = '0x7a3F4b91Ce2D8a06F5b17d3E4c8B29aA5f0e9c21'
+
 export interface BucketItem {
   ticker: string
   dollars: number
@@ -211,7 +217,7 @@ export interface State {
   unlocked: boolean
   prefs: Prefs
   security: Security
-  person: { name: string; email: string; phone: string; dob: string; address: string }
+  person: { name: string; email: string; phone: string; dob: string; address: string; joined: string }
   cash: number
   inEarn: number
   earnedSoFar: number
@@ -323,6 +329,7 @@ export const state: State = {
     phone: '+234 802 431 9087',
     dob: '14 March 1996',
     address: '12 Awolowo Road, Ikoyi, Lagos',
+    joined: 'March 2024',
   },
   cash: 2480,
   inEarn: 1240,
