@@ -783,12 +783,29 @@ th.right .th-sort { flex-direction: row-reverse; }
   align-items: flex-start;
 }
 /* Buying a share is what this screen is for, so that tile is the wide one and
-   the only one that lifts off the flat surface. The gradient holds the card
-   for the first 42% and then goes to the brand green at the bottom edge,
-   under the dots. */
-.gate-lead {
-  flex: 0 1 400px;
-  background: linear-gradient(180deg, var(--sunken) 0%, var(--sunken) 42%, var(--accent) 100%);
+   the one whose call to action is a filled pill. It used to be the only one
+   carrying the gradient as well, permanently — three doors, one of them
+   already lit, and the hover on top of that was a flat grey that painted over
+   the green and made the wide tile look like it had gone out.
+
+   The gradient is the hover now, on all three. At rest the doors are the same
+   flat card; the one under the pointer washes green up from its bottom edge,
+   under the dots. Buy Stocks keeps its emphasis by being wider and by being
+   the one with a button on it. */
+.gate-lead { flex: 0 1 400px; }
+
+/* The gradient is a layer of its own rather than the card's background,
+   because a background-image cannot be transitioned between two values and a
+   green that snaps on is a green that reads as a bug. It is first in the
+   tile, so the dot field — positioned, later in tree order — still paints on
+   top of it exactly as it did when the gradient was the card. */
+.gate::before {
+  content: ''; position: absolute; inset: 0; opacity: 0; pointer-events: none;
+  background: linear-gradient(180deg,
+    var(--sunken-hover) 0%, var(--sunken-hover) 42%, var(--accent) 100%);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .gate::before { transition: opacity var(--t-base) var(--ease); }
 }
 .gate-words { display: flex; flex-direction: column; gap: 8px; position: relative; z-index: 1; }
 .gate-words .muted { font-size: 14px; line-height: 20px; }
@@ -1310,6 +1327,13 @@ th.right .th-sort { flex-direction: row-reverse; }
     box-shadow: var(--shadow-hover);
   }
   a.card:hover .promo-badge { background: var(--control-pressed); }
+
+  /* -- the three doors on Home. The lift and the shadow are the same as any
+     other card that navigates; what is theirs is the green, which arrives
+     from the bottom edge under the dot field. The card keeps its own flat
+     background underneath: the gradient's top stop is --sunken-hover, so the
+     two agree at the top and the layer only has to carry the difference. -- */
+  .gate:hover::before, .gate:focus-visible::before { opacity: 1; }
 
   /* -- buttons. Each variant moves along the ramp it already lives on. -- */
   .btn-primary:hover { background: var(--inverse-hover); }

@@ -95,6 +95,17 @@ for (const r of ROUTES) {
     await row.hover(); await page.waitForTimeout(250)
     for (const t of await sweep()) if (t.ratio < t.need) bad.push({ route: theme + ' ' + r + ' (row hovered)', ...t })
   }
+
+  /* The three doors on Home wash green from the bottom edge under the pointer,
+     so the ground under their words is a gradient that only exists on hover.
+     A gradient has to be checked where the text really sits — walking up the
+     tree for the nearest solid fill skips straight past it and reports a pass
+     that was never true. Each door in turn, because they are different heights
+     of the same gradient. */
+  for (const g of await page.$$('.gate')) {
+    await g.hover(); await page.waitForTimeout(300)
+    for (const t of await sweep()) if (t.ratio < t.need) bad.push({ route: theme + ' ' + r + ' (door hovered)', ...t })
+  }
 }
 
 /* The lock is the one screen `seen()` cannot reach, since seeding a returning
