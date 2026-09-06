@@ -130,11 +130,42 @@ const MAX_BARS = 90
 const fitBars = (w: number) =>
   Math.max(MIN_BARS, Math.min(MAX_BARS, Math.floor((w + GAP) / (MIN_BAR + GAP))))
 
+/** How many candles a range is made of, whatever the width. The series used
+ *  to be generated at the bar count the row had room for, which made every
+ *  figure read off it a fact about the browser window rather than about the
+ *  thing being charted: Apple's year high came out $224.50 at 1440, $224.69
+ *  at 1100 and $224.55 on a phone, and the same reload on the same screen
+ *  agreed with itself only because the generator is seeded. */
+const RESOLUTION = MAX_BARS
+
+/** Fold the fixed series into however many candles the width has room for.
+ *  The buckets partition the whole series and nothing is dropped, so the high,
+ *  the low and the two ends come out the same at every width — which is the
+ *  point. A wider window shows more detail, not different history. */
+export function foldCandles(full: Candle[], n: number): Candle[] {
+  if (n >= full.length) return full
+  const out: Candle[] = []
+  for (let i = 0; i < n; i++) {
+    const from = Math.floor((i * full.length) / n)
+    const to = Math.max(Math.floor(((i + 1) * full.length) / n), from + 1)
+    const slice = full.slice(from, to)
+    out.push({
+      o: slice[0].o,
+      c: slice[slice.length - 1].c,
+      h: Math.max(...slice.map((k) => k.h)),
+      l: Math.min(...slice.map((k) => k.l)),
+    })
+  }
+  return out
+}
+
 export function barChart(spec: ChartSpec): HTMLElement {
   const height = spec.height ?? 200
   let range = spec.ranges.find((r) => r.key === spec.initial) ?? spec.ranges[0]
   let vals: number[] = []
   let candles: Candle[] = []
+  /** The range at full resolution, before the width has folded it. */
+  let full: Candle[] = []
 
   const grid = h('div', { class: 'ch-grid' })
   const bars = h('div', { class: 'ch-bars' })
@@ -160,7 +191,8 @@ export function barChart(spec: ChartSpec): HTMLElement {
     const w = bars.clientWidth
     if (w < MIN_BAR) return
     const n = fitBars(w)
-    candles = candlesFor(range, spec.endValue, n, spec.seed)
+    full = candlesFor(range, spec.endValue, RESOLUTION, spec.seed)
+    candles = foldCandles(full, n)
     vals = candles.map((k) => k.c)
 
     // The axis is zoomed to the series, not anchored at zero: this portfolio
@@ -220,14 +252,21 @@ export function barChart(spec: ChartSpec): HTMLElement {
     axis.replaceChildren(...Array.from({ length: k }, (_, j) =>
       h('span', { class: 't-caption muted', text: range.fmt(dateAt(range, j / (k - 1))) })))
 
-    const from = vals[0]
+    // Where the range opened, not where its first candle closed. `vals` holds
+    // closes, so reading the baseline off vals[0] measured close-to-close
+    // while the percentage beside it measured open-to-now — two different
+    // spans in one sentence, and the dollar half moved with the width because
+    // the first close did. The open is the pinned start of the series.
+    const from = candles[0].o
     const change = spec.endValue - from
     caption.className = 't-caption ' + (change >= 0 ? 'pos' : 'warn')
     caption.textContent =
       `${change >= 0 ? '+' : '−'}${usd(Math.abs(change))} (${change >= 0 ? '+' : '−'}${pct(Math.abs(range.pct))}) ` +
       (range.over ?? 'over ' + range.key)
 
-    paintOhlc(candles[candles.length - 1], vals[0])
+    // The four numbers are the latest period at full resolution — a fixed
+    // slice of time — not the last bucket, whose width depends on the window.
+    paintOhlc(full[full.length - 1], from)
 
     plot.setAttribute('role', 'img')
     plot.setAttribute('aria-label',
@@ -259,7 +298,7 @@ export function barChart(spec: ChartSpec): HTMLElement {
     lit = i
     const bar = bars.children[i] as HTMLElement
     bar.classList.add('on')
-    const from = vals[0]
+    const from = candles[0].o
     const k = candles[i]
     const d = vals[i] - from
     // The readout follows the pointer, so the four numbers are the candle you
@@ -279,7 +318,7 @@ export function barChart(spec: ChartSpec): HTMLElement {
     if (lit >= 0) bars.children[lit]?.classList.remove('on')
     lit = -1
     tip.hidden = true
-    paintOhlc(candles[candles.length - 1], vals[0])
+    paintOhlc(full[full.length - 1], candles[0].o)
   }
   bars.addEventListener('pointermove', (e) => {
     const r = bars.getBoundingClientRect()
