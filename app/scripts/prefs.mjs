@@ -43,11 +43,11 @@ await p.getByRole('button', { name: 'Dark', exact: true }).click(); await p.wait
 
 console.log('NAIRA BESIDE DOLLARS')
 await at('/transfer')
-ok('the aside is there by default', /indicative rate/.test(await text()))
+ok('naira is there by default', /About \u20a6[\d,]+/.test(await text()))
 await acct()
 await p.getByRole('button', { name: /Show naira beside dollars/ }).click(); await p.waitForTimeout(300)
 await at('/transfer')
-ok('turning it off removes it', !/indicative rate/.test(await text()))
+ok('turning it off removes it', !/About \u20a6[\d,]+/.test(await text()))
 await at('/withdraw')
 ok('but Convert still shows naira, because that is what it is about',
    /₦/.test(await text()))

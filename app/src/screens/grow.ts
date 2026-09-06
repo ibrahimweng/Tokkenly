@@ -6,7 +6,7 @@ import { table } from '../components/table'
 import { amount } from '../components/bits'
 import {
   state, holdingsValue, owed, availableToBorrow, cover, sellPoint,
-  monthlyCost, monthlyEarn, movementCeiling, ceilingLabel, money, MASK,
+  monthlyCost, monthlyEarn, movementCeiling, ceilingLabel, money, MASK, inNaira,
 } from '../state'
 import { usd, pct, signed, when } from '../format'
 import { go, openSheet } from '../router'
@@ -55,12 +55,14 @@ function growHero(): HTMLElement {
       h('div', { class: 'stack-8' },
         h('span', { class: 't-caps subtle', text: 'In Earn' }),
         h('span', { class: 'hero-figure', text: money(state.inEarn) }),
+        inNaira(state.inEarn) ? h('span', { class: 'muted t-caption', text: inNaira(state.inEarn)! }) : null,
         h('span', { class: 'muted',
           text: `Earning ${pct(state.rates.earn)} a year, paid every day. Nothing is locked up.` })),
       debt > 0
         ? h('div', { class: 'stack-8 hero-aside' },
             h('span', { class: 't-caps subtle', text: 'You owe' }),
             h('span', { class: 't-display', text: money(debt) }),
+            inNaira(debt) ? h('span', { class: 'muted t-caption', text: inNaira(debt)! }) : null,
             h('span', { class: 'muted',
               text: `${money(state.borrowed)} borrowed and ${money(state.interestOwed)} interest so far` }))
         : null))

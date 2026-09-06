@@ -91,7 +91,7 @@ function preferencesBody(): (Node | null)[] {
       cardHead('Money'),
       toggle({
         label: 'Show naira beside dollars', ic: icon.convert(),
-        sub: 'An indicative figure at today’s rate, next to the dollar amount',
+        sub: 'Every balance in both currencies, at today’s indicative rate',
         get: () => p.showNaira, set: (v) => { actions.setPref('showNaira', v); back() },
       }),
       toggle({

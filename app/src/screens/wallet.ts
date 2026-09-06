@@ -2,7 +2,7 @@ import { h } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, headLink, kv, callout, amount, directionMark, privacyToggle } from '../components/bits'
-import { state, buyingPower, availableToBorrow, nairaAside, limits, leftThisMonth, verified, money } from '../state'
+import { state, buyingPower, availableToBorrow, inNaira, rateLine, limits, leftThisMonth, verified, money } from '../state'
 import { usd, when, activityLabel } from '../format'
 import { go, openSheet } from '../router'
 
@@ -38,8 +38,13 @@ function cashHero(): HTMLElement {
       h('div', { class: 'stack-8' },
         h('span', { class: 't-caps subtle', text: 'Cash you can spend' }),
         h('span', { class: 'hero-figure', text: money(state.cash) }),
-        nairaAside(state.cash)
-          ? h('span', { class: 'muted', text: nairaAside(state.cash)! })
+        inNaira(state.cash)
+          ? h('span', { class: 'stack-8' },
+              h('span', { class: 'muted', text: inNaira(state.cash)! }),
+              // The rate, its time and what it is: the one number here that a
+              // person cannot check for themselves, so it says where it came
+              // from rather than appearing as a fact of nature.
+              h('span', { class: 'subtle t-caption', text: rateLine() }))
           : null),
       h('div', { class: 'stack-8 hero-aside' },
         h('span', { class: 't-caps subtle', text: 'Buying power' }),

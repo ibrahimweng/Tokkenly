@@ -247,6 +247,8 @@ export interface State {
   cardWaitlist: boolean
   phraseWrittenDown: boolean
   ngnPerUsd: number
+  /** When that rate was last quoted. A rate with no time on it is a rumour. */
+  rateAt: string
 }
 
 /* --------------------------------------------------------------- keeping --
@@ -365,6 +367,7 @@ export const state: State = {
   cardWaitlist: false,
   phraseWrittenDown: false,
   ngnPerUsd: 1500,
+  rateAt: iso('2026-09-06T09:40'),
   activity: [
     { ref: 'TKN-8F2K90', kind: 'payment', who: 'Adaeze Okonkwo', type: 'Received', amount: 120, at: iso('2026-09-05T14:32'), settled: true },
     { ref: 'TKN-8E4J77', kind: 'trade', who: 'Apple', type: 'Bought', amount: -420, fee: 2.09, at: iso('2026-09-05T14:05'), settled: true },
@@ -426,12 +429,32 @@ const NOTIFY_OF: Record<Notif['kind'], keyof Prefs['notify']> = {
 export const visibleNotifications = (): Notif[] =>
   state.notifications.filter((n) => state.prefs.notify[NOTIFY_OF[n.kind]])
 
-export const nairaAside = (dollars: number): string | null => {
+/** The naira figure beside a dollar one.
+ *
+ *  Naira is the unit people here think in; dollars are the thing they bought
+ *  with it. It was an aside behind a preference, real on two screens out of
+ *  twenty-four — which is localisation done to a product rather than a product
+ *  built for a place. It goes under every balance the app states.
+ *
+ *  Covered along with the dollar figure when balances are hidden: hiding one
+ *  and printing the other in naira is not hiding anything. */
+export const inNaira = (dollars: number): string | null => {
   if (!state.prefs.showNaira) return null
-  // Covered along with the dollar figure it sits under: hiding one and
-  // printing the other in naira is not hiding anything.
-  if (state.prefs.hideBalances) return `${MASK} at today\u2019s indicative rate`
-  return `About ${naira(dollars * state.ngnPerUsd)} at today\u2019s indicative rate`
+  if (state.prefs.hideBalances) return MASK
+  return `About ${naira(dollars * state.ngnPerUsd)}`
+}
+
+/** Where that figure came from. A rate with no time and no name on it is a
+ *  rumour, and this is the one number in the product a person cannot check
+ *  for themselves. */
+export const rateLine = (): string => {
+  const at = new Date(state.rateAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+  return `${naira(state.ngnPerUsd)} to the dollar \u00b7 indicative, quoted ${at}`
+}
+
+export const nairaAside = (dollars: number): string | null => {
+  const n = inNaira(dollars)
+  return n === null ? null : `${n} at today\u2019s indicative rate`
 }
 
 /* ------------------------------------------------------------ settlement --

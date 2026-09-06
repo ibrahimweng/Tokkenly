@@ -6,7 +6,7 @@ import { shell, pageHeader, bell, jumpOpen } from '../components/shell'
 import { card, cardHead, headLink, kv, amount, directionMark, privacyToggle } from '../components/bits'
 import { table } from '../components/table'
 import {
-  state, actions, holdingsValue, availableToBorrow, buyingPower, verified, LIMITS, money,
+  state, actions, holdingsValue, availableToBorrow, buyingPower, verified, LIMITS, money, inNaira,
 } from '../state'
 import { usd, signed, when, pct, shares, greeting, activityLabel } from '../format'
 import { go } from '../router'
@@ -168,6 +168,7 @@ function detailed(): HTMLElement {
           h('span', { class: 'muted', text: standing() }),
           h('span', { class: 't-caps subtle', text: 'Total portfolio' }),
           h('span', { class: 't-display-xl', text: money(value) }),
+          inNaira(value) ? h('span', { class: 'muted t-caption', text: inNaira(value)! }) : null,
           h('span', {},
             h('span', { class: (move.amount >= 0 ? 'pos' : 'warn') + ' t-body-strong',
               text: `${move.amount >= 0 ? '+' : ''}${money(move.amount)} (${move.amount >= 0 ? '+' : ''}${pct(move.pct)})` }),
@@ -238,6 +239,7 @@ function gateway(): HTMLElement {
       h('div', { class: 'stack-8' },
         h('span', { class: 't-caps subtle', text: 'Total portfolio' }),
         h('span', { class: 't-figure', text: money(total) }),
+        inNaira(total) ? h('span', { class: 'muted t-caption', text: inNaira(total)! }) : null,
         h('span', { class: 'delta' },
           h('span', { class: (move.amount >= 0 ? 'pos' : 'warn') + ' t-body-strong',
             text: `${move.amount >= 0 ? '+' : ''}${money(move.amount)} (${move.amount >= 0 ? '+' : ''}${pct(move.pct)})` }),
