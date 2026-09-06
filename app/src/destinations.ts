@@ -1,3 +1,4 @@
+import { shares } from './format'
 import { state } from './state'
 
 export type Place = 'home' | 'wallet' | 'market' | 'grow' | 'history' | 'account'
@@ -138,7 +139,7 @@ export function search(raw: string): Hit[] {
   for (const p of state.holdings) {
     if (norm(p.ticker + ' ' + p.name).includes(q)) {
       hits.push({ label: p.name, to: '/invest/' + p.ticker.toLowerCase(), group: 'Your shares',
-                  hint: `${p.ticker} · ${p.shares.toFixed(2)} shares` })
+                  hint: `${p.ticker} · ${shares(p.shares)} shares` })
     }
   }
   const seenWho = new Set<string>()

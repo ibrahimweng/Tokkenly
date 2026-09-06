@@ -5,7 +5,7 @@ import { card, cardHead, kv, callout } from '../components/bits'
 import { find, markGap, type Instrument } from '../catalogue'
 import { barChart, type Range } from '../components/chart'
 import { state, actions, holding, inBucket } from '../state'
-import { usd, pct, signed } from '../format'
+import { usd, pct, signed, shares } from '../format'
 import { go } from '../router'
 import { toast } from '../components/sheet'
 
@@ -175,7 +175,7 @@ export function stockScreen(ticker: string): HTMLElement {
           cardHead('Your position'),
           held && held.shares > 0
             ? h('div', { class: 'stack-12' },
-                kv('You hold', held.shares.toFixed(2) + ' shares'),
+                kv('You hold', shares(held.shares) + ' shares'),
                 kv('Worth', usd(held.shares * c.price)),
                 kv('Today', h('span', { class: c.dayPct >= 0 ? 'pos t-body-strong' : 't-body-strong',
                   text: signed((held.shares * c.price * c.dayPct) / 100) })))

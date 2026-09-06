@@ -709,7 +709,7 @@ export const SHEETS: Record<string, Builder> = {
       action: `Buy ${usd(v)} of ${c.name}`,
       onConfirm: () => {
         const { activity, shares } = actions.buy(c.ticker, v)
-        replaceSheet('invest-done', { ref: activity.ref, t: c.ticker, got: shares.toFixed(4) })
+        replaceSheet('invest-done', { ref: activity.ref, t: c.ticker, got: fmtShares(shares) })
       },
     })
   },
@@ -749,7 +749,7 @@ export const SHEETS: Record<string, Builder> = {
       action: `Sell ${usd(v)} of ${c.name}`,
       onConfirm: () => {
         const { activity, shares } = actions.sell(c.ticker, v)
-        replaceSheet('sell-done', { ref: activity.ref, t: c.ticker, sold: shares.toFixed(4) })
+        replaceSheet('sell-done', { ref: activity.ref, t: c.ticker, sold: fmtShares(shares) })
       },
     })
   },
@@ -786,7 +786,7 @@ export const SHEETS: Record<string, Builder> = {
         const { refs, spent, lines: got } = actions.payBucket()
         replaceSheet('bucket-done', {
           refs: refs.join(','), spent: String(spent),
-          got: got.map((g) => g.ticker + ':' + g.shares.toFixed(4)).join(','),
+          got: got.map((g) => g.ticker + ':' + fmtShares(g.shares)).join(','),
         })
       },
     })

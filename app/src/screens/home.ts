@@ -8,7 +8,7 @@ import { table } from '../components/table'
 import {
   state, actions, holdingsValue, availableToBorrow, buyingPower, verified, LIMITS,
 } from '../state'
-import { usd, signed, when, pct, activityLabel } from '../format'
+import { usd, signed, when, pct, shares, activityLabel } from '../format'
 import { go } from '../router'
 import { isMobile } from '../responsive'
 
@@ -130,7 +130,7 @@ function detailed(): HTMLElement {
       const row = h('div', { class: 'kv', style: { cursor: 'pointer' } },
         h('span', { class: 'two-line' },
           h('span', { class: 't-body-strong', text: p.ticker }),
-          h('small', { text: `${p.name} · ${p.shares.toFixed(2)} shares` })),
+          h('small', { text: `${p.name} · ${shares(p.shares)} shares` })),
         h('span', { class: 'two-line right' },
           h('span', { class: 't-body-strong', text: usd(p.shares * p.price) }),
           h('small', { class: p.dayPct >= 0 ? 'pos' : 'muted', text: (p.dayPct >= 0 ? '+' : '') + pct(p.dayPct) })))

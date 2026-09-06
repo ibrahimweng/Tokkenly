@@ -18,8 +18,20 @@ export const isDrawdown = (a: { kind: string; who: string; type: string }): bool
 
 export const pct = (n: number, dp = 1): string => n.toFixed(dp) + '%'
 
+/** A quantity of shares. The same holding used to appear three ways on one
+ *  screen — 2.2311 in the receipt, 23.42 in the card beside it and 23.42 sh in
+ *  the table under that — which reads as three different kinds of number
+ *  rather than one number written carelessly.
+ *
+ *  Two decimals always, so a column of them lines up, and up to four more when
+ *  the figure is small enough to need them: a holding of 23.42 does not want
+ *  23.4200, and a purchase of 0.0431 is nothing at two. The floor is what
+ *  makes it money-shaped; the ceiling is what keeps a fraction honest. */
 export const shares = (n: number): string =>
-  n.toLocaleString('en-US', { minimumFractionDigits: 4, maximumFractionDigits: 4 })
+  n.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: n >= 1 ? 4 : 6,
+  })
 
 export const naira = (n: number): string =>
   '₦' + Math.round(n).toLocaleString('en-US')
