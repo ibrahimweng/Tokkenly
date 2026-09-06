@@ -14,7 +14,7 @@ import { stockScreen } from './screens/stock'
 import { investScreen, sellScreen } from './screens/invest'
 import { growScreen, borrowScreen, repayScreen, earnScreen, takeOutScreen } from './screens/grow'
 import { historyScreen } from './screens/history'
-import { accountScreen, securityScreen, supportScreen } from './screens/settings'
+import { accountScreen } from './screens/settings'
 import { signInScreen, signUpScreen } from './screens/auth'
 import { sendScreen, receiveScreen, addMoneyScreen, convertScreen } from './screens/money'
 import { allScreen } from './screens/all'
@@ -41,9 +41,6 @@ const FLAT: Record<string, () => HTMLElement> = {
   withdraw: convertScreen,
   wallet: walletScreen,
   history: historyScreen,
-  account: accountScreen,
-  security: securityScreen,
-  support: supportScreen,
   send: sendScreen,
   receive: receiveScreen,
   addmoney: addMoneyScreen,
@@ -69,6 +66,14 @@ function screenFor(r: Route): HTMLElement {
 
   const flat = FLAT[a]
   if (flat) return flat()
+
+  // Account is an index with groups under it. /security and /support were
+  // their own addresses before the split; they still resolve, so a bookmark,
+  // a palette entry from an older session and every link already in the wild
+  // land where the thing they name now lives.
+  if (a === 'account') return accountScreen(b)
+  if (a === 'security') return accountScreen('security')
+  if (a === 'support') return accountScreen('support')
 
   if (a === 'market' || a === 'invest') {
     if (!b) return marketScreen()

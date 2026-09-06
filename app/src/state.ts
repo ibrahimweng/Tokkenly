@@ -45,6 +45,95 @@ export const DEFAULT_PREFS: Prefs = {
   notify: { payments: true, prices: true, earn: true, borrowing: true },
 }
 
+/** How the account is locked, and what it is locked with. This was four
+ *  switches on the Security screen that flipped a local variable and toasted
+ *  — a security screen that lies about its own state is worse than none, so
+ *  every one of them reads and writes here now.
+ *
+ *  The PIN and the password are held in the clear because this is a prototype
+ *  with no server. A real one sends the password and never stores it, and
+ *  keeps the PIN in the device's secure enclave. The shapes are the same. */
+export interface Security {
+  /** Four digits. The product asks for it to unlock and to authorise anything
+   *  over the ask-again figure. */
+  pin: string
+  pinChanged: string
+  password: string
+  passwordChanged: string
+  faceId: boolean
+  /** Whether opening the app asks for the PIN at all. */
+  appLock: boolean
+  /** Wrong attempts since the last correct one. Five locks the challenge. */
+  wrongPin: number
+}
+
+export const DEFAULT_SECURITY: Security = {
+  pin: '4193',
+  pinChanged: '24 August 2026',
+  password: 'harmattan evening walk',
+  passwordChanged: '2 July 2026',
+  faceId: true,
+  appLock: true,
+  wrongPin: 0,
+}
+
+/** The four digits nobody should be allowed to choose. Not a strength meter —
+ *  a PIN has 10,000 possibilities and a meter on four digits is theatre — but
+ *  these five patterns are what a thief tries first, and roughly a quarter of
+ *  real PINs are in this set. */
+export function weakPin(pin: string, dob = ''): string | null {
+  if (!/^\d{4}$/.test(pin)) return null
+  if (/^(\d)\1{3}$/.test(pin)) return 'Four of the same number is the first thing anyone tries.'
+  const d = pin.split('').map(Number)
+  const run = (step: number) => d.every((n, i) => i === 0 || n === (d[i - 1] + step + 10) % 10)
+  if (run(1)) return 'Four in a row is the second thing anyone tries.'
+  if (run(-1)) return 'Four in a row backwards is no harder to guess than forwards.'
+  if (d[0] === d[2] && d[1] === d[3]) return 'A repeated pair is easy to read over your shoulder.'
+  // A year between 1930 and this year is a date of birth, and a date of birth
+  // is on the card in the same wallet as the phone.
+  const year = Number(pin)
+  if (year >= 1930 && year <= 2026) return 'That looks like a year. Anyone who knows your age can guess it.'
+  const born = dob.match(/\b(19|20)\d{2}\b/)
+  if (born && pin === born[0]) return 'That is the year you were born.'
+  return null
+}
+
+/** Length beats composition. A rule demanding a symbol produces Password1!,
+ *  which is short, guessable and universally hated; length is what actually
+ *  costs an attacker time. So: a floor, a blocklist of what people pick
+ *  anyway, and a sentence saying what would make it better. */
+const COMMON = [
+  'password', '12345678', 'qwertyui', 'iloveyou', 'letmein', 'welcome',
+  'football', 'password1', 'abc12345', 'sunshine', 'princess',
+  'tokkenly', 'nigeria', 'lagos', 'monkey', 'dragon', 'admin',
+]
+
+export interface PasswordVerdict { ok: boolean; text: string; rank: 'weak' | 'fair' | 'strong' }
+
+export function ratePassword(v: string, person = ''): PasswordVerdict {
+  const low = v.toLowerCase()
+  if (v.length < 10) {
+    return { ok: false, rank: 'weak',
+      text: `Ten characters at least. ${10 - v.length} to go.` }
+  }
+  if (COMMON.some((c) => low.includes(c))) {
+    return { ok: false, rank: 'weak',
+      text: 'That contains one of the passwords people pick most. Anything else is safer.' }
+  }
+  if (person && low.includes(person.toLowerCase().split(' ')[0])) {
+    return { ok: false, rank: 'weak', text: 'Your own name is the first guess anybody makes.' }
+  }
+  if (/^(.)\1+$/.test(v)) {
+    return { ok: false, rank: 'weak', text: 'One character repeated is one character long.' }
+  }
+  if (v.length >= 16) {
+    return { ok: true, rank: 'strong',
+      text: 'Strong. Long enough that length alone protects it.' }
+  }
+  return { ok: true, rank: 'fair',
+    text: 'Good. A few more words would make it much harder to guess.' }
+}
+
 export interface Kyc {
   status: 'none' | 'checking' | 'verified'
   method?: 'NIN' | 'BVN'
@@ -100,6 +189,7 @@ export interface Device {
 export interface State {
   signedIn: boolean
   prefs: Prefs
+  security: Security
   person: { name: string; email: string; phone: string; dob: string; address: string }
   cash: number
   inEarn: number
@@ -148,7 +238,13 @@ const KEEP = 'tokkenly.prefs.v1'
 
 function remember(): void {
   try {
-    localStorage.setItem(KEEP, JSON.stringify({ prefs: state.prefs, seenIntro: state.seenIntro }))
+    localStorage.setItem(KEEP, JSON.stringify({
+      prefs: state.prefs, seenIntro: state.seenIntro,
+      // The wrong-attempt count is deliberately not kept: a lockout that
+      // survives a reload is a lockout a person cannot clear, and this has no
+      // server to clear it for them.
+      security: { ...state.security, wrongPin: 0 },
+    }))
   } catch { /* private windows and blocked storage are not a failure */ }
 }
 
@@ -156,13 +252,16 @@ export function recall(): void {
   try {
     const raw = localStorage.getItem(KEEP)
     if (!raw) return
-    const saved = JSON.parse(raw) as { prefs?: Partial<Prefs>; seenIntro?: boolean }
+    const saved = JSON.parse(raw) as {
+      prefs?: Partial<Prefs>; seenIntro?: boolean; security?: Partial<Security>
+    }
     // Merged, not replaced: a preference added after this was written should
     // arrive at its default rather than as undefined.
     state.prefs = {
       ...DEFAULT_PREFS, ...saved.prefs,
       notify: { ...DEFAULT_PREFS.notify, ...(saved.prefs?.notify ?? {}) },
     }
+    state.security = { ...DEFAULT_SECURITY, ...saved.security, wrongPin: 0 }
     state.seenIntro = saved.seenIntro ?? false
   } catch { /* unreadable or from an older shape: the defaults stand */ }
 }
@@ -176,9 +275,14 @@ export function applyTheme(): void {
 
 const iso = (d: string) => new Date(d).toISOString()
 
+/** The date a person would write, for "changed on" lines. */
+const today = (): string =>
+  new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+
 export const state: State = {
   signedIn: true,
   prefs: { ...DEFAULT_PREFS, notify: { ...DEFAULT_PREFS.notify } },
+  security: { ...DEFAULT_SECURITY },
   person: {
     name: 'Chinaza Okoro',
     email: 'ibrahimweng0@gmail.com',
@@ -544,6 +648,40 @@ export const actions = {
   resetPrefs() {
     state.prefs = { ...DEFAULT_PREFS, notify: { ...DEFAULT_PREFS.notify } }
     applyTheme()
+    changed()
+  },
+
+  /* ----- security ----- */
+  /** The five-attempt ceiling is here rather than in the screen, so every
+   *  place that asks for the PIN counts against the same total. */
+  checkPin(pin: string): boolean {
+    if (pin === state.security.pin) {
+      state.security.wrongPin = 0
+      remember()
+      return true
+    }
+    state.security.wrongPin += 1
+    remember()
+    return false
+  },
+  pinLocked: (): boolean => state.security.wrongPin >= 5,
+  clearPinAttempts() {
+    state.security.wrongPin = 0
+    remember()
+  },
+  setPin(pin: string) {
+    state.security.pin = pin
+    state.security.pinChanged = today()
+    state.security.wrongPin = 0
+    changed()
+  },
+  setPassword(next: string) {
+    state.security.password = next
+    state.security.passwordChanged = today()
+    changed()
+  },
+  setSecurity<K extends 'faceId' | 'appLock'>(key: K, on: boolean) {
+    state.security[key] = on
     changed()
   },
 
