@@ -189,6 +189,14 @@ export function stockScreen(ticker: string): HTMLElement {
           held && held.shares > 0
             ? h('button', { class: 'btn btn-secondary', text: 'Sell ' + c.ticker,
                 on: { click: () => go('/invest/' + c.ticker.toLowerCase() + '/sell') } })
+            : null,
+          // Beside Buy and Sell, on the position it moves, and only when there
+          // is a position to move. A share can go to another verified Tokkenly
+          // account and nowhere else; the screen behind this says so when the
+          // person picked does not have one. design.md 11g.27.
+          held && held.shares > 0
+            ? h('button', { class: 'btn btn-secondary', text: 'Send ' + c.ticker + ' to someone',
+                on: { click: () => go('/invest/' + c.ticker.toLowerCase() + '/send') } })
             : null
         ))),
     bucketBar()

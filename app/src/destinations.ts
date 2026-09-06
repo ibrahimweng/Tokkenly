@@ -37,6 +37,8 @@ export const DESTINATIONS: Destination[] = [
   { label: 'Apple', to: '/invest/aapl', place: 'market', kind: 'screen', also: 'aapl stock company' },
   { label: 'Invest in Apple', to: '/invest/aapl/invest', place: 'market', kind: 'action', also: 'buy aapl shares' },
   { label: 'Sell Apple', to: '/invest/aapl/sell', place: 'market', kind: 'action', also: 'aapl shares' },
+  { label: 'Send Apple to someone', to: '/invest/aapl/send', place: 'market', kind: 'action',
+    also: 'gift give transfer aapl shares to a person', hint: 'To another Tokkenly account' },
 
   { label: 'Grow', to: '/grow', place: 'grow', kind: 'place', primary: true, also: 'earn borrow interest' },
   { label: 'Move money into Earn', to: '/grow/earn', place: 'grow', kind: 'action', primary: true, also: 'save interest yield', hint: '4.8% a year, paid daily' },

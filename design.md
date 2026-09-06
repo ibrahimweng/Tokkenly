@@ -5333,7 +5333,55 @@ Open questions for the person deciding: A, B or C; and whether sending shares
 belongs on the Send screen as a second thing it can carry, or as its own action
 from a holding.
 
-### 11g.28 Still open
+### 11g.28 Handing a share over, and refusing to
+
+11g.27 laid out three ways to answer this and recommended the middle one. It
+was chosen, and built: a share can go to another verified Tokkenly account and
+to nobody else. The action starts on the holding — beside Buy and Sell in Your
+position, on the thing it moves — and only appears when there is a position to
+move.
+
+**The refusal was built first**, because it is the part that has to be right on
+the first day, and because a refusal nobody can reach is a refusal nobody has
+tested. Two of the four people in the list hold no account, the way `.99`
+declines and `.98` goes unanswered. Picking one of them is a real address with
+a real screen: it names them, says in one sentence why a security is not a
+payment, and offers the same gift as cash with them already in it. Nothing
+leaves the holding on the way. The list does not hide them either — they are
+listed under their own heading, marked "Cash only", because a row that does
+nothing when pressed teaches nobody anything.
+
+The composer is priced in dollars and settles in shares, which is what the buy
+screen already does and what a person already means. Its label says "How much"
+rather than "How many", because the field takes dollars and a label naming a
+unit the field will not accept is the shortest way to make somebody type the
+wrong number. The summary does the converting: they receive 1.00 AAPL, at
+$224.10 a share, fee none either side, you keep 22.42.
+
+Three things it inherits rather than reinvents. Item 06's rule — one limit
+policy for every outflow — applies, because an unverified account handing
+somebody $5,000 of Apple is exactly what a ceiling is for; the ceiling is the
+smaller of the holding and what the account may still move, and the hint names
+whichever is binding. The last quick chip says which one it reached: "All" when
+the holding is the limit, "The most" when the month is, because a chip labelled
+All that stops short of all is worse than no chip. And the PIN stands in front
+of a large one, from the same preference that guards a payment.
+
+The wallet does not move. That is the whole difference between this and
+selling, and the suite asserts it.
+
+Two model changes carry it. An `Activity` can name an `asset` — ticker, shares
+and the price of the day — so a receipt for a transfer states what actually
+left rather than dividing a dollar figure by a price that has since moved. And
+a `Person` carries whether they are on Tokkenly, on the person rather than
+derived, because the flag is the whole rule.
+
+95. **Build the refusal before the thing it refuses.** The happy path of a
+    regulated action is the easy half. The screen that says no is the one
+    somebody meets on their first attempt, it is the one a regulator reads,
+    and it is the one that is still missing when a feature ships late.
+
+### 11g.29 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from
   using the product afterwards. Item 30 was held back until it was asked for,
@@ -5363,9 +5411,15 @@ from a holding.
   recorded as one in 11g.11. A product that did not rebuild its whole tree
   would return focus to the control that opened the dialog.
 - Item 07, receive handles, needs a backend and a naming policy.
-- Sending a share to another person is researched and not built. 11g.27 has the
-  market survey and three options; the recommendation is "inside Tokkenly
-  only", and the decision has not been made.
+- Sending a share to another person is built, inside Tokkenly only: 11g.27 for
+  the market survey, 11g.28 for what shipped. What is not built is the other
+  half of it — the recipient's copy. This is a single-account prototype, so a
+  share leaves one holding and arrives nowhere; a real one owes the other side
+  an activity row, a notification and a cost basis.
+- Sending to an arbitrary Base address is deliberately absent. It is possible
+  on a free-floating token and it is the point at which a security leaves the
+  regulated perimeter, so it waits for a licence and an opinion naming the
+  eligible token classes.
 - Rate history — a chart of the naira against the dollar, the missing half of
   item 23 — needs a series the product does not have.
 - Everything in 11f.38 that has not been superseded still stands, and the file

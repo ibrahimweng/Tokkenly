@@ -6,7 +6,7 @@ import { searchField, searchNote } from '../components/search'
 import { rank, onlyNear } from '../match'
 import { table } from '../components/table'
 import { state, actions, visibleNotifications, type ActivityKind, type Activity, type Notif } from '../state'
-import { when, usd, activityLabel } from '../format'
+import { when, usd, shares as fmtShares, activityLabel } from '../format'
 import { go, current, openSheet } from '../router'
 import { isMobile } from '../responsive'
 
@@ -79,6 +79,13 @@ function alertsSection(rows: Notif[], term: string): HTMLElement {
             undefined, 'history'))
 }
 
+/** What a row was. For most movements the type is the whole answer; for a
+ *  share handed to another person it is not — "Sent" beside a name is what a
+ *  cash payment says, and the two rows would be indistinguishable in a column
+ *  whose job is to tell them apart. */
+const what = (a: Activity): string =>
+  a.asset ? `${a.type} ${fmtShares(a.asset.shares)} ${a.asset.ticker}` : a.type
+
 /** The list itself, lifted out so the search can repaint it without
  *  rebuilding the page around the field being typed into. */
 function tableOf(rows: Activity[],
@@ -95,8 +102,8 @@ function tableOf(rows: Activity[],
         h('span', { class: 'who' }, directionMark(a.amount),
           h('span', { class: 'two-line' },
             h('span', { class: 't-body-strong', text: a.who }),
-            h('small', { class: 'phone-only', text: a.type + ' · ' + when(a.at) }))),
-        h('span', { class: 'muted', text: a.type }),
+            h('small', { class: 'phone-only', text: what(a) + ' · ' + when(a.at) }))),
+        h('span', { class: 'muted', text: what(a) }),
         h('span', { class: 'muted', text: a.ref }),
         h('span', { class: 'muted', text: when(a.at) }),
         amount(a),
@@ -117,7 +124,7 @@ export function historyScreen(): HTMLElement {
 
   // What a row can be found by: who it was with, what it was, its reference,
   // and the figure — typed either way round, "45" or "$45.00".
-  const FIELDS = (a: Activity) => [a.who, a.type, a.ref, String(Math.abs(a.amount)), usd(Math.abs(a.amount))]
+  const FIELDS = (a: Activity) => [a.who, what(a), a.asset?.ticker ?? '', a.ref, String(Math.abs(a.amount)), usd(Math.abs(a.amount))]
   const within = state.activity.filter((a) => !f.kinds || f.kinds.includes(a.kind))
   const rowsFor = (t: string): Activity[] => (t.trim() ? rank(t, within, FIELDS) : within)
 

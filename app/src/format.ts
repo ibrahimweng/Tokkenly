@@ -81,7 +81,12 @@ export function parseAmount(raw: string): number {
 
 /** How an entry reads in a one-line list. History has columns for who and
  *  what; a list has one line, so Grow entries name their product. */
-export function activityLabel(a: { kind: string; type: string; who: string }): string {
+export function activityLabel(
+  a: { kind: string; type: string; who: string; asset?: { ticker: string } },
+): string {
+  // A share that changed hands names the share. "Sent Tunde Bakare" is what a
+  // cash payment says, and the two are not the same event.
+  if (a.asset) return `${a.type} ${a.asset.ticker} ${a.type === 'Sent' ? 'to' : 'from'} ${a.who}`
   if (a.kind !== 'grow') return a.type + ' ' + a.who
   const map: Record<string, string> = {
     Interest: 'Interest from Earn',

@@ -18,7 +18,7 @@ import { growScreen, borrowScreen, repayScreen, earnScreen, takeOutScreen } from
 import { historyScreen } from './screens/history'
 import { accountScreen } from './screens/settings'
 import { signInScreen, signUpScreen } from './screens/auth'
-import { sendScreen, receiveScreen, addMoneyScreen, convertScreen } from './screens/money'
+import { sendScreen, receiveScreen, addMoneyScreen, convertScreen, sendSharesScreen } from './screens/money'
 import { allScreen } from './screens/all'
 import { welcomeScreen } from './screens/welcome'
 import { verifyScreen } from './screens/verify'
@@ -87,6 +87,7 @@ function screenFor(r: Route): HTMLElement {
     if (!b) return marketScreen()
     if (c === 'invest') return investScreen(b)
     if (c === 'sell') return sellScreen(b)
+    if (c === 'send') return sendSharesScreen(b)
     return stockScreen(b)
   }
 

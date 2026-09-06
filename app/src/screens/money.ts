@@ -6,23 +6,39 @@ import { table } from '../components/table'
 import { searchField, searchNote } from '../components/search'
 import { rank, onlyNear } from '../match'
 import { composerScreen } from '../components/composer'
-import { state, movementCeiling, ceilingLabel, WALLET } from '../state'
+import { state, movementCeiling, ceilingLabel, holding, WALLET } from '../state'
 
 const ceilingLabel2 = (byBalance: number) => ceilingLabel(byBalance, 'The most you can move here')
 import { walletScreen } from './wallet'
-import { usd, naira, when, activityLabel } from '../format'
+import { stockScreen } from './stock'
+import { find, type Instrument } from '../catalogue'
+import { usd, naira, when, shares, activityLabel } from '../format'
 import { openSheet, current, go } from '../router'
 
 import { isMobile } from '../responsive'
 import { toast } from '../components/sheet'
 
-const PEOPLE = ['Adaeze Okonkwo', 'Tunde Bakare', 'Chidi Nwosu', 'Ngozi Eze']
+/** Names only. Cash goes to anybody, so the Tokkenly flag on a person is
+ *  nothing to do with paying them — it is what decides whether a share can be
+ *  handed over, and that lives on the share screen. */
+const PEOPLE = (): string[] => state.people.map((p) => p.name)
 
-const initials = (name: string) => name.split(' ').map((s) => s[0]).join('')
+/** Ordered by memory rather than alphabet: the person you paid on Tuesday
+ *  first. Shared, because the picker and the column beside Send must not
+ *  disagree about who is at the top. */
+export function byRecent(names: string[]): string[] {
+  return [...names].sort((a, b) => {
+    const ia = state.activity.findIndex((x) => x.who === a)
+    const ib = state.activity.findIndex((x) => x.who === b)
+    return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib)
+  })
+}
+
+export const initials = (name: string) => name.split(' ').map((s) => s[0]).join('')
 
 /** When someone was last paid, so the list is ordered by memory rather than
  *  alphabet. Nothing beats "the person you paid on Tuesday". */
-function lastPaid(name: string): string {
+export function lastPaid(name: string): string {
   const a = state.activity.find((x) => x.who === name && x.kind === 'payment')
   return a ? (a.amount < 0 ? 'You sent ' : 'They sent ') + usd(Math.abs(a.amount)) + ' · ' + when(a.at) : 'No payments yet'
 }
@@ -32,12 +48,7 @@ function lastPaid(name: string): string {
 /** The same list the phone shows as a screen, as a sheet for the dialog's
  *  Change row. One source of people, two presentations. */
 export function peopleRows(onPick: (who: string) => void): HTMLElement[] {
-  return [...PEOPLE]
-    .sort((a, b) => {
-      const ia = state.activity.findIndex((x) => x.who === a)
-      const ib = state.activity.findIndex((x) => x.who === b)
-      return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib)
-    })
+  return byRecent(PEOPLE())
     .map((p) =>
       h('button', { class: 'sheet-row', on: { click: () => onPick(p) } },
         h('span', { class: 'avatar', text: initials(p) }),
@@ -56,12 +67,7 @@ function sendSide(opts: { search: boolean }): HTMLElement {
   const term = r.query.get('q') ?? ''
   const setTerm = (v: string) => go('/send' + (v ? '?q=' + encodeURIComponent(v) : ''))
 
-  const people = [...PEOPLE]
-    .sort((a, b) => {
-      const ia = state.activity.findIndex((x) => x.who === a)
-      const ib = state.activity.findIndex((x) => x.who === b)
-      return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib)
-    })
+  const people = byRecent(PEOPLE())
 
   const PEOPLE_FIELDS = (n: string) => [n, lastPaid(n)]
   const row = (n: string) =>
@@ -149,7 +155,7 @@ export function sendScreen(): HTMLElement {
   const chosen = r.query.get('to')
   // On a phone, who comes first. On desktop the list is the right column.
   if (isMobile() && !chosen && !r.sheet) return sendWhoScreen()
-  const to = chosen ?? PEOPLE[0]
+  const to = chosen ?? PEOPLE()[0]
   // Built once and handed back on every repaint: the amount changing must not
   // wipe an address somebody is halfway through pasting.
   const side = isMobile() ? null : sendSide({ search: false })
@@ -225,6 +231,179 @@ function received(): HTMLElement | null {
       (i) => openSheet('receipt', { ref: rows[i].ref })
     )
   )
+}
+
+/* ---------------------------------------------------------------------------
+   Sending a share.
+
+   The survey is in design.md 11g.27: the incumbents mostly refuse this, and
+   the ones that allow it do it on paper. Of the tokenised platforms, only the
+   ones whose token is free to move can do it at all, and that freedom is the
+   same decision that keeps them out of some markets entirely.
+
+   So this is the middle option, and it is deliberate: a share can be handed to
+   another verified Tokkenly account and to nobody else. Both sides are known,
+   both wallets are ours, and the cost basis of each is a number the product
+   already holds. Sending to an arbitrary address is not offered — that is the
+   point at which a security leaves a regulated perimeter, and it is not a
+   thing to ship ahead of the licence that permits it.
+
+   The refusal was built before the transfer. It is the part that has to be
+   right on the first day, and a refusal nobody can reach is a refusal nobody
+   has tested — which is why two of the four people in the list do not hold an
+   account.
+   --------------------------------------------------------------------------- */
+
+const onTokkenly = (name: string): boolean =>
+  !!state.people.find((p) => p.name === name)?.onTokkenly
+
+/** Who can be handed a share, and who cannot, in one list. The ones without an
+ *  account are not hidden and not greyed into silence: they are listed, marked,
+ *  and they go to a screen that says why and what to do instead. A row that
+ *  does nothing when pressed teaches nobody anything. */
+function shareSide(c: Instrument): HTMLElement {
+  const to = (n: string) => `/invest/${c.ticker.toLowerCase()}/send?to=${encodeURIComponent(n)}`
+  const row = (n: string) =>
+    h('button', { class: 'sheet-row', on: { click: () => go(to(n)) } },
+      h('span', { class: 'avatar', text: initials(n) }),
+      h('span', { class: 'two-line grow' },
+        h('span', { class: 't-body-strong', text: n }),
+        h('small', { text: onTokkenly(n) ? lastPaid(n) : 'No Tokkenly account' })),
+      onTokkenly(n) ? null : h('span', { class: 'pill warn', text: 'Cash only' }),
+      h('span', { class: 'muted', html: icon.chevron() }))
+  const names = byRecent(state.people.map((p) => p.name))
+  return h('div', { class: 'stack' },
+    card(
+      cardHead('Who gets them'),
+      h('div', { class: 'sheet-list' }, ...names.filter(onTokkenly).map(row))),
+    card(
+      cardHead('Not on Tokkenly yet'),
+      h('div', { class: 'sheet-list' }, ...names.filter((n) => !onTokkenly(n)).map(row)),
+      h('span', { class: 'muted t-caption',
+        text: 'A share is a security, so it can only be delivered to a verified account. You can still send these people cash.' })))
+}
+
+/** The refusal. It names the person, says why in one sentence, and offers the
+ *  two things that actually help: the same gift as cash, or somebody else. */
+function cannotSend(c: Instrument, to: string): HTMLElement {
+  const first = to.split(' ')[0]
+  const left = card(
+    cardHead('Why this cannot go'),
+    h('div', { class: 'set-banner' },
+      h('span', { class: 'mark warn-mark', html: icon.alert() }),
+      h('span', { class: 'two-line grow' },
+        h('span', { class: 't-body-strong', text: to + ' does not hold a Tokkenly account' }),
+        h('small', { text: 'Shares can only be delivered to a verified account.' }))),
+    h('span', { class: 'muted',
+      text: `A tokenised share is a security, not a payment. We have to know who is receiving one before we hand it over, which means ${first} needs a verified Tokkenly account first. Cash has no such rule.` }),
+    h('button', { class: 'btn btn-primary', text: 'Send ' + first + ' cash instead',
+      on: { click: () => go('/send?to=' + encodeURIComponent(to)) } }),
+    // On a wide screen the list of people who can receive it is the column
+    // beside this; on a phone there is nothing but this card, so it carries
+    // the way back to the list.
+    isMobile()
+      ? h('button', { class: 'btn btn-secondary', text: 'Choose somebody else',
+          on: { click: () => go('/invest/' + c.ticker.toLowerCase() + '/send') } })
+      : null,
+    callout('Nothing has left your holding. You still hold every share you did a moment ago.'))
+  left.classList.add('col-compose')
+  return shell('market',
+    pageHeader('Send ' + c.name),
+    isMobile()
+      ? left
+      : h('div', { class: 'row' }, left, h('div', { class: 'stack grow' }, shareSide(c))))
+}
+
+/** Who gets them, on a phone, where there is no column to put the list in. */
+function whoGetsSharesScreen(c: Instrument): HTMLElement {
+  return shell('market',
+    pageHeader('Send ' + c.name,
+      eyebrow('You hold', shares(holding(c.ticker)?.shares ?? 0) + ' shares')),
+    shareSide(c))
+}
+
+export function sendSharesScreen(ticker: string): HTMLElement {
+  const c = find(ticker)
+  if (!c) return shell('market', pageHeader('Not found'))
+  const held = holding(c.ticker)
+  if (!held || held.shares <= 0) {
+    return shell('market',
+      pageHeader('Send ' + c.name),
+      emptyState('You do not hold any ' + c.ticker,
+        'You can only send shares you own. Buy some first, then they can go to anybody with a Tokkenly account.',
+        { label: 'Buy ' + c.ticker, onClick: () => go('/invest/' + c.ticker.toLowerCase() + '/invest') }))
+  }
+
+  const r = current()
+  const chosen = r.query.get('to')
+  // On a phone, who comes first; on a wide screen the list is the column
+  // beside the amount, the same shape Send money takes.
+  if (isMobile() && !chosen && !r.sheet) return whoGetsSharesScreen(c)
+  const to = chosen ?? byRecent(state.people.map((p) => p.name)).find(onTokkenly) ?? ''
+  if (!onTokkenly(to)) return cannotSend(c, to)
+
+  const worth = held.shares * held.price
+  // The holding is one ceiling; what the account may move this month is the
+  // other, and an outflow answers to both. Item 06 settled that a share is
+  // not an exception to it.
+  const ceiling = Math.min(worth, movementCeiling())
+  const side = isMobile() ? null : shareSide(c)
+  // Only the chips that fit. A quick amount the holding cannot cover trips the
+  // ceiling warning the moment it is pressed, which makes a shortcut into a
+  // telling-off.
+  const quick = [
+    { label: '1 share', value: c.price },
+    { label: '5 shares', value: c.price * 5 },
+    { label: 'Half', value: worth / 2 },
+    // The last chip is always the biggest thing that can actually go, and it
+    // says which ceiling it is: "All" when the holding is the limit, "The
+    // most" when the monthly one is. A chip labelled All that stops short of
+    // all is worse than no chip.
+    { label: worth <= ceiling + 0.005 ? 'All' : 'The most', value: Math.min(worth, ceiling) },
+  ].filter((q) => q.value <= ceiling + 0.005 && q.value > 0)
+
+  return composerScreen({
+    place: 'market',
+    base: () => stockScreen(c.ticker.toLowerCase()),
+    right: () => side!,
+    lede: () => h('div', { class: 'stack-8' },
+      h('span', { class: 't-caps subtle', text: 'To' }),
+      h(side ? 'div' : 'button', {
+        class: 'sheet-row', style: { background: 'var(--control)' },
+        on: side ? {} : { click: () => go(`/invest/${c.ticker.toLowerCase()}/send`) },
+      },
+        h('span', { class: 'avatar', text: initials(to) }),
+        h('span', { class: 'two-line grow' },
+          h('span', { class: 't-body-strong', text: to }),
+          h('small', { text: 'Verified Tokkenly account' })),
+        side ? null : h('span', { class: 'link quiet', text: 'Change' }))),
+    title: 'Send ' + c.name,
+    eyebrow: ['You hold', shares(held.shares) + ' shares'],
+    // "How much", not "How many": the field takes dollars, like every other
+    // composer in the product, and the summary underneath does the converting
+    // into shares. A label that names a unit the field does not accept is the
+    // shortest way to make somebody type the wrong number.
+    cardLabel: 'How much',
+    cardRight: 'You hold ' + usd(worth),
+    // One share is what somebody means by giving a share. It opens there when
+    // the holding covers it and at the whole holding when it does not.
+    initial: Math.min(c.price, ceiling),
+    max: ceiling,
+    maxLabel: ceilingLabel(worth, 'What you hold of ' + c.ticker),
+    note: 'Priced at ' + usd(c.price) + ' a share. No fee, either side.',
+    quick,
+    summary: (v) => [
+      ['They receive', shares(v / held.price) + ' ' + c.ticker],
+      ['At', usd(held.price) + ' a share'],
+      ['Fee', 'None, either side'],
+      ['You keep', shares(Math.max(0, held.shares - v / held.price)) + ' ' + c.ticker],
+    ],
+    callout: 'The share itself moves, not its value in cash. ' + to.split(' ')[0] +
+      ' holds it from the moment it lands, and it cannot be recalled.',
+    risky: true,
+    action: (v) => 'Send ' + shares(v / held.price) + ' ' + c.ticker,
+    onAction: (v) => openSheet('shares-review', { v: String(v), t: c.ticker, to }),
+  })
 }
 
 export function receiveScreen(): HTMLElement {

@@ -20,6 +20,13 @@ export interface Activity {
    *  charged then, not the fee the rate would give today. Absent means the
    *  movement was free, which is most of them. */
   fee?: number
+  /** What actually moved, when it was not money. A share sent to another
+   *  person has a dollar value — the row has to show one, and the portfolio
+   *  really did fall by it — but the thing that changed hands is a number of
+   *  shares in a named company, and a receipt that only says "−$224.10" is a
+   *  receipt for the wrong event. Recorded at the price of the day, like the
+   *  fee, because the value of what was sent is not what it is worth now. */
+  asset?: { ticker: string; shares: number; price: number }
   settled: boolean
 }
 
@@ -202,6 +209,22 @@ export interface Bank {
   holder: string
 }
 
+/** Somebody you can pay, and whether they hold an account here.
+ *
+ *  Cash goes to anybody: a Base address is a Base address. A share does not.
+ *  A tokenised share is a security, and delivering one to somebody nobody has
+ *  identified is the thing a licence exists to prevent — so the product can
+ *  only hand a share to another verified Tokkenly account. See design.md
+ *  11g.27 for the survey that settled this.
+ *
+ *  The flag lives on the person rather than being derived, because the honest
+ *  version of this screen is the one that refuses, and a refusal you cannot
+ *  reach is a refusal nobody has tested. */
+export interface Person {
+  name: string
+  onTokkenly: boolean
+}
+
 export interface Device {
   id: string
   name: string
@@ -249,6 +272,7 @@ export interface State {
    *  things you are interested in; a bucket is a list of things you have
    *  decided on, with an amount against each. */
   bucket: BucketItem[]
+  people: Person[]
   banks: Bank[]
   devices: Device[]
   activity: Activity[]
@@ -355,6 +379,15 @@ export const state: State = {
   ],
   bucket: [],
   watchlist: ['AAPL', 'NVDA', 'TSLA', 'MSFT', 'VOO'],
+  // Two on Tokkenly and two not, so the screen that refuses to hand a share to
+  // somebody without an account is on a path anybody can walk, the way .99
+  // declines and .98 goes unanswered.
+  people: [
+    { name: 'Adaeze Okonkwo', onTokkenly: true },
+    { name: 'Tunde Bakare', onTokkenly: true },
+    { name: 'Chidi Nwosu', onTokkenly: false },
+    { name: 'Ngozi Eze', onTokkenly: false },
+  ],
   banks: [
     { id: 'gt', name: 'GTBank', last4: '4471', holder: 'Chinaza Okoro' },
     { id: 'kuda', name: 'Kuda', last4: '8820', holder: 'Chinaza Okoro' },
@@ -658,6 +691,7 @@ function record(a: Omit<Activity, 'ref' | 'at' | 'settled'> & Partial<Activity>)
     amount: a.amount,
     note: a.note,
     fee: a.fee,
+    asset: a.asset,
   }
   state.activity.unshift(entry)
   return entry
@@ -790,6 +824,42 @@ export const actions = {
     const activity = record({ kind: 'trade', who: c.name, type: 'Sold', amount: value - fee, fee })
     changed()
     return { activity, shares, fee, proceeds: value - fee }
+  },
+
+  /** Hand shares to another Tokkenly account.
+   *
+   *  No fee, because the fees card says sending costs nothing and a share is
+   *  not a special case of that. No wallet movement either: the portfolio goes
+   *  down by what left it and the cash balance does not move, which is the
+   *  whole difference between this and selling.
+   *
+   *  Bounded by what is actually held, like sell(), so a holding can never go
+   *  negative however the caller was written. The refusal for a recipient
+   *  without an account is on the screen, not here — but the floor is here as
+   *  well, because a rule that only exists in a view is a rule one route
+   *  around the view undoes. */
+  sendShares(ticker: string, dollars: number, to: string):
+      { activity: Activity; shares: number; value: number } {
+    const p = state.people.find((x) => x.name === to)
+    if (!p?.onTokkenly) throw new Error(to + ' does not hold a Tokkenly account')
+    const h = holding(ticker)
+    const c = find(ticker)
+    if (!h || !c) throw new Error('Nothing held in ' + ticker)
+    const value = Math.max(0, Math.min(dollars, h.shares * h.price))
+    const shares = value / h.price
+    h.shares -= shares
+    if (h.shares < 1e-6) state.holdings.splice(state.holdings.indexOf(h), 1)
+    // Rule from item 06: one limit policy for every outflow. A share leaving
+    // the account is an outflow — an unverified account handing somebody
+    // $5,000 of Apple is exactly what a ceiling is for — so it counts against
+    // the month like a payment does.
+    actions.countAgainstLimit(value)
+    const activity = record({
+      kind: 'trade', who: to, type: 'Sent', amount: -value,
+      asset: { ticker: c.ticker, shares, price: h.price },
+    })
+    changed()
+    return { activity, shares, value }
   },
 
   borrow(amount: number): Activity {

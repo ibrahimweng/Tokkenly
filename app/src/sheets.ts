@@ -402,7 +402,13 @@ export const SHEETS: Record<string, Builder> = {
     // worth now, what shape it has been in, and what you hold of it. The old
     // one said "Apple, −$420.00" and stopped, which is the one document a
     // person keeps being the least informative screen in the product.
-    const c = a.kind === 'trade' ? CATALOGUE.find((x) => x.name === a.who) : undefined
+    // Which company this was about. A buy or a sell names it in `who`; a share
+    // handed to another person names the person there and the company on the
+    // asset, and a receipt that only says "−$224.10 to Tunde" is a receipt for
+    // the wrong event.
+    const c = a.asset
+      ? CATALOGUE.find((x) => x.ticker === a.asset!.ticker)
+      : a.kind === 'trade' ? CATALOGUE.find((x) => x.name === a.who) : undefined
     const held = c ? holding(c.ticker) : undefined
     return sheet(
       'Receipt',
@@ -422,7 +428,16 @@ export const SHEETS: Record<string, Builder> = {
         // The amount, the fee and the total, the way the composer stated them
         // before the button was pressed — a receipt that reorganises the
         // arithmetic is a receipt somebody has to check.
-        ...(c ? [
+        // A transfer states what left, at the price of the day it left at. The
+        // shares are recorded rather than divided out of the amount, because a
+        // price that has moved since would silently restate the quantity.
+        ...(a.asset ? [
+          // No Company row: the header two lines up already says AAPL · Apple,
+          // and this panel is for the arithmetic.
+          ['Shares', fmtShares(a.asset.shares) + ' ' + a.asset.ticker] as [string, string],
+          ['Price each', usd(a.asset.price)] as [string, string],
+          ['Worth then', usd(Math.abs(a.amount))] as [string, string],
+        ] : c ? [
           [a.type === 'Sold' ? 'Sale' : 'Investment', usd(grossOf(a))] as [string, string],
           ['Shares', fmtShares(grossOf(a) / c.price)] as [string, string],
           ['Price each', usd(c.price)] as [string, string],
@@ -438,13 +453,18 @@ export const SHEETS: Record<string, Builder> = {
         // conversion and printed on everything, including a loan drawdown with
         // no rate anywhere on the sheet. None is the whole answer.
         ['Fee', a.fee ? usd(a.fee) : 'None'],
-        ...(c ? [[a.type === 'Sold' ? 'You received' : 'Total',
+        ...(c && !a.asset ? [[a.type === 'Sold' ? 'You received' : 'Total',
           usd(Math.abs(a.amount))] as [string, string]] : []),
         ...(c && held ? [['You hold now',
           `${fmtShares(held.shares)} shares · ${usd(held.shares * c.price)}`] as [string, string]] : [])
       ),
       calloutEl(a.settled
-        ? 'Settled. Nothing about this payment is going to change now.'
+        ? a.asset
+          // Not "this payment": no money moved. What moved was the share, and
+          // the one thing worth saying about a share that has gone is that it
+          // is gone.
+          ? `Settled. ${a.who} holds ${fmtShares(a.asset.shares)} ${a.asset.ticker} from this transfer, and it cannot be recalled.`
+          : 'Settled. Nothing about this payment is going to change now.'
         : 'Still settling. It usually clears within a minute.'),
       h('button', {
         class: 'btn btn-primary', text: 'Download receipt',
@@ -801,6 +821,43 @@ export const SHEETS: Record<string, Builder> = {
   'send-done': (r) => {
     const a = state.activity.find((x) => x.ref === str(r, 'ref'))!
     return done('Sent', `${usd(Math.abs(a.amount))} is on its way to ${a.who}.`, a, [['Fee', 'None']])
+  },
+
+  /* ----- sending shares -----
+     Priced in dollars, settled in shares, and every figure on the review says
+     which it is. The one line that matters here is not the amount: it is that
+     the security itself moves and does not come back. */
+  'shares-review': (r) => {
+    const v = num(r, 'v')
+    const to = str(r, 'to')
+    const t = str(r, 't')
+    const c = find(t)!
+    const held = holding(t)
+    const n = held ? v / held.price : 0
+    return review({
+      title: 'Review',
+      figureLabel: 'You are sending', figureValue: fmtShares(n) + ' ' + c.ticker, amount: v,
+      rows: [
+        ['To', to],
+        ['Company', c.name],
+        ['Worth', usd(v)],
+        ['At', usd(held?.price ?? c.price) + ' a share'],
+        ['Fee', 'None, either side'],
+        ['You keep', fmtShares(Math.max(0, (held?.shares ?? 0) - n)) + ' ' + c.ticker],
+      ],
+      note: 'A share handed to another account cannot be recalled, and its price will have moved by the time anybody notices a mistake.',
+      action: 'Send ' + fmtShares(n) + ' ' + c.ticker,
+      onConfirm: () => {
+        const { activity } = actions.sendShares(t, v, to)
+        replaceSheet('shares-done', { ref: activity.ref })
+      },
+    })
+  },
+  'shares-done': (r) => {
+    const a = state.activity.find((x) => x.ref === str(r, 'ref'))!
+    const n = a.asset ? fmtShares(a.asset.shares) + ' ' + a.asset.ticker : 'The shares'
+    return done('Sent', `${n} now belong to ${a.who}.`, a,
+      [['Worth', usd(Math.abs(a.amount))], ['Fee', 'None']])
   },
 
   /* ----- add money ----- */
