@@ -260,5 +260,44 @@ for (const w of [390, 360, 320]) {
   await c.close()
 }
 
+console.log('AND THE TYPE IS THE TYPE, WITH NOBODY ELSE IN THE PATH')
+{
+  const c = await b.newPage({ viewport: { width: 1440, height: 1000 } })
+  await seen(c)
+  c.on('pageerror', (e) => errs.push(String(e)))
+  // Nothing routed away this time: the point is that there is nothing to route.
+  const offsite = []
+  await c.route('**/*', (r) => {
+    const u = r.request().url()
+    if (u.startsWith('http://localhost:4173')) return r.continue()
+    offsite.push(u)
+    return r.abort()
+  })
+  await c.goto(B + '/transfer', { waitUntil: 'networkidle' }); await c.waitForTimeout(700)
+  ok('the product fetches nothing from anywhere else', offsite.length === 0, offsite.join(' ') || 'none')
+  const f = await c.evaluate(async () => {
+    await document.fonts.ready
+    const width = (t, font) => {
+      const s = document.createElement('span')
+      s.style.cssText = `position:absolute;visibility:hidden;white-space:pre;font:600 48px ${font}`
+      s.textContent = t; document.body.appendChild(s)
+      const w = s.getBoundingClientRect().width; s.remove(); return Math.round(w)
+    }
+    return {
+      faces: [...document.fonts].filter((x) => x.status === 'loaded').length,
+      hero: getComputedStyle(document.querySelector('.hero-figure')).fontFamily.split(',')[0],
+      // Geist and the fallback are nothing like each other, which is the whole
+      // reason this matters: a session that fell back was a different design.
+      differs: width('$2,480.00', "'Geist'") !== width('$2,480.00', 'ui-sans-serif'),
+      // latin-ext carries U+20A0-20AB, and the naira sign is U+20A6.
+      naira: width('\u20a63,720,000', "'Geist'") !== width('\u20a63,720,000', 'ui-sans-serif'),
+    }
+  })
+  ok('both subsets load from this origin', f.faces === 2, f.faces + ' faces')
+  ok('and the product is set in them', f.hero.includes('Geist') && f.differs, f.hero)
+  ok('including the naira sign, which lives in latin-ext', f.naira)
+  await c.close()
+}
+
 console.log('\nerrors:', errs.length ? errs : 'none')
 await b.close()
