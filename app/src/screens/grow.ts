@@ -199,6 +199,7 @@ export function borrowScreen(): HTMLElement {
       ]
     },
     callout: 'Your shares stay yours and keep earning. We only sell if they fall to the level above.',
+    risky: true,
     action: (v) => 'Borrow ' + usd(v),
     onAction: (v) => openSheet('borrow-review', { v: String(v) }),
     right: (v) => {

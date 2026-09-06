@@ -13,7 +13,16 @@ function authCard(title: string, sub: string, body: Node[], footer: Node): HTMLE
         h('h1', { class: 't-title', style: { margin: '0' }, text: title }),
         h('p', { class: 'muted', style: { margin: '0' }, text: sub })),
       ...body,
-      footer))
+      footer),
+    // The most trust-building writing in the product — the custodian, what a
+    // token is, what happens if we fail, who to escalate to — was reachable
+    // from two text links buried in settings. This is the screen where
+    // somebody decides whether to hand us money, so it is the screen that
+    // should be able to answer them.
+    h('p', { class: 'auth-legal' },
+      h('span', { text: 'Before you start: ' }),
+      h('button', { class: 'link', text: 'what you own, what it costs, and what can go wrong',
+        on: { click: () => go('/disclosures') } })))
 }
 
 function field(label: string, placeholder: string, type = 'text'): HTMLElement {

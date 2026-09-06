@@ -79,6 +79,7 @@ export function investScreen(ticker: string): HTMLElement {
     callout: c.kind === 'etf'
       ? `A fund, not a company: one holding spread across ${c.holds ?? 'many'}. Its value can fall as well as rise, and you can get back less than you put in.`
       : 'You are buying part of a share. Its value can fall as well as rise, and you can get back less than you put in.',
+    risky: true,
     action: (v) => `Buy ${usd(v)} of ${c.name}`,
     onAction: (v) => openSheet('invest-review', { v: String(v), t: c.ticker }),
     right: (v) => {
@@ -146,6 +147,7 @@ export function sellScreen(ticker: string): HTMLElement {
       ['Shares sold', fmtShares(v / c.price)],
     ],
     callout: 'Selling part of a holding is fine. Whatever you keep carries on tracking the price.',
+    risky: true,
     action: (v) => `Sell ${usd(v)} of ${c.name}`,
     onAction: (v) => openSheet('sell-review', { v: String(v), t: c.ticker }),
     right: (v) =>

@@ -38,6 +38,19 @@ export interface ComposerSpec {
   closeTo?: string
   /** A row above the amount, for a dialog that needs to name its target. */
   lede?: () => Node
+  /** Whether this flow carries the risks the disclosures describe. Buying,
+   *  selling and borrowing do; moving your own money between your own
+   *  accounts does not, and a legal link on a bank transfer is noise. */
+  risky?: boolean
+}
+
+/** The way to the full disclosures, under the button that takes the risk. The
+ *  callout above it says the one sentence that matters; this is where the rest
+ *  of it lives, rather than two screens away in settings. */
+function riskLink(): HTMLElement {
+  return h('p', { class: 'risk-link' },
+    h('button', { class: 'link quiet', text: 'What you own, and what can go wrong',
+      on: { click: () => go('/disclosures') } }))
 }
 
 export function composerScreen(spec: ComposerSpec): HTMLElement {
@@ -98,14 +111,16 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
       mobile ? keypad(comp) : null,
       summaryBox,
       mobile ? null : calloutEl(spec.callout),
-      button)
+      button,
+      spec.risky ? riskLink() : null)
     if (mobile) out.querySelector('.sheet')?.prepend(h('div', { class: 'grabber' }))
     return out
   }
 
   const left = card(
     cardHead(spec.cardLabel, h('span', { class: 'muted', text: spec.cardRight })),
-    comp.el, capNote, summaryBox, calloutEl(spec.callout), button)
+    comp.el, capNote, summaryBox, calloutEl(spec.callout), button,
+    spec.risky ? riskLink() : null)
   // A stated width, not an inline one: the stacking rule has to be able to
   // release it below 1240, and it cannot outrank a style attribute.
   left.classList.add('col-compose')

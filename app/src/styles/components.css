@@ -1466,3 +1466,14 @@ th.right .th-sort { flex-direction: row-reverse; }
   .screen > .offline-bar { position: fixed; top: 0; left: var(--sidebar-w); right: 0; z-index: 40; }
   .screen:has(> .offline-bar) > .content { padding-top: 62px; }
 }
+
+/* The way to the disclosures, under the control that takes the risk. Quiet,
+   because it is a reference rather than a step, and centred so it reads as
+   belonging to the card rather than to the button above it. */
+.risk-link { margin: 0; text-align: center; }
+/* Under the sign-in card rather than inside it: it is about the company, not
+   about the form. */
+.auth-legal {
+  margin: 20px 0 0; text-align: center; max-width: 420px;
+  color: var(--muted); font-size: 12px; line-height: 18px;
+}
