@@ -4207,14 +4207,14 @@ because the sweep did not include the sign-in screens. It does now.
 - Face ID is a button that succeeds after half a second. WebAuthn would make
   it real and is out of scope for a prototype with no server.
 
-## 11g. An outside pass, and four tiers of it built
+## 11g. An outside pass, and five tiers of it built
 
 The brief was to come at this the way a design associate brought in to make a
 product market-ready would: criticise everything, name what is wrong rather
 than what could be nicer, and rank it. The pass produced forty-four numbered
-findings across five tiers, ordered by what a person loses if it is not fixed
-rather than by how hard it is. Tiers 0 to 3 are built and are what follows;
-tier 4 is accessibility and tier 5 is finish.
+findings across six tiers, ordered by what a person loses if it is not fixed
+rather than by how hard it is. Tiers 0 to 4 are built and are what follows;
+tier 5 is finish.
 
 The tiering rule worth keeping: **tier 0 is not "the important ones", it is the
 ones where the product says something untrue.** Everything in it was a screen
@@ -4698,11 +4698,124 @@ art mean something" is a proposal to redraw artwork somebody made deliberately.
     item, corrected another and stopped a third from vandalising a deliberate
     piece of work.
 
-### 11g.11 Still open
+### 11g.11 Tier 4: what the product owed somebody not using a mouse
 
-- Tier 4 (accessibility, items 31–36) and tier 5 (finish, items 37–44) are not
-  started.
+Contrast was already clean across every route in both themes, which is rare
+and was worth protecting. Everything else in this category was absent rather
+than wrong, which is why none of it had been caught: the product works
+perfectly well if you can see it and are holding a mouse.
+
+**A sheet was a div over a scrim.** It looked modal and behaved like a panel
+that happened to be on top: no role, nothing naming it, focus left wherever it
+already was, and Tab walking straight out of it. Open Send with a keyboard and
+the third Tab reached Convert on the wallet underneath. Both shapes — the
+`?sheet=` dialog and the composer that presents as a modal — go through one
+function now: `role="dialog"`, `aria-modal`, named by its own heading, focus
+moved in on open, Tab and Shift-Tab held inside, and the screen beneath
+`inert`, which takes it out of the tab order and the accessibility tree rather
+than only deafening it to the pointer.
+
+**Focus cannot go back to what opened it**, and pretending otherwise would
+have been the wrong fix. This app replaces the whole tree on every state
+change, so the invoking element does not exist by the time the dialog closes.
+Focus goes to the content of the screen underneath instead, which is at least
+past the seven nav rows a keyboard user has already walked. The same rebuild
+is why a dialog takes focus only when it is new or has lost it: focusing on
+every mount would drag the caret off whatever was being typed into it — the
+same double-render trap that broke the counting balance in 11g.7.
+
+**Every screen offered exactly one heading.** The page title, and then
+nothing: heading navigation, which is how a screen reader user skims a page,
+gave one rung and stopped. A card's name is an `<h2>` now, which is three to
+eleven rungs a screen, and it looks identical because `.t-caps` was always
+carrying the type. Two things were actively in the way: the sidebar promo
+emitted an `<h3>` before the page's `<h1>` on all sixteen signed-in routes, so
+that navigation landed on an advert first; and `outcome()` emitted an empty
+`<h2>` on every successful payment, which is a rung to nowhere. The outcome
+names itself under the tick instead, which is also what its dialog is now
+labelled by.
+
+**There were no live regions at all.** Arriving somewhere said nothing, and
+the tab said "Tokkenly" on all twenty-six routes — which makes a browser
+history and a row of tabs useless as well as being silent. Both name the
+screen now. Every field error appears without a page change — a ceiling, a
+shortfall, half an address — and appeared silently, so for somebody who cannot
+see the sentence the button simply stopped working with no reason given. They
+are built by one helper that makes them a status, rather than by five call
+sites that each have to remember.
+
+**A toast took itself away after 2,600ms with no way to hold it.** Unannounced
+as well. That is a WCAG 2.2.1 failure on the timing alone and, more plainly,
+it is how somebody who reads slowly never finds out what happened to their
+money. Announced, held while it is hovered or focused, and dismissible.
+
+**And a skip link, which is a button rather than an anchor.** The customary
+`<a href="#main">` cannot work here: the address bar is the router, so a
+fragment link navigates to `/main` and lands on the not-found screen. A button
+that moves focus does the part of a skip link that actually does the work.
+
+76. **A rebuild is an accessibility problem, not only a rendering one.** Focus
+    lives on an element. If the tree is replaced wholesale, focus is a thing
+    the app has to put back deliberately, in three places at least: when a
+    dialog opens, when one closes, and when the same dialog is redrawn under
+    somebody's hands.
+
+### 11g.12 Forty-four pixels, and what a target costs
+
+Eleven kinds of control measured under 44px on a phone across twenty-two
+routes: chips at 32, sort headers at 28, the sheet close at 32 square, the
+account avatar at 40, small buttons at 40, the amount field at 42, and four
+sorts of text link between 16 and 20 tall.
+
+The first attempt tried to get the height for free. The text links got an
+invisible hit area — a `::after` reaching 44px out of a 20px link — so no row
+would have to grow. Measured, it did not work: a pseudo-element paints in its
+parent's place in the order, so the card that followed the link in the
+document sat on top of it, and `elementFromPoint` answered "card" over half
+the band. Raising it above the card would have fixed the miss and started
+taking taps meant for whatever was underneath, which is worse than the thing
+being fixed.
+
+So the rows grew. A card header on a phone goes from about 20px to 44. Invest's
+first company moved from 464px down the screen to 492, and four companies
+still stand above the rail at 390 and at 360.
+
+77. **A target costs what it costs.** You cannot get 44px out of a 20px row
+    without taking the difference from somewhere, and taking it from a
+    neighbour takes their taps with it. Every way of avoiding that is a way of
+    hiding it.
+
+### 11g.13 A candle that is not only a colour
+
+Up and down were encoded in colour alone: mint against amber in the dark
+theme, mid-green against a muddy brown in the light one. That pair flattens to
+two similar browns with a red-green deficiency, on the one chart in this
+product somebody is reading in order to decide what to buy — and amber for
+down is not a convention anybody arrives with anyway.
+
+A rise is hollow now and a fall is filled, the way every candlestick chart
+ever drawn has done it. The constraint that decided the implementation is the
+narrowest bar the row will draw, which is five pixels: a 1px inset ring leaves
+three pixels of hole, which reads at 76 candles in both themes. A thicker ring
+would have closed it. The latest period keeps its own outer ring, so the two
+shadows combine rather than the later rule quietly filling the hollow body
+back in.
+
+78. **The second channel has to survive the smallest instance.** Hollow-versus-
+    filled is the right answer and would have been a decorative one at 1.5px
+    of ring: at the density this chart actually draws, the hollow candle would
+    have been a filled candle with a slightly different colour.
+
+### 11g.14 Still open
+
+- Tier 5 (finish, items 37–44) is not started.
 - Item 30, the dot art, is deliberately unbuilt. See 11g.10.
+- Tier 4 covered what was absent. What it did not do is put the product in
+  front of a real screen reader: every assertion in `a11y.mjs` is about the
+  DOM, and a tree that is correct on paper can still read badly aloud.
+- `main` takes focus when a dialog closes, which is a compromise and is
+  recorded as one in 11g.11. A product that did not rebuild its whole tree
+  would return focus to the control that opened the dialog.
 - Item 07, receive handles, needs a backend and a naming policy.
 - Rate history — a chart of the naira against the dollar, the missing half of
   item 23 — needs a series the product does not have.
