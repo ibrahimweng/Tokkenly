@@ -5,10 +5,43 @@ import { dotArt, BUY, CONVERT, BORROW, type ArtSpec } from '../components/art'
 import { shell, pageHeader, bell, jumpOpen } from '../components/shell'
 import { card, cardHead, headLink, kv, amount, directionMark } from '../components/bits'
 import { table } from '../components/table'
-import { state, actions, holdingsValue, availableToBorrow, buyingPower } from '../state'
+import {
+  state, actions, holdingsValue, availableToBorrow, buyingPower, verified, LIMITS,
+} from '../state'
 import { usd, signed, when, pct, activityLabel } from '../format'
 import { go } from '../router'
 import { isMobile } from '../responsive'
+
+/** The line under the greeting, which used to assert that nothing needed
+ *  attention on every render — including on an account that had not verified,
+ *  whose limits were a tenth of what they could be, and for whom Buy and
+ *  Withdraw were both shut because of it. It says what is true instead. */
+function standing(): string {
+  const settling = state.activity.filter((a) => !a.settled).length
+  if (settling) {
+    return settling === 1
+      ? 'One payment is still settling.'
+      : `${settling} payments are still settling.`
+  }
+  if (!verified()) return 'Everything is settled. One thing is waiting on you.'
+  return 'Everything is settled. Nothing needs your attention.'
+}
+
+/** The one thing standing between an account and the rest of the product. It
+ *  was named on Transfer and on Account, and nowhere on the screen everyone
+ *  lands on. Not dismissible: it is shut two flows, and the way to be rid of
+ *  it is to do it — hiding it would leave the app broken and quiet about it. */
+function verifyTask(): HTMLElement | null {
+  if (verified()) return null
+  const a = link('/verify/what', 'card task')
+  a.appendChild(h('span', { class: 'task-ic', html: icon.lock() }))
+  a.appendChild(h('span', { class: 'two-line grow' },
+    h('span', { class: 't-body-strong', text: 'Verify to lift your limits' }),
+    h('small', { class: 'muted',
+      text: `A NIN or a BVN, and a minute. Until then you can move ${usd(LIMITS.none.single, false)} at once and ${usd(LIMITS.none.monthly, false)} a month.` })))
+  a.appendChild(h('span', { class: 'muted', html: icon.chevron() }))
+  return a
+}
 
 function viewToggle(): HTMLElement {
   const mk = (v: 'simple' | 'detailed', label: string) =>
@@ -126,10 +159,11 @@ function detailed(): HTMLElement {
     'home',
     pageHeader(isMobile() ? '' : 'Good morning, ' + state.person.name.split(' ')[0],
       h('div', { class: 'header-actions' }, jumpOpen(), viewToggle(), bell())),
+    verifyTask(),
     h('div', { class: 'row' },
       h('div', { class: 'stack', style: { width: '308px', flex: 'none' } },
         h('div', { class: 'stack-8' },
-          h('span', { class: 'muted', text: 'Everything is settled. Nothing needs your attention.' }),
+          h('span', { class: 'muted', text: standing() }),
           h('span', { class: 't-caps subtle', text: 'Total portfolio' }),
           h('span', { class: 't-display-xl', text: usd(value) }),
           h('span', {},
@@ -192,8 +226,9 @@ function gateway(): HTMLElement {
       h('div', { class: 'page-header-row' },
         h('div', { class: 'stack-12' },
           h('h1', { class: 't-display', text: 'Good morning, ' + state.person.name.split(' ')[0] }),
-          h('span', { class: 'muted', text: 'Everything is settled. Nothing needs your attention.' })),
+          h('span', { class: 'muted', text: standing() })),
         h('div', { class: 'header-actions' }, jumpOpen(), viewToggle(), bell()))),
+    verifyTask(),
     h('div', { class: 'headline' },
       h('div', { class: 'stack-8' },
         h('span', { class: 't-caps subtle', text: 'Total portfolio' }),

@@ -95,6 +95,24 @@
 .callout.warning { background: var(--tint-warning); color: var(--warning); }
 .callout .ic { flex: none; margin-top: 1px; }
 
+/* A task the account has not finished, on the screen it lands on. Tinted
+   rather than filled, and in the brand rather than the warning: verifying is
+   an invitation to lift a limit, not an alarm about a fault. Pressable, so it
+   reads as the way to do the thing rather than as a notice about it. */
+/* `.card` is a flex column, so the direction has to be said again here or the
+   icon, the words and the chevron stack instead of sitting in a line. */
+.task {
+  flex-direction: row; align-items: center; gap: 16px;
+  padding: 16px 20px; text-decoration: none;
+  background: var(--tint-brand);
+}
+.task .task-ic {
+  flex: none; width: 40px; height: 40px; border-radius: 12px;
+  background: var(--sunken); color: var(--ink);
+  display: grid; place-items: center;
+}
+.task .two-line small { color: var(--muted); }
+
 /* ---------- buttons ---------- */
 /* `flex: none` because a button is almost always the last child of a flex
    column — a sheet, a card, a composer — and a flex item shrinks along the

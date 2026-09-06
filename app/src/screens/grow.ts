@@ -41,6 +41,31 @@ const QUESTIONS: [string, string][] = [
   ['What does borrowing cost?', 'Only the interest, charged daily on what you owe. No arrangement fee and no early repayment fee.'],
 ]
 
+/** Where this account stands in Grow: what is earning, and what is owed.
+ *  The card used to be labelled "In Grow" and show the Earn balance alone,
+ *  which read as the whole of Grow while $380 of borrowing and $8.90 of
+ *  interest were on the books and named nowhere on the screen. A lending
+ *  product that shows the limit and hides the balance is selling, not
+ *  informing. The owed side appears only when there is a loan: a zero here
+ *  would be a figure nobody asked for. */
+function growHero(): HTMLElement {
+  const debt = owed()
+  return h('section', { class: 'card' },
+    h('div', { class: 'hero-top' },
+      h('div', { class: 'stack-8' },
+        h('span', { class: 't-caps subtle', text: 'In Earn' }),
+        h('span', { class: 'hero-figure', text: usd(state.inEarn) }),
+        h('span', { class: 'muted',
+          text: `Earning ${pct(state.rates.earn)} a year, paid every day. Nothing is locked up.` })),
+      debt > 0
+        ? h('div', { class: 'stack-8 hero-aside' },
+            h('span', { class: 't-caps subtle', text: 'You owe' }),
+            h('span', { class: 't-display', text: usd(debt) }),
+            h('span', { class: 'muted',
+              text: `${usd(state.borrowed)} borrowed and ${usd(state.interestOwed)} interest so far` }))
+        : null))
+}
+
 export function growScreen(): HTMLElement {
   const qgrid = h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' } })
   for (const [q, a] of QUESTIONS) {
@@ -52,11 +77,7 @@ export function growScreen(): HTMLElement {
   return shell(
     'grow',
     pageHeader('Grow'),
-    card(
-      cardHead('In Grow'),
-      h('span', { class: 't-display', text: usd(state.inEarn) }),
-      h('span', { class: 'muted', text: `Earning ${pct(state.rates.earn)} a year, paid every day. Nothing is locked up.` })
-    ),
+    growHero(),
     h('div', { class: 'row' },
       productCard({
         label: 'Earn', linkLabel: 'Take out', linkTo: '/grow/takeout',
@@ -74,10 +95,17 @@ export function growScreen(): HTMLElement {
         rate: pct(state.rates.borrow) + ' a year',
         pitch: 'Borrow against the shares you already own. They stay yours the whole time.',
         rows: [
+          // What is owed comes before what is available. The other order reads
+          // as an offer; this one reads as a position.
+          ...(owed() > 0
+            ? [['You owe', h('span', { class: 'warn t-body-strong', text: usd(owed()) })] as [string, Node]]
+            : []),
           ['You can borrow', usd(availableToBorrow())],
           ['Against', usd(holdingsValue()) + ' in shares'],
         ],
-        caption: `A ${usd(1000, false)} loan costs about ${usd(monthlyCost(1000))} a month. Repay any time.`,
+        caption: owed() > 0
+          ? `Repay any time, no fee. We would only sell if your shares fell below ${usd(sellPoint())}.`
+          : `A ${usd(1000, false)} loan costs about ${usd(monthlyCost(1000))} a month. Repay any time.`,
         cta: 'Borrow money', ctaTo: '/grow/borrow',
       })),
     card(cardHead('Questions people ask'), qgrid)

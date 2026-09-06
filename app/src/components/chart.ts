@@ -318,7 +318,8 @@ export function barChart(spec: ChartSpec): HTMLElement {
     if (lit >= 0) bars.children[lit]?.classList.remove('on')
     lit = -1
     tip.hidden = true
-    paintOhlc(full[full.length - 1], candles[0].o)
+    // A chart that never got a width to draw against has no candles to report.
+    if (candles.length) paintOhlc(full[full.length - 1], candles[0].o)
   }
   bars.addEventListener('pointermove', (e) => {
     const r = bars.getBoundingClientRect()
