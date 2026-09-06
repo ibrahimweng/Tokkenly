@@ -1,7 +1,7 @@
 import { h } from '../ui'
 import { icon } from '../icons'
 import { actions, state } from '../state'
-import { go } from '../router'
+import { go, openSheet } from '../router'
 
 function authCard(title: string, sub: string, body: Node[], footer: Node): HTMLElement {
   return h('div', { class: 'auth' },
@@ -39,6 +39,11 @@ export function signInScreen(): HTMLElement {
         h('span', { style: { flex: '1', height: '1px', background: 'var(--control)' } })),
       field('Email', state.person.email, 'email'),
       field('Password', 'Your password', 'password'),
+      // The link belongs here, under the field that failed, not in a footer.
+      // Somebody looking for it has just been told their password is wrong.
+      h('div', { class: 'auth-aside' },
+        h('button', { class: 'link quiet', text: 'Forgotten your password?',
+          on: { click: () => openSheet('forgot') } })),
       h('button', { class: 'btn btn-primary', text: 'Sign in', on: { click: enter } }),
     ],
     h('p', { class: 'muted t-caption', style: { margin: '0', textAlign: 'center' } },

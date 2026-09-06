@@ -3950,7 +3950,145 @@ Nine widths, twelve routes, both themes, and the offending element named — as
     query had no way to override. If a value might need to change with the
     width, it belongs in the stylesheet.
 
-### 11f.29 Still open
+### 11f.30 Account was a wall, and Security was a lie
+
+Two problems, and only one of them was the one that got reported.
+
+**Ten cards, twenty-five controls, one screen.** The note was that settings
+was too crowded, and it was — but the deeper fault was the form. A card
+implies content; a row implies a destination. A settings home wants
+destinations, and a row can carry its own value on the right, which answers
+most visits without a tap: `Notifications — 3 of 4`, `Security — 4-digit PIN`,
+`Payment methods — 2 banks`. Reading ten cards to learn what a row could have
+told you is the crowding.
+
+Eight groups now, each its own address under `/account/`. Wide, the list stays
+on screen and the panel changes beside it — a run of changes is one click each
+instead of two. Narrow, the index and the group are separate screens. The
+split is at 1024, which is a second breakpoint (`isSplit`) rather than a reuse
+of the phone one: at 900 a 320 rail and a panel still fit, and forcing the
+phone pattern there would waste half the width.
+
+**Screen or sheet is not a coin toss.** A group is a place you browse and come
+back to, so a group is a screen. A single decision with a commit — change the
+PIN, edit one field, add a bank — is a task you finish and dismiss, so it is a
+sheet. On a phone those are different gestures, back against dismiss, and
+swapping them is what makes a settings screen feel slippery.
+
+**Security was decorative.** `toggleRow()` flipped a local variable and fired
+a toast; nothing persisted, and the code said so in a comment on another
+function — *"which the Face ID and PIN switches on Security never did."* Every
+switch reads and writes `state.security` now, which is kept.
+
+Three more things the split turned up:
+
+- **"Ask again for large payments" existed twice** — a real preference
+  (`confirmOver`) and a fake toggle in Security saying the same thing.
+- **Verification is not a setting.** It is a task with a payoff, and
+  unverified it was the most valuable thing on the screen, third down the side
+  column. It is a banner above the list now, and still a row, so the list
+  never changes shape.
+- **The crypto address is not a setting either.** It is a Receive concern, and
+  it was in Account because it had nowhere else to go. Receive already draws
+  it; Account no longer does.
+
+58. **The reported symptom and the diagnosis are different documents.**
+    "Too crowded" was true and fixable by splitting. It would not have found
+    the switches that toasted and forgot, and those were the worse bug — a
+    security screen that lies about its own state is worse than no security
+    screen.
+
+### 11f.31 Four digits, and what they are for
+
+A PIN that unlocks the app and nothing else is theatre in a money product. It
+authorises now: above the ask-again figure the review sheet has no confirm
+button at all until four digits arrive.
+
+That also fixes the preference. It was a tickbox, and a tickbox is a thing a
+thumb learns to hit without reading — worse, it proves nothing about who is
+holding the phone. Four digits do. Buying, selling and sending are all gated:
+a sale does not leave the account, but neither does a purchase, and somebody
+who set "ask above $500" would not expect $900 of their holding to be
+liquidated without being asked.
+
+`components/pinpad.ts` is one component behind three jobs — changing the PIN,
+the payment challenge, and the app lock the switch now controls — because a
+PIN that looks different in each place is a PIN people stop recognising. It
+never echoes a digit: four dots say how far you are without putting the number
+on a screen somebody can read over your shoulder. It completes itself on the
+fourth digit, since asking for a Continue tap after that is asking twice. And
+it takes the hardware keyboard, because a pad you can only click makes a
+desktop user reach for the mouse to type four numbers.
+
+**Refusal happens at the moment it is typed, not on save.** Five patterns are
+blocked — four of the same, four in a row either way, a repeated pair, and
+anything that reads as a year — and each says which one it is rather than
+"weak PIN". Being told at the end that the number you confirmed twice was
+never allowed is the version people abandon.
+
+**A mismatch goes back to choosing, not round again.** Two entries disagreed
+and there is no way to know which was the slip, so the one that gets retyped
+is the one that decides the PIN. Confirming again would let a typo in step two
+become the PIN.
+
+59. **A confirmation nobody can fail is not a confirmation.** The tickbox
+    could be ticked without reading it and by anybody holding the phone. It
+    had the shape of a safeguard and none of the function.
+
+### 11f.32 Length beats punctuation
+
+The password rules are a floor and a blocklist, not a composition rule. "Must
+contain a capital and a symbol" reliably produces `Password1!` — eleven
+characters of nothing, and universally hated. Length is what actually costs an
+attacker time, so: ten characters minimum, a blocklist of what people pick
+anyway, a check against the person's own name, and a readout that is a
+sentence about what would improve this one rather than a coloured bar with a
+meaningless word on it.
+
+Two faults the suite found in my own rules:
+
+- The blocklist contained the seeded person's first name, which **shadowed the
+  name check** — `chinaza okoro is me` was refused as "one of the passwords
+  people pick most", which is both wrong and unhelpful. The name check handles
+  names; the blocklist handles passwords.
+- The password the product ships with was `lagos harmattan season`, and
+  `lagos` is on the blocklist. **We shipped a password we would not let you
+  choose.** Changed to one that passes its own rules.
+
+There is a show toggle on both fields, because typing a long password blind on
+a phone is the reason people pick short ones. And `Forgotten your password?`
+sits under the field on sign-in, where somebody who has just been told their
+password is wrong is already looking. It says a link is on its way whether or
+not the address is known: "no account with that email" tells a stranger which
+of the addresses they are guessing is real.
+
+60. **A rule you exempt your own data from is a rule you do not believe.**
+    Seed data goes through the validator like everything else.
+
+### 11f.33 What the suites caught this time
+
+`scripts/settings.mjs` is new — 47 assertions on the index, the eight
+addresses, the two redirects, both breakpoints, the PIN and the password. The
+sweep grew from twelve routes to nineteen and the contrast run from fourteen
+to twenty-three.
+
+- **A crash is not a pass.** My first run counted `FAIL` lines and reported
+  `prefs` and `ftue` green; both had died on a `TimeoutError` before reaching
+  a single assertion, so there were no FAIL lines to count. Exit codes now.
+- **`/settings` has never been a route.** It sat in the contrast list the
+  whole time, resolving to the not-found screen, so one of the fourteen routes
+  being measured was measuring nothing.
+- **Disabled controls were being measured.** The change-password sheet opens
+  with Save disabled at 0.4 opacity, which reads 1.45:1 — but WCAG 1.4.3
+  exempts inactive components, and the dimness is the product's deliberate
+  signal (11f.7). The harness skips them now rather than the product changing
+  a settled decision.
+- Four suites pointed at addresses that had moved. Each was checked against
+  the app before the test was touched: all four were stale assumptions, and
+  two of them got wider assertions than they had before rather than a
+  find-and-replace on the URL.
+
+### 11f.34 Still open
 
 - The nav component's variants are still named `Money` and `Stocks` from the
   older product. Renaming breaks 29 instances on `04 App`.
@@ -3968,3 +4106,10 @@ Nine widths, twelve routes, both themes, and the offending element named — as
   phone lists cash as a row inside the holdings list, one "everything you own"
   list rather than our Wallet/positions split; and their down-moves are red
   where ours are amber.
+- The app lock switch is honoured as a setting but there is no lock screen
+  yet: nothing asks for the PIN on open, only on a payment.
+- The PIN and the password are held in the clear, because there is no server.
+  A real one sends the password and never stores it, and keeps the PIN in the
+  device's secure enclave. The shapes are the same.
+- Figma has none of this: the file still draws Account as the two-column wall
+  of cards, and has no PIN pad, no password sheet and no settings rail.

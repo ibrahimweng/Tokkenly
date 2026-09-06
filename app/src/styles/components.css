@@ -1143,3 +1143,120 @@ th.right .th-sort { flex-direction: row-reverse; }
   a.card:hover, .btn:hover { transform: none !important; }
   .sk { animation: none !important; opacity: 0.7; }
 }
+
+/* ---------------------------------------------------------------- the PIN --
+   Four dots and a pad. The dots are the whole readout: a filled one says how
+   far you are without putting a digit on a screen somebody can see. */
+.pinpad {
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+  outline: none;
+}
+.pinpad:focus-visible .pin-dots { box-shadow: 0 0 0 2px var(--ink); border-radius: 999px; }
+.pin-dots { display: flex; gap: 16px; padding: 8px 12px; }
+.pin-dot {
+  width: 14px; height: 14px; border-radius: 999px; flex: none;
+  background: transparent; border: 2px solid var(--control-pressed);
+  transition: background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+}
+.pin-dot.on { background: var(--ink); border-color: var(--ink); }
+/* A refusal you can feel. Short, and only on the dots, so the pad does not
+   move under a finger that is already reaching for the next digit. */
+@keyframes pin-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-7px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(2px); }
+}
+.pin-dots.shake { animation: pin-shake 320ms var(--ease); }
+.pin-note { min-height: 18px; text-align: center; max-width: 34ch; }
+.pin-note.bad { color: var(--negative); }
+.pin-keypad { width: 100%; max-width: 280px; }
+@media (prefers-reduced-motion: reduce) {
+  .pin-dots.shake { animation: none; }
+}
+
+/* --------------------------------------------------------------- settings --
+   An index of destinations, not a wall of cards. A row carries its own value
+   on the right, which is what makes the list worth reading before tapping. */
+.set-list {
+  display: flex; flex-direction: column;
+  background: var(--sunken); border-radius: var(--r-card); padding: 8px;
+}
+.set-row {
+  display: flex; align-items: center; gap: 16px; width: 100%;
+  padding: 14px 12px; border-radius: var(--r-panel);
+  text-align: left; color: var(--ink); background: transparent;
+  transition: background var(--t-fast) var(--ease);
+}
+.set-row .who { flex: 1 1 auto; min-width: 0; }
+/* A label that wraps turns an eight-row list into eight different heights and
+   pushes the value on top of it. It stays on one line and, under real
+   pressure, ends in an ellipsis like the value does. */
+.set-row .who .t-body-strong {
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.set-value {
+  flex: 0 1 auto; min-width: 0; text-align: right;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 14px;
+}
+.set-chev { flex: none; display: flex; }
+/* The selected row on a split screen. It is the only lit row in the panel,
+   the way one nav row is the only lit row in the sidebar. */
+.set-row.on { background: var(--control); }
+.set-row.on .set-chev { opacity: 0; }
+
+/* Wide: the list stays and the panel changes. 280 is the width at which every
+   label fits on one line without the values crowding them. */
+.set-split { align-items: flex-start; }
+.set-col { width: 320px; flex: none; }
+/* In the rail the chevron says nothing the lit row does not already say, and
+   the 24px it costs is 24px the value needs. */
+.set-list.rail .set-chev { display: none; }
+.set-panel { min-width: 0; }
+
+/* Unverified, the check is the most useful thing on the screen, so it sits
+   above the list rather than seventh down it. */
+.set-banner {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap; row-gap: 12px;
+  padding: 16px 20px; border-radius: var(--r-card);
+  background: var(--tint-warning); color: var(--ink);
+}
+.set-banner .warn-mark { background: transparent; color: var(--warning); flex: none; }
+.set-banner .two-line small { color: var(--ink); opacity: 0.78; }
+
+/* Sign out is not a setting and does not sit among them. */
+.set-foot {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 12px;
+  padding-top: 8px;
+}
+.set-foot .btn { width: 100%; }
+
+@media (hover: hover) {
+  .set-row:hover { background: var(--sunken-hover); }
+  .set-row.on:hover { background: var(--control-pressed); }
+}
+@media (max-width: 899px) {
+  .set-row { padding: 14px 10px; gap: 12px; }
+  .set-value { font-size: 13px; }
+}
+/* A flag on a settings row is a call to action, not a value. Short by design,
+   and it never shrinks, because "Do …" is not a call to anything. */
+.warn-chip {
+  flex: none; background: var(--tint-warning); color: var(--warning);
+  font-weight: 600;
+}
+
+/* The strength readout is a sentence, so it needs room to be one. */
+.pw-note { display: block; min-height: 34px; }
+.pw-note.bad { color: var(--negative); }
+.pw-note.good { color: var(--positive); }
+.pw-eye { flex: none; font-size: 13px; }
+.auth-aside { display: flex; justify-content: flex-end; margin-top: -4px; }
+
+/* The PIN standing in for the confirm button. Centred like the pad it holds,
+   because a left-aligned caps label over a centred pad reads as two things. */
+.pin-gate { align-items: center; }
+.pin-gate > .t-caps { align-self: flex-start; }
+.pin-gate > .btn { width: 100%; }

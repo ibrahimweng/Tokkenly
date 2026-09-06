@@ -7,7 +7,14 @@ import { seen } from './seen.mjs'
 
 const B = 'http://localhost:4173/#'
 const ROUTES = ['/', '/transfer', '/invest', '/invest/aapl', '/grow', '/activity',
-  '/settings', '/all', '/send', '/receive', '/account', '/bucket', '/verify', '/disclosures']
+  '/all', '/send', '/receive', '/bucket', '/verify', '/disclosures', '/signin',
+  // Account is eight screens now, and the two locks are sheets over one of
+  // them. '/settings' was in this list and has never been a route.
+  '/account', '/account/details', '/account/preferences', '/account/notifications',
+  '/account/security', '/account/payments', '/account/verification',
+  '/account/support', '/account/legal',
+  '/account/security?sheet=pin', '/account/security?sheet=password',
+  '/invest/aapl/invest']
 
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const page = await b.newPage({ viewport: { width: 1440, height: 1000 } })
@@ -45,6 +52,11 @@ const sweep = async () => page.evaluate(() => {
     if (!t) continue
     const s = getComputedStyle(el)
     if (s.visibility === 'hidden' || s.display === 'none') continue
+    // WCAG 1.4.3 exempts text that is part of an inactive control, and the
+    // product dims disabled buttons to 0.4 on purpose (design.md 11f.7) —
+    // the dimness is the signal. Measuring them reports the convention as a
+    // failure on every screen that opens with a button waiting for input.
+    if (el.closest('[disabled]')) continue
     const r = el.getBoundingClientRect()
     if (!r.width || !r.height) continue
     /* element opacity fades the text as much as the ground */

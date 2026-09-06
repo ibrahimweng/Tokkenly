@@ -19,6 +19,10 @@ const text = () => p.evaluate(() => document.body.innerText)
 console.log('BEFORE  an unverified account says so, and says what it costs')
 await at('/account')
 ok('the header does not claim verified', /Not verified/.test(await text()))
+// The index states the cost of not verifying; the group states the lift.
+ok('the index banner names both ceilings',
+   /\$250 a payment and \$1,000 a month/.test((await text()).replace(/\n/g, ' ')))
+await at('/account/verification')
 ok('the card says what verifying lifts', /\$1,000\s*→\s*\$10,000/.test((await text()).replace(/\n/g, ' ')),
    ((await text()).match(/Monthly limit[^\n]*/) ?? [''])[0])
 await at('/transfer')

@@ -11,7 +11,11 @@ await seen(p)
 p.on('pageerror', (e) => errs.push(String(e)))
 p.setDefaultTimeout(6000)
 await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
-const acct = async () => { await p.goto(B + '/account', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400) }
+// Every control lives in its own group now, so a helper per group rather
+// than one /account that held all twenty-five.
+const group = async (g) => { await p.goto(B + '/account/' + g, { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400) }
+const acct = () => group('preferences')
+const notifs = () => group('notifications')
 const at = async (r) => { await p.goto(B + r, { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400) }
 const text = () => p.evaluate(() => document.body.innerText)
 
@@ -53,7 +57,7 @@ await p.getByRole('button', { name: /Show naira beside dollars/ }).click(); awai
 console.log('NOTIFICATIONS')
 await at('/')
 const before = await p.evaluate(() => document.querySelector('.bell .dot')?.textContent ?? '0')
-await acct()
+await notifs()
 await p.getByRole('button', { name: /Money landing/ }).click(); await p.waitForTimeout(300)
 await at('/')
 const after = await p.evaluate(() => document.querySelector('.bell .dot')?.textContent ?? '0')
@@ -63,30 +67,41 @@ ok('and the panel agrees with the bell',
    !/Received|payment/i.test(await p.evaluate(() => document.querySelector('.scrim')?.innerText ?? '')),
    (await p.evaluate(() => document.querySelector('.scrim')?.innerText?.replace(/\n/g, ' ').slice(0, 60) ?? '')))
 await p.keyboard.press('Escape'); await p.waitForTimeout(300)
-await acct()
+await notifs()
 await p.getByRole('button', { name: /Money landing/ }).click(); await p.waitForTimeout(300)
 
-console.log('ASK AGAIN ABOVE')
+console.log('ASK FOR THE PIN ABOVE')
 await at('/invest/aapl/invest')
 let i = p.locator('.amount-box input')
 await i.fill('100'); await i.dispatchEvent('input'); await p.waitForTimeout(200)
 await p.locator('.btn-primary').first().click(); await p.waitForTimeout(400)
 ok('under the figure, nothing extra to do',
-   await p.evaluate(() => !document.querySelector('.agree') && !document.querySelector('.scrim .btn-primary')?.hasAttribute('disabled')))
+   await p.evaluate(() => !document.querySelector('.pinpad') && !!document.querySelector('.scrim .btn-primary')))
 await p.keyboard.press('Escape'); await p.waitForTimeout(300)
 await at('/invest/aapl/invest')
 i = p.locator('.amount-box input')
 await i.fill('900'); await i.dispatchEvent('input'); await p.waitForTimeout(200)
 await p.locator('.btn-primary').first().click(); await p.waitForTimeout(400)
 const big = await p.evaluate(() => ({
-  tick: !!document.querySelector('.agree'),
-  blocked: document.querySelector('.scrim .btn-primary')?.hasAttribute('disabled'),
-  says: document.querySelector('.agree')?.innerText.replace(/\n/g, ' '),
+  pad: !!document.querySelector('.pinpad'),
+  button: !!document.querySelector('.scrim .btn-primary'),
+  says: document.querySelector('.pin-note')?.textContent ?? '',
 }))
-ok('over it, the button waits', big.tick && big.blocked === true, big.says ?? 'no tick')
-await p.locator('.agree').click(); await p.waitForTimeout(300)
-ok('and the tick releases it',
-   (await p.evaluate(() => document.querySelector('.scrim .btn-primary')?.hasAttribute('disabled'))) === false)
+// A tickbox proves nothing about who is holding the phone, so above the
+// figure there is no button to press at all until four digits arrive.
+ok('over it, the PIN stands where the button was',
+   big.pad && !big.button, big.says || 'no pad')
+const tap = (d) => p.locator('.pin-keypad .key', { hasText: new RegExp('^' + d + '$') }).first().click()
+for (const d of ['9', '9', '9', '9']) await tap(d)
+await p.waitForTimeout(400)
+ok('a wrong PIN says how many tries are left',
+   /tries left/.test(await p.evaluate(() => document.querySelector('.pin-note')?.textContent ?? '')),
+   await p.evaluate(() => document.querySelector('.pin-note')?.textContent ?? ''))
+for (const d of ['4', '1', '9', '3']) await tap(d)
+await p.waitForTimeout(400)
+ok('and the right one hands back the button that names the amount',
+   /900/.test(await p.evaluate(() => document.querySelector('.scrim .btn-primary')?.textContent ?? '')),
+   await p.evaluate(() => document.querySelector('.scrim .btn-primary')?.textContent ?? 'still gated'))
 await p.keyboard.press('Escape'); await p.waitForTimeout(300)
 await acct()
 await p.getByRole('button', { name: 'Never', exact: true }).click(); await p.waitForTimeout(300)
