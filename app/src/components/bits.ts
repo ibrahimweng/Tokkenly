@@ -1,7 +1,8 @@
 import { h, link } from '../ui'
 import { icon } from '../icons'
-import { signed, isDrawdown } from '../format'
-import { state, actions, MASK } from '../state'
+import { signed, isDrawdown, usd } from '../format'
+import { state, actions, MASK, bucketTotal, bucketCost } from '../state'
+import { go } from '../router'
 
 export function card(...children: (Node | false | null)[]): HTMLElement {
   const el = h('section', { class: 'card' })
@@ -17,6 +18,38 @@ export function card(...children: (Node | false | null)[]): HTMLElement {
 export function cardHead(label: string, right?: Node | null): HTMLElement {
   return h('div', { class: 'card-head' },
     h('h2', { class: 't-caps subtle', text: label }), right ?? null)
+}
+
+/* ---------------- the bucket, standing by ----------------
+
+   A bucket that fills and then waits for somebody to remember it is a bucket
+   nobody pays for. Every shop that sells more than one thing at a time solves
+   this the same way, and it is not a trick: a small standing bar that says
+   what is in the basket and what it comes to, on the screens where you are
+   doing the choosing. It states the total rather than nagging, and it can be
+   put away — a bar you cannot dismiss is an advert. */
+
+/** Put away for now. Not persisted: it comes back when you add the next
+ *  thing, because that is a fresh decision rather than the same one repeated. */
+let barHidden = false
+export const showBucketBar = (): void => { barHidden = false }
+
+export function bucketBar(): HTMLElement | null {
+  const n = state.bucket.length
+  if (!n || barHidden) return null
+  const bar = h('div', { class: 'bucket-bar', role: 'status', ariaLive: 'polite' },
+    h('span', { class: 'mark', html: icon.bucket() }),
+    h('span', { class: 'two-line grow' },
+      h('span', { class: 't-body-strong',
+        text: `${n} ${n === 1 ? 'company' : 'companies'} in your bucket` }),
+      h('small', { text: `${usd(bucketTotal())} · ${usd(bucketCost())} all in` })),
+    h('button', { class: 'btn btn-primary btn-sm', text: 'Review and buy',
+      on: { click: () => go('/bucket') } }),
+    h('button', {
+      class: 'icon-btn bucket-bar-close', ariaLabel: 'Put this away', html: icon.close(),
+      on: { click: () => { barHidden = true; bar.remove() } },
+    }))
+  return bar
 }
 
 /** A limit, a shortfall or a mistake, beside the thing it is about — and

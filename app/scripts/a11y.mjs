@@ -120,14 +120,25 @@ ok('arriving names the screen, in the tab and out loud',
    `${await p.title()} / ${JSON.stringify(await said())}`)
 ok('and there is exactly one region doing the talking',
    (await p.evaluate(() => document.querySelectorAll('.sr-only[aria-live]').length)) === 1)
-await at('/invest')
-await p.locator('.table tbody tr').first().locator('.icon-btn').click(); await p.waitForTimeout(350)
-ok('a toast is announced', /is in your bucket/.test(await said()), JSON.stringify(await said()))
+// Adding to the bucket stopped raising a toast — the bar it docks says the
+// same thing and the two collided — so this exercises one that still does.
+await at('/account/preferences')
+await p.getByRole('button', { name: /Reset every preference/ }).click(); await p.waitForTimeout(400)
+ok('a toast is announced', /default/i.test(await said()), JSON.stringify(await said()))
 await p.locator('.toast').hover(); await p.waitForTimeout(3200)
 // WCAG 2.2.1: content that removes itself on a timer has to be holdable.
 ok('and holds while it is under the pointer', await p.evaluate(() => !!document.querySelector('.toast')))
 await p.locator('.toast').click(); await p.waitForTimeout(250)
 ok('and can be dismissed', await p.evaluate(() => !document.querySelector('.toast')))
+
+// What replaced it on that path: the bar is a live region, so a bucket that
+// grew is still said out loud rather than only drawn.
+await at('/invest')
+await p.locator('.table tbody tr').first().locator('.icon-btn').click(); await p.waitForTimeout(500)
+ok('and the bucket bar speaks for itself', await p.evaluate(() => {
+  const bar = document.querySelector('.bucket-bar')
+  return !!bar && bar.getAttribute('role') === 'status' && /in your bucket/.test(bar.textContent ?? '')
+}))
 
 await at('/withdraw')
 {

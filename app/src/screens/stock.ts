@@ -1,13 +1,14 @@
 import { h } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
-import { card, cardHead, kv, callout } from '../components/bits'
+import { card, cardHead, kv, callout, bucketBar, showBucketBar } from '../components/bits'
 import { find, markGap, type Instrument } from '../catalogue'
 import { barChart, type Range } from '../components/chart'
 import { state, actions, holding, inBucket, money, MASK } from '../state'
 import { usd, pct, signed, shares } from '../format'
 import { go } from '../router'
 import { toast } from '../components/sheet'
+import { celebrate } from '../confetti'
 
 /** The same chart Home draws, with the company's own year behind it. The
  *  ranges are anchored to the twelve months the catalogue already states, so
@@ -40,18 +41,20 @@ function priceChart(c: Instrument): HTMLElement {
  *  for the bucket; the amount is editable there. */
 function bucketAdd(c: Instrument): HTMLElement {
   const already = inBucket(c.ticker)
-  return h('button', {
+  const b = h('button', {
     class: 'btn btn-secondary btn-sm',
     text: already ? 'In your bucket · ' + usd(already.dollars, false) : 'Add to bucket',
-    on: {
-      click: () => {
-        if (already) { go('/bucket'); return }
-        actions.addToBucket(c.ticker, state.prefs.tradeDefault)
-        toast(`${usd(state.prefs.tradeDefault, false)} of ${c.name} is in your bucket`, 'success')
-        go('/invest/' + c.ticker.toLowerCase())
-      },
-    },
   })
+  b.addEventListener('click', () => {
+    if (already) { go('/bucket'); return }
+    // Before the action: addToBucket rebuilds the tree and detaches this
+    // button, and a burst measured from a detached element never appears.
+    celebrate(b)
+    showBucketBar()
+    actions.addToBucket(c.ticker, state.prefs.tradeDefault)
+    go('/invest/' + c.ticker.toLowerCase())
+  })
+  return b
 }
 
 /** What you are paying over or under the real share. On a tokenised product
@@ -187,6 +190,7 @@ export function stockScreen(ticker: string): HTMLElement {
             ? h('button', { class: 'btn btn-secondary', text: 'Sell ' + c.ticker,
                 on: { click: () => go('/invest/' + c.ticker.toLowerCase() + '/sell') } })
             : null
-        )))
+        ))),
+    bucketBar()
   )
 }

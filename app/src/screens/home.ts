@@ -7,6 +7,7 @@ import { card, cardHead, headLink, kv, amount, directionMark, privacyToggle } fr
 import { table } from '../components/table'
 import {
   state, actions, holdingsValue, availableToBorrow, buyingPower, verified, LIMITS, money, inNaira,
+  bucketTotal, bucketCost,
 } from '../state'
 import { usd, signed, when, pct, shares, greeting, activityLabel } from '../format'
 import { go } from '../router'
@@ -39,6 +40,26 @@ function verifyTask(): HTMLElement | null {
     h('span', { class: 't-body-strong', text: 'Verify to lift your limits' }),
     h('small', { class: 'muted',
       text: `A NIN or a BVN, and a minute. Until then you can move ${usd(LIMITS.none.single, false)} at once and ${usd(LIMITS.none.monthly, false)} a month.` })))
+  a.appendChild(h('span', { class: 'muted', html: icon.chevron() }))
+  return a
+}
+
+/** What is picked out and not yet paid for.
+ *
+ *  The bar on Invest catches somebody in the middle of choosing. This catches
+ *  the one who chose yesterday, closed the tab and came back — for whom the
+ *  only reminder was a number beside a word in the sidebar. It states what is
+ *  waiting and what it comes to, and offers the one thing left to do. */
+function waiting(): HTMLElement | null {
+  const n = state.bucket.length
+  if (!n) return null
+  const a = link('/bucket', 'card task')
+  a.appendChild(h('span', { class: 'task-ic', html: icon.bucket() }))
+  a.appendChild(h('span', { class: 'two-line grow' },
+    h('span', { class: 't-body-strong',
+      text: `${n} ${n === 1 ? 'company is' : 'companies are'} waiting in your bucket` }),
+    h('small', { class: 'muted',
+      text: `${money(bucketTotal())} to invest, ${money(bucketCost())} all in. One payment buys the lot.` })))
   a.appendChild(h('span', { class: 'muted', html: icon.chevron() }))
   return a
 }
@@ -177,6 +198,7 @@ function detailed(): HTMLElement {
       h('div', { class: 'header-actions' },
         isMobile() ? null : jumpOpen(), viewToggle(), privacyToggle(), bell())),
     verifyTask(),
+    waiting(),
     h('div', { class: 'row' },
       h('div', { class: 'stack', style: { width: '308px', flex: 'none' } },
         h('div', { class: 'stack-8' },
@@ -267,6 +289,7 @@ function gateway(): HTMLElement {
           // apart is not twice as findable.
           isMobile() ? null : jumpOpen(), viewToggle(), privacyToggle(), bell()))),
     verifyTask(),
+    waiting(),
     h('div', { class: 'headline' },
       h('div', { class: 'stack-8' },
         h('span', { class: 't-caps subtle', text: 'Total portfolio' }),

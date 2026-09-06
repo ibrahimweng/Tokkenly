@@ -1,7 +1,7 @@
 import { h } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
-import { card, cardHead, emptyState } from '../components/bits'
+import { card, cardHead, emptyState, bucketBar, showBucketBar } from '../components/bits'
 import { searchField, searchNote } from '../components/search'
 import { rank, onlyNear } from '../match'
 import { table } from '../components/table'
@@ -9,7 +9,7 @@ import { CATALOGUE, CATEGORIES, INDICES, PICKS, find, discount, markGap, type In
 import { state, actions, inBucket } from '../state'
 import { usd, pct } from '../format'
 import { go, current } from '../router'
-import { toast } from '../components/sheet'
+import { celebrate } from '../confetti'
 
 function tickerRow(ticker: string): HTMLElement {
   const c = find(ticker)
@@ -52,8 +52,17 @@ function bucketCell(c: Instrument): HTMLElement {
   b.addEventListener('click', (e) => {
     e.stopPropagation()   // the row navigates; this button does not
     if (inIt) { go('/bucket'); return }
+    // Before the action, not after. addToBucket broadcasts, every listener
+    // rebuilds the whole tree, and this button is detached by the time it
+    // returns — so a burst measured from it afterwards is measured from an
+    // element that is no longer on the page, and never appears.
+    // Three confirmations of one press is noise, and the last two collided:
+    // the toast rail sits where the bar docks. The burst says it worked and
+    // the bar says what you now have, which is the more useful half. The bar
+    // is a live region, so this is still announced.
+    celebrate(b)
+    showBucketBar()
     actions.addToBucket(c.ticker, state.prefs.tradeDefault)
-    toast(`${usd(state.prefs.tradeDefault, false)} of ${c.name} is in your bucket`, 'success')
   })
   return b
 }
@@ -256,6 +265,7 @@ export function marketScreen(): HTMLElement {
     h('p', { class: 'subtle t-caption', style: { margin: '0' } },
       h('span', { text: 'Investing involves risk. The value of what you hold can fall as well as rise, and you can get back less than you put in. ' }),
       h('button', { class: 'link quiet', text: 'Risk and disclosures',
-        on: { click: () => go('/disclosures') } }))
+        on: { click: () => go('/disclosures') } })),
+    bucketBar()
   )
 }

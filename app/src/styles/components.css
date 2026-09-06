@@ -1099,6 +1099,28 @@ th.right .th-sort { flex-direction: row-reverse; }
   .pref-act > .btn { width: 100%; }
 }
 
+/* A bucket that fills and then waits to be remembered is a bucket nobody pays
+   for. The bar states what is in it and what it comes to, on the screens where
+   the choosing happens — and it can be put away, because a bar you cannot
+   dismiss is an advert. It sits above the phone's rail rather than under it. */
+.bucket-bar {
+  position: sticky; bottom: 20px; z-index: 20;
+  display: flex; align-items: center; gap: 16px;
+  padding: 12px 12px 12px 20px; border-radius: var(--r-pill);
+  background: var(--surface); border: 1px solid var(--control);
+  box-shadow: var(--shadow-float);
+  animation: rise var(--t-base) var(--ease);
+}
+.bucket-bar .mark { flex: none; }
+.bucket-bar .btn { flex: none; }
+.bucket-bar-close { width: 36px; height: 36px; background: none; }
+@media (max-width: 899px) {
+  .bucket-bar { bottom: calc(var(--nav-h) + 44px); padding: 10px 10px 10px 16px; gap: 12px; }
+  /* The words go; the count, the total and the way to pay are the bar. */
+  .bucket-bar .mark { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .bucket-bar { animation: none; } }
+
 /* ---------------------------------------------------------- the bucket --
    Things picked out and not yet paid for. It lives in the sidebar with the
    places rather than in a page header, because a list you fill as you browse
