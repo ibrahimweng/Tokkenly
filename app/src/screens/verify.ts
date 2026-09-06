@@ -1,7 +1,7 @@
 import { h } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
-import { card, cardHead, kv, callout } from '../components/bits'
+import { card, cardHead, kv, callout, fieldError } from '../components/bits'
 import { state, actions, LIMITS, verified } from '../state'
 import { usd } from '../format'
 import { go } from '../router'
@@ -53,8 +53,9 @@ export function verifyScreen(step: string): HTMLElement {
   if (at === 'number') {
     const input = h('input', { placeholder: '11 digits', inputmode: 'numeric', ariaLabel: 'Your NIN or BVN' })
     const field = h('label', { class: 'field' }, input)
-    const err = h('small', { class: 'field-error', hidden: true },
+    const err = fieldError(
       h('span', { html: icon.alert() }), h('span', { text: 'A NIN or BVN is eleven digits.' }))
+    err.hidden = true
     let method: 'NIN' | 'BVN' = 'NIN'
     const pick = h('div', { class: 'chip-row' }, ...(['NIN', 'BVN'] as const).map((m) =>
       h('button', { class: 'chip', text: m, ariaPressed: m === method,

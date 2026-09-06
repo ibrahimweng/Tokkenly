@@ -27,6 +27,27 @@
 .nav-row .ic { width: 18px; height: 18px; flex: none; opacity: 0.9; }
 .nav-gap { height: 12px; }
 
+/* Off screen until it is tabbed to, then the first thing on it. Not
+   display:none and not visibility:hidden, either of which would take it out of
+   the tab order and leave it unreachable — which is the one thing a skip link
+   must not be. */
+.skip {
+  position: fixed; top: 12px; left: 12px; z-index: 90;
+  transform: translateY(-200%);
+  background: var(--surface); color: var(--ink);
+  border: 1px solid var(--control-pressed); border-radius: 10px;
+  padding: 12px 16px; font-weight: 600; font-size: 14px;
+  box-shadow: var(--shadow-float);
+}
+.skip:focus-visible { transform: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .skip { transition: transform var(--t-fast) var(--ease); }
+}
+/* The content can hold focus without joining the tab order, so it must not
+   also draw a ring when it is clicked into. */
+.content:focus { outline: none; }
+.content:focus-visible { outline: none; }
+
 .promo {
   margin-top: auto;
   background: var(--sunken);
@@ -38,7 +59,7 @@
   width: 32px; height: 32px; border-radius: 10px; background: var(--control);
   display: grid; place-items: center;
 }
-.promo h3 { margin: 0; font-size: 15px; line-height: 20px; font-weight: 600; }
+.promo-title { margin: 0; font-size: 15px; line-height: 20px; font-weight: 600; }
 .promo p { margin: 0; color: var(--muted); font-size: 12px; line-height: 16px; }
 .promo button { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 13px; }
 
@@ -68,6 +89,8 @@
   gap: 16px; flex-wrap: wrap; row-gap: 8px;
 }
 .card-head > * { min-width: 0; }
+/* The card's name is an <h2> now; the type still comes from .t-caps. */
+.card-head h2 { margin: 0; }
 .link { font-size: 14px; font-weight: 600; color: var(--ink); }
 .link.quiet { color: var(--muted); }
 
@@ -243,6 +266,8 @@
   color: var(--on-inverse); display: grid; place-items: center; flex: none;
 }
 .figure { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+/* The outcome's heading is a real h2 now; the type comes from .t-title. */
+.figure h2 { margin: 0; }
 .panel {
   background: var(--control); border-radius: var(--r-panel); padding: 20px;
   display: flex; flex-direction: column; gap: 20px;
@@ -258,9 +283,11 @@
 /* ---------- toast ---------- */
 .toast-rail { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 60;
   display: flex; flex-direction: column; gap: 8px; align-items: center; }
+/* A button, so it can be dismissed and can hold focus long enough to stop its
+   own countdown — but it reads as the notice it is, not as a control. */
 .toast {
   background: var(--control-pressed); color: var(--ink); padding: 12px 20px;
-  border-radius: 999px; font-size: 13px; font-weight: 600;
+  border-radius: 999px; font-size: 13px; font-weight: 600; text-align: left;
   box-shadow: var(--shadow-toast); animation: rise 160ms ease-out;
 }
 
@@ -531,7 +558,7 @@
   padding: 32px 24px; text-align: center;
 }
 .empty .mark { width: 48px; height: 48px; background: var(--control); }
-.empty h3 { margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; }
+.empty h2 { margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; }
 .empty p { margin: 0; color: var(--muted); font-size: 12px; line-height: 16px; max-width: 32ch; }
 .empty .btn { width: auto; height: 40px; padding: 0 18px; margin-top: 4px; }
 

@@ -22,6 +22,14 @@ ul { margin: 0; padding: 0; list-style: none; }
 [hidden] { display: none !important; }
 :focus-visible { outline: 2px solid var(--positive); outline-offset: 2px; border-radius: 6px; }
 
+/* For a screen reader and nobody else. Not display:none and not
+   visibility:hidden, either of which removes it from the accessibility tree
+   too, which is the whole point of it. */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap; margin: -1px; padding: 0; border: 0;
+}
+
 .screen { display: flex; min-height: 100vh; }
 .content {
   flex: 1;

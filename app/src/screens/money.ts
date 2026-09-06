@@ -1,7 +1,7 @@
 import { h } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader, eyebrow, renderBase } from '../components/shell'
-import { card, cardHead, kv, callout, emptyState } from '../components/bits'
+import { card, cardHead, kv, callout, emptyState, fieldError } from '../components/bits'
 import { composerScreen } from '../components/composer'
 import { state, movementCeiling, ceilingLabel } from '../state'
 
@@ -70,8 +70,9 @@ export function sendWhoScreen(): HTMLElement {
 
   const address = h('input', { placeholder: 'Paste a Base address' })
   const addressField = h('label', { class: 'field' }, address)
-  const addressError = h('small', { class: 'field-error', hidden: true },
+  const addressError = fieldError(
     h('span', { html: icon.alert() }), h('span', { text: 'Paste a full Base address' }))
+  addressError.hidden = true
   const submitAddress = () => {
     const v = address.value.trim()
     // The mistake is shown where it was made, not in a toast that has gone by.

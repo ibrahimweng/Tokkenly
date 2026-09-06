@@ -9,9 +9,26 @@ export function card(...children: (Node | false | null)[]): HTMLElement {
   return el
 }
 
+/** A card's name, as a heading. It was a span, so every screen in the product
+ *  offered a screen reader exactly one heading — the page title — and no way to
+ *  skim what was on it. Home has five cards, a stock page eleven. The type is
+ *  unchanged: .t-caps carries it, and an <h2> at 11px caps looks like an
+ *  eyebrow because that is what it is. */
 export function cardHead(label: string, right?: Node | null): HTMLElement {
   return h('div', { class: 'card-head' },
-    h('span', { class: 't-caps subtle', text: label }), right ?? null)
+    h('h2', { class: 't-caps subtle', text: label }), right ?? null)
+}
+
+/** A limit, a shortfall or a mistake, beside the thing it is about — and
+ *  always a live region.
+ *
+ *  Every one of these appears without a page change: you type past a ceiling,
+ *  you fill a bucket past your cash, you paste half an address. They were
+ *  appearing silently, which for somebody who cannot see the sentence means
+ *  the button simply stops working with no explanation. Built here rather than
+ *  in five places, so the rule is one rule. */
+export function fieldError(...children: (Node | string | null | false)[]): HTMLElement {
+  return h('small', { class: 'field-error', role: 'status' }, ...children)
 }
 
 /** A card header link names where it goes, never "see more". Rule 49. */
@@ -41,7 +58,11 @@ export function emptyState(
 ): HTMLElement {
   return h('div', { class: 'empty' },
     h('span', { class: 'mark', html: icon[glyph]() }),
-    h('h3', { text: title }),
+    // h2, not h3. An empty state sits inside a card on most screens, where it
+    // would follow the card's own heading, and stands alone under the page
+    // title on the bucket, where an h3 skipped a level. A sibling h2 is right
+    // in both places.
+    h('h2', { text: title }),
     h('p', { text: body }),
     // A quiet button inside a card. A second filled grey on a grey card is
     // one surface too many.

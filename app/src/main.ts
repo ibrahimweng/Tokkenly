@@ -7,6 +7,8 @@ import { start, current, go, openSheet, type Route } from './router'
 import { state, actions, subscribe, applyTheme, recall, IDLE_LOCK_MS } from './state'
 import { onBreakpointChange } from './responsive'
 import { buildSheet } from './sheets'
+import { dialogClosed } from './components/sheet'
+import { nameTheScreen } from './announce'
 import { homeScreen } from './screens/home'
 import { walletScreen } from './screens/wallet'
 import { marketScreen } from './screens/market'
@@ -100,14 +102,43 @@ function screenFor(r: Route): HTMLElement {
 }
 
 let lastPath = ''
+let hadDialog = false
 function render(r: Route): void {
   const keepScroll = r.path === lastPath ? window.scrollY : 0
+  const arrived = r.path !== lastPath
   lastPath = r.path
   app.replaceChildren(screenFor(r))
+  const screen = app.firstElementChild as HTMLElement | null
   const sheetEl = buildSheet(r)
-  if (sheetEl) app.appendChild(sheetEl)
+  if (sheetEl) {
+    // Everything under the dialog leaves the tab order and the accessibility
+    // tree while it is up. A composer that presents as a modal does this for
+    // itself, since its scrim lives inside the screen rather than beside it.
+    screen?.setAttribute('inert', '')
+    app.appendChild(sheetEl)
+  }
   document.body.style.overflow = sheetEl ? 'hidden' : ''
   window.scrollTo(0, keepScroll)
+
+  // Say where we are, once per arrival rather than once per state change —
+  // this function runs again every time anything at all changes, and a live
+  // region that repeats the page title after every toggle is worse than one
+  // that says nothing.
+  if (arrived) nameTheScreen(app.querySelector('h1')?.textContent)
+
+  // Where focus goes when a dialog closes. It cannot go back to whatever
+  // opened it: this app replaces the entire tree on every change, so that
+  // element no longer exists by the time the dialog is gone. The content of
+  // the screen underneath is the honest answer — a keyboard user carries on
+  // from the page rather than from the top of the document, above seven nav
+  // rows they have already passed once.
+  const open = !!sheetEl || !!app.querySelector('.scrim')
+  if (hadDialog && !open) {
+    dialogClosed()
+    const main = app.querySelector<HTMLElement>('main.content')
+    if (main && (document.activeElement === document.body || document.activeElement === null)) main.focus()
+  }
+  hadDialog = open
 }
 
 /** A lock that only fires on a cold start protects a phone that has been

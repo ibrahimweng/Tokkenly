@@ -89,11 +89,14 @@ export function sidebar(active: Place): HTMLElement {
     if (current().path === '/bucket') row.setAttribute('aria-current', 'page')
     nav.appendChild(row)
   }
+  // Not an <h3>. It sat in the sidebar, which is drawn before the content, so
+  // heading navigation on all sixteen signed-in routes landed on an advert
+  // before the page's own <h1>. It looks the same and is no longer a landmark.
   const promo = h(
     'div',
     { class: 'promo' },
     h('div', { class: 'promo-badge', html: icon.card() }),
-    h('h3', { text: 'Debit card\ncoming soon' }),
+    h('div', { class: 'promo-title', text: 'Debit card\ncoming soon' }),
     h('p', { text: 'Spend your dollars in naira, anywhere that takes a card.' }),
     h('button', { on: { click: () => openSheet('card') } },
       h('span', { text: state.cardWaitlist ? 'You are on the list' : 'Join the list' }),
@@ -182,13 +185,29 @@ function offlineBar(): HTMLElement | null {
     h('span', { text: 'No connection. You can still look around; moving money has to wait.' }))
 }
 
+/** The way past the chrome. Seven nav rows, a promo with a button of its own
+ *  and the account row stand between the start of the document and the page —
+ *  on every navigation, because this app replaces the whole tree each time.
+ *
+ *  A button rather than the customary `<a href="#main">`: the address bar is
+ *  the router here, so an anchor to a fragment would navigate to /main and land
+ *  on the not-found screen. It moves focus instead, which is the part of a skip
+ *  link that actually does the work. `main` takes tabindex="-1" so it can hold
+ *  focus without joining the tab order. */
+function skipLink(to: HTMLElement): HTMLElement {
+  return h('button', {
+    class: 'skip', text: 'Skip to content',
+    on: { click: () => { to.focus(); to.scrollIntoView() } },
+  })
+}
+
 export function shell(active: Place, ...bands: (Node | false | null)[]): HTMLElement {
-  const content = h('main', { class: 'content' })
+  const content = h('main', { class: 'content', id: 'main', tabIndex: -1 })
   append(content, bands)
   if (isMobile()) {
-    return h('div', { class: 'screen' }, offlineBar(), topBar(), content, rail(active))
+    return h('div', { class: 'screen' }, skipLink(content), offlineBar(), topBar(), content, rail(active))
   }
-  return h('div', { class: 'screen' }, sidebar(active), offlineBar(), content)
+  return h('div', { class: 'screen' }, skipLink(content), sidebar(active), offlineBar(), content)
 }
 
 /** Where you are, as a trail you can step back up. Drawn from the registry,

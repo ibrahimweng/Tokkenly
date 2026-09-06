@@ -2,7 +2,7 @@ import { h } from '../ui'
 import { icon } from '../icons'
 import { usd } from '../format'
 import { shell, pageHeader, eyebrow, renderBase, type Place } from './shell'
-import { card, cardHead, kv, callout as calloutEl } from './bits'
+import { card, cardHead, kv, callout as calloutEl, fieldError } from './bits'
 import { amountComposer, keypad } from './amount'
 import { isMobile } from '../responsive'
 import { current, closeSheet, go } from '../router'
@@ -77,7 +77,8 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
     quick: spec.quick,
   })
 
-  const capNote = h('small', { class: 'field-error', hidden: true })
+  const capNote = fieldError()
+  capNote.hidden = true
   const summaryBox = h('div', { class: 'stack-8 summary' })
   const rightBox = h('div', { class: 'stack grow' })
   const button = h('button', { class: 'btn btn-primary' })

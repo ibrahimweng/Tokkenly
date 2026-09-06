@@ -84,7 +84,7 @@ for (const [route, expect] of [
   ['/support?q=zzzzz', 'Nothing matches that'],
 ]) {
   await go(route)
-  const t = await page.locator('.empty h3').first().textContent().catch(() => null)
+  const t = await page.locator('.empty h2').first().textContent().catch(() => null)
   ok(route, t === expect, t ?? 'no empty state')
 }
 await go('/activity?q=zzzzz')
@@ -93,7 +93,7 @@ ok('the empty state clears the search', page.url().endsWith('#/activity'), page.
 
 console.log('EMPTY, on a phone')
 await go('/send?q=zzzzz', 390)
-const t2 = await page.locator('.empty h3').first().textContent().catch(() => null)
+const t2 = await page.locator('.empty h2').first().textContent().catch(() => null)
 ok('the picker search finds nobody', t2 === 'Nobody by that name', t2 ?? 'no empty state')
 await go('/send?q=tunde', 390)
 const n = await page.locator('.sheet-row').count()

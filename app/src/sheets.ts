@@ -116,7 +116,7 @@ function review(opts: {
       if (actions.pinLocked()) {
         gate.replaceChildren(
           h('span', { class: 't-caps subtle', text: 'Locked' }),
-          h('span', { class: 'field-error',
+          h('span', { class: 'field-error', role: 'status',
             text: 'Five wrong tries. Set a new PIN from Account before moving this much.' }),
           h('button', { class: 'btn btn-secondary', text: 'Go to Security',
             on: { click: () => { closeSheet(); go('/account/security') } } }))

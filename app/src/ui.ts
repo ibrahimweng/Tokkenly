@@ -4,6 +4,9 @@
 type Child = Node | string | number | null | undefined | false
 type Props = {
   class?: string
+  /** Only where something else has to point at it — a dialog naming its own
+   *  heading, a skip link naming the content. Not a styling hook. */
+  id?: string
   text?: string
   html?: string
   href?: string
@@ -16,8 +19,15 @@ type Props = {
   ariaCurrent?: string
   ariaPressed?: boolean | string
   ariaLabel?: string
+  ariaLabelledby?: string
   ariaLive?: string
+  ariaAtomic?: boolean | string
+  ariaModal?: boolean | string
+  ariaHidden?: boolean | string
   role?: string
+  /** Takes a subtree out of the tab order, the accessibility tree and the
+   *  pointer in one go. What a modal owes the page underneath it. */
+  inert?: boolean
   /** For a div that has to take the keyboard — the PIN pad is one. */
   tabIndex?: number
   title?: string
@@ -33,6 +43,7 @@ export function h<K extends keyof HTMLElementTagNameMap>(
 ): HTMLElementTagNameMap[K] {
   const el = document.createElement(tag)
   if (props.class) el.className = props.class
+  if (props.id) el.id = props.id
   if (props.text !== undefined) el.textContent = props.text
   if (props.html !== undefined) el.innerHTML = props.html
   if (props.href !== undefined) el.setAttribute('href', props.href)
@@ -45,8 +56,13 @@ export function h<K extends keyof HTMLElementTagNameMap>(
   if (props.ariaCurrent) el.setAttribute('aria-current', props.ariaCurrent)
   if (props.ariaPressed !== undefined) el.setAttribute('aria-pressed', String(props.ariaPressed))
   if (props.ariaLabel) el.setAttribute('aria-label', props.ariaLabel)
+  if (props.ariaLabelledby) el.setAttribute('aria-labelledby', props.ariaLabelledby)
   if (props.ariaLive) el.setAttribute('aria-live', props.ariaLive)
+  if (props.ariaAtomic !== undefined) el.setAttribute('aria-atomic', String(props.ariaAtomic))
+  if (props.ariaModal !== undefined) el.setAttribute('aria-modal', String(props.ariaModal))
+  if (props.ariaHidden !== undefined) el.setAttribute('aria-hidden', String(props.ariaHidden))
   if (props.role) el.setAttribute('role', props.role)
+  if (props.inert) el.setAttribute('inert', '')
   if (props.tabIndex !== undefined) el.tabIndex = props.tabIndex
   if (props.title !== undefined) el.setAttribute('title', props.title)
   if (props.dataset) for (const [k, v] of Object.entries(props.dataset)) el.dataset[k] = v
