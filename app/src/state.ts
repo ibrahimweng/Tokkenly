@@ -15,6 +15,11 @@ export interface Activity {
   amount: number          // signed, in dollars
   at: string              // ISO
   note?: string
+  /** What this movement cost, in dollars. Recorded rather than recomputed:
+   *  the receipt for a trade made last month has to state the fee that was
+   *  charged then, not the fee the rate would give today. Absent means the
+   *  movement was free, which is most of them. */
+  fee?: number
   settled: boolean
 }
 
@@ -350,25 +355,25 @@ export const state: State = {
   ngnPerUsd: 1500,
   activity: [
     { ref: 'TKN-8F2K90', kind: 'payment', who: 'Adaeze Okonkwo', type: 'Received', amount: 120, at: iso('2026-09-05T14:32'), settled: true },
-    { ref: 'TKN-8E4J77', kind: 'trade', who: 'Apple', type: 'Bought', amount: -420, at: iso('2026-09-05T14:05'), settled: true },
+    { ref: 'TKN-8E4J77', kind: 'trade', who: 'Apple', type: 'Bought', amount: -420, fee: 2.09, at: iso('2026-09-05T14:05'), settled: true },
     { ref: 'TKN-7D1J83', kind: 'payment', who: 'Tunde Bakare', type: 'Sent', amount: -45, at: iso('2026-09-04T09:14'), settled: true },
     { ref: 'TKN-7C8H62', kind: 'grow', who: 'Earn', type: 'Interest', amount: 0.16, at: iso('2026-09-04T00:05'), settled: true },
     { ref: 'TKN-6C9H77', kind: 'payment', who: 'Payroll', type: 'Received', amount: 1500, at: iso('2026-08-29T08:00'), settled: true },
-    { ref: 'TKN-6B4G61', kind: 'trade', who: 'Tesla', type: 'Sold', amount: 260, at: iso('2026-08-28T19:20'), settled: true },
+    { ref: 'TKN-6B4G61', kind: 'trade', who: 'Tesla', type: 'Sold', amount: 260, fee: 1.31, at: iso('2026-08-28T19:20'), settled: true },
     { ref: 'TKN-5Z2E44', kind: 'payment', who: 'Adaeze Okonkwo', type: 'Sent', amount: -80, at: iso('2026-08-26T16:40'), settled: true },
-    { ref: 'TKN-5Y3D31', kind: 'trade', who: 'Nvidia', type: 'Bought', amount: -380, at: iso('2026-08-26T11:05'), settled: true },
+    { ref: 'TKN-5Y3D31', kind: 'trade', who: 'Nvidia', type: 'Bought', amount: -380, fee: 1.89, at: iso('2026-08-26T11:05'), settled: true },
     { ref: 'TKN-4X1C25', kind: 'payment', who: 'Rent', type: 'Sent', amount: -620, at: iso('2026-08-24T07:00'), settled: true },
     { ref: 'TKN-3V0A04', kind: 'payment', who: 'Tunde Bakare', type: 'Sent', amount: -30, at: iso('2026-08-22T10:22'), settled: true },
     { ref: 'TKN-2T9Y81', kind: 'payment', who: 'Data top up', type: 'Sent', amount: -12, at: iso('2026-08-20T18:35'), settled: true },
     { ref: 'TKN-2S4X70', kind: 'grow', who: 'Borrow', type: 'Borrowed', amount: 500, at: iso('2026-08-12T10:40'), settled: true },
     { ref: 'TKN-2R7W58', kind: 'payment', who: 'Chidi Nwosu', type: 'Received', amount: 65, at: iso('2026-08-11T13:05'), settled: true },
     { ref: 'TKN-1Q6V47', kind: 'payment', who: 'MTN airtime', type: 'Sent', amount: -8, at: iso('2026-08-09T19:48'), settled: true },
-    { ref: 'TKN-1P5U36', kind: 'trade', who: 'Vanguard S&P 500', type: 'Bought', amount: -300, at: iso('2026-08-07T15:22'), settled: true },
+    { ref: 'TKN-1P5U36', kind: 'trade', who: 'Vanguard S&P 500', type: 'Bought', amount: -300, fee: 1.49, at: iso('2026-08-07T15:22'), settled: true },
     { ref: 'TKN-1N4T25', kind: 'payment', who: 'Ngozi Eze', type: 'Sent', amount: -150, at: iso('2026-08-05T11:30'), settled: true },
     { ref: 'TKN-0M3S14', kind: 'grow', who: 'Earn', type: 'Moved in', amount: -740, at: iso('2026-08-03T09:15'), settled: true },
     { ref: 'TKN-0L2R03', kind: 'payment', who: 'Ikeja Electric', type: 'Sent', amount: -34, at: iso('2026-08-01T07:40'), settled: true },
     { ref: 'TKN-0K1Q92', kind: 'payment', who: 'Payroll', type: 'Received', amount: 1500, at: iso('2026-07-31T08:00'), settled: true },
-    { ref: 'TKN-0J0P81', kind: 'trade', who: 'Apple', type: 'Bought', amount: -560, at: iso('2026-07-29T14:12'), settled: true },
+    { ref: 'TKN-0J0P81', kind: 'trade', who: 'Apple', type: 'Bought', amount: -560, fee: 2.79, at: iso('2026-07-29T14:12'), settled: true },
   ],
 }
 
@@ -496,6 +501,7 @@ function record(a: Omit<Activity, 'ref' | 'at' | 'settled'> & Partial<Activity>)
     type: a.type,
     amount: a.amount,
     note: a.note,
+    fee: a.fee,
   }
   state.activity.unshift(entry)
   return entry
@@ -592,7 +598,7 @@ export const actions = {
     else state.holdings.push({ ticker: c.ticker, name: c.name, shares, price: c.price, dayPct: c.dayPct })
     state.cash -= spend + fee
     actions.countAgainstLimit(spend + fee)
-    const activity = record({ kind: 'trade', who: c.name, type: 'Bought', amount: -(spend + fee) })
+    const activity = record({ kind: 'trade', who: c.name, type: 'Bought', amount: -(spend + fee), fee })
     changed()
     return { activity, shares, fee, invested: spend }
   },
@@ -612,7 +618,7 @@ export const actions = {
     // Selling $100 puts $99.50 in the wallet: the fee comes out of what you
     // get, not out of what you sold, which is the figure on the review.
     state.cash += value - fee
-    const activity = record({ kind: 'trade', who: c.name, type: 'Sold', amount: value - fee })
+    const activity = record({ kind: 'trade', who: c.name, type: 'Sold', amount: value - fee, fee })
     changed()
     return { activity, shares, fee, proceeds: value - fee }
   },

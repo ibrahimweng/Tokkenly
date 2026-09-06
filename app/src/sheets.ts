@@ -262,7 +262,15 @@ export const SHEETS: Record<string, Builder> = {
         [inbound ? 'From' : 'To', a.who],
         ['Reference', a.ref],
         ['When', longWhen(a.at)],
-        ['Fee', 'None — the rate above is what you get']
+        // The receipt used to say "None" on every entry, including the trades
+        // that charged half a per cent — the one document a person keeps,
+        // stating the wrong figure for the one thing it is kept for. The fee
+        // is recorded on the movement now, so this reads it rather than
+        // asserting it.
+        // "None — the rate above is what you get" was written for a currency
+        // conversion and printed on everything, including a loan drawdown with
+        // no rate anywhere on the sheet. None is the whole answer.
+        ['Fee', a.fee ? usd(a.fee) : 'None']
       ),
       calloutEl(a.settled
         ? 'Settled. Nothing about this payment is going to change now.'

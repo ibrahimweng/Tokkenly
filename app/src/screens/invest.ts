@@ -57,14 +57,25 @@ export function investScreen(ticker: string): HTMLElement {
       { label: usd(500, false), value: 500 },
       { label: 'All', value: state.cash },
     ],
-    summary: (v) => [
-      ['Investment', usd(v)],
-      ['Fee', `${usd(tradeFee(v))} · ${state.fees.trade}%`],
-      ['Total', usd(v + tradeFee(v))],
-      [discount(c) >= 0 ? 'Below the real price' : 'Above the real price',
-        pct(Math.abs(discount(c)), 2), discount(c) >= 0 ? 'pos' : 'warn'],
-      ['You receive', fmtShares(v / c.price) + ' shares'],
-    ],
+    summary: (v) => {
+      // What the gap to the real share is worth on this order. It was stated
+      // as a bare percentage sitting among dollar figures, which left the one
+      // cost on the screen that is not a fee as the only one you could not
+      // read in money. It is not added to the total: it is inside the price
+      // per share, not a charge on top, and the total is what leaves the
+      // wallet. So it comes after what you receive, as a note on the price
+      // rather than a line in the bill.
+      const gap = v * (1 - c.mark / c.price)   // positive when you pay over
+      return [
+        ['Investment', usd(v)],
+        ['Fee', `${usd(tradeFee(v))} · ${state.fees.trade}%`],
+        ['Total', usd(v + tradeFee(v))],
+        ['You receive', fmtShares(v / c.price) + ' shares'],
+        gap > 0
+          ? ['Above the real price', `${usd(gap)} · ${pct(Math.abs(discount(c)), 2)}`, 'warn']
+          : ['Below the real price', `${usd(-gap)} · ${pct(discount(c), 2)}`, 'pos'],
+      ]
+    },
     callout: c.kind === 'etf'
       ? `A fund, not a company: one holding spread across ${c.holds ?? 'many'}. Its value can fall as well as rise, and you can get back less than you put in.`
       : 'You are buying part of a share. Its value can fall as well as rise, and you can get back less than you put in.',

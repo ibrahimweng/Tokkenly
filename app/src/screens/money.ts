@@ -219,9 +219,15 @@ export function addMoneyScreen(): HTMLElement {
       { label: usd(200, false), value: 200 },
       { label: usd(500, false), value: 500 },
     ],
+    // The fee row is here as well as on the review. The pitch is "the amount,
+    // the rate, the fee, and exactly what you receive, before you confirm" —
+    // and a fee that only appears once you have pressed the button is a fee
+    // you found out about later. None is an answer; leaving it out is not.
     summary: (v) => [
       ['You pay', naira(v * state.ngnPerUsd)],
       ['Rate', '1 dollar = ' + naira(state.ngnPerUsd)],
+      ['Fee', 'None — the rate above is the rate you get'],
+      ['You receive', usd(v)],
       ['From', bank.name + ' •••• ' + bank.last4],
       ['Lands', 'In about a minute'],
     ],
@@ -263,8 +269,10 @@ export function convertScreen(): HTMLElement {
       { label: 'All', value: state.cash },
     ],
     summary: (v) => [
-      ['You get', naira(v * state.ngnPerUsd)],
+      ['You send', usd(v)],
       ['Rate', '1 dollar = ' + naira(state.ngnPerUsd)],
+      ['Fee', 'None — the rate above is the rate you get'],
+      ['You get', naira(v * state.ngnPerUsd)],
       ['Into', bank.name + ' •••• ' + bank.last4],
       ['Arrives', 'Usually within a minute'],
     ],
