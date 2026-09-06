@@ -1372,3 +1372,43 @@ th.right .th-sort { flex-direction: row-reverse; }
   .lock { padding: 20px; align-content: center; }
   .lock-card { padding: 24px; }
 }
+
+/* ------------------------------------------------- the market, on a phone --
+   The screen that exists to show you things you can buy was putting the first
+   company 805px down an 844px screen: a title, a search field, a paragraph
+   that repeated the title, seven filter chips wrapped onto three rows, and
+   three full-width index cards. The chips scroll, the indices become a strip,
+   and the paragraph goes, which is about 350px back. */
+.desk-only { display: block; }
+@media (max-width: 899px) {
+  .desk-only { display: none; }
+
+  .chip-row.chip-scroll {
+    flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
+    /* the row bleeds to both edges so a chip mid-scroll is not clipped by a
+       gutter it cannot cross */
+    margin-inline: calc(var(--content-pad-x) * -1);
+    padding-inline: var(--content-pad-x);
+  }
+  .chip-row.chip-scroll::-webkit-scrollbar { display: none; }
+  .chip-row.chip-scroll .chip { flex: none; }
+
+  .row.indices {
+    flex-direction: row !important;
+    overflow-x: auto; scrollbar-width: none; gap: 8px;
+    margin-inline: calc(var(--content-pad-x) * -1);
+    padding-inline: var(--content-pad-x);
+  }
+  .row.indices::-webkit-scrollbar { display: none; }
+  .row.indices > .card {
+    width: 190px !important; flex: 0 0 auto !important;
+    padding: 12px 14px; border-radius: 16px; gap: 6px;
+  }
+  .row.indices .t-display { font-size: 22px; line-height: 28px; }
+  .row.indices .kv { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .row.indices .kv > span:last-child { text-align: left; }
+
+  /* "AAPL · Apple" was breaking after the separator, leaving a dangling dot at
+     the end of the first line. It fits on one once the description is gone. */
+  .table .name-line { white-space: nowrap; }
+}

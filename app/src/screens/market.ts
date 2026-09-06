@@ -121,12 +121,19 @@ export function marketScreen(): HTMLElement {
         value: r.query.get('q') ?? '',
         on: { keydown: (e) => { if ((e as KeyboardEvent).key === 'Enter') setQuery('q', (e.target as HTMLInputElement).value) } },
       })),
-    h('p', { class: 'muted', style: { margin: '0' },
+    // The paragraph says what the header already says — "Tokenised, so it
+    // trades 24/7" — and on a phone the two of them together cost 90px of the
+    // one screen that is meant to show you things you can buy.
+    h('p', { class: 'muted desk-only', style: { margin: '0' },
       text: 'US stocks and ETFs, tokenised. You can buy part of one from a dollar, and the market never closes.' }),
-    h('div', { class: 'chip-row' }, ...CATEGORIES.map((c) =>
+    // Seven filters wrapped onto three rows on a phone. One row that scrolls.
+    h('div', { class: 'chip-row chip-scroll' }, ...CATEGORIES.map((c) =>
       h('button', { class: 'chip', text: c, ariaPressed: c === cat && !term,
         on: { click: () => setQuery('cat', c) } }))),
-    h('div', { class: 'row equal' }, ...INDICES.map((i) =>
+    // Three full-width cards, one per index, was 384px of a 844px screen for
+    // three numbers a first-time investor did not come for. On a phone they
+    // become a strip you can push sideways.
+    h('div', { class: 'row equal indices' }, ...INDICES.map((i) =>
       // Level and move on one line: three cards across the page each holding a
       // stat in the top-left corner read as three cards that did not finish.
       // Negative takes the same warn the table gives it, not a quiet grey.
@@ -162,7 +169,11 @@ export function marketScreen(): HTMLElement {
                     h('span', { class: 'name-line' },
                       h('span', { class: 't-body-strong', text: `${c.ticker} · ${c.name}` }),
                       c.kind === 'etf' ? h('span', { class: 'tag', text: 'ETF' }) : null),
-                    h('small', { text: c.plain })),
+                    // The one-line description is what the company does. On a
+                    // phone the name cell is about 180px and the sentence
+                    // wrapped to four lines, which turned a list of companies
+                    // into a wall. It is on the stock page, one tap away.
+                    h('small', { class: 'desk-only', text: c.plain })),
                   h('span', { class: 't-body-strong nowrap', text: usd(c.price) }),
                   h('span', { class: (c.dayPct >= 0 ? 'pos' : 'warn') + ' t-body-strong nowrap',
                     text: (c.dayPct >= 0 ? '+' : '') + pct(c.dayPct) }),
