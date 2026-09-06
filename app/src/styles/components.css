@@ -493,6 +493,7 @@
   }
 }
 
+
 /* ---------------------------------------------------------------- motion --
    One curve and one duration for every state change, so a hover, a press and
    a focus ring all move at the same speed. 110ms is short enough that the
@@ -1091,10 +1092,22 @@ th.right .th-sort { flex-direction: row-reverse; }
   transition: background-color var(--t-fast) var(--ease);
 }
 /* Up and down are the chart's own two colours, not the product's positive and
-   negative: a candle is a direction, not a judgement about your money. */
+   negative: a candle is a direction, not a judgement about your money.
+
+   And not colour alone. Mint against amber in the dark theme, mid-green
+   against a muddy brown in the light one — a pair that a red-green deficiency
+   flattens to two similar browns, on the one chart in the product somebody is
+   reading to decide what to buy. So the body carries it too, the way every
+   candlestick chart ever drawn has: a rise is hollow, a fall is filled. It
+   survives the narrowest bar the row will draw, which is five pixels: a 1px
+   ring still leaves three of hole. */
 .ch-candle.up { color: var(--positive); }
 .ch-candle.down { color: var(--warning); }
+.ch-candle.up .ch-body { background: none; box-shadow: inset 0 0 0 1px currentColor; }
+/* The latest period wears a ring of its own, so the two combine rather than
+   the newer rule quietly filling the hollow one back in. */
 .ch-candle.now .ch-body { box-shadow: 0 0 0 1px var(--ink); }
+.ch-candle.up.now .ch-body { box-shadow: inset 0 0 0 1px currentColor, 0 0 0 1px var(--ink); }
 .ch-candle.on { color: var(--ink); }
 .ch-candle.on .ch-wick { opacity: 1; }
 
@@ -1567,4 +1580,52 @@ th.right .th-sort { flex-direction: row-reverse; }
 
 @media (prefers-reduced-motion: reduce) {
   .ch-line, .ch-svg path:first-of-type, .ch-end { animation: none; }
+}
+
+/* ---------- what a thumb can hit ----------
+
+   44px, on the device where a finger is the pointer. Measured across
+   twenty-two routes, eleven kinds of control were under it: chips at 32,
+   sort headers at 28, a sheet close at 32 square, the account avatar at 40,
+   small buttons at 40, and four sorts of text link between 16 and 20 tall.
+
+   Every one of them grows for real. The first attempt gave the text links an
+   invisible hit area instead — a ::after reaching 44px out of a 20px link, so
+   the row would not get taller. Measured, it did not work: a pseudo-element
+   paints in its parent's place in the order, so the card that came after the
+   link in the document was on top of it, and elementFromPoint answered "card"
+   over half the band. Raising it over the card would have fixed the miss and
+   started stealing taps from whatever was underneath, which is worse than the
+   thing being fixed.
+
+   So the rows grow. A card header on a phone goes from about 20px to 44, the
+   crumbs likewise. That is 24px a header, and it is what a target costs: you
+   cannot get 44px of it out of a 20px row without taking the difference from
+   somewhere, and taking it from a neighbour means taking their taps too. */
+@media (max-width: 899px) {
+  .chip { height: 44px; }
+  .btn-sm { height: 44px; }
+  .close { width: 44px; height: 44px; }
+  .topbar .avatar { width: 44px; height: 44px; }
+  .addr { min-height: 44px; }
+  /* The field is 48 and the input inside it was 22, so the top and bottom
+     thirds of a search box were the label rather than the field. */
+  .field input { align-self: stretch; }
+  /* A sort header is a control in a row of clickable rows, so it takes its
+     44px out of its own header rather than out of the first row under it. */
+  .th-sort { min-height: 44px; padding: 8px 0 12px; }
+
+  /* Both of these are one control alone in a padded box, so they take their
+     44 for real. */
+  .empty .btn { height: 44px; }
+  .amount-box input { min-height: 44px; }
+
+  .link, .crumb, .th-sort, .close, .chip, .btn-sm, .empty .btn {
+    /* so a min-height has something to centre */
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .link, .crumb { min-height: 44px; }
+  /* A crumb is followed by a chevron that is not a target; it does not need
+     the height, and giving it the height would space the trail out. */
+  .crumb-sep { align-self: center; }
 }

@@ -140,5 +140,67 @@ await at('/withdraw')
   ok('a ceiling explains itself out loud too', e.shown && e.role === 'status', JSON.stringify(e))
 }
 
+console.log('WHAT A THUMB CAN HIT')
+{
+  const m = await b.newPage({ viewport: { width: 390, height: 844 } })
+  await seen(m)
+  m.on('pageerror', (e) => errs.push(String(e)))
+  await m.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
+  const small = new Map()
+  for (const r of ['/', '/transfer', '/invest', '/invest/aapl', '/grow', '/activity', '/bucket',
+    '/account', '/account/preferences', '/account/payments', '/account/security', '/account/details',
+    '/send', '/receive', '/addmoney', '/withdraw', '/verify', '/all', '/disclosures',
+    '/invest/aapl/invest', '/grow/borrow', '/?sheet=notifications']) {
+    await m.goto(B + r, { waitUntil: 'domcontentloaded' }); await m.waitForTimeout(400)
+    for (const x of await m.evaluate(() => {
+      const out = []
+      for (const el of document.querySelectorAll('a[href], button, input, select, [tabindex]:not([tabindex="-1"])')) {
+        if (el.offsetParent === null) continue
+        const r = el.getBoundingClientRect()
+        if (!r.width || !r.height) continue
+        // Height is the axis that fails here: these are wide and short. A
+        // crumb is 37 across and cannot be widened without spacing out the
+        // trail it belongs to, which is why only height is asserted.
+        if (r.height >= 44) continue
+        out.push({ k: (el.tagName.toLowerCase() + '.' + String(el.className || '').split(' ').filter(Boolean).join('.')).slice(0, 46),
+                   h: Math.round(r.height), t: (el.textContent || el.getAttribute('aria-label') || '').trim().slice(0, 20) })
+      }
+      return out
+    })) small.set(x.k, { ...x, where: r })
+  }
+  const list = [...small.values()]
+  ok('nothing on a phone is under 44 tall', list.length === 0,
+     list.map((x) => `${x.k} ${x.h}px on ${x.where}`).join('; ') || 'none')
+  await m.close()
+}
+
+console.log('A CANDLE IS NOT ONLY A COLOUR')
+for (const theme of ['dark', 'light']) {
+  const c = await b.newPage({ viewport: { width: 1440, height: 1000 } })
+  await seen(c, { theme })
+  c.on('pageerror', (e) => errs.push(String(e)))
+  await c.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
+  await c.goto(B + '/invest/aapl', { waitUntil: 'domcontentloaded' }); await c.waitForTimeout(700)
+  const m = await c.evaluate(() => {
+    const cs = [...document.querySelectorAll('.ch-candle')]
+    const body = (c) => c && getComputedStyle(c.querySelector('.ch-body'))
+    const up = body(cs.find((x) => x.classList.contains('up') && !x.classList.contains('now')))
+    const dn = body(cs.find((x) => x.classList.contains('down') && !x.classList.contains('now')))
+    const now = body(cs.find((x) => x.classList.contains('now')))
+    const clear = (s) => s && /rgba\(0, 0, 0, 0\)|transparent/.test(s.backgroundColor)
+    return {
+      upHollow: clear(up) && /inset/.test(up.boxShadow),
+      downFilled: !clear(dn) && !/inset/.test(dn.boxShadow),
+      // the latest period keeps its own ring whichever way it went
+      nowRinged: !!now && /1px/.test(now.boxShadow),
+      width: Math.round(document.querySelector('.ch-candle')?.getBoundingClientRect().width ?? 0),
+    }
+  })
+  ok(`${theme}: a rise is hollow and a fall is filled`, m.upHollow && m.downFilled, JSON.stringify(m))
+  ok(`${theme}: and it survives the narrowest bar drawn`, m.width >= 3, m.width + 'px')
+  ok(`${theme}: the latest period still marks itself`, m.nowRinged)
+  await c.close()
+}
+
 console.log('\nerrors:', errs.length ? errs : 'none')
 await b.close()
