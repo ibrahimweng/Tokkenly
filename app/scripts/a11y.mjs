@@ -202,5 +202,63 @@ for (const theme of ['dark', 'light']) {
   await c.close()
 }
 
+console.log('LABELS THAT FIT WHERE THEY ARE PUT')
+for (const [w, tag] of [[1440, 'desk'], [1100, 'tablet'], [390, 'phone'], [360, 'small']]) {
+  const c = await b.newPage({ viewport: { width: w, height: 900 } })
+  await seen(c)
+  c.on('pageerror', (e) => errs.push(String(e)))
+  await c.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
+  await c.goto(B + '/invest/aapl', { waitUntil: 'domcontentloaded' }); await c.waitForTimeout(700)
+  const m = await c.evaluate(() => {
+    const plot = document.querySelector('.ch-plot')
+    const card = plot?.closest('.card')
+    if (!plot || !card) return null
+    const cb = card.getBoundingClientRect()
+    const box = (sel) => [...document.querySelectorAll(sel)].map((e) => ({ t: e.textContent.trim(), r: e.getBoundingClientRect() }))
+    const hit = (a, c2) => a.left < c2.right && c2.left < a.right && a.top < c2.bottom && c2.top < a.bottom
+    const tag = box('.ch-mark-tag')[0]
+    return {
+      // The real-price tag used to start at the plot's left edge, which is
+      // inside the gutter the axis labels live in, so it sat on top of one.
+      overTicks: tag ? box('.ch-tick').filter((t) => hit(tag.r, t.r)).map((t) => t.t) : [],
+      // The high and the low sit against the right edge and were flush with it.
+      tight: box('.ch-edge span').filter((e) => cb.right - e.r.right < 4).map((e) => e.t),
+    }
+  })
+  ok(`${tag}: nothing on the plot is drawn over anything else`,
+     !!m && m.overTicks.length === 0 && m.tight.length === 0, JSON.stringify(m))
+  await c.close()
+}
+
+console.log('AND EVERY PLACEHOLDER FITS ITS FIELD')
+for (const w of [390, 360, 320]) {
+  const c = await b.newPage({ viewport: { width: w, height: 844 } })
+  await seen(c)
+  c.on('pageerror', (e) => errs.push(String(e)))
+  await c.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
+  const over = []
+  for (const r of ['/activity', '/invest', '/all', '/send', '/account/support', '/verify/number', '/receive']) {
+    await c.goto(B + r, { waitUntil: 'domcontentloaded' }); await c.waitForTimeout(350)
+    // A placeholder cut mid-word is a sentence the field never finishes.
+    over.push(...await c.evaluate(() => {
+      const out = []
+      for (const el of document.querySelectorAll('input')) {
+        if (!el.placeholder || el.offsetParent === null) continue
+        const probe = document.createElement('span')
+        const s = getComputedStyle(el)
+        probe.style.cssText = `position:absolute;visibility:hidden;white-space:pre;font:${s.font};letter-spacing:${s.letterSpacing}`
+        probe.textContent = el.placeholder
+        document.body.appendChild(probe)
+        const need = probe.getBoundingClientRect().width
+        probe.remove()
+        if (need > el.clientWidth - 1) out.push(el.placeholder)
+      }
+      return out
+    }))
+  }
+  ok(`${w}px: no placeholder is cut off`, over.length === 0, over.join('; ') || 'none')
+  await c.close()
+}
+
 console.log('\nerrors:', errs.length ? errs : 'none')
 await b.close()

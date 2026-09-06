@@ -6,6 +6,7 @@ import { table } from '../components/table'
 import { state, type ActivityKind, type Activity } from '../state'
 import { when } from '../format'
 import { go, current, openSheet } from '../router'
+import { isMobile } from '../responsive'
 
 const FILTERS: { id: string; label: string; kinds: ActivityKind[] | null }[] = [
   { id: 'all', label: 'All', kinds: null },
@@ -58,7 +59,10 @@ export function historyScreen(): HTMLElement {
   const search = h('label', { class: 'field grow' },
     h('span', { html: icon.search() }),
     h('input', {
-      placeholder: 'Search a name, a reference or an amount',
+      // A placeholder that does not fit is a sentence cut off mid-word: at 360
+      // this read "Search a name, a reference or an a". The short form says the
+      // same three things.
+      placeholder: isMobile() ? 'Name, reference or amount' : 'Search a name, a reference or an amount',
       value: r.query.get('q') ?? '',
       on: {
         keydown: (e) => {

@@ -1140,7 +1140,11 @@ th.right .th-sort { flex-direction: row-reverse; }
 .ch-candle.on .ch-wick { opacity: 1; }
 
 /* the real share behind the token, drawn across the whole period */
-.ch-overlay { position: absolute; inset: 0; pointer-events: none; }
+/* Inset by the axis gutter, not the whole plot. The overlay spanned the plot
+   including the 56px the y-axis labels live in, so the real-price line started
+   underneath them and its tag sat on top of one: "$220" read through a purple
+   badge on every stock page. The line belongs where the bars are. */
+.ch-overlay { position: absolute; inset: 0 0 0 56px; pointer-events: none; }
 .ch-mark {
   position: absolute; left: 0; right: 0; height: 0;
   border-top: 1px dashed var(--data-2);
@@ -1158,8 +1162,11 @@ th.right .th-sort { flex-direction: row-reverse; }
   position: absolute; right: 0; height: 0;
   font-size: 10px; line-height: 14px; color: var(--muted); white-space: nowrap;
 }
+/* Off the edge by its own padding. Flush against the card's inside edge, the
+   chip read as cut rather than placed — and at a narrow width the last digit
+   of "High $224.69" really did meet it. */
 .ch-edge span {
-  position: absolute; right: 0; top: -7px;
+  position: absolute; right: 6px; top: -7px;
   background: var(--control); padding: 0 5px; border-radius: 4px;
 }
 
@@ -1188,6 +1195,7 @@ th.right .th-sort { flex-direction: row-reverse; }
   /* the gutter shrinks with everything else, and the axis with it */
   .ch-plot, .ch-axis { padding-left: 44px; }
   .ch-line { left: 44px; }
+  .ch-overlay { inset: 0 0 0 44px; }
   .ch-tick { right: calc(100% + 8px); }
   .ch-axis { font-size: 11px; }
   /* four OHLC figures and a change do not fit a phone beside the caption */
