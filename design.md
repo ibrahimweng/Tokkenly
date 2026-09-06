@@ -4983,11 +4983,76 @@ the reading; the field is the feeling of it.
     data moved, and the test that caught it was moving money and looking, not
     reading the code.
 
-### 11g.19 Still open
+### 11g.19 Search that answers while you are typing
+
+Five fields — Invest, Activity, Send, Support and Everything — did nothing
+until Enter, and then matched on `includes`. "Micrsoft" found nothing, "aple"
+found nothing, and the only way to learn either had happened was to look at an
+empty list. The palette behind ⌘K had done this properly since it was written;
+the five fields people actually land on had not.
+
+**Two things happen on every keystroke.** The list under the field narrows,
+because that list is the answer and watching it shrink is the fastest way to
+know the search heard you. And a panel offers the closest matches, including
+the ones the narrowing cannot reach: a company you do not hold, a screen, a
+person you have not paid, the receipt behind a reference.
+
+**Ranked, in four rungs, and the order between them is the point.** A name that
+starts with what you typed beats one that merely contains it, which beats one
+your typing could be a garbled version of. The fuzzy rung is a subsequence with
+a gap budget — enough for a dropped letter or a transposition, tight enough
+that "aeo" does not match every sentence in English, and off entirely under
+three characters. A list of near misses says that it is one.
+
+**The address stays the record and typing does not touch it.** A query
+parameter per keystroke is a history nobody can walk back through, and a route
+change rebuilds this app's whole tree, which takes the focus out of the field
+being typed into — the same fault the bucket's amount field hit in 11f.22, for
+the same reason. Each screen repaints its own list; Enter commits; a link into
+a search still arrives narrowed.
+
+85. **A search box that says nothing between the first keystroke and Enter is
+    a search box people assume is broken.** The five fields worked exactly as
+    written, and every one of them read as a dead control until the moment it
+    suddenly reloaded the page.
+
+86. **Show what matched, not only what was found.** Typing "recovry" on
+    Support offered "What happens if I lose my phone", which reads as a wrong
+    answer — the word is in the answer, not the question. A row that cannot
+    show why it is there is a row that looks like a mistake.
+
+### 11g.20 The gradient as the hover, not one door's decoration
+
+Three doors on Home, one of them already lit: the lead tile carried the green
+permanently, so at rest the row read as one live tile and two dead ones. The
+hover on top of that was `a.card`'s flat `--sunken-hover`, which painted
+straight over the gradient — the wide tile's answer to being pointed at was to
+go out.
+
+The gradient is the hover now, on all three. At rest they are the same flat
+card; the one under the pointer washes green up from its bottom edge, under the
+dots. Buy Stocks keeps its emphasis by being wider and by being the one with a
+button on it rather than a link.
+
+The dot fields are untouched — every cell, size and tone as composed, still
+keyed to the account. The green is a layer of its own beneath them rather than
+the card's background, because a background-image cannot be transitioned
+between two values and a green that snaps on reads as a bug.
+
+87. **A permanent version of a state is a state that cannot be entered.** The
+    gradient was the product's strongest visual moment and it was spent
+    standing still on one tile, which left the hover with nowhere to go and no
+    choice but to paint over it.
+
+### 11g.21 Still open
 
 - All forty-four items are settled. Item 30 was held back until it was asked
   for, and was then built without generating anything: see 11g.18, and 11g.10
   for why the audit's own account of it was wrong.
+- Two things the audit missed entirely and the person using it did not: that
+  every search field was a dead control until Enter (11g.19), and that the
+  gateway tiles had spent their one gradient standing still (11g.20). An audit
+  reads a build; it does not use one.
 - The composer's two columns are 722 against 336 and stay that way. See 11g.17.
 - Sign-in refuses the password `wrong` and accepts everything else, which is a
   prototype's shape of a real check, not a real one.
