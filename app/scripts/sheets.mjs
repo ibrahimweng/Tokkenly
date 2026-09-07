@@ -27,8 +27,14 @@ const ROUTES = [
   ['/account/legal?sheet=close', 'close'],
   ['/transfer?sheet=banks', 'banks'],
   ['/send?to=Tunde%20Bakare&sheet=send-review&v=120', 'send-review'],
-  ['/addmoney?sheet=add-review&v=200', 'add-review'],
-  ['/withdraw?sheet=convert-review&v=200', 'convert-review'],
+  // The same review, on the rail that changes currency. It holds a rate and
+  // states one, which the other two do not, so it is a different dialog in
+  // everything but its name and has to be measured as one.
+  ['/send?rail=bank&to=gt&sheet=send-review&v=200', 'send-review to a bank'],
+  ['/addmoney?sheet=transfer-review&v=200', 'transfer-review'],
+  ['/addmoney?via=card&sheet=card-review&v=200', 'card-review'],
+  ['/addmoney?sheet=add-waiting&ref=TKN-6C9H77', 'add-waiting'],
+  ['/transfer?sheet=cards', 'cards'],
   ['/invest/aapl/invest?sheet=invest-review&v=200&t=AAPL', 'invest-review'],
   ['/invest/aapl/sell?sheet=sell-review&v=200&t=AAPL', 'sell-review'],
   ['/invest/aapl/send?to=Tunde%20Bakare&sheet=shares-review&v=224.1&t=AAPL', 'shares-review'],

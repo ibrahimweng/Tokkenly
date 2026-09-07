@@ -4,8 +4,8 @@ import { sheet, figure, panel, foldPanel, outcome, toast } from './components/sh
 import { callout as calloutEl, emptyState as emptyStateEl, skeletonList } from './components/bits'
 import {
   state, actions, owed, monthlyCost, monthlyInterest, holding, bucketTotal,
-  tradeFee, weakPin, ratePassword, LIMITS, type Activity,
-  requestQuote, quoteLive, settlement, grossOf, type Quote,
+  tradeFee, cardFee, weakPin, ratePassword, LIMITS, type Activity,
+  requestQuote, quoteLive, settlement, grossOf, type Quote, type Destination,
 } from './state'
 import { pinPad } from './components/pinpad'
 import { find, discount, CATALOGUE } from './catalogue'
@@ -24,6 +24,29 @@ const YEAR: Range = { key: '1Y', days: 365, pct: 17.28, vol: 0.09, fmt: () => ''
 /** How long a confirmation shows its spinner. Short enough not to annoy,
  *  long enough that the state is real rather than decorative. */
 export const CONFIRM_MS = 350
+
+/* How long the two ways in actually take.
+   A card is pulled by us and clears in seconds; a transfer is pushed by a
+   person through their own bank and takes as long as the banks take. The
+   difference is the point of offering both, so it is a real wait with a real
+   posting on either side of it rather than a spinner over an answer we
+   already had. Short enough to demonstrate, long enough to be a state. */
+const CARD_MS = 1400
+const TRANSFER_MS = 2600
+
+/** The destination a send sheet was opened for, rebuilt from its address.
+ *  A dialog that cannot be reconstructed from the route is a dialog that
+ *  loses its target the moment the tree is rebuilt. */
+function destFrom(r: Route): Destination {
+  const rail = (r.query.get('rail') ?? 'tokkenly') as Destination['rail']
+  const to = r.query.get('to') ?? ''
+  if (rail === 'bank') {
+    const own = state.banks.find((b) => b.id === to)
+    if (own) return { rail, name: own.name, bankId: own.id, bank: own.name, number: own.number }
+    return { rail, name: to, bank: r.query.get('bank') ?? '', number: r.query.get('acct') ?? '' }
+  }
+  return { rail, name: to }
+}
 
 const num = (r: Route, k: string, d = 0): number => Number(r.query.get(k) ?? d) || d
 const str = (r: Route, k: string, d = ''): string => r.query.get(k) ?? d
@@ -833,7 +856,7 @@ export const SHEETS: Record<string, Builder> = {
             const n = name.value.trim()
             const a = acct.value.trim()
             if (!n || a.length < 4) { toast('Add a bank name and account number'); return }
-            actions.addBank(n, a.slice(-4))
+            actions.addBank(n, a)
             toast(n + ' added')
             closeSheet()
           },
@@ -841,25 +864,65 @@ export const SHEETS: Record<string, Builder> = {
       }))
   },
 
-  /* ----- send ----- */
+  /* ----- send -----
+     One review for three destinations. The rows differ because the rails do:
+     a payout into naira is a conversion and states a rate, the other two are
+     dollars at both ends and state a network. */
   'send-review': (r) => {
     const v = num(r, 'v')
-    const to = str(r, 'to')
+    const to = destFrom(r)
+    if (to.rail !== 'bank') {
+      return review({
+        title: 'Review',
+        figureLabel: 'You are sending', figureValue: usd(v), amount: v,
+        rows: [
+          ['To', to.name],
+          ['They receive', usd(v)],
+          ['Fee', 'None — what you send is what they get'],
+          ['Arrives', 'In about a minute'],
+        ],
+        note: to.rail === 'chain'
+          ? 'An address cannot be checked and a payment on the network cannot be recalled. Send a small amount first if you are not sure.'
+          : 'Payments cannot be recalled once they are on the network.',
+        action: 'Send ' + usd(v),
+        onConfirm: () => {
+          const a = actions.sendMoney(to, v)
+          replaceSheet('send-done', { ref: a.ref })
+        },
+      })
+    }
     return review({
       title: 'Review',
       figureLabel: 'You are sending', figureValue: usd(v), amount: v,
-      rows: [['To', to], ['They receive', usd(v)], ['Fee', 'None — what you send is what they get'], ['Arrives', 'In about a minute']],
-      note: 'Payments cannot be recalled once they are on the network.',
-      action: 'Send ' + usd(v),
-      onConfirm: () => {
-        const a = actions.send(to, v)
-        replaceSheet('send-done', { ref: a.ref })
+      rows: [], action: '', onConfirm: () => {},
+      note: '',
+      hold: {
+        rows: (q) => [
+          ['To', to.name],
+          ['Account', (to.bank ?? '') + (to.number ? ' · ' + to.number : '')],
+          ['Rate', '1 dollar = ' + naira(q.rate)],
+          ['Fee', 'None — the rate above is the rate you get'],
+          ['They get', naira(v * q.rate)],
+          ['Arrives', 'Usually within a minute'],
+        ],
+        action: () => 'Send ' + usd(v),
+        onConfirm: (q) => {
+          const a = actions.sendMoney(to, v, q.rate)
+          replaceSheet('send-done', { ref: a.ref, rate: String(q.rate) })
+        },
       },
     })
   },
   'send-done': (r) => {
     const a = state.activity.find((x) => x.ref === str(r, 'ref'))!
-    return done('Sent', `${usd(Math.abs(a.amount))} is on its way to ${a.who}.`, a, [['Fee', 'None']])
+    const rate = num(r, 'rate', 0)
+    // The rate that was honoured, not the indicative one. Confirming against a
+    // held quote and then being told a different naira figure is the exact
+    // thing the hold exists to prevent.
+    return rate
+      ? done('Sent', `${naira(Math.abs(a.amount) * rate)} is on its way to ${a.who}.`, a,
+             [['Fee', 'None'], ['Rate', '1 dollar = ' + naira(rate)]])
+      : done('Sent', `${usd(Math.abs(a.amount))} is on its way to ${a.who}.`, a, [['Fee', 'None']])
   },
 
   /* ----- sending shares -----
@@ -899,71 +962,141 @@ export const SHEETS: Record<string, Builder> = {
       [['Worth', usd(Math.abs(a.amount))], ['Fee', 'None']])
   },
 
-  /* ----- add money ----- */
-  'add-review': (r) => {
+  /* ----- adding money -----
+     Two rails, two reviews, and the same two-step ledger under both. Neither
+     confirms a wallet that has gone up: they confirm that naira has left, and
+     the waiting sheet is where the arrival is reported. */
+
+  /** The card. We pull the naira, so a firm rate can be held for the ninety
+   *  seconds it takes, and the fee is a figure rather than a footnote. */
+  'card-review': (r) => {
     const v = num(r, 'v')
-    const bank = state.banks[0]
+    const c = state.cards[0]
     return review({
       title: 'Review',
       figureLabel: 'You are adding', figureValue: usd(v), amount: v,
       rows: [], action: '', onConfirm: () => {},
       note: '',
       hold: {
-        rows: (q) => [
-          ['You pay', naira(v * q.rate)],
-          ['Rate', '1 dollar = ' + naira(q.rate)],
-          ['Fee', 'None — the rate above is the rate you get'],
-          ['You receive', usd(v)],
-          ['From', bank.name + ' •••• ' + bank.last4],
-          ['Lands', 'In about a minute'],
-        ],
-        action: () => 'Add ' + usd(v),
-        onConfirm: () => {
-          const a = actions.addMoney(v, bank.id)
-          replaceSheet('add-done', { ref: a.ref })
+        rows: (q) => {
+          const ngn = Math.round(v * q.rate)
+          return [
+            ['You pay', naira(ngn + cardFee(ngn))],
+            ['Rate', '1 dollar = ' + naira(q.rate)],
+            ['Fee', naira(cardFee(ngn)) + ' · ' + state.fees.card + '% card fee'],
+            ['You receive', usd(v)],
+            ['Card', c.brand + ' •••• ' + c.last4],
+          ]
+        },
+        action: (q) => 'Pay ' + naira(Math.round(v * q.rate) + cardFee(Math.round(v * q.rate))),
+        onConfirm: (q) => {
+          const a = actions.startAddMoney(v, { kind: 'card', id: c.id }, q.rate)
+          // The charge is authorised; the naira has not reached us yet. A card
+          // takes seconds, so the wait is short — but it is a real wait with a
+          // real posting behind it, not a spinner over an answer we already had.
+          setTimeout(() => actions.landAddMoney(a.ref, q.rate), CARD_MS)
+          replaceSheet('add-waiting', { ref: a.ref, rate: String(q.rate) })
         },
       },
     })
-  },
-  'add-done': (r) => {
-    const a = state.activity.find((x) => x.ref === str(r, 'ref'))!
-    return done('Added', `${usd(a.amount)} is in your wallet.`, a, [['From', a.who]])
   },
 
-  /* ----- convert ----- */
-  'convert-review': (r) => {
+  /** The transfer. Nothing is held and nothing is charged: this sheet hands
+   *  over the account details and waits to be told the money has been sent.
+   *  Pressing the button is the person saying they have done it, which is why
+   *  it is worded as one — and it is the moment the naira leaves their bank,
+   *  so it is the moment the first posting is written. */
+  'transfer-review': (r) => {
     const v = num(r, 'v')
-    const bank = state.banks[0]
-    return review({
-      title: 'Review',
-      figureLabel: 'You are withdrawing', figureValue: usd(v), amount: v,
-      rows: [], action: '', onConfirm: () => {},
-      note: '',
-      hold: {
-        rows: (q) => [
-          ['Withdrawing', usd(v)],
-          ['Rate', '1 dollar = ' + naira(q.rate)],
-          ['Fee', 'None — the rate above is the rate you get'],
-          ['You receive', naira(v * q.rate)],
-          ['Into', bank.name + ' •••• ' + bank.last4],
-          ['Arrives', 'Usually within a minute'],
-        ],
-        action: () => 'Withdraw ' + usd(v),
-        onConfirm: (q) => {
-          const a = actions.convert(v, bank.id)
-          replaceSheet('convert-done', { ref: a.ref, rate: String(q.rate) })
+    const va = state.va
+    const ngn = Math.round(v * state.ngnPerUsd)
+    const copy = h('button', {
+      class: 'copy va-number', title: 'Copy the account number',
+      on: {
+        click: () => {
+          navigator.clipboard?.writeText(va.number).catch(() => {})
+          toast('Account number copied')
         },
       },
-    })
+    }, h('span', { class: 't-body-strong', text: va.number }),
+       h('span', { class: 'muted', html: icon.copy() }))
+    return sheet('Send the naira',
+      figure('Send exactly', naira(ngn)),
+      // The number first, because it is the thing being copied and the thing
+      // a wrong keystroke ruins. Everything under it is confirmation.
+      h('div', { class: 'kv' },
+        h('span', { class: 't-caps subtle', text: 'Account number' }), copy),
+      panel(
+        ['Bank', va.bank],
+        ['Account name', va.name],
+        ['Rate', '1 dollar = ' + naira(state.ngnPerUsd) + ', today'],
+        ['Fee', 'None — a transfer costs nothing'],
+        ['You will get', 'About ' + usd(v)],
+      ),
+      calloutEl('The rate is struck when your naira lands, so the dollars may differ by a few cents.'),
+      h('button', {
+        class: 'btn btn-primary', text: 'I have sent it',
+        on: {
+          click: () => {
+            const a = actions.startAddMoney(v, { kind: 'transfer', id: state.banks[0]?.id })
+            setTimeout(() => actions.landAddMoney(a.ref), TRANSFER_MS)
+            replaceSheet('add-waiting', { ref: a.ref })
+          },
+        },
+      }))
+      // No "Not now" under it. The sheet already closes from its own header,
+      // and a second control that does the same thing is what 11g.32 spent a
+      // tier taking out of the other dialogs.
   },
-  'convert-done': (r) => {
+
+  /** Between the two halves. The wallet has not moved and this sheet does not
+   *  say it has: it names what is in flight, where it is, and what happens
+   *  next. When the naira lands the tree is rebuilt and this becomes the
+   *  outcome, in place, without anybody pressing anything. */
+  'add-waiting': (r) => {
     const a = state.activity.find((x) => x.ref === str(r, 'ref'))!
-    // The rate that was honoured, not the indicative one. Confirming against a
-    // held quote and then being told a different naira figure is the exact
-    // thing the hold exists to prevent.
     const rate = num(r, 'rate', state.ngnPerUsd)
-    return done('Withdrawn', `${naira(Math.abs(a.amount) * rate)} is on its way to ${a.who}.`, a)
+    if (a.settled) {
+      return outcome('Added', `${usd(a.amount)} is in your wallet.`,
+        [['From', a.who], ['Rate', '1 dollar = ' + naira(rate)],
+         ['Reference', a.ref], ['When', longWhen(a.at)]],
+        { label: 'Done', onClick: closeSheet },
+        { label: 'See the record', onClick: () => replaceSheet('receipt', { ref: a.ref }) },
+        { celebrate: true })
+    }
+    const stuck = settlement(a.amount) === 'pending'
+    return sheet('On its way',
+      figure('Waiting for', naira(Math.round(a.amount * rate))),
+      panel(
+        ['You will get', usd(a.amount)],
+        ['From', a.who],
+        ['Reference', a.ref],
+      ),
+      calloutEl(stuck
+        ? 'This one has not reached us. Nothing has been lost — it is in your activity as unsettled, and it will credit the moment it arrives. Talk to us if it has been an hour.'
+        : 'Your wallet goes up the moment the naira reaches our account. You can close this and carry on.',
+        stuck ? 'warning' : undefined),
+      h('button', { class: 'btn btn-secondary', text: 'Close', on: { click: closeSheet } }))
   },
+
+  /** The cards on file. The same shape as the banks sheet, because they do the
+   *  same job from the other side. */
+  cards: () =>
+    sheet('Your cards',
+      h('div', { class: 'stack-12' },
+        ...state.cards.map((c) =>
+          h('div', { class: 'kv' },
+            h('span', { class: 'who' },
+              h('span', { class: 'mark', html: icon.wallet() }),
+              h('span', { class: 'two-line' },
+                h('span', { class: 't-body-strong', text: c.brand + ' •••• ' + c.last4 })),
+                h('small', { text: 'Expires ' + c.expiry })),
+            h('span', { class: 'muted t-caption', text: c.holder })))),
+      calloutEl(`A card costs ${state.fees.card}% and lands in seconds. A transfer costs nothing and takes a minute or two.`),
+      h('button', {
+        class: 'btn btn-secondary', text: 'Add a card',
+        on: { click: () => { toast('Adding a card needs a payments licence we do not have yet'); closeSheet() } },
+      })),
 
   /* ----- invest ----- */
   'invest-review': (r) => {

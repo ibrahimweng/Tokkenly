@@ -215,7 +215,89 @@ export interface Bank {
   name: string
   last4: string
   holder: string
+  /** The whole number, because a payout names one and a person checks it.
+   *  Nigerian account numbers are ten digits, always. */
+  number: string
 }
+
+/** A card on file. Naira in, at the speed a card moves, which is the whole
+ *  reason it is here beside the transfer: one route is instant and costs
+ *  something, the other is free and takes a minute. */
+export interface Card {
+  id: string
+  brand: string
+  last4: string
+  expiry: string
+  holder: string
+}
+
+/** The naira account money is paid into.
+ *
+ *  Not a shared account with a reference on it. Every Nigerian payments
+ *  provider issues a dedicated virtual account per customer, which is why a
+ *  transfer needs no reference at all: the account number *is* the reference,
+ *  and money reaching it can only be yours. It is a permanent detail of the
+ *  account, not a thing generated per payment, so it sits in state beside the
+ *  Base address rather than being made up at the review. */
+export interface VirtualAccount {
+  bank: string
+  number: string
+  name: string
+}
+
+/* --------------------------------------------------------------- sending --
+   Where money is going, which is the only question Send actually asks.
+
+   There used to be two screens: Send, for a person or an address, and
+   Withdraw, for your own bank. They were one errand wearing two names — both
+   take dollars out of the same wallet — and the split hid the thing that
+   really differs, which is that a payout into naira is a conversion and the
+   other two are not. */
+export type Rail = 'tokkenly' | 'chain' | 'bank'
+
+export interface Destination {
+  rail: Rail
+  /** What it is called on screen: a person, a shortened address, an account
+   *  holder's name as the bank returned it. */
+  name: string
+  /** One of your own banks, when it is one of your own. */
+  bankId?: string
+  /** For a bank payout: which bank, and the ten digits. */
+  bank?: string
+  number?: string
+}
+
+/** Whose account that number is.
+ *
+ *  Every Nigerian transfer asks this before it asks anything else: you type
+ *  ten digits, the bank returns a name, and you check it against the person
+ *  you meant to pay. It is the one step that catches a wrong digit before the
+ *  money is gone, and a product that moves naira without it is missing the
+ *  safety rail everybody in that market already expects.
+ *
+ *  Deterministic, like the rest of the failure model: ten digits or it is not
+ *  a number, and a number ending 99 resolves to nobody — so the refusal is on
+ *  a path anybody can walk rather than a state nobody has seen. */
+const HOLDERS = [
+  'ADAEZE NGOZI OKONKWO', 'TUNDE OLUWASEUN BAKARE', 'CHIDI EMEKA NWOSU',
+  'NGOZI AMARA EZE', 'IBRAHIM SULEIMAN BELLO', 'FATIMA AISHA YUSUF',
+  'OLUWATOBI DANIEL ADEYEMI', 'BLESSING CHIOMA UDE', 'MUSA GARBA ALIYU',
+  'KEHINDE FOLASADE LAWAL',
+]
+
+export function resolveAccount(number: string): string | null {
+  const digits = number.replace(/\D/g, '')
+  if (digits.length !== 10) return null
+  const own = state.banks.find((b) => b.number === digits)
+  if (own) return own.holder.toUpperCase()
+  if (digits.slice(-2) === '99') return null
+  return HOLDERS[Number(digits.slice(-1))]
+}
+
+/** What is on its way in and has not landed. Derived, like everything else:
+ *  it is the balance of the account the money sits in between the two banks,
+ *  not a number kept beside the row that is waiting. */
+export const inflightNaira = (): number => ledger.balanceOf('inflight')
 
 /** Somebody you can pay, and whether they hold an account here.
  *
@@ -273,7 +355,7 @@ export interface State {
    *  with "free" is not being transparent, it is being vague — and the two
    *  ship together. `fx` is nought because the naira rate on screen is the
    *  rate you get; that is the "nothing folded in" half of the promise. */
-  fees: { trade: number; fx: number }
+  fees: { trade: number; fx: number; card: number }
   /** Identity, and what it unlocks. The marketing says identity checks "may be
    *  required before financial and investment services", so an account starts
    *  without one and the limits say what that costs. */
@@ -287,6 +369,8 @@ export interface State {
   bucket: BucketItem[]
   people: Person[]
   banks: Bank[]
+  cards: Card[]
+  va: VirtualAccount
   devices: Device[]
   activity: Activity[]
   notifications: Notif[]
@@ -517,7 +601,10 @@ export const state: State = {
   get interestOwed() { return -ledger.balanceOf('loan.int') },
   borrowLimit: 1860,
   rates: { lend: 4.8, borrow: 9.4, collateral: 140 },
-  fees: { trade: 0.5, fx: 0 },
+  // A transfer costs nothing and a card costs what the card networks charge.
+  // Two ways in that cost the same are one way in wearing two names; the
+  // difference is the reason to offer both.
+  fees: { trade: 0.5, fx: 0, card: 1.4 },
   kyc: { status: 'none' },
   usedThisMonth: 180,
   // Not a list that is kept up to date beside the ledger — a reading of it.
@@ -548,9 +635,19 @@ export const state: State = {
     { name: 'Ngozi Eze', onTokkenly: false },
   ],
   banks: [
-    { id: 'gt', name: 'GTBank', last4: '4471', holder: 'Chinaza Okoro' },
-    { id: 'kuda', name: 'Kuda', last4: '8820', holder: 'Chinaza Okoro' },
+    { id: 'gt', name: 'GTBank', last4: '4471', holder: 'Chinaza Okoro', number: '0142384471' },
+    { id: 'kuda', name: 'Kuda', last4: '8820', holder: 'Chinaza Okoro', number: '2019478820' },
   ],
+  cards: [
+    { id: 'c1', brand: 'Verve', last4: '6612', expiry: '09/28', holder: 'CHINAZA OKORO' },
+  ],
+  // Permanent, and in the person's own name after it: money reaching it can
+  // only be theirs, which is why the transfer needs no reference.
+  va: {
+    bank: 'Providus Bank',
+    number: '9902847713',
+    name: 'TOKKENLY / CHINAZA OKORO',
+  },
   devices: [
     { id: 'mac', name: 'Chrome on Mac', seen: 'Now', current: true },
     { id: 'iphone', name: 'iPhone 13', seen: 'Today 09:12', current: false },
@@ -791,6 +888,12 @@ export function ceilingLabel(byBalance: number, ownLabel: string): string {
 export const tradeFee = (amount: number): number =>
   Math.round(amount * state.fees.trade) / 100
 
+/** What a card charges to move naira. Charged in naira, on the naira, because
+ *  that is where the card network takes it — so it is added to what you pay
+ *  rather than taken out of what you get, and the review says both figures. */
+export const cardFee = (naira: number): number =>
+  Math.round(naira * state.fees.card / 100)
+
 /** The most that can be invested once the fee has to fit in the cash too. */
 export const maxInvestable = (): number =>
   Math.floor((state.cash / (1 + state.fees.trade / 100)) * 100) / 100
@@ -926,71 +1029,154 @@ export const actions = {
     changed()
   },
 
-  send(to: string, amount: number): Activity {
+  /* --------------------------------------------------------- sending out --
+     One act, three rails. Send and Withdraw used to be two screens for one
+     errand — "why is there a send and there is a withdrawal?" — and the
+     honest answer is that there is not. Both take dollars out of the same
+     wallet; what differs is where they land, and that one fact decides the
+     currency, the speed, the fee and whether anybody's name needs checking.
+
+     So the destination is the question, and everything else follows from it:
+
+       tokkenly  another account here. Dollars, instantly, free.
+       chain     a Base address. Dollars, on the network, free, and final.
+       bank      any Nigerian account, yours or somebody else's. Dollars out,
+                 naira in, at the rate — which makes it a conversion, so it is
+                 two postings joined by that rate rather than one.
+  */
+  sendMoney(to: Destination, amount: number, rate = state.ngnPerUsd): Activity {
     actions.countAgainstLimit(amount)
+    if (to.rail === 'bank') {
+      const naira = Math.round(amount * rate)
+      const account = to.bankId ? 'bank:' + to.bankId : 'payee:' + to.name
+      ledger.account(account, to.name + (to.number ? ' \u00b7\u00b7\u00b7\u00b7 ' + to.number.slice(-4) : ''))
+      const a = record({
+        kind: 'payment', who: to.name, type: 'Sent', amount: -amount,
+        note: to.bankId ? 'Converted to naira' : 'Paid out in naira',
+      })
+      ledger.post({
+        ref: a.ref, at: a.at, pair: a.ref, rate,
+        what: `Took ${usd(amount)} from your wallet`,
+        entries: [{ account: 'wallet', amount: -amount }, { account: 'desk.usd', amount }],
+      })
+      ledger.post({
+        ref: a.ref, at: a.at, pair: a.ref, rate,
+        what: `Paid \u20a6${naira.toLocaleString('en-US')} to ${to.name}`,
+        entries: [{ account: 'desk.ngn', amount: -naira }, { account, amount: naira }],
+      })
+      changed()
+      return a
+    }
+    // Dollars, and the far end is the only difference: a Tokkenly account, or
+    // the network for anything outside it.
+    const far = to.rail === 'tokkenly' ? 'person:' + to.name : 'chain'
+    if (to.rail === 'tokkenly') ledger.account(far, to.name)
     const a = move(
-      { kind: 'payment', who: to, type: 'Sent', amount: -amount },
-      `Sent ${usd(amount)} to ${to}`,
-      // Dollars leave your wallet and arrive in theirs. On a Base address the
-      // far end is the network; on a Tokkenly account it is that account.
-      [{ account: 'wallet', amount: -amount }, { account: 'chain', amount }],
+      { kind: 'payment', who: to.name, type: 'Sent', amount: -amount },
+      `Sent ${usd(amount)} to ${to.name}`,
+      [{ account: 'wallet', amount: -amount }, { account: far, amount }],
     )
     changed()
     return a
   },
 
-  addMoney(amount: number, bankId: string, rate = state.ngnPerUsd): Activity {
+  /* ------------------------------------------------------- adding money --
+     Money arriving takes time, and the product used to pretend it did not.
+     `addMoney` credited the wallet the instant the button was pressed, from a
+     bank nobody had told, which is the single most dishonest thing the
+     prototype did: it invented the one event the whole flow is about.
+
+     There are two ways in and they behave differently, which is the reason to
+     offer both rather than to dress one up as two.
+
+       transfer  You push naira to a virtual account that belongs to you.
+                 Free, and it takes as long as the banks take. Nobody can hold
+                 a rate while somebody types an account number into another
+                 app, so the rate is struck when the money lands and the
+                 screen says so.
+       card      We pull the naira. Seconds, and it costs the card fee, so a
+                 firm rate can be held for the ninety seconds it takes.
+
+     Both run in two steps. `startAddMoney` records what left; `landAddMoney`
+     records what arrived and converts it. In between, the naira sits in
+     `inflight` — an account that is neither yours nor ours, which is exactly
+     what money between two banks is. The wallet does not move until step two,
+     and because every balance is derived there is no way to make it. */
+  startAddMoney(amount: number, via: { kind: 'transfer' | 'card'; id?: string }, rate = state.ngnPerUsd): Activity {
     actions.countAgainstLimit(amount)
-    const bank = state.banks.find((b) => b.id === bankId)
     const naira = Math.round(amount * rate)
-    const ref = reference()
-    // Named the first time it is used, so the statement says GTBank rather
-    // than the id it happens to be keyed by.
-    ledger.account('bank:' + bankId, bank ? bank.name + ' \u00b7\u00b7\u00b7\u00b7 ' + bank.last4 : 'Your bank')
-    // Two postings, because one entry cannot be denominated twice. Naira
-    // leaves the bank and reaches our desk; dollars leave the desk and reach
-    // the wallet. The rate is on both, so the pair can be checked.
-    ledger.post({
-      ref, at: new Date().toISOString(), pair: ref, rate,
-      what: `${bank?.name ?? 'Your bank'} paid in \u20a6${naira.toLocaleString('en-US')}`,
-      entries: [{ account: 'bank:' + bankId, amount: -naira }, { account: 'desk.ngn', amount: naira }],
-    })
-    ledger.post({
-      ref, at: new Date().toISOString(), pair: ref, rate,
-      what: `Converted to ${usd(amount)} and paid to your wallet`,
-      entries: [{ account: 'desk.usd', amount: -amount }, { account: 'wallet', amount }],
-    })
+    const from = via.kind === 'card'
+      ? state.cards.find((c) => c.id === via.id) ?? state.cards[0]
+      : state.banks.find((b) => b.id === via.id) ?? state.banks[0]
+    const account = via.kind === 'card' ? 'card:' + from.id : 'bank:' + from.id
+    const label = via.kind === 'card'
+      ? (from as Card).brand + ' \u00b7\u00b7\u00b7\u00b7 ' + from.last4
+      : (from as Bank).name + ' \u00b7\u00b7\u00b7\u00b7 ' + from.last4
+    ledger.account(account, label)
+    // A card takes its cut in naira, on the naira, so it is added to what you
+    // pay rather than taken out of what you get — and the review says both
+    // figures rather than one. A transfer costs nothing, which is the whole
+    // difference between the two rails and the reason to show both.
+    const fee = via.kind === 'card' ? cardFee(naira) : 0
     const a = record({
-      kind: 'payment', who: bank ? bank.name : 'Bank transfer',
+      kind: 'payment', who: via.kind === 'card' ? (from as Card).brand + ' card' : (from as Bank).name,
       type: 'Received', amount, note: 'Bought dollars',
+      // It has not landed. `settlement()` still decides the two magic
+      // endings — a card that declines and one that goes unanswered — but
+      // anything else starts pending and stays pending until the naira is
+      // actually in our account.
+      settled: false,
+    })
+    ledger.post({
+      ref: a.ref, at: a.at, rate,
+      what: via.kind === 'card'
+        ? `${label} charged \u20a6${naira.toLocaleString('en-US')}`
+        : `\u20a6${naira.toLocaleString('en-US')} sent from ${label}`,
+      entries: [
+        { account, amount: -(naira + fee) },
+        { account: 'inflight', amount: naira },
+        ...(fee ? [{ account: 'fees.ngn', amount: fee }] : []),
+      ],
     })
     changed()
     return a
   },
 
-  convert(amount: number, bankId: string, rate = state.ngnPerUsd): Activity {
-    actions.countAgainstLimit(amount)
-    const bank = state.banks.find((b) => b.id === bankId)
-    const naira = Math.round(amount * rate)
-    const ref = reference()
-    ledger.account('bank:' + bankId, bank ? bank.name + ' \u00b7\u00b7\u00b7\u00b7 ' + bank.last4 : 'Your bank')
+  /** The other half: the naira reaches the Tokkenly account and is converted.
+   *  The rate is the one honoured at this moment rather than the one shown
+   *  when the transfer was started, because that is the truth of it — and on
+   *  the card, where a quote was held, the two are the same number. */
+  landAddMoney(ref: string, rate = state.ngnPerUsd): void {
+    const a = state.activity.find((x) => x.ref === ref)
+    if (!a || a.settled) return
+    // The one that never arrives. `.98` is the product's magic value for
+    // "no answer", and with money genuinely in flight it finally has a state
+    // to mean: the transfer sits in `inflight` and stays there. The rule is
+    // here rather than on the screen that waits, because a rule that only
+    // exists in a view is a rule one route around the view undoes.
+    if (settlement(a.amount) === 'pending') return
+    const naira = Math.round(a.amount * rate)
+    ledger.post({
+      ref, at: new Date().toISOString(),
+      what: `\u20a6${naira.toLocaleString('en-US')} reached your Tokkenly naira account`,
+      entries: [{ account: 'inflight', amount: -naira }, { account: 'collect', amount: naira }],
+    })
+    // The conversion itself: two postings, one in each currency, joined by the
+    // rate. One entry cannot be denominated twice.
     ledger.post({
       ref, at: new Date().toISOString(), pair: ref, rate,
-      what: `Took ${usd(amount)} from your wallet`,
-      entries: [{ account: 'wallet', amount: -amount }, { account: 'desk.usd', amount }],
+      what: `\u20a6${naira.toLocaleString('en-US')} went to the currency desk`,
+      entries: [{ account: 'collect', amount: -naira }, { account: 'desk.ngn', amount: naira }],
     })
     ledger.post({
       ref, at: new Date().toISOString(), pair: ref, rate,
-      what: `Paid \u20a6${naira.toLocaleString('en-US')} to ${bank?.name ?? 'your bank'}`,
-      entries: [{ account: 'desk.ngn', amount: -naira }, { account: 'bank:' + bankId, amount: naira }],
+      what: `Converted to ${usd(a.amount)} and paid to your wallet`,
+      entries: [{ account: 'desk.usd', amount: -a.amount }, { account: 'wallet', amount: a.amount }],
     })
-    const a = record({
-      kind: 'payment', who: bank ? bank.name : 'Bank transfer',
-      type: 'Sent', amount: -amount, note: 'Converted to naira',
-    })
+    a.settled = true
     changed()
-    return a
   },
+
 
   /** Buying something you do not already hold opens the position. It used to
    *  take the money and add the shares only `if (h)`, so a first purchase —
@@ -1281,8 +1467,12 @@ export const actions = {
     changed()
   },
 
-  addBank(name: string, last4: string) {
-    state.banks.push({ id: name.toLowerCase() + last4, name, last4, holder: state.person.name })
+  addBank(name: string, number: string) {
+    const last4 = number.slice(-4)
+    state.banks.push({
+      id: name.toLowerCase().replace(/\s+/g, '') + last4,
+      name, last4, number, holder: state.person.name,
+    })
     changed()
   },
 

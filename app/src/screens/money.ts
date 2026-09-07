@@ -6,7 +6,10 @@ import { table } from '../components/table'
 import { searchField, searchNote } from '../components/search'
 import { rank, onlyNear } from '../match'
 import { composerScreen } from '../components/composer'
-import { state, movementCeiling, ceilingLabel, holding, WALLET } from '../state'
+import {
+  state, movementCeiling, ceilingLabel, holding, cardFee, resolveAccount, WALLET,
+  type Destination,
+} from '../state'
 
 const ceilingLabel2 = (byBalance: number) => ceilingLabel(byBalance, 'The most you can move here')
 import { walletScreen } from './wallet'
@@ -58,18 +61,110 @@ export function peopleRows(onPick: (who: string) => void): HTMLElement[] {
         h('span', { class: 'muted', html: icon.chevron() })))
 }
 
-/** Who you can pay, and a field for anybody you cannot. On a phone this is the
- *  first screen of Send; on a wide one it is the column beside the composer,
- *  so choosing who and saying how much are one screen rather than a dialog
- *  that opens another dialog to change its own target. */
-function sendSide(opts: { search: boolean }): HTMLElement {
+/* ---------------------------------------------------------------------------
+   One Send, and the question it asks first.
+
+   There used to be two screens. Send took dollars to a person or a Base
+   address; Withdraw took dollars to your own bank and turned them into naira.
+   "Why is there a send and there is a withdrawal?" is the right question, and
+   the honest answer is that there is not: both take dollars out of the same
+   wallet, and what differs is only where they land.
+
+   So there is one screen and the destination is what it asks. Everything else
+   follows from that one answer — the currency at the far end, the rail, the
+   speed, whether a rate is involved and whether anybody's name needs checking:
+
+     Someone on Tokkenly   dollars, instantly, free
+     A Base address        dollars, on the network, free, and final
+     A Nigerian account    dollars out, naira in, at the rate — yours or
+                           anybody's, with the name checked before you confirm
+
+   Withdraw and Convert still resolve, to the third of those. An address people
+   have bookmarked should not stop working because the product learned to
+   count the errand properly.
+   --------------------------------------------------------------------------- */
+
+/** Where the money is going, read off the address. `to` names it; `rail` says
+ *  which kind of thing it is, so a person called "0x…" and an address are
+ *  never confused for each other. */
+export function destination(): Destination | null {
+  const r = current()
+  const rail = r.query.get('rail')
+  const to = r.query.get('to')
+  if (rail === 'bank') {
+    const own = state.banks.find((b) => b.id === to)
+    if (own) return { rail: 'bank', name: own.name, bankId: own.id, bank: own.name, number: own.number }
+    const bank = r.query.get('bank')
+    if (to && bank) return { rail: 'bank', name: to, bank, number: r.query.get('acct') ?? '' }
+    return null
+  }
+  if (!to) return null
+  if (rail === 'chain') return { rail: 'chain', name: to }
+  return { rail: 'tokkenly', name: to }
+}
+
+/** Somebody else's Nigerian account, checked before it is used.
+ *
+ *  Ten digits, then the bank returns a name. It is the one step that catches a
+ *  wrong digit while the money is still yours, and every Nigerian who has ever
+ *  sent a transfer expects to see it — so the name arrives on the screen and
+ *  the button stays out of reach until it does. */
+function payeeCard(): HTMLElement {
+  const banks = ['Access Bank', 'GTBank', 'Kuda', 'Opay', 'First Bank', 'UBA', 'Zenith Bank', 'Moniepoint']
+  const pick = h('select', { class: 'field-select' },
+    ...banks.map((b) => h('option', { value: b, text: b })))
+  const acct = h('input', { placeholder: '10-digit account number', inputmode: 'numeric' })
+  acct.setAttribute('maxlength', '10')
+  const field = h('label', { class: 'field' }, acct)
+  const err = fieldError(h('span', { html: icon.alert() }),
+    h('span', { text: 'We could not find that account. Check the number and the bank.' }))
+  err.hidden = true
+  const found = h('div', { class: 'found', hidden: true })
+  const go2 = h('button', { class: 'btn btn-primary', text: 'Use this account', hidden: true })
+
+  let name: string | null = null
+  const check = () => {
+    name = resolveAccount(acct.value)
+    field.classList.toggle('error', !name && acct.value.replace(/\D/g, '').length === 10)
+    err.hidden = !!name || acct.value.replace(/\D/g, '').length < 10
+    found.hidden = !name
+    go2.hidden = !name
+    if (name) {
+      found.replaceChildren(
+        h('span', { class: 't-caps subtle', text: 'Account name' }),
+        h('span', { class: 't-title', text: name }),
+        h('small', { class: 'muted', text: pick.value + ' · ' + acct.value }))
+    }
+  }
+  acct.addEventListener('input', check)
+  pick.addEventListener('change', check)
+  go2.addEventListener('click', () => {
+    if (!name) return
+    go('/send?rail=bank&to=' + encodeURIComponent(name) +
+       '&bank=' + encodeURIComponent(pick.value) + '&acct=' + encodeURIComponent(acct.value))
+  })
+
+  return card(
+    cardHead('Somebody else’s account'),
+    h('label', { class: 'field' }, pick),
+    field,
+    err,
+    found,
+    go2,
+    h('span', { class: 'muted t-caption',
+      html: icon.info() + ' We check the name with the bank before you confirm. Naira arrives in minutes.' }))
+}
+
+/** Every place the money could go, in one column. Three groups, because the
+ *  three behave differently, and the group is the fastest way to say which
+ *  kind of thing you are about to pay. */
+function whereSide(opts: { search: boolean }): (Node | null)[] {
   const r = current()
   const term = r.query.get('q') ?? ''
   const setTerm = (v: string) => go('/send' + (v ? '?q=' + encodeURIComponent(v) : ''))
-
   const people = byRecent(PEOPLE())
-
   const PEOPLE_FIELDS = (n: string) => [n, lastPaid(n)]
+
   const row = (n: string) =>
     h('button', {
       class: 'sheet-row',
@@ -87,12 +182,12 @@ function sendSide(opts: { search: boolean }): HTMLElement {
   const paint = (t: string): void => {
     const found = t.trim() ? rank(t, people, PEOPLE_FIELDS) : people
     peopleCard.replaceChildren(card(
-      cardHead('People you can pay'),
+      cardHead('Someone on Tokkenly'),
       searchNote(t, found.length, onlyNear(t, found, PEOPLE_FIELDS)),
       found.length
         ? h('div', { class: 'sheet-list' }, ...found.map(row))
         : emptyState('Nobody by that name',
-            'Search another name, or send to an address below.',
+            'Search another name, or use one of the ways below.',
             { label: 'Clear the search', onClick: () => go('/send') })))
   }
   paint(term)
@@ -109,14 +204,14 @@ function sendSide(opts: { search: boolean }): HTMLElement {
     addressField.classList.toggle('error', bad)
     addressError.hidden = !bad
     if (bad) { address.focus(); return }
-    go('/send?to=' + encodeURIComponent(v.slice(0, 6) + '…' + v.slice(-4)))
+    go('/send?rail=chain&to=' + encodeURIComponent(v.slice(0, 6) + '…' + v.slice(-4)))
   }
   address.addEventListener('input', () => {
     addressField.classList.remove('error')
     addressError.hidden = true
   })
 
-  return h('div', { class: 'stack' },
+  const cards: (Node | null)[] = [
     opts.search
       ? searchField({
           placeholder: 'Search a name',
@@ -125,7 +220,7 @@ function sendSide(opts: { search: boolean }): HTMLElement {
           // composer with that person already in it.
           suggest: (t) => rank(t, people, PEOPLE_FIELDS).slice(0, 7).map((n) => ({
             label: n,
-            hint: 'Send money',
+            hint: 'Send dollars',
             group: 'People',
             pick: () => go('/send?to=' + encodeURIComponent(n)),
           })),
@@ -135,35 +230,67 @@ function sendSide(opts: { search: boolean }): HTMLElement {
       : null,
     peopleCard,
     card(
-      cardHead('Or send to an address'),
+      cardHead('Your own bank'),
+      ...state.banks.map((b) =>
+        h('button', {
+          class: 'sheet-row',
+          on: { click: () => go('/send?rail=bank&to=' + encodeURIComponent(b.id)) },
+        },
+          h('span', { class: 'mark', html: icon.convert() }),
+          h('span', { class: 'two-line grow' },
+            h('span', { class: 't-body-strong', text: b.name }),
+            h('small', { text: '•••• ' + b.last4 + ' · ' + b.holder })),
+          h('span', { class: 'muted', html: icon.chevron() }))),
+      h('span', { class: 'muted t-caption', text: 'Dollars out, naira in, at the rate you are shown.' }),
+      h('button', { class: 'link quiet', text: 'Add a bank', on: { click: () => openSheet('banks') } })),
+    payeeCard(),
+    card(
+      cardHead('A Base address'),
       addressField,
       addressError,
       h('button', { class: 'btn btn-secondary', text: 'Continue', on: { click: submitAddress } }),
-      callout('Base network only. Sending any other asset to this address loses it.', 'warning')
-    ))
+      callout('Base network only. Sending any other asset to this address loses it.', 'warning')),
+  ]
+  return cards
 }
 
+/** The whole list, as one column. This is the right-hand column of the
+ *  composer, where there is one column to be. */
+const whereColumn = (opts: { search: boolean }): HTMLElement =>
+  h('div', { class: 'stack' }, ...whereSide(opts))
+
+/** And the whole list as a page, where there is no composer yet and the four
+ *  groups would otherwise run 1,300px down one side of a wide screen. The
+ *  split is by how the money leaves: dollars on the left, naira on the right. */
 export function sendWhoScreen(): HTMLElement {
+  const [search, people, own, payee, address] = whereSide({ search: true })
   return shell(
     'wallet',
     pageHeader('Send money', eyebrow('Cash available', usd(state.cash))),
-    sendSide({ search: true }))
+    search,
+    isMobile()
+      ? h('div', { class: 'stack' }, people, own, payee, address)
+      : h('div', { class: 'row' },
+          h('div', { class: 'stack col-main' }, people, address),
+          h('div', { class: 'stack col-side' }, own, payee)))
 }
 
-export function sendScreen(): HTMLElement {
-  const r = current()
-  const chosen = r.query.get('to')
-  // On a phone, who comes first. On desktop the list is the right column.
-  if (isMobile() && !chosen && !r.sheet) return sendWhoScreen()
-  const to = chosen ?? PEOPLE()[0]
+export function sendScreen(forced?: Destination): HTMLElement {
+  const to = forced ?? destination()
+  // No destination yet, so the screen is the question. At every width: the
+  // composer has nothing to compose until it knows where the money is going,
+  // and a composer with a blank target is a form with a hole in it.
+  if (!to) return sendWhoScreen()
+  const bank = to.rail === 'bank'
+  const rate = state.ngnPerUsd
   // Built once and handed back on every repaint: the amount changing must not
   // wipe an address somebody is halfway through pasting.
-  const side = isMobile() ? null : sendSide({ search: false })
+  const side = isMobile() ? null : whereColumn({ search: false })
   return composerScreen({
     place: 'wallet',
     base: walletScreen,
     right: () => side!,
-    // On a phone the sheet is all there is, so the row opens a picker. On a
+    // On a phone the sheet is all there is, so the row opens the picker. On a
     // wide screen the list is the column beside it, and a Change that opens a
     // dialog to do what the next column already does is a second way to the
     // same place.
@@ -171,39 +298,80 @@ export function sendScreen(): HTMLElement {
       h('span', { class: 't-caps subtle', text: 'To' }),
       h(side ? 'div' : 'button', {
         class: 'sheet-row', style: { background: 'var(--control)' },
-        on: side ? {} : { click: () => openSheet('pick-who') },
+        on: side ? {} : { click: () => go('/send') },
       },
-        h('span', { class: 'avatar', text: initials(to) }),
-        h('span', { class: 'two-line' },
-          h('span', { class: 't-body-strong', text: to }),
-          h('small', { text: lastPaid(to) })),
+        bank
+          ? h('span', { class: 'mark', html: icon.convert() })
+          : h('span', { class: 'avatar', text: initials(to.name) }),
+        h('span', { class: 'two-line grow' },
+          h('span', { class: 't-body-strong', text: to.name }),
+          // Your own account is already named by the row above it, so the
+          // second line masks the number the way the rest of the product
+          // does. Somebody else's shows the whole thing, because that is the
+          // digits you are checking.
+          h('small', { text: !bank
+            ? (to.rail === 'chain' ? 'Base address' : lastPaid(to.name))
+            : to.bankId
+              ? '•••• ' + (to.number ?? '').slice(-4) + ' · ' + state.person.name
+              : to.bank + ' · ' + to.number })),
         side ? null : h('span', { class: 'link quiet', text: 'Change' }))),
     title: 'Send money',
     eyebrow: ['Cash available', usd(state.cash)],
     cardLabel: 'How much',
     cardRight: 'Cash ' + usd(state.cash),
-    initial: Math.min(120, state.cash),
+    initial: Math.min(bank ? 300 : 120, state.cash),
     max: Math.min(state.cash, movementCeiling()),
     maxLabel: ceilingLabel2(state.cash),
-    note: 'Arrives in under a minute, any day of the week.',
-    quick: [
-      { label: usd(20, false), value: 20 },
-      { label: usd(50, false), value: 50 },
-      { label: usd(120, false), value: 120 },
-      { label: 'All', value: state.cash },
-    ],
+    note: bank
+      ? 'Dollars out of your wallet, naira into that account.'
+      : 'Arrives in under a minute, any day of the week.',
+    quick: bank
+      ? [
+          { label: usd(50, false), value: 50 },
+          { label: usd(100, false), value: 100 },
+          { label: usd(300, false), value: 300 },
+          { label: 'All', value: state.cash },
+        ]
+      : [
+          { label: usd(20, false), value: 20 },
+          { label: usd(50, false), value: 50 },
+          { label: usd(120, false), value: 120 },
+          { label: 'All', value: state.cash },
+        ],
     // No 'To' row: the lede above already names them, and the same fact twice
     // in one dialog reads as a mistake.
-    summary: () => [
-      ['Fee', 'None — what you send is what they get'],
-      ['Arrives', 'In about a minute'],
-      ['Network', 'Base'],
-    ],
-    callout: 'Payments run every day of the year, including public holidays.',
+    summary: (v) => bank
+      ? [
+          ['You send', usd(v)],
+          ['Rate', '1 dollar = ' + naira(rate)],
+          ['Fee', 'None — the rate above is the rate you get'],
+          ['They get', naira(v * rate)],
+          ['Arrives', 'Usually within a minute'],
+        ]
+      : [
+          ['Fee', 'None — what you send is what they get'],
+          ['Arrives', 'In about a minute'],
+          ['Network', to.rail === 'chain' ? 'Base' : 'Inside Tokkenly'],
+        ],
+    callout: bank
+      ? 'You get a firm rate at the review, held for ninety seconds. Payouts run every day.'
+      : 'Payments run every day of the year, including public holidays.',
     action: (v) => 'Send ' + usd(v),
-    onAction: (v) => openSheet('send-review', { v: String(v), to }),
+    onAction: (v) => openSheet('send-review', { v: String(v), ...railParams(to) }),
+    bottom: bank ? (pastMoves('out') ?? undefined) : undefined,
   })
 }
+
+/** The destination, as the parameters a sheet can be re-opened from. A dialog
+ *  that cannot be rebuilt from its address is a dialog that loses its target
+ *  on a refresh. */
+export function railParams(d: Destination): Record<string, string> {
+  const out: Record<string, string> = { rail: d.rail, to: d.bankId ?? d.name }
+  if (d.bank) out.bank = d.bank
+  if (d.number) out.acct = d.number
+  return out
+}
+
 
 /** What people have sent you. Receive was a dialog with a code in it and
  *  nothing else; the question straight after "here is my address" is "did the
@@ -470,10 +638,19 @@ export function receiveScreen(): HTMLElement {
  *
  *  Nothing to show means no card. A screen that ends with an empty panel
  *  explaining that it is empty is worse composed than one that ends. */
-const NOTE = { in: 'Bought dollars', out: 'Converted to naira' } as const
+const NOTE = {
+  in: ['Bought dollars'],
+  // Both kinds of payout. Money to your own account and money to somebody
+  // else's are written with different notes because they are different
+  // errands, but "money you have taken out" is true of both, and a card that
+  // listed only half of them would be quietly wrong about the half it showed.
+  out: ['Converted to naira', 'Paid out in naira'],
+} as const
 
 function pastMoves(which: 'in' | 'out'): HTMLElement | null {
-  const rows = state.activity.filter((a) => a.note === NOTE[which]).slice(0, 5)
+  const rows = state.activity
+    .filter((a) => (NOTE[which] as readonly string[]).includes(a.note ?? ''))
+    .slice(0, 5)
   if (!rows.length) return null
   return card(
     cardHead(which === 'in' ? 'Money you have added' : 'Money you have taken out',
@@ -497,8 +674,97 @@ function pastMoves(which: 'in' | 'out'): HTMLElement | null {
   )
 }
 
+/* ---------------------------------------------------------------------------
+   Adding money, and the two ways it actually gets here.
+
+   The screen used to show one figure, one bank and one button, and pressing it
+   put dollars in the wallet. Nothing was debited, no account was named, and
+   the money arrived from nowhere in about as long as a click. The question it
+   provoked — "where is the money coming from?" — had no answer because there
+   was nothing behind it to answer with.
+
+   There are two ways in, and they are genuinely different, which is why both
+   are here rather than one of them dressed up as a choice:
+
+     A transfer  you push naira to an account that belongs to you, from your
+                 own bank app. It costs nothing and it takes as long as the
+                 banks take. Nobody can hold a rate while you type an account
+                 number into another app, so the rate is struck when the money
+                 lands, and the screen says so instead of promising otherwise.
+     A card      we pull the naira. It is seconds, it costs what the card
+                 networks charge, and because it is seconds a firm rate can be
+                 held for ninety of them.
+
+   Choosing costs one query parameter, so the choice is a place you can link to
+   and come back to rather than a state inside a dialog.
+   --------------------------------------------------------------------------- */
+
+export type Via = 'transfer' | 'card'
+
+export const addVia = (): Via => (current().query.get('via') === 'card' ? 'card' : 'transfer')
+
+/** The two rails, as two choices you can see at once. Not a dropdown: they
+ *  differ in what they cost and how long they take, and both facts belong on
+ *  the thing being chosen rather than in a line underneath it. */
+function railPicker(now: Via, head = true): HTMLElement {
+  const one = (key: Via, label: string, cost: string, speed: string, ic: string) => {
+    const b = h('button', {
+      class: 'rail' + (key === now ? ' on' : ''),
+      on: { click: () => go('/addmoney' + (key === 'card' ? '?via=card' : '')) },
+    },
+      h('span', { class: 'mark', html: ic }),
+      h('span', { class: 'two-line grow' },
+        h('span', { class: 't-body-strong', text: label }),
+        h('small', { text: speed })),
+      h('span', { class: 't-body-strong nowrap' + (cost === 'Free' ? ' pos' : ''), text: cost }))
+    // Two buttons where one is chosen: pressed, not checked. A screen reader
+    // that only hears "Bank transfer, Card" cannot tell which is in force.
+    b.setAttribute('aria-pressed', String(key === now))
+    return b
+  }
+  const rows = h('div', { class: 'stack-8' },
+    one('transfer', 'Bank transfer', 'Free', 'A minute or two', icon.convert()),
+    one('card', 'Card', state.fees.card + '%', 'Seconds', icon.wallet()))
+  // Above the amount, not beside it. Which rail you are on changes the fee,
+  // the wait and what can be promised about the rate — so it is the same kind
+  // of thing as Send's "To" row, and it goes in the same place, which is also
+  // the only place a phone has room for it.
+  return head
+    ? h('div', { class: 'stack-8' },
+        h('span', { class: 't-caps subtle', text: 'How it arrives' }), rows)
+    : card(cardHead('How the money gets here'), rows)
+}
+
+/** Where to send the naira. A dedicated account, permanently yours, which is
+ *  why there is no reference to quote: money reaching it can only be yours.
+ *  The number is the thing being copied, so the button is on the number. */
+function virtualAccount(): HTMLElement {
+  const v = state.va
+  return card(
+    cardHead('Send your naira here'),
+    kv('Bank', v.bank),
+    h('div', { class: 'kv' },
+      h('span', { class: 't-caps subtle', text: 'Account number' }),
+      h('button', {
+        class: 'copy va-number', title: 'Copy the account number',
+        on: {
+          click: () => {
+            navigator.clipboard?.writeText(v.number).catch(() => {})
+            toast('Account number copied')
+          },
+        },
+      },
+        h('span', { class: 't-body-strong', text: v.number }),
+        h('span', { class: 'muted', html: icon.copy() }))),
+    kv('Account name', v.name),
+    callout('This account is yours and does not change. Anything you send to it reaches your wallet, so there is no reference to quote.'))
+}
+
 export function addMoneyScreen(): HTMLElement {
-  const bank = state.banks[0]
+  const how = addVia()
+  const plastic = state.cards[0]
+  const rate = state.ngnPerUsd
+  const owed = (v: number) => Math.round(v * rate) + (how === 'card' ? cardFee(Math.round(v * rate)) : 0)
   return composerScreen({
     place: 'wallet',
     base: walletScreen,
@@ -513,7 +779,9 @@ export function addMoneyScreen(): HTMLElement {
     initial: 200,
     max: Math.min(5000, movementCeiling()),
     maxLabel: ceilingLabel2(5000),
-    note: 'Pay from your bank in naira, receive dollars.',
+    note: how === 'card'
+      ? 'Charged to your card in naira. In your wallet in seconds.'
+      : 'Send naira from your own bank. Dollars land when it does.',
     quick: [
       { label: usd(50, false), value: 50 },
       { label: usd(100, false), value: 100 },
@@ -524,78 +792,59 @@ export function addMoneyScreen(): HTMLElement {
     // the rate, the fee, and exactly what you receive, before you confirm" —
     // and a fee that only appears once you have pressed the button is a fee
     // you found out about later. None is an answer; leaving it out is not.
-    summary: (v) => [
-      ['You pay', naira(v * state.ngnPerUsd)],
-      ['Rate', '1 dollar = ' + naira(state.ngnPerUsd)],
-      ['Fee', 'None — the rate above is the rate you get'],
-      ['You receive', usd(v)],
-      ['From', bank.name + ' •••• ' + bank.last4],
-      ['Lands', 'In about a minute'],
-    ],
-    callout: 'The rate above is indicative. You get a firm one at the review, held for ninety seconds.',
-    action: (v) => 'Add ' + usd(v),
-    onAction: (v) => openSheet('add-review', { v: String(v) }),
+    summary: (v) => how === 'card'
+      ? [
+          ['You pay', naira(owed(v))],
+          ['Rate', '1 dollar = ' + naira(rate)],
+          ['Fee', naira(cardFee(Math.round(v * rate))) + ' · ' + state.fees.card + '% card fee'],
+          ['You receive', usd(v)],
+          ['From', plastic.brand + ' •••• ' + plastic.last4],
+          ['Lands', 'In a few seconds'],
+        ]
+      : [
+          ['You send', naira(v * rate)],
+          ['Rate', '1 dollar = ' + naira(rate) + ', today'],
+          ['Fee', 'None — a transfer costs nothing'],
+          ['You receive', 'About ' + usd(v)],
+          ['To', state.va.bank + ' · ' + state.va.number],
+          ['Lands', 'When your bank sends it'],
+        ],
+    callout: how === 'card'
+      ? 'You get a firm rate at the review, held for ninety seconds.'
+      : 'The rate is struck when your naira arrives, not now — nobody can hold one while you are in another app. Today’s is above.',
+    action: (v) => (how === 'card' ? 'Pay ' + naira(owed(v)) : 'Get the account details'),
+    onAction: (v) => openSheet(how === 'card' ? 'card-review' : 'transfer-review', { v: String(v) }),
+    lede: () => railPicker(how),
     right: (v) =>
-      card(
-        cardHead('What you pay'),
-        h('span', { class: 't-title', text: 'In naira' }),
-        h('span', { class: 't-display-xl', text: naira(v * state.ngnPerUsd) }),
-        h('span', { class: 'muted', text: 'Indicative. The rate you see at the review is the rate you get.' }),
-        h('div', { class: 'stack-12' },
-          kv('Bank', bank.name),
-          kv('Account', '•••• ' + bank.last4),
-          kv('Name', bank.holder)),
-        h('button', { class: 'link', text: 'Use another bank', on: { click: () => openSheet('banks') } })
-      ),
+      h('div', { class: 'stack' },
+        how === 'card'
+          ? card(
+              cardHead('What you pay'),
+              h('span', { class: 't-title', text: 'In naira' }),
+              h('span', { class: 't-display-xl', text: naira(owed(v)) }),
+              h('span', { class: 'muted',
+                text: naira(v * rate) + ' for the dollars, ' + naira(cardFee(Math.round(v * rate))) + ' card fee.' }),
+              h('div', { class: 'stack-12' },
+                kv('Card', plastic.brand),
+                kv('Number', '•••• ' + plastic.last4),
+                kv('Expires', plastic.expiry)),
+              h('button', { class: 'link', text: 'Use another card', on: { click: () => openSheet('cards') } }))
+          : virtualAccount()),
     bottom: pastMoves('in') ?? undefined,
   })
 }
 
-export function convertScreen(): HTMLElement {
-  const bank = state.banks[0]
-  return composerScreen({
-    place: 'wallet',
-    base: walletScreen,
-    title: 'Withdraw to your bank',
-    eyebrow: ['Cash available', usd(state.cash)],
-    cardLabel: 'How much',
-    cardRight: 'Cash ' + usd(state.cash),
-    initial: Math.min(300, state.cash),
-    max: Math.min(state.cash, movementCeiling()),
-    maxLabel: ceilingLabel2(state.cash),
-    note: 'Dollars out of your wallet, naira into your bank.',
-    quick: [
-      { label: usd(50, false), value: 50 },
-      { label: usd(100, false), value: 100 },
-      { label: usd(300, false), value: 300 },
-      { label: 'All', value: state.cash },
-    ],
-    summary: (v) => [
-      ['You send', usd(v)],
-      ['Rate', '1 dollar = ' + naira(state.ngnPerUsd)],
-      ['Fee', 'None — the rate above is the rate you get'],
-      ['You get', naira(v * state.ngnPerUsd)],
-      ['Into', bank.name + ' •••• ' + bank.last4],
-      ['Arrives', 'Usually within a minute'],
-    ],
-    callout: 'You get a firm rate at the review, held for ninety seconds. Payouts run every day.',
-    action: (v) => 'Withdraw ' + usd(v),
-    onAction: (v) => openSheet('convert-review', { v: String(v) }),
-    right: (v) =>
-      card(
-        cardHead('Where it lands',
-          h('button', { class: 'link', text: 'Change', on: { click: () => openSheet('banks') } })),
-        h('span', { class: 't-title', text: bank.name }),
-        h('span', { class: 't-display-xl', text: naira(v * state.ngnPerUsd) }),
-        h('span', { class: 'muted', text: '•••• ' + bank.last4 + ' · ' + bank.holder }),
-        h('div', { class: 'stack-12' },
-          ...state.banks.map((b) => kv(b.name, '•••• ' + b.last4))),
-        h('button', {
-          class: 'link', text: 'Add a bank',
-          on: { click: () => openSheet('banks') },
-        }),
-        h('span', { class: 'muted t-caption', html: icon.info() + ' A bank account has to be in your own name.' })
-      ),
-    bottom: pastMoves('out') ?? undefined,
+/** The old Withdraw, which is Send with the destination already answered.
+ *  It keeps its address rather than its screen: a redirect, not a copy, so
+ *  there is one composer for the errand and no second one to drift from it. */
+export function withdrawScreen(): HTMLElement {
+  const own = state.banks[0]
+  // The composer itself, with the destination already answered — not a
+  // redirect. A redirect would paint the picker for one frame and then jump,
+  // and the point of keeping the address is that it lands where it always did.
+  if (!own) return sendScreen()
+  return sendScreen({
+    rail: 'bank', name: own.name, bankId: own.id, bank: own.name, number: own.number,
   })
 }
+

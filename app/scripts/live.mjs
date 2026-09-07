@@ -22,7 +22,11 @@ const page = async (w = 1440, h = 1024) => {
 console.log('COMPOSING IS A SCREEN  every way of moving money, the same way')
 for (const [route, title] of [
   ['/send?to=Tunde%20Bakare', 'Send money'], ['/receive', 'Receive money'],
-  ['/addmoney', 'Add money'], ['/withdraw', 'Withdraw to your bank'],
+  // /withdraw is kept as an address and answers with the Send composer: one
+  // errand, one screen, the destination already filled in. What is being
+  // checked here is that it is still a place with a heading and a trail, not
+  // that it still has a name of its own.
+  ['/addmoney', 'Add money'], ['/withdraw', 'Send money'],
   ['/invest/aapl/invest', 'Invest'], ['/grow/borrow', 'Borrow'],
   ['/grow/earn', 'Lend'], ['/grow/repay', 'Repay'],
 ]) {

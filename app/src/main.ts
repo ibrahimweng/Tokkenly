@@ -19,7 +19,7 @@ import { historyScreen } from './screens/history'
 import { accountScreen } from './screens/settings'
 import { statementScreen } from './screens/statement'
 import { signInScreen, signUpScreen } from './screens/auth'
-import { sendScreen, receiveScreen, addMoneyScreen, convertScreen, sendSharesScreen } from './screens/money'
+import { sendScreen, receiveScreen, addMoneyScreen, withdrawScreen, sendSharesScreen } from './screens/money'
 import { allScreen } from './screens/all'
 import { welcomeScreen } from './screens/welcome'
 import { verifyScreen } from './screens/verify'
@@ -42,13 +42,17 @@ function notFound(path: string): HTMLElement {
 const FLAT: Record<string, () => HTMLElement> = {
   transfer: walletScreen,
   activity: historyScreen,
-  withdraw: convertScreen,
   wallet: walletScreen,
   history: historyScreen,
   send: sendScreen,
+  // Withdraw and Convert were one errand each and both were Send with the
+  // destination already answered. They still resolve, to the bank rail: an
+  // address somebody bookmarked should not break because the product learned
+  // to count the errand properly.
+  withdraw: withdrawScreen,
+  convert: withdrawScreen,
   receive: receiveScreen,
   addmoney: addMoneyScreen,
-  convert: convertScreen,
   bucket: bucketScreen,
   disclosures: disclosuresScreen,
 }

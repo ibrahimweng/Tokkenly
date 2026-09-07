@@ -296,19 +296,36 @@ function securityBody(): (Node | null)[] {
 
 function paymentsBody(): (Node | null)[] {
   return [
+    // Where naira reaches you, which is a permanent detail of the account
+    // rather than something generated per payment — so it belongs here, beside
+    // the banks, and not only on the screen that happens to need it.
+    card(
+      cardHead('Your naira account'),
+      kv('Bank', state.va.bank),
+      kv('Account number', state.va.number),
+      kv('Account name', state.va.name),
+      h('span', { class: 'muted t-caption',
+        text: 'Yours, and it does not change. Anything sent to it becomes dollars in your wallet at the rate when it lands.' })),
     card(
       cardHead('Your banks', h('button', { class: 'link', text: 'Add a bank',
         on: { click: () => openSheet('banks') } })),
       ...state.banks.map((b) => kv(b.name, '•••• ' + b.last4)),
       state.banks.length
         ? h('span', { class: 'muted t-caption',
-            text: 'Naira arrives from these and payouts go back to them. The first one is used unless you pick another.' })
-        : h('span', { class: 'muted', text: 'No bank yet. Add one to move naira in and out.' }),
+            text: 'Payouts go to these. The first one is used unless you pick another.' })
+        : h('span', { class: 'muted', text: 'No bank yet. Add one to move naira out.' }),
       h('button', { class: 'link quiet', text: 'Manage banks', on: { click: () => openSheet('banks') } })),
+    card(
+      cardHead('Your cards', h('button', { class: 'link', text: 'Manage cards',
+        on: { click: () => openSheet('cards') } })),
+      ...state.cards.map((c) => kv(c.brand + ' •••• ' + c.last4, 'Expires ' + c.expiry)),
+      h('span', { class: 'muted t-caption',
+        text: 'A card is seconds and costs ' + state.fees.card + '%. A transfer is free and takes a minute or two.' })),
     card(
       cardHead('What it costs'),
       kv('Buying or selling', state.fees.trade + '% of the amount'),
-      kv('Naira to dollars', 'Nothing beyond the rate on screen'),
+      kv('Adding money by transfer', 'Nothing beyond the rate on screen'),
+      kv('Adding money by card', state.fees.card + '% of the naira'),
       kv('Sending and receiving', 'Nothing'),
       h('span', { class: 'muted t-caption', text: 'The fee is shown on every screen before you commit, never after.' })),
   ]

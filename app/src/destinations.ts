@@ -26,10 +26,16 @@ export const DESTINATIONS: Destination[] = [
 
   { label: 'Transfer', to: '/transfer', place: 'wallet', kind: 'place', primary: true, also: 'wallet cash balance dollars move money' },
   { label: 'Add money', to: '/addmoney', place: 'wallet', kind: 'action', primary: true, also: 'buy dollars fund top up naira deposit', hint: 'Naira in, dollars out' },
-  { label: 'Send money', to: '/send', place: 'wallet', kind: 'action', primary: true, also: 'pay transfer', hint: 'Pay a person or a wallet' },
+  { label: 'Send money', to: '/send', place: 'wallet', kind: 'action', primary: true,
+    also: 'pay transfer withdraw convert cash out naira bank payout wallet address',
+    hint: 'To a person, a wallet or a bank' },
   { label: 'Receive money', to: '/receive', place: 'wallet', kind: 'action', primary: true, also: 'address qr get paid base wallet address 0x copy', hint: 'Your address and code' },
-  { label: 'Withdraw to your bank', to: '/withdraw', place: 'wallet', kind: 'action', primary: true, also: 'convert cash out naira bank payout', hint: 'Dollars out, naira into your bank' },
+  // Still listed, because it is what people search for. It resolves into Send
+  // with the destination already answered rather than to a screen of its own.
+  { label: 'Withdraw to your bank', to: '/withdraw', place: 'wallet', kind: 'action', primary: true, also: 'convert cash out naira payout', hint: 'Dollars out, naira into your bank' },
   { label: 'Your banks', to: '/transfer?sheet=banks', place: 'wallet', kind: 'screen', primary: true, also: 'account number gtbank kuda payout' },
+  { label: 'Your naira account', to: '/account/payments', place: 'wallet', kind: 'screen', primary: true,
+    also: 'virtual account number where to send naira deposit providus', hint: 'Where to send naira' },
 
   { label: 'Invest', to: '/invest', place: 'market', kind: 'place', primary: true, also: 'market stocks shares etfs browse buy' },
   { label: 'Your bucket', to: '/bucket', place: 'market', kind: 'screen', primary: true,
@@ -193,6 +199,7 @@ export function search(raw: string): Hit[] {
       { label: `Send ${usd(v)}`, to: '/send?v=' + v, group: 'Move money', hint: 'Pick who, then confirm' },
       { label: `Add ${usd(v)}`, to: '/addmoney?v=' + v, group: 'Move money', hint: 'Naira in, dollars out' },
       { label: `Withdraw ${usd(v)}`, to: '/withdraw?v=' + v, group: 'Move money', hint: 'Dollars out to your bank' },
+      { label: `Pay ${usd(v)} to a Nigerian account`, to: '/send?v=' + v, group: 'Move money', hint: 'Any account, name checked first' },
     )
   }
 

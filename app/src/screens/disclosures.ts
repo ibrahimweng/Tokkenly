@@ -38,7 +38,8 @@ export function disclosuresScreen(): HTMLElement {
           cardHead('What it costs'),
           kv('Buying or selling', pct(state.fees.trade, 1) + ' of the amount'),
           kv('Adding money', 'No fee'),
-          kv('Withdrawing to a bank', 'No fee'),
+          kv('Sending to a bank', 'No fee beyond the rate on screen'),
+          kv('Adding money by card', pct(state.fees.card, 1) + ' of the naira'),
           kv('Sending to another wallet', 'No fee'),
           para('Every screen that moves money shows the amount, the fee and what you receive before you confirm.')),
 

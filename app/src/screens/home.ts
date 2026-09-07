@@ -243,7 +243,12 @@ function detailed(): HTMLElement {
           h('button', { class: 'btn btn-secondary btn-sm', text: 'Receive', on: { click: () => go('/receive') } }))),
       h('div', { class: 'row grow tiles' },
         quickAction('Buy', 'Shares and funds', icon.buy(), '/invest'),
-        quickAction('Convert', 'Naira and dollars', icon.convert(), '/withdraw'),
+        // Was "Convert", pointing at Withdraw. Converting is now both
+        // directions and neither is a screen of its own: naira in is Add
+        // money, naira out is Send with a bank as the destination. Send is
+        // already a button eight pixels above this row, so the errand this
+        // slot is missing is the other one.
+        quickAction('Add money', 'Naira in, dollars out', icon.receive(), '/addmoney'),
         quickAction('Borrow', 'Against your shares', icon.download(), '/grow/borrow'))),
     tasks(),
     h('div', { class: 'row' },

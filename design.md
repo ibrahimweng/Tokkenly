@@ -5727,7 +5727,122 @@ drawing; and the busy button's spinner, a glyph on a pseudo-element. It reads
      was missing was not judgement, it was a count: a rule stated in prose
      drifts, and a rule with a suite behind it does not.
 
-### 11g.37 Still open
+### 11g.37 Where the money comes from, part two: time
+
+The ledger made the accounts honest. It did not make the clock honest. Adding
+money still credited the wallet the instant the button was pressed — the
+postings named the right accounts now, and they all happened in the same
+millisecond, on a bank transfer nobody had told. The one event the whole flow
+is about, the money actually arriving, was still invented.
+
+**Two ways in, and they are genuinely different.** A transfer is pushed by a
+person from their own bank app; a card is pulled by us. That difference decides
+everything else, so both are on the screen rather than one of them dressed up
+as a choice:
+
+| | Bank transfer | Card |
+|---|---|---|
+| Who moves it | You do | We do |
+| How long | A minute or two | Seconds |
+| What it costs | Nothing | 1.4% of the naira |
+| The rate | Struck when it lands | Held firm for ninety seconds |
+
+The last row is the one that matters and it is the one a prototype would fudge.
+Nobody can hold a rate for ninety seconds while somebody types an account
+number into a different app. So the transfer screen says the rate is struck on
+arrival, quotes today's as indicative, and promises "about $200" rather than
+$200 exactly. The card, which clears in seconds, gets the firm quote the rest of
+the product already knew how to hold.
+
+**A dedicated account, not a reference.** Every Nigerian payments provider
+issues a virtual account per customer, and that is why a transfer there needs
+no reference at all: the account number *is* the reference, and money reaching
+it can only be yours. It is a permanent property of the account, so it sits in
+state beside the Base address and appears on Payment methods as well as on the
+screen that needs it, rather than being generated at a review.
+
+**And a leg that is genuinely pending.** Adding money is two steps now.
+`startAddMoney` writes what left — naira out of a bank or a card, into
+`inflight`, an account that is neither yours nor ours, which is exactly what
+money between two banks is. `landAddMoney` writes what arrived: into the
+Tokkenly naira account, on to the currency desk, and out the other side as
+dollars in the wallet. Four postings, three moments, and every one of them a
+thing that really happens.
+
+The wallet does not move until step two, and because every balance is derived
+there is no way to make it. That is the whole return on the ledger: the
+pending state is not a flag on a row that the balance politely ignores, it is
+the money sitting in a named account you can look at. Transfer shows it —
+"On its way to us, ₦450,000" — read off `inflight` rather than totalled from
+the rows beside it.
+
+`.98`, the magic value for "no answer", finally has a state to mean. With money
+genuinely in flight, a transfer that never arrives sits in `inflight` and stays
+there, and the waiting sheet says so: nothing lost, nothing credited, nothing
+sent twice. The rule is in `landAddMoney` rather than on the screen, because a
+rule that only exists in a view is a rule one route around the view undoes.
+
+A card fee needed a naira fee account of its own. It could not be folded into
+`fees`, which is denominated in dollars, because a posting has to come to
+nothing in every currency it touches — the ledger refusing to let two
+currencies share an account is the ledger doing its job.
+
+### 11g.38 One Send, and the question it asks first
+
+"Why is there a send and there is a withdrawal?" The honest answer is that
+there is not. Both took dollars out of the same wallet. The split into two
+screens hid the only thing that actually differs, which is that a payout into
+naira is a *conversion* — two postings joined by a rate — and the other rails
+are dollars at both ends.
+
+So there is one Send, and the destination is what it asks first. Everything
+else falls out of that one answer:
+
+- **Someone on Tokkenly** — dollars, instantly, free. The far end is
+  `person:<name>`, an account with a name on it rather than "the network".
+- **A Base address** — dollars, on the network, free and final. The warning
+  says what an address cannot do, which is be checked.
+- **A Nigerian bank account** — yours or anybody's. Dollars out of the wallet,
+  naira into the account, at the rate. Your own banks are listed first because
+  that is the old Withdraw, and it is now one row rather than one screen.
+
+**A name before a number.** The third rail gained the step that every Nigerian
+transfer has and this product did not: you type ten digits, the bank returns a
+name, and you check it against the person you meant to pay. It is the one thing
+that catches a wrong digit while the money is still yours. The button to
+continue does not exist until a name comes back, and an account ending 99
+resolves to nobody — so the refusal is on a path anybody can walk rather than a
+state nobody has seen.
+
+`/withdraw` and `/convert` still resolve. They render the same composer with the
+destination already answered rather than redirecting, because a redirect would
+paint the picker for a frame and then jump. An address somebody bookmarked
+should not break because the product learned to count the errand properly.
+
+Transfer went from three doors to two. The measurements: adding $300 by
+transfer leaves the wallet at $2,480 and ₦450,000 in `inflight` while it is in
+the air, then $2,780 and nothing in flight; a card add of $100 charges
+₦2,100 in fees in naira and credits exactly $100; a $120 payout to GTBank takes
+$120 from the wallet and pays naira at the held rate, in two postings. Twenty
+four assertions in `inflow.mjs`.
+
+104. **A pending state is an account, not a flag.** "Still settling" written
+     beside a balance that has already moved is decoration. Money that has left
+     one place and not arrived at another is somewhere, and naming that
+     somewhere is what makes the waiting screen true rather than reassuring.
+
+105. **Two ways to do one thing must differ in something the person pays.**
+     Cost, or speed, or what can be promised about the rate. If they differ in
+     none of those, they are one way with two buttons, and the choice is work
+     the product has pushed onto the reader.
+
+106. **The destination is the question.** Send and Withdraw were one errand
+     wearing two names, and splitting them hid the fact that only one of the
+     two changes currency. Where the money goes decides the rail, the fee, the
+     speed and the checks; ask that first and the rest of the screen follows
+     from it.
+
+### 11g.39 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from
   using the product afterwards. Item 30 was held back until it was asked for,
@@ -5743,17 +5858,16 @@ drawing; and the busy button's spinner, a glyph on a pseudo-element. It reads
   wherever it was filled. What it still cannot do is take a payment from
   anything but the wallet balance: "add money" and "buy the bucket" are two
   errands where a card or a bank debit at the point of purchase would be one.
-- The ledger is built and the statement proves it (11g.35). Two things it makes
-  possible are not built yet. **Adding money still credits the wallet the
-  instant the button is pressed.** The postings are now honest about which
-  accounts it passes through, but not about time: naira reaching a Nigerian
-  virtual account by transfer takes minutes and a card charge can be reversed,
-  so there should be a pending leg sitting in the collection account until the
-  money actually lands, and two ways in — a dedicated account with a reference,
-  and a card. **And Send and Withdraw are still two screens** for one errand.
-  The destination is what differs, not the act: another Tokkenly person, a Base
-  address, or anybody's Nigerian bank account, each deciding the rail, the
-  currency, the fee and whether a name check is owed.
+- The ledger is built and the statement proves it (11g.35); adding money has a
+  real pending leg and two rails (11g.37); Send asks where the money is going
+  and Withdraw is one of the answers (11g.38). What is still missing from the
+  money model is the other side of a card: a charge can be reversed weeks
+  later, and there is no chargeback in here at all — the ledger would need a
+  reversing posting and the wallet would need somewhere to take it from.
+- A transfer lands on a timer, because there is no webhook to wait for. That is
+  the seam a real backend arrives at, and it is one `setTimeout` wide.
+- The name a Nigerian account resolves to comes from a table indexed by the
+  last digit. The step is real and the refusal is real; the directory is not.
 - The recipient of a share transfer is still nobody: `sent:AAPL` is an account
   outside the books, which is truthful for a single-account prototype and is
   the seam a real one fills with the other person's `held:AAPL`.

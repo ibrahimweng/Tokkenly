@@ -79,6 +79,12 @@ const FIXED: Account[] = [
     what: 'What the loan has cost so far, and not yet been paid' },
 
   // ours
+  // Money that has left somebody's bank or card and has not reached us yet is
+  // not ours and is not theirs. Before this account existed the product simply
+  // pretended the gap was not there: the wallet went up the instant the button
+  // was pressed, on a transfer that had not been made.
+  { id: 'inflight', name: 'On its way to us', currency: 'NGN', book: 'ours',
+    what: 'Naira that has left a bank or a card and has not arrived yet' },
   { id: 'collect', name: 'Tokkenly naira account', currency: 'NGN', book: 'ours',
     what: 'Where naira paid to us sits before it is converted' },
   { id: 'payout', name: 'Tokkenly payout account', currency: 'NGN', book: 'ours',
@@ -89,6 +95,11 @@ const FIXED: Account[] = [
     what: 'The other side of every conversion' },
   { id: 'fees', name: 'Tokkenly fees', currency: 'USD', book: 'ours',
     what: 'What we charged, and nothing else' },
+  // A card fee is charged in naira, on the naira, because that is the currency
+  // the card network takes it in. It cannot be folded into the dollar fee
+  // account: a posting has to come to nothing in every currency it touches.
+  { id: 'fees.ngn', name: 'Tokkenly fees, naira', currency: 'NGN', book: 'ours',
+    what: 'What a card charge cost, in the currency it was charged in' },
   { id: 'interest', name: 'Interest we pay and charge', currency: 'USD', book: 'ours',
     what: 'What the pool pays lenders, and what borrowers pay it' },
 

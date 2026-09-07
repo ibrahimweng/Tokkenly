@@ -3,8 +3,8 @@ import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, headLink, kv, callout, amount, directionMark, figureWithEye, spentBar } from '../components/bits'
 import { table } from '../components/table'
-import { state, buyingPower, availableToBorrow, inNaira, rateLine, limits, leftThisMonth, verified, money } from '../state'
-import { usd, when, activityLabel } from '../format'
+import { state, buyingPower, availableToBorrow, inNaira, inflightNaira, rateLine, limits, leftThisMonth, verified, money } from '../state'
+import { usd, naira, when, activityLabel } from '../format'
 import { go, openSheet } from '../router'
 
 function way(label: string, sub: string, ic: string, to: string): HTMLElement {
@@ -147,6 +147,7 @@ function limitsCard(): HTMLElement {
 
 export function walletScreen(): HTMLElement {
   const pending = state.activity.filter((a) => !a.settled)
+  const flight = inflightNaira()
 
   return shell(
     'wallet',
@@ -160,12 +161,22 @@ export function walletScreen(): HTMLElement {
     cashHero(),
     h('div', { class: 'row' },
       h('div', { class: 'stack col-main' },
+        // Two doors, not three. Withdraw was Send with the destination already
+        // answered, and a third tile for it made one errand look like two.
         h('div', { class: 'row equal' },
           way('Add money', 'Naira in, dollars out', icon.receive(), '/addmoney'),
-          way('Send', 'Pay anyone, for nothing', icon.send(), '/send'),
-          way('Withdraw', 'Dollars out to your bank', icon.convert(), '/withdraw')),
+          way('Send', 'To a person, a wallet or a bank', icon.send(), '/send')),
         card(
           cardHead('Still settling', headLink('See all', '/activity')),
+          // What is genuinely between two banks, named in the currency it is
+          // sitting in. It is the balance of the account the money waits in
+          // rather than a total of the rows below, so a wallet that has not
+          // gone up and a figure that says why cannot disagree.
+          flight > 0
+            ? h('div', { class: 'kv' },
+                h('span', { class: 't-caps subtle', text: 'On its way to us' }),
+                h('span', { class: 't-body-strong', text: naira(flight) }))
+            : null,
           pending.length
             ? h('div', { class: 'stack-12' }, ...pending.map((a) =>
                 h('div', { class: 'kv' },

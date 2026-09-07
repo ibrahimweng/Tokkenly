@@ -96,7 +96,10 @@ await go('/send?q=zzzzz', 390)
 const t2 = await page.locator('.empty h2').first().textContent().catch(() => null)
 ok('the picker search finds nobody', t2 === 'Nobody by that name', t2 ?? 'no empty state')
 await go('/send?q=tunde', 390)
-const n = await page.locator('.sheet-row').count()
+// Scoped to the people card. Send now lists your own banks in the same row
+// anatomy, which is right — they are destinations too — so an unscoped count
+// was measuring the whole screen rather than the search.
+const n = await page.locator('.card', { hasText: 'Someone on Tokkenly' }).locator('.sheet-row').count()
 ok('the picker search filters', n === 1, `${n} row(s)`)
 
 console.log('ERROR')
@@ -106,8 +109,11 @@ await page.locator('.btn-secondary', { hasText: 'Continue' }).click()
 await page.waitForTimeout(120)
 const err = await page.evaluate(() => {
   const f = document.querySelector('.field.error')
-  const m = document.querySelector('.field-error')
-  return { ringed: !!f, message: m && !m.hidden ? m.textContent.trim() : null }
+  // The visible one. There is more than one field on this screen now — the
+  // account-number check has its own — and every other is hidden, so picking
+  // the first in the document was picking a message nobody can see.
+  const m = document.querySelector('.field-error:not([hidden])')
+  return { ringed: !!f, message: m ? m.textContent.trim() : null }
 })
 ok('a bad address is marked where it was typed', err.ringed && !!err.message, JSON.stringify(err))
 await page.locator('input[placeholder="Paste a Base address"]').fill('0x22b1A7c04fa0')
