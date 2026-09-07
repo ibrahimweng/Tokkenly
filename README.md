@@ -56,5 +56,28 @@ node scripts/send.mjs         # the Send picker, both widths
 node scripts/states.mjs       # 25 interaction-state checks
 ```
 
+### Making something fail
+
+Which movements fail is deterministic, so every unhappy path is reachable on
+purpose rather than one run in ten. The rule is carried on the cents, the way a
+payment sandbox uses a magic value, so any amount becomes a failure by changing
+the pennies:
+
+| Amount | What happens |
+|---|---|
+| ends `.99` | the bank declines. Nothing is written and nothing leaves. |
+| ends `.98` | no answer in time. Recorded unsettled, and it shows up in Still settling. |
+| anything else | settles. |
+
+It applies to payments and trades — the movements with somebody else in the
+middle. Moving your own money between your own buckets has nobody to decline it.
+
+Signing in works the same way. Any email and password gets you in, except one:
+
+| Password | What happens |
+|---|---|
+| `wrong` | the sign-in is refused, and says so under the fields. |
+| anything else | you are in, after the moment it takes to look busy. |
+
 Running them needs a Chromium. Either `npx playwright install chromium` or
 point `executablePath` at one you already have.

@@ -1,7 +1,7 @@
 /* Every state the product claims to have, exercised in a real browser.
    Figma 02 Components: Button, Icon button, Text field, Empty state, Toast. */
 import { chromium } from 'playwright'
-import { seen } from './seen.mjs'
+import { seen, fresh } from './seen.mjs'
 
 const B = 'http://localhost:4173/#'
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
@@ -22,7 +22,10 @@ const ok = (label, pass, detail = '') =>
   console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${label}${detail ? '  ' + detail : ''}`)
 
 console.log('HOVER')
-await go('/')
+// Home carries no filled button since Send and Receive moved to the wallet
+// (11g.44). What is being checked is the treatment, so it is checked wherever
+// the treatment lives.
+await go('/verify')
 const filled = page.locator('.btn-primary').first()
 const rest = await bg(await filled.elementHandle())
 await filled.hover(); await page.waitForTimeout(80)
@@ -84,7 +87,7 @@ for (const [route, expect] of [
   ['/support?q=zzzzz', 'Nothing matches that'],
 ]) {
   await go(route)
-  const t = await page.locator('.empty h3').first().textContent().catch(() => null)
+  const t = await page.locator('.empty h2').first().textContent().catch(() => null)
   ok(route, t === expect, t ?? 'no empty state')
 }
 await go('/activity?q=zzzzz')
@@ -93,10 +96,13 @@ ok('the empty state clears the search', page.url().endsWith('#/activity'), page.
 
 console.log('EMPTY, on a phone')
 await go('/send?q=zzzzz', 390)
-const t2 = await page.locator('.empty h3').first().textContent().catch(() => null)
+const t2 = await page.locator('.empty h2').first().textContent().catch(() => null)
 ok('the picker search finds nobody', t2 === 'Nobody by that name', t2 ?? 'no empty state')
 await go('/send?q=tunde', 390)
-const n = await page.locator('.sheet-row').count()
+// Scoped to the people card. Send now lists your own banks in the same row
+// anatomy, which is right — they are destinations too — so an unscoped count
+// was measuring the whole screen rather than the search.
+const n = await page.locator('.card', { hasText: 'Someone on Tokkenly' }).locator('.sheet-row').count()
 ok('the picker search filters', n === 1, `${n} row(s)`)
 
 console.log('ERROR')
@@ -106,8 +112,11 @@ await page.locator('.btn-secondary', { hasText: 'Continue' }).click()
 await page.waitForTimeout(120)
 const err = await page.evaluate(() => {
   const f = document.querySelector('.field.error')
-  const m = document.querySelector('.field-error')
-  return { ringed: !!f, message: m && !m.hidden ? m.textContent.trim() : null }
+  // The visible one. There is more than one field on this screen now — the
+  // account-number check has its own — and every other is hidden, so picking
+  // the first in the document was picking a message nobody can see.
+  const m = document.querySelector('.field-error:not([hidden])')
+  return { ringed: !!f, message: m ? m.textContent.trim() : null }
 })
 ok('a bad address is marked where it was typed', err.ringed && !!err.message, JSON.stringify(err))
 await page.locator('input[placeholder="Paste a Base address"]').fill('0x22b1A7c04fa0')
@@ -181,6 +190,56 @@ const sunken = await page.evaluate(() =>
   getComputedStyle(document.documentElement).getPropertyValue('--sunken').trim())
 ok('and none of them is repainted to --sunken',
    dim.primary.bg !== sunken && dim.secondary.bg !== sunken, sunken)
+
+console.log('THE FIRST SCREEN, AND ITS THREE STATES')
+{
+  // A fresh page, because the point of these is somebody who has not been here
+  // and cannot be seeded past the screen they are looking at.
+  const a = await b.newPage({ viewport: { width: 1440, height: 1000 } })
+  await fresh(a)
+  a.on('pageerror', (e) => errors.push(String(e)))
+  await a.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
+  const err = () => a.evaluate(() => {
+    const e = document.querySelector('.field-error')
+    return e && !e.hidden ? e.innerText.replace(/\n/g, ' ').trim() : null
+  })
+  const land = async (r) => { await a.goto(B + r, { waitUntil: 'domcontentloaded' }); await a.waitForTimeout(400) }
+
+  await land('/signin')
+  ok('it says why anybody should hand this product money',
+     (await a.evaluate(() => document.querySelectorAll('.promise').length)) === 3
+     && /down as well as up/.test(await a.evaluate(() => document.querySelector('.auth-warn')?.textContent ?? '')))
+  ok('and the email field does not arrive holding somebody else\u2019s address',
+     !/@/.test(await a.evaluate(() => document.querySelector('input[type=email]')?.placeholder ?? '')),
+     await a.evaluate(() => document.querySelector('input[type=email]')?.placeholder ?? ''))
+  // The one button that is not email was wearing an envelope.
+  ok('and Google is not offered under a picture of an envelope',
+     await a.evaluate(() => {
+       const btn = [...document.querySelectorAll('button')].find((x) => /Continue with Google/.test(x.textContent))
+       return !!btn && !btn.querySelector('svg')
+     }))
+
+  await a.locator('.btn-primary').click(); await a.waitForTimeout(250)
+  ok('an empty field is named where it is empty', (await err()) !== null, await err())
+  await a.locator('input[type=email]').fill('a@b.co')
+  await a.locator('input[type=password]').fill('wrong')
+  await a.locator('.btn-primary').click(); await a.waitForTimeout(150)
+  ok('the button says it is working', /is-busy/.test(await a.evaluate(() => document.querySelector('.btn-primary')?.className ?? '')))
+  await a.waitForTimeout(900)
+  ok('and a refusal leaves you on the screen with the reason',
+     /do not recognise/.test((await err()) ?? '') && (await a.evaluate(() => location.hash)).includes('signin'),
+     await err())
+
+  // A password you cannot see is how somebody resets one they had right.
+  await a.locator('.reveal').click(); await a.waitForTimeout(200)
+  ok('the password can be looked at',
+     await a.evaluate(() => [...document.querySelectorAll('.field input')].some((i) => i.type === 'text')))
+
+  await a.evaluate(() => window.dispatchEvent(new Event('offline'))); await a.waitForTimeout(200)
+  await a.locator('.btn-primary').click(); await a.waitForTimeout(300)
+  ok('and nothing is sent with no connection', /No connection/.test((await err()) ?? ''), await err())
+  await a.close()
+}
 
 console.log('\nERRORS: ' + (errors.length ? errors.join(' | ') : 'none'))
 await b.close()

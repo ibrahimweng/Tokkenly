@@ -30,7 +30,7 @@ function lockedOut(): HTMLElement {
       h('button', { class: 'btn btn-primary', text: 'Sign in with my password',
         on: { click: () => { actions.signOut(); go('/signin') } } }),
       h('span', { class: 'subtle t-caption', style: { textAlign: 'center' },
-        text: 'Forgotten that too? Your twelve word recovery phrase sets a new one. Nobody at Tokkenly can read your PIN, so nobody can tell it to you.' })))
+        text: 'Forgotten that too? Your twelve word recovery phrase sets a new one. Nobody here can read your PIN.' })))
 }
 
 export function lockScreen(): HTMLElement {

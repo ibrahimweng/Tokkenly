@@ -4,19 +4,26 @@ import './styles/components.css'
 
 import { h } from './ui'
 import { start, current, go, openSheet, type Route } from './router'
-import { state, actions, subscribe, applyTheme, recall, IDLE_LOCK_MS } from './state'
+import { state, actions, subscribe, applyTheme, recall, openBooks, IDLE_LOCK_MS } from './state'
 import { onBreakpointChange } from './responsive'
 import { buildSheet } from './sheets'
+import { dialogClosed } from './components/sheet'
+import { nameTheScreen } from './announce'
 import { homeScreen } from './screens/home'
 import { walletScreen } from './screens/wallet'
 import { marketScreen } from './screens/market'
 import { stockScreen } from './screens/stock'
 import { investScreen, sellScreen } from './screens/invest'
-import { growScreen, borrowScreen, repayScreen, earnScreen, takeOutScreen } from './screens/grow'
+import {
+  growScreen, borrowScreen, repayScreen, earnScreen, takeOutScreen,
+  lendingScreen, borrowingScreen,
+} from './screens/grow'
 import { historyScreen } from './screens/history'
 import { accountScreen } from './screens/settings'
+import { statementScreen } from './screens/statement'
+import { adminScreen } from './screens/admin'
 import { signInScreen, signUpScreen } from './screens/auth'
-import { sendScreen, receiveScreen, addMoneyScreen, convertScreen } from './screens/money'
+import { sendScreen, receiveScreen, addMoneyScreen, withdrawScreen, sendSharesScreen } from './screens/money'
 import { allScreen } from './screens/all'
 import { welcomeScreen } from './screens/welcome'
 import { verifyScreen } from './screens/verify'
@@ -39,13 +46,17 @@ function notFound(path: string): HTMLElement {
 const FLAT: Record<string, () => HTMLElement> = {
   transfer: walletScreen,
   activity: historyScreen,
-  withdraw: convertScreen,
   wallet: walletScreen,
   history: historyScreen,
   send: sendScreen,
+  // Withdraw and Convert were one errand each and both were Send with the
+  // destination already answered. They still resolve, to the bank rail: an
+  // address somebody bookmarked should not break because the product learned
+  // to count the errand properly.
+  withdraw: withdrawScreen,
+  convert: withdrawScreen,
   receive: receiveScreen,
   addmoney: addMoneyScreen,
-  convert: convertScreen,
   bucket: bucketScreen,
   disclosures: disclosuresScreen,
 }
@@ -77,6 +88,9 @@ function screenFor(r: Route): HTMLElement {
   // their own addresses before the split; they still resolve, so a bookmark,
   // a palette entry from an older session and every link already in the wild
   // land where the thing they name now lives.
+  if (a === 'statement') return statementScreen()
+  // The ops console. Its own place, because it is not this person's account.
+  if (a === 'admin') return adminScreen()
   if (a === 'account') return accountScreen(b)
   if (a === 'security') return accountScreen('security')
   if (a === 'support') return accountScreen('support')
@@ -85,11 +99,17 @@ function screenFor(r: Route): HTMLElement {
     if (!b) return marketScreen()
     if (c === 'invest') return investScreen(b)
     if (c === 'sell') return sellScreen(b)
+    if (c === 'send') return sendSharesScreen(b)
     return stockScreen(b)
   }
 
   if (a === 'grow') {
     if (!b) return growScreen()
+    // The two positions. The buttons on the cards lead here rather than
+    // straight into a composer: somebody with an open loan came to look at it,
+    // not to take another one.
+    if (b === 'lending') return lendingScreen()
+    if (b === 'borrowing') return borrowingScreen()
     if (b === 'borrow') return borrowScreen()
     if (b === 'repay') return repayScreen()
     if (b === 'earn') return earnScreen()
@@ -100,14 +120,43 @@ function screenFor(r: Route): HTMLElement {
 }
 
 let lastPath = ''
+let hadDialog = false
 function render(r: Route): void {
   const keepScroll = r.path === lastPath ? window.scrollY : 0
+  const arrived = r.path !== lastPath
   lastPath = r.path
   app.replaceChildren(screenFor(r))
+  const screen = app.firstElementChild as HTMLElement | null
   const sheetEl = buildSheet(r)
-  if (sheetEl) app.appendChild(sheetEl)
+  if (sheetEl) {
+    // Everything under the dialog leaves the tab order and the accessibility
+    // tree while it is up. A composer that presents as a modal does this for
+    // itself, since its scrim lives inside the screen rather than beside it.
+    screen?.setAttribute('inert', '')
+    app.appendChild(sheetEl)
+  }
   document.body.style.overflow = sheetEl ? 'hidden' : ''
   window.scrollTo(0, keepScroll)
+
+  // Say where we are, once per arrival rather than once per state change —
+  // this function runs again every time anything at all changes, and a live
+  // region that repeats the page title after every toggle is worse than one
+  // that says nothing.
+  if (arrived) nameTheScreen(app.querySelector('h1')?.textContent)
+
+  // Where focus goes when a dialog closes. It cannot go back to whatever
+  // opened it: this app replaces the entire tree on every change, so that
+  // element no longer exists by the time the dialog is gone. The content of
+  // the screen underneath is the honest answer — a keyboard user carries on
+  // from the page rather than from the top of the document, above seven nav
+  // rows they have already passed once.
+  const open = !!sheetEl || !!app.querySelector('.scrim')
+  if (hadDialog && !open) {
+    dialogClosed()
+    const main = app.querySelector<HTMLElement>('main.content')
+    if (main && (document.activeElement === document.body || document.activeElement === null)) main.focus()
+  }
+  hadDialog = open
 }
 
 /** A lock that only fires on a cold start protects a phone that has been
@@ -131,6 +180,14 @@ addEventListener('keydown', (e) => {
   }
 })
 
+// The one genuinely asynchronous fact in the product: whether there is a
+// connection. On a Lagos commute this changes several times a trip, and a
+// money app that does not notice will happily tell somebody a payment went
+// through while the phone was holding no signal at all.
+addEventListener('online', () => actions.setOnline(true))
+addEventListener('offline', () => actions.setOnline(false))
+
+openBooks()
 recall()
 applyTheme()
 subscribe(() => render(current()))

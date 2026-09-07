@@ -2,7 +2,7 @@
    Every step asks the same three questions: can I tell what will happen, can
    I get out, and does the number that lands match the number I agreed to. */
 import { chromium } from 'playwright'
-import { seen } from './seen.mjs'
+import { seen, settled } from './seen.mjs'
 const B = 'http://localhost:4173/#'
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const errs = []
@@ -48,7 +48,10 @@ for (const [flow, route, verb] of [['BUY', '/invest/aapl/invest', 'Buy'], ['SELL
     summary: [...document.querySelectorAll('.summary .kv')].map((e) => e.textContent),
   }))
   ok('typing an amount moves the button', /75/.test(after.action ?? ''), after.action ?? '')
-  ok('and the summary follows it', after.summary.some((s) => /sh|share/i.test(s)), after.summary[0] ?? '')
+// The summary names the token you end up holding rather than "shares": what
+// arrives in the wallet is AAPLc, and the review says so.
+  ok('and the summary follows it', after.summary.some((s) => /[A-Z]{2,5}c\b/.test(s)),
+     after.summary.join(' | ').slice(0, 90))
 
   /* over the limit */
   await input.fill('999999')
@@ -95,7 +98,10 @@ for (const [flow, route, verb] of [['BUY', '/invest/aapl/invest', 'Buy'], ['SELL
   await p.waitForTimeout(900)
   const done = await p.evaluate(() => ({
     open: !!document.querySelector('.scrim'),
-    tick: !!document.querySelector('.tick'),
+    // A settled outcome celebrates with the coin; the tick is what an
+    // unsettled one keeps, because a coin turning happily over "Still
+    // settling" would be the product cheering its own failure.
+    tick: !!document.querySelector('.coin, .tick'),
     text: document.querySelector('.scrim')?.innerText.replace(/\n/g, ' ').slice(0, 90),
     toast: document.querySelector('.toast')?.textContent,
     url: location.hash,
@@ -109,8 +115,8 @@ console.log('AFTER THE TRADE  the ledger has to agree')
 {
   const p = await page()
   const cash = async () => {
-    await p.goto(B + '/transfer', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(350)
-    return money(await p.$eval('.hero-figure', (e) => e.textContent))
+    await p.goto(B + '/transfer', { waitUntil: 'domcontentloaded' })
+    return money(await settled(p, '.hero-figure'))
   }
   const before = await cash()
   await p.goto(B + '/invest/nvda/invest', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
@@ -131,22 +137,29 @@ console.log('AFTER THE TRADE  the ledger has to agree')
 console.log('A FIRST BUY  the one the whole product is for')
 {
   const p = await page()
-  // Coca-Cola is in the catalogue and not in the opening holdings
-  await p.goto(B + '/invest/ko/invest', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
+  // Alphabet is in the launch set, not paused, and not in the opening
+  // holdings, which is what a first buy needs: a company the account can
+  // actually buy and has never held. Coca-Cola was none of those — it is
+  // listed but outside the launch set, so the button was rightly disabled and
+  // this suite had been dead for tiers.
+  await p.goto(B + '/invest/googl/invest', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
   const i = p.locator('.amount-box input')
   await i.fill('100'); await i.dispatchEvent('input'); await p.waitForTimeout(250)
   await p.locator('.btn-primary').first().click(); await p.waitForTimeout(400)
   await p.locator('.scrim .btn-primary').first().click(); await p.waitForTimeout(900)
   const said = await p.evaluate(() => document.querySelector('.scrim')?.innerText.replace(/\n/g, ' ') ?? '')
-  ok('it says how many shares arrived', /[\d.]+ shares of Coca-Cola/.test(said) && !/undefined/.test(said),
+  ok('it says how many shares arrived', /[\d.]+ shares of Alphabet/.test(said) && !/undefined/.test(said),
      said.slice(0, 70))
-  await p.goto(B + '/invest/ko', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
+  await p.goto(B + '/invest/googl', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
   const held = await p.evaluate(() => document.body.innerText.match(/You hold[^\n]*/)?.[0] ?? 'no row')
   ok('and the position exists afterwards', !/None yet|no row/.test(held), held)
   await p.goto(B + '/', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
   const home = await p.evaluate(() => document.body.innerText)
-  ok('the home screen opens on Simple', /Buy Stocks|Convert Cash/.test(home),
-     /Buy Stocks/.test(home) ? 'gateway' : 'detailed')
+  // The doors carry the names of the places they open now (11g.45), so the
+  // gateway is recognised by those rather than by the action labels it used
+  // to wear.
+  ok('the home screen opens on Simple', /Invest[\s\S]*Wallet[\s\S]*Borrow & Lend/.test(home),
+     /Invest/.test(home) ? 'gateway' : 'detailed')
   await p.close()
 }
 

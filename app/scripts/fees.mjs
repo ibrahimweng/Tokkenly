@@ -2,7 +2,7 @@
    receive, before you confirm." That is a promise about arithmetic, so it is
    checked as arithmetic: what the review says must be what the ledger does. */
 import { chromium } from 'playwright'
-import { seen, verify } from './seen.mjs'
+import { seen, verify, settled } from './seen.mjs'
 const B = 'http://localhost:4173/#'
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const errs = []
@@ -15,8 +15,8 @@ await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 /* the first figure in a string: "$0.50 · 0.5%" is fifty cents, not 0.500.5 */
 const money = (s) => Number((String(s ?? '').match(/[\d,]+\.?\d*/) ?? ['0'])[0].replace(/,/g, '')) || 0
 const cash = async () => {
-  await p.goto(B + '/transfer', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(350)
-  return money(await p.$eval('.hero-figure', (e) => e.textContent))
+  await p.goto(B + '/transfer', { waitUntil: 'domcontentloaded' })
+  return money(await settled(p, '.hero-figure'))
 }
 /* the review panel renders each row as .cell with a caps label over a value,
    and the label is uppercased by CSS, so match on the text the DOM holds */
@@ -39,7 +39,9 @@ ok('the investment is stated', money(r['Investment']) === 50, JSON.stringify(r['
 ok('the fee is stated, with its rate', /0\.5%/.test(r['Fee'] ?? ''), r['Fee'] ?? 'missing')
 ok('the fee is the rate applied to the amount', money(r['Fee']) === 0.25, r['Fee'] ?? '')
 ok('the total is amount plus fee', money(r['Total']) === 50.25, r['Total'] ?? '')
-ok('and what you receive is spelled out', /shares of/.test(r['You receive'] ?? ''), r['You receive'] ?? '')
+// "0.4205 NVDAc" rather than "0.4205 shares of Nvidia": the review names the
+// token you end up holding, which is the thing that arrives in the wallet.
+ok('and what you receive is spelled out', /[\d.]+ [A-Z]+c$/.test(r['You receive'] ?? ''), r['You receive'] ?? '')
 await p.locator('.scrim .btn-primary').first().click(); await p.waitForTimeout(900)
 const after = await cash()
 ok('the ledger charges the total, not the amount', Math.abs((before - after) - 50.25) < 0.01,
@@ -86,7 +88,10 @@ await p.goto(B + '/addmoney', { waitUntil: 'domcontentloaded' }); await p.waitFo
 await p.locator('.btn-primary').first().click(); await p.waitForTimeout(450)
 const r3 = await rows()
 ok('add money states a fee line', !!r3['Fee'], r3['Fee'] ?? 'missing')
-ok('and it is none, not silence', /None/.test(r3['Fee'] ?? ''), r3['Fee'] ?? '')
+// "No fee" rather than "None — the rate above is the rate you get": the row
+// above already states the rate, so the fee row only has to answer its own
+// question. What is being checked is that it answers it at all.
+ok('and it is none, not silence', /No fee|None/.test(r3['Fee'] ?? ''), r3['Fee'] ?? '')
 ok('with the rate on screen', !!r3['Rate'], r3['Rate'] ?? 'missing')
 
 console.log('THE BUCKET  one payment, one fee')

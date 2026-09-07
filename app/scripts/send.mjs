@@ -1,4 +1,5 @@
 import { chromium } from 'playwright'
+import { seen } from './seen.mjs'
 const base = 'http://localhost:4173/#'
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const errs = []
@@ -6,6 +7,10 @@ const log = []
 
 // phone: who first, then how much
 const p = await b.newPage({ viewport: { width: 390, height: 844 } })
+// Since the app lock landed, a page that does not seed the unlock drives
+// the PIN pad instead of the product. This suite was measuring the lock
+// screen and reporting on it.
+await seen(p)
 p.on('pageerror', (e) => errs.push('phone pageerror: ' + e.message))
 await p.goto(base + '/send', { waitUntil: 'networkidle' })
 await p.waitForTimeout(200)
@@ -36,16 +41,25 @@ await p.locator('.sheet .btn-primary').click()
 await p.waitForTimeout(600)
 log.push('  outcome: ' + (await p.locator('.sheet .t-title').textContent()))
 
-// desktop is unchanged: one screen, picker on the right
+// desktop: one screen, the amount on the left and who on the right
 const d = await b.newPage({ viewport: { width: 1440, height: 1024 } })
+await seen(d)
 d.on('pageerror', (e) => errs.push('desktop pageerror: ' + e.message))
 await d.goto(base + '/send', { waitUntil: 'networkidle' })
 await d.waitForTimeout(200)
 log.push('')
+// With a destination, because a bare /send is the question rather than the
+// composer since 11g.38.
+await d.goto(base + '/send?to=Tunde%20Bakare', { waitUntil: 'networkidle' })
+await d.waitForTimeout(300)
 log.push('DESKTOP  /send')
 log.push('  title:  ' + (await d.locator('.page-header h1').textContent()))
 log.push('  composer on page: ' + (await d.locator('.card .amount-box').count())
-       + ', picker rows: ' + (await d.locator('.col-side .kv, .stack.grow .kv').count()))
+       + ', people beside it: ' + (await d.locator('.stack.grow .sheet-row').count())
+       + ', dialogs: ' + (await d.locator('.scrim').count()))
+log.push('  paying:  ' + (await d.locator('.col-compose .sheet-row .t-body-strong').first().textContent()))
+log.push('  and an address field for anyone not listed: '
+       + (await d.locator('.stack.grow input[placeholder*="address"]').count()))
 
 console.log(log.join('\n'))
 console.log('\nERRORS: ' + (errs.length ? errs.join('\n') : 'none'))

@@ -1,13 +1,15 @@
-import { h } from '../ui'
+import { h, countTo } from '../ui'
 import { icon } from '../icons'
-import { shell, pageHeader, eyebrow } from '../components/shell'
-import { card, cardHead, headLink, kv, callout, amount, directionMark } from '../components/bits'
-import { state, buyingPower, availableToBorrow, nairaAside, limits, leftThisMonth, verified } from '../state'
-import { usd, when, activityLabel } from '../format'
+import { shell, pageHeader } from '../components/shell'
+import { card, cardHead, headLink, kv, callout, amount, directionMark, figureWithEye, spentBar } from '../components/bits'
+import { table } from '../components/table'
+import { state, buyingPower, availableToBorrow, inNaira, inflightNaira, outboundNaira, rateLine, limits, leftThisMonth, verified, money } from '../state'
+import { usd, naira, when, activityLabel } from '../format'
 import { go, openSheet } from '../router'
 
-function way(label: string, sub: string, ic: string, to: string): HTMLElement {
-  const b = h('button', { class: 'card', style: { textAlign: 'left', flex: '1' }, on: { click: () => go(to) } })
+function way(label: string, sub: string, ic: string, to: string | null, onClick?: () => void): HTMLElement {
+  const b = h('button', { class: 'card', style: { textAlign: 'left', flex: '1' },
+    on: { click: () => (onClick ? onClick() : go(to!)) } })
   b.appendChild(h('div', { class: 'promo-badge', html: ic }))
   b.appendChild(h('div', { class: 'stack-8' },
     h('span', { class: 't-title', text: label }),
@@ -16,13 +18,58 @@ function way(label: string, sub: string, ic: string, to: string): HTMLElement {
 }
 
 /** The centrepiece of the wallet. Not just the number: what the number is
- *  made of. Cash, what is working in Earn, and what the shares would lend
- *  against, drawn to scale so the proportions are readable at a glance. */
+ *  made of. Cash and what is lent out, drawn to scale so the
+ *  proportions are readable at a glance.
+ *
+ *  What is deliberately not in the bar is what the shares would lend against.
+ *  It used to be a third segment, which made a credit limit look like a third
+ *  kind of balance and let the caption total all three: "$5,200.00 in total"
+ *  on an account holding $3,720. Money you have and money you could owe do not
+ *  add up, and a single bar said they did. Borrowing capacity is still on the
+ *  screen — it is what turns the balance into buying power — but it is named
+ *  as borrowing, on its own line, beside a figure that says so. */
+/** The wallet's own figure, travelling rather than jumping when money moves. */
+function cashFigure(): HTMLElement {
+  const el = h('span', { class: 'hero-figure' })
+  if (state.prefs.hideBalances) el.textContent = money(state.cash)
+  else countTo(el, 'wallet.cash', state.cash, (n) => money(n))
+  return el
+}
+
+/** What has actually moved through this wallet.
+ *
+ *  The screen listed what is still in flight — which is usually nothing — and
+ *  then stopped, leaving a column that ended 160px above the one beside it. It
+ *  was also the only screen in the product about your cash that never showed
+ *  what happened to it: Home has a recent list, the wallet did not. The empty
+ *  space and the missing list were the same hole. */
+function moved(): HTMLElement {
+  const rows = state.activity.filter((a) => a.kind === 'payment').slice(0, 6)
+  return card(
+    cardHead('Money in and out', headLink('See all', '/activity?filter=payments')),
+    rows.length
+      ? table(
+          [{ key: 'who', label: 'Who' }, { key: 'when', label: 'When', optional: true },
+           { key: 'ref', label: 'Reference', optional: true }, { key: 'amt', label: 'Amount', align: 'right' }],
+          rows.map((a) => [
+            h('span', { class: 'who' }, directionMark(a.amount),
+              h('span', { class: 'two-line' },
+                h('span', { class: 't-body-strong', text: activityLabel(a) }),
+                h('small', { class: 'phone-only', text: when(a.at) }))),
+            h('span', { class: 'muted', text: when(a.at) }),
+            h('span', { class: 'muted', text: a.ref }),
+            amount(a),
+          ]),
+          (i) => openSheet('receipt', { ref: rows[i].ref })
+        )
+      : h('span', { class: 'muted', text: 'Nothing has moved through this wallet yet.' })
+  )
+}
+
 function cashHero(): HTMLElement {
   const parts = [
     { label: 'Cash', value: state.cash, cls: 'a', hint: 'Ready to spend or send' },
-    { label: 'In Earn', value: state.inEarn, cls: 'b', hint: 'Earning ' + state.rates.earn + '% a year' },
-    { label: 'Could borrow', value: availableToBorrow(), cls: 'c', hint: 'Against the shares you own' },
+    { label: 'Lent out', value: state.lent, cls: 'b', hint: 'Paying ' + state.rates.lend + '% a year' },
   ]
   const total = parts.reduce((t, p) => t + p.value, 0)
 
@@ -30,40 +77,85 @@ function cashHero(): HTMLElement {
     h('div', { class: 'hero-top' },
       h('div', { class: 'stack-8' },
         h('span', { class: 't-caps subtle', text: 'Cash you can spend' }),
-        h('span', { class: 'hero-figure', text: usd(state.cash) }),
-        nairaAside(state.cash)
-          ? h('span', { class: 'muted', text: nairaAside(state.cash)! })
+        figureWithEye(cashFigure()),
+        inNaira(state.cash)
+          ? h('span', { class: 'stack-8' },
+              h('span', { class: 'muted', text: inNaira(state.cash)! }),
+              // The rate, its time and what it is: the one number here that a
+              // person cannot check for themselves, so it says where it came
+              // from rather than appearing as a fact of nature.
+              h('span', { class: 'subtle t-caption', text: rateLine() }))
           : null),
       h('div', { class: 'stack-8 hero-aside' },
         h('span', { class: 't-caps subtle', text: 'Buying power' }),
-        h('span', { class: 't-display', text: usd(buyingPower()) }),
-        h('span', { class: 'muted', text: 'Cash plus what you could borrow' }))),
+        h('span', { class: 't-display', text: money(buyingPower()) }),
+        h('span', { class: 'muted',
+          text: `Your cash plus the ${money(availableToBorrow())} your shares would lend against` }))),
 
     h('div', { class: 'hero-bar', ariaLabel: 'How your money is arranged' },
       ...parts.map((p) =>
         h('span', { class: 'seg ' + p.cls, style: { flex: String(Math.max(p.value, 1)) },
-          ariaLabel: `${p.label} ${usd(p.value)}`,
-          title: `${p.label} — ${usd(p.value)}. ${p.hint}.` }))),
+          ariaLabel: `${p.label} ${money(p.value)}`,
+          title: `${p.label} — ${money(p.value)}. ${p.hint}.` }))),
 
     h('div', { class: 'hero-legend' },
       ...parts.map((p) =>
         h('div', { class: 'leg' },
           h('span', { class: 'dot ' + p.cls }),
           h('span', { class: 'two-line' },
-            h('span', { class: 't-body-strong', text: `${p.label} ${usd(p.value)}` }),
+            h('span', { class: 't-body-strong', text: `${p.label} ${money(p.value)}` }),
             h('small', { text: p.hint }))))),
 
     h('span', { class: 'subtle t-caption',
-      text: `${usd(total)} in total across your wallet, Earn and what your shares would lend against.` })
+      text: `${money(total)} in total across your wallet and what you have lent. Borrowing is credit, not balance, so it is not in this figure.` })
   )
+}
+
+/** What is left of the month, and what is stopping you.
+ *
+ *  It was four rows of a table in a plain panel beside another plain panel —
+ *  four numbers of equal weight, none of which was the one anybody wants. On
+ *  an unverified account this card is the thing that actually stops a payment,
+ *  and it looked exactly like the list of bank accounts next to it.
+ *
+ *  The figure is what is left, because that is the question. The bar is how
+ *  much of the month has gone, which no arrangement of four numbers can show
+ *  as fast. And unverified it takes the same tint as the reminder on Home,
+ *  because it is the same subject and one of them should not be a notice while
+ *  the other is furniture. Verified there is nothing to lift, so it goes calm:
+ *  a limit you are not near is information, not a warning. */
+function limitsCard(): HTMLElement {
+  const done = verified()
+  const left = leftThisMonth()
+  const c = card(
+    cardHead('Your limits',
+      h('span', { class: 'pill' + (done ? ' pos' : ' warn'), text: done ? 'Verified' : 'Not verified' })),
+    h('div', { class: 'stack-8' },
+      h('span', { class: 't-display', text: money(left) }),
+      h('span', { class: 'muted',
+        text: `left of your ${usd(limits().monthly, false)} this month` }),
+      spentBar(state.usedThisMonth, limits().monthly, done ? '' : 'warn')),
+    kv('Used this month', money(state.usedThisMonth)),
+    kv('One payment', usd(limits().single, false)),
+    // The card that states a limit is the place to lift it.
+    done
+      ? callout('These reset on the first of the month.')
+      : h('button', { class: 'btn btn-primary', text: 'Verify to lift these',
+          on: { click: () => go('/verify') } }))
+  if (!done) c.classList.add('limits-open')
+  return c
 }
 
 export function walletScreen(): HTMLElement {
   const pending = state.activity.filter((a) => !a.settled)
+  const flight = inflightNaira()
+  const outbound = outboundNaira()
 
   return shell(
     'wallet',
-    pageHeader('Transfer', eyebrow('Buying power', usd(buyingPower()))),
+    // No eyebrow: it printed buying power 60px above the card that prints
+    // buying power, which reads as two facts rather than one repeated.
+    pageHeader('Wallet'),
     // The hero takes the whole column. It is the centrepiece of the page, and
     // sharing the width with the limits card left the two figures in it 20px
     // from wrapping onto separate lines — which they did, once the column came
@@ -71,12 +163,34 @@ export function walletScreen(): HTMLElement {
     cashHero(),
     h('div', { class: 'row' },
       h('div', { class: 'stack col-main' },
+        // Two doors: money in and money out. Receive was a third, and it was
+        // the same question as Add money asked twice — how does money get into
+        // this wallet. It is a tab inside the one door now. Add money opens in
+        // place, because handing over an account number does not need a screen
+        // change; Send is a page, because it asks four things.
         h('div', { class: 'row equal' },
-          way('Add money', 'Naira in, dollars out', icon.receive(), '/addmoney'),
-          way('Send', 'Pay anyone, for nothing', icon.send(), '/send'),
-          way('Withdraw', 'Dollars out to your bank', icon.convert(), '/withdraw')),
+          way('Add money', 'Bank transfer, Base or a card', icon.receive(), null,
+            () => openSheet('add-money')),
+          way('Send', 'To a person, a wallet or a bank', icon.send(), '/send')),
         card(
           cardHead('Still settling', headLink('See all', '/activity')),
+          // What is genuinely between two banks, named in the currency it is
+          // sitting in. It is the balance of the account the money waits in
+          // rather than a total of the rows below, so a wallet that has not
+          // gone up and a figure that says why cannot disagree.
+          flight > 0
+            ? h('div', { class: 'kv' },
+                h('span', { class: 't-caps subtle', text: 'On its way to us' }),
+                h('span', { class: 't-body-strong', text: naira(flight) }))
+            : null,
+          // And the other direction. Dollars that have left the wallet but
+          // whose naira have not reached anybody's bank are in an account with
+          // a name, not in a state of hopefulness.
+          outbound > 0
+            ? h('div', { class: 'kv' },
+                h('span', { class: 't-caps subtle', text: 'On its way out' }),
+                h('span', { class: 't-body-strong', text: naira(outbound) }))
+            : null,
           pending.length
             ? h('div', { class: 'stack-12' }, ...pending.map((a) =>
                 h('div', { class: 'kv' },
@@ -84,22 +198,12 @@ export function walletScreen(): HTMLElement {
                     h('span', { class: 'two-line' },
                       h('span', { class: 't-body-strong', text: activityLabel(a) }),
                       h('small', { text: when(a.at) }))),
-                  amount(a.amount))))
+                  amount(a))))
             : h('span', { class: 'muted', text: 'Nothing is in flight. Everything you have sent or received has landed.' })
-        )),
-      h('div', { class: 'stack col-side' },
-        card(
-          cardHead('Your limits'),
-          kv('Monthly', usd(limits().monthly, false)),
-          kv('Used this month', usd(state.usedThisMonth)),
-          kv('Left this month', usd(leftThisMonth())),
-          kv('One payment', usd(limits().single, false)),
-          // The card that states a limit is the place to lift it.
-          verified()
-            ? callout('These are the verified limits. They reset on the first of the month.')
-            : h('button', { class: 'btn btn-primary btn-sm', text: 'Verify to lift these',
-                on: { click: () => go('/verify') } })
         ),
+        moved()),
+      h('div', { class: 'stack col-side' },
+        limitsCard(),
         card(
           cardHead('Payment methods', h('button', { class: 'link', text: 'Add a bank', on: { click: () => openSheet('banks') } })),
           ...state.banks.map((b) =>

@@ -1,6 +1,6 @@
 /* Filling a bucket from the places you would fill it, and paying for it once. */
 import { chromium } from 'playwright'
-import { seen } from './seen.mjs'
+import { seen, settled } from './seen.mjs'
 const B = 'http://localhost:4173/#'
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const errs = []
@@ -65,10 +65,11 @@ ok('and offers the fix', /Add \$/.test(over.action ?? ''), over.action ?? '')
 await g.fill('100'); await g.dispatchEvent('change'); await p.waitForTimeout(500)
 
 console.log('PAYING ONCE')
-const cashBefore = await (async () => {
-  await p.goto(B + '/transfer', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(350)
-  return money(await p.$eval('.hero-figure', (e) => e.textContent))
-})()
+const cash = async () => {
+  await p.goto(B + '/transfer', { waitUntil: 'domcontentloaded' })
+  return money(await settled(p, '.hero-figure'))
+}
+const cashBefore = await cash()
 await p.goto(B + '/bucket', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
 // the all-in figure, which is what the wallet will actually be charged
 const total = money(await p.evaluate(() =>
@@ -81,10 +82,7 @@ const doneText = await p.evaluate(() => document.querySelector('.scrim')?.innerT
 ok('it confirms what arrived, company by company', /shares/.test(doneText), doneText.slice(0, 90))
 await p.locator('.scrim .btn-primary').first().click(); await p.waitForTimeout(600)
 ok('the bucket empties', (await count()) === '0', 'count ' + (await count()))
-const cashAfter = await (async () => {
-  await p.goto(B + '/transfer', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(350)
-  return money(await p.$eval('.hero-figure', (e) => e.textContent))
-})()
+const cashAfter = await cash()
 ok('and cash went down by the total, once', Math.abs((cashBefore - cashAfter) - total) < 0.05,
    `${cashBefore} → ${cashAfter}, total ${total}`)
 await p.goto(B + '/activity?filter=trades', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)

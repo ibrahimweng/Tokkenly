@@ -80,13 +80,18 @@ ok('and you can order by it', (await p.evaluate(() => location.hash)).includes('
    await p.evaluate(() => location.hash))
 await at('/invest/nke/invest')
 ok('the buy screen states it', /the real price/i.test(await p.evaluate(() => document.body.innerText)))
+// Nike is listed but outside the launch set, so its button is refused — which
+// is the product working, and why the review has to be reached on a company
+// that can actually be bought. Alphabet is in the launch set and trades below
+// the real share, so the gap is there to be carried.
+await at('/invest/googl/invest')
 await p.locator('.amount-box input').fill('50')
 await p.locator('.amount-box input').dispatchEvent('input')
 await p.waitForTimeout(250)
 await p.locator('.content .btn-primary').last().click(); await p.waitForTimeout(450)
 const rev = await p.evaluate(() => document.querySelector('.scrim')?.innerText.replace(/\n/g, ' ') ?? '')
-ok('and the review carries it beside the fee', /real price/i.test(rev) && /\$80\.33/.test(rev),
-   (rev.match(/(BELOW|ABOVE) THE REAL PRICE [^A-Z]*/i) ?? [''])[0].trim())
+ok('and the review carries it beside the fee', /real price/i.test(rev) && /\$166\.77/.test(rev),
+   (rev.match(/(BELOW|ABOVE) THE REAL PRICE[^%]*%/i) ?? [''])[0].trim())
 
 console.log('\nerrors:', errs.length ? errs : 'none')
 await b.close()

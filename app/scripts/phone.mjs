@@ -1,7 +1,12 @@
 import { chromium } from 'playwright'
+import { seen } from './seen.mjs'
 const base = 'http://localhost:4173/#'
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 })
+// Since the app lock landed, a page that does not seed the unlock drives
+// the PIN pad instead of the product. This suite was measuring the lock
+// screen and reporting on it.
+await seen(page)
 const errs = []
 page.on('pageerror', (e) => errs.push('pageerror: ' + e.message))
 page.on('console', (m) => { if (m.type() === 'error' && !/ERR_CONNECTION|favicon/.test(m.text())) errs.push('console: ' + m.text()) })

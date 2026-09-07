@@ -1,19 +1,28 @@
 import { chromium } from 'playwright'
+import { seen } from './seen.mjs'
 const base = 'http://localhost:4173/#'
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const p = await b.newPage({ viewport: { width: 390, height: 844 } })
+// Since the app lock landed, a page that does not seed the unlock drives
+// the PIN pad instead of the product. This suite was measuring the lock
+// screen and reporting on it.
+await seen(p)
 const errs = []
 p.on('pageerror', (e) => errs.push('pageerror: ' + e.message))
 const log = []
 const text = async (s) => (await p.locator(s).first().textContent().catch(() => '')) ?? ''
 
-log.push('FLOW  Grow → Borrow with the keypad → review → confirm → History')
+log.push('FLOW  Borrow & Lend → Borrow with the keypad → review → confirm → History')
 await p.goto(base + '/transfer', { waitUntil: 'networkidle' })
 log.push('  wallet before: ' + (await text('.card .t-display-xl')).trim())
 
 await p.goto(base + '/grow', { waitUntil: 'networkidle' })
 await p.getByText('Borrow money', { exact: true }).first().click()
-await p.waitForTimeout(200)
+await p.waitForTimeout(250)
+// One more step since 11g.43: the card opens the position, and the position is
+// where you borrow more.
+await p.getByText('Borrow more', { exact: true }).first().click()
+await p.waitForTimeout(250)
 log.push('  sheet opened: ' + (await text('.sheet-head h2')).trim())
 
 // clear then type 750 on the keypad

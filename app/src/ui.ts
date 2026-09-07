@@ -4,6 +4,9 @@
 type Child = Node | string | number | null | undefined | false
 type Props = {
   class?: string
+  /** Only where something else has to point at it — a dialog naming its own
+   *  heading, a skip link naming the content. Not a styling hook. */
+  id?: string
   text?: string
   html?: string
   href?: string
@@ -16,8 +19,15 @@ type Props = {
   ariaCurrent?: string
   ariaPressed?: boolean | string
   ariaLabel?: string
+  ariaLabelledby?: string
   ariaLive?: string
+  ariaAtomic?: boolean | string
+  ariaModal?: boolean | string
+  ariaHidden?: boolean | string
   role?: string
+  /** Takes a subtree out of the tab order, the accessibility tree and the
+   *  pointer in one go. What a modal owes the page underneath it. */
+  inert?: boolean
   /** For a div that has to take the keyboard — the PIN pad is one. */
   tabIndex?: number
   title?: string
@@ -33,6 +43,7 @@ export function h<K extends keyof HTMLElementTagNameMap>(
 ): HTMLElementTagNameMap[K] {
   const el = document.createElement(tag)
   if (props.class) el.className = props.class
+  if (props.id) el.id = props.id
   if (props.text !== undefined) el.textContent = props.text
   if (props.html !== undefined) el.innerHTML = props.html
   if (props.href !== undefined) el.setAttribute('href', props.href)
@@ -45,8 +56,13 @@ export function h<K extends keyof HTMLElementTagNameMap>(
   if (props.ariaCurrent) el.setAttribute('aria-current', props.ariaCurrent)
   if (props.ariaPressed !== undefined) el.setAttribute('aria-pressed', String(props.ariaPressed))
   if (props.ariaLabel) el.setAttribute('aria-label', props.ariaLabel)
+  if (props.ariaLabelledby) el.setAttribute('aria-labelledby', props.ariaLabelledby)
   if (props.ariaLive) el.setAttribute('aria-live', props.ariaLive)
+  if (props.ariaAtomic !== undefined) el.setAttribute('aria-atomic', String(props.ariaAtomic))
+  if (props.ariaModal !== undefined) el.setAttribute('aria-modal', String(props.ariaModal))
+  if (props.ariaHidden !== undefined) el.setAttribute('aria-hidden', String(props.ariaHidden))
   if (props.role) el.setAttribute('role', props.role)
+  if (props.inert) el.setAttribute('inert', '')
   if (props.tabIndex !== undefined) el.tabIndex = props.tabIndex
   if (props.title !== undefined) el.setAttribute('title', props.title)
   if (props.dataset) for (const [k, v] of Object.entries(props.dataset)) el.dataset[k] = v
@@ -78,4 +94,74 @@ export function link(to: string, cls: string, ...children: Child[]): HTMLAnchorE
   const a = h('a', { class: cls, href: '#' + to })
   append(a, children)
   return a
+}
+
+
+/* ------------------------------------------------------------- continuity --
+   The product has one curve and one duration for every state change, which is
+   the right discipline and was already done. What it had none of is
+   choreography: after a trade the balance simply became a different number,
+   with nothing to connect the figure you were looking at to the figure you are
+   looking at now. Carrying the eye across that gap is the cheapest thing in
+   interface design that reads as expensive, and the only one here a person
+   feels without being able to name it. */
+
+/** What each keyed figure is showing right now. The app rebuilds the DOM on
+ *  every state change, so the figure on screen cannot be read back off the
+ *  element — it has to be remembered. The memory tracks the painted number
+ *  frame by frame, not the destination: a render thrown away halfway through
+ *  its travel hands the next one the figure the eye actually last saw. */
+const lastShown = new Map<string, number>()
+
+/** Which run owns each key. A rebuild starts a new one, and the old loop steps
+ *  aside rather than fighting it for the same element's text. */
+const owner = new Map<string, number>()
+let runs = 0
+
+const still = (): boolean =>
+  typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
+
+/** A figure that travels to its new value rather than jumping to it. The first
+ *  paint never animates: arriving on a screen is not a change. */
+export function countTo(
+  el: HTMLElement,
+  key: string,
+  to: number,
+  fmt: (n: number) => string,
+): void {
+  const mine = ++runs
+  owner.set(key, mine)
+
+  const from = lastShown.get(key)
+  // Half a cent apart is the same figure: the memory carries fractions the
+  // formatter rounds away, and travelling between two identical strings is
+  // half a second of nothing.
+  if (from === undefined || Math.abs(to - from) < 0.005 || still()) {
+    lastShown.set(key, to)
+    el.textContent = fmt(to)
+    return
+  }
+
+  // Start from where the last figure was, so the first frame is continuous
+  // with what was on screen rather than a jump followed by a crawl back.
+  el.textContent = fmt(from)
+
+  const MS = 520
+  let begun = 0
+  const step = (now: number): void => {
+    // Superseded, or this render was thrown away — the app rebuilds the whole
+    // tree and can do it twice in a row, once for the state and once for the
+    // route. Stop, leaving the memory on the last figure painted so the render
+    // that survives carries on from there instead of landing.
+    if (owner.get(key) !== mine || !el.isConnected) return
+    if (!begun) begun = now
+    const t = Math.min(1, (now - begun) / MS)
+    // The same shape as --ease: quick away, settling at the end.
+    const eased = 1 - Math.pow(1 - t, 3)
+    const at = t < 1 ? from + (to - from) * eased : to
+    lastShown.set(key, at)
+    el.textContent = fmt(at)
+    if (t < 1) requestAnimationFrame(step)
+  }
+  requestAnimationFrame(step)
 }

@@ -1,7 +1,7 @@
 import { h } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
-import { card, cardHead, kv, callout } from '../components/bits'
+import { card, cardHead, kv, callout, fieldError } from '../components/bits'
 import { state, actions, LIMITS, verified } from '../state'
 import { usd } from '../format'
 import { go } from '../router'
@@ -33,7 +33,7 @@ export function verifyScreen(step: string): HTMLElement {
               h('span', { class: 't-title', text: title }),
               h('span', { class: 'muted', text: sub })),
             ...body)),
-        h('div', { class: 'stack col-side' }, whatItLifts())))
+        h('div', { class: 'stack col-side' }, whatItLifts(), whatHappensToIt())))
 
   /* ----- 1. what we need, and why ----- */
   if (at === 'what') {
@@ -53,8 +53,9 @@ export function verifyScreen(step: string): HTMLElement {
   if (at === 'number') {
     const input = h('input', { placeholder: '11 digits', inputmode: 'numeric', ariaLabel: 'Your NIN or BVN' })
     const field = h('label', { class: 'field' }, input)
-    const err = h('small', { class: 'field-error', hidden: true },
+    const err = fieldError(
       h('span', { html: icon.alert() }), h('span', { text: 'A NIN or BVN is eleven digits.' }))
+    err.hidden = true
     let method: 'NIN' | 'BVN' = 'NIN'
     const pick = h('div', { class: 'chip-row' }, ...(['NIN', 'BVN'] as const).map((m) =>
       h('button', { class: 'chip', text: m, ariaPressed: m === method,
@@ -134,6 +135,29 @@ function step2(n: string, title: string, sub: string): HTMLElement {
     h('span', { class: 'two-line grow' },
       h('span', { class: 't-body-strong', text: title }),
       h('small', { text: sub })))
+}
+
+/** The questions somebody has when they are about to type a national ID
+ *  number into a phone, answered beside the field rather than in a policy.
+ *  Every line is already stated somewhere in this product — the disclosures on
+ *  eligibility, Account on what it holds, this screen's own first paragraph on
+ *  where the number goes. It sat under a 192px card on a 1000px screen with
+ *  four hundred pixels of nothing under it; these are the answers that were
+ *  missing, not filler to fill it. */
+function whatHappensToIt(): HTMLElement {
+  const line = (title: string, body: string, ic: string) =>
+    h('div', { class: 'promise' },
+      h('span', { class: 'mark', html: ic }),
+      h('span', { class: 'two-line' },
+        h('span', { class: 't-body-strong', text: title }),
+        h('small', { text: body })))
+  return card(
+    cardHead('What happens to it'),
+    line('It goes to the check and nowhere else', 'Not to a company that wants to sell you something, and not to anybody outside the check itself.', icon.lock()),
+    line('You can have it all back', 'Your details, every payment and every document you sent us, downloadable whenever you want.', icon.download()),
+    line('Eighteen or over, resident in Nigeria', 'That is the rule this check exists to satisfy. We may have to ask for more if we are required to.', icon.info()),
+    h('button', { class: 'link quiet', text: 'What we hold about you',
+      on: { click: () => go('/account/details') } }))
 }
 
 /** The same card the Account and Transfer screens show, so the reason to do

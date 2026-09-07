@@ -25,15 +25,33 @@ export const icon = {
   download: () => svg('<path d="M12 4v10M8 11l4 4 4-4M5 19h14"/>', 18),
   send: () => svg('<path d="M21 3 10.5 13.5M21 3l-6.8 18-3.7-7.5L3 10.1z"/>', 18),
   receive: () => svg('<path d="M12 4v12M8 12l4 4 4-4M5 20h14"/>', 18),
+  /* Three finder squares. Receive is your address and the code for it, and the
+     down arrow was already spoken for by Add money. */
+  qr: () => svg('<rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><path d="M14 14h2.5M14 14v2.5M20 14v2.5M17 20h3M14 20h.01"/>', 18),
   convert: () => svg('<path d="M4 8h13l-3-3M20 16H7l3 3"/>', 18),
   buy: () => svg('<path d="M6 18 18 6M10 6h8v8"/>', 18),
+  /* The natures an activity row can have, one glyph each. A feed that mixes a
+     share purchase, a salary, a loan and a sign-in needs the left edge to say
+     which is which before anybody reads a word (11g.48). */
+  bought: () => svg('<rect x="3" y="4" width="18" height="16" rx="3"/><path d="m7 15 3.5-4 2.5 2.5L17 9"/>', 18),
+  sold: () => svg('<rect x="3" y="4" width="18" height="16" rx="3"/><path d="m7 9 3.5 4 2.5-2.5L17 15"/>', 18),
+  coin: () => svg('<circle cx="12" cy="12" r="8"/><path d="M12 7.5v9M9.8 9.8h4a1.7 1.7 0 0 1 0 3.4h-3.6a1.7 1.7 0 0 0 0 3.4h4"/>', 18),
+  repay: () => svg('<path d="M12 19V8M8 12l4-4 4 4M5 5h14"/>', 18),
   card: () => svg('<path d="M7 17 17 7M17 13V7h-6"/>', 18),
   lock: () => svg('<rect x="5" y="10" width="14" height="10" rx="2.5"/><path d="M8.5 10V7.5a3.5 3.5 0 0 1 7 0V10"/>', 18),
   face: () => svg('<path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M9 10h.01M15 10h.01M9 14.5s1.2 1 3 1 3-1 3-1"/>', 18),
+  /* Light and dark, as the half-filled circle every product uses for it. */
+  theme: () => svg('<circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16Z" fill="currentColor" stroke="none"/>', 18),
+  eye: () => svg('<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/>', 18),
+  eyeOff: () => svg('<path d="M9.9 5.8A9.6 9.6 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-2.9 3.6M6.3 7.9A17 17 0 0 0 2.5 12S6 18.5 12 18.5a9.4 9.4 0 0 0 3.3-.6"/><path d="M10 10a3 3 0 0 0 4 4"/><path d="m4 4 16 16"/>', 18),
   key: () => svg('<circle cx="8" cy="12" r="3.5"/><path d="M11.5 12H20l-1.5 2M17 12v3"/>', 18),
   mail: () => svg('<rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m3.5 7 8.5 6 8.5-6"/>', 18),
   copy: () => svg('<rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4H5.5A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/>', 18),
   plus: () => svg('<path d="M12 5v14M5 12h14"/>', 18),
   grid: () => svg('<rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/>', 22),
   back: () => svg('<path d="m15 5-7 7 7 7"/>', 20),
+  /** Leaving the product. The only glyph that means "this opens somewhere we
+   *  do not control", so it belongs on the block explorer link and nowhere a
+   *  person would mistake for navigation inside the app. */
+  external: () => svg('<path d="M14 5h5v5"/><path d="M19 5 10 14"/><path d="M18 13v5.5A1.5 1.5 0 0 1 16.5 20h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H11"/>', 18),
 }

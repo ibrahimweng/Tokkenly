@@ -1,4 +1,6 @@
+import { shares, usd } from './format'
 import { state } from './state'
+import { CATALOGUE } from './catalogue'
 
 export type Place = 'home' | 'wallet' | 'market' | 'grow' | 'history' | 'account'
 
@@ -13,6 +15,9 @@ export interface Destination {
   also?: string
   /** Worth showing in the palette before anyone types. */
   primary?: boolean
+  /** The staff console. It shares the `account` group so it sorts with the
+   *  rest of the settings, but it is nobody's parent except its own screens'. */
+  staff?: boolean
   hint?: string
 }
 
@@ -22,12 +27,18 @@ export interface Destination {
 export const DESTINATIONS: Destination[] = [
   { label: 'Home', to: '/', place: 'home', kind: 'place', also: 'dashboard overview start' },
 
-  { label: 'Transfer', to: '/transfer', place: 'wallet', kind: 'place', primary: true, also: 'wallet cash balance dollars move money' },
+  { label: 'Wallet', to: '/transfer', place: 'wallet', kind: 'place', primary: true, also: 'transfer cash balance dollars move money convert' },
   { label: 'Add money', to: '/addmoney', place: 'wallet', kind: 'action', primary: true, also: 'buy dollars fund top up naira deposit', hint: 'Naira in, dollars out' },
-  { label: 'Send money', to: '/send', place: 'wallet', kind: 'action', primary: true, also: 'pay transfer', hint: 'Pay a person or a wallet' },
-  { label: 'Receive money', to: '/receive', place: 'wallet', kind: 'action', primary: true, also: 'address qr get paid base wallet address 0x copy', hint: 'Your address and code' },
-  { label: 'Withdraw to your bank', to: '/withdraw', place: 'wallet', kind: 'action', primary: true, also: 'convert cash out naira bank payout', hint: 'Dollars out, naira into your bank' },
+  { label: 'Send money', to: '/send', place: 'wallet', kind: 'action', primary: true,
+    also: 'pay transfer withdraw convert cash out naira bank payout wallet address',
+    hint: 'To a person, a wallet or a bank' },
+  { label: 'Receive money', to: '/receive', place: 'wallet', kind: 'action', primary: true, also: 'address qr get paid base wallet address 0x copy receive add money', hint: 'Your Base address, inside Add money' },
+  // Still listed, because it is what people search for. It resolves into Send
+  // with the destination already answered rather than to a screen of its own.
+  { label: 'Send to your bank', to: '/withdraw', place: 'wallet', kind: 'action', primary: true, also: 'convert cash out naira payout', hint: 'Dollars out, naira into your bank' },
   { label: 'Your banks', to: '/transfer?sheet=banks', place: 'wallet', kind: 'screen', primary: true, also: 'account number gtbank kuda payout' },
+  { label: 'Your naira account', to: '/account/payments', place: 'wallet', kind: 'screen', primary: true,
+    also: 'virtual account number where to send naira deposit providus', hint: 'Where to send naira' },
 
   { label: 'Invest', to: '/invest', place: 'market', kind: 'place', primary: true, also: 'market stocks shares etfs browse buy' },
   { label: 'Your bucket', to: '/bucket', place: 'market', kind: 'screen', primary: true,
@@ -35,17 +46,50 @@ export const DESTINATIONS: Destination[] = [
   { label: 'Apple', to: '/invest/aapl', place: 'market', kind: 'screen', also: 'aapl stock company' },
   { label: 'Invest in Apple', to: '/invest/aapl/invest', place: 'market', kind: 'action', also: 'buy aapl shares' },
   { label: 'Sell Apple', to: '/invest/aapl/sell', place: 'market', kind: 'action', also: 'aapl shares' },
+  { label: 'Send Apple to someone', to: '/invest/aapl/send', place: 'market', kind: 'action',
+    also: 'gift give transfer aapl shares to a person', hint: 'To another Tokkenly account' },
 
-  { label: 'Grow', to: '/grow', place: 'grow', kind: 'place', primary: true, also: 'earn borrow interest' },
-  { label: 'Move money into Earn', to: '/grow/earn', place: 'grow', kind: 'action', primary: true, also: 'save interest yield', hint: '4.8% a year, paid daily' },
-  { label: 'Take money out of Earn', to: '/grow/takeout', place: 'grow', kind: 'action', primary: true, also: 'withdraw earn', hint: 'Any time, no fee' },
+  { label: 'Borrow & Lend', to: '/grow', place: 'grow', kind: 'place', primary: true,
+    also: 'earn grow interest yield loan credit save lending' },
+  { label: 'Lending', to: '/grow/lending', place: 'grow', kind: 'screen', primary: true,
+    also: 'lent out earnings interest paid what you lent',
+    hint: 'What you have lent, and what it has paid' },
+  { label: 'Borrowing', to: '/grow/borrowing', place: 'grow', kind: 'screen', primary: true,
+    also: 'loan owed debt what backs it shares against the loan',
+    hint: 'What you owe, and what backs it' },
+  { label: 'Lend your dollars', to: '/grow/earn', place: 'grow', kind: 'action', primary: true,
+    also: 'earn save interest yield deposit', hint: '4.8% a year, paid daily' },
+  { label: 'Take back what you lent', to: '/grow/takeout', place: 'grow', kind: 'action', primary: true,
+    also: 'withdraw earn out', hint: 'Any time, no fee' },
   { label: 'Borrow', to: '/grow/borrow', place: 'grow', kind: 'action', primary: true, also: 'loan against shares credit', hint: 'Against the shares you own' },
   { label: 'Repay', to: '/grow/repay', place: 'grow', kind: 'action', primary: true, also: 'pay back loan owed', hint: 'Clear what you owe' },
+
+  { label: 'Operations', to: '/admin', place: 'account', kind: 'place', primary: true, staff: true,
+    also: 'admin ops console staff switches providers reconciliation audit launch pilot kill switch',
+    hint: 'Staff view: switches, providers, reconciliation' },
+  { label: 'Provider status', to: '/admin/status', place: 'account', kind: 'screen',
+    also: 'admin health up down switch chainlink 0x didit base cdp outage' },
+  { label: 'Feature switches', to: '/admin/switches', place: 'account', kind: 'screen',
+    also: 'admin kill switch turn off buying selling funding gas asset' },
+  { label: 'Reconciliation', to: '/admin/breaks', place: 'account', kind: 'screen',
+    also: 'admin breaks differences provider records balances' },
+  { label: 'Audit history', to: '/admin/audit', place: 'account', kind: 'screen',
+    also: 'admin staff actions who did what log' },
+  { label: 'Launch readiness', to: '/admin/launch', place: 'account', kind: 'screen',
+    also: 'admin gates before launch legal contracts limits security review' },
+  { label: 'Your wallet', to: '/account/wallet', place: 'account', kind: 'screen', primary: true,
+    also: 'address base smart account export key you hold your own key custody gas sponsored invite',
+    hint: 'Base · you hold your own key' },
 
   { label: 'Activity', to: '/activity', place: 'history', kind: 'place', primary: true, also: 'history statement transactions receipts' },
   { label: 'Payments', to: '/activity?filter=payments', place: 'history', kind: 'screen', primary: true, also: 'sent received' },
   { label: 'Trades', to: '/activity?filter=trades', place: 'history', kind: 'screen', primary: true, also: 'bought sold shares' },
-  { label: 'Grow activity', to: '/activity?filter=grow', place: 'history', kind: 'screen', primary: true, also: 'interest borrowed repaid' },
+  { label: 'Borrowing and lending', to: '/activity?filter=grow', place: 'history', kind: 'screen', primary: true, also: 'grow earn interest borrowed repaid lent' },
+  { label: 'Statement', to: '/statement', place: 'history', kind: 'screen', primary: true,
+    also: 'ledger accounts double entry proof balance where money came from',
+    hint: 'Every movement, both ends' },
+  { label: 'Notifications', to: '/activity?filter=alerts', place: 'history', kind: 'screen', primary: true,
+    also: 'alerts bell unread told me announcements sign in filled', hint: 'What we have told you' },
 
   { label: 'Account', to: '/account', place: 'account', kind: 'place', primary: true, also: 'profile settings preferences options' },
   // Every settings group is its own address, so the palette can take somebody
@@ -55,7 +99,10 @@ export const DESTINATIONS: Destination[] = [
   { label: 'Preferences', to: '/account/preferences', place: 'account', kind: 'screen', primary: true,
     also: 'theme dark light home screen simple detailed naira bucket default intro' },
   { label: 'Notifications', to: '/account/notifications', place: 'account', kind: 'screen', primary: true,
-    also: 'alerts buzz push prices payments earn borrowing' },
+    also: 'alerts buzz push prices payments earn borrowing',
+    // Two screens carry the word: the ones you were sent, and the switches
+    // that decide which get sent. The hint is what tells them apart in a list.
+    hint: 'Choose what is worth a buzz' },
   { label: 'Security', to: '/account/security', place: 'account', kind: 'screen', primary: true,
     also: 'pin password face id recovery phrase devices sign out everywhere' },
   { label: 'Change your PIN', to: '/account/security?sheet=pin', place: 'account', kind: 'action', primary: true,
@@ -75,8 +122,8 @@ export const DESTINATIONS: Destination[] = [
 ]
 
 export const PLACE_LABEL: Record<Place, string> = {
-  home: 'Home', wallet: 'Transfer', market: 'Invest',
-  grow: 'Grow', history: 'Activity', account: 'Account',
+  home: 'Home', wallet: 'Wallet', market: 'Invest',
+  grow: 'Borrow & Lend', history: 'Activity', account: 'Account',
 }
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9 ]/g, '')
@@ -105,7 +152,14 @@ export function trailFor(path: string, query: URLSearchParams): Destination[] {
 
 function trailTo(here: Destination, path: string): Destination[] {
   {
-  const root = DESTINATIONS.find((d) => d.place === here.place && d.kind === 'place')
+  // The root is the place this screen actually sits under, not whichever
+  // place in its group happens to come first in the list. Operations and
+  // Account share the `account` group, and Operations was written first, so
+  // verification, the disclosures and the index of every screen all told a
+  // customer they were standing inside the staff console.
+  const roots = DESTINATIONS.filter((d) => d.place === here.place && d.kind === 'place')
+  const root = roots.find((d) => path === bare(d.to) || path.startsWith(bare(d.to) + '/'))
+    ?? roots.find((d) => !d.staff)
   const trail: Destination[] = []
   if (root && root !== here) trail.push(root)
   // A stock's action sits under the stock, which sits under Invest.
@@ -138,7 +192,7 @@ export function search(raw: string): Hit[] {
   for (const p of state.holdings) {
     if (norm(p.ticker + ' ' + p.name).includes(q)) {
       hits.push({ label: p.name, to: '/invest/' + p.ticker.toLowerCase(), group: 'Your shares',
-                  hint: `${p.ticker} · ${p.shares.toFixed(2)} shares` })
+                  hint: `${p.ticker} · ${shares(p.shares)} shares` })
     }
   }
   const seenWho = new Set<string>()
@@ -150,9 +204,41 @@ export function search(raw: string): Hit[] {
   }
   for (const a of state.activity) {
     if (norm(a.ref).includes(q)) {
-      hits.push({ label: a.ref, to: '/history?sheet=receipt&ref=' + a.ref, group: 'Receipts',
+      hits.push({ label: a.ref, to: '/activity?sheet=receipt&ref=' + a.ref, group: 'Receipts',
                   hint: `${a.type} · ${a.who}` })
     }
   }
-  return hits.slice(0, 12)
+
+  // Everything you could buy, not only what you already hold. This is a
+  // product for buying shares, and typing "Microsoft" found nothing unless
+  // you owned some — which is the wrong way round for a search box on a shop.
+  const held = new Set(state.holdings.map((p) => p.ticker))
+  for (const c of CATALOGUE) {
+    if (held.has(c.ticker)) continue          // already listed under Your shares
+    if (!norm(`${c.ticker} ${c.name} ${c.tags.join(' ')}`).includes(q)) continue
+    hits.push({ label: `${c.ticker} · ${c.name}`, to: '/invest/' + c.ticker.toLowerCase(),
+                group: c.kind === 'etf' ? 'Funds' : 'Companies', hint: usd(c.price) })
+  }
+
+  // A number in the query is an amount, and the three things you can do with
+  // one are two keystrokes away rather than a screen and a keypad away.
+  // Only when the whole query is an amount. Stripping the non-digits out of
+  // anything turned the reference TKN-8F2K90 into "Send $8,290.00", which is
+  // a suggestion nobody asked for attached to a number that does not exist.
+  const asAmount = raw.trim().match(/^\$?\s*([\d,]+(?:\.\d{1,2})?)$/)
+  if (asAmount && Number(asAmount[1].replace(/,/g, '')) > 0) {
+    const v = Number(asAmount[1].replace(/,/g, ''))
+    hits.unshift(
+      { label: `Send ${usd(v)}`, to: '/send?v=' + v, group: 'Move money', hint: 'Pick who, then confirm' },
+      { label: `Add ${usd(v)}`, to: '/addmoney?v=' + v, group: 'Move money', hint: 'Naira in, dollars out' },
+      { label: `Withdraw ${usd(v)}`, to: '/withdraw?v=' + v, group: 'Move money', hint: 'Dollars out to your bank' },
+      { label: `Pay ${usd(v)} to a Nigerian account`, to: '/send?v=' + v, group: 'Move money', hint: 'Any account, name checked first' },
+    )
+  }
+
+  // A name that starts with what you typed is a better answer than one that
+  // merely contains it, and the list was in source order — so the destination
+  // registry always outranked the company you were actually looking for.
+  const starts = (hit: Hit) => (norm(hit.label).startsWith(q) ? 0 : 1)
+  return hits.sort((a, b) => starts(a) - starts(b)).slice(0, 12)
 }

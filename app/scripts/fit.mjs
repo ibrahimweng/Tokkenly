@@ -1,11 +1,22 @@
 import { chromium } from 'playwright'
+import { seen } from './seen.mjs'
 const base = 'http://localhost:4173/#'
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const p = await b.newPage({ viewport: { width: 390, height: 844 } })
+// Since the app lock landed, a page that does not seed the unlock drives
+// the PIN pad instead of the product. This suite was measuring the lock
+// screen and reporting on it.
+await seen(p)
 const rows = []
-for (const hash of ['/grow/borrow','/grow/repay','/grow/earn','/grow/takeout','/send','/addmoney','/withdraw','/invest/aapl/invest','/invest/aapl/sell']) {
+// '/send' on the phone is the list of people, not a composer — measuring it
+// reported 'no sheet' and checked nothing. The sheet is one step further in,
+// once somebody is picked, so that is the route with a button to fit.
+for (const hash of ['/grow/borrow','/grow/repay','/grow/earn','/grow/takeout','/send?to=Tunde Bakare','/addmoney','/withdraw','/invest/aapl/invest','/invest/aapl/sell']) {
   await p.goto(base + hash, { waitUntil: 'networkidle' })
-  await p.waitForTimeout(160)
+  // Past the 200ms slideup. Measuring at 160 caught the sheet mid-travel and
+  // reported the button below the fold about one run in three, which is worse
+  // than not checking: a gate that cries wolf gets ignored.
+  await p.waitForTimeout(320)
   const r = await p.evaluate(() => {
     const sheet = document.querySelector('.sheet')
     const btn = sheet && sheet.querySelector('.btn-primary')

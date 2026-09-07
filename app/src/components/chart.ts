@@ -43,6 +43,13 @@ export interface ChartSpec {
    *  on a tokenised share and a single figure only shows it as of now. */
   mark?: number
   markLabel?: string
+  /** How the series is drawn. Candles for a share, because open, high, low and
+   *  close are four real facts about a traded thing and the gap between them
+   *  is what a trader reads. A line for a portfolio, because a savings balance
+   *  has a value rather than an intraday range: drawing one as candles put a
+   *  trader's instrument on a saver's screen and made the busiest block on
+   *  Home out of a number that only goes up and down slowly. */
+  shape?: 'candles' | 'area'
 }
 
 export interface Candle { o: number; h: number; l: number; c: number }
@@ -130,16 +137,76 @@ const MAX_BARS = 90
 const fitBars = (w: number) =>
   Math.max(MIN_BARS, Math.min(MAX_BARS, Math.floor((w + GAP) / (MIN_BAR + GAP))))
 
+/** How many candles a range is made of, whatever the width. The series used
+ *  to be generated at the bar count the row had room for, which made every
+ *  figure read off it a fact about the browser window rather than about the
+ *  thing being charted: Apple's year high came out $224.50 at 1440, $224.69
+ *  at 1100 and $224.55 on a phone, and the same reload on the same screen
+ *  agreed with itself only because the generator is seeded. */
+const RESOLUTION = MAX_BARS
+
+/** Fold the fixed series into however many candles the width has room for.
+ *  The buckets partition the whole series and nothing is dropped, so the high,
+ *  the low and the two ends come out the same at every width — which is the
+ *  point. A wider window shows more detail, not different history. */
+export function foldCandles(full: Candle[], n: number): Candle[] {
+  if (n >= full.length) return full
+  const out: Candle[] = []
+  for (let i = 0; i < n; i++) {
+    const from = Math.floor((i * full.length) / n)
+    const to = Math.max(Math.floor(((i + 1) * full.length) / n), from + 1)
+    const slice = full.slice(from, to)
+    out.push({
+      o: slice[0].o,
+      c: slice[slice.length - 1].c,
+      h: Math.max(...slice.map((k) => k.h)),
+      l: Math.min(...slice.map((k) => k.l)),
+    })
+  }
+  return out
+}
+
+/** A share's shape, small enough to sit in a receipt.
+ *
+ *  No axis, no labels, no hover — a sparkline is not a chart you read figures
+ *  off, it is the answer to "has this been going up or down", which is exactly
+ *  the question somebody has the moment after they bought some. It draws from
+ *  the same seeded series the full chart draws from, so the little line and
+ *  the big one are the same claim about the same company. */
+export function sparkline(r: Range, endValue: number, seed = 7): HTMLElement {
+  const N = 40
+  const vals = candlesFor(r, endValue, N, seed).map((k) => k.c)
+  const lo = Math.min(...vals)
+  const hi = Math.max(...vals)
+  const span = Math.max(hi - lo, 0.0001)
+  const at = (v: number) => 100 - ((v - lo) / span) * 100
+  const pts = vals.map((v, i) => `${(i / (N - 1)) * 100},${at(v)}`).join(' L ')
+  const up = vals[vals.length - 1] >= vals[0]
+  const tone = up ? 'var(--positive)' : 'var(--warning)'
+  const box = h('div', { class: 'spark' + (up ? ' up' : ' down') })
+  box.innerHTML =
+    `<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">` +
+    `<path d="M ${pts} L 100,100 L 0,100 Z" fill="${tone}" opacity="0.12" stroke="none"/>` +
+    `<path d="M ${pts}" fill="none" stroke="${tone}" stroke-width="2" ` +
+    `vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round"/>` +
+    `</svg>`
+  return box
+}
+
 export function barChart(spec: ChartSpec): HTMLElement {
   const height = spec.height ?? 200
   let range = spec.ranges.find((r) => r.key === spec.initial) ?? spec.ranges[0]
   let vals: number[] = []
   let candles: Candle[] = []
+  /** The range at full resolution, before the width has folded it. */
+  let full: Candle[] = []
 
   const grid = h('div', { class: 'ch-grid' })
   const bars = h('div', { class: 'ch-bars' })
   const overlay = h('div', { class: 'ch-overlay' })
   const tip = h('div', { class: 'ch-tip', hidden: true })
+  /** Where the pointer is, on a line that has no bars to light up. */
+  const cursor = h('span', { class: 'ch-cursor', hidden: true })
   const plot = h('div', { class: 'ch-plot', style: { height: height + 'px' } }, grid, bars, overlay, tip)
   // Open, high, low, close and the change, above the plot — four numbers of
   // precision the marks alone cannot give, and the line every trading screen
@@ -160,7 +227,8 @@ export function barChart(spec: ChartSpec): HTMLElement {
     const w = bars.clientWidth
     if (w < MIN_BAR) return
     const n = fitBars(w)
-    candles = candlesFor(range, spec.endValue, n, spec.seed)
+    full = candlesFor(range, spec.endValue, RESOLUTION, spec.seed)
+    candles = foldCandles(full, n)
     vals = candles.map((k) => k.c)
 
     // The axis is zoomed to the series, not anchored at zero: this portfolio
@@ -187,7 +255,8 @@ export function barChart(spec: ChartSpec): HTMLElement {
       h('div', { class: 'ch-line', style: { bottom: at(v) + '%' } },
         h('span', { class: 'ch-tick', text: compact(v, step) }))))
 
-    bars.replaceChildren(...candles.map((k, i) => {
+    if (spec.shape === 'area') drawArea()
+    else bars.replaceChildren(...candles.map((k, i) => {
       const up = k.c >= k.o
       const bodyTop = Math.max(at(k.o), at(k.c))
       const bodyLow = Math.min(at(k.o), at(k.c))
@@ -198,6 +267,41 @@ export function barChart(spec: ChartSpec): HTMLElement {
         h('span', { class: 'ch-body',
           style: { bottom: bodyLow + '%', height: Math.max(1.2, bodyTop - bodyLow) + '%' } }))
     }))
+
+    /** One filled shape under one line, and a dot on the end. The fill fades
+     *  out downwards rather than sitting as a slab, because the area under a
+     *  balance line is not a quantity — it is there to give the line a body. */
+    function drawArea(): void {
+      const n2 = vals.length
+      const pt = (v: number, i: number) => `${(i / (n2 - 1)) * 100},${100 - at(v)}`
+      const line = vals.map(pt).join(' L ')
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+      svg.setAttribute('class', 'ch-svg')
+      svg.setAttribute('viewBox', '0 0 100 100')
+      svg.setAttribute('preserveAspectRatio', 'none')
+      svg.setAttribute('aria-hidden', 'true')
+      const id = 'chfill' + Math.random().toString(36).slice(2, 8)
+      svg.innerHTML =
+        `<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">` +
+        `<stop offset="0%" stop-color="currentColor" stop-opacity="0.28"/>` +
+        `<stop offset="100%" stop-color="currentColor" stop-opacity="0"/>` +
+        `</linearGradient></defs>` +
+        `<path d="M ${line} L 100,100 L 0,100 Z" fill="url(#${id})" stroke="none"/>` +
+        // pathLength normalises the line to 1 whatever its real length, so one
+        // dash rule draws any range in the same time rather than a year taking
+        // longer than a day.
+        `<path class="ch-line" pathLength="1" d="M ${line}" fill="none" ` +
+        `stroke="currentColor" stroke-width="2" vector-effect="non-scaling-stroke" ` +
+        `stroke-linejoin="round" stroke-linecap="round"/>`
+      // The end of the line is where the money is now, so it gets a mark. Its
+      // own element rather than an SVG circle: the viewBox is stretched to the
+      // plot, and a circle inside it would come out an ellipse.
+      const end = h('span', { class: 'ch-end',
+        style: { left: '100%', bottom: at(vals[n2 - 1]) + '%' } })
+      bars.replaceChildren(svg, end, cursor)
+      bars.classList.toggle('up', spec.endValue >= candles[0].o)
+      bars.classList.toggle('down', spec.endValue < candles[0].o)
+    }
 
     // The real price of the share behind the token, drawn across the whole
     // period so the gap is a shape rather than a single figure.
@@ -220,14 +324,22 @@ export function barChart(spec: ChartSpec): HTMLElement {
     axis.replaceChildren(...Array.from({ length: k }, (_, j) =>
       h('span', { class: 't-caption muted', text: range.fmt(dateAt(range, j / (k - 1))) })))
 
-    const from = vals[0]
+    // Where the range opened, not where its first candle closed. `vals` holds
+    // closes, so reading the baseline off vals[0] measured close-to-close
+    // while the percentage beside it measured open-to-now — two different
+    // spans in one sentence, and the dollar half moved with the width because
+    // the first close did. The open is the pinned start of the series.
+    const from = candles[0].o
     const change = spec.endValue - from
     caption.className = 't-caption ' + (change >= 0 ? 'pos' : 'warn')
     caption.textContent =
       `${change >= 0 ? '+' : '−'}${usd(Math.abs(change))} (${change >= 0 ? '+' : '−'}${pct(Math.abs(range.pct))}) ` +
       (range.over ?? 'over ' + range.key)
 
-    paintOhlc(candles[candles.length - 1], vals[0])
+    // The four numbers are the latest period at full resolution — a fixed
+    // slice of time — not the last bucket, whose width depends on the window.
+    if (spec.shape === 'area') ohlc.replaceChildren()
+    else paintOhlc(full[full.length - 1], from)
 
     plot.setAttribute('role', 'img')
     plot.setAttribute('aria-label',
@@ -240,6 +352,9 @@ export function barChart(spec: ChartSpec): HTMLElement {
     }
   }
 
+  /** Open, high, low and close are four facts about a traded thing. A balance
+   *  has none of them, so the row is not drawn at all on a line chart rather
+   *  than being filled with numbers that do not mean anything. */
   function paintOhlc(k: Candle | undefined, from: number): void {
     if (!k) return
     const d = k.c - k.o
@@ -255,16 +370,19 @@ export function barChart(spec: ChartSpec): HTMLElement {
   let lit = -1
   const show = (i: number) => {
     if (i === lit || i < 0 || i >= vals.length) return
-    if (lit >= 0) bars.children[lit]?.classList.remove('on')
+    const areaMode = spec.shape === 'area'
+    if (lit >= 0 && !areaMode) bars.children[lit]?.classList.remove('on')
     lit = i
-    const bar = bars.children[i] as HTMLElement
-    bar.classList.add('on')
-    const from = vals[0]
+    if (areaMode) {
+      cursor.hidden = false
+      cursor.style.left = (i / (vals.length - 1)) * 100 + '%'
+    } else (bars.children[i] as HTMLElement).classList.add('on')
+    const from = candles[0].o
     const k = candles[i]
     const d = vals[i] - from
     // The readout follows the pointer, so the four numbers are the candle you
     // are on rather than the last one.
-    paintOhlc(k, from)
+    if (spec.shape !== 'area') paintOhlc(k, from)
     tip.replaceChildren(
       h('span', { class: 't-body-strong', text: usd(vals[i]) }),
       h('span', { class: (d >= 0 ? 'pos' : 'warn') + ' t-caption',
@@ -272,14 +390,18 @@ export function barChart(spec: ChartSpec): HTMLElement {
       h('span', { class: 'muted t-caption', text: range.fmt(dateAt(range, i / (vals.length - 1))) }))
     tip.hidden = false
     // clamped so it never hangs off either edge of the card
-    const x = bar.offsetLeft + bar.offsetWidth / 2
+    const x = spec.shape === 'area'
+      ? (i / (vals.length - 1)) * bars.clientWidth
+      : (bars.children[i] as HTMLElement).offsetLeft + (bars.children[i] as HTMLElement).offsetWidth / 2
     tip.style.left = Math.min(Math.max(x, tip.offsetWidth / 2), plot.clientWidth - tip.offsetWidth / 2) + 'px'
   }
   const hide = () => {
-    if (lit >= 0) bars.children[lit]?.classList.remove('on')
+    if (lit >= 0 && spec.shape !== 'area') bars.children[lit]?.classList.remove('on')
+    cursor.hidden = true
     lit = -1
     tip.hidden = true
-    paintOhlc(candles[candles.length - 1], vals[0])
+    // A chart that never got a width to draw against has no candles to report.
+    if (candles.length && spec.shape !== 'area') paintOhlc(full[full.length - 1], candles[0].o)
   }
   bars.addEventListener('pointermove', (e) => {
     const r = bars.getBoundingClientRect()

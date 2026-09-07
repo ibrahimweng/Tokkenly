@@ -1625,12 +1625,21 @@ scale.
     merely change colour.
 11. Never use `ink/subtle` for text a person needs to read.
 12. Never add a shadow except to a bottom sheet or a floating element.
+12b. Human and simple, in every word a customer reads. Say it the way a person
+    would say it out loud. One idea per sentence, twenty-four words at most. No
+    em dash and no semicolon: both are a full stop somebody was afraid to use.
+    No word an insider forgets is a word, unless the screen also says what it
+    means. Where something genuinely needs more context than a line, it goes
+    behind a question mark and not into another paragraph. `words.mjs` counts
+    all of it, on every route, and nothing is exempt. See 11g.41.
 13. Never draw a line. No card outline, no field outline, no list divider, no
     chip edge, no rule under a heading. Outside a chart the only strokes are a
     2px green focus ring, a 2px error ring, and the glyphs themselves. If two
     things need separating, step the surface or add space. A chart is the single
     named exception, spelled out in 8.13, because reading a price is not the
-    same job as glancing at a card.
+    same job as glancing at a card. `lines.mjs` counts, at every route in both
+    themes, and its list of exceptions is the whole list: see 11g.36 for the
+    eight places this had already been broken before anything checked.
 14. Never nest more than three surface levels.
 15. Never compose an amount below 36. Set it flat.
 16. Never draw a glyph at any size but 12, and never at any stroke but 2. The
@@ -4206,3 +4215,2794 @@ because the sweep did not include the sign-in screens. It does now.
   from — which the button does not.
 - Face ID is a button that succeeds after half a second. WebAuthn would make
   it real and is out of scope for a prototype with no server.
+
+## 11g. An outside pass, and all six tiers of it built
+
+The brief was to come at this the way a design associate brought in to make a
+product market-ready would: criticise everything, name what is wrong rather
+than what could be nicer, and rank it. The pass produced forty-four numbered
+findings across six tiers, ordered by what a person loses if it is not fixed
+rather than by how hard it is. All six are built, all forty-four items are
+settled, and what follows is what changed.
+
+The tiering rule worth keeping: **tier 0 is not "the important ones", it is the
+ones where the product says something untrue.** Everything in it was a screen
+stating a number that was wrong, or a control that did not do what it said. A
+thing that is merely ugly waits.
+
+### 11g.1 Six things that were wrong, not weak
+
+**A button that shrinks is a height that was a wish.** `.btn` set 56px and was
+almost always the last child of a flex column — a sheet, a card, a composer —
+and a flex item shrinks along the main axis unless it is told not to. Measured:
+the buy sheet's confirm was 30px on a 390 phone, and Send's was 20px and below
+the fold on a 1366×768 laptop. Both of them the one control their screen exists
+to offer. `flex: none`, and anything that genuinely needs to flex says so after
+the rule.
+
+**A composer opened above its own ceiling.** The screen handed it a comfortable
+figure — $500 of a share, $300 out to a bank — without knowing what the account
+is allowed to move, and an unverified account is allowed $250. So the field
+read $500, the receipt priced $500, and the button was dead, with nothing on
+screen saying why: the sentence that explains a cap only appeared once you had
+touched something. It opens at `min(initial, max)` now and the first paint
+carries the reason when the opening figure had to come down. Buy and Withdraw
+both said DISABLED on first load for every new account.
+
+That sentence costs about 38px, which pushed the buy sheet past the bottom of a
+phone once the button was allowed its real height — so the action stops taking
+part in the scroll and sticks to the foot of the sheet. The fit was a
+coincidence anyway, one row away from breaking.
+
+**One account, two totals.** Simple showed cash, Earn and holdings under TOTAL
+PORTFOLIO. Detailed showed the holdings alone, under no label, with the day's
+move and the total gain as literals. The toggle appeared to delete $3,720,
+disagreed with itself about the day by $3.50, and the two literals would have
+gone on saying +$142.60 and +$1,840.60 however the holdings moved. Detailed
+derives all three now, and reads total gain off the range table its own chart
+draws from.
+
+**A price was a fact about the browser window.** The series was generated at
+whatever bar count the row had room for, so Apple's year high came out $224.50
+at 1440, $224.54 at 1280, $224.69 at 1100 and $224.55 on a phone. Reloading
+agreed with itself only because the generator is seeded; resizing did not, and
+the same person checking the same share on a laptop and then a phone was shown
+two different histories. The range is built at a fixed resolution now and
+folded into however many candles the width can hold — the buckets partition the
+whole series and drop nothing, so both ends, the high and the low come out the
+same at every width.
+
+The caption had a second fault in the same sentence: its baseline was `vals[0]`,
+which holds closes, so the dollar half measured close-to-now while the
+percentage beside it measured open-to-now. With both fixed, Home's all-time
+caption and its Total gain agree: +$3,204.16 (+24.6%) in each.
+
+**Home said nothing was waiting on an account that had not verified.** The
+standing line was the fixed string "Everything is settled. Nothing needs your
+attention." — on an account whose limits were a tenth of what they could be and
+for whom Buy and Withdraw were both shut because of it. The line reads state
+now, and the task sits on Home in both views. It is not dismissible: it has two
+flows shut, and the way to be rid of it is to do it.
+
+Grow had the same shape. The hero was labelled "In Grow" and showed the Earn
+balance alone while $380 of borrowing and $8.90 of interest were on the books
+and named nowhere on the screen.
+
+**A limit that stops the safer thing.** Sending, adding money, converting out
+and buying all answered to the movement ceiling. Drawing on the credit line did
+not, so an unverified account could take a $1,150 loan while being stopped from
+buying $300 of a share. A drawdown puts money in the wallet that was not there
+before, so it crosses the boundary a deposit crosses; it answers to the same
+ceiling now. Repaying and moving in and out of Earn stay uncapped, because
+those are your own money moving between your own buckets and a limit that
+blocked a repayment would hold somebody at 9.4% for the sake of a cap meant to
+protect them. The rule is written beside `movementCeiling()` so the next flow
+added has somewhere to look.
+
+64. **A ceiling the opening figure ignores is a screen arguing with itself.**
+    Three surfaces stated the same transaction at once — the field, the
+    receipt and the button — and only the button knew about the cap, so it
+    expressed the disagreement as a dead control with no explanation.
+
+65. **A figure that moves with the window is a fact about the window.** Nothing
+    about the year high changed between 1100 and 1440; the sampling did. Any
+    figure read off generated data has to be read off the same data at every
+    size, or it is describing the renderer.
+
+### 11g.2 Money that adds up
+
+Tier 1 was arithmetic and vocabulary: seven places where the figures were
+individually defensible and collectively incoherent.
+
+**Money you have and money you could owe do not add up.** The wallet hero drew
+cash, Earn and "Could borrow" as three segments of one bar and totalled all
+three: "$5,200.00 in total" on an account holding $3,720. A credit limit
+rendered as a third kind of balance, same unit, same scale, with a sentence
+underneath saying so in words. The bar is what you hold now; borrowing capacity
+keeps its place, because it is what turns a balance into buying power, but it
+is named as borrowing. Buying power was also printed twice, 60px apart.
+
+**Borrowing is money in that is not yours.** Rule 43 has two cases, green for
+money in and neutral for money out, and a drawdown satisfies the first — the
+wallet does go up — so $500 borrowed at 9.4% rendered exactly like a $1,500
+payday in the list where a person reviews what happened to their money. Three
+cases now: it keeps the plus, because the money arrived, and loses the green,
+because it is a debt. The test lives next to `signed()` and `amount()` takes
+the entry rather than the figure, so a call site cannot decide for itself which
+case it is in — which is what rule 43 was about.
+
+**Every cost in money, on the screen where you decide.** The buy composer
+quoted the gap to the real share as a bare percentage among dollar figures: the
+one cost on the screen that is not a fee, and the only one you could not read
+in money. It says both now, "$0.42 · 0.17%", and stays out of the total because
+it is inside the price per share rather than a charge on top. Add money and
+Withdraw showed no fee row at all, against a pitch that promises "the amount,
+the rate, the fee, and exactly what you receive, before you confirm". And the
+receipt asserted "Fee: None" on every entry including the trades that charged
+half a per cent — the one document a person keeps, wrong about the one thing it
+is kept for. The fee is recorded on the movement now rather than recomputed, so
+a receipt from last month states the fee that was charged then.
+
+**The gap to the real share was printed three ways.** The stock page put a sign
+and a word in one sentence — "−0.17% above $223.72" — which cannot both be
+true. The market table printed a bare "−0.17%" in a column of prices, where a
+signed percentage reads as a price move: a buyer scanning it saw Apple down and
+Nvidia up, when it meant Apple's token costs 0.17% over the real share and
+Nvidia's is 0.42% under. The figure loses its sign and the word carries the
+direction.
+
+**A what-if that ignored the buy.** Composing $250 of Apple, the "If it moves"
+table read 23.42 shares in all three rows — the holding you arrived with. It
+projects the position the order would leave now: 24.5356 shares at $250,
+23.8662 at $100, moving as the amount moves.
+
+**One quantity, three renderings.** 2.2311 in the receipt, 23.42 in the card
+beside it, 23.42 sh in the table under that. Three renderings of one number
+read as three kinds of number, which is bad for a product whose whole
+proposition is owning a fraction of a share. `shares()` carries the rule: two
+decimals always so a column lines up, up to four more when the figure is small
+enough to need them. "sh" is gone.
+
+**A ninety-second hold with nothing behind it.** "The rate is held for ninety
+seconds once you confirm" had no clock, no expiry and no way to be given a new
+one — a sentence about a rate, on the two screens whose whole job is to be
+believed about a rate. A quote is a thing with an end now. When it runs out the
+confirm button is *replaced* by "Get a new rate" rather than greyed, because a
+dead control you can still press is how a stale rate gets spent. A re-quote
+steps through a fixed sequence rather than being drawn at random, so a figure
+on screen never moves on its own; it moves when you ask.
+
+Two faults surfaced building it. The held branch returned before the PIN gate,
+so a withdrawal over the ask-again figure would have gone through without it —
+the gate is a shared function now and is rebuilt per quote. And the withdrawal
+outcome reported the indicative rate rather than the one it honoured, which is
+the exact surprise a hold exists to prevent.
+
+66. **A cost stated as a percentage among dollar figures is the one cost on the
+    screen nobody can act on.** Every other line was money. The reader has to
+    stop and do arithmetic on precisely the number the product would rather
+    they did not look at.
+
+67. **A promise with no mechanism is worse than no promise.** Nothing enforced
+    the ninety seconds, so the sentence was load-bearing for trust and carried
+    by nothing at all.
+
+### 11g.3 The phone, and the middle of the range
+
+**The floating rail was covering content with a hard edge.** Measured at rest
+on a 390×844 phone: a whole Activity row — Nvidia, bought 26 August, −$380.00 —
+the borrow rate on Grow, the Dow figure on Invest and the Convert tile's own
+call to action. Covered flat, so the page did not look like it carried on
+underneath; it looked like it stopped. A fade says it carries on, behind the
+pill in the rail's own stacking context, deaf to the pointer. The reserved band
+at the foot of the scroll clears the fade as well as the rail.
+
+**Four unlabelled glyphs in a capsule is a memory test**, in a product whose
+thesis is teaching somebody their first share. The sidebar has said Home,
+Invest, Transfer and Grow in words since the start; the phone, where most of
+these people will be, said nothing. Icon over name, and the lit tab is told
+apart by its fill rather than by being fatter than its neighbours. Below 400
+the rail gives up its side gutters before it gives up a word — 360 is what most
+budget Android phones actually are, and "Transfer" is the longest of the four.
+
+**Nothing above the fold on the shopping screen was shoppable.** The first
+stock sat about 805px down an 844px screen, under a title, a search field, a
+paragraph repeating the title, seven filter chips on three rows, and three
+full-width cards for the S&P, the Nasdaq and the Dow. The paragraph goes, the
+chips become one scrolling row, the indices become a strip you push sideways,
+and both bleed to the edges so a card mid-scroll is not clipped by a gutter it
+cannot cross. The first company lands at 464px and four rows fit above the rail
+at 390 and at 360.
+
+**One greeting, one search.** Mobile Home said "Good morning, Chinaza" in the
+top bar and again as its own title 180px below, and carried two search buttons
+40px apart: roughly 200px of the screen with the least of it, spent saying
+things twice. And it was the fixed string "Good morning" at every hour of the
+day. A product asking to be believed about money should not be visibly wrong
+about what time it is.
+
+**Four ways to enter one number is indecision, not generosity.** A field, a
+drag-ruler, four quick chips and a keypad, stacked, pushing the confirm off the
+bottom. The phone keeps the keypad and the chips, which are the two a thumb
+wants; the ruler goes, because at 390 it is sixty-five unlabelled lines with no
+range, no unit and no scale. The buy sheet's content came down from 788px to
+732. The desktop keeps it, where it is the only way to move the figure without
+typing, and its caption now says what it does and where it stops.
+
+**The middle of the device range was designed for neither end.** There was one
+breakpoint, at 899, so a 900px window and a 1440px monitor got the same 240px
+sidebar and the same 96px gutters. On a 1024×768 iPad that left about 688px of
+content: the three doors on Home crushed to slots, "Borrow or Lend" wrapped to
+two lines, the dot field cropped to a sliver. Between 900 and 1199 the sidebar
+keeps its places and gives up its width — icon over name, the way the phone's
+rail now reads — and the gutters come in to 32. Content at 1024 goes from 688px
+to 936. The promo card goes at this width rather than shrinking: a heading, a
+paragraph and a button squeezed into 72px is an advert nobody can read.
+
+68. **A range with one breakpoint has two designs and pretends to have one.**
+    Everything between them is an interpolation nobody looked at. The tablet
+    tier was not a new idea; it was the admission that 900 to 1199 existed.
+
+### 11g.4 What it does when it goes wrong
+
+**Nothing in the product knew whether there was a connection.** Every
+confirmation wrote to the ledger and reported success, so on a dropped signal —
+which on a Lagos commute happens several times a trip — the app would tell
+somebody a payment had landed while the phone was holding no signal at all.
+That is the worst thing a money app can say.
+
+The browser's own `online` and `offline` events write to state, and the bar
+says what still works as well as what does not, because "offline" alone reads
+as "the app is broken" when everything you can read is still there. Every
+review refuses in place, under the receipt, with the wallet unchanged and the
+URL still on the review. And the rate becomes a request: a quote is the one
+figure the product cannot know on its own, so it is the honest place to model a
+round trip — skeleton rows while it waits, two named reasons if it fails, no
+confirm button in that state so there is nothing to press by mistake.
+`skeletonList()` had been in the codebase since the start and had never once
+been called.
+
+**Every flow in this product succeeded.** No decline, no timeout, no reversal,
+and `toast()` carried an `'error'` tone nothing had ever called — so the thing
+people actually judge a money app on had never been designed. Two failures now,
+both in the one seam every confirmation passes through.
+
+Declined: the sheet stays where it is, the reason is on screen under the
+receipt rather than in a toast that has gone by the time you look up, and
+nothing is written.
+
+Unanswered is the honest one and the harder one. It may still land, so the
+movement is recorded unsettled rather than claimed either way. That turned on a
+whole chain the product had built and could never reach: Home's standing line
+says "One payment is still settling", the Activity row wears its Pending pill,
+the wallet's Still Settling card has something in it for the first time, and
+the receipt reads "Still settling. It usually clears within a minute." All of
+that UI existed. Nothing could produce the state it was for.
+
+Which movements fail is deterministic, on the cents, the way a payment sandbox
+uses a magic value: `.99` declines, `.98` goes unanswered. A prototype that
+declines one payment in ten is unusable for a demo and untestable in a suite.
+It is in the README so the team can aim at it.
+
+69. **A product where nothing can fail has not designed the half people judge
+    it on.** Eleven screens of success and no failure state is not an
+    optimistic product, it is an unfinished one — and the giveaway was a whole
+    chain of pending UI that no code path could reach.
+
+### 11g.5 Risk where it is taken, and a balance you can cover
+
+**The best writing in the product was two screens from where it mattered.**
+`/disclosures` says what a tokenised share actually is, that it is held with a
+regulated custodian, that you get the exposure and not the voting rights, what
+happens to your money if the custodian or Tokkenly fails, and who to escalate
+to. It was reachable from two text links buried in settings. It is now under
+the button that takes the risk — buying, selling and borrowing each carry a
+quiet line to it beneath the confirm — and under the sign-in and sign-up cards.
+
+Deliberately not on Add money, Withdraw or Send. Those move your own money
+between your own accounts and carry none of what that page describes, and noise
+is how people learn to skip the ones that matter.
+
+**Balances come off the screen.** People here check their money on buses and in
+queues, and a $16,229 figure at 48px is readable from the next seat. One
+function decides what is covered, so a balance somebody forgot to wrap is not
+one call site away from undoing the whole thing. What is yours goes — the
+portfolio, cash, Earn, what you owe, every amount in Activity, and the naira
+line under a dollar figure, because covering one and printing the other in
+naira covers nothing. What is not yours stays: share prices, index levels, the
+rates, the limits. Hiding public figures protects nobody and makes the screen
+useless. The switch sits next to the figure it covers as well as in
+Preferences, because the moment you want it is the moment somebody sits down
+beside you and Account is four taps away. Tooltips and aria-labels are covered
+too: a balance read out to a screen reader is still a balance on the screen.
+
+### 11g.6 Two charts, and naira as a currency
+
+**A balance is a line; a share is candles.** Home drew the portfolio as
+candlesticks — open, high, low and close, four numbers per period. A savings
+balance does not have an intraday range. It has a value, and the four numbers
+under the chart were filled with figures that meant nothing about it. It also
+made the busiest, most saturated block on Home out of the calmest data in the
+product, which is the wrong way round. The portfolio is a line now with a soft
+body under it and a mark where the money is; no OHLC row, because there is
+nothing honest to put in it. The stock page keeps its candles, because those
+four are real facts about a traded thing.
+
+**Naira is a currency, not an ornament.** The audit left this as a product
+decision; the call is that for a product whose README opens "Stablecoin and
+stocks, for Nigeria", naira is the unit people here think in and dollars are
+the thing they bought with it. It was an aside behind a toggle, real on two
+screens out of twenty-four, which is localisation done to a product rather than
+a product built for a place. Every balance the app states carries it now.
+
+And the rate stops being a fact of nature. It is the one number here a person
+cannot check for themselves, so Transfer says what it is and when it was taken:
+"₦1,500 to the dollar · indicative, quoted 09:40". A rate with no time and no
+name on it is a rumour.
+
+The preference stays, because wanting one currency on screen is a real
+preference rather than a default to be argued with — and because the decision
+reverses cleanly if it is the wrong one.
+
+70. **A preference is where a decision goes when nobody will make it.** Naira
+    was a switch because deciding whether this is a Nigerian product or an
+    American one with a Nigerian option is harder than shipping both. Two of
+    the twenty-four screens honoured the switch, which is the tell: nobody
+    owned it.
+
+### 11g.7 A palette that knows about things, and motion that carries the eye
+
+**The palette did not know the catalogue.** Typing "Microsoft" found nothing
+unless you already owned some, which is the wrong way round for the search box
+on a shop. Every company and fund is findable now, by ticker, by name or by
+what it is — "health" finds Johnson & Johnson — and the ones you hold stay
+under Your shares rather than appearing twice. An amount is a thing you can
+type as well: "50" offers Send, Add and Withdraw with the figure already in
+them.
+
+Only when the *whole* query is an amount. Stripping the digits out of anything
+turned the reference TKN-8F2K90 into "Send $8,290.00" — a suggestion nobody
+asked for, attached to a number that does not exist. And hits were in source
+order, so the destination registry always outranked the company being looked
+for; a label that starts with what you typed comes first.
+
+**Motion had one curve and one duration and no choreography.** That discipline
+was already right. What was missing is that after a payment the balance simply
+became a different number, with nothing connecting the figure you were looking
+at to the one you are looking at now. The balance travels now — sending $120
+walks the wallet from $2,480.00 through $2,439.54, $2,403.26 and $2,383.83 —
+and the portfolio line draws itself, its ground fading up under it with the end
+mark arriving last. `pathLength` normalises the stroke so a year and a day take
+the same time to draw. Both stop under `prefers-reduced-motion`.
+
+**The first version of that was half broken and the suite half hid it.** The
+app rebuilds the whole tree twice in a row, once for the state and once for the
+route, and the discarded render was writing the *destination* into the memory
+on its way out. Whichever render got a frame first decided the outcome: usually
+the survivor read from and to as the same number and painted the answer, so
+Home travelled and the wallet jumped. Occasionally it raced the other way and
+the wallet travelled for real — which is when `bucket.mjs`, reading
+`.hero-figure` a fixed 350ms after a navigation and comparing to within five
+cents, failed. One defect, showing up as a missing animation on half the
+screens and as an intermittent test failure on the other half.
+
+The memory holds the figure actually on screen now, updated frame by frame, so
+a discarded render leaves it where the eye last saw it and the next one carries
+on from there. A generation per key stops two runs writing to one key at once.
+
+71. **Motion earns its place by connecting two states, not by decorating one.**
+    Everything here already animated; nothing carried anything across a change.
+    The cheapest thing in interface design that reads as expensive is also the
+    only one a person feels without being able to name it.
+
+### 11g.8 An intro that ends on a choice
+
+The intro made four claims and then handed you an empty market with a button
+saying "Buy your first share", which is not a thing the market screen does. A
+person finished onboarding having done nothing, holding four claims they had no
+way to check, on a screen answering a question they had not asked.
+
+**The last step stops talking.** It offers the three companies the market
+already puts forward, each with what the starting amount actually buys of it —
+`$50 buys 0.223115 shares` — which is screen one's claim made good on something
+you can press. Pressing one puts it in the bucket, ends the intro and lands on
+the bucket with the pick in it: one deliberate press from a first purchase,
+with the amount and the total in front of you.
+
+**Picking is not buying, and it stays that way.** Onboarding is the worst place
+to slide somebody into a financial commitment, so the money decision stays in
+the composer where the cost is stated. The screen says nothing is bought until
+you say so, and the suite proves it by reading the wallet before and after.
+
+**Screen one stopped quoting the person's balance.** It ended on "You have
+$2,480.00 ready to spend." — an account balance, to the cent, told to somebody
+who has not added a naira. On a real first run it is either untrue or it is
+somebody else's money, and either way it teaches a person that the figures here
+are decoration. The claim above it is about a share price, so it says the share
+price and what a dollar buys of one, which anybody can go and check.
+
+The pick step drops the dot art and lays the three across the width. The other
+steps carry decoration bottom-right and a solid Next; this one is deliberately
+unlike them, because it asks rather than tells — and a pressable card floating
+on a field of dots reads as ornament, which is the opposite of what these are.
+
+72. **An intro that ends on a slogan ends nowhere.** Four claims and a button
+    to a screen that cannot honour it is a carousel, not an onboarding. The
+    test of the last step is whether anything is different afterwards.
+
+### 11g.9 What the suites were not testing
+
+**Six suites were driving the lock screen.** The app lock landed and six of the
+seven suites that build their own page stopped seeding the unlock, so every
+route they visited was the PIN pad. Three failed loudly. The other three did
+not, which was worse:
+
+    fit    reported "no sheet" for all nine composers, and passed
+    phone  measured overflow on 23 routes, all of them the lock screen
+    walk   screenshotted 24 routes, all of them the lock screen
+
+Fixing that surfaced staleness underneath from changes that predate the lock:
+`flows` read the wallet's cash from `.t-display-xl`, which the hero stopped
+using when it was rewritten; walked the rail by its old names, Wallet, Market
+and History; clicked two controls that had moved to their own addresses when
+Account became an index; and read the holding from "the first `.kv` in the side
+column", which the token card above it turned into Liquidity — an unchanging
+number reported twice as the holding, without ever failing.
+
+**Two more were reporting on nothing.** `fit` measured `/send` on the phone,
+which is the list of people rather than a composer, so it printed "no sheet"
+and checked no fit at all; it measures the sheet one step in now. And `walk`
+had no font refusal, so this sandbox's unreachable Google Fonts arrived in its
+ERRORS line as if the app had raised them.
+
+**And three were reading a figure while it moved.** `bucket`, `fees` and
+`trade` all compared the wallet before and after a movement, sampled a fixed
+350ms after a navigation — `trade` to within two cents. `seen.mjs` gained
+`settled()`, which polls until the text repeats itself and then takes it.
+
+**Contrast had never been measured on the intro at all.** `seen()` seeds a
+returning visitor, which is exactly what skips the intro, so the one part of
+the product that puts text on a green gradient was the one part never checked.
+The same shape of gap as 11f.37, where the sweep had never covered the sign-in
+screens: a suite's seeding decides what it can reach, and what it cannot reach
+is invisible rather than reported. Four steps, both themes, and the card under
+the pointer: 17 texts on the pick step, nothing below AA.
+
+73. **A gate that reports on a screen nobody asked it about is not a gate.**
+    Passing is not evidence. Three suites passed while looking at a PIN pad,
+    and the only thing that separated them from the three that failed was
+    whether their assertions happened to be satisfiable by the wrong screen.
+
+74. **Reading a figure that moves, at a fixed time, is a coin toss.** It was
+    stable only for as long as the animation was broken. Fixing the product
+    would have broken three suites; both faults came from the same commit.
+
+### 11g.10 Where the audit was wrong
+
+An audit is a document with claims in it, and it does not get to skip the
+check it is applying. Three findings did not survive contact with the code.
+
+**The buy premium was misquoted.** The audit said the gap to the real share was
+"about 85¢" on a $250 order and implied it was missing from the total. It is
+$0.42, and it is correctly absent from the total: it is embedded in the price
+per share rather than added on top, and the total is what leaves the wallet.
+What was actually wrong was quoting it as a bare percentage — which is the
+finding that survived.
+
+**The palette already searched more than the routes.** The audit said it knew
+only the twenty-four destinations. It had searched holdings, people paid and
+receipt references since it was written. The real gaps were the catalogue and
+amounts.
+
+**The dot art is not generated.** The audit's item 30 assumed a formula and
+proposed replacing it with a meaningful one. `art.ts` holds three hand-composed
+12px grids lifted cell for cell from Figma 06 Desktop D01c with the accent
+cells placed by hand, and the file argues explicitly against generating them.
+The item was held back pending a decision, because "make the art mean
+something" read as a proposal to redraw artwork somebody made deliberately. It
+was built once that decision came, and without generating anything: see
+11g.18. The finding was right that the fields carried no information. It was
+wrong about the only way to give them some.
+
+75. **The audit is not exempt from the audit.** Two of the three were wrong in
+    the direction that made the finding sound worse, which is the direction an
+    audit is biased in. Checking the three cost twenty minutes and removed one
+    item, corrected another and stopped a third from vandalising a deliberate
+    piece of work.
+
+### 11g.11 Tier 4: what the product owed somebody not using a mouse
+
+Contrast was already clean across every route in both themes, which is rare
+and was worth protecting. Everything else in this category was absent rather
+than wrong, which is why none of it had been caught: the product works
+perfectly well if you can see it and are holding a mouse.
+
+**A sheet was a div over a scrim.** It looked modal and behaved like a panel
+that happened to be on top: no role, nothing naming it, focus left wherever it
+already was, and Tab walking straight out of it. Open Send with a keyboard and
+the third Tab reached Convert on the wallet underneath. Both shapes — the
+`?sheet=` dialog and the composer that presents as a modal — go through one
+function now: `role="dialog"`, `aria-modal`, named by its own heading, focus
+moved in on open, Tab and Shift-Tab held inside, and the screen beneath
+`inert`, which takes it out of the tab order and the accessibility tree rather
+than only deafening it to the pointer.
+
+**Focus cannot go back to what opened it**, and pretending otherwise would
+have been the wrong fix. This app replaces the whole tree on every state
+change, so the invoking element does not exist by the time the dialog closes.
+Focus goes to the content of the screen underneath instead, which is at least
+past the seven nav rows a keyboard user has already walked. The same rebuild
+is why a dialog takes focus only when it is new or has lost it: focusing on
+every mount would drag the caret off whatever was being typed into it — the
+same double-render trap that broke the counting balance in 11g.7.
+
+**Every screen offered exactly one heading.** The page title, and then
+nothing: heading navigation, which is how a screen reader user skims a page,
+gave one rung and stopped. A card's name is an `<h2>` now, which is three to
+eleven rungs a screen, and it looks identical because `.t-caps` was always
+carrying the type. Two things were actively in the way: the sidebar promo
+emitted an `<h3>` before the page's `<h1>` on all sixteen signed-in routes, so
+that navigation landed on an advert first; and `outcome()` emitted an empty
+`<h2>` on every successful payment, which is a rung to nowhere. The outcome
+names itself under the tick instead, which is also what its dialog is now
+labelled by.
+
+**There were no live regions at all.** Arriving somewhere said nothing, and
+the tab said "Tokkenly" on all twenty-six routes — which makes a browser
+history and a row of tabs useless as well as being silent. Both name the
+screen now. Every field error appears without a page change — a ceiling, a
+shortfall, half an address — and appeared silently, so for somebody who cannot
+see the sentence the button simply stopped working with no reason given. They
+are built by one helper that makes them a status, rather than by five call
+sites that each have to remember.
+
+**A toast took itself away after 2,600ms with no way to hold it.** Unannounced
+as well. That is a WCAG 2.2.1 failure on the timing alone and, more plainly,
+it is how somebody who reads slowly never finds out what happened to their
+money. Announced, held while it is hovered or focused, and dismissible.
+
+**And a skip link, which is a button rather than an anchor.** The customary
+`<a href="#main">` cannot work here: the address bar is the router, so a
+fragment link navigates to `/main` and lands on the not-found screen. A button
+that moves focus does the part of a skip link that actually does the work.
+
+76. **A rebuild is an accessibility problem, not only a rendering one.** Focus
+    lives on an element. If the tree is replaced wholesale, focus is a thing
+    the app has to put back deliberately, in three places at least: when a
+    dialog opens, when one closes, and when the same dialog is redrawn under
+    somebody's hands.
+
+### 11g.12 Forty-four pixels, and what a target costs
+
+Eleven kinds of control measured under 44px on a phone across twenty-two
+routes: chips at 32, sort headers at 28, the sheet close at 32 square, the
+account avatar at 40, small buttons at 40, the amount field at 42, and four
+sorts of text link between 16 and 20 tall.
+
+The first attempt tried to get the height for free. The text links got an
+invisible hit area — a `::after` reaching 44px out of a 20px link — so no row
+would have to grow. Measured, it did not work: a pseudo-element paints in its
+parent's place in the order, so the card that followed the link in the
+document sat on top of it, and `elementFromPoint` answered "card" over half
+the band. Raising it above the card would have fixed the miss and started
+taking taps meant for whatever was underneath, which is worse than the thing
+being fixed.
+
+So the rows grew. A card header on a phone goes from about 20px to 44. Invest's
+first company moved from 464px down the screen to 492, and four companies
+still stand above the rail at 390 and at 360.
+
+77. **A target costs what it costs.** You cannot get 44px out of a 20px row
+    without taking the difference from somewhere, and taking it from a
+    neighbour takes their taps with it. Every way of avoiding that is a way of
+    hiding it.
+
+### 11g.13 A candle that is not only a colour
+
+Up and down were encoded in colour alone: mint against amber in the dark
+theme, mid-green against a muddy brown in the light one. That pair flattens to
+two similar browns with a red-green deficiency, on the one chart in this
+product somebody is reading in order to decide what to buy — and amber for
+down is not a convention anybody arrives with anyway.
+
+A rise is hollow now and a fall is filled, the way every candlestick chart
+ever drawn has done it. The constraint that decided the implementation is the
+narrowest bar the row will draw, which is five pixels: a 1px inset ring leaves
+three pixels of hole, which reads at 76 candles in both themes. A thicker ring
+would have closed it. The latest period keeps its own outer ring, so the two
+shadows combine rather than the later rule quietly filling the hollow body
+back in.
+
+78. **The second channel has to survive the smallest instance.** Hollow-versus-
+    filled is the right answer and would have been a decorative one at 1.5px
+    of ring: at the density this chart actually draws, the hollow candle would
+    have been a filled candle with a slightly different colour.
+
+### 11g.14 Tier 5: the ones nobody files a bug for
+
+Eight items, individually small and collectively the difference between
+nearly-finished and finished.
+
+**One name per thing.** Add money had five surfaces and three names: the
+registry, the breadcrumb, the palette and the wallet tile called it Add money;
+the screen called itself Buy dollars, the button said Buy, and the review said
+"You are buying". The place called Invest was still the Market in two leaves —
+an empty bucket offering to send you "to the market", a missing company
+offering "back to Market". And Home's third door said "Convert money" and
+opened a screen headed "Withdraw to your bank"; its own copy describes both
+directions, which is the Transfer place rather than the Withdraw action, so
+that is where it goes now.
+
+**Preferences was six settings in five shapes.** Half the rows had a glyph and
+half did not, the introduction was a hand-built div rather than a control, and
+two chip groups sat identical to each other while one sets a starting amount
+and the other decides when the product stops and asks who is holding the
+phone. Every row is glyph, label, description, control now, and the two chip
+groups tell themselves apart by a bucket and a padlock before the words do.
+
+Two flex faults surfaced doing it, and the first is worth writing down:
+`.grow` is `flex: 1 1 auto`, so a label's basis is the width of its longest
+sentence. On a wrapping row that pushes the label onto a line of its own and
+leaves the glyph sitting alone above it — on exactly the settings whose
+description runs past one line, and only those, which is why it looked
+arbitrary rather than broken.
+
+**The Settled pill was on all twenty activity rows**, which is a column of
+grey rather than a status. It appears only when there is something to say.
+
+**The chart's overlay was inset by nothing**, so it spanned the plot including
+the 56px gutter the y-axis labels live in: the real-price line started
+underneath them and its tag sat on top of one. "$220" read through a purple
+badge on every stock page, in both themes, at every width. Two of the four
+things this item listed were already gone — Account's eyebrow stopped
+overlapping its title when Account became an index, and the Low label stopped
+being under the rail when item 15 gave the rail a fade. Checked rather than
+assumed.
+
+79. **A label placed relative to a container is placed relative to its
+    padding too.** The overlay was correct about the plot and wrong about the
+    gutter, and the gutter is where the labels are.
+
+### 11g.15 The first screen, and what it was not saying
+
+Sign-in was the least designed screen in the product and the first one a
+stranger sees: a 480px card alone in the middle of a 1440px canvas, a Google
+button wearing an envelope, the seeded person's own address in the email
+placeholder, a password field with no way to check what you typed, no error
+state, no loading state, and nothing answering the question the screen is
+actually asking — why would I give these people my money.
+
+The answer was already written and was two links away. Three statements from
+`/disclosures` sit beside the form now, in their own words, with the first line
+of the disclosures under them as the counterweight: shares go down as well as
+up, nothing here is a savings account. A screen carrying three reassurances and
+no risk is an advert.
+
+The form has states. Empty fields are named where they are empty, the button
+goes busy, a refusal leaves you on the screen with the reason under the fields,
+and offline refuses like every other action. Which sign-in fails is
+deterministic — the password `wrong` — the same idea as the cents rule, and in
+the README beside it. The password can be looked at, because typing ten
+characters you cannot see on a phone keyboard and then being told only that it
+was wrong is how somebody resets a password they had right the second time.
+
+The envelope is gone rather than replaced: it said "email" on the one button
+that is not email, and drawing somebody else's mark from memory is a worse
+answer than drawing none.
+
+80. **Every claim on a sign-in screen should exist somewhere else in the
+    product.** One that appears only there is a marketing claim, and a money
+    product cannot afford to make its first statement its least accountable.
+
+### 11g.16 Serving our own type, and what that revealed
+
+Two weights of Geist came from `fonts.googleapis.com` with no local copy.
+`display=swap` meant nothing ever blocked on it, which is exactly why this
+never looked broken — but on the connections this market has, a real share of
+sessions rendered the whole product in `ui-sans-serif`. Measured, "$2,480.00"
+at 48/600 is 245px in Geist and 192 in the fallback: a quarter narrower, on a
+screen where every figure is a number. Those sessions were not seeing a
+slightly different font. They were seeing a different design.
+
+Two files, 46KB together, because Google serves Geist as a variable font — one
+face covers 400 and 600. Both subsets are kept: latin-ext holds U+20A0–20AB
+and the naira sign is U+20A6, so dropping it to save 16KB would take ₦ out of
+a product for Nigeria.
+
+Which means every fit and overflow figure in this repository had been measured
+in the wrong font. Re-run in the real one: the composer sheets grew — Borrow's
+content from 740 to 786, Invest's to 814 — and the button is still on screen on
+all nine, which is what the sticky footer from item 02 was for.
+
+81. **A fallback that never blocks is a fallback nobody notices shipping.**
+    The failure mode of a webfont is not a blank screen, it is a different
+    product rendered to a fraction of your users, and no test will find it
+    while the tests are rendering the fallback too.
+
+### 11g.17 Filling a hole with the thing that was missing
+
+Three screens ended halfway down the window with one column trailing the other,
+and in two of them the empty space and a missing answer were the same hole.
+
+Transfer listed what was still in flight — usually nothing — and stopped. It
+was also the only screen in the product about your cash that never showed what
+had happened to it: Home carries a recent list, the wallet did not. Verify sat
+under a 192px card with four hundred pixels of nothing below it, and somebody
+about to type a national ID number into a phone has three questions, all three
+of which were already answered elsewhere in this product.
+
+Add money and Withdraw now carry their recent movements, the way Invest and
+Sell already carry their recent orders. The first version filtered on `kind ===
+'payment' && amount > 0`, which put "Received Adaeze Okonkwo" under a heading
+reading "Money you have added" — a card wrong about the one thing it was for.
+And it is not rendered at all when there is nothing in it.
+
+What is not fixed, and is not pretended otherwise: the composer's own two
+columns still come out 722 against 336. A tall form beside a short context card
+is the shape of that pattern, and the only way to balance it would be to invent
+a card — which is the filler this item is about.
+
+82. **Dead space is a symptom; the diagnosis is usually a missing answer.**
+    Two of these three screens were short because they were not saying
+    something they should have been. The third is short because it is short,
+    and the right response to that is to leave it alone.
+
+### 11g.18 The dot fields, keyed to the money they are doors to
+
+The last of the forty-four, and the one held back until it was asked for,
+because the audit's answer to it was wrong. It proposed generating the fields
+from data. That would have thrown the artwork away: 11f.18 records how these
+were made — three 12px grids lifted cell for cell from D01c, 677 dots,
+composed rather than computed — and the argument there still stands. A formula
+that came close would be a different picture.
+
+**So nothing is generated.** Not one dot moves and not one changes size. The
+composition Figma drew is the top of the scale, and the account decides how
+much of it is awake. The three doors are the three places money can be, so
+together they read as one portfolio spread across three tiles: what is in
+shares, what is cash, and what is working in Earn. On the seeded account that
+is 77, 15 and 8 per cent, and the three fields look nothing like each other
+for the first time.
+
+Two things had to be right for it to be a reading rather than a mood.
+
+**A field keyed straight to its proportion goes dark.** On an account holding
+most of its money in one place, two of the three doors would have read as
+broken rather than as informative. The value moves the level between a floor
+and the whole field, so the quietest door is still a picture.
+
+**A sleeping cell needs a rung of its own.** The first version dimmed each tone
+by one step — c to b, b to a — which reads well until you notice that a dim
+cell has nowhere to go. Moving $1,000 into Earn changed that tile's level and
+not one pixel of it, because the cells being woken were composed dim in the
+first place. `--dot-sleep` is a fourth rung nothing else uses, in both themes.
+
+The field stays `aria-hidden` and always will: a dot field is not a thing to
+read a figure off. Each tile says its reading in words instead. The sentence is
+the reading; the field is the feeling of it.
+
+83. **Data-driven does not have to mean generated.** The choice looked like
+    one between a composed picture that means nothing and a computed one that
+    means something. It was a false choice: the composition can be the scale
+    and the data can be the level, and then the artwork is not competing with
+    the information, it is carrying it.
+
+84. **An encoding is only as good as its worst case.** Dimming by one rung
+    was a defensible rule that happened to encode nothing on the tile whose
+    data moved, and the test that caught it was moving money and looking, not
+    reading the code.
+
+### 11g.19 Search that answers while you are typing
+
+Five fields — Invest, Activity, Send, Support and Everything — did nothing
+until Enter, and then matched on `includes`. "Micrsoft" found nothing, "aple"
+found nothing, and the only way to learn either had happened was to look at an
+empty list. The palette behind ⌘K had done this properly since it was written;
+the five fields people actually land on had not.
+
+**Two things happen on every keystroke.** The list under the field narrows,
+because that list is the answer and watching it shrink is the fastest way to
+know the search heard you. And a panel offers the closest matches, including
+the ones the narrowing cannot reach: a company you do not hold, a screen, a
+person you have not paid, the receipt behind a reference.
+
+**Ranked, in four rungs, and the order between them is the point.** A name that
+starts with what you typed beats one that merely contains it, which beats one
+your typing could be a garbled version of. The fuzzy rung is a subsequence with
+a gap budget — enough for a dropped letter or a transposition, tight enough
+that "aeo" does not match every sentence in English, and off entirely under
+three characters. A list of near misses says that it is one.
+
+**The address stays the record and typing does not touch it.** A query
+parameter per keystroke is a history nobody can walk back through, and a route
+change rebuilds this app's whole tree, which takes the focus out of the field
+being typed into — the same fault the bucket's amount field hit in 11f.22, for
+the same reason. Each screen repaints its own list; Enter commits; a link into
+a search still arrives narrowed.
+
+85. **A search box that says nothing between the first keystroke and Enter is
+    a search box people assume is broken.** The five fields worked exactly as
+    written, and every one of them read as a dead control until the moment it
+    suddenly reloaded the page.
+
+86. **Show what matched, not only what was found.** Typing "recovry" on
+    Support offered "What happens if I lose my phone", which reads as a wrong
+    answer — the word is in the answer, not the question. A row that cannot
+    show why it is there is a row that looks like a mistake.
+
+### 11g.20 The gradient as the hover, not one door's decoration
+
+Three doors on Home, one of them already lit: the lead tile carried the green
+permanently, so at rest the row read as one live tile and two dead ones. The
+hover on top of that was `a.card`'s flat `--sunken-hover`, which painted
+straight over the gradient — the wide tile's answer to being pointed at was to
+go out.
+
+The gradient is the hover now, on all three. At rest they are the same flat
+card; the one under the pointer washes green up from its bottom edge, under the
+dots. Buy Stocks keeps its emphasis by being wider and by being the one with a
+button on it rather than a link.
+
+The dot fields are untouched — every cell, size and tone as composed, still
+keyed to the account. The green is a layer of its own beneath them rather than
+the card's background, because a background-image cannot be transitioned
+between two values and a green that snaps on reads as a bug.
+
+87. **A permanent version of a state is a state that cannot be entered.** The
+    gradient was the product's strongest visual moment and it was spent
+    standing still on one tile, which left the hover with nowhere to go and no
+    choice but to paint over it.
+
+### 11g.21 Celebrating the choice, not the trade
+
+The ask was confetti — GSAP was named — when a company goes in the bucket and
+again when one is bought. Half of that is a bad idea with a paper trail:
+Robinhood put confetti on executed trades, a securities regulator's complaint
+named it as gamifying investing, and it came out of the product in 2021. This
+app tells somebody their first share is not a lottery ticket. It cannot then
+throw a party the moment they buy one.
+
+So the celebration moved one step earlier. Adding a company to the bucket is
+choosing, not committing: nothing has been paid, nothing can go wrong, and it
+is exactly the moment a person is deciding whether this is for them. Fourteen
+bits fan up from the button, fall under gravity and fade — 900ms, and nothing
+in the page moves. Buying gets the other treatment: the outcome sheet resolves
+rather than appears, a wash of colour up to the accent, the tick drawn rather
+than stamped, then the figure, the panel and the buttons rising in turn. It
+reads as a settling.
+
+No dependency. GSAP is about 70KB for a burst that is thirty lines of canvas
+and four keyframes, on a product that has just self-hosted its own typeface to
+keep third parties out of it. Both effects sit inside
+`prefers-reduced-motion: no-preference`.
+
+Two things the build got wrong on the way. The burst never appeared, because
+`addToBucket` broadcasts and every listener rebuilds the whole tree — the
+button was detached and its rectangle was zeros by the time `celebrate` ran.
+It is called before the action now, at both sites. And the toast that used to
+confirm the add landed on top of the new standing bar: three confirmations of
+one press. The toast went; the bar is a live region, so the announcement
+survived.
+
+88. **Celebrate the decision, not the transaction.** A burst on a completed
+    trade tells somebody the outcome was good. Nobody knows that yet, least of
+    all the product.
+
+### 11g.22 A receipt worth opening, opened where you are
+
+The old receipt was a list of fields and a button that threw you onto another
+screen. It now says what was bought: ticker and name, the one plain line about
+the company, the price and the day's move, a year sparkline behind it, then
+investment, shares, price each, reference, when, fee, total and what you hold
+now. It ends with a way on to the company and to the portfolio, because a
+record you cannot act on is a dead end.
+
+And it opens in place. "See the record" used to navigate to `/activity` first
+and open the sheet there; it replaces the sheet on whatever screen you were on
+now, so a receipt read from a buy on the stock page leaves you on the stock
+page — with a link inside it to where the record lives. Home's receipt rows do
+the same.
+
+One number was wrong the whole time. Shares were derived from the fee-inclusive
+amount, so a $200 buy of Nvidia read 1.6905 shares where 1.6821 were bought.
+`grossOf()` lives beside `buy()` and `sell()` now, so the figure a receipt
+derives and the figure a trade records cannot drift apart.
+
+89. **A modal opens on the screen you are on.** Navigating first, then opening,
+    loses the place the person was and makes the dismiss button a trap door.
+    The way to the modal's home screen belongs inside the modal.
+
+### 11g.23 An account that says who you are, once
+
+Opening Personal details on a phone produced three copies of its own title
+within 100px: a crumb reading `Account › Personal details`, an `<h1>` reading
+Personal details, and a card headed PERSONAL DETAILS. Under them were five rows
+of a table. Nothing on the screen said whose account it was.
+
+The trail goes. A trail is for a parent you cannot see — on a wide screen the
+settings rail is lit two inches to the left, so it said nothing new; on a phone
+its last name was the page title word for word. In its place on the phone is
+one step up, carrying the parent's name, at 44px rather than the trail's 37.
+`pageHeader` takes `{ crumbs: false }` or `{ back }` and every other screen in
+the product keeps its trail, because on those the parent really is off screen.
+
+The group itself is a profile now: the monogram at 64px, the name, where you
+stand with us, and how long you have been here. Then the details, then the
+three facts that are this product rather than this person — the wallet address
+that money reaches you at, the bank payouts land in, and what the account is
+allowed to move — each naming the group that owns it rather than repeating its
+controls.
+
+Three more copies of one word went with it. "Verified" was in the page header
+eyebrow, on the rail row, and on the profile badge at the same time; the badge
+and the row are enough, and the date of the check belongs to the group that
+owns the check. Unverified, the badge does not appear on a screen where the
+amber banner is already saying it at length.
+
+Two things surfaced on the way. `.addr` is a `<button>`, so it had been
+centring the token address on every company page while the copy button sat
+adrift at its end — the one control on that row nowhere near what it copies.
+And the wallet address existed as a literal inside the Receive screen, where
+nothing else could reach it; it is a constant beside `LIMITS` now.
+
+90. **A trail is for a parent you cannot see.** Where the parent is on the
+    screen — a lit rail, a tab strip — the trail restates it, and the restating
+    costs a line at the top of every page.
+
+91. **A control belongs beside the thing it changes.** Stated here because the
+    address row broke it in the smallest possible way and nobody noticed for
+    eleven screens.
+
+### 11g.24 The switch against the number
+
+The privacy switch lived in two page headers, in a row with search, a view
+toggle and the bell — three hundred pixels from the figure it covers, reading
+as one more piece of chrome. On Grow it was not on the screen at all, so the
+one place a balance is masked by default had no way to uncover it short of four
+taps into Preferences.
+
+It sits on the figure's own line now, on the four screens with a headline
+balance and nowhere else: Home in both views, Transfer, Grow. (Grow's went
+where Grow's headline figure went, when that screen lost its hero: 11g.43.)
+Quiet at rest —
+a filled circle beside a 40px number is a second thing to look at — and it
+takes its surface under the pointer, the way a control should. One per screen,
+because it is one setting: a second eye on the same page would suggest two
+things to cover.
+
+`prefs.mjs` now covers it, which nothing did before. The test names the figure
+as "whatever the switch was paired with", so the pairing cannot be broken
+without the test noticing.
+
+92. **A control belongs beside the thing it changes, and only there.** Rule 91
+    said this about an address row. It is worth its own number because the
+    header is where controls go to be forgotten: near the logo, far from the
+    work, in a row of four where none of them is about anything on the page.
+
+### 11g.25 The bell's panel becomes a place
+
+Notifications were a modal. Five announcements floated over whatever screen the
+bell happened to be on, dismissed by the same gesture that dismisses a payment
+you are halfway through, and reachable from one header — Home's. On a phone
+that meant the only route to them was going Home first.
+
+They are a section of Activity now, behind a chip of their own, and the unread
+count moved from the bell onto the chip. Beside the money rather than mixed
+into it: a notification has no amount and no reference, so a row of it in the
+table would mean two empty columns and a sort by amount that cannot order it.
+The bell still exists and still carries the count; it navigates rather than
+opening a panel. The phone's More list gained a row to them, which it never
+had.
+
+Every row now goes to the thing it is about. "Adaeze Okonkwo paid you $120.00"
+opens that receipt, in place, on the screen you are already on; the sign-in
+notice goes to Security; the interest one goes to Grow. A row that greys out
+and does nothing else is a list of things you have already read, which is not
+what anybody opens a notification for.
+
+Two nouns nearly collided. The Account group of switches is also called
+Notifications, and rule 37 says one noun per thing — but these are two things:
+the messages, and the switches that decide which get sent. They are told apart
+in the palette by their group and by a hint each ("What we have told you",
+"Choose what is worth a buzz") rather than by renaming one of them into
+something nobody says out loud.
+
+93. **A modal is for a task, not for a list.** A panel that only shows things
+    has no commit, nothing to cancel, and no reason to take the screen — and
+    being a panel, it can only be reached from wherever somebody thought to put
+    the button.
+
+### 11g.26 Composing is a screen, committing is a dialog
+
+Eight ways of moving money, and two of them were dialogs. Send and Receive
+opened over the wallet; Add money, Withdraw, Invest, Sell, Earn, Take out,
+Borrow and Repay were screens of their own. Nothing separated the two groups
+except which one Figma happened to draw as D09 and D12.
+
+It cost both of them something real. Send is the one composer that needs a list
+beside it — who you are paying — and as a dialog it had nowhere to put one, so
+picking a person meant a "Change" link that opened a second dialog on top of
+the first. Receive is a page anybody might want to send to somebody else, and
+as a dialog it had no address to link to; its warning about the network — the
+one line on that screen that costs real money to get wrong — sat in a box you
+dismiss.
+
+Both are screens now, and the option that let a composer be a dialog is gone
+from `ComposerSpec` rather than left unused. Send is the amount on the left and
+the people plus an address field on the right; the Change link stands down at
+that width, because a link that opens a dialog to do what the next column
+already does is a second way to one place. Receive is the code and the address
+on the left, what happens when somebody pays you and the last four payments in
+on the right.
+
+The phone is unchanged and was already consistent: every composer is a sheet
+over its place, because there is no second column to put context in. Receive
+composes nothing, so it is a screen at both widths — as is the people list that
+opens Send on a phone.
+
+94. **Composing is a place; committing is a dialog over it.** The review, the
+    PIN and the outcome take the screen because they are the moment something
+    becomes true. Choosing an amount is not that moment, and a dialog around it
+    only removes the room the choice needed.
+
+### 11g.27 Can somebody send a share to somebody else?
+
+Researched rather than guessed, because the answer decides whether a Send
+screen ever holds anything but dollars. What follows is what the market does
+today, what it would take here, and a recommendation. Nothing has been built.
+
+**The incumbents mostly say no, and the ones that say yes say it on paper.**
+
+The rail in the United States is ACATS, and ACATS moves an account, or part of
+one, between two firms *for the same beneficial owner*. The names have to
+match. A change of owner is a different animal: it needs a stock power, a
+medallion signature guarantee above a threshold, and manual handling at both
+ends.
+
+- **Robinhood** does not support transferring, gifting or receiving assets to
+  or from another person's account at all. Its "gift stock" is a referral
+  promotion, not a transfer.
+- **Interactive Brokers** accepts position transfers only between accounts of
+  like ownership and identical title. Third-party transfers are not permitted
+  except donations to qualified charities; anything else goes to Compliance and
+  may be refused.
+- **Fidelity** does it, and is the clearest example of what it costs: a form
+  called *Transfer Shares as a Gift — Nonretirement* for shares leaving to
+  another firm, and a separate internal form for Fidelity to Fidelity.
+- **Trading 212** does not do it. It is an open feature request on their forum.
+
+The pattern is worth stating plainly: **every platform that optimised for speed
+turned this off, and the platforms that kept it kept it as paperwork.** The
+obstacle is not technical. A change of beneficial ownership pulls in AML and
+source-of-funds checks on a transfer nobody paid for, gift reporting, and a
+cost basis the receiving firm has to inherit — a same-name ACATS carries the
+basis automatically, a gift does not.
+
+**The tokenised platforms split three ways, and only one of them can do it.**
+
+1. **Free token, gated mint and redeem.** Backed's xStocks, as sold through
+   Kraken and Bybit. KYC sits at the issuer for minting and redeeming; once
+   minted the token is an ordinary SPL or ERC-20 and can be withdrawn to a
+   self-custody wallet and moved anywhere. So yes, one holder can send one to
+   another person. The catch is the other half of the same decision: xStocks
+   are for non-US persons only, and redemption for the real share is limited to
+   KYC'd qualified investors dealing with Backed directly. Retail exits by
+   selling, not by redeeming.
+2. **Whitelisted token, gated transfer.** Dinari's dShares, on ERC-3643. The
+   whitelist is in the contract, so a transfer to an unverified address
+   reverts. Person to person works only between two verified wallets.
+3. **Closed book, no transfer at all.** Robinhood's EU stock tokens cannot be
+   moved to another broker, wallet or platform. You sell to get out.
+
+**Could we do it?**
+
+Technically, almost for free. The product already holds positions as tokens on
+Base and already has a Send screen with a people list and an address field.
+Sending 1.68 NVDA is the same transaction as sending $120; the difference is
+which contract's transfer is called. The composer would count in shares
+instead of dollars, and the receipt already knows how to say both.
+
+Legally, it depends on two things, neither of which is code.
+
+The first is the issuer's transfer restrictions, which we do not control. On a
+Backed-style token it already works. On a Dinari-style token it works only
+between wallets the issuer has whitelisted, which in practice means Tokkenly
+user to Tokkenly user. On a Robinhood-style token it cannot be done at all.
+
+The second is Nigerian law. The Investments and Securities Act 2025 classifies
+digital assets, tokenised real-world assets included, as securities; platforms
+that facilitate them need SEC Nigeria licensing, and the 2026 guidelines put
+₦1bn of capital behind a Digital Asset Offering Platform and ₦2bn behind an
+exchange or custodian, to be met by 30 June 2027. So this sits inside a
+securities perimeter, not a payments one, and a user-to-user transfer is a
+change of beneficial ownership. That drags in recipient KYC before delivery,
+travel-rule data on the transfer, a source-and-purpose question above a
+threshold, and a cost basis the product has no concept of today. And it cannot
+be undone: cash sent to the wrong address is bad, and shares sent to the wrong
+address are bad and have moved in price by the time anybody notices.
+
+**Three ways to answer it, in rising order of cost.**
+
+- **A. Don't move the security.** "Send Chinaza $50 towards Apple." One
+  payment, nothing changes owner, no licence question. This is what most of the
+  market does. Cheapest, safest, weakest.
+- **B. Send inside Tokkenly only.** Both sides verified, both wallets ours, the
+  transfer is a movement against a token we already hold. It fits the app that
+  exists: the Send screen has the people list already, and the recipient is
+  KYC'd by definition. It also lets the product refuse honestly — an unverified
+  recipient gets a screen that says why, not a failed transaction.
+- **C. Send to any Base address.** Only possible on a free-floating token, and
+  it makes us the point at which a security leaves the regulated perimeter.
+  Not before a licence and an opinion naming which token classes are eligible.
+
+**B, with A as the fallback** — "they are not on Tokkenly yet: send the cash
+and an invitation instead" — is the recommendation. And the first thing to
+build is not the transfer; it is the refusal, because the refusal is the part
+that has to be right on day one.
+
+Open questions for the person deciding: A, B or C; and whether sending shares
+belongs on the Send screen as a second thing it can carry, or as its own action
+from a holding.
+
+### 11g.28 Handing a share over, and refusing to
+
+11g.27 laid out three ways to answer this and recommended the middle one. It
+was chosen, and built: a share can go to another verified Tokkenly account and
+to nobody else. The action starts on the holding — beside Buy and Sell in Your
+position, on the thing it moves — and only appears when there is a position to
+move.
+
+**The refusal was built first**, because it is the part that has to be right on
+the first day, and because a refusal nobody can reach is a refusal nobody has
+tested. Two of the four people in the list hold no account, the way `.99`
+declines and `.98` goes unanswered. Picking one of them is a real address with
+a real screen: it names them, says in one sentence why a security is not a
+payment, and offers the same gift as cash with them already in it. Nothing
+leaves the holding on the way. The list does not hide them either — they are
+listed under their own heading, marked "Cash only", because a row that does
+nothing when pressed teaches nobody anything.
+
+The composer is priced in dollars and settles in shares, which is what the buy
+screen already does and what a person already means. Its label says "How much"
+rather than "How many", because the field takes dollars and a label naming a
+unit the field will not accept is the shortest way to make somebody type the
+wrong number. The summary does the converting: they receive 1.00 AAPL, at
+$224.10 a share, fee none either side, you keep 22.42.
+
+Three things it inherits rather than reinvents. Item 06's rule — one limit
+policy for every outflow — applies, because an unverified account handing
+somebody $5,000 of Apple is exactly what a ceiling is for; the ceiling is the
+smaller of the holding and what the account may still move, and the hint names
+whichever is binding. The last quick chip says which one it reached: "All" when
+the holding is the limit, "The most" when the month is, because a chip labelled
+All that stops short of all is worse than no chip. And the PIN stands in front
+of a large one, from the same preference that guards a payment.
+
+The wallet does not move. That is the whole difference between this and
+selling, and the suite asserts it.
+
+Two model changes carry it. An `Activity` can name an `asset` — ticker, shares
+and the price of the day — so a receipt for a transfer states what actually
+left rather than dividing a dollar figure by a price that has since moved. And
+a `Person` carries whether they are on Tokkenly, on the person rather than
+derived, because the flag is the whole rule.
+
+95. **Build the refusal before the thing it refuses.** The happy path of a
+    regulated action is the easy half. The screen that says no is the one
+    somebody meets on their first attempt, it is the one a regulator reads,
+    and it is the one that is still missing when a feature ships late.
+
+### 11g.29 Two reminders, moved and made dismissible
+
+Home opened with two standing rows above everything: verify your identity, and
+three companies are waiting in your bucket. Above the balance, above the doors
+— which is where a bank puts the thing it wants from you rather than the thing
+you came for.
+
+They sit under the doors now and against the recent activity, in both
+compositions. Somebody arriving sees what they came for; somebody who has done
+it meets the reminder on the way out.
+
+And they can be put away, which they could not be before. A reminder that
+cannot be dismissed is an advert, and this one is on the screen the product
+opens on. Not by a stray tap though: one of the two is what lifts an account's
+limits, so the close asks first, and what it asks names what is being hidden
+and what is not — the account stays unverified and the limits stay with it; the
+bucket keeps every company in it and only Home stops mentioning them. Each says
+where the thing still lives.
+
+It is a preference, so it survives a reload, and Preferences grows a row that
+counts what is hidden and brings it back. The row is absent when nothing is,
+because a control for a state nobody is in is noise.
+
+96. **Anything that stands on a screen uninvited must be dismissible, and
+    anything dismissible in one press must ask.** The two halves are one rule:
+    without the first it is an advert, and without the second it is a trapdoor
+    under the one thing that lifts a limit.
+
+### 11g.30 The card that stops a payment, made to look like it
+
+"Your limits" was four rows of a table in a plain panel, beside another plain
+panel listing bank accounts. Four numbers of equal weight, none of them the one
+anybody wants, on the card that is actually stopping payments on an unverified
+account.
+
+It leads with what is left, because that is the question. Under it, a bar for
+how much of the month has gone — which no arrangement of four numbers shows as
+fast — amber while the ceiling is one you have not lifted. Then the two
+supporting figures, then the way to lift it.
+
+Unverified it takes the same tint as the reminder on Home, because it is the
+same subject and the same offer, and one of them should not be a notice while
+the other is furniture. Verified it goes calm and loses the button: a limit you
+are nowhere near is information, not a warning.
+
+`spentBar` is not `meter`. The meter auto-scales and carries a tick, because a
+cover ratio has no natural ceiling and has a minimum worth marking. A month's
+allowance has both, and a bar that rescales itself is a bar that cannot be
+compared with the same bar yesterday.
+
+### 11g.31 A coin, and the end of the gradient
+
+The outcome sheet washed green up from its own bottom edge. It was one flat
+colour doing the work of saying "this went well", and it read as a filter over
+the sheet rather than as anything to do with the trade.
+
+It is a coin now, in dots, turning. Home's three doors are dot fields, a
+receipt's history is a sparkline, and nothing in this product is a photograph —
+so the celebration is a dot field too. A disc seen face on, rotating about its
+vertical axis: it squashes to a line as it passes edge on and opens out again,
+the side turning towards you catches the light, and a struck $ on its face
+squashes with it. It bobs a little faster than it turns, and the two being out
+of phase is the whole difference between a coin spinning and a coin pleased
+with itself.
+
+One canvas, 95 x 95, about three hundred circles a frame, and it stops the
+moment it leaves the document — this app rebuilds its whole tree on every
+change, so a loop that does not check that is a loop that runs for the life of
+the tab. Reduced motion gets one still frame at three quarters on, where both
+the rim and the face read.
+
+It only turns for an outcome worth turning for. A payment that did not come
+back confirmed keeps the tick, because a coin spinning happily over "Still
+settling" would be the product cheering its own failure. 11g.21 still holds:
+what is celebrated is completion, not the trade.
+
+### 11g.32 One size of pop-up
+
+Measured rather than eyeballed, and the measurement was embarrassing: the two
+tallest dialogs in the product were the review where money is agreed to (832px,
+scrolling on a phone) and the receipt that is the record of it (952px,
+scrolling on both). The two screens where a line below the fold matters most
+were the two with the most of it.
+
+Three changes, in the order they were worth making.
+
+**The panel pairs up.** Past four facts it becomes two columns. Nothing is
+hidden and the height halves; a value too long to sit in half a sheet takes the
+whole width rather than wrapping every cell into two ragged lines. That alone
+took the buy review from 832 to 712 and off the phone's scroll.
+
+**A record folds; a review does not.** The receipt keeps the four facts
+somebody opens it to check — who it was with, what they got, what it came to,
+and the reference they are matching against a statement — and folds the
+arithmetic behind the total and the state of the holding afterwards, one press
+away. A review states every term it is asking agreement to, and folding one of
+those would be hiding a term behind a button.
+
+**The status left its box.** "Settled. Nothing about this is going to change
+now" was a 68px callout at the foot of the sheet — the last place anybody looks
+for the status of the number at the top. It is a caption under that number now.
+
+The receipt is 728 on a desktop and 688 on a phone, and `sheets.mjs` holds the
+line: every dialog in the product opens, none of them scrolls at 390 x 844, and
+none is more than four fifths of the screen it is on.
+
+97. **A dialog you read may fold. A dialog you agree to may not.** The
+    difference is whether pressing the button changes anything, and it decides
+    what is allowed to be one press away.
+
+### 11g.33 Borrow & Lend, and two cards that are not the same card
+
+**The place had no name anybody says out loud.** The tab said Grow, the door on
+Home said "Borrow or Lend", and the product inside said Earn. Three words for
+one thing, and the loudest of them — Grow — names a feeling rather than an
+action. Somebody who wants to borrow against their shares does not go looking
+for growth.
+
+It is Borrow & Lend now: the tab, the page, the door, the registry, the
+activity filter. Earn is Lend, because the account is lending its dollars and
+"earn" was the marketing word for it. Every string that a person reads moved,
+and so did the identifiers behind them — `inEarn` is `lent`, `moveIntoEarn` is
+`lend`, `rates.earn` is `rates.lend` — because a file that says Earn about a
+thing called Lend is the first step of the drift this record exists to prevent.
+The `/grow` routes stay: a bookmark is not a place to make a point.
+
+No single word was found that points at both halves. Credit and lending each
+name one side; interest names the fee rather than the act. Two words that both
+say what you can do beat one that says neither.
+
+The phone tab wraps to two lines rather than reading "Borrow & Le…". Two lines
+of 12px plus an 18px glyph still sit inside the 52 the tab already had, and it
+holds at 320.
+
+**The two cards were the same card twice.** A caps eyebrow, the rate at 32px,
+the pitch, then rows — which made the loudest thing on each of them the one
+fact they have in common, and left EARN and BORROW as 11px labels doing all the
+work of telling them apart.
+
+Now the name leads. Each card says what you can do in ink and finishes the
+sentence in grey, and the rate lives inside that sentence where it belongs: a
+fact about the offer rather than the offer itself. "Lend your dollars. 4.8% a
+year, paid into your wallet every morning." "Borrow against your shares. 9.4% a
+year, and they stay yours the whole time."
+
+And they are mirrored rather than identical. One composition — the field Home's
+third door already carries — reflected: the lending card leads with it in
+green, the borrowing card closes with it in amber. Same anatomy, no chance of
+mistaking one for the other from across a room, and no second drawing to keep
+in step with the first. Each field is keyed to its own figure the way the doors
+on Home are: how much of your spendable money is out on loan, and how much of
+your limit you have drawn. A ramp swaps which colour each of the three rungs
+resolves to, so the composition survives — dropping one flat colour over a
+field would flatten every tone it was drawn in.
+
+98. **The name goes where the eye goes.** A card whose largest text is the one
+    thing it shares with the card beside it has spent its emphasis telling you
+    nothing. The rate is not what the product is; it is a detail of it.
+
+99. **A pair should be one thing reflected, not two things drawn.** Two
+    compositions have to be kept in step by hand forever. A mirror cannot drift.
+
+### 11g.34 A halftone, not a ball pit
+
+Measured: the two Borrow & Lend cards were drawing their field at 20.6px
+between dot centres with a 17.2px dot in each. That is not a dot field, it is a
+row of balls, and it was loud enough to compete with the words beside it.
+
+The cause is that a composed field has a fixed number of cells, so the bigger
+the box it is stretched into, the further apart its dots land — and because the
+crop scales by whichever axis needs more, it was the field's twelve rows
+against the band's height setting the pitch, not its columns against the width.
+Repeating it sideways alone changed nothing.
+
+So the field repeats in both axes now, and every other copy is reflected, so
+the joins are folds rather than seams and it reads as one continuous texture
+rather than as wallpaper. Each dot also gives up 40% of its composed diameter.
+Every field in the product now lands at about six pixels between centres with a
+three pixel dot: the doors on Home went from 12px and 11px to 6.0 and 3.3, and
+the two cards from 20.6 and 17.2 to 5.5 and 2.8.
+
+And the buttons align. The mirror had put the field last on the borrowing card,
+which meant its action sat 128px higher than the lending one and read as
+floating in the middle of the card — the two mirrored halves cannot both end on
+their action if one of them ends on a picture. The field moved to sit under the
+figures and the button is last on both. The conditions came out of the
+headlines with it: a sell price and a monthly cost were sitting in the one line
+whose job is to say what the product is.
+
+100. **A texture is a pitch, not a picture.** Whether a dot field reads as
+     halftone or as polka dots is decided by how many cells land in the box,
+     which is a property of the box and not of the drawing — so it has to be
+     measured on every surface the drawing is used, not settled once.
+
+### 11g.35 Where the money comes from
+
+The question was asked plainly: when I add money, where is it coming from? I
+press a button and the balance goes up. Where did it come from, and where does
+it end up, and where do the shares come from — make it make sense end to end,
+with no contradiction about where money is lost or where it arrived out of thin
+air.
+
+There was no good answer, because there was no answer at all. `addMoney` was
+`state.cash += amount`. Nothing was debited. A withdrawal was the same line with
+a minus. A share bought came from nowhere in particular and a share sent
+vanished. Every screen was honest about its own arithmetic and the product as a
+whole was not honest about anything: it was a set of balances that could be
+made to disagree, and the only reason they did not was that nothing had tried.
+
+So the product got a ledger, and every figure in it is now read out of that
+ledger rather than kept beside it.
+
+**Three books, and named accounts.** `theirs` is outside Tokkenly — somebody's
+Nigerian bank, a card issuer, the Base network, the venue a tokenised share is
+bought from. `ours` is Tokkenly's own: the naira account money is paid into, the
+one payouts leave from, the desk where two currencies meet, the fees, and the
+interest the pool pays and charges. `yours` is the balances the app shows: the
+wallet, what has been lent, what is owed. Fourteen fixed accounts, and
+counterparty ones made the first time they are used, so the statement can name
+your GTBank account and Tunde Bakare's without the ledger having to know every
+bank in Nigeria in advance.
+
+**A posting sums to zero in every currency it touches, or it does not happen.**
+`post()` throws. Not logs, not flags for a later reconciliation — a movement
+with one end is refused before it is written, because a prototype that
+tolerates an unbalanced posting is a prototype that will ship one. It is the
+one rule the screens cannot get around by forgetting a leg.
+
+**A conversion is two postings, not one entry with two currencies.** Adding
+money is naira leaving your bank and arriving in Tokkenly's collection account,
+and then dollars leaving the desk and arriving in your wallet: two movements,
+joined by a shared reference and the rate you were shown. That is how a real
+ledger does it, because one entry cannot be denominated twice, and it is also
+the honest answer to the question — the naira are in a Nigerian account with a
+name, and the dollars came off a desk that now holds naira against them.
+
+**Balances are derived.** `state.cash` is a getter over `balanceOf('wallet')`.
+Making the five money balances read-only produced fourteen `TS2540 Cannot
+assign` errors, which was the point: every one of them was a place that used to
+move money by assignment, and each was rewritten as a posting. There is no
+second copy of the truth left to drift from the first.
+
+**Shares are in the ledger too, and not as a dollar value.** An account holding
+"the value of your Apple" would move every time the market did, which is not a
+thing a ledger account does. So a ticker is a currency: `held:AAPL` is what a
+custodian holds in your name, `float:AAPL` is what the market has, `sent:AAPL`
+is what has gone to somebody else. A buy is one posting with five legs that
+balances twice over — dollars from your wallet to the market and to our fees,
+and Apple from the market into custody. A share handed to another Tokkenly
+account has two legs and neither is money, which is the ledger saying exactly
+what the screen says: this is not a sale, nobody was paid.
+
+`state.holdings` is a reading of those accounts, not a list kept beside them, so
+a position cannot be credited without the trade that bought it. It caught a
+name collision on the way: the fund was `Vanguard S&P 500` in the holdings and
+`S&P 500 ETF` in the catalogue, two names for one thing surviving because
+nothing had ever had to join them up.
+
+**The opening position is named rather than hidden.** Twenty-one movements the
+account already had are replayed oldest first, and the difference between where
+they land and where the account actually stands is posted from an account
+called "Before this record". That is not a fudge. An account open for months
+has a history this file does not contain, and naming it is more honest than
+pretending the first row is the beginning of the world. Each ticker balances
+against its own opening account, because a posting has to come to nothing in
+every currency it touches and Apple and Tesla are two of them.
+
+**And a screen that proves it.** `/statement` is not a debugging view. The left
+column is every movement with both its ends, each leg naming the account and
+what it gained or gave up. The right column is the trial balance: every account
+grouped by whose it is, with a total that has to read zero. Dollars and naira
+get a card each; the four tickers share one, because a card per company would
+push the money off the screen by the fourth holding. The total stays even when
+a currency is empty — a claim that disappears when it is easy to meet is not
+one anybody should believe.
+
+Measured after ten actions in a row — add, withdraw, send, buy, sell, borrow,
+repay, lend, take back, send shares — thirty-three movements, no movement with
+fewer than two legs, and six totals reading `$0.00`, `₦0`, `0.00 AAPL`,
+`0.00 NVDA`, `0.00 VOO`, `0.00 TSLA`. The wallet on Transfer, the lending
+figure on Borrow & Lend and the position on a company page are the same numbers
+the statement shows, because they are the same numbers.
+
+101. **A balance is a reading, not a variable.** The moment a figure is stored
+     beside the movements that produced it there are two truths, and the only
+     question left is when they diverge. Derive it, and make the compiler say
+     so: a read-only getter turns every place that used to move money by
+     assignment into an error you have to answer.
+
+102. **A movement has two ends or it does not happen.** Enforce it where the
+     movement is written, not where it is later checked, and throw rather than
+     log. A product that can invent money quietly will, and the screen that
+     shows the books has to be a screen a person can read — the proof is worth
+     nothing if only the build can check it.
+
+### 11g.36 Rule 13, and the eight places it had already been broken
+
+Adding the statement meant adding a line: a hairline over the reference at the
+foot of each movement card. Rule 13 forbids it, in the first sentence — never
+draw a line, no card outline, no field outline, no list divider, no chip edge,
+no rule under a heading. Taking it out again raised the obvious question, which
+is whether anything else in the product had done the same thing quietly. Eight
+things had, over four tiers.
+
+- A hairline between every **preference row**, and another between every
+  **bucket row**. Both are list dividers, which the rule names. The rows are
+  12px padded top and bottom, so 24px already separated them further than the
+  16px inside them; the line was saying what the space had said.
+- The **four timeframe percentages** on a company page were boxed and divided
+  in hairlines, three of them per strip. The comment above it argued the case:
+  `--subtle` on `--control` measures 4.21:1, under AA for an 11px caps label,
+  so the cells could not take a fill and a hairline said "segmented" just as
+  well. The reasoning was right about the contrast and wrong about the
+  conclusion — the gutters carry no text, so they can be any ground at all. The
+  strip sits on `--control` now with 4px gutters and the cells keep the card's
+  ground, which reads as segmented, draws nothing, and leaves the small text on
+  exactly the surface it was measured against.
+- Outlines around the two **floating panels**: the search suggestions and the
+  bucket bar. Both already have `--shadow-float`, which is what rule 12 gives a
+  floating element, so the outline was the same statement in the one language
+  the product does not speak.
+- The **command palette** was fenced: a hairline under the field and another
+  over the foot. The well steps down to `--canvas` instead, so the chrome and
+  the results separate by surface. The **key cap** beside the field was a chip
+  edge — filled now, which also puts its radius back on the grid.
+- The **skip link** was a 10px rounded rectangle with an outline, breaking rule
+  6 as well: buttons are pills. It floats over content, so the shadow it
+  already had is what separates it.
+
+None of these looked wrong on its own. That is the point, and it is why the fix
+is not the eight edits but `lines.mjs`: nineteen routes in both themes, walking
+every element's computed style and reporting any visible stroke. Three
+exceptions are named in the file rather than tolerated — a chart, which the
+rule names as its own exception; the empty PIN dot, where the outline is the
+drawing; and the busy button's spinner, a glyph on a pseudo-element. It reads
+`nothing draws a line`.
+
+103. **A rule nobody can check is a preference.** Rule 13 was written at the
+     start and broken eight times in four tiers, by people — the same one —
+     reasoning carefully each time about why this case was different. Two of
+     those arguments were even correct about the constraint they named. What
+     was missing was not judgement, it was a count: a rule stated in prose
+     drifts, and a rule with a suite behind it does not.
+
+### 11g.37 Where the money comes from, part two: time
+
+The ledger made the accounts honest. It did not make the clock honest. Adding
+money still credited the wallet the instant the button was pressed — the
+postings named the right accounts now, and they all happened in the same
+millisecond, on a bank transfer nobody had told. The one event the whole flow
+is about, the money actually arriving, was still invented.
+
+**Two ways in, and they are genuinely different.** A transfer is pushed by a
+person from their own bank app; a card is pulled by us. That difference decides
+everything else, so both are on the screen rather than one of them dressed up
+as a choice:
+
+| | Bank transfer | Card |
+|---|---|---|
+| Who moves it | You do | We do |
+| How long | A minute or two | Seconds |
+| What it costs | Nothing | 1.4% of the naira |
+| The rate | Struck when it lands | Held firm for ninety seconds |
+
+The last row is the one that matters and it is the one a prototype would fudge.
+Nobody can hold a rate for ninety seconds while somebody types an account
+number into a different app. So the transfer screen says the rate is struck on
+arrival, quotes today's as indicative, and promises "about $200" rather than
+$200 exactly. The card, which clears in seconds, gets the firm quote the rest of
+the product already knew how to hold.
+
+**A dedicated account, not a reference.** Every Nigerian payments provider
+issues a virtual account per customer, and that is why a transfer there needs
+no reference at all: the account number *is* the reference, and money reaching
+it can only be yours. It is a permanent property of the account, so it sits in
+state beside the Base address and appears on Payment methods as well as on the
+screen that needs it, rather than being generated at a review.
+
+**And a leg that is genuinely pending.** Adding money is two steps now.
+`startAddMoney` writes what left — naira out of a bank or a card, into
+`inflight`, an account that is neither yours nor ours, which is exactly what
+money between two banks is. `landAddMoney` writes what arrived: into the
+Tokkenly naira account, on to the currency desk, and out the other side as
+dollars in the wallet. Four postings, three moments, and every one of them a
+thing that really happens.
+
+The wallet does not move until step two, and because every balance is derived
+there is no way to make it. That is the whole return on the ledger: the
+pending state is not a flag on a row that the balance politely ignores, it is
+the money sitting in a named account you can look at. Transfer shows it —
+"On its way to us, ₦450,000" — read off `inflight` rather than totalled from
+the rows beside it.
+
+`.98`, the magic value for "no answer", finally has a state to mean. With money
+genuinely in flight, a transfer that never arrives sits in `inflight` and stays
+there, and the waiting sheet says so: nothing lost, nothing credited, nothing
+sent twice. The rule is in `landAddMoney` rather than on the screen, because a
+rule that only exists in a view is a rule one route around the view undoes.
+
+A card fee needed a naira fee account of its own. It could not be folded into
+`fees`, which is denominated in dollars, because a posting has to come to
+nothing in every currency it touches — the ledger refusing to let two
+currencies share an account is the ledger doing its job.
+
+### 11g.38 One Send, and the question it asks first
+
+"Why is there a send and there is a withdrawal?" The honest answer is that
+there is not. Both took dollars out of the same wallet. The split into two
+screens hid the only thing that actually differs, which is that a payout into
+naira is a *conversion* — two postings joined by a rate — and the other rails
+are dollars at both ends.
+
+So there is one Send, and the destination is what it asks first. Everything
+else falls out of that one answer:
+
+- **Someone on Tokkenly** — dollars, instantly, free. The far end is
+  `person:<name>`, an account with a name on it rather than "the network".
+- **A Base address** — dollars, on the network, free and final. The warning
+  says what an address cannot do, which is be checked.
+- **A Nigerian bank account** — yours or anybody's. Dollars out of the wallet,
+  naira into the account, at the rate. Your own banks are listed first because
+  that is the old Withdraw, and it is now one row rather than one screen.
+
+**A name before a number.** The third rail gained the step that every Nigerian
+transfer has and this product did not: you type ten digits, the bank returns a
+name, and you check it against the person you meant to pay. It is the one thing
+that catches a wrong digit while the money is still yours. The button to
+continue does not exist until a name comes back, and an account ending 99
+resolves to nobody — so the refusal is on a path anybody can walk rather than a
+state nobody has seen.
+
+`/withdraw` and `/convert` still resolve. They render the same composer with the
+destination already answered rather than redirecting, because a redirect would
+paint the picker for a frame and then jump. An address somebody bookmarked
+should not break because the product learned to count the errand properly.
+
+Transfer went from three doors to two. The measurements: adding $300 by
+transfer leaves the wallet at $2,480 and ₦450,000 in `inflight` while it is in
+the air, then $2,780 and nothing in flight; a card add of $100 charges
+₦2,100 in fees in naira and credits exactly $100; a $120 payout to GTBank takes
+$120 from the wallet and pays naira at the held rate, in two postings. Twenty
+four assertions in `inflow.mjs`.
+
+104. **A pending state is an account, not a flag.** "Still settling" written
+     beside a balance that has already moved is decoration. Money that has left
+     one place and not arrived at another is somewhere, and naming that
+     somewhere is what makes the waiting screen true rather than reassuring.
+
+105. **Two ways to do one thing must differ in something the person pays.**
+     Cost, or speed, or what can be promised about the rate. If they differ in
+     none of those, they are one way with two buttons, and the choice is work
+     the product has pushed onto the reader.
+
+106. **The destination is the question.** Send and Withdraw were one errand
+     wearing two names, and splitting them hid the fact that only one of the
+     two changes currency. Where the money goes decides the rail, the fee, the
+     speed and the checks; ask that first and the rest of the screen follows
+     from it.
+
+### 11g.39 Three things a real pending leg turned up
+
+Making the wait real made three other things wrong that had not been wrong
+before, which is what a prototype does when one of its fictions is removed.
+
+**Nothing in the product had ever written a notification.** The five in the
+list are seeded, and the switch in Preferences filtered a fixed set — a control
+that changes what you can see and never what happens. That was survivable while
+every movement completed inside the dialog that started it. It stopped being
+survivable the moment the waiting sheet said "you can close this and carry on",
+because carrying on then meant never being told the money arrived. A transfer
+landing is the only genuinely asynchronous event in this product, so it is the
+one that writes a notification, and it is the first the product has ever
+written: *"$300.00 landed in your wallet · ₦450,000 from GTBank, at ₦1,500 to
+the dollar."*
+
+**A receipt for money that changed currency stated one of its two figures.** It
+said "+$300.00, from GTBank" and stopped, which is the wrong half for the one
+document a person keeps: what they need for their own records is the naira that
+left. It reads both off the ledger now — `conversion(ref)` returns the naira leg
+and the rate from the paired postings — rather than multiplying the dollars by
+whatever the rate is this morning. A record written a fortnight ago at ₦1,494
+that reprints itself at today's rate is not a record.
+
+**And "still settling · it usually clears within a minute" was a promise the
+stuck one cannot keep.** `.98` now means a transfer that never arrives, so its
+receipt says what is actually true: we have not seen it, and nothing has been
+taken twice.
+
+One more, from the other direction: money can now reach you two ways — dollars
+to a Base address, naira to a virtual account — and they were described on two
+screens with neither mentioning the other. Somebody asking "how do I get paid"
+would have found half the answer. Receive names both.
+
+107. **Removing a fiction exposes the ones leaning on it.** The wait was fake,
+     so nothing needed to tell you it had ended, so the notification list could
+     stay a decoration and the receipt could state one currency. Each was
+     defensible on its own and none of them survived the first honest thing
+     built next to it. When you make one part of a product true, walk the parts
+     that were quietly relying on it being false.
+
+### 11g.40 The rest of the MVP, with dummy data behind it
+
+A read of the MVP spec against the build turned up three lists: things half
+built, things not started, and two things built that the spec puts outside the
+MVP. This tier is all three, on the principle that a prototype's job is to show
+every feature working — the wiring is the engineers' problem and the screens
+are not.
+
+**A token is not a share, and now the product says which.** Everything you hold
+is `AAPLc`, not `AAPL`: the suffix is the whole point of a tokenised product
+and hiding it makes the app a broker pretending. `find()` answers to both, so
+every route, bookmark, palette entry and test written against the bare symbol
+still lands — a naming convention that breaks addresses has cost more than it
+is worth.
+
+The company page gained the card that makes it tokenised rather than brokered:
+**one AAPLc is 1.0043 × AAPL**, above one because a tokenised share cannot pay
+a dividend into your wallet or split into two tokens, so both accrue into a
+B20 multiplier instead. The corporate actions that moved it are folded
+underneath. It is the single most confusing thing about the instrument and the
+product had never mentioned it.
+
+Twelve assets, four of them the approved launch set. The other eight are
+visible and cannot be bought, which is what a market that is honest about its
+pipeline looks like: hiding them makes the product look smaller than it is,
+and letting somebody compose an order in one and refusing at the review wastes
+their afternoon.
+
+**A trade is checked against a price the venue did not supply.** Price impact,
+minimum received, and the gap to the Chainlink reference are on the composer,
+and four refusals sit in front of the button rather than behind it: stale
+reference, deviation over 1.5%, impact over 2%, and an order bigger than the
+book. All of them show their arithmetic — a refusal that does not show its
+working reads as the app being broken.
+
+Two findings came out of building it. The impact curve was purely quadratic
+and read `0.00%` on every order a person could afford, which made both the
+figure and the refusal behind it decoration; it is linear-dominant now, and a
+$2,400 order against METAc's thin book reads 3.56% and is refused. And the
+catalogue briefly carried **two independent prices** — `mark` and a new
+`chainlink` — which are the same fact from the same kind of source, and the
+review printed both. One number, named by where it comes from, with an age on
+it.
+
+**A portfolio knows what it cost.** Average cost and gain per holding, derived
+from the trades that built the position exactly the way the quantity is, so
+the two cannot drift. `basis()` walks the postings and reduces cost
+proportionally on a sale. It went in wrong first: the opening posting is one
+movement carrying every account the replay could not reach, so reading its
+wallet leg as the price of its Apple leg put the average cost at −$39.87 a
+share. A posting that balances Apple against "Apple before this record" is an
+opening position and is priced as one.
+
+**A bank payout is two stages**, because there are two: the dollars leave the
+wallet when it is authorised and the naira reach somebody's bank when the banks
+get round to it. Nothing calls it complete until the second, the naira wait in
+a named account in between, and Transfer shows both directions of flight.
+
+**Identity and permission are different facts.** Five checks — who you are,
+over eighteen, resident, sanctions, and may-hold-this-instrument — each with
+its own state and its own sentence. The last can fail while the others pass,
+which is the commonest real answer and the one a single verified/not-verified
+badge cannot express. There is a button on the screen that produces that
+ending, because a state nobody has seen is a state nobody has designed.
+
+**The wallet says who holds the key.** The product's central claim — that we
+cannot move your money and cannot be made to — was invisible: the address was
+on Receive, the balance on Transfer, and nowhere did it say who could sign. Now
+it is a group of its own, with the export flow, the sponsored-gas ceiling, and
+the invite that let this person in.
+
+**And there is a console.** `/admin`, its own place rather than a section of
+Account, because it is not this person's account: it answers to somebody else
+about everybody else's money, and dressing the two the same is how a support
+agent ends up thinking they are looking at their own settings. Provider health
+with the customer-facing fallback beside each one, nine switches, the pilot
+list, deposits and orders and withdrawals, reconciliation breaks you can work,
+the staff audit log, and the launch gates from "Required before launch" as a
+screen rather than a paragraph in a document.
+
+Two rules it keeps. **Nothing in it can move customer money** — there is no
+key, so this is not a policy anybody has to enforce. And **every switch names
+what a customer sees**: "buying: off" is a boolean, "every buy button is
+replaced by a line saying trading is paused" is a decision.
+
+The switches are wired all the way through. Card funding ships off, so Add
+money shows the card rail as paused rather than hiding it; METAc ships off, so
+its buy button is a sentence; turning off Buying replaces the buy composer's
+button with the reason. `mvp.mjs` flips them from the console and checks the
+customer screen on the very next render, which is the only way to know a switch
+is not decoration.
+
+**Left as they are, on request:** Borrow & Lend and sending a share to another
+person both work and both sit outside the MVP the spec describes. They are the
+two future product families, and they stay demoable.
+
+108. **A switch that changes nothing is a lie with a toggle on it.** An ops
+     console full of booleans nobody has wired is worse than no console: it
+     tells the person flipping it that they have done something. Wire it to the
+     screen, name the consequence in the customer's words on the row, and test
+     the customer screen rather than the state.
+
+109. **Show the pipeline, refuse the order.** A market that hides what is not
+     tradable looks smaller than it is; one that lets you compose an order and
+     refuses at the review wastes the composing. Both, on the thing itself,
+     before the amount.
+
+110. **Two numbers for one fact is one number and a bug waiting.** The
+     catalogue carried a venue price, a "real" price and a Chainlink reference
+     for the same instrument, and the review printed two of them side by side.
+     When a second source arrives, check whether it is a second fact.
+
+### 11g.41 Human and simple
+
+The brief arrived as one sentence: the words in this product have to be human
+and simple, so that somebody who has never bought a share can read a screen
+once and act on it. It came with a specific complaint — the two Borrow & Lend
+cards — and the complaint turned out to be the whole argument in miniature.
+
+**The buttons were sawn off.** A `width: 100%` button with 24px side margins is
+48px wider than the card it sits in, and `overflow: hidden` on the card turns
+that into a button whose right end is missing. The margins were doing the
+padding job every other child of that card gets from a rule above them;
+`width: auto` lets the flex column stretch the button into the space the
+margins leave, which is what the margins were for. Measured: 24px inset on both
+sides, nothing clipped, at both widths.
+
+**And each card carried five pieces of text to say one word.** An eyebrow
+reading LENDING, a headline reading "Lend your dollars.", a grey clause
+finishing the sentence, three figures, and a caption underneath explaining the
+terms. Six lines for a feature whose whole idea is one word — and the one word
+*was* the eyebrow, set in the smallest, quietest type on the card.
+
+So the eyebrow becomes the title. **Lend**. **Borrow**. Under it, one sentence
+saying what you get, in the words somebody would use telling a friend: "Earn
+4.8% a year on cash you are not using." "Get cash without selling your shares."
+Then the figures. Then the button. Nothing else.
+
+**Where the caption carried something real, it moved behind a question mark.**
+Both captions held one fact worth keeping — what we would sell, and that
+nothing is locked up — and neither was deleted. Nielsen Norman's rule for
+progressive disclosure is that the trigger has to be persistent and
+discoverable and has to work on a press, not only on a hover: a hover tooltip
+is a tooltip a phone cannot open and a keyboard cannot reach. So it is a real
+button, in the tab order, with a label, opening a small panel in place.
+
+Three rules keep it from becoming clutter. One per idea, and only where the
+idea is genuinely not in the words already. Forty words or fewer, because a
+popover that scrolls is a screen that lost an argument with itself. And it
+never holds a fact that only lives there.
+
+It is 24px, and rule 35 wants 44 under a thumb. The first version faked that
+with an invisible `::after` — real to a finger, invisible to the checker, and
+overlapping the next hint's hit area if two ever sat close. The button is
+genuinely 44 on a phone now and gives the 20 back as negative margin: the box
+a thumb hits is 44, the space it takes in the row is 24, and the circle is
+drawn by a pseudo-element inset inside it.
+
+**Then the same rule, everywhere.** The product's voice was long sentences
+joined with em dashes: "None — the rate above is the rate you get." That is two
+sentences pretending to be one, and the second half was answering a question
+the row above it had already answered. It is "No fee" now. Sixty-one strings
+across every customer screen, the disclosures, the onboarding and the console
+were rewritten the same way.
+
+And it is a suite, because a rule nobody can check is a preference — the lesson
+rule 13 cost four tiers to learn. `words.mjs` walks thirty-two routes and
+counts the three things that actually make copy hard: sentences over
+twenty-four words, em dashes and semicolons, and jargon appearing on a screen
+that does not also explain it. It found the last of each: a 46-word sentence on
+the statement, "Born 14 March 1996 — over eighteen", and "Collateral cover" on
+the borrowing screen. That last one is now "Shares against the loan", with the
+140% rule behind its question mark.
+
+The suite began with two exemptions — the disclosures and the
+questions-people-ask block, on the reasoning that a legal page is read rather
+than scanned. Both then passed without them. Breaking the risk warnings into
+short sentences cost them nothing and they are plainly better for it, so
+**nothing is exempt**.
+
+111. **Human and simple, or it does not ship.** Say it the way a person would
+     say it out loud. One idea per sentence. If a sentence needs an em dash it
+     needs a full stop. If a word needs explaining it is the wrong word, unless
+     the screen explains it. This governs every string a customer can read, and
+     `words.mjs` counts it.
+
+112. **A question mark instead of a paragraph.** Text that explains a thing
+     sits beside it forever, read once by the person who needed it and re-read
+     by nobody. Put the explanation behind a press: persistent trigger, real
+     button, forty words, and never the only place the fact lives.
+
+113. **A hit area you cannot see is a hit area you cannot check.** An invisible
+     pseudo-element that makes a 24px control 44px passes a finger and fails a
+     measurement, and two of them side by side overlap in a way nothing on
+     screen explains. Make the box the size it claims to be and give the space
+     back with margin.
+
+### 11g.42 The screens the sweep never saw
+
+The voice sweep in 11g.41 reported clean across thirty-two routes. Widening it
+to every screen and every dialog took it to ninety-three, and the widening is
+the finding.
+
+**It had never opened a dialog.** `words.mjs` walked pages and looked only
+inside `.content`, so it had never read a review, a receipt, an outcome, a
+refusal or an empty state — which between them are most of the sentences
+somebody reads on the day something goes wrong. Thirty-one more addresses, one
+per dialog, at the address that opens it.
+
+**And it read nothing at all on six screens.** Sign-in, sign-up, the lock
+screen and all four onboarding screens render their own shell rather than
+`.content`, so the selector matched zero elements and the suite passed them in
+silence. Those are the six screens a newcomer meets first.
+
+That is the failure mode of every check written against a selector, and the fix
+is the same one every time: **make it prove it read something**. Each address
+now has to come back with at least eight words on it, and the total is printed
+— 897 sentences across 93 screens. A suite that walks ninety addresses and
+reads none of them should fail loudly, not pass quietly.
+
+**The jargon check had a rule that could never fire.** `['custodian', /custodian/i]`
+allows the word wherever the word appears. Two of the ten entries were written
+that way. Once the pattern was changed to a different phrase — the word is
+allowed only where the screen also says "holds the real share" — it found
+"custodian" on the statement and the disclosures and "self-custodial" on every
+Account page, from a hint in the destination registry.
+
+The lock screen took one more fix. It is not at an address: it renders over
+whatever you were looking at, and `locked()` is an init script, so it needs a
+page of its own. Reading it by container rather than by leaf then reported the
+keypad's ten digits and four labels as a twenty-five word sentence, which is
+why one reader now serves both.
+
+114. **A check must prove it looked.** A selector that matches nothing passes
+     everything, silently, forever. Every sweep over a set of screens should
+     count what it read and fail when a screen comes back empty — the count is
+     the difference between "nothing is wrong" and "nothing was examined".
+
+115. **An exception whose pattern contains the rule is not an exception.**
+     Allowing "custodian" wherever "custodian" appears is a check that can
+     never fire. When a rule carries a get-out, the get-out has to be a
+     different string from the thing it excuses.
+
+### 11g.43 A card is a door, and a position is a page
+
+Borrow & Lend opened with a hero: "Lent out" and "You owe" in display type,
+side by side, above two cards that showed the same two figures again forty
+pixels lower. The page said everything twice and led with the half that is not
+a decision. It is deleted. The page is two cards and the questions people ask,
+and nothing else.
+
+**The figure goes on the handle.** Each card now carries one figure — what you
+have lent, what you owe — immediately above the button that acts on it, at
+28px rather than the hero's 56. That is the whole of the hero's content, in the
+place where it is the reason to press something rather than an announcement.
+
+**The corner links are gone.** "Repay" and "Take it back" sat beside each
+button in eleven-pixel type, and between them they were the entire set of
+things somebody with an open position could do. Two words in the quietest type
+on the card, for the thing the person came to the screen for. The button leads
+to a page per side instead — `/grow/lending` and `/grow/borrowing` — and the
+page holds what the position is, what it costs, what backs it, everything that
+built it, and the two or three things to do next. The composers still live at
+the addresses they always had; these are the pages that send you to them.
+
+One honest limitation is stated on the borrowing page rather than designed
+around: a loan is one balance, not a stack of separate loans. Money is
+fungible, so there is no "repay this draw". Repaying reduces the balance. The
+history below it is what happened, not a list of things that can each be
+settled on their own, and pretending otherwise would be a fiction that costs
+somebody money the first time they believed it.
+
+**The mirror cost 128 pixels.** The dot field used to bleed off the top of the
+lending card and the bottom of the borrowing one — one composition reflected,
+which is a nicer idea than it is a layout. Putting the band above the lending
+card's words started that card's title level with the other card's figures and
+left the two buttons 128 pixels apart. Two cards side by side with their names
+at different heights and their actions at different heights do not read as a
+mirrored pair; they read as one card that has slipped.
+
+So the field goes under the button on both, against the card's own bottom edge,
+and the order is identical: the name, the sentence, the figures, your position,
+the button, the field. The mirror is now the field itself — flipped, and lit in
+the other colour — rather than which end of the card it sits at. Measured: both
+cards 460 tall, both buttons at 252.
+
+That also settles what the band was doing in the middle of the borrowing card,
+between the figures and the action. A picture between a sentence and the button
+that answers it makes the button read as belonging to the picture.
+
+**The switch went with the figure.** The privacy eye sat on the hero, which is
+the rule — it belongs beside the number it covers and nowhere else (11g.24).
+Deleting the hero deleted the only way to uncover a masked balance on this
+screen, which is the exact failure that put the eye there in the first place,
+and `prefs.mjs` caught it on the first run. It did not go back on a card. A
+card figure is a position, like a holding on a company page, and positions
+follow the setting without a switch of their own; two eyes on one screen would
+suggest two things to cover. It went where the headline figure went: to the top
+of each position page. The suite walks those two routes now, and asserts the
+other half as well — that Borrow & Lend masks both cards and offers no switch.
+
+**Hover is a step in the surface.** The whole card answers the pointer, because
+the whole card is one offer — background only, no shadow, no gradient, no lift,
+and the button inside it steps with it so the card lighting up does not leave
+the one thing you came to press looking flat against it. A card that moves
+under the cursor reads as selected rather than as hovered. Movement is what a
+press is for.
+
+**The cover ratio read 3,217%.** The borrowing page showed the shares as a
+percentage of the debt — $12,509 of shares against a $389 loan — under a bar
+that was pinned full. It is a true number and nobody thinks in it. The same
+fact, in the words somebody would use to ask for it, is *how far can it fall
+before you touch it*: 96%. The bar underneath is now what the shares are worth
+with the sell price marked on it, so the gap between the fill and the line is
+the answer drawn. Two rows lost their fragment labels the same way — "About a
+month" became "A month pays" on one page and "A month costs" on the other,
+because a row is a sentence read across, not a heading with a number beside it.
+
+The borrowing composer carried the identical figure under the identical label,
+so it got the identical fix, and the scenarios table under it — "if your shares
+fall 96%, we sell enough to cover" — now reads the same variable rather than
+recomputing it, so the two cannot drift apart.
+
+Chasing the number turned up a smaller thing: the rule was written against one
+quantity and measured against another. The sell price is 140% of what you
+*borrowed*; three screens said "140% of what you owe", which on this account is
+a different number — $380 against $388.90 — sitting a few rows up the same
+page. The words now say what the model measures. Whether the model is right is
+a separate question, and it is in Still open: a real maintenance requirement is
+against the whole debit balance, interest included.
+
+**And the cross-reference.** The MVP brief lists ten features, and borrowing
+and lending are not among them. They are in the section headed *Not included in
+the MVP* — "Earn or yield products", "Stock-backed credit or any other
+lending" — with a note that Earn & Credit is a future product family needing
+its own legal and risk review. So there is no specification to check the
+repayment flow against: this whole place is ahead of the brief, and what a
+borrower can do here was decided in this file, not in that one. It is left
+standing and working, because a prototype's job is to show the product; the
+gap is recorded here so nobody mistakes it for a requirement that was met.
+
+**Then the phone found three more.** None of them is about Borrow & Lend; all
+three were found by opening it at 390 wide, which is the argument for looking
+at every screen on a phone rather than trusting that the rules held.
+
+*The question mark was a plain grey disc.* Rule 35 wants 44px under a thumb and
+a 44px question mark would be a button the size of the figure it annotates, so
+the mobile rule makes the button really 44, gives 20 back as negative margin,
+and draws the visible 24px circle with a positioned pseudo-element inside it
+(11g.42). A positioned pseudo-element paints above its parent's inline content.
+The circle was painting over the "?". `isolation: isolate` on the button and
+`z-index: -1` on the circle put it back underneath.
+
+No suite caught it because every check on that button measures its box, and
+painted-or-not-painted is a question about pixels. So `a11y.mjs` now asks about
+pixels: it shoots the button, sets `color: transparent` on it, shoots it again,
+and fails if the two images are identical — because that means the glyph was
+never being drawn. Two viewports, since this one only ever went wrong on the
+phone.
+
+*Six answers in three 100px columns.* "Questions people ask" carried
+`gridTemplateColumns: repeat(3, 1fr)` as an inline style, and an inline style
+cannot be asked how wide the screen is. Every answer read two words to a line.
+It is a class now: three columns, two on a tablet, one on a phone.
+
+*And a class name collided.* The help button took the name `.hint`, which had
+belonged since item 19 to the caption under the amount ruler — "Drag to adjust,
+or type. Up to $2,480.00." The button's block sits later in the stylesheet, so
+it won, and that caption became a 24px grey circle with the sentence clipped
+inside it. On every composer in the product: lend, take out, borrow, repay,
+buy, sell, add money, send. It shipped in the previous commit and nothing
+failed, because no suite reads a caption's shape and the words themselves were
+still in the DOM for `words.mjs` to find. The caption is `.ruler-note` now.
+
+116. **A pair is read across.** Two cards side by side are scanned as rows —
+     name against name, figure against figure, button against button. A
+     composition that is beautiful in one card and shifts the other by a
+     hundred pixels has broken the row to keep the idea. Align first, and let
+     the mirror be colour, direction and content.
+
+117. **A ratio is not a sentence.** Any figure that needs the reader to hold
+     two quantities and a direction in their head — cover, exposure, a
+     multiple — is arithmetic shown instead of the answer. Print the thing they
+     would have asked for: not "3,217% covered" but "your shares can fall 96%".
+
+118. **A row is a sentence read across.** "About a month — $4.96" is a heading
+     with a number beside it. "A month pays — $4.96" is a sentence. The label
+     is the first half, the value is the second, and a label that cannot finish
+     in the value is the wrong label.
+
+119. **A class name is a noun, and rule 37 applies to it.** One noun per thing,
+     in the stylesheet as much as on the screen. Two different things sharing a
+     class name is not a naming problem that someone will tidy later — the
+     later block silently wins on every property they share, on every screen
+     that uses the older one, and the build stays green. Before taking a name,
+     grep for it.
+
+120. **A check that measures a box cannot see paint.** Every assertion about a
+     control being big enough, present, labelled and in the tab order can pass
+     while the thing is invisible. When a rule is about what somebody sees,
+     find a way to ask about pixels — two screenshots that must differ is
+     usually enough, and needs no image library.
+
+### 11g.44 One frame, and two objects in it
+
+Three things, from three sentences: the cards still looked empty, Home was
+handling money it has no business handling, and the whole product moved under
+the cursor when you walked between two pages.
+
+**The field becomes an object.** The three dot fields in this product are
+compositions — cells placed by hand, lifted from Figma, then tiled four across
+and twice down into a texture. A texture is the right answer behind a heading
+and the wrong one on a card whose job is to say what the card is about. Tiled
+four times across 494 pixels it says nothing, which is why both cards read as
+having art on them rather than art about them.
+
+So the two product cards carry an object each: three overlapping coins for
+lending, a bifold wallet for borrowing. One simple thing per card, stated once,
+at a size you can see.
+
+Composing a wallet by hand at the resolution a wallet needs is four thousand
+characters of base 36, so these are generated — from a shape, then broken up.
+That is a departure from the note at the top of `art.ts`, and a deliberate one:
+that note is about not re-deriving a drawing somebody made, and nobody drew
+these. The style is the reference's — a form stippled solid at one end coming
+apart into loose specks at the other — and it is three things:
+
+- **the form**, cells inside the shape, kept with a probability that falls
+  along a drift axis, so the left stays solid and the right opens up;
+- **the break**, cells just outside the shape near where it is coming apart,
+  thinning with distance from it;
+- **the dust**, a far sparser scatter carrying on past the form, so the band
+  has something in it rather than ending on a hard edge.
+
+Each of those is decided by a hash of the cell's own coordinates. The tree here
+is rebuilt on every state change; a field that used `Math.random` would boil.
+Distance to the form is a two-pass chamfer transform rather than a search per
+cell, so the whole grid costs one sweep each way.
+
+Two drawing tricks worth keeping. Dots cannot occlude, so three overlapping
+discs are one blob: each coin is cut by the one in front of it, and the cut is
+what makes them read as a stack. And the seam on the wallet — the flap edge,
+the gap beside the strap, the line under the card — is *subtracted*. A missing
+row of dots is the only line this field can draw.
+
+**The level moves the scatter, not the form.** The old field was a gauge: it
+woke from the bottom in proportion to your position, which is rule 30 and
+11g.18. A wallet with 45% of it drawn is not a level, it is a rendering fault.
+So the form is always whole and the level decides how far the break and the
+dust carry — a position you have barely opened shows the thing itself and
+little else; a full one throws it across the band. The colour keying stays as
+it was, green for lending and amber for borrowing.
+
+The cards grew to 528 to hold it, and the band to 188.
+
+**Send and Receive leave Home.** This is a place for buying and selling shares.
+Paying a person is not what somebody opens it to do, and two buttons for it
+under the portfolio figure said otherwise — on both views. They live on the
+wallet, which is where the money is, and Home goes back to being a gateway: the
+three doors, the reminders, the recent rows. The sentence that used to sit
+under the greeting moved into the body, where the other view already had it.
+
+Taking them off Home found that **Receive had nowhere else to be**. The wallet
+carried two doors, Add money and Send, and never one for Receive: it had only
+ever been the second button under Home's portfolio figure. Removing it from
+there left it reachable through search and nowhere else — a screen with no door.
+So the wallet has three doors now: money in by bank or card, money out, and
+your address for somebody to pay. Moving something is not finished until it has
+arrived.
+
+**And the frame.** Walking between two pages moved the page. Measured across
+twenty-five routes at 1440:
+
+| | values |
+|---|---|
+| title top | 24, 28, 32, 48, 56, 58 |
+| header height | 24, 32, 40, 48, 58, 64, 72 |
+| first card top | 72, 80, 88, 96, 106, 112, 120 |
+
+Invest started 48 pixels higher than Home. A company page put its title 32
+pixels below the list it came from. None of that is visible in a screenshot of
+any one screen, which is why nothing had ever caught it: it exists only in the
+navigation, and only a measurement across routes can see it.
+
+The header is a grid of two rows that are always there. A **routing row** for
+the back link or the breadcrumbs, which keeps its height when it holds neither,
+because a row that collapses is a row that moves everything under it. And a
+**title row**, fixed, tall enough for the largest heading in the product, with
+the line box set to the track — so a 32px greeting and an 18px page name occupy
+the same rectangle rather than two boxes that merely share a centre. Nothing
+else may live in there; a subtitle under the title is what made Home 72 tall.
+
+Two intermediate versions were wrong in instructive ways. Bottom-anchoring the
+row alone left four values, because the row still grew to whatever sat beside
+the title — a page with a bell and a view toggle centred its heading in a
+taller box than a page with nothing. Setting the h1's line height without
+raising the selector's specificity did nothing at all, because `.page-header
+h1` already set it and came later.
+
+It now measures one value for every route at every width: header 66 and body
+114 on desktop and tablet, 88 and 188 on a phone. `frame.mjs` walks
+forty-three routes at three widths and asserts exactly that. Reverting the grid
+makes it fail on all five measures at once, which is how I know it is looking.
+
+It also names the seven screens that are *not* in the frame — sign-in, sign-up,
+the lock screen and the four onboarding steps, which draw their own shell
+because a form that fills the window is not a page — and asserts that none of
+them has grown a page header. An exception that is listed is a decision; an
+exception that is merely absent from the list is an omission nobody will ever
+notice (rule 114).
+
+The cost is real and worth naming: pages without a back link start 42 pixels
+lower than they did, because they now reserve the routing row they were not
+using. That is the trade — a page that never moves, against forty-two pixels of
+what used to be above the fold.
+
+121. **A picture is not a texture.** Repeating a composition until it fills a
+     box makes wallpaper, and wallpaper is what a surface wears when nobody
+     decided what should be on it. If a panel is about something, put that
+     thing in it once, at a size you can see.
+
+122. **When a picture carries data, the data moves what surrounds the subject,
+     not the subject.** A gauge that dissolves the thing it is drawn on stops
+     being read as a level and starts being read as a fault. Keep the form
+     whole and let the level move everything else — how far it scatters, how
+     far it reaches, how much of the field it fills.
+
+123. **A frame is fixed or it is not a frame.** The title, the routing row and
+     the top of the body belong at one height on every page in the product, and
+     a row that has nothing in it keeps its height anyway. Sizing a header to
+     its contents means every page has its own, and the difference is invisible
+     on any single screen and obvious the moment somebody navigates. Measure it
+     across routes, because that is the only place it exists.
+
+### 11g.45 The four that were waiting, and cards half again as tall
+
+Four things had been flagged and left standing because they were the owner's to
+decide. All four were decided at once, so they land together.
+
+**The cards are 792, not 528.** Half again as tall, in one axis only: same
+width, same anatomy, more height — and the height goes to the field rather than
+to the gap. A first pass gave it to the spacer, which made the card taller and
+emptier at the same time, which is the fault this was meant to fix. The band is
+442 and the content above it is 322, so the picture is most of the card.
+
+That changed the field's shape, and a field is composed for the shape it lands
+in. A picture laid out for a 2.8 band and cropped into a 1.25 one loses most of
+itself: `slice` is the right crop for a texture and the wrong one for a
+subject. So there are two boxes now — **TALL** for the product cards, **WIDE**
+for the doors on Home and the onboarding panels — and nothing is laid out
+twice, because no object appears in both.
+
+The dust also had to learn to fan. In a band half as wide as it is, a trail
+that runs horizontally leaves the lower half bare, so its vertical reach now
+opens with the drift. That is what the reference does with a mane and a wheel.
+
+**Three more objects, for the three doors.** Home shows all of them at once, so
+they have to be tellable apart at a glance, and none of them may be the wallet
+or the coins — those belong to the two product cards a click away, and a door
+that previews what is behind it is only useful if it previews the right thing.
+
+- **Invest** is a disc with one wedge cut out and set down beside the hole it
+  came from. Own a piece. The only one of the three that is an idea rather than
+  an object, and the one that reads best.
+- **Wallet** is two banknotes, the front over the back, each with the oval
+  window every note in the world has.
+- **Borrow & Lend** is a wallet with a coin standing against it — two products,
+  so two things.
+
+They forced a change to the door itself. At 140 the band was the height of a
+texture: a note's window and a slice's cut are three pixels each, and the whole
+thing reads as noise. The band is 196 and the door is 368 rather than 300,
+because the words take the top 170 whatever the box is, and a picture needs the
+rest to be clear of them. The field also dissolves into the card before it
+reaches the words — the words already sat above it in the stacking order, which
+stops them being covered and does nothing whatever for reading grey text over a
+field of dots.
+
+**The place is called Wallet.** It had three names: the code called it the
+wallet, the rail called it Transfer, and Home called it Convert Cash — a door
+naming an operation that had had no page since the one Send landed in 11g.38.
+The product's own copy settles it. "Your wallet" appears in sixty-one sentences
+— it lands in your wallet, moves cash from your wallet, in your wallet in
+seconds — and "your transfer" in none. So Wallet, everywhere, and every door
+now carries the name of the place it opens: Invest, Wallet, Borrow & Lend.
+
+`names.mjs` is the check that should have existed before somebody had to point
+this out. It reads every label that leads somewhere — the three doors, the
+seven rail rows, the three quick actions — follows it, and compares it to the
+name the destination gives itself. It found one more on its first run: the
+quick action reading "Buy" opened a page called Invest. Home's greeting is the
+one heading that is not a page name, and it is listed as such rather than
+skipped.
+
+That fault could not have been caught by any suite in here, and it is worth
+being precise about why: every other check tests a screen, and this one lives
+in the gap between two screens. So does the frame in 11g.44. Both were found by
+a person walking around the product, which is the argument for doing that.
+
+**Add money leaves Home, and the slot becomes a door.** Same argument that took
+Send and Receive off it: money movement is the wallet's. Rather than dropping to
+two, the slot becomes the door to the wallet, so the row is three ways into the
+product instead of two doors and an errand.
+
+**And the frame costs ten pixels less.** Reserving the routing row is what buys
+a page that never moves, and it cannot be had for nothing — but what is
+reserved can be no bigger than it has to be. The routing row is 22 rather than
+26, which is what a 12px back link needs; the title row is 34 rather than 40,
+which is what the largest heading in the product needs once that heading is 26
+rather than 32. Header 66 → 56, first card 114 → 104, still one value on all
+forty-three routes at all three widths. The phone cannot be trimmed: both rows
+are 44 there because rule 35 says a thumb needs 44.
+
+124. **A label is a promise about a destination, and only walking it can check
+     it.** Every check in a suite of screen tests passes while a door says one
+     thing and opens another, because the fault is in neither screen. Read the
+     labels, follow them, compare them to the name the page gives itself — and
+     list the exceptions, because an exception nobody wrote down is an omission.
+
+125. **A picture is composed for the box it lands in.** The same subject in a
+     wide band and a tall one is two layouts, not one layout cropped. Cropping
+     is what you do to a texture, which has no subject to lose.
+
+### 11g.46 Into the corner, and a button that stops floating
+
+**The objects sit in the bottom-left corner and run off both edges.** They were
+placed in the band rather than composed into it — centred vertically, clear of
+every edge, which is the arrangement of something dropped in rather than
+something belonging there. They are half again as large now, anchored to the
+bottom-left, and they overrun the card on two sides: part of the front coin and
+part of the wallet's body are simply not drawn, because the field's grid stops
+at zero and the renderer only visits cells inside it. Nothing is scaled to fit,
+so nothing is distorted; the crop is the composition.
+
+The anchor moved with them. `preserveAspectRatio` was `xMinYMid slice`, which
+centred the field vertically; it is `xMinYMax slice` now, so the corner the
+object sits in is the corner that survives, and what is lost to the crop is the
+top right — which is where the dust was heading anyway.
+
+**And the card no longer answers the pointer.** 11g.43 gave it a surface step
+on the argument that the whole card is one offer. Nothing on it is clickable
+except the button, and the surface stepping up toward the button's own tone is
+what made the button look like it had a shadow under it. The card is inert; the
+button steps, and that is all.
+
+**The shadow under a hovered button is gone, everywhere.** Chasing the one on
+this card found a global rule: every filled button rose a pixel and cast
+`--shadow-hover` — twenty pixels of blur at 45% black. The note beside it
+argued that a lighter fill alone is easy to miss on a page this dark. It is not
+easy to miss, and the shadow was the loudest thing on any screen carrying a
+button: it reads as an object floating over the page rather than a control
+answering the pointer. Rule 46 said this about the doors on Home and 11g.43
+said it about a card; it is now true of the last thing in the product that was
+still doing it. A button steps along its own ramp and does nothing else.
+
+126. **Bleed is a composition, not an accident.** A picture that clears every
+     edge of its box reads as placed in the box. One that runs off two of them
+     reads as belonging to it — and the way to do that is to let the crop cut
+     the drawing, never to scale the drawing until it fits.
+
+### 11g.47 One door for money coming in
+
+Add money asked how much and then handed over an account number. Receive was a
+separate screen showing a Base address. Both answer the same question — how does
+money get into this wallet — and asking somebody to know which of two screens
+holds their answer is asking them to know the plumbing.
+
+**And two of the three take no amount at all.** A bank transfer and a Base
+payment are *pushed*: the product hands over details and waits. Being asked
+"how much?" before being given an account number is being asked to commit to a
+figure nothing will hold you to — the money that arrives is whatever the person
+sends. Only a card is *pulled*, and only the card asks.
+
+So: one door, three tabs, and the tab is in the address so it can be linked to
+and returned to. Bank transfer and Base are details and history. Card is the one
+that asks, and the fee is on it rather than on the review behind it.
+
+It opens **in place**, over the wallet, with the full page one link away — the
+standing rule about dialogs. The dialog and the page are the same panels at two
+sizes rather than two things to keep in step: `addPanels(tab, full)` builds
+both, and `full` decides whether the provider note and the wide table come
+along.
+
+**The ceiling did the design work.** Item 61 caps a dialog at 82% of a 390×844
+phone, and the first build came in at 774 for the bank tab and 1104 for Base.
+Getting under 692 meant deciding what a dialog is actually for. The answer:
+
+- **One card, not three.** A details card, a provider note and a history card
+  spend 112 pixels on padding and gaps before saying anything. What has arrived
+  goes inside the details card; the provider note is the page's.
+- **Two rows of history, not four**, and as a list rather than a table — a
+  header row over two rows of data costs more than it explains.
+- **The QR is 84 rather than 160**, and loses the caption and the wide copy
+  button under it. The field beside the address carries a copy button already,
+  so the wide one was 56 pixels repeating it.
+
+Base lands at 688 against a cap of 692, which is tight and is the honest
+number. Both tabs are in `sheets.mjs` now, so the next thing added to them has
+to answer to the same ceiling.
+
+**A rail that is off is shown as off.** The first version of the tab row simply
+omitted the card tab when operations had switched it off, which quietly
+reversed a rule this file already had: a door that vanishes makes people think
+they misremembered it, one that says "not right now" tells them to come back.
+`inflow.mjs` caught it, having been written against the rail picker that got it
+right. The tab is there, disabled, and says Paused.
+
+That suite also had to stop counting positions. It asserted things about
+`rails[1]`, which was the card when there were two rails and is Base now there
+are three. It looks the card tab up by name.
+
+**And the deposits are split by rail, which meant recording it.** Each tab lists
+what came in that way, and which way a deposit came in cannot be worked out
+from the payer's name without guessing that anybody called "Payroll" used a
+bank. `Activity` carries a `rail` now, set where money lands and seeded on the
+four inbound rows.
+
+The wallet drops to two doors: money in, money out. `/receive` still resolves,
+to the Base tab, because somebody has it bookmarked — the same arrangement
+`/withdraw` and `/convert` have had since 11g.38.
+
+127. **Ask for an amount only where an amount does something.** A figure typed
+     before a set of bank details is a figure nothing will honour: what arrives
+     is what the sender sends. Push rails hand over details; pull rails ask.
+     Putting one composer in front of both makes the product look like it is
+     collecting the number for its own benefit.
+
+128. **A ceiling is a brief.** The dialog got smaller by deciding what a dialog
+     is for, not by shrinking type. Three cards became one, a table became a
+     list, and a 160px code became 84 — and every one of those is a better
+     dialog, not a compromised one.
+
+### 11g.48 One feed, and the sweep that was lying
+
+Activity held two lists that never met: a table of money, and behind its own
+chip a list of notifications. Somebody who remembered "Adaeze paid me" had to
+know whether they were remembering the payment or the announcement of it,
+because those lived in different places. They are the same day in somebody's
+life and they belong in one column.
+
+What the reading changed, and where it came from:
+
+**One item per underlying event.** Monzo's account of merging their feeds is
+explicit: work out the source and destination of each item and keep the one
+that represents the whole transfer. Three of the five seeded notifications
+carry the reference of a transaction that is already a row. Showing both is the
+fault this file has spent five tiers removing — the page saying everything
+twice. So a notification about a movement folds into that movement's row, which
+carries a bell to say it was announced. A notification with nothing behind it —
+a sign in — is a row of its own. Doing it turned up a data gap: the interest
+notification pointed at `/grow` rather than at the interest payment's
+reference, so the feed showed that one twice until the seed was corrected.
+
+**A glyph per nature, in a fixed place.** NN/g on list entries: pair the
+important pieces with iconography, and hold every element in a fixed position
+so the eye learns the row once. Eleven natures — bought, sold, shares sent,
+added, received, sent, withdrawn, borrowed, repaid, lent, taken back, interest —
+plus security and notice. The glyph is recognition; the tag beside it is the
+answer for anybody who does not recognise the glyph, and it is what tells a
+movement from an announcement.
+
+**Day headers, compared against the row above.** Today, Yesterday, then the
+date, emitted when the day turns rather than computed per row. Times are short:
+their job is roughly how long ago, not exactly when.
+
+Ordering by size is still in the address and turns the grouping off, because a
+list ordered by size has no days in it. Ordering by who, by type and by
+reference went with the table — a feed has no columns to sort. The statement is
+where a row is proved.
+
+**And the sweep was lying.** `all.sh` counted lines matching FAIL. A suite that
+*crashes* prints no such line, so a dead suite read as a clean one — and ten of
+them have been dead for several tiers while this file recorded "thirty-three
+suites green". They died on selectors that moved under them: "Borrow money" now
+opens a position page rather than a composer (11g.43), so `flows` was clicking
+into a screen with no amount box on it and timing out.
+
+That is rule 114 — a check must prove it looked — turned on the thing doing the
+checking. `all.sh` now fails a suite that exits non-zero or prints a stack
+trace, and it is in `scripts/` rather than in a scratch directory, because a
+harness nobody can read is a harness nobody can audit.
+
+The ten are listed in Still open. They are not this tier's regressions: every
+one of them crashes at the previous commit too, which is how it was established
+that they predate it rather than assumed.
+
+129. **A test harness needs its own rule 114.** Counting failures is not the
+     same as counting suites that ran. A runner that reports on output alone
+     will report silence as success, and a suite that dies is silent. Check the
+     exit code, and treat a stack trace as a failure.
+
+### 11g.50 The ten dead suites, and two faults they were standing on
+
+Ten suites had been crashing rather than failing, some of them for several
+tiers, and 11g.48 caught the runner that was hiding it. This tier walked them.
+
+Nine were selector repairs — a screen had moved and the suite had not — and
+each is written up in one line because that is all it is worth:
+
+- `flows`, `send`, `verify`, `states`, `phone-flows`, `ledger` were clicking
+  into composers reached through a position page since 11g.43, or reading rows
+  by a class the feed replaced in 11g.48.
+- `settings` picked the *last* `.btn-primary` on Send. Send grew a second one —
+  "Use this account", revealed when a typed account number resolves to a name —
+  and it is hidden until then, so the suite was waiting six seconds for a
+  button nobody can press. Visible ones only.
+- `inflow` was written against three rail cards that are three tabs now, and
+  against an Add money that asked for an amount before it handed over an
+  account number. Its assertion is document order now rather than presence:
+  the bank tab does carry an amount, under the details, for somebody who has
+  paid and wants to watch it arrive. Nothing asks how much before it says
+  where.
+- `trade` and `token` were both buying a company the product refuses to sell.
+  Coca-Cola and Nike are in the catalogue and outside the launch set, so their
+  buy buttons are correctly disabled, and both suites were timing out on a
+  refusal that is the product working. They buy Alphabet now — in the launch
+  set, not paused, and not in the opening holdings, which is what "a first buy"
+  actually needs. Meta looked like the better choice until the probe: it is
+  seeded paused, which is a state worth having and a bad one to test a purchase
+  through.
+
+The tenth was not a selector at all. `token` asserts that the review carries
+the gap to the real share, and it was looking for the words "real price". The
+review said **Below Chainlink**. The composer behind it said **Below the real
+price**. One fact, two names, one dialog apart — and the second of them is a
+vendor's brand, which is the thing rule 37 and the plain-words pass exist to
+keep out of a sentence somebody agrees to money on. The label is the
+composer's words now; the source keeps its name in the value, where it is what
+makes the number worth believing rather than a heading nobody asked for:
+
+    Below the real price    1.24% · $166.77 on Chainlink, 15s ago
+
+The refusal panel had the same fault twice over — "Venue price" against
+"Chainlink" — and reads "Price here" against "The real price" now.
+
+**And then the trail.** Chasing that wording meant reading page headers, and
+the header was saying the name of the place twice. The breadcrumb ended on the
+page you were standing on, drawn from the registry's label — which is written
+to be *searched* — while the `<h1>` a line below it is written to be *read*.
+Where the two agree that is a repetition. Where they do not it is a
+contradiction, and on seven routes they did not:
+
+| route | trail said | the page said |
+|---|---|---|
+| `/receive` | Receive money | Add money |
+| `/withdraw` | Send to your bank | Send money |
+| `/grow/earn` | Lend your dollars | Lend |
+| `/grow/takeout` | Take back what you lent | Take out |
+| `/invest/aapl/invest` | Invest in Apple | Invest |
+| `/invest/aapl/sell` | Sell Apple | Sell |
+| `/invest/aapl/send` | Send Apple to someone | Send Apple |
+
+Neither name is wrong. "Take back what you lent" is what somebody types into
+the palette and "Take out" is what a title should be at 18px, and the answer is
+not to make one of them worse. It is that a trail is for the step you *cannot*
+see. The step you can see is the title. So the trail names parents only, and
+every step in it is a link — which is the whole job of a trail, and the last
+one never was.
+
+**The second fault was underneath it.** `trailTo` found a screen's root with
+`DESTINATIONS.find(d => d.place === here.place && d.kind === 'place')` — the
+first place in the group. Operations, the staff console, is filed under
+`account` so that it sorts with the rest of the settings, and it is written
+first. So every customer screen in that group — verify your identity, the risk
+disclosures, the index of every screen in the product — told a customer they
+were standing inside the staff console. Nobody had looked at that header,
+because nothing in the sweep had ever read a breadcrumb except to check that
+one existed.
+
+The root is the place the screen actually sits under now: a prefix of its own
+path if there is one, otherwise the first place in the group that is not
+`staff: true`. Two lines, one new flag, no new `Place` — a Place is a tab in
+the navigation and Operations is not one.
+
+`names.mjs` grew the check that would have caught all of it. A crumb earns its
+place three ways: it goes somewhere that is not here, it goes somewhere a
+person could have come from — a tab in the navigation, or a step above this
+path — and the page it opens answers to the name the crumb gave it. Run
+against the old code it fails seventeen of seventeen trails, naming both
+faults separately; that was checked before it was kept, per rule 114.
+
+The sweep is thirty-four suites and all of them run. That sentence has not been
+true in this file for five tiers.
+
+130. **A trail is for the step you cannot see.** The page you are on is the
+     title. A breadcrumb that ends on it either says the same thing twice or,
+     where the label and the title were written for different jobs, says two
+     different things about one place. Name the parents, link every one of
+     them, and stop.
+
+131. **A search label and a title are not the same string.** One is written to
+     be typed at, the other to be read at the top of a screen, and a registry
+     that serves both will be asked for the wrong one somewhere. Decide which
+     surface gets which, rather than making one of them worse until they match.
+
+### 11g.51 The doors answer with the field
+
+A door on Home is 368 tall, navigates, and used to answer a pointer with a
+green gradient washing up from its bottom edge. That is a light coming on. It
+was the same wash wherever the cursor was, it told you nothing about where you
+were pointing, and it put a colour under a title that is supposed to be the
+loudest thing on the card. It is gone.
+
+What answers now is the picture. Every field in this product is a few thousand
+loose dots, and loose dots are a thing a hand can push through — so the pointer
+pushes. Dots inside its reach drift away from it, hardest under the pointer and
+fading to nothing at the edge, and drift home when it leaves. Nothing changes
+colour. The picture is already the quiet half of the card and a colour arriving
+under a title is the same competition by another name.
+
+**The reach is 420px and the falloff is `t^1.6`,** which is two decisions
+arguing and the argument is worth writing down. A tight reach gives a crisp
+hole under the pointer and nothing at all when the cursor is up in the words,
+where it spends most of its time on a card whose object sits in the opposite
+corner. A wide one is felt everywhere but slides the whole field as one piece,
+which reads as a picture being dragged rather than pushed. Between them: wide
+enough that the words reach the object — from the title the nearest dots move
+about 15px, which is a lean rather than a shove — and steep enough that under
+the pointer the field opens a hole with a rim of dots pressed around it.
+
+**And the corner.** The three objects were asked to move to the bottom right.
+The first attempt changed one attribute — `xMinYMax slice` to `xMaxYMax` — and
+made the pictures worse: every object in this file is composed into the left of
+its box and dissolves rightward, because that is the one direction the drift in
+`makeField` runs. Cropping from the right keeps the dust and throws the subject
+away. It is not a crop, it is a mirror: the object goes to the far end and the
+drift goes with it, so the dust still trails away from the subject rather than
+piling up against it. `flip` does that, order preserved — `objectArt` wakes the
+first n loose specks in the array, so a mirrored field wakes the same specks in
+the same sequence and the reading of the portfolio is the same reading.
+
+**The fields are at a third.** They were drawn at full ink and read as the
+subject of the card: three tiles of texture with some words on them. A third is
+the weight at which the title wins and the object is still an object.
+
+**What it cost, and what that cost was.** The first working version ran at 19
+frames a second — 53ms a frame, 123 at worst. The obvious suspect was the
+thousand style writes, and the obvious suspect was wrong: the writes are
+nothing. The cost was a `transition: transform 160ms` on every circle, which
+meant a thousand transitions being *restarted* every frame. Taking it off took
+the frame from 53ms to 16.7 — a clean 60 — and cost nothing visible, because
+the pointer is already moving continuously and there is nothing for an eased
+follow to smooth. The one movement that does need easing is the way home, so
+that is the one that has a transition: a `.homing` class goes on for 260ms
+when the pointer leaves and comes straight off again.
+
+Two smaller things fell out of it. A dot moving less than half a pixel is not
+moving, and dropping those is a real slice of a wide field. And the pointer is
+converted into the field's coordinates off the matrix — `getScreenCTM()` —
+rather than off the box and the ratio, because the field is cropped with
+`slice` and a cropped ratio is exactly where doing it by hand goes wrong.
+
+`hover.mjs` measures every hover in the product by the surface under the
+pointer, and this is the first one that is not a surface change at all, so it
+gets its own reading: at rest nothing has moved, under the pointer a hundred
+dots or more have and the furthest has gone a long way, from the words some
+have and the furthest has gone a short way, after leaving none have, and for
+somebody who asked for no motion none of it happens at any point.
+
+132. **A corner is a composition, not a crop.** Moving a picture to the other
+     side of its frame by changing which edge survives the crop keeps the part
+     that was meant to be thrown away. Mirror the composition and the light,
+     the drift and the bleed go with it.
+
+133. **A transition is a cost per element, per frame.** A thousand transforms
+     is nothing; a thousand transitions restarting every frame is a third of a
+     second of work. Transition the movement that needs easing — usually the
+     one back to rest — and let the one that is already following a hand
+     follow it.
+
+### 11g.52 The same stir, on a picture drawn a fifth larger
+
+The two product cards on Borrow & Lend take the effect the doors took in
+11g.51, and their fields come down to a third with them. On these two it was
+worse than on the doors, because the ramps put colour in the field: a green one
+and an amber one, at full strength, under a title and a figure somebody is
+actually there to read.
+
+Giving them the stir turned up the thing 11g.51 had got away with. Reach and
+push were in CSS pixels — "because that is the space a hand is in", which is
+true of the hand and false of the picture. The doors draw their field at 0.37px
+a unit and these cards draw theirs at 0.44, so the same 420px reach covers a
+fifth less of the composition here, and a fifth less of a picture is a
+different effect rather than the same effect on a bigger card. What has to stay
+the same is what the field does: the same number of dots moving by the same
+fraction of their own spacing. So reach and push are in the field's units now —
+1130 and 81, about 94 cells and 6.7 — and the same pointer opens the same hole
+in both. Measured: 80 units on a door, 81 on a card.
+
+The one quantity that stays in pixels is the floor. Half a *drawn* pixel is not
+a movement to an eye whatever it is to the arithmetic, and that one is
+converted back through the matrix.
+
+**And a second cost, which was not the writes either.** 2,291 dots is twice a
+door's, and the frame went to 18ms with 38 at worst. The fix was not fewer dots
+or a shorter reach: it was noticing that out in the tail of the falloff a dot's
+offset changes by a fraction of a unit a frame however fast the pointer moves.
+Rounding the offset to a whole field unit — under half a drawn pixel — and
+skipping the write when it has not changed took the worst frame from 38ms to
+25. On the larger field that is most of the field, most frames.
+
+`hover.mjs` reads both surfaces and compares them in field units, which is the
+only place the property this tier is about can be seen at all: pixels would
+report the two as different and be right, and the effect would still be wrong.
+Run against a pixel-defined reach it fails, naming 80 against 68.
+
+134. **Say a size in the units of the thing it is a size of.** A reach across a
+     picture is a number of the picture's own cells; a floor under what an eye
+     can see is a number of screen pixels. Writing both in pixels made the
+     first one wrong on the second surface that used it, and there is no
+     surface count at which that gets easier to notice.
+
+### 11g.49 Still open
+
+- All forty-four items of the audit are settled, and seven more that came from
+  using the product afterwards. Item 30 was held back until it was asked for,
+  and was then built without generating anything: see 11g.18, and 11g.10 for
+  why the audit's own account of it was wrong.
+- Four things the audit missed entirely and the person using it did not: that
+  every search field was a dead control until Enter (11g.19), that the gateway
+  tiles had spent their one gradient standing still (11g.20), that a receipt
+  named the wrong number of shares (11g.22), and that Account said its own name
+  three times before saying anybody else's (11g.23). An audit reads a build; it
+  does not use one.
+- The bucket can be filled and paid for in one go, and now says so from
+  wherever it was filled. What it still cannot do is take a payment from
+  anything but the wallet balance: "add money" and "buy the bucket" are two
+  errands where a card or a bank debit at the point of purchase would be one.
+- The ledger is built and the statement proves it (11g.35); adding money has a
+  real pending leg and two rails (11g.37); Send asks where the money is going
+  and Withdraw is one of the answers (11g.38). What is still missing from the
+  money model is the other side of a card: a charge can be reversed weeks
+  later, and there is no chargeback in here at all — the ledger would need a
+  reversing posting and the wallet would need somewhere to take it from.
+- A transfer lands on a timer, because there is no webhook to wait for. That is
+  the seam a real backend arrives at, and it is one `setTimeout` wide.
+- Every provider is dummy data: CDP, Didit, Switch, 0x, Chainlink and viem are
+  named, their health is shown, their fallbacks are written and none of them is
+  called. That is the seam, and it is the whole remaining engineering job.
+- The sell price is 140% of the principal, not of the whole balance — interest
+  accrued is outside the requirement. Every screen now says so in those words
+  (11g.43), which makes the product honest rather than right: a real
+  maintenance requirement counts the interest too. `sellPoint()` and `cover()`
+  are one line each and the change would ripple into the borrow composer's
+  projection, which is why it is written down here rather than guessed at.
+- Every field in the product is an object now (11g.45), so the three
+  compositions lifted cell for cell from Figma, and the renderer that tiled
+  them into a texture, are used nowhere and have been deleted — `art.ts` went
+  from 486 lines to 330. They are in the history if the texture is ever wanted
+  back. What this costs is the one thing those fields had that a generated
+  object does not: somebody drew them.
+- The ten crashing suites are fixed and the sweep is thirty-four green
+  (11g.50). What is not fixed is the reason they went unnoticed for five
+  tiers: every one of them is run by hand. There is no hook, no CI and nothing
+  that runs `all.sh` unless somebody types it.
+- `/receive` and `/addmoney` are two addresses for one screen, and so are
+  `/withdraw` and `/send`. Both aliases are deliberate — they are what people
+  search for, and the registry says so in a hint — and both now open a screen
+  whose title and trail agree with each other (11g.50). What has not been
+  decided is whether an alias should redirect, so that the address bar carries
+  one name too.
+- The console has no roles. Anybody who can reach `/admin` sees everything, and
+  a real one separates support from risk from engineering.
+- Borrow & Lend is not in the MVP brief at all — it is in that brief's *Not
+  included* list, as a future product family needing its own legal and risk
+  review (11g.43). Everything in it works and nothing in it has been specified
+  by anyone but this file. The two things it would need first from a real one
+  are a margin call — a notification, and a screen for the day the shares fall
+  — and a policy for what happens to an open loan when somebody wants to sell
+  the shares backing it. Neither exists here.
+- One notification is written by the product and five are seeded. Every other
+  event still completes inside the dialog that started it, so nothing else has
+  anything to announce — but a real product would have a price alert and a
+  margin call in here, and neither exists.
+- The name a Nigerian account resolves to comes from a table indexed by the
+  last digit. The step is real and the refusal is real; the directory is not.
+- The recipient of a share transfer is still nobody: `sent:AAPL` is an account
+  outside the books, which is truthful for a single-account prototype and is
+  the seam a real one fills with the other person's `held:AAPL`.
+- The rate on a conversion is honoured and recorded on both halves of the
+  posting, but the desk it passes through never runs out. A real one has a
+  position and a limit.
+- The privacy switch covers the headline figure on four screens. Every other
+  masked figure in the product — a position on a company page, an amount in a
+  history row — follows the same setting and has no switch of its own, which is
+  deliberate: see 11g.24.
+- The composer's two columns are 722 against 336 and stay that way. See 11g.17.
+- Sign-in refuses the password `wrong` and accepts everything else, which is a
+  prototype's shape of a real check, not a real one.
+- Tier 4 covered what was absent. What it did not do is put the product in
+  front of a real screen reader: every assertion in `a11y.mjs` is about the
+  DOM, and a tree that is correct on paper can still read badly aloud.
+- `main` takes focus when a dialog closes, which is a compromise and is
+  recorded as one in 11g.11. A product that did not rebuild its whole tree
+  would return focus to the control that opened the dialog.
+- Item 07, receive handles, needs a backend and a naming policy.
+- Sending a share to another person is built, inside Tokkenly only: 11g.27 for
+  the market survey, 11g.28 for what shipped. What is not built is the other
+  half of it — the recipient's copy. This is a single-account prototype, so a
+  share leaves one holding and arrives nowhere; a real one owes the other side
+  an activity row, a notification and a cost basis.
+- Sending to an arbitrary Base address is deliberately absent. It is possible
+  on a free-floating token and it is the point at which a security leaves the
+  regulated perimeter, so it waits for a licence and an opinion naming the
+  eligible token classes.
+- Rate history — a chart of the naira against the dollar, the missing half of
+  item 23 — needs a series the product does not have.
+- Everything in 11f.38 that has not been superseded still stands, and the file
+  is now further behind: Figma has none of the last four tiers either.
+- The tablet tier is defined by the sidebar and the gutters. Nothing has been
+  drawn for it in Figma, so 900–1199 exists in CSS and nowhere else.
+- `settlement()` decides failure on the cents. That is right for a prototype
+  and wrong for anything else, and the seam is one function wide when a real
+  backend arrives.

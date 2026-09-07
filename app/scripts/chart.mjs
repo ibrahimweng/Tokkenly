@@ -12,14 +12,19 @@ const errs = []
 page.on('pageerror', (e) => errs.push(String(e)))
 await page.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 
+// Home draws a line now and the stock page draws candles, so the reader has to
+// know which it is looking at rather than assuming bars and throwing when there
+// are none. The width checks below apply either way.
 const read = () => page.evaluate(() => {
   const bars = [...document.querySelectorAll('.ch-candle')]
+  const area = document.querySelector('.ch-svg')
   const w = bars.map((e) => e.getBoundingClientRect().width)
   const plot = document.querySelector('.ch-plot').getBoundingClientRect()
-  const last = bars[bars.length - 1].getBoundingClientRect()
+  const last = (bars.length ? bars[bars.length - 1] : area).getBoundingClientRect()
   return {
+    shape: bars.length ? 'candles' : 'area',
     bars: bars.length,
-    pitch: +(w.reduce((a, c) => a + c, 0) / w.length).toFixed(2),
+    pitch: bars.length ? +(w.reduce((a, c) => a + c, 0) / w.length).toFixed(2) : 0,
     ticks: [...document.querySelectorAll('.ch-tick')].map((e) => e.textContent),
     axis: [...document.querySelectorAll('.ch-axis span')].map((e) => e.textContent),
     caption: document.querySelector('.chart .t-caption').textContent,
@@ -36,7 +41,7 @@ for (const w of [1440, 1200, 1024, 900, 768, 540, 390, 320]) {
   await page.goto(B + '/', { waitUntil: 'domcontentloaded' })
   await page.waitForTimeout(400)
   const r = await read()
-  console.log(`  ${String(w).padStart(4)}  bars ${String(r.bars).padStart(3)}  pitch ${String(r.pitch).padStart(6)}  ` +
+  console.log(`  ${String(w).padStart(4)}  ${r.shape.padEnd(7)} marks ${String(r.bars).padStart(3)}  pitch ${String(r.pitch).padStart(6)}  ` +
     `axis ${r.axis.length} [${r.axis.join(' ')}]  fits ${r.fits}  overflowX ${r.overflowX}`)
 }
 

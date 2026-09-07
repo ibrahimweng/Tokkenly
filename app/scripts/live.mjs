@@ -19,21 +19,34 @@ const page = async (w = 1440, h = 1024) => {
   return p
 }
 
-console.log('DIALOGS  Figma draws D09 Send and D12 Receive over the wallet')
-for (const [route, title] of [['/send', 'Send money'], ['/receive', 'Receive money']]) {
+console.log('COMPOSING IS A SCREEN  every way of moving money, the same way')
+for (const [route, title] of [
+  ['/send?to=Tunde%20Bakare', 'Send money'],
+  // /receive is kept as an address and answers with Add money on its Base tab:
+  // one question — how does money get into this wallet — one screen. Same
+  // arrangement as /withdraw below.
+  ['/receive', 'Add money'],
+  // /withdraw is kept as an address and answers with the Send composer: one
+  // errand, one screen, the destination already filled in. What is being
+  // checked here is that it is still a place with a heading and a trail, not
+  // that it still has a name of its own.
+  ['/addmoney', 'Add money'], ['/withdraw', 'Send money'],
+  ['/invest/aapl/invest', 'Invest'], ['/grow/borrow', 'Borrow'],
+  ['/grow/earn', 'Lend'], ['/grow/repay', 'Repay'],
+]) {
   const p = await page()
-  await p.goto(B + route, { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(200)
-  const d = await p.evaluate(() => {
-    const s = document.querySelector('.scrim > .sheet')
-    return { w: s ? Math.round(s.getBoundingClientRect().width) : 0,
-             title: s?.querySelector('h2')?.textContent,
-             behind: document.querySelector('.content .page-header h1')?.textContent,
-             sidebar: getComputedStyle(document.querySelector('.sidebar')).display !== 'none' }
-  })
-  ok(`${route} is a 480 dialog over Transfer`,
-     d.w === 480 && d.title === title && d.behind === 'Transfer' && d.sidebar, JSON.stringify(d))
-  await p.keyboard.press('Escape'); await p.waitForTimeout(200)
-  ok(`${route} closes to Transfer`, p.url().endsWith('#/transfer'), new URL(p.url()).hash)
+  await p.goto(B + route, { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(250)
+  const d = await p.evaluate(() => ({
+    dialog: !!document.querySelector('.scrim > .sheet'),
+    h1: document.querySelector('.content .page-header h1')?.textContent,
+    trail: !!document.querySelector('.crumbs'),
+  }))
+  // Send and Receive were dialogs over the wallet and the other six were
+  // screens, which meant the one composer that most needs a list beside it had
+  // nowhere to put one. One rule now: composing is a place, committing is a
+  // dialog over the place.
+  ok(`${route} is a screen of its own`,
+     !d.dialog && d.h1 === title && d.trail, JSON.stringify(d))
   await p.close()
 }
 { // and still a bottom sheet on a phone
@@ -44,14 +57,18 @@ for (const [route, title] of [['/send', 'Send money'], ['/receive', 'Receive mon
   ok('the phone still gets a sheet with a grabber and a keypad', grabber === 1 && keypad === 1)
   await p.close()
 }
-{ // changing the recipient without leaving
+{ // changing the recipient without leaving the screen
   const p = await page()
-  await p.goto(B + '/send', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(200)
-  await p.locator('.sheet-row').first().click(); await p.waitForTimeout(250)
-  const listed = await p.locator('.sheet-row').count()
-  await p.locator('.sheet-row').nth(1).click(); await p.waitForTimeout(250)
-  const to = await p.locator('.sheet .t-body-strong').first().textContent()
-  ok('Change opens the list and picks a new recipient', listed >= 4 && !!to, `${listed} listed, now ${to}`)
+  await p.goto(B + '/send?to=Tunde%20Bakare', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(250)
+  const people = p.locator('.stack.grow .sheet-row')
+  const listed = await people.count()
+  const before = await p.locator('.col-compose .sheet-row .t-body-strong').first().textContent()
+  await people.nth(0).click(); await p.waitForTimeout(300)
+  const after = await p.locator('.col-compose .sheet-row .t-body-strong').first().textContent()
+  // The list is the column beside the amount, not a dialog opened from a
+  // Change link that opened from a dialog.
+  ok('the column beside it picks who you are paying',
+     listed >= 4 && !!after && after !== before, `${listed} listed, ${before} → ${after}`)
   await p.close()
 }
 
@@ -91,9 +108,16 @@ console.log('CHART  a range that redraws nothing is a button that lies')
   await p.waitForTimeout(200)
   const tip = await p.evaluate(() => {
     const t = document.querySelector('.ch-tip')
-    return t.hidden ? null : { text: t.innerText.replace(/\n/g, ' '), lit: document.querySelectorAll('.ch-candle.on').length }
+    if (t.hidden) return null
+    // Candles light the one you are on; a line moves a cursor to it. Either
+    // way exactly one thing on the plot marks where the pointer is.
+    const cursor = document.querySelector('.ch-cursor')
+    return {
+      text: t.innerText.replace(/\n/g, ' '),
+      marked: document.querySelectorAll('.ch-candle.on').length + (cursor && !cursor.hidden ? 1 : 0),
+    }
   })
-  ok('pointing at a bar says what it was worth', !!tip && tip.lit === 1, tip ? tip.text : 'no tooltip')
+  ok('pointing at a point says what it was worth', !!tip && tip.marked === 1, tip ? tip.text : 'no tooltip')
   await p.close()
 }
 
@@ -102,27 +126,49 @@ console.log('NOTIFICATIONS  a count that does not go down is decoration')
   const p = await page()
   await p.goto(B + '/', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(200)
   const start = await p.locator('.bell .dot').textContent()
-  await p.locator('.bell').click(); await p.waitForTimeout(250)
-  const rows = await p.locator('.sheet-row').count()
-  await p.locator('.sheet-row:not(.read)').first().click(); await p.waitForTimeout(250)
-  const after = await p.locator('.bell .dot').textContent()
+  await p.locator('.bell').click(); await p.waitForTimeout(400)
+  // No longer a panel over Home: the bell is a way to a section of Activity,
+  // and the count moves from the bell to the chip that opens it.
+  ok('the bell is a way to somewhere, not a panel',
+     (await p.evaluate(() => location.hash)) === '#/activity?filter=alerts' &&
+     (await p.locator('.scrim').count()) === 0, await p.evaluate(() => location.hash))
+  ok('the chip carries the count',
+     (await p.locator('.chip-count').textContent()) === start, start)
+  // Reading one opens what it is about, which is the point of the row.
+  // A notification is a row in the one feed now, not a row in a section of its
+  // own. The unread ones are the ones carrying the bell.
+  await p.locator('.feed-row.unread').first().click(); await p.waitForTimeout(500)
+  ok('and a row goes to the thing it is about',
+     (await p.evaluate(() => location.hash)).includes('sheet=receipt'),
+     await p.evaluate(() => location.hash))
+  await p.keyboard.press('Escape'); await p.waitForTimeout(350)
+  const after = await p.locator('.chip-count').textContent()
   ok('reading one drops the count', Number(after) === Number(start) - 1, `${start} then ${after}`)
-  await p.locator('.link', { hasText: 'Mark all read' }).click(); await p.waitForTimeout(250)
-  ok('mark all read clears the badge', (await p.locator('.bell .dot').count()) === 0)
-  ok('and the panel says so', (await p.locator('.sheet .muted').first().textContent()) === 'All caught up')
+  await p.locator('button', { hasText: 'Mark all read' }).first().click(); await p.waitForTimeout(300)
+  ok('mark all read clears it', (await p.locator('.chip-count').count()) === 0)
+  // The notifications section is gone — they are rows in the one feed — so the
+  // sentence that used to sit in its head sits where its button was.
+  ok('and the screen says so',
+     /All caught up/.test(await p.evaluate(() =>
+       document.querySelector('.page-header')?.innerText ?? '')))
+  await p.goto(B + '/', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(250)
+  ok('and the bell agrees', (await p.locator('.bell .dot').count()) === 0)
   await p.close()
 }
 
 console.log('SORTING  ordering is part of the address')
 {
   const p = await page()
-  const first = () => p.locator('tbody tr').first().textContent()
+  // Activity is a feed rather than a table, so ordering is a control beside the
+  // list rather than a column head. What is being checked has not changed:
+  // ordering is in the address and survives a reload.
+  const first = () => p.locator('.feed-row').first().textContent()
   await p.goto(B + '/activity', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(200)
-  const n = await p.locator('tbody tr').count()
+  const n = await p.locator('.feed-row').count()
   const byDate = await first()
-  await p.locator('.th-sort', { hasText: 'Amount' }).click(); await p.waitForTimeout(250)
+  await p.locator('.sort-by', { hasText: 'Largest' }).click(); await p.waitForTimeout(250)
   const desc = await first()
-  await p.locator('.th-sort', { hasText: 'Amount' }).click(); await p.waitForTimeout(250)
+  await p.locator('.sort-by', { hasText: 'Largest' }).click(); await p.waitForTimeout(250)
   const asc = await first()
   ok('history has something to sort', n >= 20, `${n} rows`)
   ok('sorting by amount reorders', byDate !== desc && desc !== asc)
@@ -136,8 +182,13 @@ console.log('MOVING AROUND  four navigators, one registry')
 {
   const p = await page(1600, 1000)
   await p.goto(B + '/withdraw', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(250)
+  // Parents only (11g.50). The trail's job is the step you cannot see; the
+  // step you can see is the <h1>. Ending on the page you are standing on made
+  // this header read "Send to your bank" over a title reading "Send money".
   const crumbs = (await p.locator('.crumb').allTextContents()).join(' > ')
-  ok('a trail says where you are', crumbs === 'Transfer > Withdraw to your bank', crumbs)
+  const title = await p.locator('h1').first().textContent()
+  ok('a trail says where you came from, not where you are',
+     crumbs === 'Wallet' && title === 'Send money', `${crumbs} / ${title}`)
   await p.locator('.crumb').first().click(); await p.waitForTimeout(250)
   ok('and the trail steps back up', p.url().endsWith('#/transfer'), new URL(p.url()).hash)
 
@@ -195,7 +246,7 @@ console.log('MOVING AROUND, on a phone')
 console.log('A BASE UNDER A DIALOG IS NOT WHERE YOU ARE')
 {
   for (const [w, route, wants] of [
-    [1600, '/withdraw', true], [1600, '/send', false], [1600, '/receive', false],
+    [1600, '/withdraw', true], [1600, '/send', true], [1600, '/receive', true],
     [390, '/withdraw', false],
   ]) {
     const p = await page(w, w === 390 ? 844 : 1000)
@@ -218,6 +269,58 @@ console.log('WIDTH  the middle is drawn in a 1200 column, whatever the monitor')
     ok(`${w}px keeps the column at 1200`, m.content === 1200, `content ${m.content}, side card ${m.side}`)
     await p.close()
   }
+}
+
+console.log('THE DOT FIELDS  decoration that has been given something to say')
+{
+  const p = await b.newPage({ viewport: { width: 1440, height: 1000 } })
+  await seen(p, { homeView: 'simple' })
+  p.on('pageerror', (e) => errs.push(String(e)))
+  await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
+  const read = async () => {
+    await p.goto(B + '/', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(600)
+    return p.evaluate(() => [...document.querySelectorAll('.gate')].map((g) => {
+      let awake = 0, asleep = 0
+      for (const c of g.querySelectorAll('circle')) {
+        if (/dot-sleep/.test(c.getAttribute('fill') ?? '')) asleep += 1
+        else awake += 1
+      }
+      return { says: g.querySelector('.gate-reads')?.textContent ?? '', awake, asleep }
+    }))
+  }
+  const before = await read()
+  ok('all three doors carry a field', before.length === 3)
+  // The three slices of one portfolio, one door each, so no two of them can
+  // be the same picture on an account with its money in more than one place.
+  ok('and each one says which slice it is keyed to',
+     before.every((g) => /% of your money (in|lent)/.test(g.says)), before.map((g) => g.says).join(' | '))
+  ok('no two are at the same level',
+     new Set(before.map((g) => g.awake)).size === 3, before.map((g) => g.awake + '/' + (g.awake + g.asleep)).join(' '))
+  // A gauge that does not move is a picture. $1,000 out of cash and lent out
+  // has to show up on the two doors it is about, and not on the third.
+  await p.goto(B + '/grow/earn', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(500)
+  const amt = p.locator('.amount-box input')
+  await amt.fill('1000'); await amt.dispatchEvent('input'); await p.waitForTimeout(250)
+  await p.locator('.btn-primary').first().click(); await p.waitForTimeout(500)
+  await p.locator('.scrim .btn-primary').first().click(); await p.waitForTimeout(1000)
+  await p.keyboard.press('Escape'); await p.waitForTimeout(300)
+  const after = await read()
+  ok('moving money wakes one field and quiets another',
+     after[1].awake < before[1].awake && after[2].awake > before[2].awake,
+     before.map((g, i) => `${g.awake}\u2192${after[i].awake}`).join(' '))
+  ok('and leaves the one it is not about alone', after[0].awake === before[0].awake)
+  ok('the words follow the field', after[2].says !== before[2].says,
+     `${before[2].says} \u2192 ${after[2].says}`)
+  // No account, no reading: the intro shows the field exactly as it is drawn.
+  const w = await b.newPage({ viewport: { width: 1440, height: 900 } })
+  await w.addInitScript(`try { localStorage.removeItem('tokkenly.prefs.v1'); sessionStorage.setItem('tokkenly.unlocked','1') } catch {}`)
+  await w.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
+  await w.goto(B + '/welcome/0', { waitUntil: 'domcontentloaded' }); await w.waitForTimeout(600)
+  ok('the intro shows the field as composed, with nothing asleep in it',
+     (await w.evaluate(() => [...document.querySelectorAll('.welcome-art circle')]
+       .filter((c) => /dot-sleep/.test(c.getAttribute('fill') ?? '')).length)) === 0)
+  await w.close()
+  await p.close()
 }
 
 console.log('\nERRORS: ' + (errs.length ? errs.join(' | ') : 'none'))

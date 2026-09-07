@@ -87,11 +87,25 @@ for (const r of ROUTES) {
   await page.waitForTimeout(250)
   for (const t of await sweep()) if (t.ratio < t.need) bad.push({ route: theme + ' ' + r, ...t })
 
-  /* and again with a row under the pointer, because the wash moves the ground */
-  const row = await page.$('.table tbody tr td')
+  /* and again with a row under the pointer, because the wash moves the ground.
+     Not on a route that opens a sheet: the scrim is over the row, the hover
+     never lands, and the suite times out rather than reporting anything. */
+  const row = await page.$('.scrim') ? null : await page.$('.table tbody tr td')
   if (row) {
     await row.hover(); await page.waitForTimeout(250)
     for (const t of await sweep()) if (t.ratio < t.need) bad.push({ route: theme + ' ' + r + ' (row hovered)', ...t })
+  }
+
+  /* The three doors on Home used to wash green from the bottom edge under the
+     pointer, which put a gradient under their words that only existed on
+     hover. That is gone (11g.51): the answer is the dot field parting, and
+     the ground is the same flat --sunken-hover every card that navigates
+     takes. Each door is still hovered in turn, because the field moving under
+     grey text is exactly the kind of change that is easy to assume is
+     harmless and cheap to check. */
+  for (const g of await page.$$('.gate')) {
+    await g.hover(); await page.waitForTimeout(300)
+    for (const t of await sweep()) if (t.ratio < t.need) bad.push({ route: theme + ' ' + r + ' (door hovered)', ...t })
   }
 }
 
@@ -110,6 +124,30 @@ for (const [label, wrong] of [['/lock', 0], ['/lock (locked out)', 5]]) {
   await lp.waitForTimeout(300)
   for (const t of await sweep(lp)) if (t.ratio < t.need) bad.push({ route: theme + ' ' + label, ...t })
   await lp.close()
+}
+
+/* The intro is the other screen seen() cannot reach, for the same reason: it
+   is what a returning visitor is seeded past. It has never been measured, and
+   it is the one part of the product that puts text on a green gradient — and
+   now three pressable cards on it too. */
+for (const theme of THEMES)
+for (const step of [0, 1, 2, 3]) {
+  const wp = await b.newPage({ viewport: { width: 1440, height: 1000 } })
+  await wp.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
+  await wp.addInitScript(`try {
+    localStorage.setItem('tokkenly.prefs.v1', JSON.stringify({
+      seenIntro: false, prefs: { theme: '${theme}' }, security: {} }))
+    sessionStorage.setItem('tokkenly.unlocked', '1')
+  } catch {}`)
+  await wp.goto(B + '/welcome/' + step, { waitUntil: 'domcontentloaded' })
+  await wp.waitForTimeout(300)
+  for (const t of await sweep(wp)) if (t.ratio < t.need) bad.push({ route: theme + ' /welcome/' + step, ...t })
+  const card = await wp.$('.welcome-pick')
+  if (card) {
+    await card.hover(); await wp.waitForTimeout(250)
+    for (const t of await sweep(wp)) if (t.ratio < t.need) bad.push({ route: theme + ' /welcome/' + step + ' (hovered)', ...t })
+  }
+  await wp.close()
 }
 
 const already = new Set()

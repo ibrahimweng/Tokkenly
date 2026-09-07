@@ -1,6 +1,7 @@
 import { h } from '../ui'
 import { icon } from '../icons'
 import { usd, parseAmount } from '../format'
+import { isMobile } from '../responsive'
 
 export interface AmountComposer {
   el: HTMLElement
@@ -42,7 +43,10 @@ export function amountComposer(opts: {
   note?: string
   quick?: { label: string; value: number }[]
 }): AmountComposer {
-  let value = opts.initial
+  // The composer never holds a figure above its own ceiling, not even the one
+  // it was handed. A screen that asks to open at more than the account can
+  // move gets the ceiling, and the caller is told to say why.
+  let value = Math.min(opts.max, Math.max(0, opts.initial))
   const subs: ((v: number, capped: boolean) => void)[] = []
 
   const input = h('input', {
@@ -56,7 +60,11 @@ export function amountComposer(opts: {
   const ruler = h('div', { class: 'ruler', ariaLabel: 'Drag to change the amount' }, canvas)
 
   const note = h('p', { class: 'amount-note', text: opts.note ?? '' })
-  const hint = h('p', { class: 'hint', text: 'Type an amount, or drag the ruler' })
+  // What a drag is for, and what it can reach. "Type an amount, or drag the
+  // ruler" named the control without saying what it did or where it stopped,
+  // which is most of why the ruler read as texture.
+  const hint = h('p', { class: 'ruler-note',
+    text: `Drag to adjust, or type. Up to ${usd(opts.max)}.` })
 
   const chips = h('div', { class: 'chip-row', style: { justifyContent: 'center' } })
   for (const q of opts.quick ?? []) {
@@ -133,12 +141,20 @@ export function amountComposer(opts: {
   ruler.addEventListener('pointerup', stop)
   ruler.addEventListener('pointercancel', stop)
 
+  // Four ways to enter one number — a field, a ruler, quick chips and, on the
+  // phone, a keypad — is not generosity, it is indecision, and it was pushing
+  // the confirm button off the bottom of the sheet. The phone has the keypad
+  // and the chips, which are the two a thumb wants; the ruler is 44px of
+  // unlabelled line between the amount and the chips and it goes. The desktop
+  // keeps it, because there it is the only way to move the figure without
+  // typing, and it now says what it reaches.
+  const phone = isMobile()
   const el = h(
     'div',
     { class: 'stack-16' },
     h('div', { class: 'amount-wrap' }, h('div', { class: 'amount-box' }, input), note),
-    ruler,
-    hint,
+    phone ? null : ruler,
+    phone ? null : hint,
     (opts.quick ?? []).length ? chips : h('span')
   )
 

@@ -1,7 +1,7 @@
 import { h } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
-import { card, cardHead, kv, emptyState } from '../components/bits'
+import { card, cardHead, kv, emptyState, fieldError } from '../components/bits'
 import { find } from '../catalogue'
 import { state, actions, bucketTotal, bucketShortfall, bucketCost, tradeFee } from '../state'
 import { usd, shares as fmtShares } from '../format'
@@ -24,7 +24,7 @@ export function bucketScreen(): HTMLElement {
       pageHeader('Your bucket'),
       card(emptyState('Nothing in the bucket yet',
         'Pick companies as you browse and pay for them together, once you are ready.',
-        { label: 'Go to the market', onClick: () => go('/invest') })))
+        { label: 'Go to Invest', onClick: () => go('/invest') })))
   }
 
   const rows = state.bucket.map((b) => {
@@ -62,7 +62,7 @@ export function bucketScreen(): HTMLElement {
       // The question you are actually asking while you fill a bucket.
       kv('Left after', short > 0 ? '—' : usd(state.cash - bucketCost())),
       short > 0
-        ? h('small', { class: 'field-error' },
+        ? fieldError(
             h('span', { html: icon.alert() }),
             h('span', { text: `That is ${usd(short)} more than you have.` }))
         : h('span', { class: 'muted t-caption',

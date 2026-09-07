@@ -2,7 +2,7 @@ import { h } from '../ui'
 import { icon } from '../icons'
 import { usd } from '../format'
 import { shell, pageHeader, eyebrow, renderBase, type Place } from './shell'
-import { card, cardHead, kv, callout as calloutEl } from './bits'
+import { card, cardHead, kv, callout as calloutEl, fieldError } from './bits'
 import { amountComposer, keypad } from './amount'
 import { isMobile } from '../responsive'
 import { current, closeSheet, go } from '../router'
@@ -29,33 +29,78 @@ export interface ComposerSpec {
   /** The place the composer belongs to. On the phone the amount arrives as a
    *  sheet over this, because there is no second column to put context in. */
   base: () => HTMLElement
-  /** How it presents on a wide screen. Most composers are a screen of their
-   *  own, the way Figma draws Add money, Convert, Invest, Borrow, Earn, Repay
-   *  and Take out. Send is a dialog over the wallet, the way Figma draws D09.
-   *  The phone shows a sheet either way. */
-  present?: 'screen' | 'modal'
-  /** Where closing the dialog goes. Ignored when it presents as a screen. */
-  closeTo?: string
-  /** A row above the amount, for a dialog that needs to name its target. */
+  /** A row above the amount, for a composer that has to name its target.
+   *  Send is the only one: the others are about your own money and the title
+   *  says which pot. */
   lede?: () => Node
+  /** Whether this flow carries the risks the disclosures describe. Buying,
+   *  selling and borrowing do; moving your own money between your own
+   *  accounts does not, and a legal link on a bank transfer is noise. */
+  risky?: boolean
+  /** A reason this particular amount must not go through, checked on every
+   *  keystroke. Separate from the ceiling: a ceiling is about your account and
+   *  says "not this much", a guard is about the market and says "not this
+   *  trade". Both take the button away rather than letting somebody press it
+   *  and be refused a screen later. */
+  guard?: (v: number) => { title: string; why: string }[]
 }
+
+/** The way to the full disclosures, under the button that takes the risk. The
+ *  callout above it says the one sentence that matters; this is where the rest
+ *  of it lives, rather than two screens away in settings. */
+function riskLink(): HTMLElement {
+  return h('p', { class: 'risk-link' },
+    h('button', { class: 'link quiet', text: 'What you own, and what can go wrong',
+      on: { click: () => go('/disclosures') } }))
+}
+
+/* ---------------------------------------------------------------------------
+   One rule, both ways round.
+
+   Composing is a screen; committing is a dialog. Every composer in the product
+   is a place with an address, a title and room for the context beside it —
+   what the loan does if the shares fall, what the last five orders were, who
+   you can pay. Send and Receive were the two exceptions: dialogs over the
+   wallet, so the one composer that most needs a list beside it had nowhere to
+   put one, and Receive's warning about the network sat in a box you dismissed
+   rather than on a page you can link somebody to.
+
+   The phone has no second column, so there a composer is a sheet over its
+   place — uniformly, all eight of them. The review, the PIN and the outcome
+   are dialogs at every width, because those are commits.
+   --------------------------------------------------------------------------- */
 
 export function composerScreen(spec: ComposerSpec): HTMLElement {
   const mobile = isMobile()
-  const overlaid = mobile || spec.present === 'modal'
+  const overlaid = mobile
 
   // A review or an outcome replaces the composer rather than stacking on it,
   // so only one thing is ever floating over the base.
   if (overlaid && current().sheet) return renderBase(spec.base)
 
+  // What the composer can actually open at. A screen asks for a comfortable
+  // starting figure — $500 of a share, $300 out to a bank — without knowing
+  // what this account is allowed to move, and an unverified account is
+  // allowed $250. Opening above the ceiling left the field reading $500, the
+  // receipt costing $500, and the button dead, with nothing on screen saying
+  // why. Open at the ceiling instead, and say so.
+  const opening = Math.min(spec.initial, spec.max)
+  const openedCapped = spec.initial > spec.max
+
   const comp = amountComposer({
-    initial: spec.initial,
+    initial: opening,
     max: spec.max,
     note: spec.note,
     quick: spec.quick,
   })
 
-  const capNote = h('small', { class: 'field-error', hidden: true })
+  const capNote = fieldError()
+  capNote.hidden = true
+  // The market's refusal, not the account's. It reads as a callout rather than
+  // a field error because it is not something typed wrongly — the amount is
+  // fine and the book is not.
+  const guardNote = calloutEl('', 'warning')
+  guardNote.hidden = true
   const summaryBox = h('div', { class: 'stack-8 summary' })
   const rightBox = h('div', { class: 'stack grow' })
   const button = h('button', { class: 'btn btn-primary' })
@@ -64,7 +109,21 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
     summaryBox.replaceChildren(...spec.summary(v).map(([k, val, cls]) => kv(k, val, cls ?? '')))
     if (!overlaid && spec.right) rightBox.replaceChildren(spec.right(v))
     button.textContent = spec.action(v)
-    button.toggleAttribute('disabled', v <= 0 || v > spec.max)
+    // Every reason at once. A trade can be refused because it is paused *and*
+    // too big for the book, and showing one of those sends somebody off to fix
+    // half a problem — they come back with a smaller order and meet the pause
+    // they were never told about.
+    const stop = spec.guard?.(v) ?? []
+    guardNote.hidden = !stop.length
+    if (stop.length) {
+      guardNote.replaceChildren(
+        h('span', { html: icon.alert() }),
+        h('div', { class: 'stack-8' },
+          ...stop.map((s) => h('span', { class: 'two-line' },
+            h('span', { class: 't-body-strong', text: s.title }),
+            h('small', { text: s.why })))))
+    }
+    button.toggleAttribute('disabled', v <= 0 || v > spec.max || stop.length > 0)
     // Say why the figure stopped where it did, at the place it stopped.
     capNote.hidden = !capped
     if (capped) {
@@ -77,26 +136,28 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
     const v = comp.get()
     if (v > 0 && v <= spec.max) spec.onAction(v)
   })
-  paint(spec.initial)
+  paint(opening, openedCapped)
 
   if (overlaid) {
-    const leave = () => (spec.closeTo && !mobile ? go(spec.closeTo) : history.back())
-    const out = modalOver(renderBase(spec.base), spec.title, leave,
+    const out = modalOver(renderBase(spec.base), spec.title, () => history.back(),
       spec.lede ? spec.lede() : null,
       comp.el, capNote,
       // The keypad is the phone's way in. A dialog has a keyboard already, and
       // room for the sentence the phone has to drop.
       mobile ? keypad(comp) : null,
-      summaryBox,
+      summaryBox, guardNote,
       mobile ? null : calloutEl(spec.callout),
-      button)
+      button,
+      spec.risky ? riskLink() : null)
     if (mobile) out.querySelector('.sheet')?.prepend(h('div', { class: 'grabber' }))
     return out
   }
 
   const left = card(
     cardHead(spec.cardLabel, h('span', { class: 'muted', text: spec.cardRight })),
-    comp.el, capNote, summaryBox, calloutEl(spec.callout), button)
+    spec.lede ? spec.lede() : null,
+    comp.el, capNote, summaryBox, guardNote, calloutEl(spec.callout), button,
+    spec.risky ? riskLink() : null)
   // A stated width, not an inline one: the stacking rule has to be able to
   // release it below 1240, and it cannot outrank a style attribute.
   left.classList.add('col-compose')
@@ -109,7 +170,7 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
   )
 }
 
-/** A three column scenario table. Borrow shows what a fall does, Earn shows
+/** A three column scenario table. Borrow shows what a fall does, Lend shows
  *  what the balance pays, Repay shows what each repayment leaves. */
 export function scenarios(
   title: string,

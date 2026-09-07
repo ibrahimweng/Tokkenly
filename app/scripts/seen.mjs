@@ -47,3 +47,23 @@ export async function verify(p, B = 'http://localhost:4173/#') {
   await p.getByRole('button', { name: 'Yes, check it' }).click()
   await p.waitForTimeout(350)
 }
+
+/** Read a figure once it has stopped moving.
+ *
+ *  Home and the wallet count the balance from the old number to the new one
+ *  over half a second, so a read taken a fixed moment after a navigation is a
+ *  read of the animation rather than of the balance: the same assertion passes
+ *  or fails depending on how busy the machine was. Poll until the text repeats
+ *  itself, then take it. */
+export async function settled(p, sel = '.hero-figure', ms = 6000) {
+  await p.waitForSelector(sel, { timeout: ms })
+  const read = () => p.$eval(sel, (e) => e.textContent ?? '')
+  const end = Date.now() + ms
+  let prev = await read()
+  for (;;) {
+    await p.waitForTimeout(120)
+    const now = await read()
+    if (now === prev || Date.now() > end) return now
+    prev = now
+  }
+}
