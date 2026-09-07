@@ -26,9 +26,20 @@ const ROUTES = [
   '/grow/takeout', '/activity', '/activity?filter=alerts', '/account',
   '/account/preferences', '/account/security', '/account/details', '/account/payments',
   '/security', '/support', '/bucket', '/send', '/receive', '/addmoney', '/withdraw',
-  '/verify', '/all', '/disclosures', '/statement', '/admin', '/admin/switches',
+  '/verify', '/verify/number', '/verify/details', '/verify/done',
+  '/all', '/disclosures', '/statement',
+  '/admin', '/admin/switches', '/admin/people', '/admin/money', '/admin/breaks',
+  '/admin/audit', '/admin/launch',
   '/invest/aapl/invest', '/invest/aapl/sell', '/invest/aapl/send',
 ]
+
+/* The screens that draw their own shell rather than a page header, named here
+   rather than left out silently. They are full-bleed by design — a sign-in
+   form and an onboarding card are not pages in the frame — and naming them is
+   the difference between an exception and an omission. If one of them ever
+   grows a `.page-header`, the count below stops matching and this has to be
+   thought about again. */
+const OWN_SHELL = ['/signin', '/signup', '/lock', '/welcome/0', '/welcome/1', '/welcome/2', '/welcome/3']
 
 for (const [w, tag] of [[1440, 'desktop'], [1100, 'tablet'], [390, 'phone']]) {
   console.log(`\n${tag.toUpperCase()}  ${w}px`)
@@ -74,6 +85,24 @@ for (const [w, tag] of [[1440, 'desktop'], [1100, 'tablet'], [390, 'phone']]) {
       : String(vals[0])
     ok(`  ${key} is the same on all ${read.length}`, vals.length === 1, odd)
   }
+  await p.close()
+}
+
+/* And the exceptions really are exceptions. */
+{
+  const p = await b.newPage({ viewport: { width: 1440, height: 1000 } })
+  await seen(p)
+  await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
+  const has = []
+  for (const r of OWN_SHELL) {
+    await p.goto('about:blank')
+    await p.goto(B + r, { waitUntil: 'networkidle' })
+    await p.waitForTimeout(180)
+    if (await p.$('.page-header')) has.push(r)
+  }
+  console.log('\nOWN SHELL')
+  ok(`the ${OWN_SHELL.length} full-bleed screens still draw no page header`,
+     has.length === 0, has.join(' ') || 'none of them do')
   await p.close()
 }
 

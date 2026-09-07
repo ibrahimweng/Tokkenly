@@ -162,11 +162,15 @@ export function walletScreen(): HTMLElement {
     cashHero(),
     h('div', { class: 'row' },
       h('div', { class: 'stack col-main' },
-        // Two doors, not three. Withdraw was Send with the destination already
-        // answered, and a third tile for it made one errand look like two.
+        // The three errands, and no fourth: Withdraw was Send with the
+        // destination already answered, so a tile for it made one errand look
+        // like two. Receive is here because it is money moving and this is
+        // where money moves — it used to be a button under the portfolio
+        // figure on Home, which is a page about shares.
         h('div', { class: 'row equal' },
           way('Add money', 'Naira in, dollars out', icon.receive(), '/addmoney'),
-          way('Send', 'To a person, a wallet or a bank', icon.send(), '/send')),
+          way('Send', 'To a person, a wallet or a bank', icon.send(), '/send'),
+          way('Receive', 'Your address, to get paid', icon.qr(), '/receive')),
         card(
           cardHead('Still settling', headLink('See all', '/activity')),
           // What is genuinely between two banks, named in the currency it is

@@ -6354,6 +6354,14 @@ wallet, which is where the money is, and Home goes back to being a gateway: the
 three doors, the reminders, the recent rows. The sentence that used to sit
 under the greeting moved into the body, where the other view already had it.
 
+Taking them off Home found that **Receive had nowhere else to be**. The wallet
+carried two doors, Add money and Send, and never one for Receive: it had only
+ever been the second button under Home's portfolio figure. Removing it from
+there left it reachable through search and nowhere else — a screen with no door.
+So the wallet has three doors now: money in by bank or card, money out, and
+your address for somebody to pay. Moving something is not finished until it has
+arrived.
+
 **And the frame.** Walking between two pages moved the page. Measured across
 twenty-five routes at 1440:
 
@@ -6385,8 +6393,15 @@ h1` already set it and came later.
 
 It now measures one value for every route at every width: header 66 and body
 114 on desktop and tablet, 88 and 188 on a phone. `frame.mjs` walks
-thirty-five routes at three widths and asserts exactly that. Reverting the grid
+forty-three routes at three widths and asserts exactly that. Reverting the grid
 makes it fail on all five measures at once, which is how I know it is looking.
+
+It also names the seven screens that are *not* in the frame — sign-in, sign-up,
+the lock screen and the four onboarding steps, which draw their own shell
+because a form that fills the window is not a page — and asserts that none of
+them has grown a page header. An exception that is listed is a decision; an
+exception that is merely absent from the list is an omission nobody will ever
+notice (rule 114).
 
 The cost is real and worth naming: pages without a back link start 42 pixels
 lower than they did, because they now reserve the routing row they were not

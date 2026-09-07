@@ -25,6 +25,9 @@ export const icon = {
   download: () => svg('<path d="M12 4v10M8 11l4 4 4-4M5 19h14"/>', 18),
   send: () => svg('<path d="M21 3 10.5 13.5M21 3l-6.8 18-3.7-7.5L3 10.1z"/>', 18),
   receive: () => svg('<path d="M12 4v12M8 12l4 4 4-4M5 20h14"/>', 18),
+  /* Three finder squares. Receive is your address and the code for it, and the
+     down arrow was already spoken for by Add money. */
+  qr: () => svg('<rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><path d="M14 14h2.5M14 14v2.5M20 14v2.5M17 20h3M14 20h.01"/>', 18),
   convert: () => svg('<path d="M4 8h13l-3-3M20 16H7l3 3"/>', 18),
   buy: () => svg('<path d="M6 18 18 6M10 6h8v8"/>', 18),
   card: () => svg('<path d="M7 17 17 7M17 13V7h-6"/>', 18),
