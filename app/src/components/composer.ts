@@ -145,7 +145,7 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
   )
 }
 
-/** A three column scenario table. Borrow shows what a fall does, Earn shows
+/** A three column scenario table. Borrow shows what a fall does, Lend shows
  *  what the balance pays, Repay shows what each repayment leaves. */
 export function scenarios(
   title: string,

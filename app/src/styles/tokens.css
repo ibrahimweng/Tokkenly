@@ -32,6 +32,17 @@
   --dot-dim: #65656c;
   --dot-mid: #a6a6ad;
   --dot-lit: #dcdce0;
+  /* The two products' own ramps, for the fields on Borrow & Lend. Three rungs
+     each, so a composed field keeps its shape and only changes hue — dropping
+     one flat colour over it would flatten every tone the field was drawn in.
+     Lending takes the positive; borrowing takes the warning, because what you
+     owe is not good news and the product does not pretend otherwise. */
+  --lend-dim: #1d5641;
+  --lend-mid: #2f9a73;
+  --lend-lit: #55e0aa;
+  --owe-dim: #5e4a1c;
+  --owe-mid: #a5822f;
+  --owe-lit: #e8bf51;
   /* A fourth rung below the field's own three, for the part of a gateway tile's
      field that the account has not woken. It has to be a rung nothing else uses,
      because a cell that is asleep has to look asleep whatever tone it was
@@ -122,6 +133,14 @@
   --dot-dim: #b8b8b2;
   --dot-mid: #8a8a84;
   --dot-lit: #33333a;
+  /* Running the other way, like the grey ramp above it: on paper the dim rung
+     is the pale one and the lit rung is the dark one. */
+  --lend-dim: #a8d6c2;
+  --lend-mid: #3f9b74;
+  --lend-lit: #0f6746;
+  --owe-dim: #ddcda1;
+  --owe-mid: #a98424;
+  --owe-lit: #6f5210;
   /* Lighter still, because this ramp runs the other way on paper. */
   --dot-sleep: #e2e2dc;
 

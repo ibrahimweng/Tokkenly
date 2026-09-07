@@ -3,7 +3,7 @@ import { icon } from './icons'
 import { sheet, figure, panel, foldPanel, outcome, toast } from './components/sheet'
 import { callout as calloutEl, emptyState as emptyStateEl, skeletonList } from './components/bits'
 import {
-  state, actions, owed, monthlyCost, monthlyEarn, holding, bucketTotal,
+  state, actions, owed, monthlyCost, monthlyInterest, holding, bucketTotal,
   tradeFee, weakPin, ratePassword, LIMITS, type Activity,
   requestQuote, quoteLive, settlement, grossOf, type Quote,
 } from './state'
@@ -525,7 +525,7 @@ export const SHEETS: Record<string, Builder> = {
       panel(
         ['Rows', String(state.activity.length)],
         ['Format', 'CSV, one row per entry'],
-        ['Covers', 'Payments, trades and Grow'],
+        ['Covers', 'Payments, trades, borrowing and lending'],
         ['Sent to', state.person.email]
       ),
       calloutEl('The file lists every reference, so it reconciles against your bank.'),
@@ -795,7 +795,7 @@ export const SHEETS: Record<string, Builder> = {
     sheet('Close your account',
       figure('This cannot be undone', 'Three things first'),
       panel(
-        ['One', 'Take your ' + usd(state.inEarn) + ' out of Earn'],
+        ['One', 'Take back the ' + usd(state.lent) + ' you have lent'],
         ['Two', 'Repay the ' + usd(owed()) + ' you owe'],
         ['Three', 'Move the rest of your money out'],
         ['Then', 'Email us and we close it within one working day']
@@ -1151,29 +1151,29 @@ export const SHEETS: Record<string, Builder> = {
       title: 'Review',
       figureLabel: 'You are moving in', figureValue: usd(v),
       rows: [
-        ['Rate', pct(state.rates.earn) + ' a year'],
-        ['Pays you', 'About ' + usd(monthlyEarn(v)) + ' a month'],
+        ['Rate', pct(state.rates.lend) + ' a year'],
+        ['Pays you', 'About ' + usd(monthlyInterest(v)) + ' a month'],
         ['Paid', 'Every day'],
         ['Take out', 'Any time, no fee'],
       ],
       note: 'The rate moves with the market. It can go up as well as down.',
       action: 'Move ' + usd(v) + ' in',
       onConfirm: () => {
-        const a = actions.moveIntoEarn(v)
+        const a = actions.lend(v)
         replaceSheet('earn-done', { ref: a.ref })
       },
     })
   },
   'earn-done': (r) => {
     const a = state.activity.find((x) => x.ref === str(r, 'ref'))!
-    return done('Moved to Earn', `${usd(Math.abs(a.amount))} starts earning tomorrow morning.`, a,
-      [['Rate', pct(state.rates.earn) + ' a year']])
+    return done('Lent', `${usd(Math.abs(a.amount))} starts paying interest tomorrow morning.`, a,
+      [['Rate', pct(state.rates.lend) + ' a year']])
   },
 
   /* ----- take out ----- */
   'takeout-review': (r) => {
     const v = num(r, 'v')
-    const rest = Math.max(0, state.inEarn - v)
+    const rest = Math.max(0, state.lent - v)
     return review({
       title: 'Review',
       figureLabel: 'You are taking out', figureValue: usd(v),
@@ -1181,19 +1181,19 @@ export const SHEETS: Record<string, Builder> = {
         ['Goes to', 'Your wallet'],
         ['Arrives', 'Straight away'],
         ['Left earning', usd(rest)],
-        ['You give up', 'About ' + usd(monthlyEarn(v)) + ' a month'],
+        ['You give up', 'About ' + usd(monthlyInterest(v)) + ' a month'],
       ],
       note: 'Interest already paid stays in your wallet. Only what you leave in keeps earning.',
       action: 'Take out ' + usd(v),
       onConfirm: () => {
-        const a = actions.takeOutOfEarn(v)
+        const a = actions.takeBack(v)
         replaceSheet('takeout-done', { ref: a.ref })
       },
     })
   },
   'takeout-done': (r) => {
     const a = state.activity.find((x) => x.ref === str(r, 'ref'))!
-    return done('Taken out', `${usd(a.amount)} is in your wallet. ${usd(state.inEarn)} carries on earning.`, a)
+    return done('Taken back', `${usd(a.amount)} is in your wallet. ${usd(state.lent)} is still lent out.`, a)
   },
 }
 

@@ -114,6 +114,26 @@ export const BORROW: ArtSpec = {
   ],
 }
 
+/** The same field, reflected. Lending and borrowing are two halves of one
+ *  thing — one account's dollars are the other account's loan — so the two
+ *  cards carry one composition, mirrored, rather than two drawings that happen
+ *  to sit beside each other. */
+export const mirror = (spec: ArtSpec): ArtSpec => ({
+  cols: spec.cols,
+  size: spec.size.map((r) => [...r].reverse().join('')),
+  tone: spec.tone.map((r) => [...r].reverse().join('')),
+})
+
+/** A field's own three rungs, for a card that is about one product rather than
+ *  about the account as a whole. The composition is untouched: only which
+ *  colour each rung resolves to changes, so a cell drawn dim stays dim. */
+export const LEND_RAMP: Record<string, string> = {
+  a: 'var(--lend-dim)', b: 'var(--lend-mid)', c: 'var(--lend-lit)', p: 'var(--lend-lit)',
+}
+export const OWE_RAMP: Record<string, string> = {
+  a: 'var(--owe-dim)', b: 'var(--owe-mid)', c: 'var(--owe-lit)', p: 'var(--owe-lit)',
+}
+
 const CELL = 12
 
 /** A cell that is not awake keeps its place and its size and gives up its
@@ -138,7 +158,8 @@ const FLOOR = 0.45
 export const level = (part: number, whole: number): number =>
   FLOOR + (1 - FLOOR) * (whole > 0 ? Math.max(0, Math.min(1, part / whole)) : 0)
 
-export function dotArt(spec: ArtSpec, at = 1): SVGSVGElement {
+export function dotArt(spec: ArtSpec, at = 1, ramp?: Record<string, string>): SVGSVGElement {
+  const PAINT = ramp ? { ...TONE, ...ramp } : TONE
   const NS = 'http://www.w3.org/2000/svg'
   const w = spec.cols * CELL
   const hgt = spec.size.length * CELL
@@ -174,7 +195,7 @@ export function dotArt(spec: ArtSpec, at = 1): SVGSVGElement {
       c.setAttribute('r', String(d / 2))
       const tone = spec.tone[y]?.[x] ?? 'b'
       const key = seen <= wake ? tone : SLEEP
-      c.setAttribute('fill', TONE[key] ?? TONE.b)
+      c.setAttribute('fill', PAINT[key] ?? PAINT.b)
       svg.appendChild(c)
     }
   }

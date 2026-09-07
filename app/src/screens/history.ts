@@ -14,7 +14,7 @@ const FILTERS: { id: string; label: string; kinds: ActivityKind[] | null }[] = [
   { id: 'all', label: 'All', kinds: null },
   { id: 'payments', label: 'Payments', kinds: ['payment'] },
   { id: 'trades', label: 'Trades', kinds: ['trade'] },
-  { id: 'grow', label: 'Grow', kinds: ['grow'] },
+  { id: 'grow', label: 'Borrow & Lend', kinds: ['grow'] },
 ]
 
 /* ---------------------------------------------------------------------------

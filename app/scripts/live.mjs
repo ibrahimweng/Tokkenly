@@ -24,7 +24,7 @@ for (const [route, title] of [
   ['/send?to=Tunde%20Bakare', 'Send money'], ['/receive', 'Receive money'],
   ['/addmoney', 'Add money'], ['/withdraw', 'Withdraw to your bank'],
   ['/invest/aapl/invest', 'Invest'], ['/grow/borrow', 'Borrow'],
-  ['/grow/earn', 'Earn'], ['/grow/repay', 'Repay'],
+  ['/grow/earn', 'Lend'], ['/grow/repay', 'Repay'],
 ]) {
   const p = await page()
   await p.goto(B + route, { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(250)
@@ -272,10 +272,10 @@ console.log('THE DOT FIELDS  decoration that has been given something to say')
   // The three slices of one portfolio, one door each, so no two of them can
   // be the same picture on an account with its money in more than one place.
   ok('and each one says which slice it is keyed to',
-     before.every((g) => /% of your money in/.test(g.says)), before.map((g) => g.says).join(' | '))
+     before.every((g) => /% of your money (in|lent)/.test(g.says)), before.map((g) => g.says).join(' | '))
   ok('no two are at the same level',
      new Set(before.map((g) => g.awake)).size === 3, before.map((g) => g.awake + '/' + (g.awake + g.asleep)).join(' '))
-  // A gauge that does not move is a picture. $1,000 out of cash and into Earn
+  // A gauge that does not move is a picture. $1,000 out of cash and lent out
   // has to show up on the two doors it is about, and not on the third.
   await p.goto(B + '/grow/earn', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(500)
   const amt = p.locator('.amount-box input')

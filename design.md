@@ -5491,7 +5491,59 @@ none is more than four fifths of the screen it is on.
     difference is whether pressing the button changes anything, and it decides
     what is allowed to be one press away.
 
-### 11g.33 Still open
+### 11g.33 Borrow & Lend, and two cards that are not the same card
+
+**The place had no name anybody says out loud.** The tab said Grow, the door on
+Home said "Borrow or Lend", and the product inside said Earn. Three words for
+one thing, and the loudest of them — Grow — names a feeling rather than an
+action. Somebody who wants to borrow against their shares does not go looking
+for growth.
+
+It is Borrow & Lend now: the tab, the page, the door, the registry, the
+activity filter. Earn is Lend, because the account is lending its dollars and
+"earn" was the marketing word for it. Every string that a person reads moved,
+and so did the identifiers behind them — `inEarn` is `lent`, `moveIntoEarn` is
+`lend`, `rates.earn` is `rates.lend` — because a file that says Earn about a
+thing called Lend is the first step of the drift this record exists to prevent.
+The `/grow` routes stay: a bookmark is not a place to make a point.
+
+No single word was found that points at both halves. Credit and lending each
+name one side; interest names the fee rather than the act. Two words that both
+say what you can do beat one that says neither.
+
+The phone tab wraps to two lines rather than reading "Borrow & Le…". Two lines
+of 12px plus an 18px glyph still sit inside the 52 the tab already had, and it
+holds at 320.
+
+**The two cards were the same card twice.** A caps eyebrow, the rate at 32px,
+the pitch, then rows — which made the loudest thing on each of them the one
+fact they have in common, and left EARN and BORROW as 11px labels doing all the
+work of telling them apart.
+
+Now the name leads. Each card says what you can do in ink and finishes the
+sentence in grey, and the rate lives inside that sentence where it belongs: a
+fact about the offer rather than the offer itself. "Lend your dollars. 4.8% a
+year, paid into your wallet every morning." "Borrow against your shares. 9.4% a
+year, and they stay yours the whole time."
+
+And they are mirrored rather than identical. One composition — the field Home's
+third door already carries — reflected: the lending card leads with it in
+green, the borrowing card closes with it in amber. Same anatomy, no chance of
+mistaking one for the other from across a room, and no second drawing to keep
+in step with the first. Each field is keyed to its own figure the way the doors
+on Home are: how much of your spendable money is out on loan, and how much of
+your limit you have drawn. A ramp swaps which colour each of the three rungs
+resolves to, so the composition survives — dropping one flat colour over a
+field would flatten every tone it was drawn in.
+
+98. **The name goes where the eye goes.** A card whose largest text is the one
+    thing it shares with the card beside it has spent its emphasis telling you
+    nothing. The rate is not what the product is; it is a detail of it.
+
+99. **A pair should be one thing reflected, not two things drawn.** Two
+    compositions have to be kept in step by hand forever. A mirror cannot drift.
+
+### 11g.34 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from
   using the product afterwards. Item 30 was held back until it was asked for,

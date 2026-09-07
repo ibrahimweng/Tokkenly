@@ -12,7 +12,7 @@ p.on('pageerror', (e) => errs.push('pageerror: ' + e.message))
 const log = []
 const text = async (s) => (await p.locator(s).first().textContent().catch(() => '')) ?? ''
 
-log.push('FLOW  Grow → Borrow with the keypad → review → confirm → History')
+log.push('FLOW  Borrow & Lend → Borrow with the keypad → review → confirm → History')
 await p.goto(base + '/transfer', { waitUntil: 'networkidle' })
 log.push('  wallet before: ' + (await text('.card .t-display-xl')).trim())
 

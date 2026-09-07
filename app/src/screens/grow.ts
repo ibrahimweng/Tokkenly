@@ -6,44 +6,88 @@ import { table } from '../components/table'
 import { amount, figureWithEye } from '../components/bits'
 import {
   state, holdingsValue, owed, availableToBorrow, cover, sellPoint,
-  monthlyCost, monthlyEarn, movementCeiling, ceilingLabel, money, MASK, inNaira,
+  monthlyCost, monthlyInterest, movementCeiling, ceilingLabel, money, MASK, inNaira,
 } from '../state'
 import { usd, pct, signed, when } from '../format'
 import { go, openSheet } from '../router'
+import { dotArt, level, mirror, BORROW, LEND_RAMP, OWE_RAMP, type ArtSpec } from '../components/art'
 
 /* ---------------- the hub ---------------- */
 
+/* ---------------------------------------------------------------------------
+   The two products, as a mirrored pair.
+
+   They were the same card twice: a caps eyebrow, then the rate at 32px, then
+   the pitch, then rows. Which made the loudest thing on each of them the one
+   thing they have in common — a percentage — and left EARN and BORROW as 11px
+   labels doing the work of saying which is which. Somebody glancing at this
+   screen read "4.8% a year" and "9.4% a year" and had to look twice to find
+   out what either was for.
+
+   So the name leads. The headline says what you can do in ink and finishes the
+   sentence in grey, which is the shape the rest of this product's covers use,
+   and the rate is inside that sentence where it belongs — a fact about the
+   offer rather than the offer itself.
+
+   And they are mirrored rather than identical. One composition, reflected: the
+   lending card carries its field at the top in green, the borrowing card
+   carries the same field flipped at the bottom in amber. Same anatomy, and no
+   chance of mistaking one for the other from across a room. Each field is
+   keyed to its own figure, the way the doors on Home are — how much of your
+   spendable money is out on loan, and how much of your limit you have drawn.
+   --------------------------------------------------------------------------- */
+
 function productCard(opts: {
-  label: string; linkLabel: string; linkTo: string
-  rate: string; pitch: string; rows: [string, string | Node][]
-  caption: string; cta: string; ctaTo: string
+  key: 'lend' | 'borrow'
+  eyebrow: string
+  /** The clause that says what this is, in ink. */
+  lead: string
+  /** The rest of the same sentence, in grey. */
+  rest: string
+  art: ArtSpec; ramp: Record<string, string>; at: number
+  rows: [string, string | Node][]
+  cta: string; ctaTo: string
+  linkLabel: string; linkTo: string
 }): HTMLElement {
+  // Anchored to the bottom on both, which is the dense end of the composition
+  // and the end the account wakes first. On the lending card that puts the lit
+  // mass against the words; on the borrowing one it puts it against the card's
+  // own edge. Same field, and the two crops are the mirror.
+  const band = h('div', { class: 'prod-art' }, dotArt(opts.art, opts.at, opts.ramp))
+  const words = h('div', { class: 'stack-8' },
+    h('div', { class: 'card-head' },
+      h('h2', { class: 't-caps subtle', text: opts.eyebrow }),
+      h('button', { class: 'link', text: opts.linkLabel, on: { click: () => go(opts.linkTo) } })),
+    h('p', { class: 'prod-say' },
+      h('strong', { text: opts.lead + ' ' }),
+      h('span', { class: 'muted', text: opts.rest })))
+  const figures = h('div', { class: 'stack-12' }, ...opts.rows.map(([k, v]) => kv(k, v)))
+  const action = h('button', { class: 'btn btn-secondary', text: opts.cta,
+    on: { click: () => go(opts.ctaTo) } })
+
   const c = card()
-  c.style.flex = '1'
-  c.appendChild(h('div', { class: 'card-head' },
-    h('span', { class: 't-caps subtle', text: opts.label }),
-    h('button', { class: 'link', text: opts.linkLabel, on: { click: () => go(opts.linkTo) } })))
-  c.appendChild(h('span', { class: 't-display', text: opts.rate }))
-  c.appendChild(h('span', { class: 'muted', text: opts.pitch }))
-  for (const [k, v] of opts.rows) c.appendChild(kv(k, v))
-  c.appendChild(h('span', { class: 'muted t-caption', text: opts.caption }))
-  c.appendChild(h('div', { class: 'spacer' }))
-  c.appendChild(h('button', { class: 'btn btn-secondary', text: opts.cta, on: { click: () => go(opts.ctaTo) } }))
+  c.classList.add('prod', 'prod-' + opts.key)
+  // The mirror, in one line: the field leads on one card and closes the other.
+  if (opts.key === 'lend') {
+    c.append(band, words, figures, h('div', { class: 'spacer' }), action)
+  } else {
+    c.append(words, figures, h('div', { class: 'spacer' }), action, band)
+  }
   return c
 }
 
 const QUESTIONS: [string, string][] = [
-  ['Can I lose money in Earn?', 'Your dollars sit in short term US government debt. The rate can move up or down, and it is not a guarantee.'],
+  ['Can I lose money lending?', 'Your dollars sit in short term US government debt. The rate can move up or down, and it is not a guarantee.'],
   ['What if my shares fall?', 'We only sell if your cover drops under 140%. Repay part of the loan, or add shares, and nothing is sold.'],
-  ['Is anything locked up?', 'No. Take money out of Earn whenever you want, and repay a loan whenever you want. There is no fee either way.'],
+  ['Is anything locked up?', 'No. Take back what you have lent whenever you want, and repay a loan whenever you want. There is no fee either way.'],
   ['When does interest start?', 'The morning after you move money in. From then on it lands in your wallet every day.'],
-  ['Can I use both at once?', 'Yes. Money in Earn keeps paying while a loan is open. The two do not affect each other.'],
+  ['Can I use both at once?', 'Yes. What you have lent keeps paying while a loan is open. The two do not affect each other.'],
   ['What does borrowing cost?', 'Only the interest, charged daily on what you owe. No arrangement fee and no early repayment fee.'],
 ]
 
-/** Where this account stands in Grow: what is earning, and what is owed.
- *  The card used to be labelled "In Grow" and show the Earn balance alone,
- *  which read as the whole of Grow while $380 of borrowing and $8.90 of
+/** Where this account stands: what is lent out, and what is owed.
+ *  The card used to be labelled "In Grow" and show the lent balance alone,
+ *  which read as the whole place while $380 of borrowing and $8.90 of
  *  interest were on the books and named nowhere on the screen. A lending
  *  product that shows the limit and hides the balance is selling, not
  *  informing. The owed side appears only when there is a loan: a zero here
@@ -53,11 +97,11 @@ function growHero(): HTMLElement {
   return h('section', { class: 'card' },
     h('div', { class: 'hero-top' },
       h('div', { class: 'stack-8' },
-        h('span', { class: 't-caps subtle', text: 'In Earn' }),
-        figureWithEye(h('span', { class: 'hero-figure', text: money(state.inEarn) })),
-        inNaira(state.inEarn) ? h('span', { class: 'muted t-caption', text: inNaira(state.inEarn)! }) : null,
+        h('span', { class: 't-caps subtle', text: 'Lent out' }),
+        figureWithEye(h('span', { class: 'hero-figure', text: money(state.lent) })),
+        inNaira(state.lent) ? h('span', { class: 'muted t-caption', text: inNaira(state.lent)! }) : null,
         h('span', { class: 'muted',
-          text: `Earning ${pct(state.rates.earn)} a year, paid every day. Nothing is locked up.` })),
+          text: `Paying you ${pct(state.rates.lend)} a year, every day. Nothing is locked up.` })),
       debt > 0
         ? h('div', { class: 'stack-8 hero-aside' },
             h('span', { class: 't-caps subtle', text: 'You owe' }),
@@ -78,24 +122,39 @@ export function growScreen(): HTMLElement {
 
   return shell(
     'grow',
-    pageHeader('Grow'),
+    pageHeader('Borrow & Lend'),
     growHero(),
-    h('div', { class: 'row' },
+    h('div', { class: 'row prods' },
       productCard({
-        label: 'Earn', linkLabel: 'Take out', linkTo: '/grow/takeout',
-        rate: pct(state.rates.earn) + ' a year',
-        pitch: 'Paid every day, straight into your wallet. Nothing is locked up.',
+        key: 'lend', eyebrow: 'Lending',
+        linkLabel: 'Take it back', linkTo: '/grow/takeout',
+        lead: 'Lend your dollars.',
+        rest: `${pct(state.rates.lend)} a year, paid into your wallet every morning. ` +
+          `Nothing is locked up, and ${usd(1000, false)} lent pays about ${usd(monthlyInterest(1000))} a month.`,
+        // How much of the money you could spend is out working. Not the whole
+        // portfolio: shares are not money you chose to lend or not to.
+        art: mirror(BORROW), ramp: LEND_RAMP,
+        at: level(state.lent, state.lent + state.cash),
         rows: [
-          ['Paid so far', h('span', { class: 'pos t-body-strong', text: state.prefs.hideBalances ? MASK : signed(state.earnedSoFar) })],
-          ['Take out', 'Any time, no fee'],
+          ['Lent out', money(state.lent)],
+          ['Interest so far', h('span', { class: 'pos t-body-strong',
+            text: state.prefs.hideBalances ? MASK : signed(state.interestPaid) })],
         ],
-        caption: `Moving ${usd(1000, false)} in pays about ${usd(monthlyEarn(1000))} a month.`,
-        cta: 'Move money in', ctaTo: '/grow/earn',
+        cta: 'Lend dollars', ctaTo: '/grow/earn',
       }),
       productCard({
-        label: 'Borrow', linkLabel: 'Repay', linkTo: '/grow/repay',
-        rate: pct(state.rates.borrow) + ' a year',
-        pitch: 'Borrow against the shares you already own. They stay yours the whole time.',
+        key: 'borrow', eyebrow: 'Borrowing',
+        linkLabel: 'Repay', linkTo: '/grow/repay',
+        lead: 'Borrow against your shares.',
+        rest: owed() > 0
+          ? `${pct(state.rates.borrow)} a year, and they stay yours the whole time. ` +
+            `Repay any time, no fee. We would only sell if your shares fell below ${money(sellPoint())}.`
+          : `${pct(state.rates.borrow)} a year, and they stay yours the whole time. ` +
+            `A ${usd(1000, false)} loan costs about ${usd(monthlyCost(1000))} a month.`,
+        // How much of the limit is drawn, which is the one number a borrower
+        // is actually watching.
+        art: BORROW, ramp: OWE_RAMP,
+        at: level(owed(), Math.max(state.borrowLimit, 1)),
         rows: [
           // What is owed comes before what is available. The other order reads
           // as an offer; this one reads as a position.
@@ -105,9 +164,6 @@ export function growScreen(): HTMLElement {
           ['You can borrow', money(availableToBorrow())],
           ['Against', money(holdingsValue()) + ' in shares'],
         ],
-        caption: owed() > 0
-          ? `Repay any time, no fee. We would only sell if your shares fell below ${money(sellPoint())}.`
-          : `A ${usd(1000, false)} loan costs about ${usd(monthlyCost(1000))} a month. Repay any time.`,
         cta: 'Borrow money', ctaTo: '/grow/borrow',
       })),
     card(cardHead('Questions people ask'), qgrid)
@@ -117,7 +173,7 @@ export function growScreen(): HTMLElement {
 /* ---------------- shared history bands ---------------- */
 
 function loanHistory(): HTMLElement {
-  const rows = state.activity.filter((a) => a.kind === 'grow' && a.who === 'Borrow')
+  const rows = state.activity.filter((a) => a.kind === 'grow' && a.who === 'Borrowing')
   return card(
     cardHead('Your loans', h('button', { class: 'link', text: 'See all', on: { click: () => go('/activity?filter=grow') } })),
     table(
@@ -141,7 +197,7 @@ function loanHistory(): HTMLElement {
 }
 
 function earnHistory(): HTMLElement {
-  const rows = state.activity.filter((a) => a.kind === 'grow' && a.who === 'Earn')
+  const rows = state.activity.filter((a) => a.kind === 'grow' && a.who === 'Lending')
   return card(
     cardHead('Your earnings', h('button', { class: 'link', text: 'See all', on: { click: () => go('/activity?filter=grow') } })),
     table(
@@ -155,7 +211,7 @@ function earnHistory(): HTMLElement {
           h('span', { class: 't-body-strong', text: a.type }),
           h('small', { class: 'phone-only', text: when(a.at) })),
         h('span', { class: 'muted', text: when(a.at) }),
-        h('span', { class: 'muted', text: pct(state.rates.earn) }),
+        h('span', { class: 'muted', text: pct(state.rates.lend) }),
         h('span', { class: 'muted', text: a.ref }),
         amount(a),
       ]),
@@ -301,7 +357,7 @@ export function earnScreen(): HTMLElement {
   return composerScreen({
     place: 'grow',
     base: growScreen,
-    title: 'Earn',
+    title: 'Lend',
     eyebrow: ['In your wallet', usd(state.cash)],
     cardLabel: 'How much',
     cardRight: 'In wallet ' + usd(state.cash),
@@ -315,8 +371,8 @@ export function earnScreen(): HTMLElement {
       { label: 'All', value: state.cash },
     ],
     summary: (v) => [
-      ['Rate', pct(state.rates.earn) + ' a year'],
-      ['Pays you', 'About ' + usd(monthlyEarn(v)) + ' a month'],
+      ['Rate', pct(state.rates.lend) + ' a year'],
+      ['Pays you', 'About ' + usd(monthlyInterest(v)) + ' a month'],
       ['Paid', 'Every day'],
       ['Take out', 'Any time, no fee'],
     ],
@@ -324,17 +380,17 @@ export function earnScreen(): HTMLElement {
     action: (v) => 'Move ' + usd(v) + ' in',
     onAction: (v) => openSheet('earn-review', { v: String(v) }),
     right: (v) => {
-      const after = state.inEarn + v
-      const yearly = (after * state.rates.earn) / 100
+      const after = state.lent + v
+      const yearly = (after * state.rates.lend) / 100
       return card(
         cardHead('What you earn'),
-        h('span', { class: 't-title', text: 'In Earn' }),
-        h('span', { class: 't-display-xl', text: usd(state.inEarn) }),
+        h('span', { class: 't-title', text: 'Lent out' }),
+        h('span', { class: 't-display-xl', text: usd(state.lent) }),
         h('span', { class: 'muted', text: 'It keeps earning every day. Take any part of it out whenever you want.' }),
         h('div', { class: 'stack-12' },
           kv('After this move', usd(after)),
-          kv('Rate', pct(state.rates.earn) + ' a year'),
-          kv('Earned so far', h('span', { class: 'pos t-body-strong', text: signed(state.earnedSoFar) }))),
+          kv('Rate', pct(state.rates.lend) + ' a year'),
+          kv('Interest so far', h('span', { class: 'pos t-body-strong', text: signed(state.interestPaid) }))),
         scenarios('What it pays you',
           ['Over', 'You earn', 'Total then'],
           [
@@ -358,39 +414,39 @@ export function takeOutScreen(): HTMLElement {
     place: 'grow',
     base: growScreen,
     title: 'Take out',
-    eyebrow: ['In Earn', usd(state.inEarn)],
+    eyebrow: ['Lent out', usd(state.lent)],
     cardLabel: 'How much',
-    cardRight: 'In Earn ' + usd(state.inEarn),
-    initial: Math.min(300, state.inEarn),
-    max: state.inEarn,
+    cardRight: 'Lent ' + usd(state.lent),
+    initial: Math.min(300, state.lent),
+    max: state.lent,
     note: 'It lands in your wallet straight away. No notice and no fee.',
     quick: [
       { label: usd(100, false), value: 100 },
       { label: usd(300, false), value: 300 },
       { label: usd(500, false), value: 500 },
-      { label: 'All', value: state.inEarn },
+      { label: 'All', value: state.lent },
     ],
     summary: (v) => [
       ['Goes to', 'Your wallet'],
       ['Arrives', 'Straight away'],
       ['Fee', 'None, ever'],
-      ['You give up', 'About ' + usd(monthlyEarn(v)) + ' a month'],
+      ['You give up', 'About ' + usd(monthlyInterest(v)) + ' a month'],
     ],
     callout: 'Interest already paid stays in your wallet. Only what you leave in keeps earning.',
     action: (v) => 'Take out ' + usd(v),
     onAction: (v) => openSheet('takeout-review', { v: String(v) }),
     right: (v) => {
-      const rest = Math.max(0, state.inEarn - v)
-      const yearly = (rest * state.rates.earn) / 100
+      const rest = Math.max(0, state.lent - v)
+      const yearly = (rest * state.rates.lend) / 100
       return card(
         cardHead('What keeps earning'),
         h('span', { class: 't-title', text: 'After this' }),
         h('span', { class: 't-display-xl', text: usd(rest) }),
         h('span', { class: 'muted', text: 'That carries on earning every day, and you can take more out whenever you want.' }),
         h('div', { class: 'stack-12' },
-          kv('Rate', pct(state.rates.earn) + ' a year'),
+          kv('Rate', pct(state.rates.lend) + ' a year'),
           kv('Paid', 'Every day'),
-          kv('Earned so far', h('span', { class: 'pos t-body-strong', text: signed(state.earnedSoFar) }))),
+          kv('Interest so far', h('span', { class: 'pos t-body-strong', text: signed(state.interestPaid) }))),
         scenarios('What the rest pays',
           ['Over', 'You earn', 'Total then'],
           [

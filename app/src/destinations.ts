@@ -40,16 +40,19 @@ export const DESTINATIONS: Destination[] = [
   { label: 'Send Apple to someone', to: '/invest/aapl/send', place: 'market', kind: 'action',
     also: 'gift give transfer aapl shares to a person', hint: 'To another Tokkenly account' },
 
-  { label: 'Grow', to: '/grow', place: 'grow', kind: 'place', primary: true, also: 'earn borrow interest' },
-  { label: 'Move money into Earn', to: '/grow/earn', place: 'grow', kind: 'action', primary: true, also: 'save interest yield', hint: '4.8% a year, paid daily' },
-  { label: 'Take money out of Earn', to: '/grow/takeout', place: 'grow', kind: 'action', primary: true, also: 'withdraw earn', hint: 'Any time, no fee' },
+  { label: 'Borrow & Lend', to: '/grow', place: 'grow', kind: 'place', primary: true,
+    also: 'earn grow interest yield loan credit save lending' },
+  { label: 'Lend your dollars', to: '/grow/earn', place: 'grow', kind: 'action', primary: true,
+    also: 'earn save interest yield deposit', hint: '4.8% a year, paid daily' },
+  { label: 'Take back what you lent', to: '/grow/takeout', place: 'grow', kind: 'action', primary: true,
+    also: 'withdraw earn out', hint: 'Any time, no fee' },
   { label: 'Borrow', to: '/grow/borrow', place: 'grow', kind: 'action', primary: true, also: 'loan against shares credit', hint: 'Against the shares you own' },
   { label: 'Repay', to: '/grow/repay', place: 'grow', kind: 'action', primary: true, also: 'pay back loan owed', hint: 'Clear what you owe' },
 
   { label: 'Activity', to: '/activity', place: 'history', kind: 'place', primary: true, also: 'history statement transactions receipts' },
   { label: 'Payments', to: '/activity?filter=payments', place: 'history', kind: 'screen', primary: true, also: 'sent received' },
   { label: 'Trades', to: '/activity?filter=trades', place: 'history', kind: 'screen', primary: true, also: 'bought sold shares' },
-  { label: 'Grow activity', to: '/activity?filter=grow', place: 'history', kind: 'screen', primary: true, also: 'interest borrowed repaid' },
+  { label: 'Borrowing and lending', to: '/activity?filter=grow', place: 'history', kind: 'screen', primary: true, also: 'grow earn interest borrowed repaid lent' },
   { label: 'Notifications', to: '/activity?filter=alerts', place: 'history', kind: 'screen', primary: true,
     also: 'alerts bell unread told me announcements sign in filled', hint: 'What we have told you' },
 
@@ -85,7 +88,7 @@ export const DESTINATIONS: Destination[] = [
 
 export const PLACE_LABEL: Record<Place, string> = {
   home: 'Home', wallet: 'Transfer', market: 'Invest',
-  grow: 'Grow', history: 'Activity', account: 'Account',
+  grow: 'Borrow & Lend', history: 'Activity', account: 'Account',
 }
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9 ]/g, '')

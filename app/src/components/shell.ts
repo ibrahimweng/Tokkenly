@@ -20,7 +20,7 @@ const PLACES: PlaceDef[] = [
   { id: 'home', label: 'Home', to: '/', ic: icon.home },
   { id: 'market', label: 'Invest', to: '/invest', ic: icon.market },
   { id: 'wallet', label: 'Transfer', to: '/transfer', ic: icon.wallet },
-  { id: 'grow', label: 'Grow', to: '/grow', ic: icon.grow },
+  { id: 'grow', label: 'Borrow & Lend', to: '/grow', ic: icon.grow },
   { id: 'history', label: 'Activity', to: '/activity', ic: icon.history },
   { id: 'account', label: 'Account', to: '/account', ic: icon.account },
 ]
@@ -145,7 +145,7 @@ function rail(active: Place): HTMLElement {
   for (const p of TABS) {
     // The name, not only the icon. Four unlabelled glyphs is a memory test,
     // and this product's whole thesis is teaching somebody their first share
-    // — the sidebar has said Home, Invest, Transfer, Grow in words since the
+    // — the sidebar has said Home, Invest, Transfer, Borrow & Lend in words
     // start, and the phone is where most of these people will actually be.
     const tab = h('button', { class: 'rail-tab', on: { click: () => go(p.to) } },
       h('span', { class: 'ic', html: p.ic() }),

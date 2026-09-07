@@ -30,7 +30,7 @@ async function clickText(t, opts = {}) {
 }
 
 /* ---- flow 1: borrow, end to end, and check the money actually moved ---- */
-log.push('FLOW 1  Grow → Borrow → review → confirm → receipt')
+log.push('FLOW 1  Borrow & Lend → Borrow → review → confirm → receipt')
 await page.goto(base + '/transfer', { waitUntil: 'networkidle' })
 const cashBefore = (await settled(page, '.hero-figure')).trim()
 await step('wallet cash before: ' + cashBefore.trim())
@@ -64,7 +64,7 @@ await step('wallet cash after: ' + (await settled(page, '.hero-figure')).trim())
 
 /* ---- flow 2: repay it back ---- */
 log.push('')
-log.push('FLOW 2  Grow → Repay → confirm')
+log.push('FLOW 2  Borrow & Lend → Repay → confirm')
 await page.goto(base + '/grow/repay', { waitUntil: 'networkidle' })
 await page.locator('.amount-box input').fill('600')
 await page.locator('.amount-box input').blur()
@@ -117,7 +117,7 @@ for (const [start, label, expect] of [
 /* ---- flow 5: every nav place, and the deepest link on each ---- */
 log.push('')
 log.push('FLOW 5  the rail')
-for (const place of ['Home', 'Transfer', 'Invest', 'Grow', 'Activity', 'Account']) {
+for (const place of ['Home', 'Transfer', 'Invest', 'Borrow & Lend', 'Activity', 'Account']) {
   await page.goto(base + '/', { waitUntil: 'networkidle' })
   await page.locator('.nav-row', { hasText: place }).first().click()
   await page.waitForTimeout(180)

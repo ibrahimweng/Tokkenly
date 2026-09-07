@@ -213,7 +213,7 @@ function notificationsBody(): (Node | null)[] {
         ic: icon.arrowIn(), get: () => n.payments, set: (v) => actions.setNotify('payments', v) }),
       toggle({ label: 'Price moves', sub: 'When something you hold moves more than five per cent in a day',
         ic: icon.market(), get: () => n.prices, set: (v) => actions.setNotify('prices', v) }),
-      toggle({ label: 'Earn interest', sub: 'The daily payout on money sitting in Earn',
+      toggle({ label: 'Interest paid', sub: 'The daily payout on the dollars you have lent',
         ic: icon.grow(), get: () => n.earn, set: (v) => actions.setNotify('earn', v) }),
       toggle({ label: 'Borrowing', sub: 'When what you owe gets close to what your shares can cover',
         ic: icon.alert(), get: () => n.borrowing, set: (v) => actions.setNotify('borrowing', v) })),
@@ -345,7 +345,7 @@ const QA: [string, string][] = [
   ['What does it cost to send money', 'Nothing. Tokkenly covers the network cost'],
   ['Why do you need my NIN or BVN', 'Nigerian law requires it before you hold a balance'],
   ['What happens if I lose my phone', 'Sign in on another one with your recovery phrase'],
-  ['Can I take money out of Earn at any time', 'Yes, with no notice and no fee. It lands in your wallet the same day'],
+  ['Can I take back what I have lent at any time', 'Yes, with no notice and no fee. It lands in your wallet the same day'],
   ['What happens if my shares fall while I owe', 'We only sell if your cover drops under 140%, and not before'],
   ['Do you charge me to buy a stock', 'Half a per cent of the amount, shown before you commit'],
   ['How do I change my PIN', 'Account, then Security, then App PIN'],
@@ -427,7 +427,7 @@ function legalBody(): (Node | null)[] {
         on: { click: () => go('/disclosures') } })),
     card(
       cardHead('Closing your account'),
-      h('span', { class: 'muted', text: 'Move your money out first. Anything sitting in Earn has to come out and any loan has to be repaid, then we can close the account and delete what we hold.' }),
+      h('span', { class: 'muted', text: 'Move your money out first. Anything you have lent has to come back and any loan has to be repaid, then we can close the account and delete what we hold.' }),
       h('button', { class: 'link', text: 'Close my account', on: { click: () => openSheet('close') } })),
   ]
 }

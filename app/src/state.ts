@@ -255,12 +255,12 @@ export interface State {
   security: Security
   person: { name: string; email: string; phone: string; dob: string; address: string; joined: string }
   cash: number
-  inEarn: number
-  earnedSoFar: number
+  lent: number
+  interestPaid: number
   borrowed: number
   interestOwed: number
   borrowLimit: number
-  rates: { earn: number; borrow: number; collateral: number }
+  rates: { lend: number; borrow: number; collateral: number }
   /** What a transaction costs, as a percentage. The marketing sells this:
    *  "the amount, the rate, the fee, and exactly what you receive, before you
    *  confirm. Nothing folded into a worse rate." A product that answers that
@@ -370,12 +370,12 @@ export const state: State = {
     joined: 'March 2024',
   },
   cash: 2480,
-  inEarn: 1240,
-  earnedSoFar: 18.6,
+  lent: 1240,
+  interestPaid: 18.6,
   borrowed: 380,
   interestOwed: 8.9,
   borrowLimit: 1860,
-  rates: { earn: 4.8, borrow: 9.4, collateral: 140 },
+  rates: { lend: 4.8, borrow: 9.4, collateral: 140 },
   fees: { trade: 0.5, fx: 0 },
   kyc: { status: 'none' },
   usedThisMonth: 180,
@@ -412,8 +412,8 @@ export const state: State = {
     { id: 'n2', kind: 'trade', title: 'Your Apple order filled',
       body: '1.87 shares at $224.10.', at: iso('2026-09-05T14:05'), read: false,
       ref: 'TKN-8E4J77' },
-    { id: 'n3', kind: 'grow', title: 'Earn paid you $0.16',
-      body: 'Interest lands every morning while your dollars sit in Earn.', at: iso('2026-09-04T00:05'), read: false,
+    { id: 'n3', kind: 'grow', title: 'Lending paid you $0.16',
+      body: 'Interest lands every morning on the dollars you have lent out.', at: iso('2026-09-04T00:05'), read: false,
       to: '/grow' },
     { id: 'n4', kind: 'security', title: 'New sign in on Pixel 7',
       body: 'Lagos, Nigeria. If this was not you, sign out everywhere.', at: iso('2026-09-03T21:10'), read: true,
@@ -431,7 +431,7 @@ export const state: State = {
     { ref: 'TKN-8F2K90', kind: 'payment', who: 'Adaeze Okonkwo', type: 'Received', amount: 120, at: iso('2026-09-05T14:32'), settled: true },
     { ref: 'TKN-8E4J77', kind: 'trade', who: 'Apple', type: 'Bought', amount: -420, fee: 2.09, at: iso('2026-09-05T14:05'), settled: true },
     { ref: 'TKN-7D1J83', kind: 'payment', who: 'Tunde Bakare', type: 'Sent', amount: -45, at: iso('2026-09-04T09:14'), settled: true },
-    { ref: 'TKN-7C8H62', kind: 'grow', who: 'Earn', type: 'Interest', amount: 0.16, at: iso('2026-09-04T00:05'), settled: true },
+    { ref: 'TKN-7C8H62', kind: 'grow', who: 'Lending', type: 'Interest', amount: 0.16, at: iso('2026-09-04T00:05'), settled: true },
     { ref: 'TKN-6C9H77', kind: 'payment', who: 'Payroll', type: 'Received', amount: 1500, at: iso('2026-08-29T08:00'), settled: true },
     { ref: 'TKN-6B4G61', kind: 'trade', who: 'Tesla', type: 'Sold', amount: 260, fee: 1.31, at: iso('2026-08-28T19:20'), settled: true },
     { ref: 'TKN-5Z2E44', kind: 'payment', who: 'Adaeze Okonkwo', type: 'Sent', amount: -80, at: iso('2026-08-26T16:40'), settled: true },
@@ -439,12 +439,12 @@ export const state: State = {
     { ref: 'TKN-4X1C25', kind: 'payment', who: 'Rent', type: 'Sent', amount: -620, at: iso('2026-08-24T07:00'), settled: true },
     { ref: 'TKN-3V0A04', kind: 'payment', who: 'Tunde Bakare', type: 'Sent', amount: -30, at: iso('2026-08-22T10:22'), settled: true },
     { ref: 'TKN-2T9Y81', kind: 'payment', who: 'Data top up', type: 'Sent', amount: -12, at: iso('2026-08-20T18:35'), settled: true },
-    { ref: 'TKN-2S4X70', kind: 'grow', who: 'Borrow', type: 'Borrowed', amount: 500, at: iso('2026-08-12T10:40'), settled: true },
+    { ref: 'TKN-2S4X70', kind: 'grow', who: 'Borrowing', type: 'Borrowed', amount: 500, at: iso('2026-08-12T10:40'), settled: true },
     { ref: 'TKN-2R7W58', kind: 'payment', who: 'Chidi Nwosu', type: 'Received', amount: 65, at: iso('2026-08-11T13:05'), settled: true },
     { ref: 'TKN-1Q6V47', kind: 'payment', who: 'MTN airtime', type: 'Sent', amount: -8, at: iso('2026-08-09T19:48'), settled: true },
     { ref: 'TKN-1P5U36', kind: 'trade', who: 'Vanguard S&P 500', type: 'Bought', amount: -300, fee: 1.49, at: iso('2026-08-07T15:22'), settled: true },
     { ref: 'TKN-1N4T25', kind: 'payment', who: 'Ngozi Eze', type: 'Sent', amount: -150, at: iso('2026-08-05T11:30'), settled: true },
-    { ref: 'TKN-0M3S14', kind: 'grow', who: 'Earn', type: 'Moved in', amount: -740, at: iso('2026-08-03T09:15'), settled: true },
+    { ref: 'TKN-0M3S14', kind: 'grow', who: 'Lending', type: 'Lent', amount: -740, at: iso('2026-08-03T09:15'), settled: true },
     { ref: 'TKN-0L2R03', kind: 'payment', who: 'Ikeja Electric', type: 'Sent', amount: -34, at: iso('2026-08-01T07:40'), settled: true },
     { ref: 'TKN-0K1Q92', kind: 'payment', who: 'Payroll', type: 'Received', amount: 1500, at: iso('2026-07-31T08:00'), settled: true },
     { ref: 'TKN-0J0P81', kind: 'trade', who: 'Apple', type: 'Bought', amount: -560, fee: 2.79, at: iso('2026-07-29T14:12'), settled: true },
@@ -473,8 +473,8 @@ export const sellPoint = (): number => state.borrowed * (state.rates.collateral 
 export const monthlyCost = (principal: number): number =>
   (principal * state.rates.borrow) / 100 / 12
 
-export const monthlyEarn = (principal: number): number =>
-  (principal * state.rates.earn) / 100 / 12
+export const monthlyInterest = (principal: number): number =>
+  (principal * state.rates.lend) / 100 / 12
 
 /** The naira line beside a dollar figure, when the person wants one. Add
  *  money and Convert are *about* naira and always show it — this is only for
@@ -618,7 +618,7 @@ export const leftThisMonth = (): number =>
  *  that was not there before, and it was the one outflow left uncapped, so an
  *  unverified account could take a $1,150 loan while being stopped from buying
  *  $300 of a share. What does not answer to it: moving your own money between
- *  your own buckets — into Earn, out of Earn — and repaying. A limit that
+ *  your own buckets — lent out, taken back — and repaying. A limit that
  *  blocked a repayment would hold someone at 9.4% for the sake of a cap that
  *  exists to protect them. */
 export const movementCeiling = (): number =>
@@ -874,7 +874,7 @@ export const actions = {
     actions.countAgainstLimit(amount)
     state.borrowed += amount
     state.cash += amount
-    const a = record({ kind: 'grow', who: 'Borrow', type: 'Borrowed', amount })
+    const a = record({ kind: 'grow', who: 'Borrowing', type: 'Borrowed', amount })
     changed()
     return a
   },
@@ -884,23 +884,23 @@ export const actions = {
     state.interestOwed -= toInterest
     state.borrowed = Math.max(0, state.borrowed - (amount - toInterest))
     state.cash -= amount
-    const a = record({ kind: 'grow', who: 'Borrow', type: 'Repaid', amount: -amount })
+    const a = record({ kind: 'grow', who: 'Borrowing', type: 'Repaid', amount: -amount })
     changed()
     return a
   },
 
-  moveIntoEarn(amount: number): Activity {
+  lend(amount: number): Activity {
     state.cash -= amount
-    state.inEarn += amount
-    const a = record({ kind: 'grow', who: 'Earn', type: 'Moved in', amount: -amount })
+    state.lent += amount
+    const a = record({ kind: 'grow', who: 'Lending', type: 'Lent', amount: -amount })
     changed()
     return a
   },
 
-  takeOutOfEarn(amount: number): Activity {
-    state.inEarn = Math.max(0, state.inEarn - amount)
+  takeBack(amount: number): Activity {
+    state.lent = Math.max(0, state.lent - amount)
     state.cash += amount
-    const a = record({ kind: 'grow', who: 'Earn', type: 'Taken out', amount })
+    const a = record({ kind: 'grow', who: 'Lending', type: 'Taken back', amount })
     changed()
     return a
   },

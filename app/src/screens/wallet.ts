@@ -17,7 +17,7 @@ function way(label: string, sub: string, ic: string, to: string): HTMLElement {
 }
 
 /** The centrepiece of the wallet. Not just the number: what the number is
- *  made of. Cash and what is working in Earn, drawn to scale so the
+ *  made of. Cash and what is lent out, drawn to scale so the
  *  proportions are readable at a glance.
  *
  *  What is deliberately not in the bar is what the shares would lend against.
@@ -68,7 +68,7 @@ function moved(): HTMLElement {
 function cashHero(): HTMLElement {
   const parts = [
     { label: 'Cash', value: state.cash, cls: 'a', hint: 'Ready to spend or send' },
-    { label: 'In Earn', value: state.inEarn, cls: 'b', hint: 'Earning ' + state.rates.earn + '% a year' },
+    { label: 'Lent out', value: state.lent, cls: 'b', hint: 'Paying ' + state.rates.lend + '% a year' },
   ]
   const total = parts.reduce((t, p) => t + p.value, 0)
 
@@ -106,7 +106,7 @@ function cashHero(): HTMLElement {
             h('small', { text: p.hint }))))),
 
     h('span', { class: 'subtle t-caption',
-      text: `${money(total)} in total across your wallet and Earn. Borrowing is credit, not balance, so it is not in this figure.` })
+      text: `${money(total)} in total across your wallet and what you have lent. Borrowing is credit, not balance, so it is not in this figure.` })
   )
 }
 

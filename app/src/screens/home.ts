@@ -166,7 +166,7 @@ function chart(): HTMLElement {
     ranges: RANGES,
     initial: '1Y',
     title: 'Portfolio over time',
-    endValue: state.cash + state.inEarn + holdingsValue(),
+    endValue: state.cash + state.lent + holdingsValue(),
     shape: 'area',
   }))
 }
@@ -186,9 +186,9 @@ function gainOver(key: string, endValue: number): { amount: number; pct: number 
 function detailed(): HTMLElement {
   // The same number Simple shows, because it is the same account. This view
   // used to show holdings alone under no label at all, so switching Simple to
-  // Detailed appeared to delete the cash and the Earn balance — $16,229.18
+  // Detailed appeared to delete the cash and the lent balance — $16,229.18
   // became $12,509.18 with nothing to explain it.
-  const value = state.cash + state.inEarn + holdingsValue()
+  const value = state.cash + state.lent + holdingsValue()
   const move = dayMove()
   const all = gainOver('ALL', value)
   const positions = card(
@@ -207,9 +207,9 @@ function detailed(): HTMLElement {
   )
 
   const growCard = card(
-    cardHead('Grow', headLink('Open Grow', '/grow')),
+    cardHead('Borrow & Lend', headLink('Open it', '/grow')),
     h('span', { class: 't-body-strong', text: `${usd(availableToBorrow(), false)} to borrow against your shares, at ${pct(state.rates.borrow)} a year` }),
-    h('span', { class: 't-body-strong', text: `${pct(state.rates.earn)} a year on dollars you are not using, paid every day` })
+    h('span', { class: 't-body-strong', text: `${pct(state.rates.lend)} a year on dollars you are not using, paid every day` })
   )
 
   const available = card(
@@ -301,7 +301,7 @@ function gateway(): HTMLElement {
   // one line of reassurance, the portfolio carries the number and the two
   // things you would do with it. The search and the bell are the app's own
   // and stay beside the toggle.
-  const total = state.cash + state.inEarn + holdingsValue()
+  const total = state.cash + state.lent + holdingsValue()
   const move = dayMove()
   return shell(
     'home',
@@ -331,7 +331,7 @@ function gateway(): HTMLElement {
         link('/receive', 'btn btn-secondary btn-wide', 'Receive'))),
     // The three fields answer to the three places money can be, so together
     // they are one reading of the portfolio spread across three doors: what is
-    // in shares, what is cash, and what is working in Earn. The composition
+    // in shares, what is cash, and what is lent out. The composition
     // Figma drew is the full field, and the account decides how much of it is
     // awake. Nothing moves and nothing is resized — the picture is the picture.
     h('div', { class: 'gates' },
@@ -347,10 +347,10 @@ function gateway(): HTMLElement {
         sub: 'Move between naira and dollars at the rate you see.',
         reads: whereItIs(state.cash, total, 'in cash'),
         at: level(state.cash, total) }),
-      tile({ art: BORROW, to: '/grow', title: 'Borrow or Lend', cta: 'See your limit',
+      tile({ art: BORROW, to: '/grow', title: 'Borrow & Lend', cta: 'See your limit',
         sub: 'Borrow against your shares without selling them.',
-        reads: whereItIs(state.inEarn, total, 'in Earn'),
-        at: level(state.inEarn, total) })),
+        reads: whereItIs(state.lent, total, 'lent out'),
+        at: level(state.lent, total) })),
     tasks(),
     // D01c draws the activity straight onto the canvas, with no card behind
     // it — the tiles above are the objects on this screen, and a fourth panel
@@ -367,11 +367,11 @@ function gateway(): HTMLElement {
 }
 
 /** What the portfolio did today: the holdings' own day moves against the cash
- *  and Earn balances, which do not move with the market. */
+ *  and lent balances, which do not move with the market. */
 function dayMove(): { amount: number; pct: number } {
   const now = holdingsValue()
   const before = state.holdings.reduce((t, p) => t + (p.shares * p.price) / (1 + p.dayPct / 100), 0)
-  const total = state.cash + state.inEarn + now
+  const total = state.cash + state.lent + now
   const amount = now - before
   return { amount, pct: total - amount ? (amount / (total - amount)) * 100 : 0 }
 }

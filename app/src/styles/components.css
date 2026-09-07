@@ -73,6 +73,45 @@
   font-size: 11px; font-weight: 600; flex: none;
 }
 
+/* -------------------------------------------------- borrowing and lending --
+   Two products, one anatomy, mirrored. The field bleeds to the card's own
+   edge — top on the lending card, bottom on the borrowing one — so the two
+   read as halves of one thing rather than as a pair of panels that happen to
+   sit beside each other. */
+/* Equal heights, so the two fields sit on one line at the top and one at the
+   bottom rather than at four different heights. The spacer inside each card
+   takes up whatever the other card's extra copy costs. */
+.row.prods { align-items: stretch; }
+.card.prod { padding: 0; overflow: hidden; gap: 0; flex: 1 1 0; min-width: 0; }
+.card.prod > *:not(.prod-art) { padding-inline: 24px; }
+.card.prod > .stack-8:first-child { padding-top: 24px; }
+.card.prod > .btn:last-child { margin: 0 24px 24px; }
+.card.prod .stack-8 + .stack-12 { padding-top: 16px; }
+.card.prod .stack-12 + .spacer { min-height: 16px; }
+.prod-art { height: 132px; overflow: hidden; flex: none; }
+.prod-art svg { display: block; width: 100%; height: 100%; }
+/* Lending leads with its field; borrowing closes with it. */
+.prod-lend > .prod-art { margin-bottom: 20px; }
+.prod-borrow > .prod-art { margin-top: 20px; }
+.prod-borrow > .btn { margin-bottom: 0 !important; }
+.prod-borrow > .stack-8:first-child { padding-top: 24px; }
+
+/* The name leads and the sentence finishes in grey. It was the rate at 32px
+   over an 11px label, which made the loudest thing on both cards the one fact
+   they have in common. */
+.prod-say {
+  margin: 0; font-size: 20px; line-height: 27px; font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.prod-say .muted { font-weight: 600; }
+@media (max-width: 899px) {
+  .card.prod > *:not(.prod-art) { padding-inline: 20px; }
+  .card.prod > .btn:last-child { margin: 0 20px 20px; }
+  .card.prod > .stack-8:first-child, .prod-borrow > .stack-8:first-child { padding-top: 20px; }
+  .prod-art { height: 108px; }
+  .prod-say { font-size: 18px; line-height: 25px; }
+}
+
 /* ---------- cards ---------- */
 .card {
   background: var(--sunken);
@@ -520,9 +559,16 @@
   color: var(--muted);
 }
 .rail-tab .ic { display: grid; place-items: center; height: 18px; }
+/* Two lines, not an ellipsis. The four tabs used to be one word each and the
+   longest of them was "Transfer"; the fourth is "Borrow & Lend" now, which at
+   10px is a couple of pixels over what a quarter of a 390 phone gives it, and
+   "Borrow & Le…" on a tab is a tab nobody can read. Two lines of 12 plus the
+   18px glyph still sit inside the 52 the tab already had. */
 .rail-label {
   font-size: 10px; line-height: 12px; font-weight: 600; letter-spacing: 0.01em;
-  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  max-width: 100%; text-align: center; overflow-wrap: break-word;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .rail-tab[aria-current='page'] { background: var(--inverse); color: var(--on-inverse); }
 /* 360 is the width most budget Android phones actually are, and "Transfer" is

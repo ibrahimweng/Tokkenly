@@ -14,7 +14,7 @@ export const signed = (n: number): string => (n >= 0 ? '+' : '−') + usd(Math.a
  *  money did arrive, and loses the green, because it is a debt. Here rather
  *  than at either call site, so the two cannot disagree about what a loan is. */
 export const isDrawdown = (a: { kind: string; who: string; type: string }): boolean =>
-  a.kind === 'grow' && a.who === 'Borrow' && a.type === 'Borrowed'
+  a.kind === 'grow' && a.who === 'Borrowing' && a.type === 'Borrowed'
 
 export const pct = (n: number, dp = 1): string => n.toFixed(dp) + '%'
 
@@ -80,7 +80,7 @@ export function parseAmount(raw: string): number {
 }
 
 /** How an entry reads in a one-line list. History has columns for who and
- *  what; a list has one line, so Grow entries name their product. */
+ *  what; a list has one line, so a borrowing or lending entry names which. */
 export function activityLabel(
   a: { kind: string; type: string; who: string; asset?: { ticker: string } },
 ): string {
@@ -89,9 +89,9 @@ export function activityLabel(
   if (a.asset) return `${a.type} ${a.asset.ticker} ${a.type === 'Sent' ? 'to' : 'from'} ${a.who}`
   if (a.kind !== 'grow') return a.type + ' ' + a.who
   const map: Record<string, string> = {
-    Interest: 'Interest from Earn',
-    'Moved in': 'Moved into Earn',
-    'Taken out': 'Taken out of Earn',
+    Interest: 'Interest on what you lent',
+    Lent: 'Lent out',
+    'Taken back': 'Taken back from lending',
   }
   return map[a.type] ?? a.type
 }

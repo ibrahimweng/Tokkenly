@@ -58,7 +58,7 @@ console.log('HIDE MY BALANCES  the switch, and where it sits')
 {
   const MASK = '\u2022\u2022\u2022\u2022\u2022\u2022'
   // Every screen with a headline balance carries the switch, on the figure's
-  // own line rather than in the header three hundred pixels away. Grow is the
+  // own line rather than in the header three hundred pixels away. Borrow & Lend is the
   // reason this is a test: it masked a balance and offered no way to uncover
   // it short of four taps into Preferences.
   // The figure is whichever element the switch was paired with, which is the
@@ -168,7 +168,7 @@ ok('the bell goes to the section rather than floating a panel',
    (await p.evaluate(() => location.hash)) === '#/activity?filter=alerts' &&
    (await p.locator('.scrim').count()) === 0,
    await p.evaluate(() => location.hash))
-// The two money ones. "paid you" would also catch Earn's daily interest,
+// The two money ones. "paid you" would also catch the daily lending interest,
 // which is a grow notification and is meant to still be here.
 ok('and the section agrees with the bell',
    !/Adaeze|Payroll/i.test(await p.evaluate(() => document.querySelector('.alert-list')?.innerText ?? '')),
