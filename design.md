@@ -6515,7 +6515,44 @@ are 44 there because rule 35 says a thumb needs 44.
      wide band and a tall one is two layouts, not one layout cropped. Cropping
      is what you do to a texture, which has no subject to lose.
 
-### 11g.46 Still open
+### 11g.46 Into the corner, and a button that stops floating
+
+**The objects sit in the bottom-left corner and run off both edges.** They were
+placed in the band rather than composed into it — centred vertically, clear of
+every edge, which is the arrangement of something dropped in rather than
+something belonging there. They are half again as large now, anchored to the
+bottom-left, and they overrun the card on two sides: part of the front coin and
+part of the wallet's body are simply not drawn, because the field's grid stops
+at zero and the renderer only visits cells inside it. Nothing is scaled to fit,
+so nothing is distorted; the crop is the composition.
+
+The anchor moved with them. `preserveAspectRatio` was `xMinYMid slice`, which
+centred the field vertically; it is `xMinYMax slice` now, so the corner the
+object sits in is the corner that survives, and what is lost to the crop is the
+top right — which is where the dust was heading anyway.
+
+**And the card no longer answers the pointer.** 11g.43 gave it a surface step
+on the argument that the whole card is one offer. Nothing on it is clickable
+except the button, and the surface stepping up toward the button's own tone is
+what made the button look like it had a shadow under it. The card is inert; the
+button steps, and that is all.
+
+**The shadow under a hovered button is gone, everywhere.** Chasing the one on
+this card found a global rule: every filled button rose a pixel and cast
+`--shadow-hover` — twenty pixels of blur at 45% black. The note beside it
+argued that a lighter fill alone is easy to miss on a page this dark. It is not
+easy to miss, and the shadow was the loudest thing on any screen carrying a
+button: it reads as an object floating over the page rather than a control
+answering the pointer. Rule 46 said this about the doors on Home and 11g.43
+said it about a card; it is now true of the last thing in the product that was
+still doing it. A button steps along its own ramp and does nothing else.
+
+126. **Bleed is a composition, not an accident.** A picture that clears every
+     edge of its box reads as placed in the box. One that runs off two of them
+     reads as belonging to it — and the way to do that is to let the crop cut
+     the drawing, never to scale the drawing until it fits.
+
+### 11g.47 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from
   using the product afterwards. Item 30 was held back until it was asked for,

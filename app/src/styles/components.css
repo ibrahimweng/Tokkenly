@@ -131,18 +131,13 @@
 .prod-figure { font-size: 28px; line-height: 34px; font-weight: 600; letter-spacing: -0.02em; }
 .prod-figure.warn { color: var(--warn); }
 
-/* The whole card answers to the pointer, because the whole card is one offer.
-   A step in the surface and nothing else: no shadow, no gradient, no lift.
-   Rule 46 already made hover a surface change on Home's doors, and a card that
-   moves under the cursor reads as selected rather than as hovered — movement
-   is what a press is for. */
-@media (hover: hover) {
-  .card.prod { transition: background var(--t-fast) var(--ease); }
-  .card.prod:hover { background: var(--sunken-hover); }
-  /* The button inside it steps too, so the card lighting up does not leave the
-     one thing you came to press looking flat against it. */
-  .card.prod:hover > .btn { background: var(--control-pressed); }
-}
+/* The card does not answer to the pointer. Only the button does.
+   It used to step its whole surface, on the argument that the card is one
+   offer — and the surface stepping toward the button's own tone is what made
+   the button look like it had a shadow under it. Nothing on the card is
+   clickable except the button, so the button is the only thing with anything
+   to say about being hovered, and it says it with the same step every other
+   secondary button in the product uses. */
 
 @media (max-width: 899px) {
   .card.prod > *:not(.prod-art) { padding-inline: 20px; }
@@ -1790,13 +1785,13 @@ th.right .th-sort { flex-direction: row-reverse; }
   .btn-quiet:hover { background: var(--control); }
   .btn-destructive:hover { background: var(--control-pressed); }
   .btn-inverse:hover { background: var(--sand-hover); }
-  /* A filled button also rises, and the shadow under it is what says so: on a
-     page this dark a lighter fill on its own is easy to miss. Quiet has no
-     surface of its own to raise, so it only gains one. */
-  .btn-primary:hover, .btn-secondary:hover, .btn-inverse:hover {
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-hover);
-  }
+  /* A button steps along its ramp and does nothing else. It used to rise a
+     pixel and cast `--shadow-hover` — 20px of blur at 45% black — on the
+     argument that a lighter fill alone is easy to miss on a page this dark.
+     It is not easy to miss, and the shadow is the loudest thing on any screen
+     it appears on: it reads as a floating object rather than as a control
+     answering the pointer. Rule 46 said the same about the doors on Home, and
+     11g.46 says it again about a card. Movement is what a press is for. */
 
   /* -- small controls -- */
   .suggest-row:hover { background: var(--control); }

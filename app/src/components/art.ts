@@ -220,15 +220,15 @@ const oval = (cx: number, cy: number, rx: number, ry: number, t: number): Mask =
  *  by the one in front of it, because dots cannot occlude: without the cut,
  *  three overlapping discs are one blob. The gap inside the edge is the rim,
  *  and it is what makes a disc read as a coin rather than as a circle. */
-const COIN_R = 15
+const COIN_R = 22
 const coin = (cx: number, cy: number): Mask =>
-  both(disc(cx, cy, COIN_R), not(ringGap(cx, cy, COIN_R * 0.62, COIN_R * 0.78)))
+  both(disc(cx, cy, COIN_R), not(ringGap(cx, cy, COIN_R * 0.64, COIN_R * 0.79)))
 export const COINS = (): ObjectField => field('coins', (() => {
-  const cut = (cx: number, cy: number) => disc(cx, cy, COIN_R + 2.2)
+  const cut = (cx: number, cy: number) => disc(cx, cy, COIN_R + 3)
   return any(
-    both(coin(45, 30), not(cut(33, 42))),
-    both(coin(33, 42), not(cut(21, 54))),
-    coin(21, 54),
+    both(coin(50, 32), not(cut(32, 51))),
+    both(coin(32, 51), not(cut(14, 70))),
+    coin(14, 70),
   )
 })(), TALL)
 
@@ -238,17 +238,19 @@ export const COINS = (): ObjectField => field('coins', (() => {
  *  ring of dots inside the silhouette reads as a seam, and adding one would
  *  have needed a second colour the card does not have. */
 export const WALLET = (): ObjectField => field('wallet', (() => {
-  const body = rrect(7, 26, 51, 60, 4.5)
+  const body = rrect(-6, 43, 47, 92, 6)
   // The card standing out of it. One, not a fan: a fan of three reads as a
-  // card holder, and the thing under it stops being the subject.
-  const card = rrect(17, 13, 38, 28, 1.6)
-  const strap = rrect(46, 34, 60, 51, 3)
+  // card holder, and the thing under it stops being the subject. Its foot is
+  // inside the body and the gap between them is a hair, or it stops reading as
+  // a card in a wallet and starts reading as a box above one.
+  const card = rrect(6, 26, 32, 46, 2)
+  const strap = rrect(42, 53, 59, 74, 4)
   // Taken out again. The flap edge across the upper third and the seam either
   // side of the strap are gaps rather than lines, because a missing row of
   // dots is the only line this field can draw.
-  const flap = rrect(7, 37.4, 51, 39.6, 0.7)
-  const gap = rrect(45.4, 32, 47.2, 53, 0.5)
-  const lip = rrect(15, 24.4, 40, 26.6, 0.5)
+  const flap = rrect(-6, 56, 47, 58.4, 0.9)
+  const gap = rrect(41.2, 50, 43.4, 77, 0.6)
+  const lip = rrect(3, 41.4, 35, 43, 0.5)
   return both(any(body, card, strap), not(any(flap, gap, lip)))
 })(), TALL)
 
@@ -307,8 +309,10 @@ export function objectArt(
   svg.setAttribute('viewBox', `0 0 ${f.cols * CELL} ${f.rows * CELL}`)
   svg.setAttribute('width', '100%')
   svg.setAttribute('height', '100%')
-  // The object is at the left, so the left is what must survive a crop.
-  svg.setAttribute('preserveAspectRatio', 'xMinYMid slice')
+  // Bottom left is where the object sits and where it runs off the edge, so it
+  // is the corner that must survive the crop. Anything lost is the top right,
+  // which is where the dust is going anyway.
+  svg.setAttribute('preserveAspectRatio', 'xMinYMax slice')
   svg.setAttribute('aria-hidden', 'true')
   svg.setAttribute('focusable', 'false')
 
