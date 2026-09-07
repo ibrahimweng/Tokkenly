@@ -179,9 +179,15 @@ function privacyToggle(): HTMLElement {
  *  screen at all — so the one place a balance is masked by default had no way
  *  to uncover it short of four taps into Preferences.
  *
- *  It sits against the figure now, on the four screens with a headline balance
- *  and nowhere else. One per screen, because the switch is one setting: a
- *  second eye on the same page would suggest two things to cover. */
+ *  It sits against the figure now, on the screens with a headline balance and
+ *  nowhere else. One per screen, because the switch is one setting: a second
+ *  eye on the same page would suggest two things to cover.
+ *
+ *  Which is why it left Borrow & Lend again when that screen's hero did. That
+ *  page is two cards with a figure apiece, and neither is a headline — they
+ *  are positions, like a holding on a company page, and they follow the
+ *  setting without a switch of their own. The switch went with the figure, to
+ *  the two position pages the cards now open. */
 export function figureWithEye(figure: HTMLElement): HTMLElement {
   return h('div', { class: 'figure-eye' }, figure, privacyToggle())
 }
@@ -200,10 +206,17 @@ export function spentBar(part: number, whole: number, cls = ''): HTMLElement {
     h('div', { class: 'meter-fill', style: { width: filled + '%' } }))
 }
 
-export function meter(valuePct: number, minPct: number): HTMLElement {
-  const scale = Math.max(valuePct, minPct) * 1.1
-  const fill = Math.min(100, (valuePct / scale) * 100)
-  const tick = Math.min(100, (minPct / scale) * 100)
+/** A value, with a mark on it, on a scale that fits both.
+ *
+ *  Both arguments are in whatever unit the caller is showing — the one caller
+ *  passes what the shares are worth and the price we would sell at. It used to
+ *  take two percentages, and its caller used to pass a cover ratio: shares as
+ *  a percentage of the debt, which reads 3,217% for somebody holding $12,500
+ *  against a $389 loan and pins the bar full every time. */
+export function meter(value: number, mark: number): HTMLElement {
+  const scale = Math.max(value, mark) * 1.1
+  const fill = scale > 0 ? Math.min(100, (value / scale) * 100) : 0
+  const tick = scale > 0 ? Math.min(100, (mark / scale) * 100) : 0
   return h('div', { class: 'meter-track' },
     h('div', { class: 'meter-fill', style: { width: fill + '%' } }),
     h('div', { class: 'meter-tick', style: { left: `calc(${tick}% - 1px)` } }))

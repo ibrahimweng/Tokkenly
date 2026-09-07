@@ -79,13 +79,17 @@
 }
 
 /* -------------------------------------------------- borrowing and lending --
-   Two products, one anatomy, mirrored. The field bleeds to the card's own
-   edge — top on the lending card, bottom on the borrowing one — so the two
-   read as halves of one thing rather than as a pair of panels that happen to
-   sit beside each other. */
-/* Equal heights, so the two fields sit on one line at the top and one at the
-   bottom rather than at four different heights. The spacer inside each card
-   takes up whatever the other card's extra copy costs. */
+   Two products, one anatomy. Both cards read top to bottom in the same order:
+   the name, the sentence, the figures, your position, the button — and then
+   the field, bleeding to the card's own bottom edge under it.
+
+   The field used to sit at the top of the lending card and the bottom of the
+   borrowing one, which made a nice mirror and cost 128 pixels: the lending
+   card's title started where the borrowing card's figures were, and its button
+   sat 128 pixels below the other button. Two cards side by side with their
+   titles and their actions at different heights read as one card that has
+   slipped, not as a pair. The mirror is now the field itself — flipped, and in
+   the other colour — rather than which end of the card it is at. */
 .row.prods { align-items: stretch; }
 .card.prod { padding: 0; overflow: hidden; gap: 0; flex: 1 1 0; min-width: 0; }
 .card.prod > *:not(.prod-art) { padding-inline: 24px; }
@@ -96,43 +100,68 @@
    that every other child gets from the rule above; `width: auto` lets the
    flex column stretch it into the space the margins leave, which is what the
    margins were for. */
-.card.prod > .btn:last-child { margin: 0 24px 24px; width: auto; }
+.card.prod > .btn { margin-inline: 24px; width: auto; }
 .card.prod .stack-8 + .stack-12 { padding-top: 16px; }
 .card.prod .stack-12 + .spacer { min-height: 16px; }
-.prod-art { height: 132px; overflow: hidden; flex: none; }
+/* Under the button, against the card's own edge. Nothing comes between the
+   words and the button they belong to: the field used to sit between the
+   figures and the action on the borrowing card, which put a picture in the
+   middle of a sentence and made the button read as belonging to the art
+   rather than to the offer above it. */
+.prod-art { height: 132px; overflow: hidden; flex: none; margin-top: 20px; }
 .prod-art svg { display: block; width: 100%; height: 100%; }
-/* Lending leads with its field; borrowing carries it under the figures. Both
-   end on the button, so the two actions sit at the same height. */
-.prod-lend > .prod-art { margin-bottom: 20px; }
-.prod-borrow > .prod-art { margin-bottom: 20px; }
-.prod-borrow > .stack-8:first-child { padding-top: 24px; }
+/* Taller, so the composition does not run out before the card does. */
+.card.prod { min-height: 460px; }
 
-/* The name leads and the sentence finishes in grey. It was the rate at 32px
-   over an 11px label, which made the loudest thing on both cards the one fact
-   they have in common. */
 /* The name of the thing, at the size a name gets. It used to be the eyebrow —
    eleven pixels of caps, the quietest type on the card, carrying the one word
    somebody actually needs. */
 .prod-title { margin: 0; font-size: 28px; line-height: 34px; font-weight: 600; letter-spacing: -0.01em; }
-/* A label and its question mark travel together. */
-.kv-key { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
 /* The one sentence under the name. It is support, so it sits at body size and
    in grey: it used to be 20px semibold, which made it compete with the thing
    it was supporting. */
 .prod-say { margin: 0; font-size: 15px; line-height: 22px; }
-@media (max-width: 899px) {
-  .card.prod > *:not(.prod-art) { padding-inline: 20px; }
-  .card.prod > .btn:last-child { margin: 0 20px 20px; width: auto; }
-  .card.prod > .stack-8:first-child, .prod-borrow > .stack-8:first-child { padding-top: 20px; }
-  .prod-art { height: 108px; }
-  /* The name of the thing, at the size a name gets. It used to be the eyebrow —
-   eleven pixels of caps, the quietest type on the card, carrying the one word
-   somebody actually needs. */
-.prod-title { margin: 0; font-size: 28px; line-height: 34px; font-weight: 600; letter-spacing: -0.01em; }
 /* A label and its question mark travel together. */
 .kv-key { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
-.prod-say { font-size: 18px; line-height: 25px; }
+
+/* The figure this card is about, immediately above the button that acts on it.
+   Smaller than a hero figure on purpose: the card is a door with your position
+   written on the handle, not a dashboard. */
+.prod-standing { display: flex; flex-direction: column; gap: 4px; padding-bottom: 4px; }
+.prod-figure { font-size: 28px; line-height: 34px; font-weight: 600; letter-spacing: -0.02em; }
+.prod-figure.warn { color: var(--warn); }
+
+/* The whole card answers to the pointer, because the whole card is one offer.
+   A step in the surface and nothing else: no shadow, no gradient, no lift.
+   Rule 46 already made hover a surface change on Home's doors, and a card that
+   moves under the cursor reads as selected rather than as hovered — movement
+   is what a press is for. */
+@media (hover: hover) {
+  .card.prod { transition: background var(--t-fast) var(--ease); }
+  .card.prod:hover { background: var(--sunken-hover); }
+  /* The button inside it steps too, so the card lighting up does not leave the
+     one thing you came to press looking flat against it. */
+  .card.prod:hover > .btn { background: var(--control-pressed); }
 }
+
+@media (max-width: 899px) {
+  .card.prod > *:not(.prod-art) { padding-inline: 20px; }
+  .card.prod > .btn { margin-inline: 20px; }
+  .card.prod > .stack-8:first-child { padding-top: 20px; }
+  /* One card at a time on a phone, so there is no second card to be as tall
+     as, and 460 is a screenful of one offer. */
+  .card.prod { min-height: 0; }
+  .prod-art { height: 108px; }
+  .prod-title { font-size: 24px; line-height: 30px; }
+  .prod-figure { font-size: 24px; line-height: 30px; }
+}
+
+/* Six short answers, in as many columns as the width can carry a sentence in.
+   Three at desktop, two on a tablet, one on a phone: at 390 wide, three
+   columns are 100px each and every answer reads two words to a line. */
+.qgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+@media (max-width: 1023px) { .qgrid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 899px) { .qgrid { grid-template-columns: 1fr; gap: 20px; } }
 
 /* ---------- cards ---------- */
 .card {
@@ -312,7 +341,11 @@
 .amount-note { color: var(--muted); font-size: 12px; }
 .ruler { width: 100%; height: 72px; position: relative; cursor: ew-resize; user-select: none; }
 .ruler canvas { width: 100%; height: 100%; display: block; }
-.hint { text-align: center; color: var(--subtle); font-size: 12px; }
+/* What the ruler is for, under the ruler. Called `.hint` until the help button
+   took that name and, being later in this file, drew a 24px grey circle over
+   every one of these. Rule 37 is about the words in the product; it is worth
+   as much in the stylesheet. */
+.ruler-note { text-align: center; color: var(--subtle); font-size: 12px; }
 
 /* ---------- tables ---------- */
 .table-scroll { overflow-x: auto; }
@@ -563,6 +596,10 @@
   display: inline-grid; place-items: center;
   background: var(--control); color: var(--muted);
   font-size: 12px; font-weight: 600; line-height: 1;
+  /* So the circle the mobile rule draws below stays behind the glyph. A
+     positioned pseudo-element paints above its parent's inline content, which
+     on a phone left a plain grey disc where the question mark should be. */
+  isolation: isolate;
 }
 @media (hover: hover) { .hint:hover { background: var(--control-pressed); color: var(--ink); } }
 .hint[aria-expanded='true'] { background: var(--inverse); color: var(--on-inverse); }
@@ -579,7 +616,7 @@
   }
   .hint::before {
     content: ''; position: absolute; inset: 10px; border-radius: 999px;
-    background: var(--control);
+    background: var(--control); z-index: -1;
   }
   .hint[aria-expanded='true'] { background: none; color: var(--on-inverse); }
   .hint[aria-expanded='true']::before { background: var(--inverse); }

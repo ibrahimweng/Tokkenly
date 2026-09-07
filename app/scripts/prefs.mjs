@@ -63,8 +63,11 @@ console.log('HIDE MY BALANCES  the switch, and where it sits')
   // it short of four taps into Preferences.
   // The figure is whichever element the switch was paired with, which is the
   // point: the test cannot name one without naming the other.
+  // Borrow & Lend's own hero is gone, and the figure it carried went to the two
+  // position pages the cards open. The switch went with it — that is the rule,
+  // and these two routes are where it now has to hold.
   const sel = '.figure-eye > :first-child'
-  for (const route of ['/', '/transfer', '/grow']) {
+  for (const route of ['/', '/transfer', '/grow/lending', '/grow/borrowing']) {
     await at(route)
     const where = await p.evaluate(() => {
       const e = document.querySelector('.eye-btn')
@@ -88,11 +91,20 @@ console.log('HIDE MY BALANCES  the switch, and where it sits')
   // One switch, one setting: covering on Home covers everywhere.
   await at('/')
   await p.locator('.eye-btn').first().click(); await p.waitForTimeout(350)
-  await at('/grow')
+  await at('/grow/borrowing')
   ok('one switch, not one per screen',
      (await p.evaluate(() => document.querySelector('.hero-figure')?.textContent)) === MASK)
   ok('and it says which way it is pointing',
      (await p.evaluate(() => document.querySelector('.eye-btn')?.getAttribute('aria-pressed'))) === 'true')
+  // And a figure that is not a headline follows the setting without a switch
+  // of its own: the two cards on Borrow & Lend are positions, like a holding on
+  // a company page. Two eyes on one screen would suggest two things to cover.
+  await at('/grow')
+  ok('the cards follow it with no switch of their own',
+     (await p.evaluate(() => [...document.querySelectorAll('.prod-figure')].map((e) => e.textContent)))
+       .every((t) => t === MASK) &&
+     (await p.evaluate(() => document.querySelectorAll('.eye-btn').length)) === 0)
+  await at('/')
   await p.locator('.eye-btn').first().click(); await p.waitForTimeout(350)
   // Preferences still has it, because a control found by accident once is a
   // control you cannot find again on purpose.

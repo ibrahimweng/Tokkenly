@@ -14,7 +14,10 @@ import { walletScreen } from './screens/wallet'
 import { marketScreen } from './screens/market'
 import { stockScreen } from './screens/stock'
 import { investScreen, sellScreen } from './screens/invest'
-import { growScreen, borrowScreen, repayScreen, earnScreen, takeOutScreen } from './screens/grow'
+import {
+  growScreen, borrowScreen, repayScreen, earnScreen, takeOutScreen,
+  lendingScreen, borrowingScreen,
+} from './screens/grow'
 import { historyScreen } from './screens/history'
 import { accountScreen } from './screens/settings'
 import { statementScreen } from './screens/statement'
@@ -102,6 +105,11 @@ function screenFor(r: Route): HTMLElement {
 
   if (a === 'grow') {
     if (!b) return growScreen()
+    // The two positions. The buttons on the cards lead here rather than
+    // straight into a composer: somebody with an open loan came to look at it,
+    // not to take another one.
+    if (b === 'lending') return lendingScreen()
+    if (b === 'borrowing') return borrowingScreen()
     if (b === 'borrow') return borrowScreen()
     if (b === 'repay') return repayScreen()
     if (b === 'earn') return earnScreen()

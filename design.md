@@ -5162,7 +5162,9 @@ one place a balance is masked by default had no way to uncover it short of four
 taps into Preferences.
 
 It sits on the figure's own line now, on the four screens with a headline
-balance and nowhere else: Home in both views, Transfer, Grow. Quiet at rest —
+balance and nowhere else: Home in both views, Transfer, Grow. (Grow's went
+where Grow's headline figure went, when that screen lost its hero: 11g.43.)
+Quiet at rest —
 a filled circle beside a 40px number is a second thing to look at — and it
 takes its surface under the pointer, the way a control should. One per screen,
 because it is one setting: a second eye on the same page would suggest two
@@ -6133,7 +6135,167 @@ why one reader now serves both.
      never fire. When a rule carries a get-out, the get-out has to be a
      different string from the thing it excuses.
 
-### 11g.43 Still open
+### 11g.43 A card is a door, and a position is a page
+
+Borrow & Lend opened with a hero: "Lent out" and "You owe" in display type,
+side by side, above two cards that showed the same two figures again forty
+pixels lower. The page said everything twice and led with the half that is not
+a decision. It is deleted. The page is two cards and the questions people ask,
+and nothing else.
+
+**The figure goes on the handle.** Each card now carries one figure — what you
+have lent, what you owe — immediately above the button that acts on it, at
+28px rather than the hero's 56. That is the whole of the hero's content, in the
+place where it is the reason to press something rather than an announcement.
+
+**The corner links are gone.** "Repay" and "Take it back" sat beside each
+button in eleven-pixel type, and between them they were the entire set of
+things somebody with an open position could do. Two words in the quietest type
+on the card, for the thing the person came to the screen for. The button leads
+to a page per side instead — `/grow/lending` and `/grow/borrowing` — and the
+page holds what the position is, what it costs, what backs it, everything that
+built it, and the two or three things to do next. The composers still live at
+the addresses they always had; these are the pages that send you to them.
+
+One honest limitation is stated on the borrowing page rather than designed
+around: a loan is one balance, not a stack of separate loans. Money is
+fungible, so there is no "repay this draw". Repaying reduces the balance. The
+history below it is what happened, not a list of things that can each be
+settled on their own, and pretending otherwise would be a fiction that costs
+somebody money the first time they believed it.
+
+**The mirror cost 128 pixels.** The dot field used to bleed off the top of the
+lending card and the bottom of the borrowing one — one composition reflected,
+which is a nicer idea than it is a layout. Putting the band above the lending
+card's words started that card's title level with the other card's figures and
+left the two buttons 128 pixels apart. Two cards side by side with their names
+at different heights and their actions at different heights do not read as a
+mirrored pair; they read as one card that has slipped.
+
+So the field goes under the button on both, against the card's own bottom edge,
+and the order is identical: the name, the sentence, the figures, your position,
+the button, the field. The mirror is now the field itself — flipped, and lit in
+the other colour — rather than which end of the card it sits at. Measured: both
+cards 460 tall, both buttons at 252.
+
+That also settles what the band was doing in the middle of the borrowing card,
+between the figures and the action. A picture between a sentence and the button
+that answers it makes the button read as belonging to the picture.
+
+**The switch went with the figure.** The privacy eye sat on the hero, which is
+the rule — it belongs beside the number it covers and nowhere else (11g.24).
+Deleting the hero deleted the only way to uncover a masked balance on this
+screen, which is the exact failure that put the eye there in the first place,
+and `prefs.mjs` caught it on the first run. It did not go back on a card. A
+card figure is a position, like a holding on a company page, and positions
+follow the setting without a switch of their own; two eyes on one screen would
+suggest two things to cover. It went where the headline figure went: to the top
+of each position page. The suite walks those two routes now, and asserts the
+other half as well — that Borrow & Lend masks both cards and offers no switch.
+
+**Hover is a step in the surface.** The whole card answers the pointer, because
+the whole card is one offer — background only, no shadow, no gradient, no lift,
+and the button inside it steps with it so the card lighting up does not leave
+the one thing you came to press looking flat against it. A card that moves
+under the cursor reads as selected rather than as hovered. Movement is what a
+press is for.
+
+**The cover ratio read 3,217%.** The borrowing page showed the shares as a
+percentage of the debt — $12,509 of shares against a $389 loan — under a bar
+that was pinned full. It is a true number and nobody thinks in it. The same
+fact, in the words somebody would use to ask for it, is *how far can it fall
+before you touch it*: 96%. The bar underneath is now what the shares are worth
+with the sell price marked on it, so the gap between the fill and the line is
+the answer drawn. Two rows lost their fragment labels the same way — "About a
+month" became "A month pays" on one page and "A month costs" on the other,
+because a row is a sentence read across, not a heading with a number beside it.
+
+The borrowing composer carried the identical figure under the identical label,
+so it got the identical fix, and the scenarios table under it — "if your shares
+fall 96%, we sell enough to cover" — now reads the same variable rather than
+recomputing it, so the two cannot drift apart.
+
+Chasing the number turned up a smaller thing: the rule was written against one
+quantity and measured against another. The sell price is 140% of what you
+*borrowed*; three screens said "140% of what you owe", which on this account is
+a different number — $380 against $388.90 — sitting a few rows up the same
+page. The words now say what the model measures. Whether the model is right is
+a separate question, and it is in Still open: a real maintenance requirement is
+against the whole debit balance, interest included.
+
+**And the cross-reference.** The MVP brief lists ten features, and borrowing
+and lending are not among them. They are in the section headed *Not included in
+the MVP* — "Earn or yield products", "Stock-backed credit or any other
+lending" — with a note that Earn & Credit is a future product family needing
+its own legal and risk review. So there is no specification to check the
+repayment flow against: this whole place is ahead of the brief, and what a
+borrower can do here was decided in this file, not in that one. It is left
+standing and working, because a prototype's job is to show the product; the
+gap is recorded here so nobody mistakes it for a requirement that was met.
+
+**Then the phone found three more.** None of them is about Borrow & Lend; all
+three were found by opening it at 390 wide, which is the argument for looking
+at every screen on a phone rather than trusting that the rules held.
+
+*The question mark was a plain grey disc.* Rule 35 wants 44px under a thumb and
+a 44px question mark would be a button the size of the figure it annotates, so
+the mobile rule makes the button really 44, gives 20 back as negative margin,
+and draws the visible 24px circle with a positioned pseudo-element inside it
+(11g.42). A positioned pseudo-element paints above its parent's inline content.
+The circle was painting over the "?". `isolation: isolate` on the button and
+`z-index: -1` on the circle put it back underneath.
+
+No suite caught it because every check on that button measures its box, and
+painted-or-not-painted is a question about pixels. So `a11y.mjs` now asks about
+pixels: it shoots the button, sets `color: transparent` on it, shoots it again,
+and fails if the two images are identical — because that means the glyph was
+never being drawn. Two viewports, since this one only ever went wrong on the
+phone.
+
+*Six answers in three 100px columns.* "Questions people ask" carried
+`gridTemplateColumns: repeat(3, 1fr)` as an inline style, and an inline style
+cannot be asked how wide the screen is. Every answer read two words to a line.
+It is a class now: three columns, two on a tablet, one on a phone.
+
+*And a class name collided.* The help button took the name `.hint`, which had
+belonged since item 19 to the caption under the amount ruler — "Drag to adjust,
+or type. Up to $2,480.00." The button's block sits later in the stylesheet, so
+it won, and that caption became a 24px grey circle with the sentence clipped
+inside it. On every composer in the product: lend, take out, borrow, repay,
+buy, sell, add money, send. It shipped in the previous commit and nothing
+failed, because no suite reads a caption's shape and the words themselves were
+still in the DOM for `words.mjs` to find. The caption is `.ruler-note` now.
+
+116. **A pair is read across.** Two cards side by side are scanned as rows —
+     name against name, figure against figure, button against button. A
+     composition that is beautiful in one card and shifts the other by a
+     hundred pixels has broken the row to keep the idea. Align first, and let
+     the mirror be colour, direction and content.
+
+117. **A ratio is not a sentence.** Any figure that needs the reader to hold
+     two quantities and a direction in their head — cover, exposure, a
+     multiple — is arithmetic shown instead of the answer. Print the thing they
+     would have asked for: not "3,217% covered" but "your shares can fall 96%".
+
+118. **A row is a sentence read across.** "About a month — $4.96" is a heading
+     with a number beside it. "A month pays — $4.96" is a sentence. The label
+     is the first half, the value is the second, and a label that cannot finish
+     in the value is the wrong label.
+
+119. **A class name is a noun, and rule 37 applies to it.** One noun per thing,
+     in the stylesheet as much as on the screen. Two different things sharing a
+     class name is not a naming problem that someone will tidy later — the
+     later block silently wins on every property they share, on every screen
+     that uses the older one, and the build stays green. Before taking a name,
+     grep for it.
+
+120. **A check that measures a box cannot see paint.** Every assertion about a
+     control being big enough, present, labelled and in the tab order can pass
+     while the thing is invisible. When a rule is about what somebody sees,
+     find a way to ask about pixels — two screenshots that must differ is
+     usually enough, and needs no image library.
+
+### 11g.44 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from
   using the product afterwards. Item 30 was held back until it was asked for,
@@ -6160,8 +6322,21 @@ why one reader now serves both.
 - Every provider is dummy data: CDP, Didit, Switch, 0x, Chainlink and viem are
   named, their health is shown, their fallbacks are written and none of them is
   called. That is the seam, and it is the whole remaining engineering job.
+- The sell price is 140% of the principal, not of the whole balance — interest
+  accrued is outside the requirement. Every screen now says so in those words
+  (11g.43), which makes the product honest rather than right: a real
+  maintenance requirement counts the interest too. `sellPoint()` and `cover()`
+  are one line each and the change would ripple into the borrow composer's
+  projection, which is why it is written down here rather than guessed at.
 - The console has no roles. Anybody who can reach `/admin` sees everything, and
   a real one separates support from risk from engineering.
+- Borrow & Lend is not in the MVP brief at all — it is in that brief's *Not
+  included* list, as a future product family needing its own legal and risk
+  review (11g.43). Everything in it works and nothing in it has been specified
+  by anyone but this file. The two things it would need first from a real one
+  are a margin call — a notification, and a screen for the day the shares fall
+  — and a policy for what happens to an open loan when somebody wants to sell
+  the shares backing it. Neither exists here.
 - One notification is written by the product and five are seeded. Every other
   event still completes inside the dialog that started it, so nothing else has
   anything to announce — but a real product would have a price alert and a

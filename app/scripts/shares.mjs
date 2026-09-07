@@ -145,8 +145,8 @@ console.log('ONE LIMIT POLICY FOR EVERY OUTFLOW  a share leaving is an outflow')
   await at(p, '/invest/aapl/send?to=Tunde%20Bakare')
   // Unverified: $250 a payment, and $5,248 of Apple in the account.
   ok('unverified, the ceiling is the limit and not the holding',
-     /Up to \$250\.00/.test(await p.evaluate(() => document.querySelector('.hint')?.textContent ?? '')),
-     await p.evaluate(() => document.querySelector('.hint')?.textContent))
+     /Up to \$250\.00/.test(await p.evaluate(() => document.querySelector('.ruler-note')?.textContent ?? '')),
+     await p.evaluate(() => document.querySelector('.ruler-note')?.textContent))
   const i = p.locator('.amount-box input')
   await i.fill('4000'); await i.dispatchEvent('input'); await p.waitForTimeout(400)
   const why = await p.evaluate(() => {
@@ -157,8 +157,8 @@ console.log('ONE LIMIT POLICY FOR EVERY OUTFLOW  a share leaving is an outflow')
   await verify(p)
   await at(p, '/invest/aapl/send?to=Tunde%20Bakare')
   ok('verifying raises it', /Up to \$2,500\.00/.test(
-     await p.evaluate(() => document.querySelector('.hint')?.textContent ?? '')),
-     await p.evaluate(() => document.querySelector('.hint')?.textContent))
+     await p.evaluate(() => document.querySelector('.ruler-note')?.textContent ?? '')),
+     await p.evaluate(() => document.querySelector('.ruler-note')?.textContent))
   const chips = await p.evaluate(() => [...document.querySelectorAll('.col-compose .chip')].map((c) => c.textContent))
   // $5,248 of Apple against a $2,500 ceiling: "All" would be a lie.
   ok('and the last chip says which ceiling it reaches',

@@ -48,6 +48,12 @@ export const DESTINATIONS: Destination[] = [
 
   { label: 'Borrow & Lend', to: '/grow', place: 'grow', kind: 'place', primary: true,
     also: 'earn grow interest yield loan credit save lending' },
+  { label: 'Lending', to: '/grow/lending', place: 'grow', kind: 'screen', primary: true,
+    also: 'lent out earnings interest paid what you lent',
+    hint: 'What you have lent, and what it has paid' },
+  { label: 'Borrowing', to: '/grow/borrowing', place: 'grow', kind: 'screen', primary: true,
+    also: 'loan owed debt what backs it shares against the loan',
+    hint: 'What you owe, and what backs it' },
   { label: 'Lend your dollars', to: '/grow/earn', place: 'grow', kind: 'action', primary: true,
     also: 'earn save interest yield deposit', hint: '4.8% a year, paid daily' },
   { label: 'Take back what you lent', to: '/grow/takeout', place: 'grow', kind: 'action', primary: true,

@@ -478,7 +478,7 @@ const QA: [string, string][] = [
   ['Why do you need my NIN or BVN', 'Nigerian law requires it before you hold a balance'],
   ['What happens if I lose my phone', 'Sign in on another one with your recovery phrase'],
   ['Can I take back what I have lent at any time', 'Yes, with no notice and no fee. It lands in your wallet the same day'],
-  ['What happens if my shares fall while I owe', 'We only sell if your cover drops under 140%, and not before'],
+  ['What happens if my shares fall while I owe', 'We only sell if they fall to 140% of what you borrowed, and not before'],
   ['Do you charge me to buy a stock', 'Half a per cent of the amount, shown before you commit'],
   ['How do I change my PIN', 'Account, then Security, then App PIN'],
   ['What if I forget my password', 'Use Forgotten your password on the sign in screen'],

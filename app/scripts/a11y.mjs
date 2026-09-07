@@ -193,6 +193,30 @@ console.log('WHAT A THUMB CAN HIT')
   const list = [...small.values()]
   ok('nothing on a phone is under 44 tall', list.length === 0,
      list.map((x) => `${x.k} ${x.h}px on ${x.where}`).join('; ') || 'none')
+
+  // And the target still has to look like what it is. The help button is 44
+  // wide with the visible 24px circle drawn by a positioned pseudo-element
+  // inside it, and a positioned pseudo-element paints above its parent's own
+  // text: for one tier the circle covered the question mark and every check on
+  // this button — which all measure its box — passed.
+  //
+  // Painted or not painted is a question about pixels, so this asks about
+  // pixels: shoot the button, make its glyph transparent, shoot it again. If
+  // the two images are the same, the glyph was not being drawn.
+  for (const [w, tag] of [[390, 'a phone'], [1440, 'a desktop']]) {
+    const g = await b.newPage({ viewport: { width: w, height: 900 } })
+    await seen(g)
+    await g.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
+    await g.goto(B + '/grow', { waitUntil: 'domcontentloaded' }); await g.waitForTimeout(400)
+    const el = g.locator('.hint').first()
+    const shown = await el.screenshot()
+    await g.addStyleTag({ content: '.hint { color: transparent !important }' })
+    await g.waitForTimeout(120)
+    const blank = await el.screenshot()
+    ok(`  and the question mark is drawn on ${tag}`, !shown.equals(blank),
+       shown.equals(blank) ? 'its own circle is painted over it' : 'visible')
+    await g.close()
+  }
   await m.close()
 }
 

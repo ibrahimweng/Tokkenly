@@ -63,7 +63,7 @@ export function amountComposer(opts: {
   // What a drag is for, and what it can reach. "Type an amount, or drag the
   // ruler" named the control without saying what it did or where it stopped,
   // which is most of why the ruler read as texture.
-  const hint = h('p', { class: 'hint',
+  const hint = h('p', { class: 'ruler-note',
     text: `Drag to adjust, or type. Up to ${usd(opts.max)}.` })
 
   const chips = h('div', { class: 'chip-row', style: { justifyContent: 'center' } })

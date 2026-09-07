@@ -1,19 +1,23 @@
 import { chromium } from 'playwright'
 import { seen } from './seen.mjs'
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
-const p = await b.newPage({ viewport: { width: 1440, height: 1000 } })
+const p = await b.newPage({ viewport: { width: 1440, height: 1150 } })
 await seen(p)
 await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
-for (const r of ['/signin', '/signup', '/welcome/0', '/welcome/1', '/welcome/2', '/welcome/3']) {
-  await p.goto('http://localhost:4173/#' + r, { waitUntil: 'domcontentloaded' })
-  await p.waitForTimeout(500)
-  const t = await p.evaluate(() => {
-    const root = document.querySelector('.auth, .welcome, .lock')
-    return [...root.querySelectorAll('p, span, small, h1, h2, strong, button, label')]
-      .filter((e) => !e.querySelector('*') && (e.textContent ?? '').trim().length > 12)
-      .map((e) => e.textContent.replace(/\s+/g, ' ').trim())
-  })
-  console.log('\n### ' + r)
-  for (const line of t) console.log('   ' + line)
-}
+await p.goto('http://localhost:4173/#/grow', { waitUntil: 'domcontentloaded' })
+await p.waitForTimeout(700)
+console.log(JSON.stringify(await p.evaluate(() => {
+  const out = {}
+  for (const k of ['lend', 'borrow']) {
+    const c = document.querySelector('.prod-' + k)
+    const r = c.getBoundingClientRect()
+    out[k] = {
+      cardTop: Math.round(r.top), cardH: Math.round(r.height),
+      parts: [...c.children].map((e) => e.className.split(' ')[0] + '=' + Math.round(e.getBoundingClientRect().height)),
+      btnTop: Math.round(c.querySelector('.btn').getBoundingClientRect().top - r.top),
+      gap: Math.round((c.querySelector('.spacer')?.getBoundingClientRect().height) ?? 0),
+    }
+  }
+  return out
+}), null, 1))
 await b.close()

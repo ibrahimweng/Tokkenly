@@ -1,12 +1,12 @@
 import { h } from '../ui'
 import { shell, pageHeader } from '../components/shell'
-import { card, cardHead, kv, meter } from '../components/bits'
+import { card, cardHead, kv, meter, callout, figureWithEye } from '../components/bits'
 import { composerScreen, scenarios } from '../components/composer'
 import { table } from '../components/table'
-import { amount, figureWithEye } from '../components/bits'
+import { amount } from '../components/bits'
 import {
-  state, holdingsValue, owed, availableToBorrow, cover, sellPoint,
-  monthlyCost, monthlyInterest, movementCeiling, ceilingLabel, money, MASK, inNaira,
+  state, holdingsValue, owed, availableToBorrow, sellPoint,
+  monthlyCost, monthlyInterest, movementCeiling, ceilingLabel, money, MASK,
 } from '../state'
 import { usd, pct, signed, when } from '../format'
 import { go, openSheet } from '../router'
@@ -30,12 +30,12 @@ import { hint, type Hint } from '../components/hint'
    and the rate is inside that sentence where it belongs — a fact about the
    offer rather than the offer itself.
 
-   And they are mirrored rather than identical. One composition, reflected: the
-   lending card carries its field at the top in green, the borrowing card
-   carries the same field flipped at the bottom in amber. Same anatomy, and no
-   chance of mistaking one for the other from across a room. Each field is
-   keyed to its own figure, the way the doors on Home are — how much of your
-   spendable money is out on loan, and how much of your limit you have drawn.
+   And they are mirrored rather than identical. Same anatomy top to bottom, and
+   the field under the button on both — but the lending card's is flipped and
+   lit in green, the borrowing card's runs the other way in amber. No chance of
+   mistaking one for the other from across a room. Each field is keyed to its
+   own figure, the way the doors on Home are — how much of your spendable money
+   is out on loan, and how much of your limit you have drawn.
    --------------------------------------------------------------------------- */
 
 /* ---------------------------------------------------------------------------
@@ -66,20 +66,22 @@ function productCard(opts: {
   say: string
   art: ArtSpec; ramp: Record<string, string>; at: number
   rows: [string, string | Node, Hint?][]
+  /** The one figure this card is about, sitting directly above its button.
+   *  Label, value, and a tone when the value is money you owe. */
+  standing: [string, string, string?]
   cta: string; ctaTo: string
-  linkLabel: string; linkTo: string
 }): HTMLElement {
   // Anchored to the bottom on both, which is the dense end of the composition
-  // and the end the account wakes first. On the lending card that puts the lit
-  // mass against the words; on the borrowing one it puts it against the card's
-  // own edge. Same field, and the two crops are the mirror.
+  // and the end the account wakes first — so the lit mass sits against the
+  // card's own bottom edge and the empty end of the field faces the button.
   // Four across: the band is about 494 wide and the field is 24 columns, so
   // one copy of it put 20 pixels between dot centres and a 17px ball in each.
   const band = h('div', { class: 'prod-art' }, dotArt(opts.art, opts.at, opts.ramp, [4, 2]))
+  // No second link in the corner. "Repay" and "Take it back" were two more
+  // decisions on a card whose job is one, and both are the first thing on the
+  // page the button already leads to.
   const words = h('div', { class: 'stack-8' },
-    h('div', { class: 'card-head' },
-      h('h2', { class: 'prod-title', text: opts.title }),
-      h('button', { class: 'link', text: opts.linkLabel, on: { click: () => go(opts.linkTo) } })),
+    h('h2', { class: 'prod-title', text: opts.title }),
     h('p', { class: 'prod-say muted', text: opts.say }))
   // The question mark goes on the label, not the figure: a question mark after
   // a number reads as doubt about the number.
@@ -92,105 +94,86 @@ function productCard(opts: {
   const action = h('button', { class: 'btn btn-secondary', text: opts.cta,
     on: { click: () => go(opts.ctaTo) } })
 
+  // The figure this card is really about, immediately above the button that
+  // acts on it. It is smaller than a hero figure on purpose: the card is not a
+  // dashboard, it is a door with your position written on the handle.
+  const standing = h('div', { class: 'prod-standing' },
+    h('span', { class: 't-caps subtle', text: opts.standing[0] }),
+    h('span', { class: 'prod-figure' + (opts.standing[2] ? ' ' + opts.standing[2] : ''),
+      text: opts.standing[1] }))
+
   const c = card()
   c.classList.add('prod', 'prod-' + opts.key)
-  // The mirror, in one line: the field leads on one card and sits under the
-  // figures on the other. The button is last on both, because it is the only
-  // arrangement in which two mirrored cards can put their actions at the same
-  // height — with the band last on one of them, the two buttons were 128px
-  // apart and the borrowing one read as floating in the middle of its card.
-  if (opts.key === 'lend') {
-    c.append(band, words, figures, h('div', { class: 'spacer' }), action)
-  } else {
-    c.append(words, figures, h('div', { class: 'spacer' }), band, action)
-  }
+  // Nothing comes between the words and the button they belong to. The field
+  // used to sit between the figures and the action on the borrowing card,
+  // which put a picture in the middle of a sentence and an action: the button
+  // read as belonging to the art rather than to the offer above it.
+  //
+  // So the field goes under the button on both, against the card's own bottom
+  // edge, and the order is the same on both: the name, the sentence, the
+  // figures, your position, the button. It was the field at the top of one
+  // card and the bottom of the other, which is a nicer idea and costs 128
+  // pixels: it started the lending card's title level with the borrowing
+  // card's figures and left the two buttons at different heights. The mirror
+  // is the field itself — flipped, and in the other colour — not which end of
+  // the card it sits at.
+  c.append(words, figures, h('div', { class: 'spacer' }), standing, action, band)
   return c
 }
 
 const QUESTIONS: [string, string][] = [
   ['Can I lose money lending?', 'Your dollars sit in short term US government debt. The rate can go up or down. It is not a guarantee.'],
-  ['What if my shares fall?', 'We only sell if your shares drop below 140% of what you owe. Repay some, or add shares, and nothing is sold.'],
+  ['What if my shares fall?', 'We only sell if they fall to 140% of what you borrowed. Repay some, or add shares, and nothing is sold.'],
   ['Is anything locked up?', 'No. Take back what you lent any time. Repay a loan any time. No fee either way.'],
   ['When does interest start?', 'The next morning. After that it lands in your wallet every day.'],
   ['Can I use both at once?', 'Yes. What you lent keeps paying while a loan is open.'],
   ['What does borrowing cost?', 'Just the interest, charged daily on what you owe. No other fees.'],
 ]
-
-/** Where this account stands: what is lent out, and what is owed.
- *  The card used to be labelled "In Grow" and show the lent balance alone,
- *  which read as the whole place while $380 of borrowing and $8.90 of
- *  interest were on the books and named nowhere on the screen. A lending
- *  product that shows the limit and hides the balance is selling, not
- *  informing. The owed side appears only when there is a loan: a zero here
- *  would be a figure nobody asked for. */
-function growHero(): HTMLElement {
-  const debt = owed()
-  return h('section', { class: 'card' },
-    h('div', { class: 'hero-top' },
-      h('div', { class: 'stack-8' },
-        h('span', { class: 't-caps subtle', text: 'Lent out' }),
-        figureWithEye(h('span', { class: 'hero-figure', text: money(state.lent) })),
-        inNaira(state.lent) ? h('span', { class: 'muted t-caption', text: inNaira(state.lent)! }) : null,
-        h('span', { class: 'muted',
-          text: `Paying you ${pct(state.rates.lend)} a year, every day. Nothing is locked up.` })),
-      debt > 0
-        ? h('div', { class: 'stack-8 hero-aside' },
-            h('span', { class: 't-caps subtle', text: 'You owe' }),
-            h('span', { class: 't-display', text: money(debt) }),
-            inNaira(debt) ? h('span', { class: 'muted t-caption', text: inNaira(debt)! }) : null,
-            h('span', { class: 'muted',
-              text: `${money(state.borrowed)} borrowed and ${money(state.interestOwed)} interest so far` }))
-        : null))
-}
-
 export function growScreen(): HTMLElement {
-  const qgrid = h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' } })
+  // A class rather than an inline style, because three columns is a desktop
+  // answer and an inline style cannot be asked about the width. At 390 it was
+  // three 100px columns of two-word lines.
+  const qgrid = h('div', { class: 'qgrid' })
   for (const [q, a] of QUESTIONS) {
     qgrid.appendChild(h('div', { class: 'stack-8' },
       h('span', { class: 't-body-strong', text: q }),
       h('span', { class: 'muted t-caption', text: a })))
   }
 
+  // Two cards and the questions, and nothing else. The hero above them showed
+  // "Lent out" and "You owe" in display type, and then both cards showed the
+  // same two figures again forty pixels lower. The page said everything twice
+  // and led with the half that is not a decision.
   return shell(
     'grow',
     pageHeader('Borrow & Lend'),
-    growHero(),
     h('div', { class: 'row prods' },
       productCard({
         key: 'lend', title: 'Lend',
-        linkLabel: 'Take it back', linkTo: '/grow/takeout',
         say: `Earn ${pct(state.rates.lend)} a year on cash you are not using.`,
         // How much of the money you could spend is out working. Not the whole
         // portfolio: shares are not money you chose to lend or not to.
         art: mirror(BORROW), ramp: LEND_RAMP,
         at: level(state.lent, state.lent + state.cash),
         rows: [
-          ['Lent out', money(state.lent), {
-            title: 'Lent out',
-            body: `Cash you have lent. Nothing is locked up, so you can take it back whenever you want. ${usd(1000, false)} pays about ${usd(monthlyInterest(1000))} a month.`,
-          }],
           ['Interest so far', h('span', { class: 'pos t-body-strong',
             text: state.prefs.hideBalances ? MASK : signed(state.interestPaid) })],
+          ['Rate', pct(state.rates.lend) + ' a year', {
+            title: 'The rate',
+            body: `It moves with the market, so it can go up or down. ${usd(1000, false)} lent pays about ${usd(monthlyInterest(1000))} a month at today's rate.`,
+          }],
         ],
-        cta: 'Lend dollars', ctaTo: '/grow/earn',
+        standing: ['Lent out', money(state.lent)],
+        cta: 'Lend dollars', ctaTo: '/grow/lending',
       }),
       productCard({
         key: 'borrow', title: 'Borrow',
-        linkLabel: 'Repay', linkTo: '/grow/repay',
         say: 'Get cash without selling your shares.',
         // How much of the limit is drawn, which is the one number a borrower
         // is actually watching.
         art: BORROW, ramp: OWE_RAMP,
         at: level(owed(), Math.max(state.borrowLimit, 1)),
         rows: [
-          // What is owed comes before what is available. The other order reads
-          // as an offer; this one reads as a position.
-          ...(owed() > 0
-            ? [['You owe', h('span', { class: 'warn t-body-strong', text: money(owed()) }), {
-                title: 'What you owe',
-                body: `What you borrowed plus interest so far. It costs ${pct(state.rates.borrow)} a year. Repay any part of it whenever you want, with no fee.`,
-              }] as [string, Node, Hint]]
-            : []),
           ['You can borrow', money(availableToBorrow())],
           ['Against', money(holdingsValue()) + ' in shares', {
             title: 'Against your shares',
@@ -200,7 +183,10 @@ export function growScreen(): HTMLElement {
             more: { label: 'What can go wrong', onClick: () => go('/disclosures') },
           }],
         ],
-        cta: 'Borrow money', ctaTo: '/grow/borrow',
+        standing: owed() > 0
+          ? ['You owe', money(owed()), 'warn']
+          : ['Borrowed so far', money(0)],
+        cta: 'Borrow money', ctaTo: '/grow/borrowing',
       })),
     card(cardHead('Questions people ask'), qgrid)
   )
@@ -298,8 +284,10 @@ export function borrowScreen(): HTMLElement {
     onAction: (v) => openSheet('borrow-review', { v: String(v) }),
     right: (v) => {
       const after = state.borrowed + v
-      const coverPct = after === 0 ? 0 : (shares / after) * 100
       const trigger = after * (state.rates.collateral / 100)
+      // How far the shares could fall before any of them is sold — the same
+      // figure the scenarios table below reaches for, so the two cannot drift.
+      const room = shares > 0 ? Math.max(0, ((shares - trigger) / shares) * 100) : 0
       const c = card(
         cardHead('What secures it',
           h('button', { class: 'link', text: 'Your positions', on: { click: () => go('/') } })),
@@ -308,20 +296,24 @@ export function borrowScreen(): HTMLElement {
         h('span', { class: 'muted', text: 'They stay yours. You keep any gains and any dividends while the loan is open.' }),
         h('div', { class: 'stack-12' },
           // "Collateral cover" was the last piece of insider vocabulary on a
-          // customer screen. The figure is what your shares are worth against
-          // what you owe, so that is what the row says, and the rule behind
+          // customer screen, and the plain-English version of it was still
+          // arithmetic: shares as a percentage of the debt, which reads in the
+          // thousands and pins its own bar full. The row asks the question
+          // somebody actually has — how far can it fall — and the rule behind
           // the number is behind the question mark rather than in a caption
           // nobody reads twice.
           h('div', { class: 'kv' },
             h('span', { class: 'kv-key' },
-              h('span', { class: 't-caps subtle', text: 'Shares against the loan' }),
+              h('span', { class: 't-caps subtle', text: 'Your shares can fall' }),
               hint({
-                title: 'Shares against the loan',
-                body: `Your shares have to be worth at least ${state.rates.collateral}% of what you owe. If they fall below that we sell just enough to bring it back.`,
+                title: 'Your shares can fall',
+                body: `Your shares have to be worth at least ${state.rates.collateral}% of the money you borrowed. If they fall below that, we sell just enough to bring it back.`,
               })),
-            h('span', { class: 'pos t-body-strong', text: Math.round(coverPct).toLocaleString('en-US') + '%' })),
-          meter(coverPct, state.rates.collateral),
-          h('span', { class: 'muted t-caption', text: 'The mark is the minimum. You are well above it.' })),
+            h('span', { class: 'pos t-body-strong', text: Math.round(room) + '%' })),
+          meter(shares, trigger),
+          h('span', { class: 'muted t-caption', text: room >= 25
+            ? 'The line is where we would sell. You are a long way above it.'
+            : 'The line is where we would sell. Borrow less, or add shares, to move away from it.' })),
         h('div', { class: 'stack-12' },
           kv('Already borrowed', usd(state.borrowed)),
           kv('After this borrow', usd(after)),
@@ -331,7 +323,7 @@ export function borrowScreen(): HTMLElement {
           [
             ['20%', usd(shares * 0.8), 'Nothing changes'],
             ['50%', usd(shares * 0.5), 'Nothing changes'],
-            [Math.round((1 - trigger / shares) * 100) + '%', usd(trigger), 'We sell enough to cover'],
+            [Math.round(room) + '%', usd(trigger), 'We sell enough to cover'],
           ])
       )
       return c
@@ -509,4 +501,186 @@ export function takeOutScreen(): HTMLElement {
   })
 }
 
-export { sellPoint, cover }
+export { sellPoint }
+
+/* ---------------------------------------------------------------------------
+   Where a position lives.
+
+   The two cards used to carry a second link in the corner — Repay, Take it
+   back — and that was the whole of what you could do with a position you
+   already held. Two words in eleven-pixel type, beside a button, for the
+   thing somebody with an open loan actually came to the screen to do.
+
+   So the button leads here instead. One page per side, holding what the
+   position is, what it costs, what backs it, everything that built it, and
+   the two or three things you can do next. The composers still exist at the
+   addresses they always had; this is the place that sends you to them.
+
+   One honest limitation, stated on the page rather than designed around: a
+   loan is one balance, not a stack of separate loans. Money is fungible, so
+   there is no "repay this draw" — repaying reduces the balance, oldest
+   interest first. The history below is what happened, not a list of things
+   that can each be settled on their own, and pretending otherwise would be a
+   fiction that costs somebody money the first time they trusted it.
+   --------------------------------------------------------------------------- */
+
+/** The figure a position page opens with, and the actions on it. */
+function positionHead(opts: {
+  label: string
+  value: string
+  tone?: string
+  say: string
+  primary: { label: string; to: string }
+  secondary?: { label: string; to: string }
+  rows: [string, string | Node, Hint?][]
+}): HTMLElement {
+  return h('section', { class: 'card' },
+    h('div', { class: 'stack-8' },
+      h('span', { class: 't-caps subtle', text: opts.label }),
+      // The switch that covers this number, on its line. It used to sit on the
+      // hero at /grow; the hero is gone and this is where that figure went.
+      figureWithEye(
+        h('span', { class: 'hero-figure' + (opts.tone ? ' ' + opts.tone : ''), text: opts.value })),
+      h('span', { class: 'muted', text: opts.say })),
+    h('div', { class: 'stack-12' },
+      ...opts.rows.map(([k, v, tip]) => h('div', { class: 'kv' },
+        h('span', { class: 'kv-key' }, h('span', { text: k }), tip ? hint(tip) : null),
+        typeof v === 'string' ? h('span', { class: 't-body-strong', text: v }) : v))),
+    // The actions, on the figure they act on. This is the whole reason the
+    // page exists.
+    h('div', { class: 'receipt-on' },
+      h('button', { class: 'btn btn-primary', text: opts.primary.label,
+        on: { click: () => go(opts.primary.to) } }),
+      opts.secondary
+        ? h('button', { class: 'btn btn-secondary', text: opts.secondary.label,
+            on: { click: () => go(opts.secondary!.to) } })
+        : null))
+}
+
+export function lendingScreen(): HTMLElement {
+  const out = state.lent
+  return shell(
+    'grow',
+    pageHeader('Lending', null, { back: { label: 'Borrow & Lend', to: '/grow' } }),
+    h('div', { class: 'row' },
+      h('div', { class: 'stack col-main' },
+        positionHead({
+          label: 'Lent out',
+          value: money(out),
+          say: out > 0
+            ? `Paying you ${pct(state.rates.lend)} a year, every morning.`
+            : 'You have not lent anything yet.',
+          rows: [
+            ['Earning', pct(state.rates.lend) + ' a year'],
+            ['Paid you so far', h('span', { class: 'pos t-body-strong',
+              text: state.prefs.hideBalances ? MASK : signed(state.interestPaid) })],
+            ['A month pays', money(monthlyInterest(out)), {
+              title: 'A month pays',
+              body: 'What today’s rate would pay on this amount over a month. The rate moves, so this is an estimate.',
+            }],
+            ['Locked up', 'Nothing'],
+          ],
+          primary: { label: 'Lend more', to: '/grow/earn' },
+          secondary: out > 0 ? { label: 'Take it back', to: '/grow/takeout' } : undefined,
+        }),
+        earnHistory()),
+      h('div', { class: 'stack col-side' },
+        card(
+          cardHead('Where the money goes'),
+          h('span', { class: 'muted',
+            text: 'Your dollars sit in short term US government debt. The rate can go up or down.' }),
+          kv('Held as', 'Short term US government debt'),
+          kv('Paid', 'Every morning, into your wallet'),
+          kv('Notice needed', 'None'),
+          kv('Fee', 'No fee'),
+          callout('The rate is not a guarantee. It can go down as well as up.')),
+        card(
+          cardHead('What you can do'),
+          h('span', { class: 'muted', text: 'Both of these are free and take about a minute.' }),
+          kv('Lend more', 'Moves cash from your wallet'),
+          kv('Take it back', 'Moves it back, any amount'))))
+  )
+}
+
+export function borrowingScreen(): HTMLElement {
+  const debt = owed()
+  const shares = holdingsValue()
+  // How far the shares could fall before any of them is sold. It was the cover
+  // ratio — shares as a percentage of the debt — which reads 3,217% when
+  // somebody holds $12,500 of shares against a $389 loan, and nobody thinks in
+  // cover ratios. This is the same fact in the words somebody would use to ask
+  // for it: how far can it fall before you touch it.
+  const room = shares > 0 ? Math.max(0, ((shares - sellPoint()) / shares) * 100) : 0
+  return shell(
+    'grow',
+    pageHeader('Borrowing', null, { back: { label: 'Borrow & Lend', to: '/grow' } }),
+    h('div', { class: 'row' },
+      h('div', { class: 'stack col-main' },
+        positionHead({
+          label: debt > 0 ? 'You owe' : 'You can borrow',
+          value: money(debt > 0 ? debt : availableToBorrow()),
+          tone: debt > 0 ? 'warn' : undefined,
+          say: debt > 0
+            ? `Costing you ${pct(state.rates.borrow)} a year, charged daily.`
+            : 'Nothing borrowed. Your shares would back a loan up to this.',
+          rows: debt > 0
+            ? [
+                ['Borrowed', money(state.borrowed)],
+                ['Interest so far', h('span', { class: 'warn t-body-strong', text: money(state.interestOwed) }), {
+                  title: 'Interest so far',
+                  body: `Charged every day on what you owe, at ${pct(state.rates.borrow)} a year. It stops the moment you repay.`,
+                }],
+                ['A month costs', money(monthlyCost(state.borrowed))],
+                ['You can still borrow', money(availableToBorrow())],
+              ]
+            : [
+                ['Rate', pct(state.rates.borrow) + ' a year'],
+                ['A ' + usd(1000, false) + ' loan', 'About ' + usd(monthlyCost(1000)) + ' a month'],
+                ['Backed by', money(shares) + ' in shares'],
+              ],
+          primary: { label: debt > 0 ? 'Repay' : 'Borrow money', to: debt > 0 ? '/grow/repay' : '/grow/borrow' },
+          secondary: debt > 0 && availableToBorrow() > 0
+            ? { label: 'Borrow more', to: '/grow/borrow' } : undefined,
+        }),
+        // What is actually holding the loan up, and the one number that
+        // decides whether anything gets sold.
+        debt > 0
+          ? card(
+              cardHead('What backs it'),
+              h('div', { class: 'kv' },
+                h('span', { class: 'kv-key' },
+                  h('span', { class: 't-caps subtle', text: 'Your shares can fall' }),
+                  hint({
+                    title: 'Your shares can fall',
+                    body: `Your shares have to be worth at least ${state.rates.collateral}% of the money you borrowed. If they fall below that, we sell just enough to bring it back.`,
+                  })),
+                h('span', { class: 'pos t-body-strong', text: Math.round(room) + '%' })),
+              // The bar is what the shares are worth. The line on it is the
+              // price we would sell at, so the gap between them is the answer
+              // to the question above, drawn.
+              meter(shares, sellPoint()),
+              kv('Your shares', money(shares)),
+              kv('We would sell below', money(sellPoint())),
+              h('span', { class: 'muted t-caption', text: room >= 25
+                ? 'The line is where we would sell. You are a long way above it.'
+                : 'The line is where we would sell. Repay some, or add shares, to move away from it.' }),
+              h('button', { class: 'btn btn-secondary btn-sm', text: 'See your shares',
+                on: { click: () => go('/') } }))
+          : null,
+        loanHistory()),
+      h('div', { class: 'stack col-side' },
+        card(
+          cardHead('What it costs'),
+          kv('Rate', pct(state.rates.borrow) + ' a year'),
+          kv('Charged', 'Daily, on what you owe'),
+          kv('To take a loan', 'No fee'),
+          kv('To repay early', 'No fee'),
+          callout('Interest is the only cost. Repaying sooner is always cheaper.')),
+        card(
+          cardHead('What you can do'),
+          h('span', { class: 'muted', text: 'Repay any amount at any time. Your shares are never sold to do it.' }),
+          kv('Repay', 'Any amount, any time'),
+          kv('Borrow more', 'Up to ' + money(availableToBorrow())),
+          kv('Add shares', 'Buying more raises what you can borrow'))))
+  )
+}
