@@ -54,9 +54,23 @@ console.log('TWO WAYS IN, AND NEITHER OF THEM IS INSTANT')
   ok('and a bank transfer is one of them, first',
      rails[0].text === 'Bank transfer' && rails[0].on)
   ok('and the Base address is another', rails.some((r) => r.text === 'Base'))
-  // Neither of the two asks how much: you are given the details and you pay in.
-  const asks = await p.evaluate(() => !!document.querySelector('.amount-box'))
-  ok('and neither of them asks for an amount', !asks)
+  // Neither of the two asks how much before it says where. The bank tab does
+  // carry an amount further down — "I have sent it", which is how a naira
+  // transfer gets matched to a dollar credit — but it sits under the account
+  // number rather than in front of it, and the Base tab has none at all. So
+  // the question is document order, not presence.
+  const gated = () => p.evaluate(() => {
+    const box = document.querySelector('.amount-box')
+    if (!box) return false
+    const details = document.querySelector('.va-number, .qr, .addr')
+    return !details || !!(box.compareDocumentPosition(details) & Node.DOCUMENT_POSITION_FOLLOWING)
+  })
+  const bankGated = await gated()
+  await at('/addmoney?tab=base')
+  const baseGated = await gated()
+  ok('and neither of them asks for an amount before it says where to pay',
+     !bankGated && !baseGated, `bank ${bankGated}, base ${baseGated}`)
+  await at('/addmoney')
   // The card rail ships switched off, so this is also the first proof that
   // the console is not decoration: what operations sets is what a customer
   // meets, on the same render.
@@ -115,9 +129,12 @@ console.log('AND SAYS SO, ON THE ONE SCREEN THAT WAS NOT LOOKING')
   // seeded, and the switch in Preferences filtered a fixed set. A transfer
   // landing while somebody is on another screen is the only genuinely
   // asynchronous event here, so it is the one that has to speak.
+  // Notices are rows in the one feed now (11g.48), reached by its own filter
+  // rather than by a list of their own. Newest first, so the transfer that
+  // just landed is the row on top.
   await at('/activity?filter=alerts')
   const top = await p.evaluate(() => {
-    const row = document.querySelector('.alert-list > .set-row')
+    const row = document.querySelector('.feed-row')
     return row ? row.innerText.replace(/\n/g, ' · ') : ''
   })
   ok('the wallet going up while you were elsewhere is told to you',
@@ -129,7 +146,7 @@ console.log('AND SAYS SO, ON THE ONE SCREEN THAT WAS NOT LOOKING')
   const ref = (top.match(/TKN-[A-Z0-9]+/) ?? [])[0]
   await at('/activity')
   const receipt = await p.evaluate(async () => {
-    const row = [...document.querySelectorAll('tbody tr, .row-hit')]
+    const row = [...document.querySelectorAll('.feed-row')]
       .find((e) => /Bought dollars|GTBank/.test(e.textContent))
     row?.click()
     await new Promise((r) => setTimeout(r, 400))
@@ -165,19 +182,36 @@ console.log('A CARD IS THE OTHER RAIL, AND IT COSTS SOMETHING')
   })
   ok('the console can turn the card rail back on', back === 'On', back ?? 'no switch')
   await at('/addmoney')
-  const rails = await p.evaluate(() => [...document.querySelectorAll('.rail')].map((e) => ({
-    text: e.innerText.replace(/\n/g, ' · '), off: e.classList.contains('off'),
+  // The rails are tabs rather than cards now, so the proof that the switch
+  // reached the customer is the tab losing its Paused label and becoming
+  // pressable, on the same render.
+  const tabs = await p.evaluate(() => [...document.querySelectorAll('.content > .chip-row .chip')].map((e) => ({
+    text: e.textContent.trim(), off: e.classList.contains('off'), dead: e.hasAttribute('disabled'),
   })))
+  const cardTab2 = tabs.find((t) => /^Card/.test(t.text))
   ok('and the customer screen shows it on the very next render',
-     !rails[1].off && /%/.test(rails[1].text) && /[Ss]econd/.test(rails[1].text), rails[1].text)
+     !!cardTab2 && !cardTab2.off && !cardTab2.dead && !/Paused/.test(cardTab2.text),
+     cardTab2 ? cardTab2.text : 'no card tab')
 
   const before = await cash()
-  await at('/addmoney?via=card')
+  await at('/addmoney?tab=card')
   await amount(100)
-  const shown = await p.evaluate(() => Object.fromEntries(
-    [...document.querySelectorAll('.summary .kv')].map((e) => [...e.children].map((c) => c.textContent))))
+  // Every cost in money, once (rule 10): the fee is naira on the composer,
+  // beside the naira it is added to, and the two come to the figure on the
+  // button. A percentage belongs on the row that describes the rail, not on
+  // the thing you are about to pay.
+  const paying = await p.evaluate(() => ({
+    text: document.querySelector('.content')?.innerText.replace(/\n/g, ' · ') ?? '',
+    action: document.querySelector('.card .btn-primary')?.textContent ?? '',
+  }))
+  const naira = (re) => Number((paying.text.match(re) ?? ['', '0'])[1].replace(/,/g, ''))
+  const forDollars = naira(/₦([\d,]+) for the dollars/)
+  const fee = naira(/₦([\d,]+) card fee/)
   ok('the card fee is a figure on the composer, not a footnote',
-     /₦/.test(shown['Fee'] ?? '') && /%/.test(shown['Fee'] ?? ''), shown['Fee'] ?? 'missing')
+     fee > 0, (paying.text.match(/₦[\d,]+ card fee/) ?? ['missing'])[0])
+  ok('and what you press is the two of them added up',
+     forDollars > 0 && Math.abs(Number(paying.action.replace(/[^\d]/g, '')) - (forDollars + fee)) < 1,
+     `${forDollars} + ${fee} vs ${paying.action}`)
   await p.locator('.col-compose .btn-primary, .card .btn-primary').first().click()
   await p.waitForTimeout(700)
   await p.locator('.scrim .btn-primary').first().click({ timeout: 8000 })
@@ -268,13 +302,25 @@ console.log('A NAME BEFORE A NUMBER')
 console.log('BOTH WAYS IN ARE NAMED WHERE SOMEBODY WOULD LOOK FOR THEM')
 {
   // Dollars reach a Base address and naira reach a virtual account. Two
-  // inbound rails described on two screens, neither mentioning the other, is
-  // the same fault as one errand wearing two names.
+  // inbound rails described on two screens, neither mentioning the other, was
+  // the same fault as one errand wearing two names. They are three tabs on one
+  // screen now (11g.47), so the other ways in are not referred to in a
+  // sentence — they are on the screen, named and one press away. /receive is
+  // that screen opened on its Base tab.
   await at('/receive')
   const said = await p.evaluate(() => document.body.innerText.replace(/\n/g, ' · '))
-  ok('Receive names the naira account as well as the address',
-     /or be paid in naira/i.test(said) && /9902847713/.test(said))
+  ok('Receive names the other ways in rather than describing them',
+     /Bank transfer/.test(said) && /Card/.test(said) && /Naira from any Nigerian bank/.test(said))
   ok('and still leads with the address it is for', /your address/i.test(said))
+  // One screen, one name. The trail said "Receive money" over a title reading
+  // "Add money" until 11g.50 — two names for a place a person is standing in.
+  const named = await p.evaluate(() => ({
+    crumbs: [...document.querySelectorAll('.crumbs .crumb')].map((e) => e.textContent.trim()),
+    h1: document.querySelector('h1')?.textContent?.trim(),
+  }))
+  ok('and the trail above it does not call it something else',
+     named.h1 === 'Add money' && !named.crumbs.includes('Receive money'),
+     named.crumbs.join(' > ') + ' / ' + named.h1)
 }
 
 console.log('\nerrors:', errs.length ? errs : 'none')

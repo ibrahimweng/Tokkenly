@@ -342,8 +342,8 @@ function refused(c: Instrument, v: number, kind: 'buy' | 'sell' = 'buy'): HTMLEl
     figure('We are not taking this trade', bad.length + (bad.length === 1 ? ' reason' : ' reasons'), 'warn'),
     ...bad.map((b) => calloutEl(b.title + '. ' + b.why, 'warning')),
     panel(
-      ['Venue price', usd(c.price)],
-      ['Chainlink', usd(c.mark)],
+      ['Price here', usd(c.price)],
+      ['The real price', usd(c.mark)],
       ['Apart by', pct(Math.abs(deviation(c)), 2)],
       ['Ceiling', pct(GUARDS.deviationPct, 1)],
       ['Impact', pct(priceImpact(c, v), 2)],
@@ -1265,9 +1265,13 @@ export const SHEETS: Record<string, Builder> = {
         // stops at the fee is not the whole cost on a tokenised product.
         // One independent price, named by where it came from and how fresh it
         // is. Quoting the venue against itself proves nothing, and quoting two
-        // references proves nothing twice.
-        [discount(c) >= 0 ? 'Below Chainlink' : 'Above Chainlink',
-          `${pct(Math.abs(discount(c)), 2)} · ${usd(c.mark)}, ${c.chainlinkAge}s ago`],
+        // references proves nothing twice. The label is the words the composer
+        // behind this dialog uses — "the real price" — because the same fact
+        // wearing two names on two adjacent surfaces is two facts to a reader.
+        // The source keeps its name in the value, where it is what makes the
+        // number worth believing rather than a brand in a heading.
+        [discount(c) >= 0 ? 'Below the real price' : 'Above the real price',
+          `${pct(Math.abs(discount(c)), 2)} · ${usd(c.mark)} on Chainlink, ${c.chainlinkAge}s ago`],
         ['You receive', fmtShares(v / c.price) + ' ' + c.ticker],
         ['At least', fmtShares(minReceived(v / c.price, GUARDS.slippagePct)) + ' ' + c.ticker],
         ['Price impact', pct(priceImpact(c, v), 2)],
@@ -1311,7 +1315,7 @@ export const SHEETS: Record<string, Builder> = {
         ['Fee', `${usd(tradeFee(v))} · ${state.fees.trade}%`],
         ['You receive', usd(v - tradeFee(v))],
         ['At least', usd(minReceived(v - tradeFee(v), GUARDS.slippagePct))],
-        ['Price each', `${usd(c.price)} · Chainlink ${usd(c.mark)}, ${c.chainlinkAge}s ago`],
+        ['Price each', `${usd(c.price)} · real price ${usd(c.mark)} on Chainlink, ${c.chainlinkAge}s ago`],
         ['Shares sold', fmtShares(v / c.price) + ' ' + c.ticker],
         ['Price impact', pct(priceImpact(c, v), 2)],
       ],

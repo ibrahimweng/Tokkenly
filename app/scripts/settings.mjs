@@ -250,7 +250,10 @@ console.log('THE PIN STANDS IN FRONT OF THE MONEY')
     await at(p, route)
     const i = p.locator('.amount-box input')
     await i.fill(String(amount)); await i.dispatchEvent('input'); await p.waitForTimeout(200)
-    await p.locator('.card .btn-primary, .sheet .btn-primary').last().click()
+    // Visible ones only. Send carries a second primary — "Use this account",
+    // revealed when a typed account number resolves to a name — and picking
+    // the last in the document was picking that one while it was still hidden.
+    await p.locator('.card .btn-primary:visible, .sheet .btn-primary:visible').last().click()
     await p.waitForTimeout(450)
     const pad = await p.locator('.scrim .pinpad').count()
     ok(`${route} at $${amount} ${gated ? 'asks for the PIN' : 'does not'}`,

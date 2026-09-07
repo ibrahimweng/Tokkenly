@@ -36,8 +36,14 @@ const cashBefore = (await settled(page, '.hero-figure')).trim()
 await step('wallet cash before: ' + cashBefore.trim())
 
 await page.goto(base + '/grow', { waitUntil: 'networkidle' })
+// The card's button opens the position rather than the composer now (11g.43):
+// somebody with an open loan came to look at it, not to take another one. So
+// the journey is one step longer, and the step is part of what is being
+// checked — this is the walk a person actually takes.
 await clickText('Borrow money')
 await step('on ' + page.url().split('#')[1])
+await clickText('Borrow more')
+await step('then on ' + page.url().split('#')[1])
 await page.locator('.amount-box input').fill('600')
 await page.locator('.amount-box input').blur()
 await page.waitForTimeout(120)
@@ -82,7 +88,7 @@ log.push('FLOW 3  Market → Apple → Invest → confirm')
 await page.goto(base + '/invest/aapl', { waitUntil: 'networkidle' })
 const heldBefore = await rowValue('You hold')
 await step('holding before: ' + heldBefore.trim())
-await clickText('Buy AAPL')
+await clickText('Buy AAPLc')
 await page.locator('.amount-box input').fill('250')
 await page.locator('.amount-box input').blur()
 await page.waitForTimeout(120)
@@ -117,7 +123,7 @@ for (const [start, label, expect] of [
 /* ---- flow 5: every nav place, and the deepest link on each ---- */
 log.push('')
 log.push('FLOW 5  the rail')
-for (const place of ['Home', 'Transfer', 'Invest', 'Borrow & Lend', 'Activity', 'Account']) {
+for (const place of ['Home', 'Wallet', 'Invest', 'Borrow & Lend', 'Activity', 'Account']) {
   await page.goto(base + '/', { waitUntil: 'networkidle' })
   await page.locator('.nav-row', { hasText: place }).first().click()
   await page.waitForTimeout(180)

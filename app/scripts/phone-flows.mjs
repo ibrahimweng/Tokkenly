@@ -18,7 +18,11 @@ log.push('  wallet before: ' + (await text('.card .t-display-xl')).trim())
 
 await p.goto(base + '/grow', { waitUntil: 'networkidle' })
 await p.getByText('Borrow money', { exact: true }).first().click()
-await p.waitForTimeout(200)
+await p.waitForTimeout(250)
+// One more step since 11g.43: the card opens the position, and the position is
+// where you borrow more.
+await p.getByText('Borrow more', { exact: true }).first().click()
+await p.waitForTimeout(250)
 log.push('  sheet opened: ' + (await text('.sheet-head h2')).trim())
 
 // clear then type 750 on the keypad

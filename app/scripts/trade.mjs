@@ -137,22 +137,29 @@ console.log('AFTER THE TRADE  the ledger has to agree')
 console.log('A FIRST BUY  the one the whole product is for')
 {
   const p = await page()
-  // Coca-Cola is in the catalogue and not in the opening holdings
-  await p.goto(B + '/invest/ko/invest', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
+  // Alphabet is in the launch set, not paused, and not in the opening
+  // holdings, which is what a first buy needs: a company the account can
+  // actually buy and has never held. Coca-Cola was none of those — it is
+  // listed but outside the launch set, so the button was rightly disabled and
+  // this suite had been dead for tiers.
+  await p.goto(B + '/invest/googl/invest', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
   const i = p.locator('.amount-box input')
   await i.fill('100'); await i.dispatchEvent('input'); await p.waitForTimeout(250)
   await p.locator('.btn-primary').first().click(); await p.waitForTimeout(400)
   await p.locator('.scrim .btn-primary').first().click(); await p.waitForTimeout(900)
   const said = await p.evaluate(() => document.querySelector('.scrim')?.innerText.replace(/\n/g, ' ') ?? '')
-  ok('it says how many shares arrived', /[\d.]+ shares of Coca-Cola/.test(said) && !/undefined/.test(said),
+  ok('it says how many shares arrived', /[\d.]+ shares of Alphabet/.test(said) && !/undefined/.test(said),
      said.slice(0, 70))
-  await p.goto(B + '/invest/ko', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
+  await p.goto(B + '/invest/googl', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
   const held = await p.evaluate(() => document.body.innerText.match(/You hold[^\n]*/)?.[0] ?? 'no row')
   ok('and the position exists afterwards', !/None yet|no row/.test(held), held)
   await p.goto(B + '/', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
   const home = await p.evaluate(() => document.body.innerText)
-  ok('the home screen opens on Simple', /Buy Stocks|Convert Cash/.test(home),
-     /Buy Stocks/.test(home) ? 'gateway' : 'detailed')
+  // The doors carry the names of the places they open now (11g.45), so the
+  // gateway is recognised by those rather than by the action labels it used
+  // to wear.
+  ok('the home screen opens on Simple', /Invest[\s\S]*Wallet[\s\S]*Borrow & Lend/.test(home),
+     /Invest/.test(home) ? 'gateway' : 'detailed')
   await p.close()
 }
 

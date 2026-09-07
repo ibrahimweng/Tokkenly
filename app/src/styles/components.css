@@ -1086,8 +1086,9 @@ th.right .th-sort { flex-direction: row-reverse; }
    title, the tabs under it, the jump-to overlay, and the index at /all. */
 
 .crumbs { display: flex; align-items: center; gap: 8px; font-size: 12px; line-height: 16px; }
+/* Every crumb is a link now — the trail names parents only, and the page you
+   are on is the title (11g.50) — so there is no lit final step to style. */
 .crumb { color: var(--muted); }
-.crumb.on { color: var(--ink); }
 .crumb-sep { display: inline-flex; color: var(--subtle); opacity: 0.6; }
 .crumb-sep svg { width: 12px; height: 12px; }
 

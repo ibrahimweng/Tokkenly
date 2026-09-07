@@ -60,7 +60,10 @@ console.log('THE BOOKS OPEN BALANCED')
   const b1 = await books()
   ok('the wallet on Transfer is the wallet in the ledger',
      money(b1.balances['Your wallet']) === cash, `${cash} vs ${b1.balances['Your wallet']}`)
-  await at('/grow')
+  // Borrow & Lend lost its hero in 11g.43 — the page is two cards and the
+  // questions. What was lent out is the headline figure on the lending
+  // position page now.
+  await at('/grow/lending')
   const lent = money(await settled(p, '.hero-figure'))
   ok('and what Borrow & Lend shows is what the ledger holds',
      money(b1.balances['Your lending']) === lent, `${lent} vs ${b1.balances['Your lending']}`)

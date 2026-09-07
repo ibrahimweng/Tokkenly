@@ -30,7 +30,7 @@ ok('Transfer states the low limit', /\$1,000/.test(await text()))
 ok('and offers the way to lift it', await p.evaluate(() => !!document.body.innerText.match(/Verify to lift/)))
 
 console.log('THE CEILING BITES  before the balance does')
-await at('/send')
+await at('/send?to=Tunde%20Bakare')
 const capped = await p.evaluate(() => {
   const i = document.querySelector('.amount-box input')
   return { max: i?.value }
@@ -78,7 +78,7 @@ await at('/account')
 ok('the header says verified', /Verified/.test(await text()) && !/Not verified/.test(await text()))
 await at('/transfer')
 ok('Transfer shows the lifted limit', /\$10,000/.test(await text()))
-await at('/send')
+await at('/send?to=Tunde%20Bakare')
 await p.locator('.amount-box input').fill('900')
 await p.locator('.amount-box input').dispatchEvent('input')
 await p.waitForTimeout(300)

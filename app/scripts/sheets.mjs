@@ -108,9 +108,12 @@ console.log('WHAT FOLDS AND WHAT DOES NOT')
   ok('a review folds nothing', (await p.locator('.panel-more').count()) === 0)
   ok('and still states every term',
      /INVESTMENT/.test(rev) && /FEE/.test(rev) && /TOTAL/.test(rev) &&
-     // "Above/Below Chainlink" now, because the product stopped carrying two
-     // independent prices and started naming the one it has.
-     /YOU RECEIVE/.test(rev) && /CHAINLINK/.test(rev) && /AT LEAST/.test(rev) &&
+     // "Above/Below the real price" — the same words the composer behind this
+     // dialog uses, because the product stopped carrying two independent
+     // prices and stopped giving the one it has two names. The source is
+     // still named, in the value rather than the label.
+     /YOU RECEIVE/.test(rev) && /THE REAL PRICE/.test(rev) && /Chainlink/.test(rev) &&
+     /AT LEAST/.test(rev) &&
      /PRICE IMPACT/.test(rev), rev.slice(0, 90))
   // Past four facts the rows pair up, which is what bought the height back.
   ok('past four facts the rows pair up',

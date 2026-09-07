@@ -48,6 +48,10 @@ d.on('pageerror', (e) => errs.push('desktop pageerror: ' + e.message))
 await d.goto(base + '/send', { waitUntil: 'networkidle' })
 await d.waitForTimeout(200)
 log.push('')
+// With a destination, because a bare /send is the question rather than the
+// composer since 11g.38.
+await d.goto(base + '/send?to=Tunde%20Bakare', { waitUntil: 'networkidle' })
+await d.waitForTimeout(300)
 log.push('DESKTOP  /send')
 log.push('  title:  ' + (await d.locator('.page-header h1').textContent()))
 log.push('  composer on page: ' + (await d.locator('.card .amount-box').count())

@@ -92,5 +92,55 @@ for (const d of [...doors, ...rail, ...quick]) {
 }
 ok('and it checked something', checked >= 7, `${checked} labels`)
 
+/* The trail is a navigator too, and it was the one nothing here read.
+   Two faults were living in it. It ended on the page you were standing on,
+   drawn from the registry's searchable label rather than the screen's title,
+   so /receive read "Wallet > Receive money" over an <h1> saying "Add money"
+   and /withdraw read "Send to your bank" over "Send money" — one place, two
+   names, one line apart. And its root was whichever entry of the group came
+   first in the list, so every customer screen filed under `account` — verify
+   your identity, the disclosures, the index of every screen — told a customer
+   they were standing inside the staff console.
+
+   So a crumb has to earn its place three ways: it goes somewhere that is not
+   here, it goes somewhere a person could have come from, and the page it goes
+   to answers to the name the crumb gave it. */
+console.log('THE TRAIL, AND WHERE IT SAYS YOU CAME FROM')
+{
+  const places = new Set(rail.map((r) => r.to).filter(Boolean))
+  const TRAILED = [
+    '/addmoney', '/receive', '/withdraw', '/send', '/bucket', '/invest/aapl',
+    '/invest/aapl/invest', '/invest/aapl/sell', '/invest/aapl/send',
+    '/grow/earn', '/grow/takeout', '/grow/borrow', '/grow/repay',
+    '/statement', '/verify', '/all', '/disclosures',
+  ]
+  let trails = 0
+  for (const r of TRAILED) {
+    await at(r)
+    const t = await p.evaluate(() => [...document.querySelectorAll('.crumbs .crumb')].map((e) => ({
+      label: e.textContent.trim(), to: (e.getAttribute('href') || '').replace(/^#/, ''),
+    })))
+    if (!t.length) continue
+    trails += 1
+    const bad = []
+    for (const c of t) {
+      if (!c.to) { bad.push(`"${c.label}" goes nowhere`); continue }
+      if (c.to === r) { bad.push(`"${c.label}" is this page`); continue }
+      // Somewhere a person could have come from: a tab in the navigation, or
+      // a screen this one sits inside.
+      if (!places.has(c.to) && !r.startsWith(c.to + '/')) {
+        bad.push(`"${c.label}" (${c.to}) is neither a tab nor a step above ${r}`)
+        continue
+      }
+      await at(c.to)
+      const h1 = await p.evaluate(() => document.querySelector('h1')?.textContent?.trim() ?? '(none)')
+      const a = c.label.toLowerCase(), b2 = h1.toLowerCase()
+      if (!(a === b2 || b2.includes(a) || a.includes(b2))) bad.push(`"${c.label}" opens a page called "${h1}"`)
+    }
+    ok(`${r}  ${t.map((c) => c.label).join(' > ')}`, bad.length === 0, bad.join('; '))
+  }
+  ok('and it read some trails', trails >= 12, `${trails} trails`)
+}
+
 console.log('\nerrors: ' + (errs.length ? errs.join('\n') : 'none'))
 await b.close()

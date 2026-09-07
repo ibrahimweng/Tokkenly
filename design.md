@@ -6683,6 +6683,110 @@ that they predate it rather than assumed.
      will report silence as success, and a suite that dies is silent. Check the
      exit code, and treat a stack trace as a failure.
 
+### 11g.50 The ten dead suites, and two faults they were standing on
+
+Ten suites had been crashing rather than failing, some of them for several
+tiers, and 11g.48 caught the runner that was hiding it. This tier walked them.
+
+Nine were selector repairs — a screen had moved and the suite had not — and
+each is written up in one line because that is all it is worth:
+
+- `flows`, `send`, `verify`, `states`, `phone-flows`, `ledger` were clicking
+  into composers reached through a position page since 11g.43, or reading rows
+  by a class the feed replaced in 11g.48.
+- `settings` picked the *last* `.btn-primary` on Send. Send grew a second one —
+  "Use this account", revealed when a typed account number resolves to a name —
+  and it is hidden until then, so the suite was waiting six seconds for a
+  button nobody can press. Visible ones only.
+- `inflow` was written against three rail cards that are three tabs now, and
+  against an Add money that asked for an amount before it handed over an
+  account number. Its assertion is document order now rather than presence:
+  the bank tab does carry an amount, under the details, for somebody who has
+  paid and wants to watch it arrive. Nothing asks how much before it says
+  where.
+- `trade` and `token` were both buying a company the product refuses to sell.
+  Coca-Cola and Nike are in the catalogue and outside the launch set, so their
+  buy buttons are correctly disabled, and both suites were timing out on a
+  refusal that is the product working. They buy Alphabet now — in the launch
+  set, not paused, and not in the opening holdings, which is what "a first buy"
+  actually needs. Meta looked like the better choice until the probe: it is
+  seeded paused, which is a state worth having and a bad one to test a purchase
+  through.
+
+The tenth was not a selector at all. `token` asserts that the review carries
+the gap to the real share, and it was looking for the words "real price". The
+review said **Below Chainlink**. The composer behind it said **Below the real
+price**. One fact, two names, one dialog apart — and the second of them is a
+vendor's brand, which is the thing rule 37 and the plain-words pass exist to
+keep out of a sentence somebody agrees to money on. The label is the
+composer's words now; the source keeps its name in the value, where it is what
+makes the number worth believing rather than a heading nobody asked for:
+
+    Below the real price    1.24% · $166.77 on Chainlink, 15s ago
+
+The refusal panel had the same fault twice over — "Venue price" against
+"Chainlink" — and reads "Price here" against "The real price" now.
+
+**And then the trail.** Chasing that wording meant reading page headers, and
+the header was saying the name of the place twice. The breadcrumb ended on the
+page you were standing on, drawn from the registry's label — which is written
+to be *searched* — while the `<h1>` a line below it is written to be *read*.
+Where the two agree that is a repetition. Where they do not it is a
+contradiction, and on seven routes they did not:
+
+| route | trail said | the page said |
+|---|---|---|
+| `/receive` | Receive money | Add money |
+| `/withdraw` | Send to your bank | Send money |
+| `/grow/earn` | Lend your dollars | Lend |
+| `/grow/takeout` | Take back what you lent | Take out |
+| `/invest/aapl/invest` | Invest in Apple | Invest |
+| `/invest/aapl/sell` | Sell Apple | Sell |
+| `/invest/aapl/send` | Send Apple to someone | Send Apple |
+
+Neither name is wrong. "Take back what you lent" is what somebody types into
+the palette and "Take out" is what a title should be at 18px, and the answer is
+not to make one of them worse. It is that a trail is for the step you *cannot*
+see. The step you can see is the title. So the trail names parents only, and
+every step in it is a link — which is the whole job of a trail, and the last
+one never was.
+
+**The second fault was underneath it.** `trailTo` found a screen's root with
+`DESTINATIONS.find(d => d.place === here.place && d.kind === 'place')` — the
+first place in the group. Operations, the staff console, is filed under
+`account` so that it sorts with the rest of the settings, and it is written
+first. So every customer screen in that group — verify your identity, the risk
+disclosures, the index of every screen in the product — told a customer they
+were standing inside the staff console. Nobody had looked at that header,
+because nothing in the sweep had ever read a breadcrumb except to check that
+one existed.
+
+The root is the place the screen actually sits under now: a prefix of its own
+path if there is one, otherwise the first place in the group that is not
+`staff: true`. Two lines, one new flag, no new `Place` — a Place is a tab in
+the navigation and Operations is not one.
+
+`names.mjs` grew the check that would have caught all of it. A crumb earns its
+place three ways: it goes somewhere that is not here, it goes somewhere a
+person could have come from — a tab in the navigation, or a step above this
+path — and the page it opens answers to the name the crumb gave it. Run
+against the old code it fails seventeen of seventeen trails, naming both
+faults separately; that was checked before it was kept, per rule 114.
+
+The sweep is thirty-four suites and all of them run. That sentence has not been
+true in this file for five tiers.
+
+130. **A trail is for the step you cannot see.** The page you are on is the
+     title. A breadcrumb that ends on it either says the same thing twice or,
+     where the label and the title were written for different jobs, says two
+     different things about one place. Name the parents, link every one of
+     them, and stop.
+
+131. **A search label and a title are not the same string.** One is written to
+     be typed at, the other to be read at the top of a screen, and a registry
+     that serves both will be asked for the wrong one somewhere. Decide which
+     surface gets which, rather than making one of them worse until they match.
+
 ### 11g.49 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from
@@ -6722,13 +6826,16 @@ that they predate it rather than assumed.
   from 486 lines to 330. They are in the history if the texture is ever wanted
   back. What this costs is the one thing those fields had that a generated
   object does not: somebody drew them.
-- Ten suites crash rather than fail, and have since the tiers that moved the
-  screens under them: `flows`, `ledger`, `send`, `states`, `token`, `trade`,
-  `verify`, `settings`, `phone-flows`, `inflow`. Each dies on a selector that
-  moved — most of them on a composer that is now reached through a position
-  page. They are selector repairs rather than product faults, and none of them
-  is a regression from 11g.48: they were verified crashing at the commit before
-  it. The sweep now reports them (11g.48, rule 129) rather than hiding them.
+- The ten crashing suites are fixed and the sweep is thirty-four green
+  (11g.50). What is not fixed is the reason they went unnoticed for five
+  tiers: every one of them is run by hand. There is no hook, no CI and nothing
+  that runs `all.sh` unless somebody types it.
+- `/receive` and `/addmoney` are two addresses for one screen, and so are
+  `/withdraw` and `/send`. Both aliases are deliberate — they are what people
+  search for, and the registry says so in a hint — and both now open a screen
+  whose title and trail agree with each other (11g.50). What has not been
+  decided is whether an alias should redirect, so that the address bar carries
+  one name too.
 - The console has no roles. Anybody who can reach `/admin` sees everything, and
   a real one separates support from risk from engineering.
 - Borrow & Lend is not in the MVP brief at all — it is in that brief's *Not

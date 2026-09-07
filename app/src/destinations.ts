@@ -15,6 +15,9 @@ export interface Destination {
   also?: string
   /** Worth showing in the palette before anyone types. */
   primary?: boolean
+  /** The staff console. It shares the `account` group so it sorts with the
+   *  rest of the settings, but it is nobody's parent except its own screens'. */
+  staff?: boolean
   hint?: string
 }
 
@@ -61,7 +64,7 @@ export const DESTINATIONS: Destination[] = [
   { label: 'Borrow', to: '/grow/borrow', place: 'grow', kind: 'action', primary: true, also: 'loan against shares credit', hint: 'Against the shares you own' },
   { label: 'Repay', to: '/grow/repay', place: 'grow', kind: 'action', primary: true, also: 'pay back loan owed', hint: 'Clear what you owe' },
 
-  { label: 'Operations', to: '/admin', place: 'account', kind: 'place', primary: true,
+  { label: 'Operations', to: '/admin', place: 'account', kind: 'place', primary: true, staff: true,
     also: 'admin ops console staff switches providers reconciliation audit launch pilot kill switch',
     hint: 'Staff view: switches, providers, reconciliation' },
   { label: 'Provider status', to: '/admin/status', place: 'account', kind: 'screen',
@@ -149,7 +152,14 @@ export function trailFor(path: string, query: URLSearchParams): Destination[] {
 
 function trailTo(here: Destination, path: string): Destination[] {
   {
-  const root = DESTINATIONS.find((d) => d.place === here.place && d.kind === 'place')
+  // The root is the place this screen actually sits under, not whichever
+  // place in its group happens to come first in the list. Operations and
+  // Account share the `account` group, and Operations was written first, so
+  // verification, the disclosures and the index of every screen all told a
+  // customer they were standing inside the staff console.
+  const roots = DESTINATIONS.filter((d) => d.place === here.place && d.kind === 'place')
+  const root = roots.find((d) => path === bare(d.to) || path.startsWith(bare(d.to) + '/'))
+    ?? roots.find((d) => !d.staff)
   const trail: Destination[] = []
   if (root && root !== here) trail.push(root)
   // A stock's action sits under the stock, which sits under Invest.

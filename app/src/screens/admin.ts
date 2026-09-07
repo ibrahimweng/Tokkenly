@@ -348,7 +348,10 @@ export function adminScreen(): HTMLElement {
         h('span', { class: 'pill' + (down ? ' warn' : ' pos'),
           text: down ? down + ' provider' + (down === 1 ? '' : 's') + ' degraded' : 'Providers up' }),
         h('span', { class: 'pill' + (off ? ' warn' : ''),
-          text: off ? off + ' switch' + (off === 1 ? '' : 'es') + ' off' : 'All switches on' }))),
+          text: off ? off + ' switch' + (off === 1 ? '' : 'es') + ' off' : 'All switches on' })),
+      // Every tab of the console is this one screen, and its name is the title.
+      // A trail back up to Operations from Operations is a line of nothing.
+      { crumbs: false }),
     // Not a customer's account. It answers to somebody else about everybody
     // else's money, and it says so before it says anything.
     callout('Staff view. Nothing here can move customer money. There is no key to sign with. You can stop things and look at things.'),

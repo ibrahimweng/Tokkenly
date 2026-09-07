@@ -182,8 +182,13 @@ console.log('MOVING AROUND  four navigators, one registry')
 {
   const p = await page(1600, 1000)
   await p.goto(B + '/withdraw', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(250)
+  // Parents only (11g.50). The trail's job is the step you cannot see; the
+  // step you can see is the <h1>. Ending on the page you are standing on made
+  // this header read "Send to your bank" over a title reading "Send money".
   const crumbs = (await p.locator('.crumb').allTextContents()).join(' > ')
-  ok('a trail says where you are', crumbs === 'Wallet > Send to your bank', crumbs)
+  const title = await p.locator('h1').first().textContent()
+  ok('a trail says where you came from, not where you are',
+     crumbs === 'Wallet' && title === 'Send money', `${crumbs} / ${title}`)
   await p.locator('.crumb').first().click(); await p.waitForTimeout(250)
   ok('and the trail steps back up', p.url().endsWith('#/transfer'), new URL(p.url()).hash)
 

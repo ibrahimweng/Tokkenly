@@ -22,7 +22,10 @@ const ok = (label, pass, detail = '') =>
   console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${label}${detail ? '  ' + detail : ''}`)
 
 console.log('HOVER')
-await go('/')
+// Home carries no filled button since Send and Receive moved to the wallet
+// (11g.44). What is being checked is the treatment, so it is checked wherever
+// the treatment lives.
+await go('/verify')
 const filled = page.locator('.btn-primary').first()
 const rest = await bg(await filled.elementHandle())
 await filled.hover(); await page.waitForTimeout(80)

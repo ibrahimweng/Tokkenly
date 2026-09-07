@@ -216,13 +216,21 @@ export function shell(active: Place, ...bands: (Node | false | null)[]): HTMLEle
  *  so it can never name a screen that is not there. */
 function breadcrumbs(): HTMLElement | null {
   const r = current()
-  const trail = trailFor(r.path, r.query)
-  if (trail.length < 2) return null
+  // Parents only. The last step of a trail is the page you are standing on,
+  // and the page you are standing on is the <h1> one line below it — so
+  // printing it again was a repetition where the two agreed, and a
+  // contradiction where they did not: the registry's label is written to be
+  // searched ("Take back what you lent") and a title is written to be read
+  // ("Take out"). Seven headers named the same screen twice, two of them
+  // ("Receive money" over "Add money", "Send to your bank" over "Send money")
+  // with words that read as two different places. Every step is a link now,
+  // which is the whole job of a trail: a parent you cannot otherwise see.
+  const trail = trailFor(r.path, r.query).slice(0, -1)
+  if (!trail.length) return null
   const nav = h('nav', { class: 'crumbs', ariaLabel: 'Where you are' })
   trail.forEach((d, i) => {
     if (i) nav.appendChild(h('span', { class: 'crumb-sep', html: icon.chevron() }))
-    if (i === trail.length - 1) nav.appendChild(h('span', { class: 'crumb on', text: d.label }))
-    else nav.appendChild(link(d.to, 'crumb', d.label))
+    nav.appendChild(link(d.to, 'crumb', d.label))
   })
   return nav
 }
