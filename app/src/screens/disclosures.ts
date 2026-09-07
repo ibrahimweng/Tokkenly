@@ -24,7 +24,7 @@ export function disclosuresScreen(): HTMLElement {
 
         card(
           cardHead('What you actually own'),
-          para('You are buying a token that tracks one real share. The real share is held by a regulated custodian.'),
+          para('You are buying a token that tracks one real share. A regulated firm called a custodian holds the real share.'),
           para('You get the price moves and the dividends. You do not get a share certificate in your name.'),
           para('You do not get a vote at the company. And you are relying on the custodian and on us, not only on the company.'),
           para('If either of us fails, that is a risk to your money on top of the share price.')),

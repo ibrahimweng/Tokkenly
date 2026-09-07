@@ -69,8 +69,8 @@ export const DESTINATIONS: Destination[] = [
   { label: 'Launch readiness', to: '/admin/launch', place: 'account', kind: 'screen',
     also: 'admin gates before launch legal contracts limits security review' },
   { label: 'Your wallet', to: '/account/wallet', place: 'account', kind: 'screen', primary: true,
-    also: 'address base smart account export key self custody gas sponsored invite',
-    hint: 'Base · self-custodial' },
+    also: 'address base smart account export key you hold your own key custody gas sponsored invite',
+    hint: 'Base · you hold your own key' },
 
   { label: 'Activity', to: '/activity', place: 'history', kind: 'place', primary: true, also: 'history statement transactions receipts' },
   { label: 'Payments', to: '/activity?filter=payments', place: 'history', kind: 'screen', primary: true, also: 'sent received' },

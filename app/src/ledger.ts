@@ -138,7 +138,7 @@ export function account(id: string, name?: string): Account {
   // when this record starts.
   const SHARES: Record<string, { book: Book; name: (t: string) => string; what: string }> = {
     held: { book: 'yours', name: (t) => t + ' held for you',
-      what: 'Tokenised shares a custodian holds in your name' },
+      what: 'Shares held for you by the firm that holds the real shares' },
     float: { book: 'theirs', name: (t) => t + ' on the market',
       what: 'Shares the market has, before or after you own them' },
     sent: { book: 'theirs', name: (t) => t + ' sent away',

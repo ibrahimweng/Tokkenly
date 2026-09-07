@@ -6087,7 +6087,53 @@ short sentences cost them nothing and they are plainly better for it, so
      screen explains. Make the box the size it claims to be and give the space
      back with margin.
 
-### 11g.42 Still open
+### 11g.42 The screens the sweep never saw
+
+The voice sweep in 11g.41 reported clean across thirty-two routes. Widening it
+to every screen and every dialog took it to ninety-three, and the widening is
+the finding.
+
+**It had never opened a dialog.** `words.mjs` walked pages and looked only
+inside `.content`, so it had never read a review, a receipt, an outcome, a
+refusal or an empty state — which between them are most of the sentences
+somebody reads on the day something goes wrong. Thirty-one more addresses, one
+per dialog, at the address that opens it.
+
+**And it read nothing at all on six screens.** Sign-in, sign-up, the lock
+screen and all four onboarding screens render their own shell rather than
+`.content`, so the selector matched zero elements and the suite passed them in
+silence. Those are the six screens a newcomer meets first.
+
+That is the failure mode of every check written against a selector, and the fix
+is the same one every time: **make it prove it read something**. Each address
+now has to come back with at least eight words on it, and the total is printed
+— 897 sentences across 93 screens. A suite that walks ninety addresses and
+reads none of them should fail loudly, not pass quietly.
+
+**The jargon check had a rule that could never fire.** `['custodian', /custodian/i]`
+allows the word wherever the word appears. Two of the ten entries were written
+that way. Once the pattern was changed to a different phrase — the word is
+allowed only where the screen also says "holds the real share" — it found
+"custodian" on the statement and the disclosures and "self-custodial" on every
+Account page, from a hint in the destination registry.
+
+The lock screen took one more fix. It is not at an address: it renders over
+whatever you were looking at, and `locked()` is an init script, so it needs a
+page of its own. Reading it by container rather than by leaf then reported the
+keypad's ten digits and four labels as a twenty-five word sentence, which is
+why one reader now serves both.
+
+114. **A check must prove it looked.** A selector that matches nothing passes
+     everything, silently, forever. Every sweep over a set of screens should
+     count what it read and fail when a screen comes back empty — the count is
+     the difference between "nothing is wrong" and "nothing was examined".
+
+115. **An exception whose pattern contains the rule is not an exception.**
+     Allowing "custodian" wherever "custodian" appears is a check that can
+     never fire. When a rule carries a get-out, the get-out has to be a
+     different string from the thing it excuses.
+
+### 11g.43 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from
   using the product afterwards. Item 30 was held back until it was asked for,

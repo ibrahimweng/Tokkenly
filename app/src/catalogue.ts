@@ -206,7 +206,7 @@ export function refusals(c: Instrument, dollars: number, off?: { trading?: boole
   // wastes their afternoon.
   if (off?.asset) {
     out.push({ code: 'asset-off', title: `${c.ticker} is paused`,
-      why: `We have suspended trading in ${c.ticker} while something is checked. If you hold it you keep it, and you can still send it — you cannot buy or sell it today.` })
+      why: `We have paused ${c.ticker} while we check something. You keep anything you hold and you can still send it. You cannot buy or sell it today.` })
   }
   if (off?.trading) {
     out.push({ code: 'trading-off', title: 'Trading is paused',

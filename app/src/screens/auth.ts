@@ -25,7 +25,7 @@ import { say } from '../announce'
 const PROMISES: { ic: () => string; title: string; body: string }[] = [
   {
     ic: icon.lock,
-    title: 'Held with a regulated custodian',
+    title: 'The real shares are held for you',
     body: 'A token that tracks one real share. You get the price moves and the dividends.',
   },
   {

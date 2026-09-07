@@ -864,7 +864,7 @@ export const state: State = {
       what: 'Looked up a payout by reference', target: 'TKN-7D1J83' },
   ],
   breaks: [
-    { id: 'REC-0448', what: 'Switch says a payout settled; we have no confirmation',
+    { id: 'REC-0448', what: 'Switch says a payout settled. We have no confirmation.',
       ours: 'Queued 14:22', theirs: 'Settled 14:25', by: 180000, state: 'open', opened: iso('2026-09-07T14:40') },
     { id: 'REC-0447', what: 'A deposit landed with no matching virtual account',
       ours: 'Nothing', theirs: '\u20a6120,000 to 9902847002', by: 120000, state: 'working', opened: iso('2026-09-06T09:11') },
