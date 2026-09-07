@@ -5431,7 +5431,67 @@ cover ratio has no natural ceiling and has a minimum worth marking. A month's
 allowance has both, and a bar that rescales itself is a bar that cannot be
 compared with the same bar yesterday.
 
-### 11g.31 Still open
+### 11g.31 A coin, and the end of the gradient
+
+The outcome sheet washed green up from its own bottom edge. It was one flat
+colour doing the work of saying "this went well", and it read as a filter over
+the sheet rather than as anything to do with the trade.
+
+It is a coin now, in dots, turning. Home's three doors are dot fields, a
+receipt's history is a sparkline, and nothing in this product is a photograph —
+so the celebration is a dot field too. A disc seen face on, rotating about its
+vertical axis: it squashes to a line as it passes edge on and opens out again,
+the side turning towards you catches the light, and a struck $ on its face
+squashes with it. It bobs a little faster than it turns, and the two being out
+of phase is the whole difference between a coin spinning and a coin pleased
+with itself.
+
+One canvas, 95 x 95, about three hundred circles a frame, and it stops the
+moment it leaves the document — this app rebuilds its whole tree on every
+change, so a loop that does not check that is a loop that runs for the life of
+the tab. Reduced motion gets one still frame at three quarters on, where both
+the rim and the face read.
+
+It only turns for an outcome worth turning for. A payment that did not come
+back confirmed keeps the tick, because a coin spinning happily over "Still
+settling" would be the product cheering its own failure. 11g.21 still holds:
+what is celebrated is completion, not the trade.
+
+### 11g.32 One size of pop-up
+
+Measured rather than eyeballed, and the measurement was embarrassing: the two
+tallest dialogs in the product were the review where money is agreed to (832px,
+scrolling on a phone) and the receipt that is the record of it (952px,
+scrolling on both). The two screens where a line below the fold matters most
+were the two with the most of it.
+
+Three changes, in the order they were worth making.
+
+**The panel pairs up.** Past four facts it becomes two columns. Nothing is
+hidden and the height halves; a value too long to sit in half a sheet takes the
+whole width rather than wrapping every cell into two ragged lines. That alone
+took the buy review from 832 to 712 and off the phone's scroll.
+
+**A record folds; a review does not.** The receipt keeps the four facts
+somebody opens it to check — who it was with, what they got, what it came to,
+and the reference they are matching against a statement — and folds the
+arithmetic behind the total and the state of the holding afterwards, one press
+away. A review states every term it is asking agreement to, and folding one of
+those would be hiding a term behind a button.
+
+**The status left its box.** "Settled. Nothing about this is going to change
+now" was a 68px callout at the foot of the sheet — the last place anybody looks
+for the status of the number at the top. It is a caption under that number now.
+
+The receipt is 728 on a desktop and 688 on a phone, and `sheets.mjs` holds the
+line: every dialog in the product opens, none of them scrolls at 390 x 844, and
+none is more than four fifths of the screen it is on.
+
+97. **A dialog you read may fold. A dialog you agree to may not.** The
+    difference is whether pressing the button changes anything, and it decides
+    what is allowed to be one press away.
+
+### 11g.33 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from
   using the product afterwards. Item 30 was held back until it was asked for,

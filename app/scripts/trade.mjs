@@ -95,7 +95,10 @@ for (const [flow, route, verb] of [['BUY', '/invest/aapl/invest', 'Buy'], ['SELL
   await p.waitForTimeout(900)
   const done = await p.evaluate(() => ({
     open: !!document.querySelector('.scrim'),
-    tick: !!document.querySelector('.tick'),
+    // A settled outcome celebrates with the coin; the tick is what an
+    // unsettled one keeps, because a coin turning happily over "Still
+    // settling" would be the product cheering its own failure.
+    tick: !!document.querySelector('.coin, .tick'),
     text: document.querySelector('.scrim')?.innerText.replace(/\n/g, ' ').slice(0, 90),
     toast: document.querySelector('.toast')?.textContent,
     url: location.hash,

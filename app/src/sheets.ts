@@ -1,6 +1,6 @@
 import { h } from './ui'
 import { icon } from './icons'
-import { sheet, figure, panel, outcome, toast } from './components/sheet'
+import { sheet, figure, panel, foldPanel, outcome, toast } from './components/sheet'
 import { callout as calloutEl, emptyState as emptyStateEl, skeletonList } from './components/bits'
 import {
   state, actions, owed, monthlyCost, monthlyEarn, holding, bucketTotal,
@@ -281,7 +281,9 @@ function done(
       // Activity and open it there — so asking "what exactly happened" moved
       // you off the screen you were on to answer it. The record is a dialog;
       // it belongs over whatever you are looking at.
-      { label: 'See the record', onClick: () => replaceSheet('receipt', { ref: a.ref }) })
+      { label: 'See the record', onClick: () => replaceSheet('receipt', { ref: a.ref }) },
+      // Nothing to celebrate: this one did not come back confirmed.
+      { celebrate: false })
   }
   return outcome(
     title,
@@ -448,7 +450,15 @@ export const SHEETS: Record<string, Builder> = {
     return sheet(
       'Receipt',
       figure(a.type, (inbound ? '+' : '−') + usd(Math.abs(a.amount)),
-        inbound && !isDrawdown(a) ? 'pos' : ''),
+        inbound && !isDrawdown(a) ? 'pos' : '',
+        a.settled
+          ? a.asset
+            // Not "this payment": no money moved. What moved was the share,
+            // and the one thing worth saying about a share that has gone is
+            // that it is gone.
+            ? `Settled · ${a.who} holds these now, and they cannot be recalled`
+            : 'Settled · nothing about this is going to change now'
+          : 'Still settling · it usually clears within a minute'),
       c ? h('div', { class: 'receipt-co' },
         h('span', { class: 'two-line grow' },
           h('span', { class: 't-body-strong', text: `${c.ticker} · ${c.name}` }),
@@ -458,49 +468,43 @@ export const SHEETS: Record<string, Builder> = {
           h('small', { class: c.dayPct >= 0 ? 'pos' : 'warn',
             text: (c.dayPct >= 0 ? '+' : '') + pct(c.dayPct) + ' today' }))) : null,
       c ? sparkline(YEAR, c.price, c.ticker.charCodeAt(0)) : null,
-      panel(
+      // Four facts, then the rest behind a press. What stays is what somebody
+      // opens a receipt to check: who it was with, what they got, what it came
+      // to, and the reference they are matching against a statement. What
+      // folds is the arithmetic behind the total and the state of the holding
+      // afterwards. The order here is the order of importance, because that is
+      // what decides which four are above the fold.
+      foldPanel(4, [
         [inbound ? 'From' : 'To', a.who],
-        // The amount, the fee and the total, the way the composer stated them
-        // before the button was pressed — a receipt that reorganises the
-        // arithmetic is a receipt somebody has to check.
         // A transfer states what left, at the price of the day it left at. The
         // shares are recorded rather than divided out of the amount, because a
         // price that has moved since would silently restate the quantity.
-        ...(a.asset ? [
-          // No Company row: the header two lines up already says AAPL · Apple,
-          // and this panel is for the arithmetic.
-          ['Shares', fmtShares(a.asset.shares) + ' ' + a.asset.ticker] as [string, string],
-          ['Price each', usd(a.asset.price)] as [string, string],
-          ['Worth then', usd(Math.abs(a.amount))] as [string, string],
-        ] : c ? [
-          [a.type === 'Sold' ? 'Sale' : 'Investment', usd(grossOf(a))] as [string, string],
-          ['Shares', fmtShares(grossOf(a) / c.price)] as [string, string],
-          ['Price each', usd(c.price)] as [string, string],
-        ] : []),
+        ...(a.asset
+          ? [['Shares', fmtShares(a.asset.shares) + ' ' + a.asset.ticker] as [string, string]]
+          : c ? [['Shares', fmtShares(grossOf(a) / c.price)] as [string, string]] : []),
+        // The total is the headline of a record; the amount and the fee that
+        // add up to it are the detail, and they were both stated before the
+        // button was pressed.
+        ...(c ? [[a.type === 'Sold' ? 'You received' : a.asset ? 'Worth then' : 'Total',
+          usd(Math.abs(a.amount))] as [string, string]] : []),
         ['Reference', a.ref],
+
+        /* ----- folded ----- */
+        ...(a.asset ? [['Price each', usd(a.asset.price)] as [string, string]]
+          : c ? [
+            [a.type === 'Sold' ? 'Sale' : 'Investment', usd(grossOf(a))] as [string, string],
+            ['Price each', usd(c.price)] as [string, string],
+          ] : []),
         ['When', longWhen(a.at)],
         // The receipt used to say "None" on every entry, including the trades
         // that charged half a per cent — the one document a person keeps,
         // stating the wrong figure for the one thing it is kept for. The fee
         // is recorded on the movement now, so this reads it rather than
         // asserting it.
-        // "None — the rate above is what you get" was written for a currency
-        // conversion and printed on everything, including a loan drawdown with
-        // no rate anywhere on the sheet. None is the whole answer.
         ['Fee', a.fee ? usd(a.fee) : 'None'],
-        ...(c && !a.asset ? [[a.type === 'Sold' ? 'You received' : 'Total',
-          usd(Math.abs(a.amount))] as [string, string]] : []),
         ...(c && held ? [['You hold now',
-          `${fmtShares(held.shares)} shares · ${usd(held.shares * c.price)}`] as [string, string]] : [])
-      ),
-      calloutEl(a.settled
-        ? a.asset
-          // Not "this payment": no money moved. What moved was the share, and
-          // the one thing worth saying about a share that has gone is that it
-          // is gone.
-          ? `Settled. ${a.who} holds ${fmtShares(a.asset.shares)} ${a.asset.ticker} from this transfer, and it cannot be recalled.`
-          : 'Settled. Nothing about this payment is going to change now.'
-        : 'Still settling. It usually clears within a minute.'),
+          `${fmtShares(held.shares)} shares · ${usd(held.shares * c.price)}`] as [string, string]] : []),
+      ]),
       h('button', {
         class: 'btn btn-primary', text: 'Download receipt',
         on: { click: () => toast('Receipt saved as ' + a.ref + '.pdf') },

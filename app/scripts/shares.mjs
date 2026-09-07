@@ -113,8 +113,12 @@ console.log('SENDING ONE')
   // line of dollars with a name beside it.
   ok('the receipt names the company it was about',
      /AAPL · Apple/.test(rec) && /SHARES · 1.00 AAPL/.test(rec), rec.slice(0, 120))
+  ok('the total is above the fold and the arithmetic is behind it',
+     /WORTH THEN · \$224.10/.test(rec) && !/PRICE EACH/.test(rec), rec.slice(0, 140))
+  await p.locator('.panel-more').click(); await p.waitForTimeout(300)
   ok('and states the price it went at, not the price now',
-     /PRICE EACH · \$224.10/.test(rec) && /WORTH THEN/.test(rec))
+     /PRICE EACH · \$224.10/.test(
+       await p.evaluate(() => document.querySelector('.sheet')?.innerText.replace(/\n/g, ' · ') ?? '')))
   ok('and that it is gone', /cannot be recalled/.test(rec))
   ok('it opened in place, on the screen the send was made from',
      (await p.evaluate(() => location.hash)).startsWith('#/invest/aapl/send'),

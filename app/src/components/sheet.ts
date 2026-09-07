@@ -2,6 +2,7 @@ import { h, append } from '../ui'
 import { icon } from '../icons'
 import { closeSheet } from '../router'
 import { say } from '../announce'
+import { spinCoin } from './coin'
 
 /* ---------------- what makes a sheet a dialog ----------------
 
@@ -150,19 +151,69 @@ export function modalOver(
   return base
 }
 
-export function figure(label: string, value: string, cls = ''): HTMLElement {
+export function figure(label: string, value: string, cls = '', note = ''): HTMLElement {
   return h('div', { class: 'figure' },
     h('span', { class: 't-caps subtle', text: label }),
-    h('span', { class: 't-display-xl ' + cls, text: value }))
+    h('span', { class: 't-display-xl ' + cls, text: value }),
+    // Whether it is finished. It was a boxed callout at the foot of the sheet,
+    // which is 68px and the last place anybody looks for the status of the
+    // number at the top. It belongs with the number.
+    note ? h('span', { class: 'muted t-caption', text: note }) : null)
 }
 
+/** The facts of a record or a review.
+ *
+ *  One fact per row is right for four of them and wrong for eight. The buy
+ *  review ran 832px on a desktop and scrolled on a phone, and a receipt for a
+ *  trade ran 952 and scrolled on both — so the sheet where money is agreed to
+ *  and the sheet that is the record of it were the two longest dialogs in the
+ *  product, which is exactly backwards.
+ *
+ *  Past four facts the panel pairs them into two columns, which halves the
+ *  height and hides nothing. A value too long to sit in half a sheet takes the
+ *  whole width instead of wrapping into a column of ragged two-line cells. */
 export function panel(...rows: [string, string][]): HTMLElement {
-  const p = h('div', { class: 'panel' })
+  const p = h('div', { class: 'panel' + (rows.length > 4 ? ' pairs' : '') })
   for (const [label, value] of rows) {
-    p.appendChild(h('div', { class: 'cell' },
+    p.appendChild(h('div', { class: 'cell' + (value.length > 20 ? ' wide' : '') },
       h('span', { class: 't-caps subtle', text: label }),
       h('span', { class: 't-body-strong', text: value })))
   }
+  return p
+}
+
+/** The same facts, with the ones nobody opened this for folded away.
+ *
+ *  A receipt for a trade was the tallest dialog in the product: nine facts, a
+ *  company, a year of its price and three buttons, at 952px on a desktop and
+ *  scrolling on a phone. Pairing the rows was not enough on its own.
+ *
+ *  What stays is what somebody opens a receipt to check — who it was with,
+ *  what they got, what it came to, and the reference they are matching against
+ *  a statement. What folds is the arithmetic behind the total and the state of
+ *  the holding afterwards: still here, one press away, and no longer the reason
+ *  the sheet does not fit.
+ *
+ *  Only for a record. A review states every term it is asking agreement to,
+ *  and folding one of those would be hiding a term behind a button. */
+export function foldPanel(keep: number, rows: [string, string][]): HTMLElement {
+  const p = panel(...rows)
+  if (rows.length <= keep + 1) return p
+  const cells = [...p.children] as HTMLElement[]
+  const hidden = cells.slice(keep)
+  for (const c of hidden) c.hidden = true
+  let open = false
+  const more = h('button', {
+    class: 'panel-more', text: hidden.length + ' more details',
+  })
+  more.setAttribute('aria-expanded', 'false')
+  more.addEventListener('click', () => {
+    open = !open
+    for (const c of hidden) c.hidden = !open
+    more.textContent = open ? 'Fewer details' : hidden.length + ' more details'
+    more.setAttribute('aria-expanded', String(open))
+  })
+  p.appendChild(more)
   return p
 }
 
@@ -172,18 +223,22 @@ export function outcome(
   line: string,
   rows: [string, string][],
   primary: { label: string; onClick: () => void },
-  secondary?: { label: string; onClick: () => void }
+  secondary?: { label: string; onClick: () => void },
+  /** Whether this outcome is one to be pleased about. A trade that settled is;
+   *  one that did not come back confirmed is not, and a coin turning happily
+   *  over "Still settling" would be the product celebrating its own failure. */
+  opts: { celebrate?: boolean } = {},
 ): HTMLElement {
   // The reveal. Deliberately not confetti: this is the moment money left the
   // account, and an animation that rewards that is one working for the product
   // against the person — which is what Robinhood's confetti on executed orders
-  // was found to be. What is celebrated here is completion, not the trade. The
-  // green washes up from the foot of the sheet, the tick draws itself, and the
-  // words and the record arrive after it in that order, because that is the
-  // order somebody reads them in.
+  // was found to be. What is celebrated here is completion, not the trade — a
+  // coin turning, in the product's own dots, then the words and the record
+  // arriving after it in the order somebody reads them.
+  const glad = opts.celebrate !== false
   const el = sheet(
     '',
-    h('div', { class: 'tick', html: icon.check() }),
+    glad ? spinCoin() : h('div', { class: 'tick', html: icon.check() }),
     h('div', { class: 'figure' },
       // The outcome's own heading, where it actually reads: "Sent", "Bought",
       // "Still settling". It was a span, so the sheet had no heading at all
@@ -197,6 +252,7 @@ export function outcome(
       : null
   )
   el.querySelector('.sheet')?.classList.add('sheet-done')
+  if (glad) el.querySelector('.sheet')?.classList.add('sheet-glad')
   return el
 }
 
