@@ -1243,19 +1243,11 @@ th.right .th-sort { flex-direction: row-reverse; }
    the one with a button on it. */
 .gate-lead { flex: 0 1 400px; }
 
-/* The gradient is a layer of its own rather than the card's background,
-   because a background-image cannot be transitioned between two values and a
-   green that snaps on is a green that reads as a bug. It is first in the
-   tile, so the dot field — positioned, later in tree order — still paints on
-   top of it exactly as it did when the gradient was the card. */
-.gate::before {
-  content: ''; position: absolute; inset: 0; opacity: 0; pointer-events: none;
-  background: linear-gradient(180deg,
-    var(--sunken-hover) 0%, var(--sunken-hover) 42%, var(--accent) 100%);
-}
-@media (prefers-reduced-motion: no-preference) {
-  .gate::before { transition: opacity var(--t-base) var(--ease); }
-}
+/* There was a green gradient here, washing up from the bottom edge on hover.
+   It is gone. A light coming on is not a thing responding — it was the same
+   wash whatever the pointer did, and it put colour under a title that is
+   supposed to be the loudest thing on the card. What answers now is the field
+   itself: the dots move out of the pointer's way. See `stir` in art.ts. */
 .gate-words { display: flex; flex-direction: column; gap: 8px; position: relative; z-index: 1; }
 .gate-words .muted { font-size: 14px; line-height: 20px; }
 
@@ -1285,6 +1277,11 @@ th.right .th-sort { flex-direction: row-reverse; }
 .gate-art {
   position: absolute; left: 0; right: 0; bottom: 0; height: 196px;
   overflow: hidden; pointer-events: none;
+  /* Down to a third. The field was drawn at full ink and read as the subject
+     of the card: three tiles of texture with some words on them. It is the
+     second thing on a door, not the first, and a third is the weight at which
+     the title wins and the object is still an object. */
+  opacity: 0.34;
   /* And it dissolves into the card before it reaches the words. The words
      already sit above it in the stacking order, which stops them being
      covered and does nothing at all for reading grey text over a field of
@@ -1292,6 +1289,16 @@ th.right .th-sort { flex-direction: row-reverse; }
      material behaving as it does everywhere else. */
   -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 20%);
   mask-image: linear-gradient(to bottom, transparent 0, #000 20%);
+}
+/* Under the pointer a dot goes where it is put, with no transition on it: a
+   thousand transforms restarting a thousand transitions every frame is the
+   whole cost of this effect, and the pointer is already moving continuously,
+   so there is nothing for an eased follow to smooth. What does need easing is
+   the way home. `.homing` is set for the length of one return and the class
+   goes off again, so the transition exists for 220ms and not for the rest of
+   the time the field is being pushed around. */
+@media (prefers-reduced-motion: no-preference) {
+  .gate-art.homing circle { transition: transform 220ms var(--ease); }
 }
 
 @media (max-width: 899px) {
@@ -1823,12 +1830,10 @@ th.right .th-sort { flex-direction: row-reverse; }
   }
   a.card:hover .promo-badge { background: var(--control-pressed); }
 
-  /* -- the three doors on Home. The lift and the shadow are the same as any
-     other card that navigates; what is theirs is the green, which arrives
-     from the bottom edge under the dot field. The card keeps its own flat
-     background underneath: the gradient's top stop is --sunken-hover, so the
-     two agree at the top and the layer only has to carry the difference. -- */
-  .gate:hover::before, .gate:focus-visible::before { opacity: 1; }
+  /* -- the three doors on Home take the lift and the shadow every card that
+     navigates takes, and nothing else. What was theirs — a green gradient on
+     hover — is now the field parting under the pointer, which is a thing the
+     card does rather than a colour it puts on. -- */
 
   /* -- buttons. Each variant moves along the ramp it already lives on. -- */
   .btn-primary:hover { background: var(--inverse-hover); }

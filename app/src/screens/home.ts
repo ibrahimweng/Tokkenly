@@ -1,7 +1,7 @@
 import { h, link, countTo } from '../ui'
 import { icon } from '../icons'
 import { barChart, type Range } from '../components/chart'
-import { objectArt, level, PIECE, NOTES, PURSE, type ObjectField } from '../components/art'
+import { objectArt, stir, level, PIECE, NOTES, PURSE, type ObjectField } from '../components/art'
 import { shell, pageHeader, bell, jumpOpen } from '../components/shell'
 import { card, cardHead, headLink, kv, amount, directionMark, figureWithEye } from '../components/bits'
 import { table } from '../components/table'
@@ -303,7 +303,14 @@ function gateway(): HTMLElement {
     a.appendChild(h('span', { class: 'gate-cta' },
       h('span', { text: opts.cta }),
       h('span', { class: 'ic', html: icon.chevron() })))
-    a.appendChild(h('div', { class: 'gate-art' }, objectArt(opts.art, opts.at)))
+    // Every door's object sits in the bottom right, away from the words, which
+    // start at the left and end well before it.
+    const art = objectArt(opts.art, opts.at, undefined, 'right')
+    a.appendChild(h('div', { class: 'gate-art' }, art))
+    // And the whole card is the surface the pointer is felt on, not only the
+    // strip the picture occupies: passing over the title already stirs the
+    // field under it.
+    stir(a, art)
     return a
   }
   // Two rows, the way D01c has them: the greeting carries the name and the

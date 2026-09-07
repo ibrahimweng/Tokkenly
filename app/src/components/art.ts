@@ -103,6 +103,10 @@ type Mask = (x: number, y: number) => boolean
    Home and the onboarding panels. Nothing uses both, so nothing is laid out
    twice. */
 export interface Box { cols: number; rows: number; mid: number; from: number; to: number }
+/** Which bottom corner the object is composed into, and therefore which one
+ *  the crop must keep. */
+export type Corner = 'left' | 'right'
+
 export const TALL: Box = { cols: 104, rows: 83, mid: 42, from: 6, to: 66 }
 export const WIDE: Box = { cols: 116, rows: 44, mid: 22, from: 5, to: 74 }
 
@@ -185,6 +189,29 @@ function makeField(mask: Mask, box: Box): ObjectField {
   // rather than lighting it in reading order.
   dots.sort((a, b) => a.d - b.d)
   return { cols, rows, dots }
+}
+
+/** The same field, handed the other way.
+ *
+ *  Every object is composed into the left of its box and dissolves rightward,
+ *  because that is the one direction the drift in `makeField` runs. Putting
+ *  the object in the other bottom corner is therefore not a crop — cropping to
+ *  the right keeps the dust and throws the subject away, which is exactly what
+ *  it did. It is a mirror: the object goes to the far end and the drift goes
+ *  with it, so the dust still trails away from the subject rather than piling
+ *  up against it.
+ *
+ *  Order is preserved, which matters more than it looks: `objectArt` wakes the
+ *  first `n` loose specks in this array, so a mirrored field wakes the same
+ *  specks in the same sequence and the reading is the same reading. */
+const mirrors = new WeakMap<ObjectField, ObjectField>()
+export function flip(f: ObjectField): ObjectField {
+  let m = mirrors.get(f)
+  if (!m) {
+    m = { cols: f.cols, rows: f.rows, dots: f.dots.map((p) => ({ ...p, x: f.cols - 1 - p.x })) }
+    mirrors.set(f, m)
+  }
+  return m
 }
 
 const built = new Map<string, ObjectField>()
@@ -301,25 +328,30 @@ export const PURSE = (): ObjectField => field('purse', (() => {
  *  the break and the dust carry — a position you have barely opened shows the
  *  thing itself and little else, and a full one throws it across the band. */
 export function objectArt(
-  f: ObjectField, at = 1, ramp?: Record<string, string>,
+  f: ObjectField, at = 1, ramp?: Record<string, string>, corner: Corner = 'left',
 ): SVGSVGElement {
   const PAINT = ramp ? { ...TONE, ...ramp } : TONE
+  // Right means mirrored and then cropped from the right, not cropped from the
+  // right: see `flip`.
+  const src = corner === 'right' ? flip(f) : f
   const NS = 'http://www.w3.org/2000/svg'
   const svg = document.createElementNS(NS, 'svg')
-  svg.setAttribute('viewBox', `0 0 ${f.cols * CELL} ${f.rows * CELL}`)
+  svg.setAttribute('viewBox', `0 0 ${src.cols * CELL} ${src.rows * CELL}`)
   svg.setAttribute('width', '100%')
   svg.setAttribute('height', '100%')
-  // Bottom left is where the object sits and where it runs off the edge, so it
-  // is the corner that must survive the crop. Anything lost is the top right,
-  // which is where the dust is going anyway.
-  svg.setAttribute('preserveAspectRatio', 'xMinYMax slice')
+  // The bottom corner the object sits in is the corner that must survive the
+  // crop; what is lost is the opposite top one, which is where the dust is
+  // going anyway. Which corner is the composition's to choose — a picture that
+  // runs off the left edge on a card whose words start at the left is a
+  // picture arguing with them.
+  svg.setAttribute('preserveAspectRatio', corner === 'right' ? 'xMaxYMax slice' : 'xMinYMax slice')
   svg.setAttribute('aria-hidden', 'true')
   svg.setAttribute('focusable', 'false')
 
-  const loose = f.dots.filter((p) => p.d > 0).length
+  const loose = src.dots.filter((p) => p.d > 0).length
   const wake = Math.round(loose * Math.max(0, Math.min(1, at)))
   let seen = 0
-  for (const p of f.dots) {
+  for (const p of src.dots) {
     const c = document.createElementNS(NS, 'circle')
     c.setAttribute('cx', String(p.x * CELL + CELL / 2))
     c.setAttribute('cy', String(p.y * CELL + CELL / 2))
@@ -331,4 +363,106 @@ export function objectArt(
     svg.appendChild(c)
   }
   return svg
+}
+
+/* ------------------------------------------------------------ the stir --
+   A card 368 tall that navigates and answers with nothing reads as a poster,
+   and the answer it used to give was a green gradient washing up from the
+   bottom edge. That is a light coming on, not a thing responding: the same
+   wash whatever the cursor did, and it argued with the field it lit.
+
+   The field is made of objects, and an object made of loose dots is a thing a
+   hand can push through. So the cursor pushes. Dots inside its reach drift
+   away from it, hardest under the pointer and fading to nothing at the edge,
+   and drift home when it leaves. Nothing changes colour: the picture is
+   already the quiet half of the card, and a colour arriving under a title is
+   the same competition by another name.
+
+   Cost, because a field is between one and two thousand circles. The loop
+   reads one matrix and writes only the dots inside reach — a few hundred, not
+   the whole field — and a dot that has been moved is remembered so it can be
+   put back in one pass rather than searched for. Frames are asked for by
+   pointer movement and stop arriving when it does. */
+/* Both in CSS pixels, because that is the space a hand is in. The field's own
+   units are whatever the composition needed, and a reach written in them would
+   mean something different on every card that used it. */
+const REACH = 420          // how far from the pointer a dot still feels it
+const PUSH = 30            // how far a dot directly under it goes, at most
+const FAINT = 0.5          // under half a pixel is not a movement, it is a cost
+
+export function stir(card: HTMLElement, svg: SVGSVGElement): void {
+  // A hover effect for a device with no hover, and motion for somebody who
+  // asked for none: neither is worth a frame.
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+  let dots: { el: SVGCircleElement; x: number; y: number }[] | null = null
+  const moved = new Set<SVGCircleElement>()
+  let mx = 0, my = 0, queued = false
+
+  let homing = 0
+  const home = () => {
+    if (!moved.size) return
+    // Eased, and only here: see the note on `.homing` in components.css.
+    const box = svg.parentElement
+    box?.classList.add('homing')
+    for (const el of moved) el.style.transform = ''
+    moved.clear()
+    clearTimeout(homing)
+    homing = setTimeout(() => box?.classList.remove('homing'), 260)
+  }
+
+  const frame = () => {
+    queued = false
+    // A push that lands mid-return would be eased, and a pointer coming back
+    // into the card would drag the field behind it.
+    if (homing) { clearTimeout(homing); homing = 0; svg.parentElement?.classList.remove('homing') }
+    const m = svg.getScreenCTM()
+    if (!m) return
+    if (!dots) {
+      dots = [...svg.querySelectorAll('circle')].map((el) => ({
+        el, x: Number(el.getAttribute('cx')), y: Number(el.getAttribute('cy')),
+      }))
+    }
+    // The pointer, in the field's own coordinates. Taken from the matrix
+    // rather than from the box and the ratio, because the field is cropped
+    // and a `slice` crop is exactly where hand arithmetic goes wrong.
+    const at = new DOMPoint(mx, my).matrixTransform(m.inverse())
+    // One pixel, in field units. The field is cropped with `slice`, so this is
+    // taken off the matrix rather than off the box and the ratio, which is
+    // exactly where doing it by hand goes wrong.
+    const per = 1 / Math.hypot(m.a, m.b)
+    const reach = REACH * per, push = PUSH * per, faint = FAINT * per
+    const still = new Set(moved)
+    for (const d of dots) {
+      const dx = d.x - at.x, dy = d.y - at.y
+      const d2 = dx * dx + dy * dy
+      if (d2 > reach * reach) continue
+      const len = Math.sqrt(d2) || 1
+      // Cubed falloff. Squared was too flat: at a reach wide enough to be felt
+      // from the words the whole field slid as one piece, which is a picture
+      // being dragged rather than a picture being pushed through. Cubed keeps
+      // the shove local and lets the rest of the reach be a long soft tail.
+      const t = 1 - len / reach
+      const by = push * Math.pow(t, 1.6)
+      // And a dot moving less than half a pixel is not moving. Dropping those
+      // is most of the field on a wide tile, and every one of them costs a
+      // style write and a transition the eye will never see.
+      if (by < faint) continue
+      const k = by / len
+      d.el.style.transform = `translate(${(dx * k).toFixed(1)}px, ${(dy * k).toFixed(1)}px)`
+      moved.add(d.el)
+      still.delete(d.el)
+    }
+    for (const el of still) { el.style.transform = ''; moved.delete(el) }
+  }
+
+  card.addEventListener('pointermove', (e) => {
+    if (e.pointerType === 'touch') return
+    mx = e.clientX; my = e.clientY
+    if (!queued) { queued = true; requestAnimationFrame(frame) }
+  })
+  card.addEventListener('pointerleave', home)
+  // A card that navigates: the field would otherwise be left holding the shape
+  // of a pointer that has gone somewhere else.
+  card.addEventListener('blur', home, true)
 }

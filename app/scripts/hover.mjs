@@ -129,6 +129,68 @@ const rmState = await rp.$eval('a.card.tile', (e) => {
 })
 console.log('reduced motion:', JSON.stringify(rmState))
 
+/* The three doors on Home answer with the field rather than with a colour.
+   There was a green gradient here; it was a light coming on — the same wash
+   wherever the pointer was — and it is gone. What replaced it is the only
+   hover in the product that is not a surface change, so it is the only one
+   this suite cannot measure with `look`, and it gets its own reading:
+
+   under the pointer the dots go somewhere, further off they go a little way,
+   off the card they are all home again, and none of it happens for somebody
+   who asked for no motion. */
+{
+  const shifted = (pg) => pg.evaluate(() => {
+    const cs = [...document.querySelectorAll('.gate .gate-art circle')]
+      .map((c) => c.style.transform)
+      .filter(Boolean)
+      .map((t) => { const m = t.match(/translate\(([-\d.]+)px, ([-\d.]+)px\)/); return m ? Math.hypot(+m[1], +m[2]) : 0 })
+    return { n: cs.length, most: cs.length ? Math.max(...cs) : 0 }
+  })
+  // Its own page: the one this suite has been using is seeded on Detailed,
+  // and the doors are Simple's.
+  const door = await b.newPage({ viewport: { width: 1440, height: 1000 } })
+  await noFonts(door); await seen(door)
+  door.on('pageerror', (e) => errors.push(String(e)))
+  await door.goto(B + '/', { waitUntil: 'networkidle' }); await door.waitForTimeout(250)
+  await door.mouse.move(0, 0); await door.waitForTimeout(300)
+  const rest = await shifted(door)
+  const box = await door.locator('.gate').first().boundingBox()
+  await door.mouse.move(box.x + box.width * 0.75, box.y + box.height * 0.85); await door.waitForTimeout(260)
+  const under = await shifted(door)
+  await door.mouse.move(box.x + 40, box.y + 40); await door.waitForTimeout(260)
+  const far = await shifted(door)
+  await door.mouse.move(0, 0); await door.waitForTimeout(500)
+  const gone = await shifted(door)
+  // In field units, not pixels — the field is cropped, and one pixel is about
+  // 2.7 of them on a 196-tall door.
+  console.log('\ndoor field  rest', JSON.stringify(rest), ' under the pointer', JSON.stringify(under))
+  console.log('door field  from the title', JSON.stringify(far), ' after leaving', JSON.stringify(gone))
+  const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
+  ok('the field is still at rest until a pointer arrives', rest.n === 0, `${rest.n} moved`)
+  ok('the pointer opens a hole in it', under.n > 100 && under.most > 40,
+     `${under.n} dots, furthest ${under.most.toFixed(0)}`)
+  ok('and it is felt from the words too, more gently',
+     far.n > 0 && far.most > 4 && far.most < under.most,
+     `${far.n} dots, furthest ${far.most.toFixed(0)}`)
+  ok('and every dot goes home when the pointer leaves', gone.n === 0, `${gone.n} still out`)
+  // The green is gone, and nothing put another colour in its place.
+  const wash = await door.evaluate(() => {
+    const s = getComputedStyle(document.querySelector('.gate'), '::before')
+    return s.content !== 'none' && s.backgroundImage !== 'none'
+  })
+  ok('and no gradient came back to do the job instead', !wash)
+  await door.close()
+
+  const still = await rm.newPage(); await noFonts(still)
+  await seen(still); await still.goto(B + '/', { waitUntil: 'networkidle' }); await still.waitForTimeout(200)
+  const sbox = await still.locator('.gate').first().boundingBox()
+  await still.mouse.move(sbox.x + sbox.width * 0.75, sbox.y + sbox.height * 0.85); await still.waitForTimeout(300)
+  const asked = await still.evaluate(() =>
+    [...document.querySelectorAll('.gate .gate-art circle')].filter((c) => c.style.transform).length)
+  ok('and nothing moves at all for somebody who asked for no motion', asked === 0, `${asked} moved`)
+  await still.close()
+}
+
 const faint = rows.filter((r) => !r.note && r.step < 2 && !r.underline && !r.fg && !r.moves && !r.lifts)
 const lowAa = rows.filter((r) => !r.note && r.aa < 4.5)
 console.log('\nfaint (no visible answer):', faint.length ? faint.map((r) => r.label).join(', ') : 'none')

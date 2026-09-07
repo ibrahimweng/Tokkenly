@@ -6787,6 +6787,81 @@ true in this file for five tiers.
      that serves both will be asked for the wrong one somewhere. Decide which
      surface gets which, rather than making one of them worse until they match.
 
+### 11g.51 The doors answer with the field
+
+A door on Home is 368 tall, navigates, and used to answer a pointer with a
+green gradient washing up from its bottom edge. That is a light coming on. It
+was the same wash wherever the cursor was, it told you nothing about where you
+were pointing, and it put a colour under a title that is supposed to be the
+loudest thing on the card. It is gone.
+
+What answers now is the picture. Every field in this product is a few thousand
+loose dots, and loose dots are a thing a hand can push through — so the pointer
+pushes. Dots inside its reach drift away from it, hardest under the pointer and
+fading to nothing at the edge, and drift home when it leaves. Nothing changes
+colour. The picture is already the quiet half of the card and a colour arriving
+under a title is the same competition by another name.
+
+**The reach is 420px and the falloff is `t^1.6`,** which is two decisions
+arguing and the argument is worth writing down. A tight reach gives a crisp
+hole under the pointer and nothing at all when the cursor is up in the words,
+where it spends most of its time on a card whose object sits in the opposite
+corner. A wide one is felt everywhere but slides the whole field as one piece,
+which reads as a picture being dragged rather than pushed. Between them: wide
+enough that the words reach the object — from the title the nearest dots move
+about 15px, which is a lean rather than a shove — and steep enough that under
+the pointer the field opens a hole with a rim of dots pressed around it.
+
+**And the corner.** The three objects were asked to move to the bottom right.
+The first attempt changed one attribute — `xMinYMax slice` to `xMaxYMax` — and
+made the pictures worse: every object in this file is composed into the left of
+its box and dissolves rightward, because that is the one direction the drift in
+`makeField` runs. Cropping from the right keeps the dust and throws the subject
+away. It is not a crop, it is a mirror: the object goes to the far end and the
+drift goes with it, so the dust still trails away from the subject rather than
+piling up against it. `flip` does that, order preserved — `objectArt` wakes the
+first n loose specks in the array, so a mirrored field wakes the same specks in
+the same sequence and the reading of the portfolio is the same reading.
+
+**The fields are at a third.** They were drawn at full ink and read as the
+subject of the card: three tiles of texture with some words on them. A third is
+the weight at which the title wins and the object is still an object.
+
+**What it cost, and what that cost was.** The first working version ran at 19
+frames a second — 53ms a frame, 123 at worst. The obvious suspect was the
+thousand style writes, and the obvious suspect was wrong: the writes are
+nothing. The cost was a `transition: transform 160ms` on every circle, which
+meant a thousand transitions being *restarted* every frame. Taking it off took
+the frame from 53ms to 16.7 — a clean 60 — and cost nothing visible, because
+the pointer is already moving continuously and there is nothing for an eased
+follow to smooth. The one movement that does need easing is the way home, so
+that is the one that has a transition: a `.homing` class goes on for 260ms
+when the pointer leaves and comes straight off again.
+
+Two smaller things fell out of it. A dot moving less than half a pixel is not
+moving, and dropping those is a real slice of a wide field. And the pointer is
+converted into the field's coordinates off the matrix — `getScreenCTM()` —
+rather than off the box and the ratio, because the field is cropped with
+`slice` and a cropped ratio is exactly where doing it by hand goes wrong.
+
+`hover.mjs` measures every hover in the product by the surface under the
+pointer, and this is the first one that is not a surface change at all, so it
+gets its own reading: at rest nothing has moved, under the pointer a hundred
+dots or more have and the furthest has gone a long way, from the words some
+have and the furthest has gone a short way, after leaving none have, and for
+somebody who asked for no motion none of it happens at any point.
+
+132. **A corner is a composition, not a crop.** Moving a picture to the other
+     side of its frame by changing which edge survives the crop keeps the part
+     that was meant to be thrown away. Mirror the composition and the light,
+     the drift and the bleed go with it.
+
+133. **A transition is a cost per element, per frame.** A thousand transforms
+     is nothing; a thousand transitions restarting every frame is a third of a
+     second of work. Transition the movement that needs easing — usually the
+     one back to rest — and let the one that is already following a hand
+     follow it.
+
 ### 11g.49 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from
