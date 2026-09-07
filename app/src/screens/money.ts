@@ -377,33 +377,6 @@ export function railParams(d: Destination): Record<string, string> {
 }
 
 
-/** What people have sent you. Receive was a dialog with a code in it and
- *  nothing else; the question straight after "here is my address" is "did the
- *  last one arrive", and the answer was two screens away. */
-function received(): HTMLElement | null {
-  const rows = state.activity.filter((a) => a.kind === 'payment' && a.amount > 0).slice(0, 5)
-  if (!rows.length) return null
-  return card(
-    cardHead('Money people have sent you',
-      h('button', { class: 'link', text: 'See all',
-        on: { click: () => go('/activity?filter=payments') } })),
-    table(
-      [
-        { key: 'w', label: 'Who' }, { key: 'when', label: 'When', optional: true },
-        { key: 'ref', label: 'Reference', optional: true }, { key: 'amt', label: 'Amount', align: 'right' },
-      ],
-      rows.map((a) => [
-        h('span', { class: 'two-line' },
-          h('span', { class: 't-body-strong', text: a.who }),
-          h('small', { class: 'phone-only', text: when(a.at) })),
-        h('span', { class: 'muted', text: when(a.at) }),
-        h('span', { class: 'muted', text: a.ref }),
-        amount(a),
-      ]),
-      (i) => openSheet('receipt', { ref: rows[i].ref })
-    )
-  )
-}
 
 /* ---------------------------------------------------------------------------
    Sending a share.
@@ -578,70 +551,12 @@ export function sendSharesScreen(ticker: string): HTMLElement {
   })
 }
 
+/** Receive was a screen of its own showing a Base address, beside an Add money
+ *  screen showing an account number — two answers to "how does money get in",
+ *  on two screens, neither naming the other. It is the Base tab now. The
+ *  address still resolves, because somebody has it bookmarked. */
 export function receiveScreen(): HTMLElement {
-  const address = WALLET
-  const short = address.slice(0, 12) + '…' + address.slice(-4)
-
-  // A deterministic block pattern. It is not a real code, and the copy button
-  // is what actually carries the address.
-  const qr = h('div', { class: 'qr', ariaLabel: 'A code that resolves to your address' })
-  let seed = 42
-  for (let i = 0; i < 121; i++) {
-    seed = (seed * 1103515245 + 12345) % 2147483648
-    qr.appendChild(h('span', { class: seed % 100 > 45 ? 'on' : '' }))
-  }
-
-  const copy = () => {
-    navigator.clipboard?.writeText(address).catch(() => undefined)
-    toast('Address copied', 'success')
-  }
-
-  // A screen, like every other way of moving money. It was a dialog, which
-  // meant the warning about the network — the one line here that costs real
-  // money to get wrong — lived in a box you dismiss, and an address nobody
-  // could link somebody to.
-  const left = card(
-    cardHead('Your address', h('span', { class: 'muted', text: 'Base' })),
-    h('div', { class: 'stack-12', style: { alignItems: 'center' } },
-      qr,
-      h('span', { class: 'muted', text: 'Scan this to pay ' + state.person.name })),
-    h('div', { class: 'field', style: { justifyContent: 'space-between' } },
-      h('span', { class: 't-body-strong', text: short }),
-      h('button', { class: 'icon-btn', html: icon.copy(), ariaLabel: 'Copy the address',
-        on: { click: copy } })),
-    h('button', { class: 'btn btn-primary', text: 'Copy address', on: { click: copy } }),
-    callout('Base network only. Anything else sent here is lost.', 'warning'))
-  left.classList.add('col-compose')
-
-  return shell(
-    'wallet',
-    pageHeader('Receive money', eyebrow('Cash available', usd(state.cash))),
-    h('div', { class: 'row' }, left,
-      h('div', { class: 'stack grow' },
-        card(
-          cardHead('What happens when somebody pays you'),
-          kv('Network', 'Base'),
-          kv('Fee', 'None, either side'),
-          kv('Arrives', 'In about a minute, any day of the week'),
-          kv('Held as', 'Dollars in your wallet'),
-          h('span', { class: 'muted t-caption',
-            text: 'Anyone with a Base wallet can pay this address. No Tokkenly account needed.' })),
-        // The other way money reaches you. Two inbound rails described on two
-        // screens, neither mentioning the other, is the same contradiction as
-        // one errand wearing two names: somebody asking "how do I get paid"
-        // would have found half the answer. An address takes dollars from a
-        // wallet; the naira account takes naira from any Nigerian bank, which
-        // in this market is how a salary arrives.
-        card(
-          cardHead('Or be paid in naira',
-            h('button', { class: 'link', text: 'Add money yourself',
-              on: { click: () => go('/addmoney') } })),
-          kv('Bank', state.va.bank),
-          kv('Account number', state.va.number),
-          kv('Account name', state.va.name),
-          h('span', { class: 'muted t-caption',
-            text: 'Anyone can pay naira into this account. It lands in your wallet as dollars.' })),
-        received())))
+  return addMoneyScreen('base')
 }
 
 /** What has come in this way before, or gone out this way before. Invest and
@@ -723,48 +638,6 @@ export type Via = 'transfer' | 'card'
 export const addVia = (): Via =>
   (current().query.get('via') === 'card' && switchOn('fund.card') ? 'card' : 'transfer')
 
-/** The two rails, as two choices you can see at once. Not a dropdown: they
- *  differ in what they cost and how long they take, and both facts belong on
- *  the thing being chosen rather than in a line underneath it. */
-function railPicker(now: Via, head = true): HTMLElement {
-  const one = (key: Via, label: string, cost: string, speed: string, ic: string) => {
-    const b = h('button', {
-      class: 'rail' + (key === now ? ' on' : ''),
-      on: { click: () => go('/addmoney' + (key === 'card' ? '?via=card' : '')) },
-    },
-      h('span', { class: 'mark', html: ic }),
-      h('span', { class: 'two-line grow' },
-        h('span', { class: 't-body-strong', text: label }),
-        h('small', { text: speed })),
-      h('span', { class: 't-body-strong nowrap' + (cost === 'Free' ? ' pos' : ''), text: cost }))
-    // Two buttons where one is chosen: pressed, not checked. A screen reader
-    // that only hears "Bank transfer, Card" cannot tell which is in force.
-    b.setAttribute('aria-pressed', String(key === now))
-    return b
-  }
-  // A rail that has been switched off is not hidden, it is shown as off. A
-  // door that vanishes makes people think they misremembered; one that says
-  // "not right now" tells them to come back.
-  const cardOn = switchOn('fund.card')
-  const rows = h('div', { class: 'stack-8' },
-    one('transfer', 'Bank transfer', 'Free', 'A minute or two', icon.convert()),
-    cardOn
-      ? one('card', 'Card', state.fees.card + '%', 'Seconds', icon.wallet())
-      : h('div', { class: 'rail off' },
-          h('span', { class: 'mark', html: icon.wallet() }),
-          h('span', { class: 'two-line grow' },
-            h('span', { class: 't-body-strong', text: 'Card' }),
-            h('small', { text: 'Paused. Use a bank transfer instead.' })),
-          h('span', { class: 'muted t-caption nowrap', text: 'Off' })))
-  // Above the amount, not beside it. Which rail you are on changes the fee,
-  // the wait and what can be promised about the rate — so it is the same kind
-  // of thing as Send's "To" row, and it goes in the same place, which is also
-  // the only place a phone has room for it.
-  return head
-    ? h('div', { class: 'stack-8' },
-        h('span', { class: 't-caps subtle', text: 'How it arrives' }), rows)
-    : card(cardHead('How the money gets here'), rows)
-}
 
 /** Where to send the naira. A dedicated account, permanently yours, which is
  *  why there is no reference to quote: money reaching it can only be yours.
@@ -788,85 +661,240 @@ function virtualAccount(): HTMLElement {
         h('span', { class: 't-body-strong', text: v.number }),
         h('span', { class: 'muted', html: icon.copy() }))),
     kv('Account name', v.name),
-    callout('This account is yours and never changes. Send naira here and it lands in your wallet.'))
+    callout('This account is yours and never changes.'))
 }
 
-export function addMoneyScreen(): HTMLElement {
-  const how = addVia()
+/* ---------------------------------------------------------------------------
+   Adding money is one errand with three ways in.
+
+   It was two screens. "Add money" asked how much and then handed over an
+   account number; "Receive" showed a Base address. Both answer the same
+   question — how does money get into this wallet — and asking somebody to know
+   which of two screens holds their answer is asking them to know the plumbing.
+
+   And two of the three take no amount at all. A bank transfer and a Base
+   payment are *pushed*: the product hands over the details and waits. Being
+   asked "how much?" before being given an account number is being asked to
+   commit to a figure that nothing will hold you to. Only the card is pulled,
+   and only the card asks.
+
+   So: one door, three tabs, and the tab is in the address so it can be linked
+   to and come back to. Each tab is the details you need and what has already
+   arrived that way.
+   --------------------------------------------------------------------------- */
+
+export type AddTab = 'bank' | 'base' | 'card'
+
+const ADD_TABS: [AddTab, string][] = [['bank', 'Bank transfer'], ['base', 'Base'], ['card', 'Card']]
+
+export const addTab = (): AddTab => {
+  const t = current().query.get('tab')
+  if (t === 'base') return 'base'
+  if (t === 'card' && switchOn('fund.card')) return 'card'
+  return 'bank'
+}
+
+/** What has already come in this way. Split by rail, because a tab that lists
+ *  every deposit is a tab that answers a question you did not ask on it. */
+function arrived(tab: AddTab, full = true): HTMLElement {
+  const rows = state.activity
+    .filter((a) => a.kind === 'payment' && a.amount > 0 && a.rail === tab)
+    .slice(0, full ? 4 : 2)
+  const head = cardHead(
+    tab === 'base' ? 'Paid to this address' : 'Added this way',
+    h('button', { class: 'link', text: 'See all',
+      on: { click: () => go('/activity?filter=payments') } }))
+  if (!rows.length) {
+    return card(head, h('span', { class: 'muted',
+      text: tab === 'base'
+        ? 'Nothing has been sent to this address yet.'
+        : 'Nothing has come in this way yet.' }))
+  }
+  // Inside the dialog it is a short list rather than a table: a header row
+  // over two rows of data is a header row that costs more than it explains.
+  if (!full) {
+    return card(head, ...rows.map((a) =>
+      h('div', { class: 'kv' },
+        h('span', { class: 'two-line' },
+          h('span', { class: 't-body-strong', text: activityLabel(a) }),
+          h('small', { class: 'muted', text: when(a.at) })),
+        amount(a))))
+  }
+  return card(head, table(
+    [
+      { key: 'w', label: 'What' }, { key: 'when', label: 'When', optional: true },
+      { key: 'amt', label: 'Amount', align: 'right' },
+    ],
+    rows.map((a) => [
+      h('span', { class: 'two-line' },
+        h('span', { class: 't-body-strong', text: activityLabel(a) }),
+        h('small', { class: 'phone-only', text: when(a.at) })),
+      h('span', { class: 'muted', text: when(a.at) }),
+      amount(a),
+    ]),
+    (i) => openSheet('receipt', { ref: rows[i].ref })
+  ))
+}
+
+/** The tabs. Chips rather than a picker, because there are three of them and
+ *  all three fit on one line at every width this product draws. */
+export function addTabRow(now: AddTab): HTMLElement {
+  const row = h('div', { class: 'chip-row' })
+  for (const [key, label] of ADD_TABS) {
+    // A rail operations has switched off is shown as off, not hidden. A door
+    // that vanishes makes people think they misremembered it; one that says
+    // "not right now" tells them to come back. That was the rail picker's rule
+    // and it is still the rule now the rails are tabs.
+    const off = key === 'card' && !switchOn('fund.card')
+    const b = h('button', {
+      class: 'chip' + (off ? ' off' : ''), ariaPressed: key === now && !off,
+      disabled: off,
+      on: { click: () => (off ? undefined : go(current().path + '?tab=' + key)) },
+    }, h('span', { text: label }), off ? h('small', { text: 'Paused' }) : null)
+    if (off) b.title = 'Card funding is off right now. Transfers are unaffected.'
+    row.appendChild(b)
+  }
+  return row
+}
+
+/** Your Base address, and the code for it. Lifted out of the Receive screen
+ *  whole: the address, the block pattern, the copy, and the one line that
+ *  costs real money to get wrong. */
+function basePanel(full = true): HTMLElement {
+  const address = WALLET
+  const short = address.slice(0, 12) + '\u2026' + address.slice(-4)
+  const qr = h('div', { class: 'qr', ariaLabel: 'A code that resolves to your address' })
+  let seed = 42
+  for (let i = 0; i < 121; i++) {
+    seed = (seed * 1103515245 + 12345) % 2147483648
+    qr.appendChild(h('span', { class: seed % 100 > 45 ? 'on' : '' }))
+  }
+  const copy = () => {
+    navigator.clipboard?.writeText(address).catch(() => undefined)
+    toast('Address copied', 'success')
+  }
+  return card(
+    cardHead('Your address', h('span', { class: 'muted', text: 'Base' })),
+    h('div', { class: 'stack-12', style: { alignItems: 'center' } },
+      qr,
+      full ? h('span', { class: 'muted', text: 'Scan this to pay ' + state.person.name }) : null),
+    h('div', { class: 'field', style: { justifyContent: 'space-between' } },
+      h('span', { class: 't-body-strong', text: short }),
+      h('button', { class: 'icon-btn', html: icon.copy(), ariaLabel: 'Copy the address',
+        on: { click: copy } })),
+    // The field carries a copy button of its own, so the wide one is the
+    // page's. In a dialog it is 56 pixels saying what the icon beside the
+    // address already said.
+    full ? h('button', { class: 'btn btn-primary', text: 'Copy address', on: { click: copy } }) : null,
+    callout('Base network only. Anything else is lost.', 'warning'))
+}
+
+/** The one tab that has to ask. A card is pulled, so a figure has to exist
+ *  before anything can happen — and the fee is on it rather than on the review
+ *  behind it, because a fee you meet after pressing the button is a fee you
+ *  found out about later. */
+function cardPanel(): HTMLElement {
   const plastic = state.cards[0]
   const rate = state.ngnPerUsd
-  const owed = (v: number) => Math.round(v * rate) + (how === 'card' ? cardFee(Math.round(v * rate)) : 0)
-  return composerScreen({
-    place: 'wallet',
-    base: walletScreen,
-    // The registry, the breadcrumb, the palette and the wallet tile all call
-    // this Add money. The screen called itself Buy dollars, its button said
-    // Buy, and its review said "You are buying" — five surfaces, three names,
-    // for one thing a person does once a week.
-    title: 'Add money',
-    eyebrow: ['Cash available', usd(state.cash)],
-    cardLabel: 'How much',
-    cardRight: 'Minimum ' + usd(10, false),
-    initial: 200,
-    max: Math.min(5000, movementCeiling()),
-    maxLabel: ceilingLabel2(5000),
-    note: how === 'card'
-      ? 'Charged to your card in naira. In your wallet in seconds.'
-      : 'Send naira from your bank. Dollars land when it does.',
-    quick: [
-      { label: usd(50, false), value: 50 },
-      { label: usd(100, false), value: 100 },
-      { label: usd(200, false), value: 200 },
-      { label: usd(500, false), value: 500 },
-    ],
-    // The fee row is here as well as on the review. The pitch is "the amount,
-    // the rate, the fee, and exactly what you receive, before you confirm" —
-    // and a fee that only appears once you have pressed the button is a fee
-    // you found out about later. None is an answer; leaving it out is not.
-    summary: (v) => how === 'card'
-      ? [
-          ['You pay', naira(owed(v))],
-          ['Rate', '1 dollar = ' + naira(rate)],
-          ['Fee', naira(cardFee(Math.round(v * rate))) + ' · ' + state.fees.card + '% card fee'],
-          ['You receive', usd(v)],
-          ['From', plastic.brand + ' •••• ' + plastic.last4],
-          ['Lands', 'In a few seconds'],
-        ]
-      : [
-          ['You send', naira(v * rate)],
-          ['Rate', '1 dollar = ' + naira(rate) + ', today'],
-          ['Fee', 'No fee'],
-          ['You receive', 'About ' + usd(v)],
-          ['To', state.va.bank + ' · ' + state.va.number],
-          ['Lands', 'When your bank sends it'],
-        ],
-    callout: how === 'card'
-      ? 'You get a firm rate on the next screen. It is held for ninety seconds.'
-      : 'You get the rate on the day your naira lands. Today’s rate is above.',
-    action: (v) => (how === 'card' ? 'Pay ' + naira(owed(v)) : 'Get the account details'),
-    onAction: (v) => openSheet(how === 'card' ? 'card-review' : 'transfer-review', { v: String(v) }),
-    lede: () => railPicker(how),
-    right: (v) =>
-      h('div', { class: 'stack' },
-        // The provider behind this rail, when it is not well. Same source as
-        // the console's metric, so the two cannot disagree about whether the
-        // thing is up.
-        providerNote('switch'),
-        how === 'card'
-          ? card(
-              cardHead('What you pay'),
-              h('span', { class: 't-title', text: 'In naira' }),
-              h('span', { class: 't-display-xl', text: naira(owed(v)) }),
-              h('span', { class: 'muted',
-                text: naira(v * rate) + ' for the dollars, ' + naira(cardFee(Math.round(v * rate))) + ' card fee.' }),
-              h('div', { class: 'stack-12' },
-                kv('Card', plastic.brand),
-                kv('Number', '•••• ' + plastic.last4),
-                kv('Expires', plastic.expiry)),
-              h('button', { class: 'link', text: 'Use another card', on: { click: () => openSheet('cards') } }))
-          : virtualAccount()),
-    bottom: pastMoves('in') ?? undefined,
+  let value = 200
+  const owed = (v: number) => Math.round(v * rate) + cardFee(Math.round(v * rate))
+  const pay = h('span', { class: 't-display-xl', text: naira(owed(value)) })
+  const split = h('span', { class: 'muted' })
+  const btn = h('button', { class: 'btn btn-primary', text: 'Pay ' + naira(owed(value)),
+    on: { click: () => openSheet('card-review', { v: String(value) }) } })
+  const paint = () => {
+    pay.textContent = naira(owed(value))
+    split.textContent = `${naira(value * rate)} for the dollars, ${naira(cardFee(Math.round(value * rate)))} card fee.`
+    btn.textContent = 'Pay ' + naira(owed(value))
+    btn.toggleAttribute('disabled', value < 10 || value > movementCeiling())
+  }
+  const input = h('input', {
+    type: 'text', inputmode: 'decimal', value: String(value), ariaLabel: 'How many dollars',
+    on: { input: (e) => {
+      const n = Number((e.target as HTMLInputElement).value.replace(/[^\d.]/g, ''))
+      value = Number.isFinite(n) ? n : 0
+      paint()
+    } },
   })
+  paint()
+  return card(
+    cardHead('How many dollars', h('span', { class: 'muted', text: 'Minimum ' + usd(10, false) })),
+    h('label', { class: 'field' }, h('span', { class: 'muted', text: '$' }), input),
+    h('div', { class: 'stack-8' },
+      h('span', { class: 't-caps subtle', text: 'You pay' }),
+      pay, split),
+    h('div', { class: 'stack-12' },
+      kv('Card', plastic.brand + ' \u2022\u2022\u2022\u2022 ' + plastic.last4),
+      kv('Rate', '1 dollar = ' + naira(rate)),
+      kv('Lands', 'In a few seconds')),
+    btn,
+    h('button', { class: 'link', text: 'Use another card', on: { click: () => openSheet('cards') } }))
+}
+
+/** One tab's worth of Add money, used by the dialog and by the page behind it
+ *  so the two cannot say different things. */
+export function addPanels(tab: AddTab, full = true): HTMLElement[] {
+  const panel = tab === 'base' ? basePanel(full) : tab === 'card' ? cardPanel() : virtualAccount()
+  if (!full) {
+    // One card, not three. A dialog that stacks a details card, a provider
+    // note and a history card spends 112 pixels on padding and gaps before it
+    // has said anything, and item 61's ceiling is 692 on a phone. What has
+    // arrived goes inside the details card; the provider note is the page's.
+    for (const el of arrivedRows(tab, 2)) panel.appendChild(el)
+    return [addTabRow(tab), panel]
+  }
+  return [
+    addTabRow(tab),
+    panel,
+    providerNote(tab === 'base' ? 'cdp' : 'switch'),
+    arrived(tab, true),
+  ].filter(Boolean) as HTMLElement[]
+}
+
+/** The last few that came in this way, as bare rows for the dialog to adopt. */
+function arrivedRows(tab: AddTab, n: number): HTMLElement[] {
+  const rows = state.activity
+    .filter((a) => a.kind === 'payment' && a.amount > 0 && a.rail === tab)
+    .slice(0, n)
+  const head = h('div', { class: 'card-head' },
+    h('h3', { class: 't-caps subtle',
+      text: tab === 'base' ? 'Paid to this address' : 'Added this way' }),
+    h('button', { class: 'link', text: 'See all',
+      on: { click: () => go('/activity?filter=payments') } }))
+  if (!rows.length) {
+    return [head, h('span', { class: 'muted t-caption', text: tab === 'base'
+      ? 'Nothing has been sent here yet.' : 'Nothing has come in this way yet.' })]
+  }
+  return [head, ...rows.map((a) =>
+    h('div', { class: 'kv' },
+      h('span', { class: 'two-line' },
+        h('span', { class: 't-body-strong', text: activityLabel(a) }),
+        h('small', { class: 'muted', text: when(a.at) })),
+      amount(a)))]
+}
+
+export function addMoneyScreen(forced?: AddTab): HTMLElement {
+  const tab = forced ?? addTab()
+  const [tabs, ...rest] = addPanels(tab)
+  // The composer is gone. It asked how much before handing over an account
+  // number, on a rail where nothing holds you to the figure — see the note
+  // above `AddTab`. The card tab is where a figure now lives, because a card
+  // is the only one of the three that is pulled.
+  return shell(
+    'wallet',
+    pageHeader('Add money', eyebrow('Cash available', usd(state.cash))),
+    tabs,
+    h('div', { class: 'row' },
+      h('div', { class: 'stack col-compose' }, rest[0], rest[1] ?? null),
+      h('div', { class: 'stack grow' },
+        rest.slice(2).length ? rest[rest.length - 1] : null,
+        card(
+          cardHead('The three ways in'),
+          kv('Bank transfer', 'Naira from any Nigerian bank'),
+          kv('Base', 'Dollars from any Base wallet'),
+          kv('Card', 'Naira on a debit card, ' + state.fees.card + '% fee'),
+          h('span', { class: 'muted t-caption',
+            text: 'The first two take no amount. You are given the details and you pay in.' })))))
 }
 
 /** The old Withdraw, which is Send with the destination already answered.

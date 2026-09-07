@@ -17,7 +17,7 @@ import { sparkline, type Range } from './components/chart'
 import { usd, naira, pct, shares as fmtShares, longWhen, when, isDrawdown } from './format'
 import { type Route, closeSheet, replaceSheet, go } from './router'
 import { QA } from './screens/settings'
-import { peopleRows } from './screens/money'
+import { peopleRows, addPanels, addTab } from './screens/money'
 import { search } from './destinations'
 import * as ledger from './ledger'
 import { BEHIND_MORE } from './components/shell'
@@ -908,6 +908,14 @@ export const SHEETS: Record<string, Builder> = {
         class: 'btn btn-destructive', text: 'Email us to close it',
         on: { click: () => { toast('Opening a draft to ' + state.person.email); closeSheet() } },
       })),
+
+  /** Adding money, in place. The three ways in are three tabs, and the tab is
+   *  in the address, so this dialog and the page behind it are the same thing
+   *  at two sizes rather than two things that have to be kept in step. */
+  'add-money': () => sheet('Add money',
+    ...addPanels(addTab(), false),
+    h('button', { class: 'link quiet', text: 'Open the full page',
+      on: { click: () => go('/addmoney?tab=' + addTab()) } })),
 
   banks: () => {
     const name = h('input', { placeholder: 'Bank name' })

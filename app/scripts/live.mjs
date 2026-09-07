@@ -21,7 +21,11 @@ const page = async (w = 1440, h = 1024) => {
 
 console.log('COMPOSING IS A SCREEN  every way of moving money, the same way')
 for (const [route, title] of [
-  ['/send?to=Tunde%20Bakare', 'Send money'], ['/receive', 'Receive money'],
+  ['/send?to=Tunde%20Bakare', 'Send money'],
+  // /receive is kept as an address and answers with Add money on its Base tab:
+  // one question — how does money get into this wallet — one screen. Same
+  // arrangement as /withdraw below.
+  ['/receive', 'Add money'],
   // /withdraw is kept as an address and answers with the Send composer: one
   // errand, one screen, the destination already filled in. What is being
   // checked here is that it is still a place with a heading and a trail, not

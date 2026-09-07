@@ -43,19 +43,29 @@ await verify(p)
 console.log('TWO WAYS IN, AND NEITHER OF THEM IS INSTANT')
 {
   await at('/addmoney')
-  const rails = await p.evaluate(() => [...document.querySelectorAll('.rail')].map((e) => ({
-    text: e.innerText.replace(/\n/g, ' · '), on: e.classList.contains('on'),
+  // The rails are tabs now, and there are three: a bank transfer, a Base
+  // address and a card. Card funding is switched off in the seeded console, so
+  // two of them show — which is the switch working, not a missing tab.
+  const rails = await p.evaluate(() => [...document.querySelectorAll('.content > .chip-row .chip')].map((e) => ({
+    text: e.textContent.trim(), on: e.getAttribute('aria-pressed') === 'true',
   })))
-  ok('the two rails are on the screen, not behind a dropdown', rails.length === 2,
+  ok('the ways in are tabs on the screen, not behind a dropdown', rails.length >= 2,
      rails.map((r) => r.text).join(' | '))
-  ok('and the transfer says what it costs and how long it takes',
-     /Free/.test(rails[0].text) && /minute/.test(rails[0].text))
-  ok('a transfer is the default', rails[0].on)
+  ok('and a bank transfer is one of them, first',
+     rails[0].text === 'Bank transfer' && rails[0].on)
+  ok('and the Base address is another', rails.some((r) => r.text === 'Base'))
+  // Neither of the two asks how much: you are given the details and you pay in.
+  const asks = await p.evaluate(() => !!document.querySelector('.amount-box'))
+  ok('and neither of them asks for an amount', !asks)
   // The card rail ships switched off, so this is also the first proof that
   // the console is not decoration: what operations sets is what a customer
   // meets, on the same render.
+  // By name rather than by index: the rails were two and are three, and a test
+  // that counts positions breaks every time one is added.
+  const cardTab = rails.find((r) => /^Card/.test(r.text))
   ok('a rail operations has switched off reads as off rather than vanishing',
-     /Paused/.test(rails[1].text) && !rails[1].on, rails[1].text)
+     !!cardTab && /Paused/.test(cardTab.text) && !cardTab.on,
+     cardTab ? cardTab.text : 'the card tab is not on the screen at all')
 
   // The account is dedicated, so there is no reference to quote.
   const va = await p.evaluate(() => document.querySelector('.va-number')?.textContent?.trim())

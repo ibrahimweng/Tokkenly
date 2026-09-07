@@ -68,7 +68,10 @@ const ways = await p.evaluate(() =>
   [...document.querySelectorAll('.row.equal > .card')].map((e) => ({
     label: e.querySelector('.t-title')?.textContent?.trim(), to: null, click: true,
   })))
-ok('and the three doors on the wallet', ways.length === 3, ways.map((d) => d.label).join(' | '))
+// Two: money in and money out. Receive was a third, and it asked the same
+// question as Add money — how does money get into this wallet — so it is a tab
+// inside that one now.
+ok('and the two doors on the wallet', ways.length === 2, ways.map((d) => d.label).join(' | '))
 
 console.log('EVERY LABEL AGAINST THE PAGE IT OPENS')
 const seenTo = new Set()

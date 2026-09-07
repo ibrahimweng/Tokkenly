@@ -21,6 +21,11 @@ export interface Activity {
    *  charged then, not the fee the rate would give today. Absent means the
    *  movement was free, which is most of them. */
   fee?: number
+  /** Which way money came in. A deposit is a bank transfer, a Base payment or
+   *  a card charge, and Add money lists them a tab at a time — which cannot be
+   *  worked out from the payer's name without guessing that anybody called
+   *  "Payroll" used a bank. Only inbound payments carry it. */
+  rail?: 'bank' | 'base' | 'card'
   /** What actually moved, when it was not money. A share sent to another
    *  person has a dollar value — the row has to show one, and the portfolio
    *  really did fall by it — but the thing that changed hands is a number of
@@ -975,11 +980,11 @@ export const state: State = {
   ngnPerUsd: 1500,
   rateAt: iso('2026-09-06T09:40'),
   activity: [
-    { ref: 'TKN-8F2K90', kind: 'payment', who: 'Adaeze Okonkwo', type: 'Received', amount: 120, at: iso('2026-09-05T14:32'), settled: true },
+    { ref: 'TKN-8F2K90', kind: 'payment', who: 'Adaeze Okonkwo', type: 'Received', amount: 120, at: iso('2026-09-05T14:32'), rail: 'base', settled: true },
     { ref: 'TKN-8E4J77', kind: 'trade', who: 'Apple', type: 'Bought', amount: -420, fee: 2.09, at: iso('2026-09-05T14:05'), settled: true },
     { ref: 'TKN-7D1J83', kind: 'payment', who: 'Tunde Bakare', type: 'Sent', amount: -45, at: iso('2026-09-04T09:14'), settled: true },
     { ref: 'TKN-7C8H62', kind: 'grow', who: 'Lending', type: 'Interest', amount: 0.16, at: iso('2026-09-04T00:05'), settled: true },
-    { ref: 'TKN-6C9H77', kind: 'payment', who: 'Payroll', type: 'Received', amount: 1500, at: iso('2026-08-29T08:00'), settled: true },
+    { ref: 'TKN-6C9H77', kind: 'payment', who: 'Payroll', type: 'Received', amount: 1500, at: iso('2026-08-29T08:00'), rail: 'bank', settled: true },
     { ref: 'TKN-6B4G61', kind: 'trade', who: 'Tesla', type: 'Sold', amount: 260, fee: 1.31, at: iso('2026-08-28T19:20'), settled: true },
     { ref: 'TKN-5Z2E44', kind: 'payment', who: 'Adaeze Okonkwo', type: 'Sent', amount: -80, at: iso('2026-08-26T16:40'), settled: true },
     { ref: 'TKN-5Y3D31', kind: 'trade', who: 'Nvidia', type: 'Bought', amount: -380, fee: 1.89, at: iso('2026-08-26T11:05'), settled: true },
@@ -987,13 +992,13 @@ export const state: State = {
     { ref: 'TKN-3V0A04', kind: 'payment', who: 'Tunde Bakare', type: 'Sent', amount: -30, at: iso('2026-08-22T10:22'), settled: true },
     { ref: 'TKN-2T9Y81', kind: 'payment', who: 'Data top up', type: 'Sent', amount: -12, at: iso('2026-08-20T18:35'), settled: true },
     { ref: 'TKN-2S4X70', kind: 'grow', who: 'Borrowing', type: 'Borrowed', amount: 500, at: iso('2026-08-12T10:40'), settled: true },
-    { ref: 'TKN-2R7W58', kind: 'payment', who: 'Chidi Nwosu', type: 'Received', amount: 65, at: iso('2026-08-11T13:05'), settled: true },
+    { ref: 'TKN-2R7W58', kind: 'payment', who: 'Chidi Nwosu', type: 'Received', amount: 65, at: iso('2026-08-11T13:05'), rail: 'base', settled: true },
     { ref: 'TKN-1Q6V47', kind: 'payment', who: 'MTN airtime', type: 'Sent', amount: -8, at: iso('2026-08-09T19:48'), settled: true },
     { ref: 'TKN-1P5U36', kind: 'trade', who: 'S&P 500 ETF', type: 'Bought', amount: -300, fee: 1.49, at: iso('2026-08-07T15:22'), settled: true },
     { ref: 'TKN-1N4T25', kind: 'payment', who: 'Ngozi Eze', type: 'Sent', amount: -150, at: iso('2026-08-05T11:30'), settled: true },
     { ref: 'TKN-0M3S14', kind: 'grow', who: 'Lending', type: 'Lent', amount: -740, at: iso('2026-08-03T09:15'), settled: true },
     { ref: 'TKN-0L2R03', kind: 'payment', who: 'Ikeja Electric', type: 'Sent', amount: -34, at: iso('2026-08-01T07:40'), settled: true },
-    { ref: 'TKN-0K1Q92', kind: 'payment', who: 'Payroll', type: 'Received', amount: 1500, at: iso('2026-07-31T08:00'), settled: true },
+    { ref: 'TKN-0K1Q92', kind: 'payment', who: 'Payroll', type: 'Received', amount: 1500, at: iso('2026-07-31T08:00'), rail: 'bank', settled: true },
     { ref: 'TKN-0J0P81', kind: 'trade', who: 'Apple', type: 'Bought', amount: -560, fee: 2.79, at: iso('2026-07-29T14:12'), settled: true },
   ],
 }
@@ -1516,7 +1521,7 @@ export const actions = {
     const fee = via.kind === 'card' ? cardFee(naira) : 0
     const a = record({
       kind: 'payment', who: via.kind === 'card' ? (from as Card).brand + ' card' : (from as Bank).name,
-      type: 'Received', amount, note: 'Bought dollars',
+      type: 'Received', amount, note: 'Bought dollars', rail: via.kind === 'card' ? 'card' : 'bank',
       // It has not landed. `settlement()` still decides the two magic
       // endings — a card that declines and one that goes unanswered — but
       // anything else starts pending and stays pending until the naira is

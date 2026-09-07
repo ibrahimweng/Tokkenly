@@ -7,8 +7,9 @@ import { state, buyingPower, availableToBorrow, inNaira, inflightNaira, outbound
 import { usd, naira, when, activityLabel } from '../format'
 import { go, openSheet } from '../router'
 
-function way(label: string, sub: string, ic: string, to: string): HTMLElement {
-  const b = h('button', { class: 'card', style: { textAlign: 'left', flex: '1' }, on: { click: () => go(to) } })
+function way(label: string, sub: string, ic: string, to: string | null, onClick?: () => void): HTMLElement {
+  const b = h('button', { class: 'card', style: { textAlign: 'left', flex: '1' },
+    on: { click: () => (onClick ? onClick() : go(to!)) } })
   b.appendChild(h('div', { class: 'promo-badge', html: ic }))
   b.appendChild(h('div', { class: 'stack-8' },
     h('span', { class: 't-title', text: label }),
@@ -162,15 +163,15 @@ export function walletScreen(): HTMLElement {
     cashHero(),
     h('div', { class: 'row' },
       h('div', { class: 'stack col-main' },
-        // The three errands, and no fourth: Withdraw was Send with the
-        // destination already answered, so a tile for it made one errand look
-        // like two. Receive is here because it is money moving and this is
-        // where money moves — it used to be a button under the portfolio
-        // figure on Home, which is a page about shares.
+        // Two doors: money in and money out. Receive was a third, and it was
+        // the same question as Add money asked twice — how does money get into
+        // this wallet. It is a tab inside the one door now. Add money opens in
+        // place, because handing over an account number does not need a screen
+        // change; Send is a page, because it asks four things.
         h('div', { class: 'row equal' },
-          way('Add money', 'Naira in, dollars out', icon.receive(), '/addmoney'),
-          way('Send', 'To a person, a wallet or a bank', icon.send(), '/send'),
-          way('Receive', 'Your address, to get paid', icon.qr(), '/receive')),
+          way('Add money', 'Bank transfer, Base or a card', icon.receive(), null,
+            () => openSheet('add-money')),
+          way('Send', 'To a person, a wallet or a bank', icon.send(), '/send')),
         card(
           cardHead('Still settling', headLink('See all', '/activity')),
           // What is genuinely between two banks, named in the currency it is

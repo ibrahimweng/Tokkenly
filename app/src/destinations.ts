@@ -29,7 +29,7 @@ export const DESTINATIONS: Destination[] = [
   { label: 'Send money', to: '/send', place: 'wallet', kind: 'action', primary: true,
     also: 'pay transfer withdraw convert cash out naira bank payout wallet address',
     hint: 'To a person, a wallet or a bank' },
-  { label: 'Receive money', to: '/receive', place: 'wallet', kind: 'action', primary: true, also: 'address qr get paid base wallet address 0x copy', hint: 'Your address and code' },
+  { label: 'Receive money', to: '/receive', place: 'wallet', kind: 'action', primary: true, also: 'address qr get paid base wallet address 0x copy receive add money', hint: 'Your Base address, inside Add money' },
   // Still listed, because it is what people search for. It resolves into Send
   // with the destination already answered rather than to a screen of its own.
   { label: 'Send to your bank', to: '/withdraw', place: 'wallet', kind: 'action', primary: true, also: 'convert cash out naira payout', hint: 'Dollars out, naira into your bank' },

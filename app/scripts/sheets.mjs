@@ -26,6 +26,11 @@ const ROUTES = [
   ['/account/security?sheet=phrase', 'phrase'],
   ['/account/legal?sheet=close', 'close'],
   ['/transfer?sheet=banks', 'banks'],
+  // Add money, a tab at a time. The Base tab is the tall one — a code, an
+  // address, a warning and what has already arrived — and it is the one that
+  // decides how much of any of that the dialog can hold.
+  ['/transfer?sheet=add-money', 'add-money, bank'],
+  ['/transfer?sheet=add-money&tab=base', 'add-money, Base'],
   ['/send?to=Tunde%20Bakare&sheet=send-review&v=120', 'send-review'],
   // The same review, on the rail that changes currency. It holds a rate and
   // states one, which the other two do not, so it is a different dialog in

@@ -6552,7 +6552,79 @@ still doing it. A button steps along its own ramp and does nothing else.
      reads as belonging to it — and the way to do that is to let the crop cut
      the drawing, never to scale the drawing until it fits.
 
-### 11g.47 Still open
+### 11g.47 One door for money coming in
+
+Add money asked how much and then handed over an account number. Receive was a
+separate screen showing a Base address. Both answer the same question — how does
+money get into this wallet — and asking somebody to know which of two screens
+holds their answer is asking them to know the plumbing.
+
+**And two of the three take no amount at all.** A bank transfer and a Base
+payment are *pushed*: the product hands over details and waits. Being asked
+"how much?" before being given an account number is being asked to commit to a
+figure nothing will hold you to — the money that arrives is whatever the person
+sends. Only a card is *pulled*, and only the card asks.
+
+So: one door, three tabs, and the tab is in the address so it can be linked to
+and returned to. Bank transfer and Base are details and history. Card is the one
+that asks, and the fee is on it rather than on the review behind it.
+
+It opens **in place**, over the wallet, with the full page one link away — the
+standing rule about dialogs. The dialog and the page are the same panels at two
+sizes rather than two things to keep in step: `addPanels(tab, full)` builds
+both, and `full` decides whether the provider note and the wide table come
+along.
+
+**The ceiling did the design work.** Item 61 caps a dialog at 82% of a 390×844
+phone, and the first build came in at 774 for the bank tab and 1104 for Base.
+Getting under 692 meant deciding what a dialog is actually for. The answer:
+
+- **One card, not three.** A details card, a provider note and a history card
+  spend 112 pixels on padding and gaps before saying anything. What has arrived
+  goes inside the details card; the provider note is the page's.
+- **Two rows of history, not four**, and as a list rather than a table — a
+  header row over two rows of data costs more than it explains.
+- **The QR is 84 rather than 160**, and loses the caption and the wide copy
+  button under it. The field beside the address carries a copy button already,
+  so the wide one was 56 pixels repeating it.
+
+Base lands at 688 against a cap of 692, which is tight and is the honest
+number. Both tabs are in `sheets.mjs` now, so the next thing added to them has
+to answer to the same ceiling.
+
+**A rail that is off is shown as off.** The first version of the tab row simply
+omitted the card tab when operations had switched it off, which quietly
+reversed a rule this file already had: a door that vanishes makes people think
+they misremembered it, one that says "not right now" tells them to come back.
+`inflow.mjs` caught it, having been written against the rail picker that got it
+right. The tab is there, disabled, and says Paused.
+
+That suite also had to stop counting positions. It asserted things about
+`rails[1]`, which was the card when there were two rails and is Base now there
+are three. It looks the card tab up by name.
+
+**And the deposits are split by rail, which meant recording it.** Each tab lists
+what came in that way, and which way a deposit came in cannot be worked out
+from the payer's name without guessing that anybody called "Payroll" used a
+bank. `Activity` carries a `rail` now, set where money lands and seeded on the
+four inbound rows.
+
+The wallet drops to two doors: money in, money out. `/receive` still resolves,
+to the Base tab, because somebody has it bookmarked — the same arrangement
+`/withdraw` and `/convert` have had since 11g.38.
+
+127. **Ask for an amount only where an amount does something.** A figure typed
+     before a set of bank details is a figure nothing will honour: what arrives
+     is what the sender sends. Push rails hand over details; pull rails ask.
+     Putting one composer in front of both makes the product look like it is
+     collecting the number for its own benefit.
+
+128. **A ceiling is a brief.** The dialog got smaller by deciding what a dialog
+     is for, not by shrinking type. Three cards became one, a table became a
+     list, and a 160px code became 84 — and every one of those is a better
+     dialog, not a compromised one.
+
+### 11g.48 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from
   using the product afterwards. Item 30 was held back until it was asked for,

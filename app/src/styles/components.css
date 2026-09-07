@@ -284,6 +284,10 @@
 }
 .chip[aria-pressed='true'] { background: var(--inverse); color: var(--on-inverse); }
 .chip-row { display: flex; gap: 8px; flex-wrap: wrap; }
+/* A tab whose rail operations has turned off. Present, named, and saying so,
+   rather than gone. */
+.chip.off { opacity: 0.5; cursor: not-allowed; gap: 6px; }
+.chip.off small { color: var(--warn); font-weight: 600; }
 
 /* ---------- search ----------
    The field, and the panel of closest matches under it. The panel is absolute
@@ -563,6 +567,9 @@
 }
 .copy svg { width: 14px; height: 14px; }
 @media (hover: hover) { .copy:hover { background: var(--control-pressed); } }
+/* Rule 35. It is the control that copies an account number, which is the one
+   thing anybody does on that panel, and it was 32 tall under a thumb. */
+@media (max-width: 899px) { .copy { min-height: 44px; padding: 6px 14px; } }
 
 /* The name the bank gave back for ten digits somebody typed. It is the whole
    point of the step, so it gets the room a figure gets rather than a line of
@@ -988,6 +995,10 @@
   display: grid; grid-template-columns: repeat(11, 1fr); gap: 2px; padding: 10px;
 }
 .qr span { border-radius: 2px; }
+/* Smaller inside a dialog, where 160 plus its details plus what has already
+   arrived puts the panel past the ceiling item 61 set. The page behind it
+   draws the big one. */
+.sheet .qr { width: 84px; height: 84px; border-radius: 12px; padding: 6px; gap: 1px; }
 .qr span.on { background: var(--on-inverse); }
 
 /* A status pill is not a control. It borrowed .chip and with it the hover, so
