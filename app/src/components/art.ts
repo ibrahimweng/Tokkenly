@@ -1,132 +1,27 @@
-/** The dot field behind the three gateway tiles, lifted cell for cell from
- *  Figma 06 Desktop, D01c Home — gateway. Each panel is a 12px grid with a
- *  circle centred in every cell it uses: `size` gives the diameter in base 36
- *  (0 for an empty cell, b for 11), `tone` gives which of four colours it
- *  takes. Nothing here is generated — the fields are composed, and a formula
- *  that came close would still be a different picture.
+/** The dot fields, and the palette they are painted from.
  *
- *  It is drawn as one SVG rather than several hundred spans: the Buy panel
- *  alone is 272 dots, and three tiles of divs is a thousand nodes for a
- *  decoration. */
-export interface ArtSpec { cols: number; size: string[]; tone: string[] }
-
+ *  This file used to hold three compositions lifted cell for cell from Figma
+ *  06 Desktop, D01c Home — hand-placed grids of base-36 diameters, tiled into
+ *  a texture behind each door. Every surface in the product now carries an
+ *  object instead (11g.44, 11g.45), so the compositions and the renderer that
+ *  tiled them are gone rather than left sitting unused. They are in the
+ *  history if the texture is ever wanted back.
+ *
+ *  What survives is the grid unit, the four rungs, and the idea that a field
+ *  is keyed to a figure rather than being decoration.
+ *
+ *  It is drawn as one SVG rather than several hundred spans: a field is upward
+ *  of a thousand dots, and that many divs is a thousand nodes for a picture. */
 const TONE: Record<string, string> = {
   a: 'var(--dot-dim)', b: 'var(--dot-mid)', c: 'var(--dot-lit)', p: 'var(--data-2)',
-  /* Not a composed tone. Nothing in the three fields is written as 'z'; it is
-     what a cell takes when the account has not woken it. */
+  /* Not a composed tone. It is what a cell takes when the account has not
+     woken it. */
   z: 'var(--dot-sleep)',
 }
 
-/** 34 × 12 at 12px, so 408 × 144 drawn into the 400 × 140 Figma clips it to. */
-export const BUY: ArtSpec = {
-  cols: 34,
-  size: [
-    '5555555443222333333200000000002334',
-    '6666666432000022220000000000000234',
-    '7777776543200000000000233333222335',
-    '7777776654320000000003455555444556',
-    '5555666665300000000002445667788887',
-    '4334455543200000000000235688888887',
-    '4333220000000002200000035799999998',
-    '6430000000002445443223456899999998',
-    '7530000000003455566677888877777788',
-    '6400000000000235689aaaaa9765445667',
-    '32000000000000358aaaaaaa9765443333',
-    '00023332000000469bbbbbbba987542000',
-  ],
-  tone: [
-    'bbbbbbbbbbbbbbbbbbbb..........bbbb',
-    'ccccccbbbb....bbbb.............bbb',
-    'ccccccbbbbb...........bbbbbbbbbbbb',
-    'cccccccbbbbb.........bbbbbbbbbbbbb',
-    'bbbbbcccbbb..........bbbbbccccccpc',
-    'bbbbbbbbbbb...........bbbccccccccc',
-    'bbbbbb.........bb......bbccccccpcc',
-    'bbb.........bbbbbbbbbbbbcccccccccc',
-    'cbb.........bbbbbbbcccccccccccpccc',
-    'bb...........bbbcccccpccccbbbbbbcc',
-    'bb............bbccccccccccbbbbbbbb',
-    '...bbbbb......bcccccpcccccccbbb...',
-  ],
-}
-
-export const CONVERT: ArtSpec = {
-  cols: 24,
-  size: [
-    '430000022322000000000023',
-    '320000000000000022333222',
-    '432000000000003455554433',
-    '554200000000003566666666',
-    '554200000000023456788888',
-    '320000000000002346788888',
-    '000002344433222346899999',
-    '000003566655555677888888',
-    '000003456778999998765545',
-    '0000003468aaaaaaa8643333',
-    '0000002479aaaaaaa8754320',
-    '432223468abbbbbba9876420',
-  ],
-  tone: [
-    'aa.....aaaaa..........aa',
-    'aa..............aaaaaaaa',
-    'aaa...........aaaaaaaaaa',
-    'aaaa..........aaabbbbaab',
-    'aaaa.........aaaaabbbbbb',
-    'aa............aaaabbbbbp',
-    '.....aaaaaaaaaaaabbbbbbb',
-    '.....aaabaaaaaaabbbbbbpb',
-    '.....aaabbbbbpbbbbbbaaaa',
-    '......aaabbbbbbbbbbaaaaa',
-    '......aabbbbpbbbbbbaaaa.',
-    'aaaaaaabbbbbbbbbbbbbpaa.',
-  ],
-}
-
-export const BORROW: ArtSpec = {
-  cols: 24,
-  size: [
-    '000000000000022333445555',
-    '000000023444443333456666',
-    '000000245666655445556666',
-    '000000346677777777765433',
-    '000002344567888888864200',
-    '233333334568888888754200',
-    '666544445678999998654330',
-    '777777777887766655665542',
-    '678999999986432234455430',
-    '579aaaaaa975320000000000',
-    '68aaaaaaa976432000000000',
-    '89aaaaa99988653000000000',
-  ],
-  tone: [
-    '.............aaaaaaaaaaa',
-    '.......aaaaaaaaaaaaaabbb',
-    '......aaaabbaaaaaaaaaaaa',
-    '......aaabbbbbbbbbbaaaaa',
-    '.....aaaaabbbbbpbbbaaa..',
-    'aaaaaaaaaabbbbbbbbbaaa..',
-    'aaaaaaaaaabbbbpbbbbaaaa.',
-    'bbbbbpbbbbbbbbaaaaaaaaaa',
-    'bbbbbbbbbbbaaaaaaaaaaaa.',
-    'abbbpbbbbbbaaa..........',
-    'abbbbbbbbbbaaaa.........',
-    'bbbpbbbbbbbbbaa.........',
-  ],
-}
-
-/** The same field, reflected. Lending and borrowing are two halves of one
- *  thing — one account's dollars are the other account's loan — so the two
- *  cards carry one composition, mirrored, rather than two drawings that happen
- *  to sit beside each other. */
-export const mirror = (spec: ArtSpec): ArtSpec => ({
-  cols: spec.cols,
-  size: spec.size.map((r) => [...r].reverse().join('')),
-  tone: spec.tone.map((r) => [...r].reverse().join('')),
-})
-
 /** A field's own three rungs, for a card that is about one product rather than
- *  about the account as a whole. The composition is untouched: only which
- *  colour each rung resolves to changes, so a cell drawn dim stays dim. */
+ *  about the account as a whole. Only which colour each rung resolves to
+ *  changes, so a cell drawn dim stays dim. */
 export const LEND_RAMP: Record<string, string> = {
   a: 'var(--lend-dim)', b: 'var(--lend-mid)', c: 'var(--lend-lit)', p: 'var(--lend-lit)',
 }
@@ -134,39 +29,8 @@ export const OWE_RAMP: Record<string, string> = {
   a: 'var(--owe-dim)', b: 'var(--owe-mid)', c: 'var(--owe-lit)', p: 'var(--owe-lit)',
 }
 
+/** The grid a field is drawn on, in SVG user units. */
 const CELL = 12
-
-/** How much of its cell a dot is allowed to fill.
- *
- *  The compositions run to 11 of 12, which on the gateway tiles read as a
- *  halftone and on a 494px card read as a row of balls: 20.6px between centres
- *  with a 17.2px dot in each is not a dot field, it is a ball pit. Dropping the
- *  diameter is half the answer — the other half is the pitch below. */
-const SHRINK = 0.6
-
-/** The field, repeated until the dots are small.
- *
- *  A composed field has a fixed number of cells, so the bigger the box it is
- *  stretched across, the further apart its dots land — and because the crop
- *  scales by whichever axis needs more, it is the field's twelve rows against
- *  the band's height that actually sets the pitch. Repeating it in both axes
- *  is what keeps that pitch fine, and every other copy is reflected, so the
- *  joins are folds rather than seams and the eye reads one continuous texture
- *  rather than wallpaper. */
-function repeat(spec: ArtSpec, x: number, y: number): ArtSpec {
-  if (x <= 1 && y <= 1) return spec
-  const wide = (rows: string[]) => rows.map((row) => {
-    let out = ''
-    for (let k = 0; k < x; k++) out += k % 2 ? [...row].reverse().join('') : row
-    return out
-  })
-  const tall = (rows: string[]) => {
-    const out: string[] = []
-    for (let k = 0; k < y; k++) out.push(...(k % 2 ? [...rows].reverse() : rows))
-    return out
-  }
-  return { cols: spec.cols * x, size: tall(wide(spec.size)), tone: tall(wide(spec.tone)) }
-}
 
 /** A cell that is not awake keeps its place and its size and gives up its
  *  tone. Every tone, to the same rung — the first version dimmed each one by a
@@ -189,57 +53,6 @@ const SLEEP = 'z'
 const FLOOR = 0.45
 export const level = (part: number, whole: number): number =>
   FLOOR + (1 - FLOOR) * (whole > 0 ? Math.max(0, Math.min(1, part / whole)) : 0)
-
-export function dotArt(
-  spec: ArtSpec, at = 1, ramp?: Record<string, string>,
-  /** How many copies of the field fit across and down the box it is drawn
-   *  into. Chosen per surface so every field in the product lands at about six
-   *  pixels between centres, whatever the box is. */
-  tiles: [number, number] = [1, 1],
-): SVGSVGElement {
-  const PAINT = ramp ? { ...TONE, ...ramp } : TONE
-  spec = repeat(spec, tiles[0], tiles[1])
-  const NS = 'http://www.w3.org/2000/svg'
-  const w = spec.cols * CELL
-  const hgt = spec.size.length * CELL
-  const svg = document.createElementNS(NS, 'svg')
-  svg.setAttribute('viewBox', `0 0 ${w} ${hgt}`)
-  svg.setAttribute('width', '100%')
-  svg.setAttribute('height', '100%')
-  // The panel is clipped in Figma too, so cropping is the drawn behaviour.
-  // Anchored to the bottom, because that is the dense end of every field.
-  svg.setAttribute('preserveAspectRatio', 'xMidYMax slice')
-  svg.setAttribute('aria-hidden', 'true')
-  svg.setAttribute('focusable', 'false')
-
-  // Filled from the bottom, because that is the dense end of every one of
-  // these fields and the end they are anchored to. Counted in dots rather than
-  // in rows, so each step of the level adds the same amount of ink whatever
-  // shape the row happens to be — and crossed within a row rather than at its
-  // edge, so the boundary runs diagonally instead of drawing a line across the
-  // picture.
-  const dots = spec.size.reduce((n, row) => n + [...row].filter((ch) => ch !== '0').length, 0)
-  const wake = at >= 1 ? dots : Math.round(dots * Math.max(0, at))
-  let seen = 0
-
-  for (let y = spec.size.length - 1; y >= 0; y--) {
-    const row = spec.size[y]
-    for (let x = spec.cols - 1; x >= 0; x--) {
-      const d = parseInt(row[x] ?? '0', 36)
-      if (!d) continue
-      seen += 1
-      const c = document.createElementNS(NS, 'circle')
-      c.setAttribute('cx', String(x * CELL + CELL / 2))
-      c.setAttribute('cy', String(y * CELL + CELL / 2))
-      c.setAttribute('r', String((d / 2) * SHRINK))
-      const tone = spec.tone[y]?.[x] ?? 'b'
-      const key = seen <= wake ? tone : SLEEP
-      c.setAttribute('fill', PAINT[key] ?? PAINT.b)
-      svg.appendChild(c)
-    }
-  }
-  return svg
-}
 
 /* ===========================================================================
    Objects, drawn as particle fields.
@@ -283,7 +96,15 @@ export interface ObjectField { cols: number; rows: number; dots: Speck[] }
 /** True where the solid form is. Coordinates are cells, not pixels. */
 type Mask = (x: number, y: number) => boolean
 
-const OBJ = { cols: 116, rows: 42 }
+/* Two box shapes, because a field has to be composed for the band it lands in.
+   A picture laid out for a 1.25 card and then cropped into a 2.6 door loses
+   most of itself; `slice` is the right crop for a texture and the wrong one
+   for a subject. TALL is the two product cards, WIDE is the three doors on
+   Home and the onboarding panels. Nothing uses both, so nothing is laid out
+   twice. */
+export interface Box { cols: number; rows: number; mid: number; from: number; to: number }
+export const TALL: Box = { cols: 104, rows: 83, mid: 42, from: 6, to: 66 }
+export const WIDE: Box = { cols: 116, rows: 44, mid: 22, from: 5, to: 74 }
 
 /** Deterministic per-cell noise in [0, 1). Cheap, and stable across renders. */
 function noise(x: number, y: number): number {
@@ -333,11 +154,8 @@ function spread(inside: boolean[], w: number, h: number): number[] {
 
 /** Where the form starts coming apart. 0 at the left edge of the object, 1 by
  *  the time the drift has crossed it. */
-const DRIFT_FROM = 8
-const DRIFT_TO = 74
-
-function makeField(mask: Mask): ObjectField {
-  const { cols, rows } = OBJ
+function makeField(mask: Mask, box: Box): ObjectField {
+  const { cols, rows, mid: OBJ_MID, from: DRIFT_FROM, to: DRIFT_TO } = box
   const inside: boolean[] = new Array(cols * rows)
   for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) inside[y * cols + x] = mask(x, y)
   const dist = spread(inside, cols, rows)
@@ -353,8 +171,12 @@ function makeField(mask: Mask): ObjectField {
       dots.push({ x, y, r: 0.46 - 0.14 * t, d: 0 })
     } else {
       // What has come off it, and then a far thinner dust carrying on past.
+      // The dust fans: its vertical reach opens with the drift, so a band
+      // half as wide as it is not left with a bare lower half. That is what
+      // the reference does with a mane and a wheel.
+      const cone = Math.exp(-Math.abs(y - OBJ_MID) / (7 + 26 * t))
       const near = 0.62 * Math.exp(-d / 2.6) * (0.18 + 0.82 * t)
-      const far = 0.05 * Math.exp(-d / 16) * t * t
+      const far = 0.16 * Math.exp(-d / 20) * t * t * cone
       if (n > near + far) continue
       dots.push({ x, y, r: Math.max(0.16, 0.42 * Math.exp(-d / 7)), d })
     }
@@ -366,11 +188,31 @@ function makeField(mask: Mask): ObjectField {
 }
 
 const built = new Map<string, ObjectField>()
-const field = (key: string, mask: Mask): ObjectField => {
+const field = (key: string, mask: Mask, box: Box): ObjectField => {
   let f = built.get(key)
-  if (!f) { f = makeField(mask); built.set(key, f) }
+  if (!f) { f = makeField(mask, box); built.set(key, f) }
   return f
 }
+
+/* ---- two more shapes the doors need ---- */
+
+/** A slice of a disc, between two angles. Angles run clockwise from east,
+ *  because y grows downward here. */
+const wedge = (cx: number, cy: number, r: number, a0: number, a1: number): Mask =>
+  (x, y) => {
+    if ((x - cx) ** 2 + (y - cy) ** 2 > r * r) return false
+    let a = (Math.atan2(y - cy, x - cx) * 180) / Math.PI
+    if (a < 0) a += 360
+    return a >= a0 && a <= a1
+  }
+
+/** The oval window on a banknote: the ring, not the fill. */
+const oval = (cx: number, cy: number, rx: number, ry: number, t: number): Mask =>
+  (x, y) => {
+    const q = ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2
+    const inner = ((x - cx) / (rx - t)) ** 2 + ((y - cy) / (ry - t)) ** 2
+    return q <= 1 && inner >= 1
+  }
 
 /* ---- the two objects ---- */
 
@@ -378,17 +220,17 @@ const field = (key: string, mask: Mask): ObjectField => {
  *  by the one in front of it, because dots cannot occlude: without the cut,
  *  three overlapping discs are one blob. The gap inside the edge is the rim,
  *  and it is what makes a disc read as a coin rather than as a circle. */
-const COIN_R = 13
+const COIN_R = 15
 const coin = (cx: number, cy: number): Mask =>
-  both(disc(cx, cy, COIN_R), not(ringGap(cx, cy, COIN_R * 0.60, COIN_R * 0.78)))
+  both(disc(cx, cy, COIN_R), not(ringGap(cx, cy, COIN_R * 0.62, COIN_R * 0.78)))
 export const COINS = (): ObjectField => field('coins', (() => {
-  const cut = (cx: number, cy: number) => disc(cx, cy, COIN_R + 2)
+  const cut = (cx: number, cy: number) => disc(cx, cy, COIN_R + 2.2)
   return any(
-    both(coin(50, 14), not(cut(35, 20))),
-    both(coin(35, 20), not(cut(20, 26))),
-    coin(20, 26),
+    both(coin(45, 30), not(cut(33, 42))),
+    both(coin(33, 42), not(cut(21, 54))),
+    coin(21, 54),
   )
-})())
+})(), TALL)
 
 /** A bifold, the way somebody draws one: a rounded body, the flap edge across
  *  the upper third, the strap standing off the right, and a line of stitching
@@ -396,19 +238,61 @@ export const COINS = (): ObjectField => field('coins', (() => {
  *  ring of dots inside the silhouette reads as a seam, and adding one would
  *  have needed a second colour the card does not have. */
 export const WALLET = (): ObjectField => field('wallet', (() => {
-  const body = rrect(7, 9, 48, 36, 3.5)
+  const body = rrect(7, 26, 51, 60, 4.5)
   // The card standing out of it. One, not a fan: a fan of three reads as a
   // card holder, and the thing under it stops being the subject.
-  const card = rrect(15, 2, 32, 10.4, 1.2)
-  const strap = rrect(44, 17, 55, 29, 2.5)
+  const card = rrect(17, 13, 38, 28, 1.6)
+  const strap = rrect(46, 34, 60, 51, 3)
   // Taken out again. The flap edge across the upper third and the seam either
   // side of the strap are gaps rather than lines, because a missing row of
   // dots is the only line this field can draw.
-  const flap = rrect(7, 17.2, 48, 19, 0.6)
-  const gap = rrect(43.6, 16, 45.2, 30, 0.4)
-  const lip = rrect(13, 8.6, 34, 10.4, 0.4)
+  const flap = rrect(7, 37.4, 51, 39.6, 0.7)
+  const gap = rrect(45.4, 32, 47.2, 53, 0.5)
+  const lip = rrect(15, 24.4, 40, 26.6, 0.5)
   return both(any(body, card, strap), not(any(flap, gap, lip)))
-})())
+})(), TALL)
+
+/* ---- the three doors ----
+   Home shows all three at once, so they have to be tellable apart at a glance
+   and none of them may be the wallet or the coins: those are spoken for by the
+   two product cards a click away, and a door that shows what is behind it is
+   only useful if it shows the right thing. */
+
+/** Own a piece. A disc with one wedge cut out of it and set down beside the
+ *  hole it came from — which is what a share is, and the only one of these
+ *  three that is an idea rather than an object. */
+export const PIECE = (): ObjectField => field('piece', (() => {
+  const cx = 25, cy = 23, R = 19
+  // The slice, and the gap it left. The gap is the slice grown a little, so
+  // there is a clean edge rather than a join.
+  const slice = wedge(cx, cy, R, 198, 252)
+  const gap = wedge(cx, cy, R + 1.5, 194, 256)
+  const lifted = (x: number, y: number) => slice(x + 7, y + 4)
+  return any(both(disc(cx, cy, R), not(gap)), lifted)
+})(), WIDE)
+
+/** Naira in, dollars held: two notes, the front one over the back one, each
+ *  with the oval window every banknote in the world has. Notes rather than
+ *  coins, because the coins are the lending card's and two piles of money on
+ *  one screen would be one thing said twice. */
+export const NOTES = (): ObjectField => field('notes', (() => {
+  const front = both(rrect(5, 18, 51, 41, 2.5), not(oval(28, 29.5, 11, 8, 2.2)))
+  const back = both(rrect(21, 3, 67, 26, 2.5), not(oval(44, 14.5, 11, 8, 2.2)))
+  const cut = rrect(3, 16, 53, 43, 2.5)
+  return any(both(back, not(cut)), front)
+})(), WIDE)
+
+/** Borrow and lend, which is two products and so is two things: the wallet,
+ *  with a coin standing against it. The card standing out of the wallet is on
+ *  the card behind this door and not here — at this size it was a bump. */
+export const PURSE = (): ObjectField => field('purse', (() => {
+  const body = rrect(5, 11, 42, 39, 3)
+  const flap = rrect(5, 21, 42, 23.2, 0.7)
+  const wallet = both(body, not(flap))
+  const C = 13
+  const coin = both(disc(50, 28, C), not(ringGap(50, 28, C * 0.56, C * 0.76)))
+  return any(both(wallet, not(disc(50, 28, C + 2))), coin)
+})(), WIDE)
 
 /** The object, at a level. The form is always drawn: a wallet with half of it
  *  missing reads as a fault, not as a figure. What the level moves is how far

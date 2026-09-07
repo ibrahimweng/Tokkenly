@@ -108,7 +108,14 @@ ul { margin: 0; padding: 0; list-style: none; }
 
    Nothing else may live in here. A subtitle under the title is what made Home
    72 tall; it belongs in the body, where every other page's first sentence is. */
-:root { --hdr-route: 26px; --hdr-title: 40px; }
+/* As small as the two rows can be and still do their jobs. The routing row
+   holds a 12px back link, the title row holds the largest heading in the
+   product, and every pixel above that is the price of a page that never
+   moves: reserving the routing row costs the pages that do not use it, and
+   the only honest reduction is to make what is reserved no bigger than it has
+   to be. 66 became 56 this way, against 24 for a page that used to have no
+   routing row at all. */
+:root { --hdr-route: 22px; --hdr-title: 34px; }
 .page-header {
   display: grid;
   grid-template-rows: var(--hdr-route) var(--hdr-title);
@@ -138,8 +145,10 @@ ul { margin: 0; padding: 0; list-style: none; }
    and an 18px page name occupy the same rectangle rather than two boxes that
    merely share a centre. */
 .page-header h1 { margin: 0; font-size: 18px; line-height: var(--hdr-title); font-weight: 600; }
-/* except where the heading is the greeting, which the file draws at 36 */
-.page-header h1.t-display { font-size: 32px; }
+/* except where the heading is the greeting. 26, not 32: the title row has to
+   be as tall as the tallest heading in the product, so every page pays for
+   Home's greeting in the space above its first card. */
+.page-header h1.t-display { font-size: 26px; }
 .eyebrow { display: flex; align-items: baseline; gap: 8px; color: var(--muted); }
 .eyebrow strong { color: var(--ink); font-weight: 600; }
 

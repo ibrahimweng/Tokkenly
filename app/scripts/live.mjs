@@ -171,7 +171,7 @@ console.log('MOVING AROUND  four navigators, one registry')
   const p = await page(1600, 1000)
   await p.goto(B + '/withdraw', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(250)
   const crumbs = (await p.locator('.crumb').allTextContents()).join(' > ')
-  ok('a trail says where you are', crumbs === 'Transfer > Withdraw to your bank', crumbs)
+  ok('a trail says where you are', crumbs === 'Wallet > Send to your bank', crumbs)
   await p.locator('.crumb').first().click(); await p.waitForTimeout(250)
   ok('and the trail steps back up', p.url().endsWith('#/transfer'), new URL(p.url()).hash)
 

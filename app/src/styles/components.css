@@ -108,10 +108,10 @@
    figures and the action on the borrowing card, which put a picture in the
    middle of a sentence and made the button read as belonging to the art
    rather than to the offer above it. */
-.prod-art { height: 188px; overflow: hidden; flex: none; margin-top: 20px; }
+.prod-art { height: 442px; overflow: hidden; flex: none; margin-top: 24px; }
 .prod-art svg { display: block; width: 100%; height: 100%; }
 /* Taller, so the composition does not run out before the card does. */
-.card.prod { min-height: 528px; }
+.card.prod { min-height: 792px; }
 
 /* The name of the thing, at the size a name gets. It used to be the eyebrow —
    eleven pixels of caps, the quietest type on the card, carrying the one word
@@ -151,7 +151,7 @@
   /* One card at a time on a phone, so there is no second card to be as tall
      as, and 460 is a screenful of one offer. */
   .card.prod { min-height: 0; }
-  .prod-art { height: 150px; }
+  .prod-art { height: 280px; }
   .prod-title { font-size: 24px; line-height: 30px; }
   .prod-figure { font-size: 24px; line-height: 30px; }
 }
@@ -1177,7 +1177,11 @@ th.right .th-sort { flex-direction: row-reverse; }
 .gate {
   position: relative; overflow: hidden;
   flex: 0 1 288px; min-width: 0;
-  height: 300px; padding: 28px; gap: 16px; border-radius: 20px;
+  /* 368, not 300. The words take the top 170 of this box whatever its height,
+     and a field that is a picture rather than a texture needs the rest to be
+     clear of them: at 300 the object either sat under the call to action or
+     was too small to read as an object at all. */
+  height: 368px; padding: 28px; gap: 16px; border-radius: 20px;
   background: var(--sunken);
   align-items: flex-start;
 }
@@ -1229,9 +1233,19 @@ th.right .th-sort { flex-direction: row-reverse; }
 
 /* The field bleeds to the bottom edge, under the padding, and is clipped by
    the tile exactly as the Figma frame clips it. */
+/* 140 was the height of a texture. An object needs room to be one: at 140 a
+   note's window and a slice's cut are three pixels each and the whole thing
+   reads as noise. It sits behind the words, which carry their own z-index. */
 .gate-art {
-  position: absolute; left: 0; right: 0; bottom: 0; height: 140px;
+  position: absolute; left: 0; right: 0; bottom: 0; height: 196px;
   overflow: hidden; pointer-events: none;
+  /* And it dissolves into the card before it reaches the words. The words
+     already sit above it in the stacking order, which stops them being
+     covered and does nothing at all for reading grey text over a field of
+     dots. The field is made of dissolving edges anyway, so one more is the
+     material behaving as it does everywhere else. */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 20%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 20%);
 }
 
 @media (max-width: 899px) {

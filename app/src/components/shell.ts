@@ -13,13 +13,13 @@ interface PlaceDef { id: Place; label: string; to: string; ic: () => string }
 /** Six places. On desktop they are a rail; on the phone the first four are
  *  tabs and the rest arrive behind More. Same six either way. */
 /* The names the product is called by everywhere else: the marketing site's
-   tabs are Home, Invest, Transfer, Activity. The ids stay as they were, so the
+   tabs are Home, Invest, Wallet, Activity. The ids stay as they were, so the
    lit-row logic and every `place:` in the registry keep working, and the old
    paths still resolve — a bookmark to /market is not a broken link. */
 const PLACES: PlaceDef[] = [
   { id: 'home', label: 'Home', to: '/', ic: icon.home },
   { id: 'market', label: 'Invest', to: '/invest', ic: icon.market },
-  { id: 'wallet', label: 'Transfer', to: '/transfer', ic: icon.wallet },
+  { id: 'wallet', label: 'Wallet', to: '/transfer', ic: icon.wallet },
   { id: 'grow', label: 'Borrow & Lend', to: '/grow', ic: icon.grow },
   { id: 'history', label: 'Activity', to: '/activity', ic: icon.history },
   { id: 'account', label: 'Account', to: '/account', ic: icon.account },
@@ -145,7 +145,7 @@ function rail(active: Place): HTMLElement {
   for (const p of TABS) {
     // The name, not only the icon. Four unlabelled glyphs is a memory test,
     // and this product's whole thesis is teaching somebody their first share
-    // — the sidebar has said Home, Invest, Transfer, Borrow & Lend in words
+    // — the sidebar has said Home, Invest, Wallet, Borrow & Lend in words
     // start, and the phone is where most of these people will actually be.
     const tab = h('button', { class: 'rail-tab', on: { click: () => go(p.to) } },
       h('span', { class: 'ic', html: p.ic() }),

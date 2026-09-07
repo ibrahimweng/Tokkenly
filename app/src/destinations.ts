@@ -24,7 +24,7 @@ export interface Destination {
 export const DESTINATIONS: Destination[] = [
   { label: 'Home', to: '/', place: 'home', kind: 'place', also: 'dashboard overview start' },
 
-  { label: 'Transfer', to: '/transfer', place: 'wallet', kind: 'place', primary: true, also: 'wallet cash balance dollars move money' },
+  { label: 'Wallet', to: '/transfer', place: 'wallet', kind: 'place', primary: true, also: 'transfer cash balance dollars move money convert' },
   { label: 'Add money', to: '/addmoney', place: 'wallet', kind: 'action', primary: true, also: 'buy dollars fund top up naira deposit', hint: 'Naira in, dollars out' },
   { label: 'Send money', to: '/send', place: 'wallet', kind: 'action', primary: true,
     also: 'pay transfer withdraw convert cash out naira bank payout wallet address',
@@ -32,7 +32,7 @@ export const DESTINATIONS: Destination[] = [
   { label: 'Receive money', to: '/receive', place: 'wallet', kind: 'action', primary: true, also: 'address qr get paid base wallet address 0x copy', hint: 'Your address and code' },
   // Still listed, because it is what people search for. It resolves into Send
   // with the destination already answered rather than to a screen of its own.
-  { label: 'Withdraw to your bank', to: '/withdraw', place: 'wallet', kind: 'action', primary: true, also: 'convert cash out naira payout', hint: 'Dollars out, naira into your bank' },
+  { label: 'Send to your bank', to: '/withdraw', place: 'wallet', kind: 'action', primary: true, also: 'convert cash out naira payout', hint: 'Dollars out, naira into your bank' },
   { label: 'Your banks', to: '/transfer?sheet=banks', place: 'wallet', kind: 'screen', primary: true, also: 'account number gtbank kuda payout' },
   { label: 'Your naira account', to: '/account/payments', place: 'wallet', kind: 'screen', primary: true,
     also: 'virtual account number where to send naira deposit providus', hint: 'Where to send naira' },
@@ -119,7 +119,7 @@ export const DESTINATIONS: Destination[] = [
 ]
 
 export const PLACE_LABEL: Record<Place, string> = {
-  home: 'Home', wallet: 'Transfer', market: 'Invest',
+  home: 'Home', wallet: 'Wallet', market: 'Invest',
   grow: 'Borrow & Lend', history: 'Activity', account: 'Account',
 }
 

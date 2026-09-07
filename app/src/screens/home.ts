@@ -1,7 +1,7 @@
 import { h, link, countTo } from '../ui'
 import { icon } from '../icons'
 import { barChart, type Range } from '../components/chart'
-import { dotArt, level, BUY, CONVERT, BORROW, type ArtSpec } from '../components/art'
+import { objectArt, level, PIECE, NOTES, PURSE, type ObjectField } from '../components/art'
 import { shell, pageHeader, bell, jumpOpen } from '../components/shell'
 import { card, cardHead, headLink, kv, amount, directionMark, figureWithEye } from '../components/bits'
 import { table } from '../components/table'
@@ -247,11 +247,12 @@ function detailed(): HTMLElement {
               text: `${move.amount >= 0 ? '+' : ''}${money(move.amount)} (${move.amount >= 0 ? '+' : ''}${pct(move.pct)})` }),
             h('span', { class: 'muted', text: '  Today' })))),
       h('div', { class: 'row grow tiles' },
-        quickAction('Buy', 'Shares and funds', icon.buy(), '/invest'),
-        // Was "Convert", pointing at Withdraw. Converting is now both
-        // directions and neither is a screen of its own: naira in is Add
-        // money, naira out is Send with a bank as the destination.
-        quickAction('Add money', 'Naira in, dollars out', icon.receive(), '/addmoney'),
+        quickAction('Invest', 'Shares and funds', icon.buy(), '/invest'),
+        // Not "Add money": that is money movement, and money movement is the
+        // wallet's, the same argument that took Send and Receive off this
+        // screen. The slot is the door to the place instead, so this row is
+        // three ways into the product rather than two doors and an errand.
+        quickAction('Wallet', 'Your cash, in and out', icon.wallet(), '/transfer'),
         quickAction('Borrow', 'Against your shares', icon.download(), '/grow/borrow'))),
     tasks(),
     h('div', { class: 'row' },
@@ -285,7 +286,7 @@ function whereItIs(part: number, whole: number, what: string): string {
  *  the gradient, because buying a share is the thing this screen is for. */
 function gateway(): HTMLElement {
   const tile = (
-    opts: { title: string; sub: string; cta: string; to: string; art: ArtSpec
+    opts: { title: string; sub: string; cta: string; to: string; art: ObjectField
             lead?: boolean; reads: string; at: number },
   ) => {
     const a = link(opts.to, 'card gate' + (opts.lead ? ' gate-lead' : ''))
@@ -302,9 +303,7 @@ function gateway(): HTMLElement {
     a.appendChild(h('span', { class: 'gate-cta' },
       h('span', { text: opts.cta }),
       h('span', { class: 'ic', html: icon.chevron() })))
-    // Twice across, so the pitch lands near six pixels rather than twelve. A
-    // door is 288 or 400 wide and the fields are 24 and 34 columns.
-    a.appendChild(h('div', { class: 'gate-art' }, dotArt(opts.art, opts.at, undefined, [2, 2])))
+    a.appendChild(h('div', { class: 'gate-art' }, objectArt(opts.art, opts.at)))
     return a
   }
   // Two rows, the way D01c has them: the greeting carries the name and the
@@ -341,7 +340,7 @@ function gateway(): HTMLElement {
     // Figma drew is the full field, and the account decides how much of it is
     // awake. Nothing moves and nothing is resized — the picture is the picture.
     h('div', { class: 'gates' },
-      tile({ lead: true, art: BUY, to: '/invest', title: 'Buy Stocks', cta: 'Buy shares',
+      tile({ lead: true, art: PIECE(), to: '/invest', title: 'Invest', cta: 'Buy shares',
         sub: 'Own a piece of Apple, Nvidia or a whole market fund. From $1.',
         reads: whereItIs(holdingsValue(), total, 'in shares'),
         at: level(holdingsValue(), total) }),
@@ -349,11 +348,11 @@ function gateway(): HTMLElement {
       // which is the Transfer place rather than the Withdraw action it used to
       // open. A door labelled "Convert money" that lands on a screen headed
       // "Withdraw to your bank" is the promise in rule 49 half kept.
-      tile({ art: CONVERT, to: '/transfer', title: 'Convert Cash', cta: 'Move money',
-        sub: 'Move between naira and dollars at the rate you see.',
+      tile({ art: NOTES(), to: '/transfer', title: 'Wallet', cta: 'Move money',
+        sub: 'Your dollars, and the naira going in and out.',
         reads: whereItIs(state.cash, total, 'in cash'),
         at: level(state.cash, total) }),
-      tile({ art: BORROW, to: '/grow', title: 'Borrow & Lend', cta: 'See your limit',
+      tile({ art: PURSE(), to: '/grow', title: 'Borrow & Lend', cta: 'See your limit',
         sub: 'Borrow against your shares without selling them.',
         reads: whereItIs(state.lent, total, 'lent out'),
         at: level(state.lent, total) })),

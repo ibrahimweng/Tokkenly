@@ -6426,7 +6426,96 @@ what used to be above the fold.
      on any single screen and obvious the moment somebody navigates. Measure it
      across routes, because that is the only place it exists.
 
-### 11g.45 Still open
+### 11g.45 The four that were waiting, and cards half again as tall
+
+Four things had been flagged and left standing because they were the owner's to
+decide. All four were decided at once, so they land together.
+
+**The cards are 792, not 528.** Half again as tall, in one axis only: same
+width, same anatomy, more height — and the height goes to the field rather than
+to the gap. A first pass gave it to the spacer, which made the card taller and
+emptier at the same time, which is the fault this was meant to fix. The band is
+442 and the content above it is 322, so the picture is most of the card.
+
+That changed the field's shape, and a field is composed for the shape it lands
+in. A picture laid out for a 2.8 band and cropped into a 1.25 one loses most of
+itself: `slice` is the right crop for a texture and the wrong one for a
+subject. So there are two boxes now — **TALL** for the product cards, **WIDE**
+for the doors on Home and the onboarding panels — and nothing is laid out
+twice, because no object appears in both.
+
+The dust also had to learn to fan. In a band half as wide as it is, a trail
+that runs horizontally leaves the lower half bare, so its vertical reach now
+opens with the drift. That is what the reference does with a mane and a wheel.
+
+**Three more objects, for the three doors.** Home shows all of them at once, so
+they have to be tellable apart at a glance, and none of them may be the wallet
+or the coins — those belong to the two product cards a click away, and a door
+that previews what is behind it is only useful if it previews the right thing.
+
+- **Invest** is a disc with one wedge cut out and set down beside the hole it
+  came from. Own a piece. The only one of the three that is an idea rather than
+  an object, and the one that reads best.
+- **Wallet** is two banknotes, the front over the back, each with the oval
+  window every note in the world has.
+- **Borrow & Lend** is a wallet with a coin standing against it — two products,
+  so two things.
+
+They forced a change to the door itself. At 140 the band was the height of a
+texture: a note's window and a slice's cut are three pixels each, and the whole
+thing reads as noise. The band is 196 and the door is 368 rather than 300,
+because the words take the top 170 whatever the box is, and a picture needs the
+rest to be clear of them. The field also dissolves into the card before it
+reaches the words — the words already sat above it in the stacking order, which
+stops them being covered and does nothing whatever for reading grey text over a
+field of dots.
+
+**The place is called Wallet.** It had three names: the code called it the
+wallet, the rail called it Transfer, and Home called it Convert Cash — a door
+naming an operation that had had no page since the one Send landed in 11g.38.
+The product's own copy settles it. "Your wallet" appears in sixty-one sentences
+— it lands in your wallet, moves cash from your wallet, in your wallet in
+seconds — and "your transfer" in none. So Wallet, everywhere, and every door
+now carries the name of the place it opens: Invest, Wallet, Borrow & Lend.
+
+`names.mjs` is the check that should have existed before somebody had to point
+this out. It reads every label that leads somewhere — the three doors, the
+seven rail rows, the three quick actions — follows it, and compares it to the
+name the destination gives itself. It found one more on its first run: the
+quick action reading "Buy" opened a page called Invest. Home's greeting is the
+one heading that is not a page name, and it is listed as such rather than
+skipped.
+
+That fault could not have been caught by any suite in here, and it is worth
+being precise about why: every other check tests a screen, and this one lives
+in the gap between two screens. So does the frame in 11g.44. Both were found by
+a person walking around the product, which is the argument for doing that.
+
+**Add money leaves Home, and the slot becomes a door.** Same argument that took
+Send and Receive off it: money movement is the wallet's. Rather than dropping to
+two, the slot becomes the door to the wallet, so the row is three ways into the
+product instead of two doors and an errand.
+
+**And the frame costs ten pixels less.** Reserving the routing row is what buys
+a page that never moves, and it cannot be had for nothing — but what is
+reserved can be no bigger than it has to be. The routing row is 22 rather than
+26, which is what a 12px back link needs; the title row is 34 rather than 40,
+which is what the largest heading in the product needs once that heading is 26
+rather than 32. Header 66 → 56, first card 114 → 104, still one value on all
+forty-three routes at all three widths. The phone cannot be trimmed: both rows
+are 44 there because rule 35 says a thumb needs 44.
+
+124. **A label is a promise about a destination, and only walking it can check
+     it.** Every check in a suite of screen tests passes while a door says one
+     thing and opens another, because the fault is in neither screen. Read the
+     labels, follow them, compare them to the name the page gives itself — and
+     list the exceptions, because an exception nobody wrote down is an omission.
+
+125. **A picture is composed for the box it lands in.** The same subject in a
+     wide band and a tall one is two layouts, not one layout cropped. Cropping
+     is what you do to a texture, which has no subject to lose.
+
+### 11g.46 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from
   using the product afterwards. Item 30 was held back until it was asked for,
@@ -6459,15 +6548,12 @@ what used to be above the fold.
   maintenance requirement counts the interest too. `sellPoint()` and `cover()`
   are one line each and the change would ripple into the borrow composer's
   projection, which is why it is written down here rather than guessed at.
-- The two product cards carry objects (11g.44); Home's three doors and the four
-  onboarding screens still carry the old tiled fields, so the product speaks two
-  art languages until five more objects are composed. What each of those should
-  be — Invest, the wallet place, the Borrow & Lend door — has not been briefed,
-  and the wallet is already spoken for by the Borrow card.
-- The Home door still says "Convert Cash" and opens a page called Transfer,
-  which the code calls the wallet: three names for one place, and Convert names
-  an operation that stopped having a page in 11g.38. The full label-against-
-  destination audit is done and the naming decision is the owner's.
+- Every field in the product is an object now (11g.45), so the three
+  compositions lifted cell for cell from Figma, and the renderer that tiled
+  them into a texture, are used nowhere and have been deleted — `art.ts` went
+  from 486 lines to 330. They are in the history if the texture is ever wanted
+  back. What this costs is the one thing those fields had that a generated
+  object does not: somebody drew them.
 - The console has no roles. Anybody who can reach `/admin` sees everything, and
   a real one separates support from risk from engineering.
 - Borrow & Lend is not in the MVP brief at all — it is in that brief's *Not

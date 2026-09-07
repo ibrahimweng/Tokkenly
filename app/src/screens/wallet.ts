@@ -154,7 +154,7 @@ export function walletScreen(): HTMLElement {
     'wallet',
     // No eyebrow: it printed buying power 60px above the card that prints
     // buying power, which reads as two facts rather than one repeated.
-    pageHeader('Transfer'),
+    pageHeader('Wallet'),
     // The hero takes the whole column. It is the centrepiece of the page, and
     // sharing the width with the limits card left the two figures in it 20px
     // from wrapping onto separate lines — which they did, once the column came
