@@ -34,9 +34,14 @@
 .skip {
   position: fixed; top: 12px; left: 12px; z-index: 90;
   transform: translateY(-200%);
+  /* It is a button, so it is a pill (rule 6) and it has no outline (rule 13).
+     It floats, so the shadow is what separates it from whatever it lands on
+     top of — which is the whole of its job, since it appears over content that
+     was already there. It had been a 10px rounded rectangle with an edge,
+     which is the one shape the product does not use. */
   background: var(--surface); color: var(--ink);
-  border: 1px solid var(--control-pressed); border-radius: 10px;
-  padding: 12px 16px; font-weight: 600; font-size: 14px;
+  border-radius: var(--r-pill);
+  padding: 12px 20px; font-weight: 600; font-size: 14px;
   box-shadow: var(--shadow-float);
 }
 .skip:focus-visible { transform: none; }
@@ -246,8 +251,11 @@
 .search { position: relative; }
 .suggest {
   position: absolute; left: 0; right: 0; top: calc(100% + 8px); z-index: 40;
-  background: var(--surface); border: 1px solid var(--control);
+  background: var(--surface);
   border-radius: var(--r-panel); padding: 8px;
+  /* Rule 12 gives a floating element a shadow and rule 13 takes its outline
+     away. The shadow is what lifts it off the page; the border was saying the
+     same thing a second time, in the one language the product does not use. */
   box-shadow: var(--shadow-float);
   max-height: 320px; overflow-y: auto;
   display: flex; flex-direction: column; gap: 2px;
@@ -905,17 +913,24 @@ th.right .th-sort { flex-direction: row-reverse; }
 
 /* the jump-to overlay */
 .jump { padding: 0; gap: 0; overflow: hidden; }
+/* The field and the foot are the chrome; the results are the thing. They were
+   fenced off with a hairline top and bottom, which rule 13 does not allow and
+   which the surface can do instead: the well steps down to the canvas and the
+   two ends keep the sheet's own ground. */
 .jump-field {
   display: flex; align-items: center; gap: 12px;
-  padding: 20px; border-bottom: 1px solid var(--control);
+  padding: 20px;
 }
 .jump-field input { width: 100%; font-size: 16px; }
 .jump-field .kbd { flex: none; }
 .kbd {
   font-size: 11px; font-weight: 600; color: var(--muted);
-  border: 1px solid var(--control-pressed); border-radius: 6px; padding: 4px 8px;
+  background: var(--control); border-radius: 8px; padding: 4px 8px;
 }
-.jump-list { max-height: 46vh; overflow: auto; padding: 8px; }
+.jump-list {
+  max-height: 46vh; overflow: auto; padding: 8px;
+  background: var(--canvas);
+}
 .jump-group {
   font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--muted); padding: 12px 12px 8px;
@@ -929,7 +944,7 @@ th.right .th-sort { flex-direction: row-reverse; }
 .jump-hit small { color: var(--muted); }
 .jump-foot {
   display: flex; gap: 16px; padding: 12px 20px;
-  border-top: 1px solid var(--control); color: var(--muted); font-size: 12px;
+  color: var(--muted); font-size: 12px;
 }
 
 /* the search box in the top of the page that opens it */
@@ -1257,7 +1272,11 @@ th.right .th-sort { flex-direction: row-reverse; }
   display: flex; align-items: center; gap: 16px;
   width: 100%; text-align: left; padding: 12px 0;
 }
-.pref-row + .pref-row { border-top: 1px solid var(--grid); }
+/* Rule 13, and no exception was ever written for it: these rows had a
+   hairline between them. The row's own gap is 16, so 24 between rows is
+   already the wider of the two and the line was doing nothing the space was
+   not. */
+.pref-row + .pref-row { padding-top: 12px; }
 .pref-row .mark { flex: none; }
 /* .grow is flex: 1 1 auto, so the label's basis is the full width of its
    longest sentence. On a wrapping row that pushed it onto a line of its own
@@ -1313,7 +1332,7 @@ th.right .th-sort { flex-direction: row-reverse; }
   position: sticky; bottom: 20px; z-index: 20;
   display: flex; align-items: center; gap: 16px;
   padding: 12px 12px 12px 20px; border-radius: var(--r-pill);
-  background: var(--surface); border: 1px solid var(--control);
+  background: var(--surface);
   box-shadow: var(--shadow-float);
   animation: rise var(--t-base) var(--ease);
 }
@@ -1342,7 +1361,7 @@ th.right .th-sort { flex-direction: row-reverse; }
   display: flex; align-items: center; gap: 16px;
   padding: 12px 0;
 }
-.bucket-row + .bucket-row { border-top: 1px solid var(--grid); }
+.bucket-row + .bucket-row { padding-top: 12px; }
 .bucket-field { width: 132px; flex: none; height: 44px; padding: 0 14px; }
 .bucket-amount { width: 100%; text-align: right; font-weight: 600; }
 
@@ -1358,19 +1377,25 @@ th.right .th-sort { flex-direction: row-reverse; }
    how thin the book is, and which token this actually is. */
 .mark-line { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 
-/* The strip keeps the card's own ground rather than sitting on --control: an
-   11px caps label and a percentage are the smallest text in the product, and
-   --control costs them their AA margin in both themes. A hairline says
-   "segmented" just as well as a fill does. */
+/* Four read-only percentages, which is not a segmented control however much
+   it looked like one: nothing here can be chosen. It used to be boxed and
+   divided in hairlines, on the reasoning that --control costs an 11px caps
+   label its AA margin — true, and rule 13 still says a line is not how you
+   separate things. So the cells keep the card's own ground and the gutters
+   are the step: the strip sits on --control and the four windows keep the
+   card's ground inside it, which reads as segmented without drawing a single
+   stroke. The small text never leaves --sunken, where it was measured —
+   --subtle on --control is 4.21:1, and that is why it was a hairline in the
+   first place. The gutters carry no text, so they can be any ground at all. */
 .tf-row {
-  display: flex; gap: 0; flex: none; border-radius: var(--r-panel);
-  overflow: hidden; border: 1px solid var(--grid);
+  display: flex; gap: 4px; flex: none; border-radius: var(--r-panel);
+  overflow: hidden; background: var(--control); padding: 4px;
 }
 .tf {
   display: flex; flex-direction: column; gap: 2px;
   padding: 8px 16px; min-width: 76px;
+  background: var(--sunken); border-radius: 12px;
 }
-.tf + .tf { border-left: 1px solid var(--grid); }
 
 /* A token address is long, unmemorable and worth showing anyway: on a product
    sold as tokenised, showing the token is the trust signal. Middle-elided,

@@ -1630,7 +1630,9 @@ scale.
     2px green focus ring, a 2px error ring, and the glyphs themselves. If two
     things need separating, step the surface or add space. A chart is the single
     named exception, spelled out in 8.13, because reading a price is not the
-    same job as glancing at a card.
+    same job as glancing at a card. `lines.mjs` counts, at every route in both
+    themes, and its list of exceptions is the whole list: see 11g.36 for the
+    eight places this had already been broken before anything checked.
 14. Never nest more than three surface levels.
 15. Never compose an amount below 36. Set it flat.
 16. Never draw a glyph at any size but 12, and never at any stroke but 2. The
@@ -5676,7 +5678,56 @@ the statement shows, because they are the same numbers.
      shows the books has to be a screen a person can read — the proof is worth
      nothing if only the build can check it.
 
-### 11g.36 Still open
+### 11g.36 Rule 13, and the eight places it had already been broken
+
+Adding the statement meant adding a line: a hairline over the reference at the
+foot of each movement card. Rule 13 forbids it, in the first sentence — never
+draw a line, no card outline, no field outline, no list divider, no chip edge,
+no rule under a heading. Taking it out again raised the obvious question, which
+is whether anything else in the product had done the same thing quietly. Eight
+things had, over four tiers.
+
+- A hairline between every **preference row**, and another between every
+  **bucket row**. Both are list dividers, which the rule names. The rows are
+  12px padded top and bottom, so 24px already separated them further than the
+  16px inside them; the line was saying what the space had said.
+- The **four timeframe percentages** on a company page were boxed and divided
+  in hairlines, three of them per strip. The comment above it argued the case:
+  `--subtle` on `--control` measures 4.21:1, under AA for an 11px caps label,
+  so the cells could not take a fill and a hairline said "segmented" just as
+  well. The reasoning was right about the contrast and wrong about the
+  conclusion — the gutters carry no text, so they can be any ground at all. The
+  strip sits on `--control` now with 4px gutters and the cells keep the card's
+  ground, which reads as segmented, draws nothing, and leaves the small text on
+  exactly the surface it was measured against.
+- Outlines around the two **floating panels**: the search suggestions and the
+  bucket bar. Both already have `--shadow-float`, which is what rule 12 gives a
+  floating element, so the outline was the same statement in the one language
+  the product does not speak.
+- The **command palette** was fenced: a hairline under the field and another
+  over the foot. The well steps down to `--canvas` instead, so the chrome and
+  the results separate by surface. The **key cap** beside the field was a chip
+  edge — filled now, which also puts its radius back on the grid.
+- The **skip link** was a 10px rounded rectangle with an outline, breaking rule
+  6 as well: buttons are pills. It floats over content, so the shadow it
+  already had is what separates it.
+
+None of these looked wrong on its own. That is the point, and it is why the fix
+is not the eight edits but `lines.mjs`: nineteen routes in both themes, walking
+every element's computed style and reporting any visible stroke. Three
+exceptions are named in the file rather than tolerated — a chart, which the
+rule names as its own exception; the empty PIN dot, where the outline is the
+drawing; and the busy button's spinner, a glyph on a pseudo-element. It reads
+`nothing draws a line`.
+
+103. **A rule nobody can check is a preference.** Rule 13 was written at the
+     start and broken eight times in four tiers, by people — the same one —
+     reasoning carefully each time about why this case was different. Two of
+     those arguments were even correct about the constraint they named. What
+     was missing was not judgement, it was a count: a rule stated in prose
+     drifts, and a rule with a suite behind it does not.
+
+### 11g.37 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from
   using the product afterwards. Item 30 was held back until it was asked for,
