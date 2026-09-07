@@ -798,15 +798,15 @@ export const state: State = {
   // person arrives in: their details are on file and nothing has been run.
   checks: [
     { key: 'identity', label: 'Who you are', state: 'pending', detail: '',
-      what: 'A government ID and a live selfie, checked by Didit' },
+      what: 'A government ID and a photo of you' },
     { key: 'age', label: 'Eighteen or over', state: 'pending', detail: '',
       what: 'Read off the date of birth on the document' },
     { key: 'residence', label: 'Resident in Nigeria', state: 'pending', detail: '',
-      what: 'The country on the document, and where you are signing in from' },
+      what: 'The country on your document, and where you sign in from' },
     { key: 'sanctions', label: 'Sanctions and watchlists', state: 'pending', detail: '',
-      what: 'Screened against the international lists we are required to check' },
+      what: 'Checked against the lists we are required to check' },
     { key: 'product', label: 'May hold tokenised shares', state: 'pending', detail: '',
-      what: 'Separate from who you are: whether somebody in your country may hold this instrument' },
+      what: 'Whether someone in your country is allowed to hold these' },
   ],
   // Invite-only for the pilot. The code is on the account because the person
   // came in through one, and support gets asked "who invited them" often
@@ -887,11 +887,11 @@ export const state: State = {
     { key: 'access', what: 'Written confirmation that Nigerian users may hold these tokens',
       who: 'Legal', state: 'in-progress', note: 'Opinion drafted, waiting on counsel sign-off' },
     { key: 'ng-legal', what: 'Nigerian legal, tax, custody and disclosure requirements approved',
-      who: 'Legal', state: 'in-progress', note: 'Disclosures written and in the product; tax treatment open' },
+      who: 'Legal', state: 'in-progress', note: 'Disclosures written and in the product. Tax treatment still open.' },
     { key: 'contracts', what: 'Production contract addresses verified for every asset and feed',
       who: 'Engineering', state: 'done', note: 'Four launch assets, USDC, and four Chainlink feeds checked against Coinbase' },
     { key: 'switch', what: 'Switch onramp and offramp documentation confirmed',
-      who: 'Engineering', state: 'in-progress', note: 'Webhook signing agreed; reversal states still unclear' },
+      who: 'Engineering', state: 'in-progress', note: 'Webhook signing agreed. Reversal states still unclear.' },
     { key: 'limits', what: 'Approved limits for price freshness, deviation, impact, gas and exposure',
       who: 'Risk', state: 'done', note: '90s, 1.5%, 2%, $5 a month, $50,000 pilot cap' },
     { key: 'security', what: 'Security review and small-value production tests end to end',
@@ -1387,11 +1387,11 @@ export const actions = {
     // point of keeping them apart.
     const at = new Date().toISOString()
     const said: Record<Check['key'], [CheckState, string]> = {
-      identity: ['passed', `${state.kyc.method ?? 'NIN'} ending ${state.kyc.last4 ?? '••••'} matched the document and the selfie`],
-      age: ['passed', `Born ${state.person.dob} — over eighteen`],
-      residence: ['passed', 'Nigerian document, and you are signing in from Lagos'],
-      sanctions: ['passed', 'No match on any list we are required to screen'],
-      product: ['passed', 'Nigeria is in the approved set for tokenised US equities in the pilot'],
+      identity: ['passed', `${state.kyc.method ?? 'NIN'} ending ${state.kyc.last4 ?? '••••'} matched your document and your photo.`],
+      age: ['passed', `Born ${state.person.dob}. Over eighteen.`],
+      residence: ['passed', 'Nigerian document. You are signing in from Lagos.'],
+      sanctions: ['passed', 'No match on any list we have to check.'],
+      product: ['passed', 'Nigeria is on the approved list for this pilot.'],
     }
     state.checks = state.checks.map((c) => ({ ...c, state: said[c.key][0], detail: said[c.key][1], at }))
     changed()
@@ -1410,7 +1410,7 @@ export const actions = {
       checkedOn: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) }
     state.checks = state.checks.map((c) => c.key === 'product'
       ? { ...c, state: 'failed' as CheckState, at,
-          detail: 'The address on your document is outside the pilot. We know who you are; we cannot open trading for you yet.' }
+          detail: 'Your address is outside the pilot. We know who you are. We cannot open trading for you yet.' }
       : { ...c, state: 'passed' as CheckState, at, detail: 'Passed' })
     changed()
   },

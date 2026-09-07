@@ -125,7 +125,7 @@ function detailsBody(): (Node | null)[] {
     thisAccountCard(),
     card(
       cardHead('What we hold about you'),
-      h('span', { class: 'muted', text: 'You can download all of it whenever you want: your details, every payment you have made, and every document you sent us.' }),
+      h('span', { class: 'muted', text: 'Download everything we hold any time: your details, every payment, every document you sent us.' }),
       h('button', { class: 'link', text: 'Download my data',
         on: { click: () => toast('Your data is being prepared. We will email ' + p.email) } })),
   ]
@@ -190,7 +190,7 @@ function preferencesBody(): (Node | null)[] {
       }),
       choice({
         label: 'Ask for your PIN above', ic: icon.lock(),
-        sub: 'Anything larger needs your four digits — buying, selling or sending',
+        sub: 'Anything larger needs your four digits',
         options: [
           { label: usd(250, false), value: '250' }, { label: usd(500, false), value: '500' },
           { label: usd(1000, false), value: '1000' }, { label: 'Never', value: '0' },
@@ -217,7 +217,7 @@ function notificationsBody(): (Node | null)[] {
         ic: icon.grow(), get: () => n.earn, set: (v) => actions.setNotify('earn', v) }),
       toggle({ label: 'Borrowing', sub: 'When what you owe gets close to what your shares can cover',
         ic: icon.alert(), get: () => n.borrowing, set: (v) => actions.setNotify('borrowing', v) })),
-    callout('Four, not twenty. A list nobody can read is a list everybody turns off wholesale.'),
+    
     // The half a switch list never admits: some of these go out whatever you
     // set, and a product that hides that is a product whose unsubscribe is a
     // lie. Saying which is which is also the only way the four above mean
@@ -225,13 +225,13 @@ function notificationsBody(): (Node | null)[] {
     card(
       cardHead('Email', h('span', { class: 'pill', text: 'To ' + state.person.email })),
       h('span', { class: 'muted',
-        text: 'The switches above are about what interrupts you in the app. These go to your inbox, and three of them go whatever you set.' }),
+        text: 'The switches above are for the app. These go to your inbox. Three of them always go.' }),
       kv('Money in or out, completed or failed', 'Always'),
       kv('An order filled, or refused', 'Always'),
       kv('A new sign in, or a change to your security', 'Always'),
       kv('Everything else', 'Follows the switches above'),
       h('span', { class: 'muted t-caption',
-        text: 'A person locked out of the app is exactly the person who needs to be told their money moved, so those three are not ours to turn off.' })),
+        text: 'Someone locked out of the app is the person who most needs to know their money moved.' })),
   ]
 }
 
@@ -266,7 +266,7 @@ function securityBody(): (Node | null)[] {
       toggle({ label: 'Face ID', sub: 'Unlock without typing your PIN', ic: icon.face(),
         get: () => s.faceId, set: (v) => actions.setSecurity('faceId', v) }),
       toggle({ label: 'Lock the app',
-        sub: 'Asks for your PIN when you open it, and after two minutes away. Off means anyone holding your unlocked phone is already in.',
+        sub: 'Asks for your PIN when you open the app, and after two minutes away',
         ic: icon.alert(),
         get: () => s.appLock, set: (v) => actions.setSecurity('appLock', v) }),
       // A lock you can only reach by waiting is a lock nobody tests. This is
@@ -302,7 +302,7 @@ function securityBody(): (Node | null)[] {
       h('span', { class: 't-body-strong', text: '3.  Change your PIN, because somebody may have watched you type it.' })),
     card(
       cardHead('What we will never do'),
-      h('span', { class: 'muted', text: 'We will never ask you for your PIN, your password, your recovery phrase, or a code from a text message. Anybody who asks is not us, however well they know your name.' })),
+      h('span', { class: 'muted', text: 'We will never ask for your PIN, password, recovery phrase or a code from a text. Anyone who asks is not us.' })),
   ]
 }
 
@@ -319,7 +319,7 @@ function paymentsBody(): (Node | null)[] {
       kv('Account number', state.va.number),
       kv('Account name', state.va.name),
       h('span', { class: 'muted t-caption',
-        text: 'Yours, and it does not change. Anything sent to it becomes dollars in your wallet at the rate when it lands.' })),
+        text: 'Yours, and it never changes. Naira sent here becomes dollars in your wallet.' })),
     card(
       cardHead('Your banks', h('button', { class: 'link', text: 'Add a bank',
         on: { click: () => openSheet('banks') } })),
@@ -334,7 +334,7 @@ function paymentsBody(): (Node | null)[] {
         on: { click: () => openSheet('cards') } })),
       ...state.cards.map((c) => kv(c.brand + ' •••• ' + c.last4, 'Expires ' + c.expiry)),
       h('span', { class: 'muted t-caption',
-        text: 'A card is seconds and costs ' + state.fees.card + '%. A transfer is free and takes a minute or two.' })),
+        text: 'A card takes seconds and costs ' + state.fees.card + '%. A bank transfer is free and takes a minute.' })),
     card(
       cardHead('What it costs'),
       kv('Buying or selling', state.fees.trade + '% of the amount'),
@@ -371,7 +371,7 @@ function walletBody(): (Node | null)[] {
     card(
       cardHead('Who holds the key', h('span', { class: 'pill pos', text: 'You do' })),
       h('span', { class: 'muted',
-        text: 'Tokkenly never stores your private key and cannot sign a transaction for you. Every movement out of this wallet is one you authorised, which is also why we cannot reverse one.' }),
+        text: 'We never hold your key and cannot sign anything for you. Every payment out is one you approved. That is also why we cannot reverse one.' }),
       kv('Key held by', 'You, through Coinbase'),
       kv('Tokkenly can sign', 'Nothing'),
       kv('Staff access', 'None, at any level'),
@@ -382,19 +382,19 @@ function walletBody(): (Node | null)[] {
     card(
       cardHead('Gas', h('span', { class: 'pill pos', text: 'We pay it' })),
       h('span', { class: 'muted',
-        text: 'Every transaction on Base costs a small fee in ETH. You do not hold ETH and should not have to, so we sponsor it for the things the product is for.' }),
+        text: 'Every payment on Base costs a small network fee. You do not hold the coin it is paid in, so we pay it for you.' }),
       kv('Sponsored', 'Buying, selling, sending, and cashing out'),
       kv('Used this month', '$0.42 of $5.00'),
       kv('What you pay', 'Nothing'),
       h('span', { class: 'muted t-caption',
-        text: 'Past the monthly ceiling the wallet still works; the fee comes out of your USDC and the screen says so before you confirm.' })),
+        text: 'Past the monthly cap it comes out of your dollars instead. The screen says so before you confirm.' })),
     card(
       cardHead('How you got in'),
       kv('Invite code', state.invite.code),
       kv('From', state.invite.by),
       kv('Joined', new Date(state.invite.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })),
       h('span', { class: 'muted t-caption',
-        text: 'Tokkenly is invite-only while the pilot runs. Everybody in it came through a code, and that is on your record rather than in a spreadsheet.' })),
+        text: 'Tokkenly is invite-only for now. Everyone here came in with a code.' })),
   ]
 }
 
@@ -554,12 +554,12 @@ function legalBody(): (Node | null)[] {
   return [
     card(
       cardHead('Risk and disclosures'),
-      h('span', { class: 'muted', text: 'What you actually own, what it costs, what happens to your money if something goes wrong, and who to go to if we cannot put it right.' }),
+      h('span', { class: 'muted', text: 'What you own, what it costs, and what happens if something goes wrong.' }),
       h('button', { class: 'btn btn-secondary btn-sm', text: 'Read the disclosures',
         on: { click: () => go('/disclosures') } })),
     card(
       cardHead('Closing your account'),
-      h('span', { class: 'muted', text: 'Move your money out first. Anything you have lent has to come back and any loan has to be repaid, then we can close the account and delete what we hold.' }),
+      h('span', { class: 'muted', text: 'Move your money out first. Take back what you lent and repay any loan. Then we close the account and delete what we hold.' }),
       h('button', { class: 'link', text: 'Close my account', on: { click: () => openSheet('close') } })),
   ]
 }

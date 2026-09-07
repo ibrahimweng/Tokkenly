@@ -118,8 +118,7 @@ function balances(): HTMLElement[] {
     // what it means is that no naira has moved through the account yet.
     h('div', { class: 'stack' },
       t.rows.length ? null : h('span', { class: 'muted',
-        text: 'Nothing yet. Naira appears here the moment you add money or ' +
-          'convert some out, on both sides of the conversion.' }),
+        text: 'Nothing yet. Naira shows up here when you add money or send some out.' }),
       ...rowsFor(t),
       // The total stays even when there is nothing to total. It is the claim
       // the screen makes, and a claim that disappears when it is easy to
@@ -130,9 +129,8 @@ function balances(): HTMLElement[] {
     cards.push(card(
       cardHead('Shares', balancedPill(tickers.every(zero), 'a share')),
       h('span', { class: 'muted',
-        text: 'Counted in shares rather than valued in dollars. Each company ' +
-          'balances on its own: what a custodian holds for you is what left ' +
-          'the market, to the fourth decimal.' }),
+        text: 'Counted in shares, not in dollars. Each company balances on its own. ' +
+          'What is held for you is what left the market.' }),
       ...tickers.map((t) => h('div', { class: 'stack-8' },
         h('span', { class: 't-caps', text: t.currency }),
         ...rowsFor(t), sumRow(t, 'Together')))))
@@ -150,22 +148,20 @@ export function statementScreen(): HTMLElement {
         card(
           cardHead('Every movement, both ends'),
           h('span', { class: 'muted',
-            text: `${book.length} movements, oldest at the bottom. Each one names the ` +
-              'account the money left and the account it arrived in. A movement with ' +
-              'one end is refused before it is written, so there is nothing on this ' +
-              'page that came from nowhere. A trade has four ends rather than two: ' +
-              'the dollars going one way and the shares coming the other.' }),
-          callout('A conversion is two movements, one in each currency, sharing a reference and a rate. One entry cannot be denominated twice.')),
+            text: `${book.length} movements, oldest at the bottom. ` +
+              'Each one names where the money left and where it arrived. ' +
+              'Money cannot appear here from nowhere. ' +
+              'A trade has four ends: dollars one way, shares the other.' }),
+          callout('Changing currency takes two movements, one in naira and one in dollars. They share a reference and a rate.')),
         ...book.map(movement)),
       h('div', { class: 'stack col-side' },
         ...balances(),
         card(
           cardHead('What this is for'),
           h('span', { class: 'muted',
-            text: 'Every balance in the app is read from these accounts rather than ' +
-              'stored beside them — your wallet, what you have lent, what you owe and ' +
-              'every share in your portfolio — so there is no second copy of the truth ' +
-              'to drift from the first.' }),
+            text: 'Every figure in the app is read from these accounts. ' +
+              'Your wallet, what you lent, what you owe, every share you hold. ' +
+              'There is no second copy to go wrong.' }),
           h('button', { class: 'btn btn-secondary btn-sm', text: 'Back to Activity',
             on: { click: () => go('/activity') } })))))
 }

@@ -39,7 +39,7 @@ const STEPS: Step[] = [
   {
     eyebrow: 'What this is',
     title: 'Own a piece of Apple,\nfrom one dollar',
-    body: 'A share in Apple costs more than $200. You do not have to buy a whole one. Put in a dollar and you own a dollar of it, and it rises and falls the same way.',
+    body: 'One Apple share costs over $200. You do not need a whole one. Put in $1 and you own $1 of Apple.',
     art: () => dotArt(BUY),
     lead: true,
     // What screen one used to say here was "You have $2,480.00 ready to
@@ -57,19 +57,19 @@ const STEPS: Step[] = [
   {
     eyebrow: 'What you hold',
     title: 'Naira in,\ndollars held',
-    body: 'You add naira from your bank and it becomes dollars. Your money sits in dollars, so it holds its value while the naira moves. Take it out to any bank you have added.',
+    body: 'Send naira from your bank and it becomes dollars. Your money stays in dollars while the naira moves. Take it out to your bank any time.',
     art: () => dotArt(CONVERT),
   },
   {
     eyebrow: 'When you can sell',
     title: 'The market\nnever closes',
-    body: 'These shares are tokenised, so they trade at any hour, any day. Sell part of a holding on a Sunday night if you want to. Cash is in your wallet in about a minute.',
+    body: 'Buy and sell at any hour, any day. Sell on a Sunday night if you want. The cash is in your wallet a minute later.',
     art: () => dotArt(BORROW),
   },
   {
     eyebrow: 'How to start',
     title: 'Pick one\nto start with',
-    body: 'Whatever you choose goes into a bucket, and one payment buys the lot — with a receipt for every company in it. Nothing is bought until you say so.',
+    body: 'Pick a few companies, then pay once for all of them. Nothing is bought until you say so.',
     pick: true,
   },
 ]

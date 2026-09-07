@@ -263,7 +263,7 @@ export function marketScreen(): HTMLElement {
     // Once, at the foot of the page. A risk line on every card is a risk line
     // nobody reads.
     h('p', { class: 'subtle t-caption', style: { margin: '0' } },
-      h('span', { text: 'Investing involves risk. The value of what you hold can fall as well as rise, and you can get back less than you put in. ' }),
+      h('span', { text: 'Prices go down as well as up. You can get back less than you put in. ' }),
       h('button', { class: 'link quiet', text: 'Risk and disclosures',
         on: { click: () => go('/disclosures') } })),
     bucketBar()

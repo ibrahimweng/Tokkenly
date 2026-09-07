@@ -197,7 +197,7 @@ export function stockScreen(ticker: string): HTMLElement {
           c.actions.length
             ? foldRows(c)
             : h('span', { class: 'muted t-caption', text: 'No corporate actions since this token was issued.' }),
-          callout('A tokenised share cannot pay a dividend into your wallet or split into two tokens. Both are expressed as a multiplier, so the token quietly represents more of the underlying share over time.')
+          callout('A token cannot pay you a dividend directly. Dividends and splits go into the multiplier instead, so one token slowly comes to represent more of the real share.')
         ),
         card(
           cardHead('Growth and valuation'),
@@ -223,7 +223,7 @@ export function stockScreen(ticker: string): HTMLElement {
         card(
           cardHead('What this is'),
           h('span', { class: 'muted', text: c.plain }),
-          callout('A tokenised share tracks the real one and trades every day of the week, including weekends.')
+          callout('This token tracks the real share and trades every day, weekends included.')
         ),
         card(
           cardHead('Your position'),

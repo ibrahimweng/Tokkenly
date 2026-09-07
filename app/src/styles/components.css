@@ -90,7 +90,13 @@
 .card.prod { padding: 0; overflow: hidden; gap: 0; flex: 1 1 0; min-width: 0; }
 .card.prod > *:not(.prod-art) { padding-inline: 24px; }
 .card.prod > .stack-8:first-child { padding-top: 24px; }
-.card.prod > .btn:last-child { margin: 0 24px 24px; }
+/* A button that is width:100% and also has side margins is 48px wider than
+   the card it is in, and `overflow: hidden` on the card turns that into a
+   button whose right end is sawn off. The margins were doing the padding job
+   that every other child gets from the rule above; `width: auto` lets the
+   flex column stretch it into the space the margins leave, which is what the
+   margins were for. */
+.card.prod > .btn:last-child { margin: 0 24px 24px; width: auto; }
 .card.prod .stack-8 + .stack-12 { padding-top: 16px; }
 .card.prod .stack-12 + .spacer { min-height: 16px; }
 .prod-art { height: 132px; overflow: hidden; flex: none; }
@@ -104,17 +110,28 @@
 /* The name leads and the sentence finishes in grey. It was the rate at 32px
    over an 11px label, which made the loudest thing on both cards the one fact
    they have in common. */
-.prod-say {
-  margin: 0; font-size: 20px; line-height: 27px; font-weight: 600;
-  letter-spacing: -0.01em;
-}
-.prod-say .muted { font-weight: 600; }
+/* The name of the thing, at the size a name gets. It used to be the eyebrow —
+   eleven pixels of caps, the quietest type on the card, carrying the one word
+   somebody actually needs. */
+.prod-title { margin: 0; font-size: 28px; line-height: 34px; font-weight: 600; letter-spacing: -0.01em; }
+/* A label and its question mark travel together. */
+.kv-key { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+/* The one sentence under the name. It is support, so it sits at body size and
+   in grey: it used to be 20px semibold, which made it compete with the thing
+   it was supporting. */
+.prod-say { margin: 0; font-size: 15px; line-height: 22px; }
 @media (max-width: 899px) {
   .card.prod > *:not(.prod-art) { padding-inline: 20px; }
-  .card.prod > .btn:last-child { margin: 0 20px 20px; }
+  .card.prod > .btn:last-child { margin: 0 20px 20px; width: auto; }
   .card.prod > .stack-8:first-child, .prod-borrow > .stack-8:first-child { padding-top: 20px; }
   .prod-art { height: 108px; }
-  .prod-say { font-size: 18px; line-height: 25px; }
+  /* The name of the thing, at the size a name gets. It used to be the eyebrow —
+   eleven pixels of caps, the quietest type on the card, carrying the one word
+   somebody actually needs. */
+.prod-title { margin: 0; font-size: 28px; line-height: 34px; font-weight: 600; letter-spacing: -0.01em; }
+/* A label and its question mark travel together. */
+.kv-key { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.prod-say { font-size: 18px; line-height: 25px; }
 }
 
 /* ---------- cards ---------- */
@@ -536,6 +553,51 @@
   font: inherit; appearance: none; border: none; outline: none;
 }
 .field select option { background: var(--control); color: var(--ink); }
+
+/* ---------------------------------------------------------- the question --
+   A 24px circle, in the tab order, next to the word it explains. Deliberately
+   quiet: it is an offer, not a warning, and a row that has to shout about its
+   own footnote has the wrong words in it. */
+.hint {
+  width: 24px; height: 24px; flex: none; border-radius: 999px;
+  display: inline-grid; place-items: center;
+  background: var(--control); color: var(--muted);
+  font-size: 12px; font-weight: 600; line-height: 1;
+}
+@media (hover: hover) { .hint:hover { background: var(--control-pressed); color: var(--ink); } }
+.hint[aria-expanded='true'] { background: var(--inverse); color: var(--on-inverse); }
+/* Rule 35 wants 44px under a thumb, and a 44px question mark would be a button
+   the size of the figure it annotates. So the button really is 44 and gives
+   the 20 back as negative margin: the box a thumb hits and a checker measures
+   is 44, the space it occupies in the row is 24, and the circle is drawn by a
+   pseudo-element inset inside it. An invisible ::after hit area would have
+   done the first of those and none of the others. */
+@media (max-width: 899px) {
+  .hint {
+    width: 44px; height: 44px; margin: -10px; position: relative;
+    background: none;
+  }
+  .hint::before {
+    content: ''; position: absolute; inset: 10px; border-radius: 999px;
+    background: var(--control);
+  }
+  .hint[aria-expanded='true'] { background: none; color: var(--on-inverse); }
+  .hint[aria-expanded='true']::before { background: var(--inverse); }
+}
+
+/* The answer. It floats, so rule 12 gives it a shadow and rule 13 takes its
+   outline away — the shadow is what lifts it, and a border would be the same
+   statement in a language this product does not use. */
+.pop {
+  position: fixed; z-index: 70;
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 16px; border-radius: var(--r-panel);
+  background: var(--surface); color: var(--ink);
+  box-shadow: var(--shadow-float);
+  animation: rise var(--t-fast) var(--ease);
+}
+.pop .muted { font-size: 13px; line-height: 19px; }
+.pop .link { align-self: flex-start; }
 
 /* ---------- toast ---------- */
 .toast-rail { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 60;

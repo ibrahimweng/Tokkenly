@@ -19,20 +19,25 @@ export function disclosuresScreen(): HTMLElement {
         card(
           cardHead('The short version'),
           h('span', { class: 't-title', text: 'You can get back less than you put in.' }),
-          para('The price of a share or a fund goes down as well as up. Nothing here is a savings account, nothing is guaranteed, and past performance does not tell you what happens next. Only put in money you can afford to leave alone.')),
+          para('Prices go down as well as up. Nothing here is a savings account. Nothing is guaranteed. What a share did last year tells you nothing about next year.'),
+          para('Only put in money you can afford to leave alone.')),
 
         card(
           cardHead('What you actually own'),
-          para('When you buy on Tokkenly you are buying a tokenised share: a token that tracks one share, or one fund, held with a regulated custodian. You get the economic exposure — the price movement and any dividend — rather than a certificate in your name.'),
-          para('That means you do not get shareholder voting rights, and you are relying on the custodian and on Tokkenly as well as on the company itself. If either fails, that is a risk to your money separate from the share price.')),
+          para('You are buying a token that tracks one real share. The real share is held by a regulated custodian.'),
+          para('You get the price moves and the dividends. You do not get a share certificate in your name.'),
+          para('You do not get a vote at the company. And you are relying on the custodian and on us, not only on the company.'),
+          para('If either of us fails, that is a risk to your money on top of the share price.')),
 
         card(
           cardHead('Funds are not companies'),
-          para('An ETF is one holding spread across many companies. That spread makes a single company failing matter less, and it also means you will never beat the group it tracks. A fund can still fall a long way if the whole market does.')),
+          para('A fund spreads your money across many companies. One company failing matters less. You also never beat the group it tracks.'),
+          para('A fund can still fall a long way if the whole market does.')),
 
         card(
           cardHead('Currency'),
-          para('Your balance is held in dollars. If the naira strengthens against the dollar, the naira value of your money falls even if the dollar figure has not moved. The rate you see when you add money or withdraw is the rate you get; there is no spread folded into it.')),
+          para('Your money is held in dollars. If the naira gets stronger, your money is worth fewer naira, even though the dollar figure has not moved.'),
+          para('The rate you see is the rate you get. We do not hide a margin inside it.')),
 
         card(
           cardHead('What it costs'),
@@ -47,7 +52,7 @@ export function disclosuresScreen(): HTMLElement {
           cardHead('Eligibility and limits'),
           kv('Before verification', usd(LIMITS.none.monthly, false) + ' a month'),
           kv('After verification', usd(LIMITS.verified.monthly, false) + ' a month'),
-          para('You need to be eighteen or over and resident in Nigeria. Identity checks are required before the higher limits, and we may ask for more information if we are required to.'),
+          para('You must be eighteen or over and living in Nigeria. We check your identity before the higher limits. Sometimes we have to ask for more.'),
           state.kyc.status === 'verified'
             ? null
             : h('button', { class: 'btn btn-primary btn-sm', text: 'Verify your identity',
@@ -55,7 +60,8 @@ export function disclosuresScreen(): HTMLElement {
 
         card(
           cardHead('If something goes wrong'),
-          para('Tell us first: Support has the fastest route to a person. If we cannot put it right, you can escalate to the relevant regulator. We will tell you who that is and how, rather than leaving you to find out.'),
+          para('Tell us first. Support is the fastest route to a person.'),
+          para('If we cannot put it right, you can take it to the regulator. We will tell you who and how.'),
           h('button', { class: 'link', text: 'Contact support', on: { click: () => go('/support') } }))),
 
       h('div', { class: 'stack col-side' },
@@ -66,5 +72,5 @@ export function disclosuresScreen(): HTMLElement {
         card(
           cardHead('Prices on this app'),
           h('span', { class: 'muted',
-            text: 'Prices are indicative and can move between the moment you see one and the moment an order fills. The review screen shows the price used for your order.' })))))
+            text: 'Prices move. The one on a list can change before your order fills. The review screen shows the price your order used.' })))))
 }

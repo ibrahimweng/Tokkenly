@@ -26,7 +26,7 @@ const PROMISES: { ic: () => string; title: string; body: string }[] = [
   {
     ic: icon.lock,
     title: 'Held with a regulated custodian',
-    body: 'A token that tracks one real share. You get the price movement and any dividend, rather than a certificate in your name.',
+    body: 'A token that tracks one real share. You get the price moves and the dividends.',
   },
   {
     ic: icon.convert,
@@ -36,7 +36,7 @@ const PROMISES: { ic: () => string; title: string; body: string }[] = [
   {
     ic: icon.info,
     title: 'Every cost, before you confirm',
-    body: 'The amount, the fee and exactly what you receive, on the screen where you decide — not on the receipt.',
+    body: 'The amount, the fee and what you get, before you press the button.',
   },
 ]
 

@@ -111,14 +111,14 @@ function review(opts: {
     // dropped signal is the worst thing a money app can do: tell somebody a
     // payment landed when nothing left the building.
     if (!state.online) {
-      refuse('No connection, so this has not been sent. Nothing has left your account. Try again when you are back.')
+      refuse('No connection, so nothing was sent. Try again when you are back online.')
       return
     }
     // The other side can say no, and when it does nothing is written: the
     // ledger is not touched, the sheet stays where it is, and the reason is on
     // screen rather than in a toast that has gone by the time you look up.
     if (settlement(opts.amount ?? 0) === 'declined') {
-      refuse('Your bank declined this one. Nothing has left your account. Check with them, or try a smaller amount.')
+      refuse('Your bank said no. Nothing left your account. Check with them, or try less.')
       return
     }
     // A quote that ran out between the sheet opening and the button being
@@ -302,7 +302,7 @@ function done(
   if (!a.settled) {
     return outcome(
       'Still settling',
-      'We did not get a confirmation in time. It may still land, so it is in your activity as unsettled and nothing has been sent twice.',
+      'We have not had confirmation yet. It may still land. Nothing has been sent twice.',
       [['Reference', a.ref], ['When', longWhen(a.at)], ...extra],
       { label: 'Done', onClick: closeSheet },
       // In place. Opening a receipt used to close this sheet, navigate to
@@ -956,12 +956,12 @@ export const SHEETS: Record<string, Builder> = {
         rows: [
           ['To', to.name],
           ['They receive', usd(v)],
-          ['Fee', 'None — what you send is what they get'],
+          ['Fee', 'No fee'],
           ['Arrives', 'In about a minute'],
         ],
         note: to.rail === 'chain'
-          ? 'An address cannot be checked and a payment on the network cannot be recalled. Send a small amount first if you are not sure.'
-          : 'Payments cannot be recalled once they are on the network.',
+          ? 'We cannot check an address. Send a small amount first if you are not sure.'
+          : 'Once sent, this cannot be taken back.',
         action: 'Send ' + usd(v),
         onConfirm: () => {
           const a = actions.sendMoney(to, v)
@@ -979,7 +979,7 @@ export const SHEETS: Record<string, Builder> = {
           ['To', to.name],
           ['Account', (to.bank ?? '') + (to.number ? ' · ' + to.number : '')],
           ['Rate', '1 dollar = ' + naira(q.rate)],
-          ['Fee', 'None — the rate above is the rate you get'],
+          ['Fee', 'No fee'],
           ['They get', naira(v * q.rate)],
           ['Arrives', 'Usually within a minute'],
         ],
@@ -1003,7 +1003,7 @@ export const SHEETS: Record<string, Builder> = {
       if (!a.settled) {
         return outcome('On its way',
           `${usd(Math.abs(a.amount))} has left your wallet. ${naira(Math.abs(a.amount) * rate)} reaches ${a.who} when the bank confirms it.`,
-          [['Stage', 'Dollars out — done'],
+          [['Stage', 'Dollars out'],
            ['Next', 'Naira into the account'],
            ['Rate', '1 dollar = ' + naira(rate)],
            ['Reference', a.ref]],
@@ -1039,7 +1039,7 @@ export const SHEETS: Record<string, Builder> = {
         ['Fee', 'None, either side'],
         ['You keep', fmtShares(Math.max(0, (held?.shares ?? 0) - n)) + ' ' + c.ticker],
       ],
-      note: 'A share handed to another account cannot be recalled, and its price will have moved by the time anybody notices a mistake.',
+      note: 'Shares cannot be sent back. Check the name before you send.',
       action: 'Send ' + fmtShares(n) + ' ' + c.ticker,
       onConfirm: () => {
         const { activity } = actions.sendShares(t, v, to)
@@ -1122,10 +1122,10 @@ export const SHEETS: Record<string, Builder> = {
         ['Bank', va.bank],
         ['Account name', va.name],
         ['Rate', '1 dollar = ' + naira(state.ngnPerUsd) + ', today'],
-        ['Fee', 'None — a transfer costs nothing'],
+        ['Fee', 'No fee'],
         ['You will get', 'About ' + usd(v)],
       ),
-      calloutEl('The rate is struck when your naira lands, so the dollars may differ by a few cents.'),
+      calloutEl('You get the rate on the day it lands, so the dollars may differ by a few cents.'),
       h('button', {
         class: 'btn btn-primary', text: 'I have sent it',
         on: {
@@ -1165,8 +1165,8 @@ export const SHEETS: Record<string, Builder> = {
         ['Reference', a.ref],
       ),
       calloutEl(stuck
-        ? 'This one has not reached us. Nothing has been lost — it is in your activity as unsettled, and it will credit the moment it arrives. Talk to us if it has been an hour.'
-        : 'Your wallet goes up the moment the naira reaches our account. You can close this and carry on.',
+        ? 'We have not seen this yet. Nothing is lost. It lands in your wallet the moment it arrives. Tell us if it has been an hour.'
+        : 'Your wallet goes up the moment your naira arrives. You can close this.',
         stuck ? 'warning' : undefined),
       h('button', { class: 'btn btn-secondary', text: 'Close', on: { click: closeSheet } }))
   },
@@ -1187,7 +1187,7 @@ export const SHEETS: Record<string, Builder> = {
         ['Joined', m.joined],
         ['Email', m.email],
       ),
-      calloutEl('Opening this record is itself written to the audit log. Support can read; nobody can sign.'),
+      calloutEl('Opening this record goes in the audit log. Staff can read. Nobody can sign.'),
       h('div', { class: 'receipt-on' },
         h('button', { class: 'btn btn-secondary', text: 'Copy support reference',
           on: { click: () => { navigator.clipboard?.writeText(m.id).catch(() => {}); toast('Reference copied') } } }),
@@ -1210,9 +1210,9 @@ export const SHEETS: Record<string, Builder> = {
         ['Exported through', 'Coinbase'],
         ['Tokkenly keeps', 'Nothing'],
       ),
-      calloutEl('Once the key is in another app, that app can move everything at this address. Nobody can undo a transaction it makes, and we cannot help you recover one.', 'warning'),
+      calloutEl('That app will be able to move everything at this address. Nothing it does can be undone.', 'warning'),
       h('span', { class: 'muted t-caption',
-        text: 'Your Tokkenly account stays open and your history stays here. What moves is control of the wallet.' }),
+        text: 'Your account and your history stay here. Only control of the wallet moves.' }),
       h('button', {
         class: 'btn btn-primary', text: 'Continue with Coinbase',
         on: { click: () => { toast('Opening the Coinbase export flow'); closeSheet() } },
@@ -1231,7 +1231,7 @@ export const SHEETS: Record<string, Builder> = {
                 h('span', { class: 't-body-strong', text: c.brand + ' •••• ' + c.last4 })),
                 h('small', { text: 'Expires ' + c.expiry })),
             h('span', { class: 'muted t-caption', text: c.holder })))),
-      calloutEl(`A card costs ${state.fees.card}% and lands in seconds. A transfer costs nothing and takes a minute or two.`),
+      calloutEl(`A card costs ${state.fees.card}% and lands in seconds. A bank transfer is free and takes a minute.`),
       h('button', {
         class: 'btn btn-secondary', text: 'Add a card',
         on: { click: () => { toast('Adding a card needs a payments licence we do not have yet'); closeSheet() } },
@@ -1325,7 +1325,7 @@ export const SHEETS: Record<string, Builder> = {
     const left = holding(c.ticker)
     return done('Sold',
       `${fmtShares(num(r, 'sold'))} shares of ${c.name}. ${usd(a.amount)} is in your wallet.`, a,
-      [['You hold now', left ? fmtShares(left.shares) + ' shares' : 'None — that was all of it']])
+      [['You hold now', left ? fmtShares(left.shares) + ' shares' : 'None left']])
   },
 
   /* ----- the bucket ----- */

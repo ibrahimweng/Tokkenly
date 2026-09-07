@@ -11,6 +11,7 @@ import {
 import { usd, pct, signed, when } from '../format'
 import { go, openSheet } from '../router'
 import { dotArt, level, mirror, BORROW, LEND_RAMP, OWE_RAMP, type ArtSpec } from '../components/art'
+import { hint, type Hint } from '../components/hint'
 
 /* ---------------- the hub ---------------- */
 
@@ -37,19 +38,34 @@ import { dotArt, level, mirror, BORROW, LEND_RAMP, OWE_RAMP, type ArtSpec } from
    spendable money is out on loan, and how much of your limit you have drawn.
    --------------------------------------------------------------------------- */
 
+/* ---------------------------------------------------------------------------
+   Two cards, one word each.
+
+   They used to carry five pieces of text apiece: an eyebrow reading LENDING,
+   a headline reading "Lend your dollars.", a grey clause finishing the
+   sentence, three figures, and a caption underneath explaining the terms. Six
+   lines to say a thing that takes one word, and the one word was the eyebrow —
+   set in the smallest, quietest type on the card.
+
+   So the eyebrow becomes the title. "Lend". "Borrow". Under it, one sentence
+   saying what you get, in the words somebody would use to tell a friend. Then
+   the figures. Then the button. Nothing else.
+
+   The caption did carry one fact worth keeping on each card — what we would
+   sell, and that nothing is locked up — and those have not been deleted. They
+   have moved behind the question mark on the row they are about, which is
+   where somebody looks when they want them and out of the way when they do
+   not.
+   --------------------------------------------------------------------------- */
+
 function productCard(opts: {
   key: 'lend' | 'borrow'
-  eyebrow: string
-  /** The clause that says what this is, in ink. */
-  lead: string
-  /** The rest of the same sentence, in grey. */
-  rest: string
+  /** One word. It is the name of the thing, not a description of it. */
+  title: string
+  /** One sentence, saying what you get. Not what it is called again. */
+  say: string
   art: ArtSpec; ramp: Record<string, string>; at: number
-  rows: [string, string | Node][]
-  /** The condition, under the figures. It was inside the headline, which put a
-   *  sell price and a monthly cost in the one line whose job is to say what
-   *  the product is. */
-  caption: string
+  rows: [string, string | Node, Hint?][]
   cta: string; ctaTo: string
   linkLabel: string; linkTo: string
 }): HTMLElement {
@@ -62,14 +78,17 @@ function productCard(opts: {
   const band = h('div', { class: 'prod-art' }, dotArt(opts.art, opts.at, opts.ramp, [4, 2]))
   const words = h('div', { class: 'stack-8' },
     h('div', { class: 'card-head' },
-      h('h2', { class: 't-caps subtle', text: opts.eyebrow }),
+      h('h2', { class: 'prod-title', text: opts.title }),
       h('button', { class: 'link', text: opts.linkLabel, on: { click: () => go(opts.linkTo) } })),
-    h('p', { class: 'prod-say' },
-      h('strong', { text: opts.lead + ' ' }),
-      h('span', { class: 'muted', text: opts.rest })))
+    h('p', { class: 'prod-say muted', text: opts.say }))
+  // The question mark goes on the label, not the figure: a question mark after
+  // a number reads as doubt about the number.
   const figures = h('div', { class: 'stack-12' },
-    ...opts.rows.map(([k, v]) => kv(k, v)),
-    h('span', { class: 'muted t-caption', text: opts.caption }))
+    ...opts.rows.map(([k, v, tip]) => h('div', { class: 'kv' },
+      h('span', { class: 'kv-key' },
+        h('span', { text: k }),
+        tip ? hint(tip) : null),
+      typeof v === 'string' ? h('span', { class: 't-body-strong', text: v }) : v)))
   const action = h('button', { class: 'btn btn-secondary', text: opts.cta,
     on: { click: () => go(opts.ctaTo) } })
 
@@ -89,12 +108,12 @@ function productCard(opts: {
 }
 
 const QUESTIONS: [string, string][] = [
-  ['Can I lose money lending?', 'Your dollars sit in short term US government debt. The rate can move up or down, and it is not a guarantee.'],
-  ['What if my shares fall?', 'We only sell if your cover drops under 140%. Repay part of the loan, or add shares, and nothing is sold.'],
-  ['Is anything locked up?', 'No. Take back what you have lent whenever you want, and repay a loan whenever you want. There is no fee either way.'],
-  ['When does interest start?', 'The morning after you move money in. From then on it lands in your wallet every day.'],
-  ['Can I use both at once?', 'Yes. What you have lent keeps paying while a loan is open. The two do not affect each other.'],
-  ['What does borrowing cost?', 'Only the interest, charged daily on what you owe. No arrangement fee and no early repayment fee.'],
+  ['Can I lose money lending?', 'Your dollars sit in short term US government debt. The rate can go up or down. It is not a guarantee.'],
+  ['What if my shares fall?', 'We only sell if your shares drop below 140% of what you owe. Repay some, or add shares, and nothing is sold.'],
+  ['Is anything locked up?', 'No. Take back what you lent any time. Repay a loan any time. No fee either way.'],
+  ['When does interest start?', 'The next morning. After that it lands in your wallet every day.'],
+  ['Can I use both at once?', 'Yes. What you lent keeps paying while a loan is open.'],
+  ['What does borrowing cost?', 'Just the interest, charged daily on what you owe. No other fees.'],
 ]
 
 /** Where this account stands: what is lent out, and what is owed.
@@ -138,30 +157,27 @@ export function growScreen(): HTMLElement {
     growHero(),
     h('div', { class: 'row prods' },
       productCard({
-        key: 'lend', eyebrow: 'Lending',
+        key: 'lend', title: 'Lend',
         linkLabel: 'Take it back', linkTo: '/grow/takeout',
-        lead: 'Lend your dollars.',
-        rest: `${pct(state.rates.lend)} a year, paid into your wallet every morning.`,
-        caption: `Nothing is locked up. ${usd(1000, false)} lent pays about ${usd(monthlyInterest(1000))} a month.`,
+        say: `Earn ${pct(state.rates.lend)} a year on cash you are not using.`,
         // How much of the money you could spend is out working. Not the whole
         // portfolio: shares are not money you chose to lend or not to.
         art: mirror(BORROW), ramp: LEND_RAMP,
         at: level(state.lent, state.lent + state.cash),
         rows: [
-          ['Lent out', money(state.lent)],
+          ['Lent out', money(state.lent), {
+            title: 'Lent out',
+            body: `Cash you have lent. Nothing is locked up, so you can take it back whenever you want. ${usd(1000, false)} pays about ${usd(monthlyInterest(1000))} a month.`,
+          }],
           ['Interest so far', h('span', { class: 'pos t-body-strong',
             text: state.prefs.hideBalances ? MASK : signed(state.interestPaid) })],
         ],
         cta: 'Lend dollars', ctaTo: '/grow/earn',
       }),
       productCard({
-        key: 'borrow', eyebrow: 'Borrowing',
+        key: 'borrow', title: 'Borrow',
         linkLabel: 'Repay', linkTo: '/grow/repay',
-        lead: 'Borrow against your shares.',
-        rest: `${pct(state.rates.borrow)} a year, and they stay yours the whole time.`,
-        caption: owed() > 0
-          ? `Repay any time, no fee. We would only sell if your shares fell below ${money(sellPoint())}.`
-          : `Repay any time, no fee. A ${usd(1000, false)} loan costs about ${usd(monthlyCost(1000))} a month.`,
+        say: 'Get cash without selling your shares.',
         // How much of the limit is drawn, which is the one number a borrower
         // is actually watching.
         art: BORROW, ramp: OWE_RAMP,
@@ -170,10 +186,19 @@ export function growScreen(): HTMLElement {
           // What is owed comes before what is available. The other order reads
           // as an offer; this one reads as a position.
           ...(owed() > 0
-            ? [['You owe', h('span', { class: 'warn t-body-strong', text: money(owed()) })] as [string, Node]]
+            ? [['You owe', h('span', { class: 'warn t-body-strong', text: money(owed()) }), {
+                title: 'What you owe',
+                body: `What you borrowed plus interest so far. It costs ${pct(state.rates.borrow)} a year. Repay any part of it whenever you want, with no fee.`,
+              }] as [string, Node, Hint]]
             : []),
           ['You can borrow', money(availableToBorrow())],
-          ['Against', money(holdingsValue()) + ' in shares'],
+          ['Against', money(holdingsValue()) + ' in shares', {
+            title: 'Against your shares',
+            body: owed() > 0
+              ? `Your shares back the loan. You keep them and they keep earning. We would only sell some if they fell below ${money(sellPoint())}.`
+              : 'Your shares back the loan. You keep them and they keep earning. We would only sell some if they fell a long way.',
+            more: { label: 'What can go wrong', onClick: () => go('/disclosures') },
+          }],
         ],
         cta: 'Borrow money', ctaTo: '/grow/borrow',
       })),
@@ -263,7 +288,7 @@ export function borrowScreen(): HTMLElement {
       return [
         ['Rate', pct(state.rates.borrow) + ' a year'],
         ['Costs you', 'About ' + usd(monthlyCost(v)) + ' a month'],
-        ['Collateral', state.rates.collateral + '% of what you borrow'],
+        ['Shares needed', state.rates.collateral + '% of what you borrow'],
         ['Sold if shares fall below', usd(after * (state.rates.collateral / 100))],
       ]
     },
@@ -282,11 +307,21 @@ export function borrowScreen(): HTMLElement {
         h('span', { class: 't-display-xl', text: usd(shares) }),
         h('span', { class: 'muted', text: 'They stay yours. You keep any gains and any dividends while the loan is open.' }),
         h('div', { class: 'stack-12' },
+          // "Collateral cover" was the last piece of insider vocabulary on a
+          // customer screen. The figure is what your shares are worth against
+          // what you owe, so that is what the row says, and the rule behind
+          // the number is behind the question mark rather than in a caption
+          // nobody reads twice.
           h('div', { class: 'kv' },
-            h('span', { class: 't-caps subtle', text: 'Collateral cover' }),
+            h('span', { class: 'kv-key' },
+              h('span', { class: 't-caps subtle', text: 'Shares against the loan' }),
+              hint({
+                title: 'Shares against the loan',
+                body: `Your shares have to be worth at least ${state.rates.collateral}% of what you owe. If they fall below that we sell just enough to bring it back.`,
+              })),
             h('span', { class: 'pos t-body-strong', text: Math.round(coverPct).toLocaleString('en-US') + '%' })),
           meter(coverPct, state.rates.collateral),
-          h('span', { class: 'muted t-caption', text: 'The mark is the minimum we need. You are well above it.' })),
+          h('span', { class: 'muted t-caption', text: 'The mark is the minimum. You are well above it.' })),
         h('div', { class: 'stack-12' },
           kv('Already borrowed', usd(state.borrowed)),
           kv('After this borrow', usd(after)),
@@ -356,7 +391,7 @@ export function repayScreen(): HTMLElement {
           ]),
         h('div', { class: 'stack-12' },
           h('span', { class: 't-caps subtle', text: 'What repaying does' }),
-          h('span', { class: 'muted t-caption', text: 'Your limit goes back up by whatever you repay, so you can borrow it again later. Your shares are untouched either way, because none of them were ever sold.' }))
+          h('span', { class: 'muted t-caption', text: 'Whatever you repay, you can borrow again later. Your shares are never sold.' }))
       ),
     bottom: loanHistory(),
   })
@@ -411,7 +446,7 @@ export function earnScreen(): HTMLElement {
           ]),
         h('div', { class: 'stack-12' },
           h('span', { class: 't-caps subtle', text: 'Where the interest comes from' }),
-          h('span', { class: 'muted t-caption', text: 'Your dollars are held in short term US government debt. The rate moves with the market, so it can go up as well as down. It is not fixed and it is not a guarantee.' }))
+          h('span', { class: 'muted t-caption', text: 'Your dollars sit in short term US government debt. The rate can go up or down. It is not a guarantee.' }))
       )
     },
     bottom: earnHistory(),
@@ -467,7 +502,7 @@ export function takeOutScreen(): HTMLElement {
           ]),
         h('div', { class: 'stack-12' },
           h('span', { class: 't-caps subtle', text: 'Where the interest comes from' }),
-          h('span', { class: 'muted t-caption', text: 'Your dollars are held in short term US government debt. The rate moves with the market, so it can go up as well as down.' }))
+          h('span', { class: 'muted t-caption', text: 'Your dollars sit in short term US government debt. The rate can go up or down.' }))
       )
     },
     bottom: earnHistory(),

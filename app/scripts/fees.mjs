@@ -88,7 +88,10 @@ await p.goto(B + '/addmoney', { waitUntil: 'domcontentloaded' }); await p.waitFo
 await p.locator('.btn-primary').first().click(); await p.waitForTimeout(450)
 const r3 = await rows()
 ok('add money states a fee line', !!r3['Fee'], r3['Fee'] ?? 'missing')
-ok('and it is none, not silence', /None/.test(r3['Fee'] ?? ''), r3['Fee'] ?? '')
+// "No fee" rather than "None — the rate above is the rate you get": the row
+// above already states the rate, so the fee row only has to answer its own
+// question. What is being checked is that it answers it at all.
+ok('and it is none, not silence', /No fee|None/.test(r3['Fee'] ?? ''), r3['Fee'] ?? '')
 ok('with the rate on screen', !!r3['Rate'], r3['Rate'] ?? 'missing')
 
 console.log('THE BUCKET  one payment, one fee')

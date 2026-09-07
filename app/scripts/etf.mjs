@@ -58,15 +58,15 @@ await p.keyboard.press('Escape'); await p.waitForTimeout(300)
 
 console.log('THE LONG VERSION')
 await at('/invest')
-ok('the market says it once, at the foot', /Investing involves risk/.test(await text()))
+ok('the market says it once, at the foot', /Prices go down as well as up/.test(await text()))
 await at('/disclosures')
 const d = await text()
 for (const [what, re] of [
-  ['what you actually own', /tokenised share/i],
-  ['that you do not get votes', /voting rights/i],
+  ['what you actually own', /token that tracks one real share/i],
+  ['that you do not get votes', /do not get a vote/i],
   ['the custodian risk', /custodian/i],
   ['that funds are not companies', /Funds are not companies/i],
-  ['the currency risk', /naira strengthens/i],
+  ['the currency risk', /naira gets stronger/i],
   ['what it costs', /0\.5% of the amount/],
   ['eligibility', /eighteen or over/i],
   ['where to complain', /regulator/i],

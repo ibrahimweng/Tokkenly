@@ -1625,6 +1625,13 @@ scale.
     merely change colour.
 11. Never use `ink/subtle` for text a person needs to read.
 12. Never add a shadow except to a bottom sheet or a floating element.
+12b. Human and simple, in every word a customer reads. Say it the way a person
+    would say it out loud. One idea per sentence, twenty-four words at most. No
+    em dash and no semicolon: both are a full stop somebody was afraid to use.
+    No word an insider forgets is a word, unless the screen also says what it
+    means. Where something genuinely needs more context than a line, it goes
+    behind a question mark and not into another paragraph. `words.mjs` counts
+    all of it, on every route, and nothing is exempt. See 11g.41.
 13. Never draw a line. No card outline, no field outline, no list divider, no
     chip edge, no rule under a heading. Outside a chart the only strokes are a
     2px green focus ring, a 2px error ring, and the glyphs themselves. If two
@@ -5995,7 +6002,92 @@ two future product families, and they stay demoable.
      for the same instrument, and the review printed two of them side by side.
      When a second source arrives, check whether it is a second fact.
 
-### 11g.41 Still open
+### 11g.41 Human and simple
+
+The brief arrived as one sentence: the words in this product have to be human
+and simple, so that somebody who has never bought a share can read a screen
+once and act on it. It came with a specific complaint — the two Borrow & Lend
+cards — and the complaint turned out to be the whole argument in miniature.
+
+**The buttons were sawn off.** A `width: 100%` button with 24px side margins is
+48px wider than the card it sits in, and `overflow: hidden` on the card turns
+that into a button whose right end is missing. The margins were doing the
+padding job every other child of that card gets from a rule above them;
+`width: auto` lets the flex column stretch the button into the space the
+margins leave, which is what the margins were for. Measured: 24px inset on both
+sides, nothing clipped, at both widths.
+
+**And each card carried five pieces of text to say one word.** An eyebrow
+reading LENDING, a headline reading "Lend your dollars.", a grey clause
+finishing the sentence, three figures, and a caption underneath explaining the
+terms. Six lines for a feature whose whole idea is one word — and the one word
+*was* the eyebrow, set in the smallest, quietest type on the card.
+
+So the eyebrow becomes the title. **Lend**. **Borrow**. Under it, one sentence
+saying what you get, in the words somebody would use telling a friend: "Earn
+4.8% a year on cash you are not using." "Get cash without selling your shares."
+Then the figures. Then the button. Nothing else.
+
+**Where the caption carried something real, it moved behind a question mark.**
+Both captions held one fact worth keeping — what we would sell, and that
+nothing is locked up — and neither was deleted. Nielsen Norman's rule for
+progressive disclosure is that the trigger has to be persistent and
+discoverable and has to work on a press, not only on a hover: a hover tooltip
+is a tooltip a phone cannot open and a keyboard cannot reach. So it is a real
+button, in the tab order, with a label, opening a small panel in place.
+
+Three rules keep it from becoming clutter. One per idea, and only where the
+idea is genuinely not in the words already. Forty words or fewer, because a
+popover that scrolls is a screen that lost an argument with itself. And it
+never holds a fact that only lives there.
+
+It is 24px, and rule 35 wants 44 under a thumb. The first version faked that
+with an invisible `::after` — real to a finger, invisible to the checker, and
+overlapping the next hint's hit area if two ever sat close. The button is
+genuinely 44 on a phone now and gives the 20 back as negative margin: the box
+a thumb hits is 44, the space it takes in the row is 24, and the circle is
+drawn by a pseudo-element inset inside it.
+
+**Then the same rule, everywhere.** The product's voice was long sentences
+joined with em dashes: "None — the rate above is the rate you get." That is two
+sentences pretending to be one, and the second half was answering a question
+the row above it had already answered. It is "No fee" now. Sixty-one strings
+across every customer screen, the disclosures, the onboarding and the console
+were rewritten the same way.
+
+And it is a suite, because a rule nobody can check is a preference — the lesson
+rule 13 cost four tiers to learn. `words.mjs` walks thirty-two routes and
+counts the three things that actually make copy hard: sentences over
+twenty-four words, em dashes and semicolons, and jargon appearing on a screen
+that does not also explain it. It found the last of each: a 46-word sentence on
+the statement, "Born 14 March 1996 — over eighteen", and "Collateral cover" on
+the borrowing screen. That last one is now "Shares against the loan", with the
+140% rule behind its question mark.
+
+The suite began with two exemptions — the disclosures and the
+questions-people-ask block, on the reasoning that a legal page is read rather
+than scanned. Both then passed without them. Breaking the risk warnings into
+short sentences cost them nothing and they are plainly better for it, so
+**nothing is exempt**.
+
+111. **Human and simple, or it does not ship.** Say it the way a person would
+     say it out loud. One idea per sentence. If a sentence needs an em dash it
+     needs a full stop. If a word needs explaining it is the wrong word, unless
+     the screen explains it. This governs every string a customer can read, and
+     `words.mjs` counts it.
+
+112. **A question mark instead of a paragraph.** Text that explains a thing
+     sits beside it forever, read once by the person who needed it and re-read
+     by nobody. Put the explanation behind a press: persistent trigger, real
+     button, forty words, and never the only place the fact lives.
+
+113. **A hit area you cannot see is a hit area you cannot check.** An invisible
+     pseudo-element that makes a 24px control 44px passes a finger and fails a
+     measurement, and two of them side by side overlap in a way nothing on
+     screen explains. Make the box the size it claims to be and give the space
+     back with margin.
+
+### 11g.42 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from
   using the product afterwards. Item 30 was held back until it was asked for,

@@ -90,14 +90,14 @@ function statusBody(): (Node | null)[] {
     card(
       cardHead('Alerts and runbooks'),
       ...[
-        ['A reference price goes stale', 'Trading refuses itself. Check the Chainlink feed, then the ceiling in Risk.'],
+        ['A price goes stale', 'Trading stops on its own. Check the Chainlink feed, then the limit in Risk.'],
         ['A provider stops answering', 'The rail turns itself off and the app says which. Nothing queues silently.'],
         ['A payout is delayed past an hour', 'It stays unsettled and the customer sees the stage it is at. Chase Switch by reference.'],
-        ['Reconciliation differs', 'It opens a break rather than being corrected in place. Work it on the Reconciliation tab.'],
+        ['Our record differs from theirs', 'It opens a break. Work it on the Reconciliation tab.'],
       ].map(([t, w]) => h('div', { class: 'two-line' },
         h('span', { class: 't-body-strong', text: t }),
         h('small', { text: w }))),
-      callout('Every one of these has a screen a customer sees. None of them is a silent failure, which is the point of writing them down beside the switches rather than in a wiki.')),
+      callout('Every one of these has a screen a customer sees. None of them fails silently.')),
   ]
 }
 
@@ -111,7 +111,7 @@ function switchesBody(): (Node | null)[] {
   return [
     off.length
       ? callout(`${off.length} ${off.length === 1 ? 'switch is' : 'switches are'} off: ${off.map((s) => s.label).join(', ')}. Customers are meeting the consequences below right now.`, 'warning')
-      : callout('Everything is on. This is the state the product ships in; every switch below is a way to take part of it away.'),
+      : callout('Everything is on. This is how the product ships. Every switch below takes part of it away.'),
     card(
       cardHead('What the product can do'),
       ...state.switches.map((sw) => h('div', { class: 'kv sw-row' },
@@ -136,7 +136,7 @@ function switchesBody(): (Node | null)[] {
       kv('Redirect a payout', 'No'),
       kv('Move a customer asset', 'No'),
       h('span', { class: 'muted t-caption',
-        text: 'The wallet is self-custodial, so this is not a policy anybody has to keep — there is nothing here that could sign. Staff can stop things and look at things.' })),
+        text: 'Customers hold their own keys, so this is not a rule anybody has to keep. There is nothing here that could sign.' })),
   ]
 }
 
@@ -168,7 +168,7 @@ function peopleBody(): (Node | null)[] {
       kv('Verified', String(state.members.filter((m) => m.kyc === 'verified').length)),
       kv('Cleared to trade', String(state.members.filter((m) => m.eligible).length)),
       kv('Restricted', String(state.members.filter((m) => m.state === 'restricted').length)),
-      callout('Verified and eligible are different counts on purpose. Somebody can be exactly who they say and still not be allowed to hold the instrument, and the gap between these two numbers is that group.')),
+      callout('Verified and eligible are different counts on purpose. Somebody can be exactly who they say and still not be allowed to hold these.')),
   ]
 }
 
@@ -217,7 +217,7 @@ function breaksBody(): (Node | null)[] {
       cardHead('Differences', h('span', { class: 'pill' + (open.length ? ' warn' : ' pos'),
         text: open.length ? open.length + ' open' : 'All clear' })),
       h('span', { class: 'muted',
-        text: 'Our record against theirs, on every provider that holds money. A difference opens a break rather than being corrected in place — a silent correction is how a product loses the ability to say what happened.' }),
+        text: 'Our record against theirs, on every provider that holds money. A difference opens a break. Nothing is corrected quietly.' }),
       ...state.breaks.map((b) => h('div', { class: 'stack-8' },
         h('div', { class: 'kv' },
           h('span', { class: 'two-line grow' },
@@ -243,7 +243,7 @@ function breaksBody(): (Node | null)[] {
       kv('Balances', 'Onchain against the ledger, every hour'),
       kv('Orders and fees', '0x fills against our own record, daily'),
       kv('Payouts', 'Switch settlements against queued payouts, hourly'),
-      callout('The ledger is the thing being reconciled against, and it is the same one a customer can open on the Statement screen. There is not an internal set of books and a customer-facing one.')),
+      callout('We reconcile against the ledger, and it is the same one a customer can open. There is no second set of books.')),
   ]
 }
 
@@ -254,7 +254,7 @@ function auditBody(): (Node | null)[] {
     card(
       cardHead('What staff did', h('span', { class: 'pill', text: state.audit.length + ' entries' })),
       h('span', { class: 'muted',
-        text: 'Staff actions only. What a customer did is in the ledger, and mixing the two would make it impossible to answer the one question this list is for: did anybody here touch this account.' }),
+        text: 'Staff actions only. What a customer did is in the ledger. This list answers one question: did anybody here touch this account.' }),
       table(
         [{ key: 'w', label: 'What' }, { key: 'o', label: 'Who', optional: true },
          { key: 't', label: 'When', align: 'right' }],
@@ -324,7 +324,7 @@ function launchBody(): (Node | null)[] {
           h('span', { class: 'mark ' + (ok ? 'pos' : 'muted'), text: String(i + 1) }),
           h('span', { class: 't-body-strong', text: String(w) })),
         h('span', { class: (ok ? 'pos' : 'muted') + ' t-caption', text: ok ? 'Walkable' : 'Not yet' }))),
-      callout('Walkable in this prototype, with dummy data behind every provider. What is left is the wiring, and the gates above are what has to be true before it carries real money.')),
+      callout('Walkable in this prototype, with dummy data behind every provider. The gates above are what has to be true before it carries real money.')),
   ]
 }
 
@@ -351,7 +351,7 @@ export function adminScreen(): HTMLElement {
           text: off ? off + ' switch' + (off === 1 ? '' : 'es') + ' off' : 'All switches on' }))),
     // Not a customer's account. It answers to somebody else about everybody
     // else's money, and it says so before it says anything.
-    callout('Staff view. Nothing here can move customer money — there is no key to sign with. You can stop things and look at things.'),
+    callout('Staff view. Nothing here can move customer money. There is no key to sign with. You can stop things and look at things.'),
     h('div', { class: 'chip-row' },
       ...TABS.map((t) => h('button', {
         class: 'chip' + (t.key === now ? ' on' : ''),

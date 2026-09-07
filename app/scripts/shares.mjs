@@ -102,7 +102,7 @@ console.log('SENDING ONE')
   const rev = await p.evaluate(() => document.querySelector('.sheet')?.innerText.replace(/\n/g, ' · ') ?? '')
   ok('the review states the shares, the company and the price',
      /1.00 AAPL/.test(rev) && /Apple/.test(rev) && /\$224.10 a share/.test(rev), rev.slice(0, 80))
-  ok('and warns that it cannot be recalled', /cannot be recalled/.test(rev))
+  ok('and warns that it cannot be undone', /cannot be sent back/.test(rev), rev.slice(0, 90))
   await p.locator('.scrim .btn-primary').click(); await p.waitForTimeout(900)
   ok('the outcome says who holds them now',
      /1.00 AAPLc now belong to Tunde Bakare/.test(

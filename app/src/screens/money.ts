@@ -152,7 +152,7 @@ function payeeCard(): HTMLElement {
     found,
     go2,
     h('span', { class: 'muted t-caption',
-      html: icon.info() + ' We check the name with the bank before you confirm. Naira arrives in minutes.' }))
+      html: icon.info() + ' We check the name before you confirm. Naira arrives in minutes.' }))
 }
 
 /** Every place the money could go, in one column. Three groups, because the
@@ -241,19 +241,19 @@ function whereSide(opts: { search: boolean }): (Node | null)[] {
             h('span', { class: 't-body-strong', text: b.name }),
             h('small', { text: '•••• ' + b.last4 + ' · ' + b.holder })),
           h('span', { class: 'muted', html: icon.chevron() }))),
-      h('span', { class: 'muted t-caption', text: 'Dollars out, naira in, at the rate you are shown.' }),
+      h('span', { class: 'muted t-caption', text: 'Dollars out, naira in.' }),
       h('button', { class: 'link quiet', text: 'Add a bank', on: { click: () => openSheet('banks') } }))
       : card(
           cardHead('Your own bank', h('span', { class: 'pill warn', text: 'Paused' })),
           h('span', { class: 'muted',
-            text: 'Naira payouts are switched off while we sort something out with the bank rail. Sending dollars to a person or an address still works, and anything already queued will finish.' })),
+            text: 'Bank payouts are off right now. You can still send dollars to a person or a wallet. Anything already on its way will finish.' })),
     switchOn('payout.ngn') ? payeeCard() : null,
     card(
       cardHead('A Base address'),
       addressField,
       addressError,
       h('button', { class: 'btn btn-secondary', text: 'Continue', on: { click: submitAddress } }),
-      callout('Base network only. Sending any other asset to this address loses it.', 'warning')),
+      callout('Base network only. Anything else sent here is lost.', 'warning')),
   ]
   return cards
 }
@@ -328,7 +328,7 @@ export function sendScreen(forced?: Destination): HTMLElement {
     maxLabel: ceilingLabel2(state.cash),
     note: bank
       ? 'Dollars out of your wallet, naira into that account.'
-      : 'Arrives in under a minute, any day of the week.',
+      : 'Arrives in about a minute, any day.',
     quick: bank
       ? [
           { label: usd(50, false), value: 50 },
@@ -348,18 +348,18 @@ export function sendScreen(forced?: Destination): HTMLElement {
       ? [
           ['You send', usd(v)],
           ['Rate', '1 dollar = ' + naira(rate)],
-          ['Fee', 'None — the rate above is the rate you get'],
+          ['Fee', 'No fee'],
           ['They get', naira(v * rate)],
           ['Arrives', 'Usually within a minute'],
         ]
       : [
-          ['Fee', 'None — what you send is what they get'],
+          ['Fee', 'No fee'],
           ['Arrives', 'In about a minute'],
           ['Network', to.rail === 'chain' ? 'Base' : 'Inside Tokkenly'],
         ],
     callout: bank
-      ? 'You get a firm rate at the review, held for ninety seconds. Payouts run every day.'
-      : 'Payments run every day of the year, including public holidays.',
+      ? 'You get a firm rate on the next screen. It is held for ninety seconds.'
+      : 'We move money every day, holidays included.',
     action: (v) => 'Send ' + usd(v),
     onAction: (v) => openSheet('send-review', { v: String(v), ...railParams(to) }),
     bottom: bank ? (pastMoves('out') ?? undefined) : undefined,
@@ -452,7 +452,7 @@ function shareSide(c: Instrument): HTMLElement {
       cardHead('Not on Tokkenly yet'),
       h('div', { class: 'sheet-list' }, ...names.filter((n) => !onTokkenly(n)).map(row)),
       h('span', { class: 'muted t-caption',
-        text: 'A share is a security, so it can only be delivered to a verified account. You can still send these people cash.' })))
+        text: 'Shares can only go to a verified Tokkenly account. You can still send these people cash.' })))
 }
 
 /** The refusal. It names the person, says why in one sentence, and offers the
@@ -610,7 +610,7 @@ export function receiveScreen(): HTMLElement {
       h('button', { class: 'icon-btn', html: icon.copy(), ariaLabel: 'Copy the address',
         on: { click: copy } })),
     h('button', { class: 'btn btn-primary', text: 'Copy address', on: { click: copy } }),
-    callout('Base network only. Sending any other asset to this address loses it.', 'warning'))
+    callout('Base network only. Anything else sent here is lost.', 'warning'))
   left.classList.add('col-compose')
 
   return shell(
@@ -625,7 +625,7 @@ export function receiveScreen(): HTMLElement {
           kv('Arrives', 'In about a minute, any day of the week'),
           kv('Held as', 'Dollars in your wallet'),
           h('span', { class: 'muted t-caption',
-            text: 'Anybody with a Base wallet can pay this address. They do not need a Tokkenly account.' })),
+            text: 'Anyone with a Base wallet can pay this address. No Tokkenly account needed.' })),
         // The other way money reaches you. Two inbound rails described on two
         // screens, neither mentioning the other, is the same contradiction as
         // one errand wearing two names: somebody asking "how do I get paid"
@@ -640,7 +640,7 @@ export function receiveScreen(): HTMLElement {
           kv('Account number', state.va.number),
           kv('Account name', state.va.name),
           h('span', { class: 'muted t-caption',
-            text: 'This account is yours. Naira paid into it by anybody becomes dollars in your wallet at the rate when it lands.' })),
+            text: 'Anyone can pay naira into this account. It lands in your wallet as dollars.' })),
         received())))
 }
 
@@ -754,7 +754,7 @@ function railPicker(now: Via, head = true): HTMLElement {
           h('span', { class: 'mark', html: icon.wallet() }),
           h('span', { class: 'two-line grow' },
             h('span', { class: 't-body-strong', text: 'Card' }),
-            h('small', { text: 'Paused. Use a transfer — it is free and takes a minute.' })),
+            h('small', { text: 'Paused. Use a bank transfer instead.' })),
           h('span', { class: 'muted t-caption nowrap', text: 'Off' })))
   // Above the amount, not beside it. Which rail you are on changes the fee,
   // the wait and what can be promised about the rate — so it is the same kind
@@ -788,7 +788,7 @@ function virtualAccount(): HTMLElement {
         h('span', { class: 't-body-strong', text: v.number }),
         h('span', { class: 'muted', html: icon.copy() }))),
     kv('Account name', v.name),
-    callout('This account is yours and does not change. Anything you send to it reaches your wallet, so there is no reference to quote.'))
+    callout('This account is yours and never changes. Send naira here and it lands in your wallet.'))
 }
 
 export function addMoneyScreen(): HTMLElement {
@@ -812,7 +812,7 @@ export function addMoneyScreen(): HTMLElement {
     maxLabel: ceilingLabel2(5000),
     note: how === 'card'
       ? 'Charged to your card in naira. In your wallet in seconds.'
-      : 'Send naira from your own bank. Dollars land when it does.',
+      : 'Send naira from your bank. Dollars land when it does.',
     quick: [
       { label: usd(50, false), value: 50 },
       { label: usd(100, false), value: 100 },
@@ -835,14 +835,14 @@ export function addMoneyScreen(): HTMLElement {
       : [
           ['You send', naira(v * rate)],
           ['Rate', '1 dollar = ' + naira(rate) + ', today'],
-          ['Fee', 'None — a transfer costs nothing'],
+          ['Fee', 'No fee'],
           ['You receive', 'About ' + usd(v)],
           ['To', state.va.bank + ' · ' + state.va.number],
           ['Lands', 'When your bank sends it'],
         ],
     callout: how === 'card'
-      ? 'You get a firm rate at the review, held for ninety seconds.'
-      : 'The rate is struck when your naira arrives, not now — nobody can hold one while you are in another app. Today’s is above.',
+      ? 'You get a firm rate on the next screen. It is held for ninety seconds.'
+      : 'You get the rate on the day your naira lands. Today’s rate is above.',
     action: (v) => (how === 'card' ? 'Pay ' + naira(owed(v)) : 'Get the account details'),
     onAction: (v) => openSheet(how === 'card' ? 'card-review' : 'transfer-review', { v: String(v) }),
     lede: () => railPicker(how),
