@@ -135,17 +135,22 @@ console.log('NOTIFICATIONS  a count that does not go down is decoration')
   ok('the chip carries the count',
      (await p.locator('.chip-count').textContent()) === start, start)
   // Reading one opens what it is about, which is the point of the row.
-  await p.locator('.set-row.alert:not(.read)').first().click(); await p.waitForTimeout(500)
+  // A notification is a row in the one feed now, not a row in a section of its
+  // own. The unread ones are the ones carrying the bell.
+  await p.locator('.feed-row.unread').first().click(); await p.waitForTimeout(500)
   ok('and a row goes to the thing it is about',
      (await p.evaluate(() => location.hash)).includes('sheet=receipt'),
      await p.evaluate(() => location.hash))
   await p.keyboard.press('Escape'); await p.waitForTimeout(350)
   const after = await p.locator('.chip-count').textContent()
   ok('reading one drops the count', Number(after) === Number(start) - 1, `${start} then ${after}`)
-  await p.locator('.link', { hasText: 'Mark all read' }).click(); await p.waitForTimeout(300)
+  await p.locator('button', { hasText: 'Mark all read' }).first().click(); await p.waitForTimeout(300)
   ok('mark all read clears it', (await p.locator('.chip-count').count()) === 0)
-  ok('and the section says so',
-     /All caught up/.test(await p.evaluate(() => document.querySelector('.card-head')?.innerText ?? '')))
+  // The notifications section is gone — they are rows in the one feed — so the
+  // sentence that used to sit in its head sits where its button was.
+  ok('and the screen says so',
+     /All caught up/.test(await p.evaluate(() =>
+       document.querySelector('.page-header')?.innerText ?? '')))
   await p.goto(B + '/', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(250)
   ok('and the bell agrees', (await p.locator('.bell .dot').count()) === 0)
   await p.close()
@@ -154,13 +159,16 @@ console.log('NOTIFICATIONS  a count that does not go down is decoration')
 console.log('SORTING  ordering is part of the address')
 {
   const p = await page()
-  const first = () => p.locator('tbody tr').first().textContent()
+  // Activity is a feed rather than a table, so ordering is a control beside the
+  // list rather than a column head. What is being checked has not changed:
+  // ordering is in the address and survives a reload.
+  const first = () => p.locator('.feed-row').first().textContent()
   await p.goto(B + '/activity', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(200)
-  const n = await p.locator('tbody tr').count()
+  const n = await p.locator('.feed-row').count()
   const byDate = await first()
-  await p.locator('.th-sort', { hasText: 'Amount' }).click(); await p.waitForTimeout(250)
+  await p.locator('.sort-by', { hasText: 'Largest' }).click(); await p.waitForTimeout(250)
   const desc = await first()
-  await p.locator('.th-sort', { hasText: 'Amount' }).click(); await p.waitForTimeout(250)
+  await p.locator('.sort-by', { hasText: 'Largest' }).click(); await p.waitForTimeout(250)
   const asc = await first()
   ok('history has something to sort', n >= 20, `${n} rows`)
   ok('sorting by amount reorders', byDate !== desc && desc !== asc)

@@ -819,7 +819,7 @@ function cardPanel(): HTMLElement {
   paint()
   return card(
     cardHead('How many dollars', h('span', { class: 'muted', text: 'Minimum ' + usd(10, false) })),
-    h('label', { class: 'field' }, h('span', { class: 'muted', text: '$' }), input),
+    h('div', { class: 'amount-box' }, input),
     h('div', { class: 'stack-8' },
       h('span', { class: 't-caps subtle', text: 'You pay' }),
       pay, split),
@@ -829,6 +829,46 @@ function cardPanel(): HTMLElement {
       kv('Lands', 'In a few seconds')),
     btn,
     h('button', { class: 'link', text: 'Use another card', on: { click: () => openSheet('cards') } }))
+}
+
+/** Telling the product about a transfer you have already made.
+ *
+ *  The brief was that a deposit should not ask how much before handing over an
+ *  account number, and that is right: nothing holds you to the figure, and the
+ *  money that lands is whatever the sender sent. Asking *after* is a different
+ *  question. This is not a gate in front of the details — it is under them, for
+ *  somebody who has paid and wants to watch it arrive, and it is what puts the
+ *  pending leg on the wallet (11g.37).
+ *
+ *  Page only. In the dialog it would be a second amount under the one thing the
+ *  dialog exists to hand over, and it would not fit under item 61's ceiling. */
+function alreadyPaid(): HTMLElement {
+  const rate = state.ngnPerUsd
+  let value = 200
+  const note = h('span', { class: 'muted' })
+  const btn = h('button', { class: 'btn btn-primary', text: 'I have sent it',
+    on: { click: () => openSheet('transfer-review', { v: String(value) }) } })
+  const paint = () => {
+    note.textContent = `${naira(value * rate)} at ${naira(rate)} to the dollar.`
+    btn.toggleAttribute('disabled', value < 10 || value > movementCeiling())
+  }
+  const input = h('input', {
+    type: 'text', inputmode: 'decimal', value: String(value), ariaLabel: 'How many dollars you sent',
+    on: { input: (e) => {
+      const n = Number((e.target as HTMLInputElement).value.replace(/[^\d.]/g, ''))
+      value = Number.isFinite(n) ? n : 0
+      paint()
+    } },
+  })
+  paint()
+  return card(
+    cardHead('Already paid it?', h('span', { class: 'muted', text: 'Optional' })),
+    h('span', { class: 'muted',
+      text: 'Tell us how much you sent and we will show it as on its way until it lands.' }),
+    // The product's amount control, not a third way of typing one (item 19).
+    h('div', { class: 'amount-box' }, input),
+    note,
+    btn)
 }
 
 /** One tab's worth of Add money, used by the dialog and by the page behind it
@@ -846,6 +886,7 @@ export function addPanels(tab: AddTab, full = true): HTMLElement[] {
   return [
     addTabRow(tab),
     panel,
+    tab === 'bank' ? alreadyPaid() : null,
     providerNote(tab === 'base' ? 'cdp' : 'switch'),
     arrived(tab, true),
   ].filter(Boolean) as HTMLElement[]
@@ -885,9 +926,9 @@ export function addMoneyScreen(forced?: AddTab): HTMLElement {
     pageHeader('Add money', eyebrow('Cash available', usd(state.cash))),
     tabs,
     h('div', { class: 'row' },
-      h('div', { class: 'stack col-compose' }, rest[0], rest[1] ?? null),
+      h('div', { class: 'stack col-compose' }, ...rest.slice(0, tab === 'bank' ? 2 : 1)),
       h('div', { class: 'stack grow' },
-        rest.slice(2).length ? rest[rest.length - 1] : null,
+        ...rest.slice(tab === 'bank' ? 2 : 1),
         card(
           cardHead('The three ways in'),
           kv('Bank transfer', 'Naira from any Nigerian bank'),

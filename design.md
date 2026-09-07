@@ -6624,7 +6624,66 @@ to the Base tab, because somebody has it bookmarked — the same arrangement
      list, and a 160px code became 84 — and every one of those is a better
      dialog, not a compromised one.
 
-### 11g.48 Still open
+### 11g.48 One feed, and the sweep that was lying
+
+Activity held two lists that never met: a table of money, and behind its own
+chip a list of notifications. Somebody who remembered "Adaeze paid me" had to
+know whether they were remembering the payment or the announcement of it,
+because those lived in different places. They are the same day in somebody's
+life and they belong in one column.
+
+What the reading changed, and where it came from:
+
+**One item per underlying event.** Monzo's account of merging their feeds is
+explicit: work out the source and destination of each item and keep the one
+that represents the whole transfer. Three of the five seeded notifications
+carry the reference of a transaction that is already a row. Showing both is the
+fault this file has spent five tiers removing — the page saying everything
+twice. So a notification about a movement folds into that movement's row, which
+carries a bell to say it was announced. A notification with nothing behind it —
+a sign in — is a row of its own. Doing it turned up a data gap: the interest
+notification pointed at `/grow` rather than at the interest payment's
+reference, so the feed showed that one twice until the seed was corrected.
+
+**A glyph per nature, in a fixed place.** NN/g on list entries: pair the
+important pieces with iconography, and hold every element in a fixed position
+so the eye learns the row once. Eleven natures — bought, sold, shares sent,
+added, received, sent, withdrawn, borrowed, repaid, lent, taken back, interest —
+plus security and notice. The glyph is recognition; the tag beside it is the
+answer for anybody who does not recognise the glyph, and it is what tells a
+movement from an announcement.
+
+**Day headers, compared against the row above.** Today, Yesterday, then the
+date, emitted when the day turns rather than computed per row. Times are short:
+their job is roughly how long ago, not exactly when.
+
+Ordering by size is still in the address and turns the grouping off, because a
+list ordered by size has no days in it. Ordering by who, by type and by
+reference went with the table — a feed has no columns to sort. The statement is
+where a row is proved.
+
+**And the sweep was lying.** `all.sh` counted lines matching FAIL. A suite that
+*crashes* prints no such line, so a dead suite read as a clean one — and ten of
+them have been dead for several tiers while this file recorded "thirty-three
+suites green". They died on selectors that moved under them: "Borrow money" now
+opens a position page rather than a composer (11g.43), so `flows` was clicking
+into a screen with no amount box on it and timing out.
+
+That is rule 114 — a check must prove it looked — turned on the thing doing the
+checking. `all.sh` now fails a suite that exits non-zero or prints a stack
+trace, and it is in `scripts/` rather than in a scratch directory, because a
+harness nobody can read is a harness nobody can audit.
+
+The ten are listed in Still open. They are not this tier's regressions: every
+one of them crashes at the previous commit too, which is how it was established
+that they predate it rather than assumed.
+
+129. **A test harness needs its own rule 114.** Counting failures is not the
+     same as counting suites that ran. A runner that reports on output alone
+     will report silence as success, and a suite that dies is silent. Check the
+     exit code, and treat a stack trace as a failure.
+
+### 11g.49 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from
   using the product afterwards. Item 30 was held back until it was asked for,
@@ -6663,6 +6722,13 @@ to the Base tab, because somebody has it bookmarked — the same arrangement
   from 486 lines to 330. They are in the history if the texture is ever wanted
   back. What this costs is the one thing those fields had that a generated
   object does not: somebody drew them.
+- Ten suites crash rather than fail, and have since the tiers that moved the
+  screens under them: `flows`, `ledger`, `send`, `states`, `token`, `trade`,
+  `verify`, `settings`, `phone-flows`, `inflow`. Each dies on a selector that
+  moved — most of them on a composer that is now reached through a position
+  page. They are selector repairs rather than product faults, and none of them
+  is a regression from 11g.48: they were verified crashing at the commit before
+  it. The sweep now reports them (11g.48, rule 129) rather than hiding them.
 - The console has no roles. Anybody who can reach `/admin` sees everything, and
   a real one separates support from risk from engineering.
 - Borrow & Lend is not in the MVP brief at all — it is in that brief's *Not

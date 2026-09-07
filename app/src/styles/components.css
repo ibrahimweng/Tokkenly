@@ -158,6 +158,41 @@
 @media (max-width: 1023px) { .qgrid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 899px) { .qgrid { grid-template-columns: 1fr; gap: 20px; } }
 
+/* ------------------------------------------------------------- the feed --
+   One column of everything that happened, movements and announcements in the
+   same order they happened in. The row is fixed: a glyph for what kind of
+   thing it was, the sentence, the tag and the detail under it, what it was
+   worth, and the way in. Fixed, because a row whose parts move is a row the
+   eye has to read rather than scan. */
+.feed { display: flex; flex-direction: column; }
+.feed-day {
+  padding: 20px 0 8px;
+}
+.feed-day:first-child { padding-top: 0; }
+.feed-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 12px; margin-inline: -12px; border-radius: 14px;
+  text-align: left; background: none; width: auto;
+}
+.feed-row .two-line { min-width: 0; }
+.feed-row .two-line small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.feed-ic { flex: none; }
+/* What was announced, on the thing it was announced about. Quiet: it is a
+   footnote on the row, not a second subject. */
+.feed-told { color: var(--subtle); display: inline-flex; flex: none; }
+.feed-told svg { width: 14px; height: 14px; }
+/* Not yet read. A dot rather than a weight change, so the row does not shift
+   when it is read. */
+.feed-row.unread .feed-ic { color: var(--ink); }
+.feed-row.unread .feed-told { color: var(--brand); }
+.feed-row .set-chev { flex: none; }
+@media (hover: hover) { .feed-row:hover { background: var(--sunken-hover); } }
+@media (max-width: 899px) {
+  .feed-row { padding: 12px 8px; margin-inline: -8px; min-height: 44px; }
+}
+/* The order control, beside the list rather than on a column head. */
+.chip.sort-by { gap: 6px; }
+
 /* ---------- cards ---------- */
 .card {
   background: var(--sunken);
@@ -337,6 +372,10 @@
   font-size: 40px; line-height: 52px; font-weight: 600; letter-spacing: -0.02em;
   text-align: center; width: 260px;
 }
+/* The same control inside a dialog, where 52px of line height plus the panel
+   it sits in is most of item 61's ceiling on its own. */
+.sheet .amount-box { padding: 4px 16px; }
+.sheet .amount-box input { font-size: 30px; line-height: 40px; width: 180px; }
 .amount-note { color: var(--muted); font-size: 12px; }
 .ruler { width: 100%; height: 72px; position: relative; cursor: ew-resize; user-select: none; }
 .ruler canvas { width: 100%; height: 100%; display: block; }

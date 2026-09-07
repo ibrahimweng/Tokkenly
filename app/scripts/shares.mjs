@@ -133,9 +133,12 @@ console.log('SENDING ONE')
      Math.abs(money(await settled(p, '.hero-figure')) - cashBefore) < 0.005,
      `${cashBefore} → ${money(await settled(p, '.hero-figure'))}`)
   await at(p, '/activity?filter=trades')
-  const row = await p.evaluate(() => document.querySelector('.table tbody tr')?.innerText.replace(/\s+/g, ' ') ?? '')
+  // The feed row carries what moved on its second line, beside the tag: a
+  // share handed to a person and a cash payment to the same person are
+  // otherwise the same sentence.
+  const row = await p.evaluate(() => document.querySelector('.feed-row')?.innerText.replace(/\s+/g, ' ') ?? '')
   ok('the activity row says what moved, not just that something did',
-     /Tunde Bakare/.test(row) && /Sent 1.00 AAPL/.test(row), row)
+     /Tunde Bakare/.test(row) && /Shares sent/.test(row) && /1\.00 AAPL/.test(row), row)
   await p.close()
 }
 

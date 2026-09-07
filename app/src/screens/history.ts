@@ -1,15 +1,19 @@
 import { h } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
-import { amount, card, cardHead, directionMark, emptyState } from '../components/bits'
+import { amount, emptyState } from '../components/bits'
 import { searchField, searchNote } from '../components/search'
 import { rank, onlyNear } from '../match'
-import { table } from '../components/table'
 import { state, actions, visibleNotifications, type ActivityKind, type Activity, type Notif } from '../state'
-import { when, usd, shares as fmtShares, activityLabel } from '../format'
+import { usd, shares as fmtShares, activityLabel } from '../format'
 import { go, current, openSheet } from '../router'
 import { isMobile } from '../responsive'
 
+const ALERTS = 'alerts'
+
+/** The categories, still at the top. They narrow one feed rather than
+ *  switching between two lists: Notices is the feed with only the
+ *  announcements in it, not a different screen. */
 const FILTERS: { id: string; label: string; kinds: ActivityKind[] | null }[] = [
   { id: 'all', label: 'All', kinds: null },
   { id: 'payments', label: 'Payments', kinds: ['payment'] },
@@ -18,108 +22,157 @@ const FILTERS: { id: string; label: string; kinds: ActivityKind[] | null }[] = [
 ]
 
 /* ---------------------------------------------------------------------------
-   Notifications, as a place rather than a panel.
+   One feed.
 
-   They were a modal over whatever screen the bell happened to be on: five
-   announcements floating above a page, dismissed by the same gesture that
-   dismisses a payment you are halfway through, and reachable from exactly one
-   header. They are the told-you layer over the events this screen already
-   holds, so they belong here.
+   Activity held two lists that never met: a table of money, and — behind its
+   own chip — a list of notifications. Somebody who remembered "Adaeze paid me"
+   had to know whether they were remembering the payment or the announcement of
+   it, because those lived in different places. They are the same day in
+   somebody's life and they belong in one column, in time order.
 
-   Beside the money, not mixed into it. A notification has no amount and no
-   reference; putting it in the table would mean two empty columns and a sort
-   by amount that cannot order it. It is a section of its own, behind its own
-   chip, with the unread count on the chip where the bell used to carry it.
+   What the reading said, and what it changed:
+
+   - **One item per underlying event.** Monzo's account of merging their feeds
+     is explicit about it: work out the source and destination of each item and
+     keep one that represents the whole transfer. Three of the five seeded
+     notifications carry the reference of a transaction that is already a row.
+     Showing both is the fault this file has spent four tiers removing — the
+     page saying everything twice. So a notification about a transaction folds
+     into that transaction's row, which carries a bell to say it was announced
+     and whether it was emailed. A notification with nothing behind it — a sign
+     in, a rate alert — is a row of its own.
+   - **A leading glyph per nature.** NN/g on list entries: pair the important
+     pieces with iconography, and keep every element in a fixed position so the
+     eye learns the row once. Bought, sold, added, sent, received, borrowed,
+     repaid, lent, taken back, interest, security. Eleven natures, eleven
+     glyphs, always in the same place.
+   - **A tag, in words.** The glyph is recognition; the tag is the answer for
+     anybody who does not recognise it, and it is what tells a notification
+     from a movement, which is the thing this rebuild was asked for.
+   - **Day headers.** The common pattern, and the cheap one: compare each row's
+     date against the row above and emit a header when it changes. Today,
+     Yesterday, then the date.
+   - **Short timestamps.** Their job is roughly how long ago, not exactly when.
+
+   Sorting by amount is still in the address, and turns the grouping off: a
+   list ordered by size has no days in it. Sorting by who, by type and by
+   reference has gone with the table — a feed has no columns to sort.
    --------------------------------------------------------------------------- */
 
-const ALERTS = 'alerts'
-const GLYPH: Record<Notif['kind'], () => string> = {
-  money: icon.wallet, trade: icon.market, grow: icon.grow, security: icon.lock,
+type Nature =
+  | 'bought' | 'sold' | 'shares-out'
+  | 'added' | 'received' | 'sent' | 'withdrew'
+  | 'borrowed' | 'repaid' | 'lent' | 'tookback' | 'interest'
+  | 'security' | 'notice'
+
+const NATURE: Record<Nature, { ic: () => string; tag: string }> = {
+  bought: { ic: icon.bought, tag: 'Bought' },
+  sold: { ic: icon.sold, tag: 'Sold' },
+  'shares-out': { ic: icon.send, tag: 'Shares sent' },
+  added: { ic: icon.receive, tag: 'Added money' },
+  received: { ic: icon.arrowIn, tag: 'Received' },
+  sent: { ic: icon.send, tag: 'Sent' },
+  withdrew: { ic: icon.arrowOut, tag: 'Withdrawn' },
+  borrowed: { ic: icon.download, tag: 'Borrowed' },
+  repaid: { ic: icon.repay, tag: 'Repaid' },
+  lent: { ic: icon.grow, tag: 'Lent' },
+  tookback: { ic: icon.repay, tag: 'Taken back' },
+  interest: { ic: icon.coin, tag: 'Interest' },
+  security: { ic: icon.lock, tag: 'Security' },
+  notice: { ic: icon.bell, tag: 'Notice' },
 }
 
-/** One announcement, and the thing it is about. A row that greys out and does
- *  nothing else is a dead end: the receipt is what somebody opening "Adaeze
- *  paid you $120" actually wants, and it is one press away. */
-function alertRow(n: Notif): HTMLElement {
-  const onward = n.ref
-    ? () => openSheet('receipt', { ref: n.ref! })
-    : n.to ? () => go(n.to!) : null
+/** What kind of thing this was. Read off what the movement is rather than
+ *  asserted at the call site, so two rows that are the same kind of event
+ *  cannot be tagged differently. */
+function natureOf(a: Activity): Nature {
+  if (a.kind === 'trade') {
+    if (a.type === 'Sent') return 'shares-out'
+    return a.amount < 0 ? 'bought' : 'sold'
+  }
+  if (a.kind === 'grow') {
+    if (a.type === 'Interest') return 'interest'
+    if (a.type === 'Borrowed') return 'borrowed'
+    if (a.type === 'Repaid') return 'repaid'
+    if (a.type === 'Taken back') return 'tookback'
+    return 'lent'
+  }
+  if (a.amount > 0) return a.rail === 'bank' || a.rail === 'card' ? 'added' : 'received'
+  return a.note === 'Converted to naira' || a.note === 'Paid out in naira' ? 'withdrew' : 'sent'
+}
+
+const NOTICE_NATURE: Record<Notif['kind'], Nature> = {
+  money: 'notice', trade: 'notice', grow: 'notice', security: 'security',
+}
+
+/** A row in the feed: either a movement, possibly with the announcement that
+ *  went with it, or an announcement with nothing behind it. */
+type Item =
+  | { at: string; act: Activity; told?: Notif }
+  | { at: string; note: Notif }
+
+const isAct = (i: Item): i is { at: string; act: Activity; told?: Notif } => 'act' in i
+
+/** Today, Yesterday, then the date. Compared against the row above rather than
+ *  computed per row, so the header appears exactly where the day turns. */
+function dayName(iso: string): string {
+  const d = new Date(iso)
+  const now = new Date()
+  const days = Math.round(
+    (new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime() -
+     new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime()) / 86400000)
+  if (days === 0) return 'Today'
+  if (days === 1) return 'Yesterday'
+  return d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })
+}
+
+const clock = (iso: string) =>
+  new Date(iso).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+
+function feedRow(i: Item): HTMLElement {
+  const n = isAct(i) ? natureOf(i.act) : NOTICE_NATURE[i.note.kind]
+  const { ic, tag } = NATURE[n]
+  const meta: string[] = [tag]
+  let title: string
+  let onward: () => void
+
+  if (isAct(i)) {
+    const a = i.act
+    title = activityLabel(a)
+    if (a.asset) meta.push(`${fmtShares(a.asset.shares)} ${a.asset.ticker} at ${usd(a.asset.price)}`)
+    meta.push(a.ref)
+    onward = () => openSheet('receipt', { ref: a.ref })
+  } else {
+    const nt = i.note
+    title = nt.title
+    meta.push(nt.body)
+    onward = () => {
+      actions.readNotification(nt.id)
+      if (nt.ref) openSheet('receipt', { ref: nt.ref })
+      else if (nt.to) go(nt.to)
+    }
+  }
+  meta.push(clock(i.at))
+
+  const told = isAct(i) ? i.told : undefined
+  const unread = isAct(i) ? !!told && !told.read : !i.note.read
+
   return h('button', {
-    class: 'set-row alert' + (n.read ? ' read' : ''),
-    on: { click: () => { actions.readNotification(n.id); onward?.() } },
+    class: 'feed-row' + (unread ? ' unread' : ''),
+    on: { click: () => { if (told) actions.readNotification(told.id); onward() } },
   },
-    h('span', { class: 'who' },
-      h('span', { class: 'mark', html: GLYPH[n.kind]() }),
-      h('span', { class: 'two-line' },
-        h('span', { class: 't-body-strong', text: n.title }),
-        h('small', { text: n.body }))),
-    h('span', { class: 'two-line right' },
-      h('span', { class: 'muted t-caption nowrap', text: when(n.at) }),
-      // Whether it also went out as an email, and whether that was our choice.
-      // A product that says "we emailed you" and a product that says "we email
-      // this one whatever you set" are making different promises, and only one
-      // of them can honour an unsubscribe.
-      n.emailed
-        ? h('small', { class: n.emailed === 'always' ? 'subtle' : 'muted',
-            text: n.emailed === 'always' ? 'Emailed · always' : 'Emailed' })
-        : null),
-    onward ? h('span', { class: 'muted set-chev', html: icon.chevron() }) : null)
-}
-
-function alertsSection(rows: Notif[], term: string): HTMLElement {
-  const unread = visibleNotifications().filter((n) => !n.read).length
-  return card(
-    // The section's name is its name; how many are unread is state, and state
-    // belongs beside the button that changes it, not in the heading.
-    cardHead('Notifications',
-      h('span', { class: 'head-state' },
-        h('span', { class: 'muted t-caption', text: unread ? unread + ' unread' : 'All caught up' }),
-        unread
-          ? h('button', { class: 'link', text: 'Mark all read',
-              on: { click: () => actions.readAllNotifications() } })
-          : null)),
-    searchNote(term, rows.length, onlyNear(term, rows, (n) => [n.title, n.body])),
-    rows.length
-      ? h('div', { class: 'alert-list' }, ...rows.map(alertRow))
-      : term.trim()
-        ? emptyState('Nothing matches that', 'Try a different word.',
-            { label: 'Clear the search', onClick: () => go('/activity?filter=' + ALERTS) })
-        : emptyState('Nothing yet', 'Payments, orders and sign ins show up here.',
-            undefined, 'history'))
-}
-
-/** What a row was. For most movements the type is the whole answer; for a
- *  share handed to another person it is not — "Sent" beside a name is what a
- *  cash payment says, and the two rows would be indistinguishable in a column
- *  whose job is to tell them apart. */
-const what = (a: Activity): string =>
-  a.asset ? `${a.type} ${fmtShares(a.asset.shares)} ${a.asset.ticker}` : a.type
-
-/** The list itself, lifted out so the search can repaint it without
- *  rebuilding the page around the field being typed into. */
-function tableOf(rows: Activity[],
-                 sort: { key: string; dir: 'asc' | 'desc'; onSort: (k: string) => void }): HTMLElement {
-  return table(
-      [
-        { key: 'who', label: 'Who', sortable: true },
-        { key: 'type', label: 'Type', optional: true, sortable: true },
-        { key: 'ref', label: 'Reference', optional: true, sortable: true },
-        { key: 'date', label: 'Date', optional: true, sortable: true },
-        { key: 'amt', label: 'Amount', align: 'right', sortable: true },
-      ],
-      rows.map((a) => [
-        h('span', { class: 'who' }, directionMark(a.amount),
-          h('span', { class: 'two-line' },
-            h('span', { class: 't-body-strong', text: a.who }),
-            h('small', { class: 'phone-only', text: what(a) + ' · ' + when(a.at) }))),
-        h('span', { class: 'muted', text: what(a) }),
-        h('span', { class: 'muted', text: a.ref }),
-        h('span', { class: 'muted', text: when(a.at) }),
-        amount(a),
-      ]),
-      (i) => openSheet('receipt', { ref: rows[i].ref }),
-      { current: { key: sort.key, dir: sort.dir }, onSort: sort.onSort }
-    )
+    h('span', { class: 'mark feed-ic', html: ic() }),
+    h('span', { class: 'two-line grow' },
+      h('span', { class: 't-body-strong', text: title }),
+      h('small', { class: 'muted', text: meta.filter(Boolean).join(' · ') })),
+    // What was announced, on the thing it was announced about. A second row
+    // saying the same event happened is the page saying it twice.
+    told
+      ? h('span', { class: 'feed-told', title: told.emailed ? 'We told you, and emailed you' : 'We told you',
+          ariaLabel: 'We told you about this', html: icon.bell() })
+      : null,
+    isAct(i) ? amount(i.act) : h('span', { class: 'muted t-caption', text: '' }),
+    h('span', { class: 'muted set-chev', html: icon.chevron() }))
 }
 
 /** History is the one place that holds everything, which is what makes every
@@ -131,85 +184,113 @@ export function historyScreen(): HTMLElement {
   const f = FILTERS.find((x) => x.id === active) ?? FILTERS[0]
   const onAlerts = active === ALERTS
 
-  // What a row can be found by: who it was with, what it was, its reference,
-  // and the figure — typed either way round, "45" or "$45.00".
-  const FIELDS = (a: Activity) => [a.who, what(a), a.asset?.ticker ?? '', a.ref, String(Math.abs(a.amount)), usd(Math.abs(a.amount))]
-  const within = state.activity.filter((a) => !f.kinds || f.kinds.includes(a.kind))
-  const rowsFor = (t: string): Activity[] => (t.trim() ? rank(t, within, FIELDS) : within)
+  const FIELDS = (a: Activity) => [
+    a.who, a.type, a.asset?.ticker ?? '', a.ref,
+    String(Math.abs(a.amount)), usd(Math.abs(a.amount)), NATURE[natureOf(a)].tag,
+  ]
+  const NFIELDS = (n: Notif) => [n.title, n.body]
 
   const setQuery = (k: string, v: string) => {
     const q = new URLSearchParams(r.query)
     if (v) q.set(k, v)
     else q.delete(k)
-    const s = q.toString()
-    go('/activity' + (s ? '?' + s : ''))
+    const s2 = q.toString()
+    go('/activity' + (s2 ? '?' + s2 : ''))
   }
 
-  // Sorting is part of the address, so an ordered view can be linked and
-  // reloaded the same way a filter or a sheet can.
+  // Ordering is part of the address, as it was when this was a table. What has
+  // gone with the table is ordering by who, by type and by reference: a feed
+  // has no columns to sort. Size is the one that still means something, and it
+  // turns the day headers off, because a list ordered by size has no days.
   const sortKey = r.query.get('sort') ?? 'date'
   const sortDir = (r.query.get('dir') ?? 'desc') as 'asc' | 'desc'
-  const onSort = (key: string) => {
-    const dir = key === sortKey && sortDir === 'desc' ? 'asc' : 'desc'
-    const q = new URLSearchParams(r.query)
-    q.set('sort', key); q.set('dir', dir)
-    go('/activity?' + q.toString())
-  }
-  const cmp: Record<string, (a: Activity, b: Activity) => number> = {
-    who: (a, b) => a.who.localeCompare(b.who),
-    type: (a, b) => a.type.localeCompare(b.type),
-    ref: (a, b) => a.ref.localeCompare(b.ref),
-    date: (a, b) => a.at.localeCompare(b.at),
-    amt: (a, b) => a.amount - b.amount,
+  const byAmount = sortKey === 'amt'
+  const orderBtn = (key: string, label: string) =>
+    h('button', {
+      class: 'chip sort-by', ariaPressed: sortKey === key,
+      on: {
+        click: () => {
+          const q = new URLSearchParams(r.query)
+          const dir = key === sortKey && sortDir === 'desc' ? 'asc' : 'desc'
+          q.set('sort', key); q.set('dir', dir)
+          go('/activity?' + q.toString())
+        },
+      },
+    }, h('span', { text: label }),
+       sortKey === key ? h('small', { text: sortDir === 'desc' ? '↓' : '↑' }) : null)
+
+  const list = h('div', { class: 'stack' })
+
+  /** What the search actually matched, kept so the note under the field can
+   *  say whether everything it found was a near miss. */
+  let matched: Activity[] = []
+
+  /** Everything that happened, as one column. */
+  const items = (t: string): Item[] => {
+    const notes = visibleNotifications()
+    const matchedNotes = t.trim() ? rank(t, notes, NFIELDS) : notes
+    // A notification whose reference names a movement is that movement's
+    // announcement, not a second event.
+    const spoken = new Map<string, Notif>()
+    for (const n of notes) if (n.ref) spoken.set(n.ref, n)
+
+    if (onAlerts) {
+      return matchedNotes.map((n) => ({ at: n.at, note: n }))
+    }
+    const within = state.activity.filter((a) => !f.kinds || f.kinds.includes(a.kind))
+    const acts = t.trim() ? rank(t, within, FIELDS) : within
+    matched = acts
+    const out: Item[] = acts.map((a) => ({ at: a.at, act: a, told: spoken.get(a.ref) }))
+    // And the ones with nothing behind them stand on their own.
+    if (!f.kinds) {
+      for (const n of matchedNotes) if (!n.ref || !spoken.has(n.ref)) out.push({ at: n.at, note: n })
+      else if (n.ref && !state.activity.some((a) => a.ref === n.ref)) out.push({ at: n.at, note: n })
+    }
+    return out
   }
 
-  // The list repaints itself as you type. The address is only touched on
-  // Enter: a route change rebuilds the whole tree, which takes the focus out
-  // of the field being typed into.
-  const list = h('div', { class: 'stack' })
-  const NFIELDS = (n: Notif) => [n.title, n.body]
   const paint = (t: string): void => {
-    if (onAlerts) {
-      const all = visibleNotifications()
-      list.replaceChildren(alertsSection(t.trim() ? rank(t, all, NFIELDS) : all, t))
-      return
+    const rows = items(t)
+    rows.sort((x, y) => byAmount
+      ? ((isAct(x) ? x.act.amount : 0) - (isAct(y) ? y.act.amount : 0)) * (sortDir === 'asc' ? 1 : -1)
+      : y.at.localeCompare(x.at) * (sortDir === 'asc' ? -1 : 1))
+
+    const feed = h('div', { class: 'feed' })
+    let day = ''
+    for (const it of rows) {
+      if (!byAmount) {
+        const d = dayName(it.at)
+        if (d !== day) {
+          day = d
+          feed.appendChild(h('h2', { class: 't-caps subtle feed-day', text: d }))
+        }
+      }
+      feed.appendChild(feedRow(it))
     }
-    const rows = rowsFor(t)
-    const ordered = [...rows].sort((a, b) => (cmp[sortKey] ?? cmp.date)(a, b) * (sortDir === 'asc' ? 1 : -1))
+
+    const note = onAlerts
+      ? searchNote(t, rows.length, onlyNear(t, visibleNotifications(), NFIELDS))
+      : searchNote(t, rows.length, onlyNear(t, matched, FIELDS))
     list.replaceChildren(
-      searchNote(t, rows.length, onlyNear(t, rows, FIELDS)) ?? h('span', { hidden: true }),
-      ordered.length ? tableOf(ordered, { key: sortKey, dir: sortDir, onSort })
+      note ?? h('span', { hidden: true }),
+      rows.length ? feed
         : t.trim() || active !== 'all'
           ? emptyState('Nothing matches that',
               'Try a different name, reference or amount.',
               { label: 'Clear the search', onClick: () => go('/activity') })
           : emptyState('Nothing here yet',
-              'Money you send or receive shows up here.', undefined, 'history'))
+              'Money you move and anything we tell you shows up here.', undefined, 'history'))
   }
 
   const search = h('div', { class: 'grow' }, searchField({
-    // A placeholder that does not fit is a sentence cut off mid-word: at 360
-    // this read "Search a name, a reference or an a". The short form says the
-    // same three things.
-    placeholder: onAlerts
-      ? 'Search your notifications'
-      : isMobile() ? 'Name, reference or amount' : 'Search a name, a reference or an amount',
+    placeholder: isMobile() ? 'Name, reference or amount' : 'Search a name, a reference or an amount',
     value: r.query.get('q') ?? '',
-    // Straight to the receipt. A reference is a thing somebody has read off a
-    // statement and wants to see, not a thing they want a filtered list of.
-    suggest: (t) => onAlerts
-      ? rank(t, visibleNotifications(), NFIELDS).slice(0, 7).map((n) => ({
-          label: n.title,
-          sub: n.body,
-          group: 'Notifications',
-          pick: () => { actions.readNotification(n.id); if (n.ref) openSheet('receipt', { ref: n.ref }) },
-        }))
-      : rank(t, state.activity, FIELDS).slice(0, 7).map((a) => ({
-          label: activityLabel(a),
-          hint: a.ref,
-          group: 'Receipts',
-          pick: () => openSheet('receipt', { ref: a.ref }),
-        })),
+    suggest: (t) => rank(t, state.activity, FIELDS).slice(0, 7).map((a) => ({
+      label: activityLabel(a),
+      hint: a.ref,
+      group: 'Receipts',
+      pick: () => openSheet('receipt', { ref: a.ref }),
+    })),
     onType: paint,
     onCommit: (v) => setQuery('q', v),
   }))
@@ -223,23 +304,27 @@ export function historyScreen(): HTMLElement {
       h('span', { text: label }), extra ?? null)
   const chips = h('div', { class: 'chip-row' },
     ...FILTERS.map((x) => chip(x.id, x.label)),
-    // The count the bell used to carry, on the thing that now opens them.
-    chip(ALERTS, 'Notifications', unread ? h('span', { class: 'chip-count', text: String(unread) }) : null))
+    chip(ALERTS, 'Notices', unread ? h('span', { class: 'chip-count', text: String(unread) }) : null))
 
   return shell(
     'history',
     pageHeader('Activity',
-      // Export is a statement of money moved, which is not what this section
-      // holds. It stands down rather than exporting something it cannot.
-      onAlerts ? null
-        : h('div', { class: 'chip-row' },
-            // The statement is where a row is proved rather than listed: both
-            // ends of it, and the accounts it passed through.
-            h('button', { class: 'btn btn-secondary btn-sm', text: 'Statement',
-              on: { click: () => go('/statement') } }),
-            h('button', { class: 'btn btn-secondary btn-sm', on: { click: () => openSheet('export') } },
-              h('span', { html: icon.download() }), h('span', { text: 'Export' })))),
+      h('div', { class: 'chip-row' },
+        // The section that used to hold the notifications said "All caught up"
+        // when there was nothing left to read. The section is gone; the
+        // sentence is not, because a button that quietly vanishes is not an
+        // answer to "did I read them all".
+        unread
+          ? h('button', { class: 'btn btn-secondary btn-sm', text: 'Mark all read',
+              on: { click: () => actions.readAllNotifications() } })
+          : h('span', { class: 'muted t-caption head-state', text: 'All caught up' }),
+        h('button', { class: 'btn btn-secondary btn-sm', text: 'Statement',
+          on: { click: () => go('/statement') } }),
+        h('button', { class: 'btn btn-secondary btn-sm', on: { click: () => openSheet('export') } },
+          h('span', { html: icon.download() }), h('span', { text: 'Export' })))),
     h('div', { class: 'row', style: { alignItems: 'center' } }, search, chips),
+    // Ordering, beside the list it orders rather than on top of a column.
+    h('div', { class: 'chip-row' }, orderBtn('date', 'Newest'), orderBtn('amt', 'Largest')),
     list,
   )
 }

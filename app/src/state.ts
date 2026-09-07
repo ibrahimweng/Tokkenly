@@ -964,9 +964,12 @@ export const state: State = {
     { id: 'n2', kind: 'trade', title: 'Your Apple order filled',
       body: '1.87 shares at $224.10.', at: iso('2026-09-05T14:05'), read: false,
       ref: 'TKN-8E4J77', emailed: 'always' },
+    // The reference, not just a place to go: this announcement is about a
+    // movement that is already a row, and without the reference the feed shows
+    // the interest twice — once as the payment and once as the news of it.
     { id: 'n3', kind: 'grow', title: 'Lending paid you $0.16',
       body: 'Interest lands every morning on the dollars you have lent out.', at: iso('2026-09-04T00:05'), read: false,
-      to: '/grow', emailed: false },
+      ref: 'TKN-7C8H62', to: '/grow', emailed: false },
     { id: 'n4', kind: 'security', title: 'New sign in on Pixel 7',
       body: 'Lagos, Nigeria. If this was not you, sign out everywhere.', at: iso('2026-09-03T21:10'), read: true,
       to: '/account/security', emailed: 'always' },

@@ -27,7 +27,7 @@ const holds = (p) => p.evaluate(() => document.activeElement?.getAttribute('role
 /* Every one of them, and the count of the thing each narrows. */
 const FIELDS = [
   { route: '/invest', what: '.table tbody tr', term: 'nvda', typo: 'micrsoft', wants: 'Microsoft', w: 1440 },
-  { route: '/activity', what: '.table tbody tr', term: 'adaeze', typo: 'adeze', wants: 'Adaeze', w: 1440 },
+  { route: '/activity', what: '.feed-row', term: 'adaeze', typo: 'adeze', wants: 'Adaeze', w: 1440 },
   { route: '/send', what: '.sheet-list .sheet-row', term: 'tunde', typo: 'tnde', wants: 'Tunde', w: 390 },
   { route: '/account/support', what: '.card .set-row', term: 'pin', typo: 'recovry', wants: 'recovery', w: 1440 },
   { route: '/all', what: '.all-row', term: 'borrow', typo: 'borow', wants: 'Borrow', w: 1440 },
