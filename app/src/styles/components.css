@@ -443,6 +443,37 @@
 .receipt-on { display: flex; gap: 12px; }
 .receipt-on .btn { flex: 1 1 0; }
 
+/* ------------------------------------------------------------- statement --
+   One movement per card, both of its ends under it. The direction mark is the
+   only colour: a leg out is neutral, a leg in is green, which is rule 43 read
+   from the account's point of view rather than yours. */
+.post { padding: 16px 20px; gap: 12px; }
+.post .card-head h2 { margin: 0; }
+.leg { display: flex; align-items: center; gap: 12px; }
+.leg-dir {
+  flex: none; width: 24px; height: 24px; border-radius: 999px;
+  display: grid; place-items: center; font-weight: 600; font-size: 13px;
+  background: var(--control); color: var(--muted);
+}
+.leg-dir.in { background: var(--tint-positive); color: var(--positive); }
+.leg .two-line small { color: var(--subtle); }
+/* Rule 13: the reference and the rate are separated from the legs by space,
+   not by a line. The card's own gap is 12, so 4 more puts the foot 16 below
+   the last leg — further than anything inside the group and nearer than the
+   next card. */
+.post-foot {
+  display: flex; justify-content: space-between; gap: 12px;
+  padding-top: 4px;
+}
+/* The claim the page exists to make. Green when it is nothing, which it has to
+   be, and loud when it is not. */
+.trial-sum {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 12px 14px; border-radius: var(--r-panel);
+  background: var(--tint-positive); color: var(--positive);
+}
+.trial-sum.off { background: var(--tint-negative); color: var(--negative); }
+
 /* ---------- toast ---------- */
 .toast-rail { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 60;
   display: flex; flex-direction: column; gap: 8px; align-items: center; }

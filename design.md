@@ -5575,7 +5575,108 @@ whose job is to say what the product is.
      which is a property of the box and not of the drawing — so it has to be
      measured on every surface the drawing is used, not settled once.
 
-### 11g.35 Still open
+### 11g.35 Where the money comes from
+
+The question was asked plainly: when I add money, where is it coming from? I
+press a button and the balance goes up. Where did it come from, and where does
+it end up, and where do the shares come from — make it make sense end to end,
+with no contradiction about where money is lost or where it arrived out of thin
+air.
+
+There was no good answer, because there was no answer at all. `addMoney` was
+`state.cash += amount`. Nothing was debited. A withdrawal was the same line with
+a minus. A share bought came from nowhere in particular and a share sent
+vanished. Every screen was honest about its own arithmetic and the product as a
+whole was not honest about anything: it was a set of balances that could be
+made to disagree, and the only reason they did not was that nothing had tried.
+
+So the product got a ledger, and every figure in it is now read out of that
+ledger rather than kept beside it.
+
+**Three books, and named accounts.** `theirs` is outside Tokkenly — somebody's
+Nigerian bank, a card issuer, the Base network, the venue a tokenised share is
+bought from. `ours` is Tokkenly's own: the naira account money is paid into, the
+one payouts leave from, the desk where two currencies meet, the fees, and the
+interest the pool pays and charges. `yours` is the balances the app shows: the
+wallet, what has been lent, what is owed. Fourteen fixed accounts, and
+counterparty ones made the first time they are used, so the statement can name
+your GTBank account and Tunde Bakare's without the ledger having to know every
+bank in Nigeria in advance.
+
+**A posting sums to zero in every currency it touches, or it does not happen.**
+`post()` throws. Not logs, not flags for a later reconciliation — a movement
+with one end is refused before it is written, because a prototype that
+tolerates an unbalanced posting is a prototype that will ship one. It is the
+one rule the screens cannot get around by forgetting a leg.
+
+**A conversion is two postings, not one entry with two currencies.** Adding
+money is naira leaving your bank and arriving in Tokkenly's collection account,
+and then dollars leaving the desk and arriving in your wallet: two movements,
+joined by a shared reference and the rate you were shown. That is how a real
+ledger does it, because one entry cannot be denominated twice, and it is also
+the honest answer to the question — the naira are in a Nigerian account with a
+name, and the dollars came off a desk that now holds naira against them.
+
+**Balances are derived.** `state.cash` is a getter over `balanceOf('wallet')`.
+Making the five money balances read-only produced fourteen `TS2540 Cannot
+assign` errors, which was the point: every one of them was a place that used to
+move money by assignment, and each was rewritten as a posting. There is no
+second copy of the truth left to drift from the first.
+
+**Shares are in the ledger too, and not as a dollar value.** An account holding
+"the value of your Apple" would move every time the market did, which is not a
+thing a ledger account does. So a ticker is a currency: `held:AAPL` is what a
+custodian holds in your name, `float:AAPL` is what the market has, `sent:AAPL`
+is what has gone to somebody else. A buy is one posting with five legs that
+balances twice over — dollars from your wallet to the market and to our fees,
+and Apple from the market into custody. A share handed to another Tokkenly
+account has two legs and neither is money, which is the ledger saying exactly
+what the screen says: this is not a sale, nobody was paid.
+
+`state.holdings` is a reading of those accounts, not a list kept beside them, so
+a position cannot be credited without the trade that bought it. It caught a
+name collision on the way: the fund was `Vanguard S&P 500` in the holdings and
+`S&P 500 ETF` in the catalogue, two names for one thing surviving because
+nothing had ever had to join them up.
+
+**The opening position is named rather than hidden.** Twenty-one movements the
+account already had are replayed oldest first, and the difference between where
+they land and where the account actually stands is posted from an account
+called "Before this record". That is not a fudge. An account open for months
+has a history this file does not contain, and naming it is more honest than
+pretending the first row is the beginning of the world. Each ticker balances
+against its own opening account, because a posting has to come to nothing in
+every currency it touches and Apple and Tesla are two of them.
+
+**And a screen that proves it.** `/statement` is not a debugging view. The left
+column is every movement with both its ends, each leg naming the account and
+what it gained or gave up. The right column is the trial balance: every account
+grouped by whose it is, with a total that has to read zero. Dollars and naira
+get a card each; the four tickers share one, because a card per company would
+push the money off the screen by the fourth holding. The total stays even when
+a currency is empty — a claim that disappears when it is easy to meet is not
+one anybody should believe.
+
+Measured after ten actions in a row — add, withdraw, send, buy, sell, borrow,
+repay, lend, take back, send shares — thirty-three movements, no movement with
+fewer than two legs, and six totals reading `$0.00`, `₦0`, `0.00 AAPL`,
+`0.00 NVDA`, `0.00 VOO`, `0.00 TSLA`. The wallet on Transfer, the lending
+figure on Borrow & Lend and the position on a company page are the same numbers
+the statement shows, because they are the same numbers.
+
+101. **A balance is a reading, not a variable.** The moment a figure is stored
+     beside the movements that produced it there are two truths, and the only
+     question left is when they diverge. Derive it, and make the compiler say
+     so: a read-only getter turns every place that used to move money by
+     assignment into an error you have to answer.
+
+102. **A movement has two ends or it does not happen.** Enforce it where the
+     movement is written, not where it is later checked, and throw rather than
+     log. A product that can invent money quietly will, and the screen that
+     shows the books has to be a screen a person can read — the proof is worth
+     nothing if only the build can check it.
+
+### 11g.36 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from
   using the product afterwards. Item 30 was held back until it was asked for,
@@ -5591,6 +5692,23 @@ whose job is to say what the product is.
   wherever it was filled. What it still cannot do is take a payment from
   anything but the wallet balance: "add money" and "buy the bucket" are two
   errands where a card or a bank debit at the point of purchase would be one.
+- The ledger is built and the statement proves it (11g.35). Two things it makes
+  possible are not built yet. **Adding money still credits the wallet the
+  instant the button is pressed.** The postings are now honest about which
+  accounts it passes through, but not about time: naira reaching a Nigerian
+  virtual account by transfer takes minutes and a card charge can be reversed,
+  so there should be a pending leg sitting in the collection account until the
+  money actually lands, and two ways in — a dedicated account with a reference,
+  and a card. **And Send and Withdraw are still two screens** for one errand.
+  The destination is what differs, not the act: another Tokkenly person, a Base
+  address, or anybody's Nigerian bank account, each deciding the rail, the
+  currency, the fee and whether a name check is owed.
+- The recipient of a share transfer is still nobody: `sent:AAPL` is an account
+  outside the books, which is truthful for a single-account prototype and is
+  the seam a real one fills with the other person's `held:AAPL`.
+- The rate on a conversion is honoured and recorded on both halves of the
+  posting, but the desk it passes through never runs out. A real one has a
+  position and a limit.
 - The privacy switch covers the headline figure on four screens. Every other
   masked figure in the product — a position on a company page, an amount in a
   history row — follows the same setting and has no switch of its own, which is

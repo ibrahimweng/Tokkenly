@@ -223,8 +223,13 @@ export function historyScreen(): HTMLElement {
       // Export is a statement of money moved, which is not what this section
       // holds. It stands down rather than exporting something it cannot.
       onAlerts ? null
-        : h('button', { class: 'btn btn-secondary btn-sm', on: { click: () => openSheet('export') } },
-            h('span', { html: icon.download() }), h('span', { text: 'Export' }))),
+        : h('div', { class: 'chip-row' },
+            // The statement is where a row is proved rather than listed: both
+            // ends of it, and the accounts it passed through.
+            h('button', { class: 'btn btn-secondary btn-sm', text: 'Statement',
+              on: { click: () => go('/statement') } }),
+            h('button', { class: 'btn btn-secondary btn-sm', on: { click: () => openSheet('export') } },
+              h('span', { html: icon.download() }), h('span', { text: 'Export' })))),
     h('div', { class: 'row', style: { alignItems: 'center' } }, search, chips),
     list,
   )

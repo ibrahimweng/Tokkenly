@@ -2,8 +2,9 @@
  *  here, so a flow that moves money changes every screen that mentions it.
  *  Opening figures match design.md 11b.4f. */
 
-import { reference, usd, naira } from './format'
-import { find } from './catalogue'
+import { reference, usd, naira, shares as sharesOf } from './format'
+import { CATALOGUE, find } from './catalogue'
+import * as ledger from './ledger'
 
 export type ActivityKind = 'payment' | 'trade' | 'grow'
 
@@ -254,11 +255,16 @@ export interface State {
   prefs: Prefs
   security: Security
   person: { name: string; email: string; phone: string; dob: string; address: string; joined: string }
-  cash: number
-  lent: number
-  interestPaid: number
-  borrowed: number
-  interestOwed: number
+  /* ----- what you hold, read from the ledger -----
+     Not fields. Every one of these used to be a number some action added to,
+     which is exactly how $200 could appear in a wallet with nothing leaving a
+     bank. They are the balances of named accounts now, derived on every read,
+     so the only way to change one is to post a movement that balances. */
+  readonly cash: number
+  readonly lent: number
+  readonly interestPaid: number
+  readonly borrowed: number
+  readonly interestOwed: number
   borrowLimit: number
   rates: { lend: number; borrow: number; collateral: number }
   /** What a transaction costs, as a percentage. The marketing sells this:
@@ -320,6 +326,141 @@ function remember(): void {
   } catch { /* private windows and blocked storage are not a failure */ }
 }
 
+/* ---------------------------------------------------------------------------
+   Opening the books.
+
+   Every row the account already has is replayed into the ledger, oldest first,
+   so the statement holds the same history the activity list does. What is left
+   over — the difference between where those rows leave the balances and where
+   the account actually stands — is the opening position, posted before them
+   from an account called "Before this record". That account is not a fudge and
+   it is not hidden: an account that has been open for months has a history
+   this file does not contain, and naming it is more honest than pretending the
+   first row is the beginning of the world.
+   --------------------------------------------------------------------------- */
+
+/** Which company a recorded row is about. The rows name the company the way a
+ *  person would — "Apple", "Tesla" — because that is what the activity list
+ *  reads; the ledger counts shares by ticker. */
+const tickerOf = (name: string): string | undefined =>
+  CATALOGUE.find((c) => c.name === name)?.ticker
+
+/** What one already-recorded movement did to the ledger. */
+function legsFor(a: Activity): { entries: ledger.Entry[]; kind?: string } | null {
+  const amt = Math.abs(a.amount)
+  const fee = a.fee ?? 0
+  if (a.kind === 'payment') {
+    return a.amount >= 0
+      ? { entries: [{ account: 'chain', amount: -amt }, { account: 'wallet', amount: amt }] }
+      : { entries: [{ account: 'wallet', amount: -amt }, { account: 'chain', amount: amt }] }
+  }
+  if (a.kind === 'trade') {
+    // A share handed to somebody moves units and no money at all, which is
+    // the whole difference between it and a sale.
+    if (a.asset) {
+      return { entries: [{ account: 'held:' + a.asset.ticker, amount: -a.asset.shares },
+                         { account: 'sent:' + a.asset.ticker, amount: a.asset.shares }] }
+    }
+    // Both halves of a trade: dollars one way, shares the other. The count
+    // comes off the figure the person typed rather than off the amount
+    // recorded, which has the fee in it.
+    const t = tickerOf(a.who)
+    const price = t ? find(t)?.price : undefined
+    const units = t && price ? grossOf(a) / price : 0
+    const shares: ledger.Entry[] = t
+      ? [{ account: 'float:' + t, amount: a.type === 'Sold' ? units : -units },
+         { account: 'held:' + t, amount: a.type === 'Sold' ? -units : units }]
+      : []
+    return a.type === 'Sold'
+      ? { entries: [{ account: 'market', amount: -(amt + fee) },
+                    { account: 'wallet', amount: amt }, { account: 'fees', amount: fee },
+                    ...shares] }
+      : { entries: [{ account: 'wallet', amount: -amt },
+                    { account: 'market', amount: amt - fee }, { account: 'fees', amount: fee },
+                    ...shares] }
+  }
+  if (a.who === 'Lending') {
+    if (a.type === 'Interest') {
+      return { kind: 'lend-interest',
+        entries: [{ account: 'interest', amount: -amt }, { account: 'wallet', amount: amt }] }
+    }
+    return a.type === 'Lent'
+      ? { entries: [{ account: 'wallet', amount: -amt }, { account: 'lent', amount: amt }] }
+      : { entries: [{ account: 'lent', amount: -amt }, { account: 'wallet', amount: amt }] }
+  }
+  if (a.who === 'Borrowing') {
+    return a.type === 'Borrowed'
+      ? { entries: [{ account: 'loan', amount: -amt }, { account: 'wallet', amount: amt }] }
+      : { entries: [{ account: 'wallet', amount: -amt }, { account: 'loan', amount: amt }] }
+  }
+  return null
+}
+
+/** Where the account actually stands, which the replay has to arrive at. */
+const TODAY = { wallet: 2480, lent: 1240, loan: -380, 'loan.int': -8.9 }
+
+/** And what it holds, in shares. The order is the order the portfolio reads
+ *  in, because the holdings list is now derived and an account's row appears
+ *  the first time the ledger names it. */
+const TODAY_SHARES: [string, number][] =
+  [['AAPL', 23.42], ['NVDA', 26.94], ['VOO', 5.6], ['TSLA', 4.8]]
+
+export function openBooks(): void {
+  ledger.reset()
+  const rows = [...state.activity].reverse()      // oldest first
+  const after: Record<string, number> = { wallet: 0, lent: 0, loan: 0, 'loan.int': 0 }
+  // Every ticker the replay touches, plus the ones the account opened with:
+  // a trade in something not in the opening position still has to arrive at
+  // the right count, and a ticker with no history has to arrive at its.
+  const units = new Map<string, number>(TODAY_SHARES.map(([t]) => [t, 0]))
+  for (const a of rows) {
+    const legs = legsFor(a)
+    if (!legs) continue
+    for (const e of legs.entries) {
+      if (e.account in after) after[e.account] += e.amount
+      if (!e.account.startsWith('held:')) continue
+      const t = e.account.slice(5)
+      units.set(t, (units.get(t) ?? 0) + e.amount)
+    }
+  }
+  const opening = Object.entries(TODAY)
+    .map(([id, target]) => ({ account: id, amount: Math.round((target - after[id]) * 100) / 100 }))
+    .filter((e) => Math.abs(e.amount) > 1e-9)
+  const sum = opening.reduce((t, e) => t + e.amount, 0)
+  // Each ticker balances against its own "before this record" account. One
+  // shared account cannot do it: a posting has to come to nothing in every
+  // currency it touches, and Apple and Tesla are two of them.
+  const target = new Map(TODAY_SHARES)
+  const held: ledger.Entry[] = []
+  for (const [t, replayed] of units) {
+    const short = Math.round(((target.get(t) ?? 0) - replayed) * 1e6) / 1e6
+    if (Math.abs(short) < 1e-6) continue
+    held.push({ account: 'held:' + t, amount: short },
+              { account: 'open:' + t, amount: -short })
+  }
+  ledger.post({
+    ref: 'TKN-OPENING', at: rows[0]?.at ?? new Date().toISOString(),
+    what: 'What the account already held',
+    entries: [...opening, { account: 'opening', amount: -Math.round(sum * 100) / 100 }, ...held],
+  })
+  for (const a of rows) {
+    const legs = legsFor(a)
+    if (!legs) continue
+    ledger.post({ ref: a.ref, at: a.at, what: activityLine(a), kind: legs.kind, entries: legs.entries })
+  }
+}
+
+/** How a movement reads on the statement. The activity list has columns for
+ *  who and what; a statement line has one sentence. */
+function activityLine(a: Activity): string {
+  if (a.asset) return `${a.type} ${sharesOf(a.asset.shares)} ${a.asset.ticker} ${a.type === 'Sent' ? 'to' : 'from'} ${a.who}`
+  if (a.kind === 'grow') return `${a.type} \u00b7 ${a.who}`
+  // A trade is "of", not "to" or "from": you bought $420 of Apple, you did not
+  // buy $420 to it.
+  if (a.kind === 'trade') return `${a.type} ${usd(Math.abs(a.amount))} of ${a.who}`
+  return `${a.type} ${usd(Math.abs(a.amount))} ${a.amount >= 0 ? 'from' : 'to'} ${a.who}`
+}
+
 export function recall(): void {
   try {
     state.unlocked = sessionStorage.getItem(SESSION) === '1'
@@ -369,22 +510,32 @@ export const state: State = {
     address: '12 Awolowo Road, Ikoyi, Lagos',
     joined: 'March 2024',
   },
-  cash: 2480,
-  lent: 1240,
-  interestPaid: 18.6,
-  borrowed: 380,
-  interestOwed: 8.9,
+  get cash() { return ledger.balanceOf('wallet') },
+  get lent() { return ledger.balanceOf('lent') },
+  get interestPaid() { return ledger.paidOf('lend-interest') },
+  get borrowed() { return -ledger.balanceOf('loan') },
+  get interestOwed() { return -ledger.balanceOf('loan.int') },
   borrowLimit: 1860,
   rates: { lend: 4.8, borrow: 9.4, collateral: 140 },
   fees: { trade: 0.5, fx: 0 },
   kyc: { status: 'none' },
   usedThisMonth: 180,
-  holdings: [
-    { ticker: 'AAPL', name: 'Apple', shares: 23.42, price: 224.1, dayPct: 1.2 },
-    { ticker: 'NVDA', name: 'Nvidia', shares: 26.94, price: 118.9, dayPct: 2.4 },
-    { ticker: 'VOO', name: 'Vanguard S&P 500', shares: 5.6, price: 511.57, dayPct: 0.4 },
-    { ticker: 'TSLA', name: 'Tesla', shares: 4.8, price: 248.5, dayPct: -0.8 },
-  ],
+  // Not a list that is kept up to date beside the ledger — a reading of it.
+  // A share in this array exists because a movement put it in custody, and
+  // its price and day move come off the catalogue, so nothing here can drift
+  // from either. What the account opened with is in OPENING_SHARES.
+  get holdings() {
+    return ledger.held().map((h) => {
+      const c = find(h.ticker)
+      return {
+        ticker: h.ticker,
+        name: c?.name ?? h.ticker,
+        shares: h.shares,
+        price: c?.price ?? 0,
+        dayPct: c?.dayPct ?? 0,
+      }
+    })
+  },
   bucket: [],
   watchlist: ['AAPL', 'NVDA', 'TSLA', 'MSFT', 'VOO'],
   // Two on Tokkenly and two not, so the screen that refuses to hand a share to
@@ -442,7 +593,7 @@ export const state: State = {
     { ref: 'TKN-2S4X70', kind: 'grow', who: 'Borrowing', type: 'Borrowed', amount: 500, at: iso('2026-08-12T10:40'), settled: true },
     { ref: 'TKN-2R7W58', kind: 'payment', who: 'Chidi Nwosu', type: 'Received', amount: 65, at: iso('2026-08-11T13:05'), settled: true },
     { ref: 'TKN-1Q6V47', kind: 'payment', who: 'MTN airtime', type: 'Sent', amount: -8, at: iso('2026-08-09T19:48'), settled: true },
-    { ref: 'TKN-1P5U36', kind: 'trade', who: 'Vanguard S&P 500', type: 'Bought', amount: -300, fee: 1.49, at: iso('2026-08-07T15:22'), settled: true },
+    { ref: 'TKN-1P5U36', kind: 'trade', who: 'S&P 500 ETF', type: 'Bought', amount: -300, fee: 1.49, at: iso('2026-08-07T15:22'), settled: true },
     { ref: 'TKN-1N4T25', kind: 'payment', who: 'Ngozi Eze', type: 'Sent', amount: -150, at: iso('2026-08-05T11:30'), settled: true },
     { ref: 'TKN-0M3S14', kind: 'grow', who: 'Lending', type: 'Lent', amount: -740, at: iso('2026-08-03T09:15'), settled: true },
     { ref: 'TKN-0L2R03', kind: 'payment', who: 'Ikeja Electric', type: 'Sent', amount: -34, at: iso('2026-08-01T07:40'), settled: true },
@@ -705,6 +856,22 @@ function record(a: Omit<Activity, 'ref' | 'at' | 'settled'> & Partial<Activity>)
   return entry
 }
 
+/** One movement, written down twice: as the row a person reads, and as the
+ *  entries that have to balance. The same reference on both, so the receipt
+ *  and the statement are provably the same event — and because `post` refuses
+ *  an unbalanced set, an action cannot record a movement it cannot account
+ *  for. That is the whole guarantee. */
+function move(
+  a: Omit<Activity, 'ref' | 'at' | 'settled'> & Partial<Activity>,
+  what: string,
+  entries: ledger.Entry[],
+  extra: { kind?: string; rate?: number; pair?: string } = {},
+): Activity {
+  const entry = record(a)
+  ledger.post({ ref: entry.ref, at: entry.at, what, entries, ...extra })
+  return entry
+}
+
 export const actions = {
   /** The connection came or went. Nothing else in the app polls for this:
    *  the browser tells us, and every screen re-reads from here. */
@@ -761,16 +928,38 @@ export const actions = {
 
   send(to: string, amount: number): Activity {
     actions.countAgainstLimit(amount)
-    state.cash -= amount
-    const a = record({ kind: 'payment', who: to, type: 'Sent', amount: -amount })
+    const a = move(
+      { kind: 'payment', who: to, type: 'Sent', amount: -amount },
+      `Sent ${usd(amount)} to ${to}`,
+      // Dollars leave your wallet and arrive in theirs. On a Base address the
+      // far end is the network; on a Tokkenly account it is that account.
+      [{ account: 'wallet', amount: -amount }, { account: 'chain', amount }],
+    )
     changed()
     return a
   },
 
-  addMoney(amount: number, bankId: string): Activity {
+  addMoney(amount: number, bankId: string, rate = state.ngnPerUsd): Activity {
     actions.countAgainstLimit(amount)
     const bank = state.banks.find((b) => b.id === bankId)
-    state.cash += amount
+    const naira = Math.round(amount * rate)
+    const ref = reference()
+    // Named the first time it is used, so the statement says GTBank rather
+    // than the id it happens to be keyed by.
+    ledger.account('bank:' + bankId, bank ? bank.name + ' \u00b7\u00b7\u00b7\u00b7 ' + bank.last4 : 'Your bank')
+    // Two postings, because one entry cannot be denominated twice. Naira
+    // leaves the bank and reaches our desk; dollars leave the desk and reach
+    // the wallet. The rate is on both, so the pair can be checked.
+    ledger.post({
+      ref, at: new Date().toISOString(), pair: ref, rate,
+      what: `${bank?.name ?? 'Your bank'} paid in \u20a6${naira.toLocaleString('en-US')}`,
+      entries: [{ account: 'bank:' + bankId, amount: -naira }, { account: 'desk.ngn', amount: naira }],
+    })
+    ledger.post({
+      ref, at: new Date().toISOString(), pair: ref, rate,
+      what: `Converted to ${usd(amount)} and paid to your wallet`,
+      entries: [{ account: 'desk.usd', amount: -amount }, { account: 'wallet', amount }],
+    })
     const a = record({
       kind: 'payment', who: bank ? bank.name : 'Bank transfer',
       type: 'Received', amount, note: 'Bought dollars',
@@ -779,10 +968,22 @@ export const actions = {
     return a
   },
 
-  convert(amount: number, bankId: string): Activity {
+  convert(amount: number, bankId: string, rate = state.ngnPerUsd): Activity {
     actions.countAgainstLimit(amount)
     const bank = state.banks.find((b) => b.id === bankId)
-    state.cash -= amount
+    const naira = Math.round(amount * rate)
+    const ref = reference()
+    ledger.account('bank:' + bankId, bank ? bank.name + ' \u00b7\u00b7\u00b7\u00b7 ' + bank.last4 : 'Your bank')
+    ledger.post({
+      ref, at: new Date().toISOString(), pair: ref, rate,
+      what: `Took ${usd(amount)} from your wallet`,
+      entries: [{ account: 'wallet', amount: -amount }, { account: 'desk.usd', amount }],
+    })
+    ledger.post({
+      ref, at: new Date().toISOString(), pair: ref, rate,
+      what: `Paid \u20a6${naira.toLocaleString('en-US')} to ${bank?.name ?? 'your bank'}`,
+      entries: [{ account: 'desk.ngn', amount: -naira }, { account: 'bank:' + bankId, amount: naira }],
+    })
     const a = record({
       kind: 'payment', who: bank ? bank.name : 'Bank transfer',
       type: 'Sent', amount: -amount, note: 'Converted to naira',
@@ -804,12 +1005,24 @@ export const actions = {
     const spend = Math.max(0, Math.min(dollars, maxInvestable()))
     const fee = tradeFee(spend)
     const shares = spend / c.price
-    const h = holding(ticker)
-    if (h) h.shares += shares
-    else state.holdings.push({ ticker: c.ticker, name: c.name, shares, price: c.price, dayPct: c.dayPct })
-    state.cash -= spend + fee
     actions.countAgainstLimit(spend + fee)
-    const activity = record({ kind: 'trade', who: c.name, type: 'Bought', amount: -(spend + fee), fee })
+    // Both halves, in one movement that has to balance in both of the things
+    // it touches. Dollars: the wallet pays the market for the shares and pays
+    // us the fee. Apple: the same number of shares leaves the market and
+    // arrives in custody in your name. The holdings list is a reading of that
+    // second half, so the position cannot be credited without the trade that
+    // bought it — and the shares are counted in shares rather than valued in
+    // dollars, because an account holding "the value of your Apple" would move
+    // every time the market did, which is not a thing a ledger account does.
+    const activity = move(
+      { kind: 'trade', who: c.name, type: 'Bought', amount: -(spend + fee), fee },
+      `Bought ${usd(spend)} of ${c.name}`,
+      [{ account: 'wallet', amount: -(spend + fee) },
+       { account: 'market', amount: spend },
+       { account: 'fees', amount: fee },
+       { account: 'float:' + c.ticker, amount: -shares },
+       { account: 'held:' + c.ticker, amount: shares }],
+    )
     changed()
     return { activity, shares, fee, invested: spend }
   },
@@ -824,12 +1037,19 @@ export const actions = {
     const value = Math.max(0, Math.min(dollars, h.shares * h.price))
     const fee = tradeFee(value)
     const shares = value / h.price
-    h.shares -= shares
-    if (h.shares < 1e-6) state.holdings.splice(state.holdings.indexOf(h), 1)
     // Selling $100 puts $99.50 in the wallet: the fee comes out of what you
-    // get, not out of what you sold, which is the figure on the review.
-    state.cash += value - fee
-    const activity = record({ kind: 'trade', who: c.name, type: 'Sold', amount: value - fee, fee })
+    // get, not out of what you sold, which is the figure on the review. The
+    // shares go back the way they came, and a position sold out entirely
+    // leaves the list because nothing is left in custody to read.
+    const activity = move(
+      { kind: 'trade', who: c.name, type: 'Sold', amount: value - fee, fee },
+      `Sold ${usd(value)} of ${c.name}`,
+      [{ account: 'market', amount: -value },
+       { account: 'wallet', amount: value - fee },
+       { account: 'fees', amount: fee },
+       { account: 'held:' + c.ticker, amount: -shares },
+       { account: 'float:' + c.ticker, amount: shares }],
+    )
     changed()
     return { activity, shares, fee, proceeds: value - fee }
   },
@@ -855,52 +1075,73 @@ export const actions = {
     if (!h || !c) throw new Error('Nothing held in ' + ticker)
     const value = Math.max(0, Math.min(dollars, h.shares * h.price))
     const shares = value / h.price
-    h.shares -= shares
-    if (h.shares < 1e-6) state.holdings.splice(state.holdings.indexOf(h), 1)
     // Rule from item 06: one limit policy for every outflow. A share leaving
     // the account is an outflow — an unverified account handing somebody
     // $5,000 of Apple is exactly what a ceiling is for — so it counts against
     // the month like a payment does.
     actions.countAgainstLimit(value)
-    const activity = record({
-      kind: 'trade', who: to, type: 'Sent', amount: -value,
-      asset: { ticker: c.ticker, shares, price: h.price },
-    })
+    // Units, and no money. The movement balances in Apple and touches no
+    // dollar account at all, which is the ledger saying the same thing the
+    // screen does: this is not a sale, nobody was paid, and the position
+    // simply is not yours any more.
+    const activity = move(
+      { kind: 'trade', who: to, type: 'Sent', amount: -value,
+        asset: { ticker: c.ticker, shares, price: h.price } },
+      `Sent ${sharesOf(shares)} ${c.ticker} to ${to}`,
+      [{ account: 'held:' + c.ticker, amount: -shares },
+       { account: 'sent:' + c.ticker, amount: shares }],
+    )
     changed()
     return { activity, shares, value }
   },
 
   borrow(amount: number): Activity {
     actions.countAgainstLimit(amount)
-    state.borrowed += amount
-    state.cash += amount
-    const a = record({ kind: 'grow', who: 'Borrowing', type: 'Borrowed', amount })
+    // The loan account goes negative by what you drew, because it is not
+    // yours. The wallet goes up by the same. Nothing was created.
+    const a = move(
+      { kind: 'grow', who: 'Borrowing', type: 'Borrowed', amount },
+      `Drew ${usd(amount)} against your shares`,
+      [{ account: 'loan', amount: -amount }, { account: 'wallet', amount }],
+    )
     changed()
     return a
   },
 
   repay(amount: number): Activity {
+    // Interest first, then principal. Both are liabilities of yours, so
+    // clearing them moves money from one of your accounts to another — the
+    // interest was charged when it accrued, not when it is paid.
     const toInterest = Math.min(amount, state.interestOwed)
-    state.interestOwed -= toInterest
-    state.borrowed = Math.max(0, state.borrowed - (amount - toInterest))
-    state.cash -= amount
-    const a = record({ kind: 'grow', who: 'Borrowing', type: 'Repaid', amount: -amount })
+    const toPrincipal = Math.min(amount - toInterest, state.borrowed)
+    const a = move(
+      { kind: 'grow', who: 'Borrowing', type: 'Repaid', amount: -(toInterest + toPrincipal) },
+      `Repaid ${usd(toInterest + toPrincipal)} of what you owe`,
+      [{ account: 'wallet', amount: -(toInterest + toPrincipal) },
+       { account: 'loan.int', amount: toInterest },
+       { account: 'loan', amount: toPrincipal }],
+    )
     changed()
     return a
   },
 
   lend(amount: number): Activity {
-    state.cash -= amount
-    state.lent += amount
-    const a = record({ kind: 'grow', who: 'Lending', type: 'Lent', amount: -amount })
+    const a = move(
+      { kind: 'grow', who: 'Lending', type: 'Lent', amount: -amount },
+      `Lent ${usd(amount)} into the pool`,
+      [{ account: 'wallet', amount: -amount }, { account: 'lent', amount }],
+    )
     changed()
     return a
   },
 
   takeBack(amount: number): Activity {
-    state.lent = Math.max(0, state.lent - amount)
-    state.cash += amount
-    const a = record({ kind: 'grow', who: 'Lending', type: 'Taken back', amount })
+    const back = Math.min(amount, state.lent)
+    const a = move(
+      { kind: 'grow', who: 'Lending', type: 'Taken back', amount: back },
+      `Took ${usd(back)} back out of the pool`,
+      [{ account: 'lent', amount: -back }, { account: 'wallet', amount: back }],
+    )
     changed()
     return a
   },
@@ -1018,7 +1259,15 @@ export const actions = {
         spent += Math.abs(activity.amount)
       }
     } finally { state.fees.trade = kept }
-    state.cash -= fee
+    // The one fee for the whole payment, posted on its own so the statement
+    // shows a single charge rather than one per company.
+    if (fee > 0) {
+      move(
+        { kind: 'trade', who: 'Tokkenly', type: 'Fee', amount: -fee, fee },
+        `Fee on one payment for ${lines.length} ${lines.length === 1 ? 'company' : 'companies'}`,
+        [{ account: 'wallet', amount: -fee }, { account: 'fees', amount: fee }],
+      )
+    }
     spent += fee
     state.bucket = []
     changed()

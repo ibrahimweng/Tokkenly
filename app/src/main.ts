@@ -4,7 +4,7 @@ import './styles/components.css'
 
 import { h } from './ui'
 import { start, current, go, openSheet, type Route } from './router'
-import { state, actions, subscribe, applyTheme, recall, IDLE_LOCK_MS } from './state'
+import { state, actions, subscribe, applyTheme, recall, openBooks, IDLE_LOCK_MS } from './state'
 import { onBreakpointChange } from './responsive'
 import { buildSheet } from './sheets'
 import { dialogClosed } from './components/sheet'
@@ -17,6 +17,7 @@ import { investScreen, sellScreen } from './screens/invest'
 import { growScreen, borrowScreen, repayScreen, earnScreen, takeOutScreen } from './screens/grow'
 import { historyScreen } from './screens/history'
 import { accountScreen } from './screens/settings'
+import { statementScreen } from './screens/statement'
 import { signInScreen, signUpScreen } from './screens/auth'
 import { sendScreen, receiveScreen, addMoneyScreen, convertScreen, sendSharesScreen } from './screens/money'
 import { allScreen } from './screens/all'
@@ -79,6 +80,7 @@ function screenFor(r: Route): HTMLElement {
   // their own addresses before the split; they still resolve, so a bookmark,
   // a palette entry from an older session and every link already in the wild
   // land where the thing they name now lives.
+  if (a === 'statement') return statementScreen()
   if (a === 'account') return accountScreen(b)
   if (a === 'security') return accountScreen('security')
   if (a === 'support') return accountScreen('support')
@@ -170,6 +172,7 @@ addEventListener('keydown', (e) => {
 addEventListener('online', () => actions.setOnline(true))
 addEventListener('offline', () => actions.setOnline(false))
 
+openBooks()
 recall()
 applyTheme()
 subscribe(() => render(current()))

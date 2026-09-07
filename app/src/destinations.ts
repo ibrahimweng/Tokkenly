@@ -53,6 +53,9 @@ export const DESTINATIONS: Destination[] = [
   { label: 'Payments', to: '/activity?filter=payments', place: 'history', kind: 'screen', primary: true, also: 'sent received' },
   { label: 'Trades', to: '/activity?filter=trades', place: 'history', kind: 'screen', primary: true, also: 'bought sold shares' },
   { label: 'Borrowing and lending', to: '/activity?filter=grow', place: 'history', kind: 'screen', primary: true, also: 'grow earn interest borrowed repaid lent' },
+  { label: 'Statement', to: '/statement', place: 'history', kind: 'screen', primary: true,
+    also: 'ledger accounts double entry proof balance where money came from',
+    hint: 'Every movement, both ends' },
   { label: 'Notifications', to: '/activity?filter=alerts', place: 'history', kind: 'screen', primary: true,
     also: 'alerts bell unread told me announcements sign in filled', hint: 'What we have told you' },
 
