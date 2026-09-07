@@ -391,7 +391,7 @@
 .ruler-note { text-align: center; color: var(--subtle); font-size: 12px; }
 
 /* ---------- tables ---------- */
-.table-scroll { overflow-x: auto; }
+.table-scroll { overflow-x: auto; overscroll-behavior-x: contain; }
 .table { width: 100%; border-collapse: collapse; }
 .table th {
   text-align: left; font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
@@ -2124,7 +2124,9 @@ th.right .th-sort { flex-direction: row-reverse; }
   .desk-only { display: none; }
 
   .chip-row.chip-scroll {
-    flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
+    /* Its own overscroll stays its own: a chip row that runs out of chips
+       should stop, not hand the gesture up to the page. */
+    flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none;
     /* the row bleeds to both edges so a chip mid-scroll is not clipped by a
        gutter it cannot cross */
     margin-inline: calc(var(--content-pad-x) * -1);
@@ -2135,7 +2137,7 @@ th.right .th-sort { flex-direction: row-reverse; }
 
   .row.indices {
     flex-direction: row !important;
-    overflow-x: auto; scrollbar-width: none; gap: 8px;
+    overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; gap: 8px;
     margin-inline: calc(var(--content-pad-x) * -1);
     padding-inline: var(--content-pad-x);
   }

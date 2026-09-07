@@ -40,8 +40,27 @@
 :root { color-scheme: dark; }
 :root[data-theme='light'] { color-scheme: light; }
 html, body { height: 100%; }
+/* The page stops where it ends.
+ *
+ *  The document is the scroller here — nothing inside it owns a scrollbar —
+ *  so a rubber band at either end drags the whole app off its own edge and
+ *  shows what is behind it. Behind it is the canvas, and the sidebar sitting
+ *  on top of the canvas is a different colour, so the bounce opened a band of
+ *  one against the other: a brick of a screen that is supposed to be a
+ *  surface. Painting the gutter cannot fix it, because at the top edge there
+ *  are two colours and the gutter can only be one.
+ *
+ *  Both axes. Sideways there is nothing to overscroll — no screen in here
+ *  scrolls horizontally — but the gesture is still live, and on a trackpad
+ *  it is the one that walks backwards through history. An app does not go
+ *  anywhere when you brush sideways on it. The cost, stated: two-finger
+ *  swipe-back stops working, and so does pull-to-refresh on Android. Both
+ *  are browser affordances rather than this product's, and both have a
+ *  button. */
+html { overscroll-behavior: none; background: var(--canvas); }
 body {
   margin: 0;
+  overscroll-behavior: none;
   background: var(--canvas);
   color: var(--ink);
   font-family: var(--font);

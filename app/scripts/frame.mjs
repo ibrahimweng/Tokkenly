@@ -106,5 +106,44 @@ for (const [w, tag] of [[1440, 'desktop'], [1100, 'tablet'], [390, 'phone']]) {
   await p.close()
 }
 
+/* The page ends where it ends.
+   The document is the scroller, so a rubber band at either end drags the app
+   off its own edge and shows the canvas behind it — against a sidebar that is
+   a different colour, which is the band that started this. Sideways there is
+   nothing to overscroll and the gesture is still live, and on a trackpad it
+   walks backwards through history. Both axes, both widths, every route. */
+console.log('\nNO OVERSCROLL, EITHER WAY')
+{
+  for (const w of [1440, 390]) {
+    const p = await b.newPage({ viewport: { width: w, height: 900 } })
+    await seen(p)
+    await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
+    const loose = []
+    for (const r of ROUTES) {
+      await p.goto('about:blank')
+      await p.goto(B + r, { waitUntil: 'networkidle' })
+      await p.waitForTimeout(120)
+      const said = await p.evaluate(() => {
+        const h = getComputedStyle(document.documentElement)
+        return {
+          x: h.overscrollBehaviorX, y: h.overscrollBehaviorY, bg: h.backgroundColor,
+          wide: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        }
+      })
+      if (said.x !== 'none' || said.y !== 'none' || said.wide !== 0) loose.push(`${r} ${JSON.stringify(said)}`)
+    }
+    ok(`at ${w} nothing bounces and nothing runs off sideways`,
+       loose.length === 0, loose.slice(0, 3).join(' | '))
+    // And the gutter is painted, so a browser that ignores the rule above
+    // still has the right colour behind the page rather than a system grey.
+    const bg = await p.evaluate(() => getComputedStyle(document.documentElement).backgroundColor)
+    const canvas = await p.evaluate(() =>
+      getComputedStyle(document.documentElement).getPropertyValue('--canvas').trim())
+    ok(`  and at ${w} the page is painted on the canvas colour, not on nothing`,
+       bg !== 'rgba(0, 0, 0, 0)', `${bg} against ${canvas}`)
+    await p.close()
+  }
+}
+
 console.log('\nerrors: ' + (errs.length ? errs.join('\n') : 'none'))
 await b.close()
