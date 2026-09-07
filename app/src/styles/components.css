@@ -108,10 +108,10 @@
    figures and the action on the borrowing card, which put a picture in the
    middle of a sentence and made the button read as belonging to the art
    rather than to the offer above it. */
-.prod-art { height: 132px; overflow: hidden; flex: none; margin-top: 20px; }
+.prod-art { height: 188px; overflow: hidden; flex: none; margin-top: 20px; }
 .prod-art svg { display: block; width: 100%; height: 100%; }
 /* Taller, so the composition does not run out before the card does. */
-.card.prod { min-height: 460px; }
+.card.prod { min-height: 528px; }
 
 /* The name of the thing, at the size a name gets. It used to be the eyebrow —
    eleven pixels of caps, the quietest type on the card, carrying the one word
@@ -151,7 +151,7 @@
   /* One card at a time on a phone, so there is no second card to be as tall
      as, and 460 is a screenful of one offer. */
   .card.prod { min-height: 0; }
-  .prod-art { height: 108px; }
+  .prod-art { height: 150px; }
   .prod-title { font-size: 24px; line-height: 30px; }
   .prod-figure { font-size: 24px; line-height: 30px; }
 }
@@ -1155,13 +1155,11 @@ th.right .th-sort { flex-direction: row-reverse; }
 .headline { display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
 .t-figure { font-size: 48px; line-height: 52px; font-weight: 600; letter-spacing: -0.02em; }
 .delta { display: flex; align-items: baseline; gap: 8px; }
-.headline-actions { display: flex; gap: 12px; flex: none; }
 .btn-wide { width: 148px; height: 48px; }
 
 @media (max-width: 899px) {
   .headline { align-items: flex-start; flex-direction: column; gap: 16px; }
   .t-figure { font-size: 36px; line-height: 44px; }
-  .headline-actions { width: 100%; }
   .btn-wide { width: auto; flex: 1 1 0; }
 }
 

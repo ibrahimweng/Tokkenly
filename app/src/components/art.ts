@@ -240,3 +240,207 @@ export function dotArt(
   }
   return svg
 }
+
+/* ===========================================================================
+   Objects, drawn as particle fields.
+
+   The three fields above are compositions: hand-placed cells, lifted from
+   Figma, tiled into a texture. A texture is the right answer for a background
+   and the wrong one for a picture — repeated four times across a card it says
+   nothing, which is why the two product cards read as having art on them
+   rather than art about them.
+
+   These are objects. A stack of coins for lending, a wallet for borrowing:
+   one simple thing per card, stated once, at a size you can see. Composing one
+   by hand at the resolution a wallet needs would be four thousand characters
+   of base 36, so these are generated from a shape and then broken up — which
+   is a departure from the note at the top of this file, and a deliberate one.
+   That note is about not re-deriving a drawing somebody made; nobody drew
+   these.
+
+   The look is the one in the reference: a form stippled solid at one end,
+   coming apart into loose specks at the other. Three parts to it —
+
+     the form      cells inside the shape, kept with a probability that falls
+                   along the drift axis, so the left stays solid and the right
+                   opens up
+     the break     cells just outside the shape, near where it is coming apart,
+                   thinning with distance
+     the dust      a far sparser scatter that carries on past the form, so the
+                   band has something in it rather than ending in a hard edge
+
+   Every one of those is decided by a hash of the cell's own coordinates, so
+   the picture is identical on every render. The tree here is rebuilt on every
+   state change; a field that used Math.random would boil.
+   =========================================================================== */
+
+/** A point in the shape's own grid. `d` is how far it is from the solid form,
+ *  in cells: 0 inside it, growing outward. The level reads that. */
+interface Speck { x: number; y: number; r: number; d: number }
+
+export interface ObjectField { cols: number; rows: number; dots: Speck[] }
+
+/** True where the solid form is. Coordinates are cells, not pixels. */
+type Mask = (x: number, y: number) => boolean
+
+const OBJ = { cols: 116, rows: 42 }
+
+/** Deterministic per-cell noise in [0, 1). Cheap, and stable across renders. */
+function noise(x: number, y: number): number {
+  let h = Math.imul(x + 11, 374761393) ^ Math.imul(y + 7, 668265263)
+  h = Math.imul(h ^ (h >>> 13), 1274126177)
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296
+}
+
+/* ---- shapes, in cell coordinates ---- */
+const disc = (cx: number, cy: number, r: number): Mask =>
+  (x, y) => (x - cx) ** 2 + (y - cy) ** 2 <= r * r
+const ringGap = (cx: number, cy: number, a: number, b: number): Mask =>
+  (x, y) => { const q = (x - cx) ** 2 + (y - cy) ** 2; return q >= a * a && q <= b * b }
+const rrect = (x0: number, y0: number, x1: number, y1: number, r: number): Mask =>
+  (x, y) => {
+    if (x < x0 || x > x1 || y < y0 || y > y1) return false
+    const dx = Math.max(x0 + r - x, 0, x - (x1 - r))
+    const dy = Math.max(y0 + r - y, 0, y - (y1 - r))
+    return dx * dx + dy * dy <= r * r
+  }
+const any = (...m: Mask[]): Mask => (x, y) => m.some((f) => f(x, y))
+const not = (m: Mask): Mask => (x, y) => !m(x, y)
+const both = (a: Mask, b: Mask): Mask => (x, y) => a(x, y) && b(x, y)
+
+/** Chamfer distance to the nearest solid cell, in cells. Two passes, so the
+ *  whole grid costs one sweep each way rather than a search per cell. */
+function spread(inside: boolean[], w: number, h: number): number[] {
+  const BIG = 1e6
+  const d: number[] = inside.map((v) => (v ? 0 : BIG))
+  const at = (x: number, y: number) => d[y * w + x]
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = y * w + x
+    if (x > 0) d[i] = Math.min(d[i], at(x - 1, y) + 3)
+    if (y > 0) d[i] = Math.min(d[i], at(x, y - 1) + 3)
+    if (x > 0 && y > 0) d[i] = Math.min(d[i], at(x - 1, y - 1) + 4)
+    if (x < w - 1 && y > 0) d[i] = Math.min(d[i], at(x + 1, y - 1) + 4)
+  }
+  for (let y = h - 1; y >= 0; y--) for (let x = w - 1; x >= 0; x--) {
+    const i = y * w + x
+    if (x < w - 1) d[i] = Math.min(d[i], at(x + 1, y) + 3)
+    if (y < h - 1) d[i] = Math.min(d[i], at(x, y + 1) + 3)
+    if (x < w - 1 && y < h - 1) d[i] = Math.min(d[i], at(x + 1, y + 1) + 4)
+    if (x > 0 && y < h - 1) d[i] = Math.min(d[i], at(x - 1, y + 1) + 4)
+  }
+  return d.map((v) => v / 3)
+}
+
+/** Where the form starts coming apart. 0 at the left edge of the object, 1 by
+ *  the time the drift has crossed it. */
+const DRIFT_FROM = 8
+const DRIFT_TO = 74
+
+function makeField(mask: Mask): ObjectField {
+  const { cols, rows } = OBJ
+  const inside: boolean[] = new Array(cols * rows)
+  for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) inside[y * cols + x] = mask(x, y)
+  const dist = spread(inside, cols, rows)
+  const dots: Speck[] = []
+  for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) {
+    const i = y * cols + x
+    const t = Math.max(0, Math.min(1, (x - DRIFT_FROM) / (DRIFT_TO - DRIFT_FROM)))
+    const n = noise(x, y)
+    const d = dist[i]
+    if (inside[i]) {
+      // Solid at the near end, opening up as the drift crosses it.
+      if (n > 1 - 0.88 * t * t) continue
+      dots.push({ x, y, r: 0.46 - 0.14 * t, d: 0 })
+    } else {
+      // What has come off it, and then a far thinner dust carrying on past.
+      const near = 0.62 * Math.exp(-d / 2.6) * (0.18 + 0.82 * t)
+      const far = 0.05 * Math.exp(-d / 16) * t * t
+      if (n > near + far) continue
+      dots.push({ x, y, r: Math.max(0.16, 0.42 * Math.exp(-d / 7)), d })
+    }
+  }
+  // Nearest first, so a rising level pushes the scatter outward from the form
+  // rather than lighting it in reading order.
+  dots.sort((a, b) => a.d - b.d)
+  return { cols, rows, dots }
+}
+
+const built = new Map<string, ObjectField>()
+const field = (key: string, mask: Mask): ObjectField => {
+  let f = built.get(key)
+  if (!f) { f = makeField(mask); built.set(key, f) }
+  return f
+}
+
+/* ---- the two objects ---- */
+
+/** Three coins, overlapping, the front one lowest and most solid. Each is cut
+ *  by the one in front of it, because dots cannot occlude: without the cut,
+ *  three overlapping discs are one blob. The gap inside the edge is the rim,
+ *  and it is what makes a disc read as a coin rather than as a circle. */
+const COIN_R = 13
+const coin = (cx: number, cy: number): Mask =>
+  both(disc(cx, cy, COIN_R), not(ringGap(cx, cy, COIN_R * 0.60, COIN_R * 0.78)))
+export const COINS = (): ObjectField => field('coins', (() => {
+  const cut = (cx: number, cy: number) => disc(cx, cy, COIN_R + 2)
+  return any(
+    both(coin(50, 14), not(cut(35, 20))),
+    both(coin(35, 20), not(cut(20, 26))),
+    coin(20, 26),
+  )
+})())
+
+/** A bifold, the way somebody draws one: a rounded body, the flap edge across
+ *  the upper third, the strap standing off the right, and a line of stitching
+ *  inset from the edge. The stitch is subtracted rather than drawn — a missing
+ *  ring of dots inside the silhouette reads as a seam, and adding one would
+ *  have needed a second colour the card does not have. */
+export const WALLET = (): ObjectField => field('wallet', (() => {
+  const body = rrect(7, 9, 48, 36, 3.5)
+  // The card standing out of it. One, not a fan: a fan of three reads as a
+  // card holder, and the thing under it stops being the subject.
+  const card = rrect(15, 2, 32, 10.4, 1.2)
+  const strap = rrect(44, 17, 55, 29, 2.5)
+  // Taken out again. The flap edge across the upper third and the seam either
+  // side of the strap are gaps rather than lines, because a missing row of
+  // dots is the only line this field can draw.
+  const flap = rrect(7, 17.2, 48, 19, 0.6)
+  const gap = rrect(43.6, 16, 45.2, 30, 0.4)
+  const lip = rrect(13, 8.6, 34, 10.4, 0.4)
+  return both(any(body, card, strap), not(any(flap, gap, lip)))
+})())
+
+/** The object, at a level. The form is always drawn: a wallet with half of it
+ *  missing reads as a fault, not as a figure. What the level moves is how far
+ *  the break and the dust carry — a position you have barely opened shows the
+ *  thing itself and little else, and a full one throws it across the band. */
+export function objectArt(
+  f: ObjectField, at = 1, ramp?: Record<string, string>,
+): SVGSVGElement {
+  const PAINT = ramp ? { ...TONE, ...ramp } : TONE
+  const NS = 'http://www.w3.org/2000/svg'
+  const svg = document.createElementNS(NS, 'svg')
+  svg.setAttribute('viewBox', `0 0 ${f.cols * CELL} ${f.rows * CELL}`)
+  svg.setAttribute('width', '100%')
+  svg.setAttribute('height', '100%')
+  // The object is at the left, so the left is what must survive a crop.
+  svg.setAttribute('preserveAspectRatio', 'xMinYMid slice')
+  svg.setAttribute('aria-hidden', 'true')
+  svg.setAttribute('focusable', 'false')
+
+  const loose = f.dots.filter((p) => p.d > 0).length
+  const wake = Math.round(loose * Math.max(0, Math.min(1, at)))
+  let seen = 0
+  for (const p of f.dots) {
+    const c = document.createElementNS(NS, 'circle')
+    c.setAttribute('cx', String(p.x * CELL + CELL / 2))
+    c.setAttribute('cy', String(p.y * CELL + CELL / 2))
+    c.setAttribute('r', String(p.r * CELL))
+    let key: string
+    if (p.d === 0) key = 'c'
+    else { seen += 1; key = seen <= wake ? (p.d < 3 ? 'b' : 'a') : SLEEP }
+    c.setAttribute('fill', PAINT[key] ?? PAINT.b)
+    svg.appendChild(c)
+  }
+  return svg
+}

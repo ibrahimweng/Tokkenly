@@ -245,17 +245,12 @@ function detailed(): HTMLElement {
           h('span', {},
             h('span', { class: (move.amount >= 0 ? 'pos' : 'warn') + ' t-body-strong',
               text: `${move.amount >= 0 ? '+' : ''}${money(move.amount)} (${move.amount >= 0 ? '+' : ''}${pct(move.pct)})` }),
-            h('span', { class: 'muted', text: '  Today' }))),
-        h('div', { class: 'chip-row' },
-          h('button', { class: 'btn btn-primary btn-sm', text: 'Send', on: { click: () => go('/send') } }),
-          h('button', { class: 'btn btn-secondary btn-sm', text: 'Receive', on: { click: () => go('/receive') } }))),
+            h('span', { class: 'muted', text: '  Today' })))),
       h('div', { class: 'row grow tiles' },
         quickAction('Buy', 'Shares and funds', icon.buy(), '/invest'),
         // Was "Convert", pointing at Withdraw. Converting is now both
         // directions and neither is a screen of its own: naira in is Add
-        // money, naira out is Send with a bank as the destination. Send is
-        // already a button eight pixels above this row, so the errand this
-        // slot is missing is the other one.
+        // money, naira out is Send with a bank as the destination.
         quickAction('Add money', 'Naira in, dollars out', icon.receive(), '/addmoney'),
         quickAction('Borrow', 'Against your shares', icon.download(), '/grow/borrow'))),
     tasks(),
@@ -325,25 +320,21 @@ function gateway(): HTMLElement {
     // above an empty heading.
     h('header', { class: 'page-header' },
       h('div', { class: 'page-header-row' },
-        h('div', { class: 'stack-12' },
-          h('h1', { class: 't-display', text: greeting() + ', ' + state.person.name.split(' ')[0] }),
-          h('span', { class: 'muted', text: standing() })),
+        h('h1', { class: 't-display', text: greeting() + ', ' + state.person.name.split(' ')[0] }),
         h('div', { class: 'header-actions' },
           // The phone's top bar already carries a search; two of them 40px
           // apart is not twice as findable.
           isMobile() ? null : jumpOpen(), viewToggle(), bell()))),
     h('div', { class: 'headline' },
       h('div', { class: 'stack-8' },
+        h('span', { class: 'muted', text: standing() }),
         h('span', { class: 't-caps subtle', text: 'Total portfolio' }),
         figureWithEye(moneyFigure('t-figure', 'home.total', total)),
         inNaira(total) ? h('span', { class: 'muted t-caption', text: inNaira(total)! }) : null,
         h('span', { class: 'delta' },
           h('span', { class: (move.amount >= 0 ? 'pos' : 'warn') + ' t-body-strong',
             text: `${move.amount >= 0 ? '+' : ''}${money(move.amount)} (${move.amount >= 0 ? '+' : ''}${pct(move.pct)})` }),
-          h('span', { class: 'muted', text: 'today' }))),
-      h('div', { class: 'headline-actions' },
-        link('/send', 'btn btn-primary btn-wide', 'Send'),
-        link('/receive', 'btn btn-secondary btn-wide', 'Receive'))),
+          h('span', { class: 'muted', text: 'today' })))),
     // The three fields answer to the three places money can be, so together
     // they are one reading of the portfolio spread across three doors: what is
     // in shares, what is cash, and what is lent out. The composition

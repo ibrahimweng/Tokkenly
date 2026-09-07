@@ -6295,7 +6295,123 @@ still in the DOM for `words.mjs` to find. The caption is `.ruler-note` now.
      find a way to ask about pixels — two screenshots that must differ is
      usually enough, and needs no image library.
 
-### 11g.44 Still open
+### 11g.44 One frame, and two objects in it
+
+Three things, from three sentences: the cards still looked empty, Home was
+handling money it has no business handling, and the whole product moved under
+the cursor when you walked between two pages.
+
+**The field becomes an object.** The three dot fields in this product are
+compositions — cells placed by hand, lifted from Figma, then tiled four across
+and twice down into a texture. A texture is the right answer behind a heading
+and the wrong one on a card whose job is to say what the card is about. Tiled
+four times across 494 pixels it says nothing, which is why both cards read as
+having art on them rather than art about them.
+
+So the two product cards carry an object each: three overlapping coins for
+lending, a bifold wallet for borrowing. One simple thing per card, stated once,
+at a size you can see.
+
+Composing a wallet by hand at the resolution a wallet needs is four thousand
+characters of base 36, so these are generated — from a shape, then broken up.
+That is a departure from the note at the top of `art.ts`, and a deliberate one:
+that note is about not re-deriving a drawing somebody made, and nobody drew
+these. The style is the reference's — a form stippled solid at one end coming
+apart into loose specks at the other — and it is three things:
+
+- **the form**, cells inside the shape, kept with a probability that falls
+  along a drift axis, so the left stays solid and the right opens up;
+- **the break**, cells just outside the shape near where it is coming apart,
+  thinning with distance from it;
+- **the dust**, a far sparser scatter carrying on past the form, so the band
+  has something in it rather than ending on a hard edge.
+
+Each of those is decided by a hash of the cell's own coordinates. The tree here
+is rebuilt on every state change; a field that used `Math.random` would boil.
+Distance to the form is a two-pass chamfer transform rather than a search per
+cell, so the whole grid costs one sweep each way.
+
+Two drawing tricks worth keeping. Dots cannot occlude, so three overlapping
+discs are one blob: each coin is cut by the one in front of it, and the cut is
+what makes them read as a stack. And the seam on the wallet — the flap edge,
+the gap beside the strap, the line under the card — is *subtracted*. A missing
+row of dots is the only line this field can draw.
+
+**The level moves the scatter, not the form.** The old field was a gauge: it
+woke from the bottom in proportion to your position, which is rule 30 and
+11g.18. A wallet with 45% of it drawn is not a level, it is a rendering fault.
+So the form is always whole and the level decides how far the break and the
+dust carry — a position you have barely opened shows the thing itself and
+little else; a full one throws it across the band. The colour keying stays as
+it was, green for lending and amber for borrowing.
+
+The cards grew to 528 to hold it, and the band to 188.
+
+**Send and Receive leave Home.** This is a place for buying and selling shares.
+Paying a person is not what somebody opens it to do, and two buttons for it
+under the portfolio figure said otherwise — on both views. They live on the
+wallet, which is where the money is, and Home goes back to being a gateway: the
+three doors, the reminders, the recent rows. The sentence that used to sit
+under the greeting moved into the body, where the other view already had it.
+
+**And the frame.** Walking between two pages moved the page. Measured across
+twenty-five routes at 1440:
+
+| | values |
+|---|---|
+| title top | 24, 28, 32, 48, 56, 58 |
+| header height | 24, 32, 40, 48, 58, 64, 72 |
+| first card top | 72, 80, 88, 96, 106, 112, 120 |
+
+Invest started 48 pixels higher than Home. A company page put its title 32
+pixels below the list it came from. None of that is visible in a screenshot of
+any one screen, which is why nothing had ever caught it: it exists only in the
+navigation, and only a measurement across routes can see it.
+
+The header is a grid of two rows that are always there. A **routing row** for
+the back link or the breadcrumbs, which keeps its height when it holds neither,
+because a row that collapses is a row that moves everything under it. And a
+**title row**, fixed, tall enough for the largest heading in the product, with
+the line box set to the track — so a 32px greeting and an 18px page name occupy
+the same rectangle rather than two boxes that merely share a centre. Nothing
+else may live in there; a subtitle under the title is what made Home 72 tall.
+
+Two intermediate versions were wrong in instructive ways. Bottom-anchoring the
+row alone left four values, because the row still grew to whatever sat beside
+the title — a page with a bell and a view toggle centred its heading in a
+taller box than a page with nothing. Setting the h1's line height without
+raising the selector's specificity did nothing at all, because `.page-header
+h1` already set it and came later.
+
+It now measures one value for every route at every width: header 66 and body
+114 on desktop and tablet, 88 and 188 on a phone. `frame.mjs` walks
+thirty-five routes at three widths and asserts exactly that. Reverting the grid
+makes it fail on all five measures at once, which is how I know it is looking.
+
+The cost is real and worth naming: pages without a back link start 42 pixels
+lower than they did, because they now reserve the routing row they were not
+using. That is the trade — a page that never moves, against forty-two pixels of
+what used to be above the fold.
+
+121. **A picture is not a texture.** Repeating a composition until it fills a
+     box makes wallpaper, and wallpaper is what a surface wears when nobody
+     decided what should be on it. If a panel is about something, put that
+     thing in it once, at a size you can see.
+
+122. **When a picture carries data, the data moves what surrounds the subject,
+     not the subject.** A gauge that dissolves the thing it is drawn on stops
+     being read as a level and starts being read as a fault. Keep the form
+     whole and let the level move everything else — how far it scatters, how
+     far it reaches, how much of the field it fills.
+
+123. **A frame is fixed or it is not a frame.** The title, the routing row and
+     the top of the body belong at one height on every page in the product, and
+     a row that has nothing in it keeps its height anyway. Sizing a header to
+     its contents means every page has its own, and the difference is invisible
+     on any single screen and obvious the moment somebody navigates. Measure it
+     across routes, because that is the only place it exists.
+
+### 11g.45 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from
   using the product afterwards. Item 30 was held back until it was asked for,
@@ -6328,6 +6444,15 @@ still in the DOM for `words.mjs` to find. The caption is `.ruler-note` now.
   maintenance requirement counts the interest too. `sellPoint()` and `cover()`
   are one line each and the change would ripple into the borrow composer's
   projection, which is why it is written down here rather than guessed at.
+- The two product cards carry objects (11g.44); Home's three doors and the four
+  onboarding screens still carry the old tiled fields, so the product speaks two
+  art languages until five more objects are composed. What each of those should
+  be — Invest, the wallet place, the Borrow & Lend door — has not been briefed,
+  and the wallet is already spoken for by the Borrow card.
+- The Home door still says "Convert Cash" and opens a page called Transfer,
+  which the code calls the wallet: three names for one place, and Convert names
+  an operation that stopped having a page in 11g.38. The full label-against-
+  destination audit is done and the naming decision is the owner's.
 - The console has no roles. Anybody who can reach `/admin` sees everything, and
   a real one separates support from risk from engineering.
 - Borrow & Lend is not in the MVP brief at all — it is in that brief's *Not
