@@ -37,6 +37,12 @@ export interface ComposerSpec {
    *  selling and borrowing do; moving your own money between your own
    *  accounts does not, and a legal link on a bank transfer is noise. */
   risky?: boolean
+  /** A reason this particular amount must not go through, checked on every
+   *  keystroke. Separate from the ceiling: a ceiling is about your account and
+   *  says "not this much", a guard is about the market and says "not this
+   *  trade". Both take the button away rather than letting somebody press it
+   *  and be refused a screen later. */
+  guard?: (v: number) => { title: string; why: string }[]
 }
 
 /** The way to the full disclosures, under the button that takes the risk. The
@@ -90,6 +96,11 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
 
   const capNote = fieldError()
   capNote.hidden = true
+  // The market's refusal, not the account's. It reads as a callout rather than
+  // a field error because it is not something typed wrongly — the amount is
+  // fine and the book is not.
+  const guardNote = calloutEl('', 'warning')
+  guardNote.hidden = true
   const summaryBox = h('div', { class: 'stack-8 summary' })
   const rightBox = h('div', { class: 'stack grow' })
   const button = h('button', { class: 'btn btn-primary' })
@@ -98,7 +109,21 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
     summaryBox.replaceChildren(...spec.summary(v).map(([k, val, cls]) => kv(k, val, cls ?? '')))
     if (!overlaid && spec.right) rightBox.replaceChildren(spec.right(v))
     button.textContent = spec.action(v)
-    button.toggleAttribute('disabled', v <= 0 || v > spec.max)
+    // Every reason at once. A trade can be refused because it is paused *and*
+    // too big for the book, and showing one of those sends somebody off to fix
+    // half a problem — they come back with a smaller order and meet the pause
+    // they were never told about.
+    const stop = spec.guard?.(v) ?? []
+    guardNote.hidden = !stop.length
+    if (stop.length) {
+      guardNote.replaceChildren(
+        h('span', { html: icon.alert() }),
+        h('div', { class: 'stack-8' },
+          ...stop.map((s) => h('span', { class: 'two-line' },
+            h('span', { class: 't-body-strong', text: s.title }),
+            h('small', { text: s.why })))))
+    }
+    button.toggleAttribute('disabled', v <= 0 || v > spec.max || stop.length > 0)
     // Say why the figure stopped where it did, at the place it stopped.
     capNote.hidden = !capped
     if (capped) {
@@ -120,7 +145,7 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
       // The keypad is the phone's way in. A dialog has a keyboard already, and
       // room for the sentence the phone has to drop.
       mobile ? keypad(comp) : null,
-      summaryBox,
+      summaryBox, guardNote,
       mobile ? null : calloutEl(spec.callout),
       button,
       spec.risky ? riskLink() : null)
@@ -131,7 +156,7 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
   const left = card(
     cardHead(spec.cardLabel, h('span', { class: 'muted', text: spec.cardRight })),
     spec.lede ? spec.lede() : null,
-    comp.el, capNote, summaryBox, calloutEl(spec.callout), button,
+    comp.el, capNote, summaryBox, guardNote, calloutEl(spec.callout), button,
     spec.risky ? riskLink() : null)
   // A stated width, not an inline one: the stacking rule has to be able to
   // release it below 1240, and it cannot outrank a style attribute.

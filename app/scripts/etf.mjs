@@ -30,7 +30,9 @@ const mixed = await p.evaluate(() => ({
   rows: document.querySelectorAll('.table tbody tr').length,
 }))
 ok('a mixed list does not call a fund a company', /ETF/.test(mixed.count ?? ''), mixed.count ?? '')
-ok('and only the funds are tagged', mixed.tags === 2 && mixed.rows === 12,
+// Thirteen now: METAc joined the catalogue as one of the four launch assets.
+// Still two funds, which is the thing being checked.
+ok('and only the funds are tagged', mixed.tags === 2 && mixed.rows === 13,
    `${mixed.tags} tags of ${mixed.rows} rows`)
 ok('the column is Name, not Company',
    /NAME/.test(await p.evaluate(() => document.querySelector('.table thead')?.innerText ?? '')))

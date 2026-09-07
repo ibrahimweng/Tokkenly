@@ -4,10 +4,10 @@ import { card, cardHead, kv } from '../components/bits'
 import { composerScreen, scenarios } from '../components/composer'
 import { table } from '../components/table'
 import { amount } from '../components/bits'
-import { find, discount } from '../catalogue'
+import { find, discount, refusals, priceImpact, minReceived, GUARDS } from '../catalogue'
 import { stockScreen } from './stock'
-import { state, holding, nairaAside, tradeFee, maxInvestable, movementCeiling, ceilingLabel } from '../state'
-import { usd, pct, shares as fmtShares, when } from '../format'
+import { state, holding, nairaAside, tradeFee, maxInvestable, movementCeiling, ceilingLabel, switchOn, assetOn } from '../state'
+import { usd, pct, signed, shares as fmtShares, when } from '../format'
 import { go, openSheet } from '../router'
 
 function orders(ticker?: string): HTMLElement {
@@ -66,15 +66,28 @@ export function investScreen(ticker: string): HTMLElement {
       // wallet. So it comes after what you receive, as a note on the price
       // rather than a line in the bill.
       const gap = v * (1 - c.mark / c.price)   // positive when you pay over
+      const got = v / c.price
       return [
         ['Investment', usd(v)],
         ['Fee', `${usd(tradeFee(v))} · ${state.fees.trade}%`],
         ['Total', usd(v + tradeFee(v))],
-        ['You receive', fmtShares(v / c.price) + ' shares'],
+        ['You receive', fmtShares(got) + ' ' + c.ticker],
+        // The floor under it. A quote is a price at a moment and the book
+        // moves before it settles, so the number that protects somebody is not
+        // the expected one — it is the least they can end up with.
+        ['At least', fmtShares(minReceived(got, GUARDS.slippagePct)) + ' ' + c.ticker],
+        ['Price impact', pct(priceImpact(c, v), 2),
+          priceImpact(c, v) > GUARDS.impactPct ? 'warn' : ''],
         gap > 0
           ? ['Above the real price', `${usd(gap)} · ${pct(Math.abs(discount(c)), 2)}`, 'warn']
           : ['Below the real price', `${usd(-gap)} · ${pct(discount(c), 2)}`, 'pos'],
       ]
+    },
+    // Four ways this trade can be refused, checked on every keystroke rather
+    // than at the review. A button you can press and then be told no is worse
+    // than a button that is honest about being unavailable.
+    guard: (v) => {
+      return refusals(c, v, { trading: !switchOn('buy'), asset: !assetOn(c.ticker) })
     },
     callout: c.kind === 'etf'
       ? `A fund, not a company: one holding spread across ${c.holds ?? 'many'}. Its value can fall as well as rise, and you can get back less than you put in.`
@@ -134,18 +147,28 @@ export function sellScreen(ticker: string): HTMLElement {
     max: maxValue,
     maxLabel: 'What this holding is worth',
     note: 'The cash lands in your wallet, usually within a minute.',
+    // A quarter, a half, three quarters, all of it. Selling is the one
+    // composer where the natural unit is a proportion of what you hold rather
+    // than a round figure: nobody thinks "I will sell two hundred and fifty
+    // dollars of Apple", they think "I will sell half".
     quick: [
-      { label: usd(100, false), value: 100 },
-      { label: usd(250, false), value: 250 },
-      { label: 'Half', value: maxValue / 2 },
+      { label: '25%', value: Math.round(maxValue * 0.25 * 100) / 100 },
+      { label: 'Half', value: Math.round(maxValue * 0.5 * 100) / 100 },
+      { label: '75%', value: Math.round(maxValue * 0.75 * 100) / 100 },
       { label: 'All', value: maxValue },
     ],
     summary: (v) => [
       ['Sale', usd(v)],
       ['Fee', `${usd(tradeFee(v))} · ${state.fees.trade}%`],
       ['You receive', usd(v - tradeFee(v))],
-      ['Shares sold', fmtShares(v / c.price)],
+      ['At least', usd(minReceived(v - tradeFee(v), GUARDS.slippagePct))],
+      ['Shares sold', fmtShares(v / c.price) + ' ' + c.ticker],
+      ['Price impact', pct(priceImpact(c, v), 2),
+        priceImpact(c, v) > GUARDS.impactPct ? 'warn' : ''],
     ],
+    guard: (v) => {
+      return refusals(c, v, { trading: !switchOn('sell'), asset: !assetOn(c.ticker) })
+    },
     callout: 'Selling part of a holding is fine. Whatever you keep carries on tracking the price.',
     risky: true,
     action: (v) => `Sell ${usd(v)} of ${c.name}`,
@@ -157,9 +180,17 @@ export function sellScreen(ticker: string): HTMLElement {
         h('span', { class: 't-display-xl', text: usd(maxValue) }),
         h('span', { class: 'muted', text: `${fmtShares(held.shares)} shares at ${usd(c.price)} each` }),
         h('div', { class: 'stack-12' },
-          kv('Selling', fmtShares(v / c.price) + ' shares'),
-          kv('Left after', fmtShares(Math.max(0, held.shares - v / c.price)) + ' shares'),
-          kv('Worth after', usd(Math.max(0, maxValue - v))))
+          kv('Selling', fmtShares(v / c.price) + ' ' + c.ticker),
+          kv('Left after', fmtShares(Math.max(0, held.shares - v / c.price)) + ' ' + c.ticker),
+          kv('Worth after', usd(Math.max(0, maxValue - v))),
+          // The half a sale screen never showed: what this sale actually
+          // realises against what those shares cost. Somebody selling to take
+          // a profit is asking exactly this, and the answer was two screens
+          // away in a spreadsheet they had to keep themselves.
+          kv('It cost you', usd((v / c.price) * held.each)),
+          kv('You realise', h('span', {
+            class: v - (v / c.price) * held.each >= 0 ? 'pos t-body-strong' : 'warn t-body-strong',
+            text: signed(v - (v / c.price) * held.each) })))
       ),
     bottom: orders(c.ticker),
   })

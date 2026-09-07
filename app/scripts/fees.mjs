@@ -39,7 +39,9 @@ ok('the investment is stated', money(r['Investment']) === 50, JSON.stringify(r['
 ok('the fee is stated, with its rate', /0\.5%/.test(r['Fee'] ?? ''), r['Fee'] ?? 'missing')
 ok('the fee is the rate applied to the amount', money(r['Fee']) === 0.25, r['Fee'] ?? '')
 ok('the total is amount plus fee', money(r['Total']) === 50.25, r['Total'] ?? '')
-ok('and what you receive is spelled out', /shares of/.test(r['You receive'] ?? ''), r['You receive'] ?? '')
+// "0.4205 NVDAc" rather than "0.4205 shares of Nvidia": the review names the
+// token you end up holding, which is the thing that arrives in the wallet.
+ok('and what you receive is spelled out', /[\d.]+ [A-Z]+c$/.test(r['You receive'] ?? ''), r['You receive'] ?? '')
 await p.locator('.scrim .btn-primary').first().click(); await p.waitForTimeout(900)
 const after = await cash()
 ok('the ledger charges the total, not the amount', Math.abs((before - after) - 50.25) < 0.01,

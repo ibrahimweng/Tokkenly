@@ -4,7 +4,7 @@ import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, kv, callout, emptyState, toggle, choice, prefAction } from '../components/bits'
 import { searchField, searchNote } from '../components/search'
 import { rank, onlyNear } from '../match'
-import { state, actions, verified, LIMITS, WALLET } from '../state'
+import { state, actions, verified, eligible, blockedBy, providersDown, LIMITS, WALLET } from '../state'
 import { usd, initialsOf } from '../format'
 import { openSheet, go, current } from '../router'
 import { toast } from '../components/sheet'
@@ -218,6 +218,20 @@ function notificationsBody(): (Node | null)[] {
       toggle({ label: 'Borrowing', sub: 'When what you owe gets close to what your shares can cover',
         ic: icon.alert(), get: () => n.borrowing, set: (v) => actions.setNotify('borrowing', v) })),
     callout('Four, not twenty. A list nobody can read is a list everybody turns off wholesale.'),
+    // The half a switch list never admits: some of these go out whatever you
+    // set, and a product that hides that is a product whose unsubscribe is a
+    // lie. Saying which is which is also the only way the four above mean
+    // anything.
+    card(
+      cardHead('Email', h('span', { class: 'pill', text: 'To ' + state.person.email })),
+      h('span', { class: 'muted',
+        text: 'The switches above are about what interrupts you in the app. These go to your inbox, and three of them go whatever you set.' }),
+      kv('Money in or out, completed or failed', 'Always'),
+      kv('An order filled, or refused', 'Always'),
+      kv('A new sign in, or a change to your security', 'Always'),
+      kv('Everything else', 'Follows the switches above'),
+      h('span', { class: 'muted t-caption',
+        text: 'A person locked out of the app is exactly the person who needs to be told their money moved, so those three are not ours to turn off.' })),
   ]
 }
 
@@ -331,26 +345,127 @@ function paymentsBody(): (Node | null)[] {
   ]
 }
 
+/* ---------------- the wallet ---------------- */
+
+/** What the wallet actually is, and the one thing that makes it self-custodial
+ *  rather than a balance we keep for you.
+ *
+ *  This card exists because the product's central claim — that we cannot move
+ *  your money and cannot be made to — is invisible everywhere else. The
+ *  address is on Receive, the balance is on Transfer, and nowhere did the
+ *  product say who holds the key. A claim nobody can find is a claim nobody
+ *  believes. */
+function walletBody(): (Node | null)[] {
+  return [
+    card(
+      cardHead('Your wallet', h('span', { class: 'pill', text: 'Base' })),
+      h('div', { class: 'stack-8' },
+        h('span', { class: 't-caps subtle', text: 'Address' }),
+        addressRow(WALLET, 'Your address is copied')),
+      kv('Kind', 'Smart account'),
+      kv('Made by', 'Coinbase CDP, when you signed up'),
+      kv('Network', 'Base'),
+      kv('Holds', 'Native USDC and your tokenised shares'),
+      h('span', { class: 'muted t-caption',
+        text: 'Everything you own sits at this address on a public chain. It is not a balance we keep for you.' })),
+    card(
+      cardHead('Who holds the key', h('span', { class: 'pill pos', text: 'You do' })),
+      h('span', { class: 'muted',
+        text: 'Tokkenly never stores your private key and cannot sign a transaction for you. Every movement out of this wallet is one you authorised, which is also why we cannot reverse one.' }),
+      kv('Key held by', 'You, through Coinbase'),
+      kv('Tokkenly can sign', 'Nothing'),
+      kv('Staff access', 'None, at any level'),
+      h('button', { class: 'btn btn-secondary', text: 'Take the wallet elsewhere',
+        on: { click: () => openSheet('export-wallet') } }),
+      h('span', { class: 'muted t-caption',
+        text: 'You can move this wallet to any other app that supports Base. Nothing here holds it hostage.' })),
+    card(
+      cardHead('Gas', h('span', { class: 'pill pos', text: 'We pay it' })),
+      h('span', { class: 'muted',
+        text: 'Every transaction on Base costs a small fee in ETH. You do not hold ETH and should not have to, so we sponsor it for the things the product is for.' }),
+      kv('Sponsored', 'Buying, selling, sending, and cashing out'),
+      kv('Used this month', '$0.42 of $5.00'),
+      kv('What you pay', 'Nothing'),
+      h('span', { class: 'muted t-caption',
+        text: 'Past the monthly ceiling the wallet still works; the fee comes out of your USDC and the screen says so before you confirm.' })),
+    card(
+      cardHead('How you got in'),
+      kv('Invite code', state.invite.code),
+      kv('From', state.invite.by),
+      kv('Joined', new Date(state.invite.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })),
+      h('span', { class: 'muted t-caption',
+        text: 'Tokkenly is invite-only while the pilot runs. Everybody in it came through a code, and that is on your record rather than in a spreadsheet.' })),
+  ]
+}
+
 /* ---------------- verification ---------------- */
 
+/** The five checks, each with its own state.
+ *
+ *  One row per question, because a person who is refused wants to know which
+ *  one and a support agent needs to know before they pick up the phone. The
+ *  tone carries the state and the glyph carries it as well, so the row is not
+ *  reading on colour alone. */
+function checkRows(): HTMLElement {
+  const TONE: Record<string, [string, string]> = {
+    passed: ['pos', '✓'], failed: ['warn', '✕'], review: ['warn', '…'], pending: ['muted', '·'],
+  }
+  const WORD: Record<string, string> = {
+    passed: 'Passed', failed: 'Not passed', review: 'With a person', pending: 'Not run yet',
+  }
+  return h('div', { class: 'stack-12' },
+    ...state.checks.map((c) => {
+      const [tone, mark] = TONE[c.state]
+      return h('div', { class: 'kv' },
+        h('span', { class: 'who' },
+          h('span', { class: 'mark ' + tone, text: mark }),
+          h('span', { class: 'two-line' },
+            h('span', { class: 't-body-strong', text: c.label }),
+            h('small', { text: c.detail || c.what }))),
+        h('span', { class: tone + ' t-caption nowrap', text: WORD[c.state] }))
+    }))
+}
+
 function verificationBody(): (Node | null)[] {
+  const stop = blockedBy()
   if (verified()) {
     return [card(
-      cardHead('Verification', h('span', { class: 'pill pos', text: 'Verified' })),
+      cardHead('Verification',
+        h('span', { class: 'pill' + (eligible() ? ' pos' : ' warn'),
+          text: eligible() ? 'Cleared to trade' : 'Identity checked' })),
+      // The distinction the spec insists on, said out loud. Knowing who
+      // somebody is and being allowed to sell them a security are two
+      // different facts, and a product with one badge for both cannot tell a
+      // person the true thing: we know exactly who you are, and you still
+      // cannot buy this.
+      h('span', { class: 'muted',
+        text: eligible()
+          ? 'Both halves are done: we know who you are, and you may hold tokenised shares in Nigeria.'
+          : 'We know who you are. Permission to hold this instrument is a separate question, and it is the one below that has not passed.' }),
+      checkRows(),
+      stop ? callout(stop.detail, 'warning') : null,
       kv('Checked with', state.kyc.method ?? 'NIN'),
       kv('Number', 'ending ' + (state.kyc.last4 ?? '••••')),
       kv('Checked on', state.kyc.checkedOn ?? ''),
+      kv('Screened by', 'Didit'),
       kv('Monthly limit', usd(LIMITS.verified.monthly, false)),
       kv('One payment', usd(LIMITS.verified.single, false)),
-      h('button', { class: 'link quiet', text: 'Start again',
-        on: { click: () => { actions.resetVerification(); toast('Verification cleared') } } }))]
+      h('div', { class: 'chip-row' },
+        h('button', { class: 'link quiet', text: 'Start again',
+          on: { click: () => { actions.resetVerification(); toast('Verification cleared') } } }),
+        // The refusal is on a path anybody can walk. A state nobody has seen
+        // is a state nobody has designed.
+        h('button', { class: 'link quiet', text: 'Show a refused eligibility check',
+          on: { click: () => { actions.failEligibility(); toast('Eligibility refused, for the demo') } } })))]
   }
   return [card(
     cardHead('Verification', h('span', { class: 'pill', text: 'Not done' })),
     h('span', { class: 'muted',
       text: 'You can browse, add money and buy small amounts without this. Verifying raises what you can move.' }),
+    checkRows(),
     kv('Monthly limit', `${usd(LIMITS.none.monthly, false)} → ${usd(LIMITS.verified.monthly, false)}`),
     kv('One payment', `${usd(LIMITS.none.single, false)} → ${usd(LIMITS.verified.single, false)}`),
+    kv('Screened by', 'Didit'),
     h('button', { class: 'btn btn-primary btn-sm', text: 'Verify with NIN or BVN',
       on: { click: () => go('/verify') } }))]
 }
@@ -468,13 +583,33 @@ export const GROUPS: Group[] = [
   { key: 'payments', label: 'Payment methods', ic: icon.card(),
     status: () => state.banks.length + (state.banks.length === 1 ? ' bank' : ' banks'),
     body: paymentsBody },
+  { key: 'wallet', label: 'Your wallet', ic: icon.wallet(),
+    status: () => 'Base · self-custodial', body: walletBody },
   { key: 'verification', label: 'Verification', ic: icon.check(),
-    status: () => (verified() ? 'Verified' : 'Not done'), body: verificationBody },
+    status: () => (verified() ? (eligible() ? 'Cleared to trade' : 'Not eligible') : 'Not done'),
+    body: verificationBody },
   { key: 'support', label: 'Support', ic: icon.mail(),
     status: () => '1 working day', body: supportBody },
   { key: 'legal', label: 'Risk and legal', ic: icon.info(),
     status: () => 'Disclosures', body: legalBody },
 ]
+
+/** The way into the console, for the people who have one. It sits under the
+ *  groups rather than among them because it is not a setting: it is a
+ *  different product wearing the same shell, and putting it in the list would
+ *  make an account holder think it was theirs. */
+export function opsDoor(): HTMLElement {
+  const down = providersDown()
+  return card(
+    cardHead('Operations', h('span', { class: 'pill' + (down ? ' warn' : ' pos'),
+      text: down ? down + ' degraded' : 'All up' })),
+    h('span', { class: 'muted',
+      text: 'Provider health, the switches that can stop any part of the product, the pilot list, reconciliation and the audit log.' }),
+    h('button', { class: 'btn btn-secondary', text: 'Open the console',
+      on: { click: () => go('/admin') } }),
+    h('span', { class: 'muted t-caption',
+      text: 'Staff only. Nothing in it can move customer money.' }))
+}
 
 const groupFor = (key?: string): Group | undefined => GROUPS.find((g) => g.key === key)
 
@@ -527,6 +662,7 @@ export function accountScreen(sub?: string): HTMLElement {
       pageHeader('Account'),
       verifyBanner(),
       indexList(),
+      opsDoor(),
       footer())
   }
 
@@ -542,7 +678,7 @@ export function accountScreen(sub?: string): HTMLElement {
       pageHeader('Account', null, { crumbs: false }),
       verifyBanner(),
       h('div', { class: 'row set-split' },
-        h('div', { class: 'stack set-col' }, indexList(group.key), footer()),
+        h('div', { class: 'stack set-col' }, indexList(group.key), opsDoor(), footer()),
         h('div', { class: 'stack grow set-panel' }, ...group.body())))
   }
 

@@ -75,6 +75,20 @@ export function kv(label: string, value: string | Node, cls = ''): HTMLElement {
     typeof value === 'string' ? h('span', { class: cls, text: value }) : value)
 }
 
+/** What is not working, said where somebody meets it.
+ *
+ *  A provider being down is an internal fact until the moment it stops
+ *  somebody adding money, and then it is theirs. The console has the metric;
+ *  this has the sentence, and they read the same source so they cannot
+ *  disagree about whether the thing is up. */
+export function providerNote(key: string): HTMLElement | null {
+  const p = state.providers.find((x) => x.key === key)
+  if (!p || p.state === 'up') return null
+  return callout(
+    `${p.name} is ${p.state === 'down' ? 'not responding' : 'slow'} right now. ${p.fallback}`,
+    p.state === 'down' ? 'warning' : 'brand')
+}
+
 export function callout(text: string, kind: 'brand' | 'warning' = 'brand'): HTMLElement {
   return h('div', { class: 'callout' + (kind === 'warning' ? ' warning' : '') },
     h('span', { html: kind === 'warning' ? icon.alert() : icon.info() }),

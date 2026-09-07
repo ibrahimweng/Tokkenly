@@ -53,7 +53,16 @@ function alertRow(n: Notif): HTMLElement {
       h('span', { class: 'two-line' },
         h('span', { class: 't-body-strong', text: n.title }),
         h('small', { text: n.body }))),
-    h('span', { class: 'muted t-caption nowrap', text: when(n.at) }),
+    h('span', { class: 'two-line right' },
+      h('span', { class: 'muted t-caption nowrap', text: when(n.at) }),
+      // Whether it also went out as an email, and whether that was our choice.
+      // A product that says "we emailed you" and a product that says "we email
+      // this one whatever you set" are making different promises, and only one
+      // of them can honour an unsubscribe.
+      n.emailed
+        ? h('small', { class: n.emailed === 'always' ? 'subtle' : 'muted',
+            text: n.emailed === 'always' ? 'Emailed · always' : 'Emailed' })
+        : null),
     onward ? h('span', { class: 'muted set-chev', html: icon.chevron() }) : null)
 }
 

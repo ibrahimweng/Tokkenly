@@ -1,5 +1,6 @@
 import { h } from '../ui'
 import { icon } from '../icons'
+import { toast } from '../components/sheet'
 import { fieldError } from '../components/bits'
 import { actions, state } from '../state'
 import { go, openSheet } from '../router'
@@ -180,6 +181,11 @@ export function signInScreen(): HTMLElement {
 }
 
 export function signUpScreen(): HTMLElement {
+  // Invite-only while the pilot runs, and the field says so rather than the
+  // product accepting anybody and refusing them three screens later. Any code
+  // starting TKN- works here; a real one is checked against a list, and the
+  // shape of the screen is the same either way.
+  const invite = field('Invite code', 'Tokkenly is invite-only during the pilot')
   const name = field('Full name', 'As it appears on your NIN')
   const email = field('Email', 'Where we send your receipts', 'email')
   const password = secret('Password', 'At least ten characters')
@@ -188,9 +194,13 @@ export function signUpScreen(): HTMLElement {
   const button = h('button', { class: 'btn btn-primary', text: 'Create account' })
   submit({
     email: email.input, password: password.input, button, error,
-    // The one rule this screen owns: the floor the product enforces everywhere
-    // else. Said before the button is pressed rather than after.
+    // The rules this screen owns: the invite, and the password floor the
+    // product enforces everywhere else. Both said before the button is
+    // pressed rather than after.
     check: () => {
+      const code = invite.input.value.trim().toUpperCase()
+      if (!code) return 'You need an invite code. Join the waitlist and we will send you one.'
+      if (!/^TKN-[A-Z0-9-]{4,}$/.test(code)) return 'That is not a Tokkenly invite code. They look like TKN-PILOT-0148.'
       if (!name.input.value.trim()) return 'Enter your name as it appears on your NIN.'
       if (password.input.value && password.input.value.length < 10)
         return 'A password needs ten characters or more.'
@@ -200,12 +210,13 @@ export function signUpScreen(): HTMLElement {
 
   return authCard(
     'Create your account',
-    'Two minutes, then a NIN check before you can hold a balance.',
+    'Invite-only during the pilot. Two minutes, then a NIN check before you can hold a balance.',
     [
       h('button', { class: 'btn btn-secondary', text: 'Continue with Google',
         on: { click: () => { actions.signIn(); go('/') } } }),
       h('div', { class: 'auth-or' },
         h('span', { class: 'rule' }), h('span', { class: 't-caption subtle', text: 'or' }), h('span', { class: 'rule' })),
+      invite.el,
       name.el,
       email.el,
       password.el,
@@ -217,6 +228,10 @@ export function signUpScreen(): HTMLElement {
     ],
     h('p', { class: 'muted t-caption', style: { margin: '0', textAlign: 'center' } },
       h('span', { text: 'Already have one? ' }),
-      h('button', { class: 'link', text: 'Sign in', on: { click: () => go('/signin') } }))
+      h('button', { class: 'link', text: 'Sign in', on: { click: () => go('/signin') } }),
+      h('br'),
+      h('span', { text: 'No code? ' }),
+      h('button', { class: 'link', text: 'Join the waitlist',
+        on: { click: () => toast('We will email you when the next cohort opens') } }))
   )
 }

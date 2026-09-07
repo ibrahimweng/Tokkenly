@@ -6,7 +6,7 @@ import { shell, pageHeader, bell, jumpOpen } from '../components/shell'
 import { card, cardHead, headLink, kv, amount, directionMark, figureWithEye } from '../components/bits'
 import { table } from '../components/table'
 import {
-  state, actions, holdingsValue, availableToBorrow, buyingPower, verified, LIMITS, money, inNaira,
+  state, actions, holdingsValue, availableToBorrow, buyingPower, verified, LIMITS, money, MASK, inNaira,
   bucketTotal, bucketCost,
 } from '../state'
 import { usd, signed, when, pct, shares, greeting, activityLabel } from '../format'
@@ -193,14 +193,22 @@ function detailed(): HTMLElement {
   const all = gainOver('ALL', value)
   const positions = card(
     cardHead('Your positions', headLink('Invest', '/invest')),
+    // What it cost and what it is worth, on the same row. The list showed the
+    // value and the day move, which answers "how is it doing today" and never
+    // "am I up on this" — the question people actually open a portfolio for.
+    // The day move goes; it is on the company page, and a row cannot carry two
+    // percentages without one of them being read as the other.
     ...state.holdings.map((p) => {
       const row = h('div', { class: 'kv', style: { cursor: 'pointer' } },
         h('span', { class: 'two-line' },
           h('span', { class: 't-body-strong', text: p.ticker }),
-          h('small', { text: `${p.name} · ${shares(p.shares)} shares` })),
+          h('small', { text: `${shares(p.shares)} at ${usd(p.each)} average` })),
         h('span', { class: 'two-line right' },
           h('span', { class: 't-body-strong', text: money(p.shares * p.price) }),
-          h('small', { class: p.dayPct >= 0 ? 'pos' : 'muted', text: (p.dayPct >= 0 ? '+' : '') + pct(p.dayPct) })))
+          h('small', { class: p.gain >= 0 ? 'pos' : 'warn',
+            text: state.prefs.hideBalances
+              ? MASK
+              : `${p.gain >= 0 ? '+' : '−'}${usd(Math.abs(p.gain), false)} · ${(p.gain >= 0 ? '+' : '−') + pct(Math.abs(p.gainPct))}` })))
       row.addEventListener('click', () => go('/invest/' + p.ticker.toLowerCase()))
       return row
     })

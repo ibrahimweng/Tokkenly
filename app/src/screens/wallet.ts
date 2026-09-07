@@ -3,7 +3,7 @@ import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, headLink, kv, callout, amount, directionMark, figureWithEye, spentBar } from '../components/bits'
 import { table } from '../components/table'
-import { state, buyingPower, availableToBorrow, inNaira, inflightNaira, rateLine, limits, leftThisMonth, verified, money } from '../state'
+import { state, buyingPower, availableToBorrow, inNaira, inflightNaira, outboundNaira, rateLine, limits, leftThisMonth, verified, money } from '../state'
 import { usd, naira, when, activityLabel } from '../format'
 import { go, openSheet } from '../router'
 
@@ -148,6 +148,7 @@ function limitsCard(): HTMLElement {
 export function walletScreen(): HTMLElement {
   const pending = state.activity.filter((a) => !a.settled)
   const flight = inflightNaira()
+  const outbound = outboundNaira()
 
   return shell(
     'wallet',
@@ -176,6 +177,14 @@ export function walletScreen(): HTMLElement {
             ? h('div', { class: 'kv' },
                 h('span', { class: 't-caps subtle', text: 'On its way to us' }),
                 h('span', { class: 't-body-strong', text: naira(flight) }))
+            : null,
+          // And the other direction. Dollars that have left the wallet but
+          // whose naira have not reached anybody's bank are in an account with
+          // a name, not in a state of hopefulness.
+          outbound > 0
+            ? h('div', { class: 'kv' },
+                h('span', { class: 't-caps subtle', text: 'On its way out' }),
+                h('span', { class: 't-body-strong', text: naira(outbound) }))
             : null,
           pending.length
             ? h('div', { class: 'stack-12' }, ...pending.map((a) =>

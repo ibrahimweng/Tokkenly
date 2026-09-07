@@ -193,6 +193,14 @@ export interface Holding {
   shares: number
   price: number
   dayPct: number
+  /** What the position cost in total, and what one share of it cost on
+   *  average. Both derived from the trades that built it. */
+  cost: number
+  each: number
+  /** What it is worth now against what it cost. The figure a person actually
+   *  came to the screen for, and the one the portfolio never showed. */
+  gain: number
+  gainPct: number
 }
 
 export interface Notif {
@@ -208,6 +216,38 @@ export interface Notif {
    *  for the ones that are not about a transaction. */
   ref?: string
   to?: string
+  /** Whether this also went out as an email, and why.
+   *
+   *  Some of these are ours to choose and some are not: a completed or failed
+   *  financial action and a security event go out whatever the switches say,
+   *  because a person who has lost access to the app is exactly the person who
+   *  needs to be told. Saying which is which on the row is what stops
+   *  "unsubscribe" being a promise the product cannot keep. */
+  emailed?: 'always' | 'preference' | false
+}
+
+/** Identity, and permission, which are not the same thing.
+ *
+ *  The spec is explicit that KYC approval must be kept separate from
+ *  permission to use the investment product, and it is right: an identity
+ *  check answers "are you who you say", and eligibility answers "may this
+ *  person, in this country, hold this instrument". A product that folds them
+ *  into one boolean has no way to say "we know exactly who you are and you
+ *  still cannot buy this", which is the commonest real answer.
+ *
+ *  Five checks, each with its own state, because a person who fails one wants
+ *  to know which and a support agent needs to know before they pick up. */
+export type CheckState = 'pending' | 'passed' | 'failed' | 'review'
+
+export interface Check {
+  key: 'identity' | 'age' | 'residence' | 'sanctions' | 'product'
+  label: string
+  what: string
+  state: CheckState
+  /** What the check actually returned, in the words a person could repeat to
+   *  support. Empty while it has not run. */
+  detail: string
+  at?: string
 }
 
 export interface Bank {
@@ -299,6 +339,129 @@ export function resolveAccount(number: string): string | null {
  *  not a number kept beside the row that is waiting. */
 export const inflightNaira = (): number => ledger.balanceOf('inflight')
 
+/** And what is on its way out: naira that left the desk and have not reached
+ *  anybody's bank yet. The other half of the same honesty. */
+export const outboundNaira = (): number => ledger.balanceOf('payout')
+
+/** The transaction on Base, for the movements that have one.
+ *
+ *  A product settling on a public chain has one thing a bank does not: the
+ *  movement is checkable by somebody who does not trust you. Hiding that is
+ *  throwing away the single best argument the product has, so every movement
+ *  that touched the chain carries a hash and every receipt links to it.
+ *
+ *  Derived from the reference rather than stored, because this is a prototype
+ *  and a made-up hash that changes on every render would be worse than an
+ *  honest deterministic one. */
+export function txHash(ref: string): string {
+  let h = 0x811c9dc5
+  for (let i = 0; i < ref.length; i++) {
+    h ^= ref.charCodeAt(i)
+    h = Math.imul(h, 0x01000193) >>> 0
+  }
+  let out = '0x'
+  for (let i = 0; i < 8; i++) {
+    h = Math.imul(h ^ (h >>> 15), 0x2545f491) >>> 0
+    out += h.toString(16).padStart(8, '0')
+  }
+  return out.slice(0, 66)
+}
+
+/** Which movements actually touched Base. A naira leg does not: it is two
+ *  banks and a desk, and putting a Basescan link on it would be the product
+ *  claiming a proof it does not have. */
+export const onChain = (a: Activity): boolean =>
+  a.kind === 'trade' || (a.kind === 'payment' && a.note !== 'Converted to naira' && a.note !== 'Paid out in naira')
+
+/** The reference support will ask for. The same one on the screen, in the
+ *  email, and in the admin record — one string, so nobody has to translate. */
+export const supportRef = (a: Activity): string => a.ref.replace('TKN-', 'TKN/') + '/1'
+
+/* --------------------------------------------------------------- the ops --
+   Everything §10 of the spec asks for, as data the screens read.
+
+   None of this is customer-facing and all of it decides what a customer can
+   do, which is exactly why it belongs in the product rather than in somebody's
+   dashboard: a switch that turns off buying is a product decision with a
+   screen behind it, and a provider that is down is a sentence a customer reads
+   long before an engineer does. */
+
+/** A server-controlled switch. Each one has a customer-facing consequence and
+ *  names it, because "buying: off" without "what people see" is how a kill
+ *  switch gets flipped by somebody who does not know what it does. */
+export interface Switch {
+  key: string
+  label: string
+  /** What stops working, in the words the customer will read. */
+  effect: string
+  on: boolean
+  /** Who last moved it, and when. */
+  by?: string
+  at?: string
+}
+
+/** One of the outside systems the product cannot work without. */
+export interface Provider {
+  key: string
+  name: string
+  does: string
+  state: 'up' | 'slow' | 'down'
+  /** What is measured, and what it read. */
+  metric: string
+  since?: string
+  /** What the customer sees while it is like this. */
+  fallback: string
+}
+
+/** A line in the audit history. Staff actions only: the customer's own
+ *  movements are in the ledger, and mixing the two would make it impossible to
+ *  answer "did anybody here touch this account". */
+export interface AuditLine {
+  at: string
+  who: string
+  what: string
+  target: string
+  /** Whether it changed anything, or only looked. */
+  kind: 'read' | 'change'
+}
+
+/** A difference between two records that should agree. The whole job of
+ *  reconciliation is to have somewhere for these to sit and be worked, rather
+ *  than for them to be discovered by a customer. */
+export interface Break {
+  id: string
+  what: string
+  ours: string
+  theirs: string
+  by: number
+  state: 'open' | 'working' | 'cleared'
+  opened: string
+}
+
+/** Somebody else on the pilot, as the admin sees them. */
+export interface Member {
+  id: string
+  name: string
+  email: string
+  joined: string
+  kyc: 'none' | 'checking' | 'verified'
+  eligible: boolean
+  funded: number
+  invite: string
+  state: 'active' | 'restricted' | 'closed'
+}
+
+/** A thing that must be true before external users are invited. Straight out
+ *  of "Required before launch", because a checklist that lives in a document
+ *  is a checklist nobody has looked at this week. */
+export interface Gate {
+  key: string
+  what: string
+  who: string
+  state: 'done' | 'in-progress' | 'not-started'
+  note: string
+}
+
 /** Somebody you can pay, and whether they hold an account here.
  *
  *  Cash goes to anybody: a Base address is a Base address. A share does not.
@@ -371,6 +534,14 @@ export interface State {
   banks: Bank[]
   cards: Card[]
   va: VirtualAccount
+  checks: Check[]
+  invite: { code: string; by: string; at: string }
+  switches: Switch[]
+  providers: Provider[]
+  audit: AuditLine[]
+  breaks: Break[]
+  members: Member[]
+  gates: Gate[]
   devices: Device[]
   activity: Activity[]
   notifications: Notif[]
@@ -480,6 +651,12 @@ function legsFor(a: Activity): { entries: ledger.Entry[]; kind?: string } | null
   return null
 }
 
+/** How long a Nigerian bank payout takes to confirm. Longer than money coming
+ *  in, because it is: an outbound transfer waits on the receiving bank, and
+ *  the whole point of tracking it as two stages is that the second one is not
+ *  instant. */
+const PAYOUT_MS = 3400
+
 /** Where the account actually stands, which the replay has to arrive at. */
 const TODAY = { wallet: 2480, lent: 1240, loan: -380, 'loan.int': -8.9 }
 
@@ -487,10 +664,21 @@ const TODAY = { wallet: 2480, lent: 1240, loan: -380, 'loan.int': -8.9 }
  *  in, because the holdings list is now derived and an account's row appears
  *  the first time the ledger names it. */
 const TODAY_SHARES: [string, number][] =
-  [['AAPL', 23.42], ['NVDA', 26.94], ['VOO', 5.6], ['TSLA', 4.8]]
+  [['AAPLc', 23.42], ['NVDAc', 26.94], ['VOOc', 5.6], ['TSLAc', 4.8]]
+
+/** And what those opening shares are assumed to have cost, each. The ledger
+ *  does not contain the trades that bought them — that is the whole point of
+ *  "Before this record" — so without this the portfolio would open showing a
+ *  hundred per cent gain on everything, which is the most flattering lie a
+ *  broker can tell. Every screen that shows a gain says which part is
+ *  estimated. */
+const OPENING_COST: Record<string, number> = {
+  AAPLc: 198.40, NVDAc: 96.15, VOOc: 468.20, TSLAc: 271.05,
+}
 
 export function openBooks(): void {
   ledger.reset()
+  for (const [t, each] of Object.entries(OPENING_COST)) ledger.setOpeningCost(t, each)
   const rows = [...state.activity].reverse()      // oldest first
   const after: Record<string, number> = { wallet: 0, lent: 0, loan: 0, 'loan.int': 0 }
   // Every ticker the replay touches, plus the ones the account opened with:
@@ -606,6 +794,109 @@ export const state: State = {
   // difference is the reason to offer both.
   fees: { trade: 0.5, fx: 0, card: 1.4 },
   kyc: { status: 'none' },
+  // Identity is one check; permission is four more. Seeded at the state a
+  // person arrives in: their details are on file and nothing has been run.
+  checks: [
+    { key: 'identity', label: 'Who you are', state: 'pending', detail: '',
+      what: 'A government ID and a live selfie, checked by Didit' },
+    { key: 'age', label: 'Eighteen or over', state: 'pending', detail: '',
+      what: 'Read off the date of birth on the document' },
+    { key: 'residence', label: 'Resident in Nigeria', state: 'pending', detail: '',
+      what: 'The country on the document, and where you are signing in from' },
+    { key: 'sanctions', label: 'Sanctions and watchlists', state: 'pending', detail: '',
+      what: 'Screened against the international lists we are required to check' },
+    { key: 'product', label: 'May hold tokenised shares', state: 'pending', detail: '',
+      what: 'Separate from who you are: whether somebody in your country may hold this instrument' },
+  ],
+  // Invite-only for the pilot. The code is on the account because the person
+  // came in through one, and support gets asked "who invited them" often
+  // enough that it belongs on the record rather than in a spreadsheet.
+  invite: { code: 'TKN-PILOT-0148', by: 'Waitlist, cohort 2', at: iso('2026-03-02T10:00') },
+  // Every switch on, except the two that are genuinely not ready. A console
+  // that opens with everything green teaches nobody what it looks like when
+  // something is off.
+  switches: [
+    { key: 'signup', label: 'New wallets', on: true, by: 'ops@tokkenly', at: iso('2026-09-01T09:12'),
+      effect: 'Sign-up stops creating wallets. Everybody already in keeps theirs.' },
+    { key: 'fund.ngn', label: 'Naira funding', on: true, by: 'ops@tokkenly', at: iso('2026-09-04T11:40'),
+      effect: 'Add money by transfer and by card both stop. The account details stay visible and nothing lands.' },
+    { key: 'fund.card', label: 'Card funding', on: false, by: 'risk@tokkenly', at: iso('2026-09-06T16:02'),
+      effect: 'The card rail disappears from Add money. Transfers are unaffected.' },
+    { key: 'buy', label: 'Buying', on: true, by: 'ops@tokkenly', at: iso('2026-08-28T08:00'),
+      effect: 'Every buy button is replaced by a line saying trading is paused. Selling still works.' },
+    { key: 'sell', label: 'Selling', on: true, by: 'ops@tokkenly', at: iso('2026-08-28T08:00'),
+      effect: 'Sell stops. This one is the last resort: somebody who cannot sell cannot get out.' },
+    { key: 'gas', label: 'Sponsored gas', on: true, by: 'ops@tokkenly', at: iso('2026-08-19T14:30'),
+      effect: 'Fees come out of the customer\u2019s USDC instead, and every review says so before they confirm.' },
+    { key: 'send', label: 'Sending out', on: true, by: 'ops@tokkenly', at: iso('2026-08-19T14:30'),
+      effect: 'Sending to a person, an address or a bank all stop.' },
+    { key: 'payout.ngn', label: 'Bank payouts', on: true, by: 'ops@tokkenly', at: iso('2026-09-02T10:15'),
+      effect: 'The bank rail disappears from Send. Payouts already queued still finish.' },
+    { key: 'asset.METAc', label: 'METAc', on: false, by: 'legal@tokkenly', at: iso('2026-09-05T12:00'),
+      effect: 'Meta cannot be bought or sold. Existing holders keep the position and can still send it.' },
+  ],
+  providers: [
+    { key: 'cdp', name: 'Coinbase CDP', does: 'Sign-in, wallets, sponsored gas', state: 'up',
+      metric: '99.98% over 30 days', fallback: 'Nobody can sign in or create a wallet.' },
+    { key: 'base', name: 'Base', does: 'Settlement', state: 'up',
+      metric: 'Block 24,881,204 · 2s behind', fallback: 'Nothing settles. Balances stay correct; movements queue.' },
+    { key: '0x', name: '0x Swap API', does: 'Buy and sell quotes', state: 'slow',
+      metric: '2,140ms median, up from 340ms', since: iso('2026-09-07T07:52'),
+      fallback: 'Quotes take longer to arrive. The review shows a skeleton and the rate hold starts when it lands.' },
+    { key: 'chainlink', name: 'Chainlink', does: 'Independent reference prices', state: 'up',
+      metric: 'All feeds under 30s', fallback: 'Every trade is refused: there is nothing to check a quote against.' },
+    { key: 'didit', name: 'Didit', does: 'Identity and screening', state: 'up',
+      metric: '4 checks today, all cleared', fallback: 'New verifications queue. Nobody already verified is affected.' },
+    { key: 'switch', name: 'Switch', does: 'Naira in and out', state: 'down',
+      metric: 'Webhooks failing since 07:14', since: iso('2026-09-07T07:14'),
+      fallback: 'Naira funding and bank payouts both stop. USDC in and out is unaffected, and the app says which.' },
+  ],
+  audit: [
+    { at: iso('2026-09-07T08:12'), who: 'risk@tokkenly', kind: 'change',
+      what: 'Turned off card funding', target: 'Switch · fund.card' },
+    { at: iso('2026-09-07T07:58'), who: 'ops@tokkenly', kind: 'read',
+      what: 'Opened a customer record', target: 'Adaeze Okonkwo' },
+    { at: iso('2026-09-06T16:02'), who: 'legal@tokkenly', kind: 'change',
+      what: 'Suspended an asset pending contract sign-off', target: 'Switch · asset.METAc' },
+    { at: iso('2026-09-06T11:20'), who: 'ops@tokkenly', kind: 'change',
+      what: 'Cleared a reconciliation break', target: 'Break · REC-0441' },
+    { at: iso('2026-09-05T09:04'), who: 'support@tokkenly', kind: 'read',
+      what: 'Looked up a payout by reference', target: 'TKN-7D1J83' },
+  ],
+  breaks: [
+    { id: 'REC-0448', what: 'Switch says a payout settled; we have no confirmation',
+      ours: 'Queued 14:22', theirs: 'Settled 14:25', by: 180000, state: 'open', opened: iso('2026-09-07T14:40') },
+    { id: 'REC-0447', what: 'A deposit landed with no matching virtual account',
+      ours: 'Nothing', theirs: '\u20a6120,000 to 9902847002', by: 120000, state: 'working', opened: iso('2026-09-06T09:11') },
+    { id: 'REC-0441', what: 'Fee taken twice on one order', ours: '$2.09', theirs: '$4.18',
+      by: 2.09, state: 'cleared', opened: iso('2026-09-04T16:30') },
+  ],
+  members: [
+    { id: 'u1', name: 'Chinaza Okoro', email: 'ibrahimweng0@gmail.com', joined: '2 March 2026',
+      kyc: 'none', eligible: false, funded: 3000, invite: 'TKN-PILOT-0148', state: 'active' },
+    { id: 'u2', name: 'Adaeze Okonkwo', email: 'ibrahimweng0@gmail.com', joined: '18 February 2026',
+      kyc: 'verified', eligible: true, funded: 12400, invite: 'TKN-PILOT-0091', state: 'active' },
+    { id: 'u3', name: 'Tunde Bakare', email: 'ibrahimweng0@gmail.com', joined: '3 April 2026',
+      kyc: 'verified', eligible: true, funded: 860, invite: 'TKN-PILOT-0203', state: 'active' },
+    { id: 'u4', name: 'Chidi Nwosu', email: 'ibrahimweng0@gmail.com', joined: '29 May 2026',
+      kyc: 'checking', eligible: false, funded: 0, invite: 'TKN-PILOT-0311', state: 'restricted' },
+    { id: 'u5', name: 'Ngozi Eze', email: 'ibrahimweng0@gmail.com', joined: '11 June 2026',
+      kyc: 'verified', eligible: false, funded: 240, invite: 'TKN-PILOT-0356', state: 'restricted' },
+  ],
+  gates: [
+    { key: 'access', what: 'Written confirmation that Nigerian users may hold these tokens',
+      who: 'Legal', state: 'in-progress', note: 'Opinion drafted, waiting on counsel sign-off' },
+    { key: 'ng-legal', what: 'Nigerian legal, tax, custody and disclosure requirements approved',
+      who: 'Legal', state: 'in-progress', note: 'Disclosures written and in the product; tax treatment open' },
+    { key: 'contracts', what: 'Production contract addresses verified for every asset and feed',
+      who: 'Engineering', state: 'done', note: 'Four launch assets, USDC, and four Chainlink feeds checked against Coinbase' },
+    { key: 'switch', what: 'Switch onramp and offramp documentation confirmed',
+      who: 'Engineering', state: 'in-progress', note: 'Webhook signing agreed; reversal states still unclear' },
+    { key: 'limits', what: 'Approved limits for price freshness, deviation, impact, gas and exposure',
+      who: 'Risk', state: 'done', note: '90s, 1.5%, 2%, $5 a month, $50,000 pilot cap' },
+    { key: 'security', what: 'Security review and small-value production tests end to end',
+      who: 'Engineering', state: 'not-started', note: 'Blocked on the Switch sandbox' },
+  ],
   usedThisMonth: 180,
   // Not a list that is kept up to date beside the ledger — a reading of it.
   // A share in this array exists because a movement put it in custody, and
@@ -614,17 +905,25 @@ export const state: State = {
   get holdings() {
     return ledger.held().map((h) => {
       const c = find(h.ticker)
+      // What it cost is read the same way the quantity is: off the trades that
+      // built the position. There is no second copy to drift.
+      const b = ledger.basis(h.ticker)
+      const value = h.shares * (c?.price ?? 0)
       return {
         ticker: h.ticker,
         name: c?.name ?? h.ticker,
         shares: h.shares,
         price: c?.price ?? 0,
         dayPct: c?.dayPct ?? 0,
+        cost: b.cost,
+        each: b.each,
+        gain: value - b.cost,
+        gainPct: b.cost > 0 ? ((value - b.cost) / b.cost) * 100 : 0,
       }
     })
   },
   bucket: [],
-  watchlist: ['AAPL', 'NVDA', 'TSLA', 'MSFT', 'VOO'],
+  watchlist: ['AAPLc', 'NVDAc', 'TSLAc', 'METAc', 'VOOc'],
   // Two on Tokkenly and two not, so the screen that refuses to hand a share to
   // somebody without an account is on a path anybody can walk, the way .99
   // declines and .98 goes unanswered.
@@ -656,19 +955,19 @@ export const state: State = {
   notifications: [
     { id: 'n1', kind: 'money', title: 'Adaeze Okonkwo paid you $120.00',
       body: 'It is already in your wallet.', at: iso('2026-09-05T14:32'), read: false,
-      ref: 'TKN-8F2K90' },
+      ref: 'TKN-8F2K90', emailed: 'preference' },
     { id: 'n2', kind: 'trade', title: 'Your Apple order filled',
       body: '1.87 shares at $224.10.', at: iso('2026-09-05T14:05'), read: false,
-      ref: 'TKN-8E4J77' },
+      ref: 'TKN-8E4J77', emailed: 'always' },
     { id: 'n3', kind: 'grow', title: 'Lending paid you $0.16',
       body: 'Interest lands every morning on the dollars you have lent out.', at: iso('2026-09-04T00:05'), read: false,
-      to: '/grow' },
+      to: '/grow', emailed: false },
     { id: 'n4', kind: 'security', title: 'New sign in on Pixel 7',
       body: 'Lagos, Nigeria. If this was not you, sign out everywhere.', at: iso('2026-09-03T21:10'), read: true,
-      to: '/account/security' },
+      to: '/account/security', emailed: 'always' },
     { id: 'n5', kind: 'money', title: 'Payroll arrived',
       body: '$1,500.00 from Kuda ending 8820.', at: iso('2026-08-29T08:00'), read: true,
-      ref: 'TKN-6C9H77' },
+      ref: 'TKN-6C9H77', emailed: 'always' },
   ],
   seenIntro: false,
   cardWaitlist: false,
@@ -853,6 +1152,31 @@ export function requestQuote(): Promise<Quote> {
    One place, so the card that states a limit and the thing that enforces it
    are the same number. */
 export const verified = (): boolean => state.kyc.status === 'verified'
+
+/** Whether this person may use the investment product. Not the same question
+ *  as whether we know who they are, and the spec is explicit about that: KYC
+ *  approval is kept separate from permission to trade. Every check has to pass,
+ *  and the last one can fail on its own. */
+/** Whether a thing the product does is currently switched on. Read by the
+ *  screens rather than checked by them: a switch that only the console knows
+ *  about is a switch that changes nothing. */
+export const switchOn = (key: string): boolean =>
+  state.switches.find((s) => s.key === key)?.on ?? true
+
+/** And whether a particular asset is switched on, which is the same question
+ *  with the ticker in it. */
+export const assetOn = (ticker: string): boolean => switchOn('asset.' + ticker)
+
+/** How many providers are not healthy, for the badge on the console door. */
+export const providersDown = (): number =>
+  state.providers.filter((p) => p.state !== 'up').length
+
+export const eligible = (): boolean =>
+  state.checks.every((c) => c.state === 'passed')
+
+/** The check that is stopping them, if one is. */
+export const blockedBy = (): Check | undefined =>
+  state.checks.find((c) => c.state === 'failed' || c.state === 'review')
 export const limits = () => (verified() ? LIMITS.verified : LIMITS.none)
 export const leftThisMonth = (): number =>
   Math.max(0, limits().monthly - state.usedThisMonth)
@@ -1012,6 +1336,41 @@ export const actions = {
     state.usedThisMonth = Math.round((state.usedThisMonth + amount) * 100) / 100
   },
 
+  /* ----- the ops console ----- */
+
+  /** Flip a switch, and write down who did it. An audit line is not a nicety:
+   *  the whole value of a kill switch is knowing afterwards who used it and
+   *  when, and a console that changes the product silently is worse than no
+   *  console. */
+  flipSwitch(key: string, by = 'you@tokkenly') {
+    const sw = state.switches.find((x) => x.key === key)
+    if (!sw) return
+    sw.on = !sw.on
+    sw.by = by
+    sw.at = new Date().toISOString()
+    state.audit.unshift({
+      at: sw.at, who: by, kind: 'change',
+      what: (sw.on ? 'Turned on ' : 'Turned off ') + sw.label.toLowerCase(),
+      target: 'Switch \u00b7 ' + key,
+    })
+    changed()
+  },
+
+  /** Move a reconciliation break along. Three states, because "someone is on
+   *  it" is a real and useful thing to know and a two-state list forces
+   *  everybody to guess. */
+  workBreak(id: string, to: Break['state'], by = 'you@tokkenly') {
+    const b = state.breaks.find((x) => x.id === id)
+    if (!b) return
+    b.state = to
+    state.audit.unshift({
+      at: new Date().toISOString(), who: by, kind: 'change',
+      what: to === 'cleared' ? 'Cleared a reconciliation break' : 'Picked up a reconciliation break',
+      target: 'Break \u00b7 ' + id,
+    })
+    changed()
+  },
+
   /* ----- identity ----- */
   startVerification(method: 'NIN' | 'BVN', number: string) {
     state.kyc = { status: 'checking', method, last4: number.slice(-4) }
@@ -1022,10 +1381,37 @@ export const actions = {
       ...state.kyc, status: 'verified',
       checkedOn: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
     }
+    // The five checks resolve with it. They are not decoration: eligibility is
+    // what actually unlocks the product, and the last of them can pass while
+    // the others do and still leave somebody unable to buy — which is the
+    // point of keeping them apart.
+    const at = new Date().toISOString()
+    const said: Record<Check['key'], [CheckState, string]> = {
+      identity: ['passed', `${state.kyc.method ?? 'NIN'} ending ${state.kyc.last4 ?? '••••'} matched the document and the selfie`],
+      age: ['passed', `Born ${state.person.dob} — over eighteen`],
+      residence: ['passed', 'Nigerian document, and you are signing in from Lagos'],
+      sanctions: ['passed', 'No match on any list we are required to screen'],
+      product: ['passed', 'Nigeria is in the approved set for tokenised US equities in the pilot'],
+    }
+    state.checks = state.checks.map((c) => ({ ...c, state: said[c.key][0], detail: said[c.key][1], at }))
     changed()
   },
   resetVerification() {
     state.kyc = { status: 'none' }
+    state.checks = state.checks.map((c) => ({ ...c, state: 'pending', detail: '', at: undefined }))
+    changed()
+  },
+  /** The other ending, and the one nobody builds. A person can be exactly who
+   *  they say and still not be allowed to hold the instrument, and the screen
+   *  that says so has to exist before somebody meets it. */
+  failEligibility() {
+    const at = new Date().toISOString()
+    state.kyc = { ...state.kyc, status: 'verified',
+      checkedOn: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) }
+    state.checks = state.checks.map((c) => c.key === 'product'
+      ? { ...c, state: 'failed' as CheckState, at,
+          detail: 'The address on your document is outside the pilot. We know who you are; we cannot open trading for you yet.' }
+      : { ...c, state: 'passed' as CheckState, at, detail: 'Passed' })
     changed()
   },
 
@@ -1047,23 +1433,33 @@ export const actions = {
   sendMoney(to: Destination, amount: number, rate = state.ngnPerUsd): Activity {
     actions.countAgainstLimit(amount)
     if (to.rail === 'bank') {
+      // Two stages, because there are two. The dollars leave the wallet the
+      // moment it is authorised and the naira reach somebody's bank when the
+      // banks get round to it, and a screen that calls the first one "sent"
+      // is telling somebody their rent is paid when it is sitting on a desk.
+      // So this half only ever writes what has actually happened.
       const naira = Math.round(amount * rate)
       const account = to.bankId ? 'bank:' + to.bankId : 'payee:' + to.name
       ledger.account(account, to.name + (to.number ? ' \u00b7\u00b7\u00b7\u00b7 ' + to.number.slice(-4) : ''))
       const a = record({
         kind: 'payment', who: to.name, type: 'Sent', amount: -amount,
         note: to.bankId ? 'Converted to naira' : 'Paid out in naira',
+        settled: false,
       })
       ledger.post({
         ref: a.ref, at: a.at, pair: a.ref, rate,
         what: `Took ${usd(amount)} from your wallet`,
         entries: [{ account: 'wallet', amount: -amount }, { account: 'desk.usd', amount }],
       })
+      // The naira are ours until the bank has them. `payout` is the account
+      // they wait in, and it is the figure the Transfer screen shows as money
+      // on its way out.
       ledger.post({
         ref: a.ref, at: a.at, pair: a.ref, rate,
-        what: `Paid \u20a6${naira.toLocaleString('en-US')} to ${to.name}`,
-        entries: [{ account: 'desk.ngn', amount: -naira }, { account, amount: naira }],
+        what: `\u20a6${naira.toLocaleString('en-US')} queued for ${to.name}`,
+        entries: [{ account: 'desk.ngn', amount: -naira }, { account: 'payout', amount: naira }],
       })
+      setTimeout(() => actions.landPayout(a.ref, rate), PAYOUT_MS)
       changed()
       return a
     }
@@ -1140,6 +1536,41 @@ export const actions = {
     })
     changed()
     return a
+  },
+
+  /** Stage two of a payout: the naira actually reach the bank.
+   *
+   *  Until this runs, the activity row is unsettled, the receipt says which
+   *  stage it is at, and nothing anywhere calls it complete. The spec's line
+   *  is "never describe a bank withdrawal as complete until the payout is
+   *  confirmed", and the only way to keep that promise is to have somewhere
+   *  for the money to be in the meantime. */
+  landPayout(ref: string, rate = state.ngnPerUsd): void {
+    const a = state.activity.find((x) => x.ref === ref)
+    if (!a || a.settled) return
+    // The same magic value, on the way out. `.98` is a payout the bank never
+    // confirms: the naira sit in our payout account and the row stays open.
+    if (settlement(a.amount) === 'pending') return
+    const ngn = Math.round(Math.abs(a.amount) * rate)
+    const account = ledger.accounts().find((x) => x.name.startsWith(a.who))?.id
+      ?? 'payee:' + a.who
+    ledger.post({
+      ref, at: new Date().toISOString(),
+      what: `\u20a6${ngn.toLocaleString('en-US')} reached ${a.who}`,
+      entries: [{ account: 'payout', amount: -ngn }, { account, amount: ngn }],
+    })
+    a.settled = true
+    state.notifications.unshift({
+      id: 'n-' + ref,
+      kind: 'money',
+      title: `\u20a6${ngn.toLocaleString('en-US')} reached ${a.who}`,
+      body: `The ${usd(Math.abs(a.amount))} left your wallet earlier; the bank has it now.`,
+      at: new Date().toISOString(),
+      read: false,
+      ref,
+      emailed: 'always',
+    })
+    changed()
   },
 
   /** The other half: the naira reaches the Tokkenly account and is converted.

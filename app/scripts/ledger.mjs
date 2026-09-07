@@ -46,7 +46,7 @@ console.log('THE BOOKS OPEN BALANCED')
   // currency appearing or emptying cannot silently move an assertion onto a
   // different total.
   const sum = (bk, re) => bk.sums.find((s) => re.test(s.text))
-  const tickers = (bk) => bk.sums.filter((s) => /[A-Z]{2,5}$/.test(s.text.trim()))
+  const tickers = (bk) => bk.sums.filter((s) => /[A-Z]{2,5}c$/.test(s.text.trim()))
   const usdSum = sum(b0, /\$/), ngnSum = sum(b0, /₦/)
   ok('the dollars come to nothing', usdSum && !usdSum.off, usdSum?.text)
   ok('and so do the naira', ngnSum && !ngnSum.off, ngnSum?.text)
@@ -109,10 +109,10 @@ console.log('AND A SHARE HAS A PROVENANCE, NOT JUST A COUNT')
   await at('/invest/nvda')
   const held = await p.evaluate(() => {
     const row = [...document.querySelectorAll('.kv')].find((e) => /You hold/.test(e.textContent))
-    return row ? row.textContent.replace(/You hold|\s+shares|\s+/g, ' ').trim() : ''
+    return row ? row.textContent.replace(/You hold|NVDAc|\s+shares|\s+/g, ' ').trim() : ''
   })
   const bk = await books()
-  const ledgerNvda = (bk.balances['NVDA held for you'] ?? '').replace(' NVDA', '')
+  const ledgerNvda = (bk.balances['NVDAc held for you'] ?? '').replace(' NVDAc', '')
   ok('the position on the company page is the position in the ledger',
      ledgerNvda !== '' && held === ledgerNvda,
      `"${held}" on the company page, "${ledgerNvda}" on the statement`)
@@ -129,7 +129,7 @@ console.log('AND A SHARE HAS A PROVENANCE, NOT JUST A COUNT')
      bought.legs.some((l) => /on the market/.test(l)) &&
      bought.legs.some((l) => /held for you/.test(l)),
      bought ? bought.legs.length + ' legs' : 'no buy found')
-  const gift = legs.find((m) => /^Sent .* to /.test(m.what) && /NVDA|AAPL|VOO|TSLA/.test(m.what))
+  const gift = legs.find((m) => /^Sent .* to /.test(m.what) && /NVDAc|AAPLc|VOOc|TSLAc/.test(m.what))
   ok('and handing a share to somebody moves shares and no money at all',
      gift && gift.legs.length === 2 && !gift.legs.some((l) => /\$/.test(l)),
      gift ? gift.what + ' — ' + gift.legs.join(' | ') : 'no share transfer found')

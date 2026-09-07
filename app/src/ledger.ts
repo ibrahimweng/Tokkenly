@@ -298,5 +298,54 @@ export function held(): { ticker: Currency; shares: number }[] {
   return out
 }
 
+/** What a position cost, and what each share cost on average.
+ *
+ *  Not stored on the holding. Cost basis is a reading of the trades that built
+ *  the position, exactly like the quantity: every posting that put shares into
+ *  custody carries the dollars that bought them on the same movement, so the
+ *  two can be walked together and cannot drift apart.
+ *
+ *  Weighted average, not FIFO. A person asking "am I up on Apple" wants one
+ *  number, and a sale reduces the cost proportionally rather than picking
+ *  which lot went — which is also what makes the figure stable when they sell
+ *  half and the price moves afterwards.
+ */
+export function basis(ticker: Currency): { cost: number; shares: number; each: number } {
+  let shares = 0
+  let cost = 0
+  for (const p of book) {
+    const leg = p.entries.find((e) => e.account === 'held:' + ticker)
+    if (!leg) continue
+    if (leg.amount > 0) {
+      shares += leg.amount
+      // The opening posting is one movement carrying every account the replay
+      // could not reach — the wallet, the lending, and every ticker — so its
+      // wallet leg has nothing to do with its Apple leg. Reading one as the
+      // price of the other put the average cost at −$39.87 a share. What marks
+      // it is its own counter-account: a posting that balances Apple against
+      // "Apple before this record" is an opening position, and is priced at
+      // the assumed cost rather than at whatever else is in the same movement.
+      const opened = p.entries.some((e) => e.account === 'open:' + ticker)
+      const money = opened ? undefined : p.entries.find((e) => e.account === 'wallet')
+      cost += money ? -money.amount : leg.amount * (openingCost.get(ticker) ?? 0)
+    } else {
+      const out = Math.min(-leg.amount, shares)
+      if (shares > 1e-9) cost -= (cost / shares) * out
+      shares -= out
+    }
+  }
+  shares = Math.round(shares * 1e6) / 1e6
+  cost = Math.round(cost * 100) / 100
+  return { cost, shares, each: shares > 1e-9 ? cost / shares : 0 }
+}
+
+/** What the account is assumed to have paid for the shares it already held
+ *  when the ledger starts. Set by the seed, because the alternative is a
+ *  portfolio that opens showing a hundred per cent gain. */
+const openingCost = new Map<Currency, number>()
+export const setOpeningCost = (ticker: Currency, each: number): void => {
+  openingCost.set(ticker, each)
+}
+
 /** Wipes the book. Only the seed uses this, and only before anything is read. */
-export function reset(): void { book.length = 0 }
+export function reset(): void { book.length = 0; openingCost.clear() }

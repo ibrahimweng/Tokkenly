@@ -4,11 +4,15 @@ import { sheet, figure, panel, foldPanel, outcome, toast } from './components/sh
 import { callout as calloutEl, emptyState as emptyStateEl, skeletonList } from './components/bits'
 import {
   state, actions, owed, monthlyCost, monthlyInterest, holding, bucketTotal,
-  tradeFee, cardFee, weakPin, ratePassword, LIMITS, type Activity,
+  tradeFee, cardFee, weakPin, ratePassword, LIMITS, type Activity, txHash, onChain, supportRef,
+  switchOn, assetOn,
   requestQuote, quoteLive, settlement, grossOf, type Quote, type Destination,
 } from './state'
 import { pinPad } from './components/pinpad'
-import { find, discount, CATALOGUE } from './catalogue'
+import {
+  find, discount, CATALOGUE, refusals, priceImpact, minReceived, deviation, GUARDS,
+  type Instrument,
+} from './catalogue'
 import { sparkline, type Range } from './components/chart'
 import { usd, naira, pct, shares as fmtShares, longWhen, when, isDrawdown } from './format'
 import { type Route, closeSheet, replaceSheet, go } from './router'
@@ -318,6 +322,38 @@ function done(
   )
 }
 
+/** The trade that must not happen, as a dialog.
+ *
+ *  Every reason at once, not the first one: a trade can be refused because the
+ *  reference is stale *and* the order is too big for the book, and telling
+ *  somebody about one of those sends them off to fix half a problem. There is
+ *  no confirm button in this sheet — not a disabled one, none — because the
+ *  safest version of a control you must not press is a control that is not
+ *  there.
+ *
+ *  It is also where the product says what it checked. A refusal that does not
+ *  show its working reads as the app being broken; one that names the venue
+ *  price, the independent price and the ceiling between them reads as the
+ *  product doing its job. */
+function refused(c: Instrument, v: number, kind: 'buy' | 'sell' = 'buy'): HTMLElement | null {
+  const bad = refusals(c, v, { trading: !switchOn(kind), asset: !assetOn(c.ticker) })
+  if (!bad.length) return null
+  return sheet('Not this one',
+    figure('We are not taking this trade', bad.length + (bad.length === 1 ? ' reason' : ' reasons'), 'warn'),
+    ...bad.map((b) => calloutEl(b.title + '. ' + b.why, 'warning')),
+    panel(
+      ['Venue price', usd(c.price)],
+      ['Chainlink', usd(c.mark)],
+      ['Apart by', pct(Math.abs(deviation(c)), 2)],
+      ['Ceiling', pct(GUARDS.deviationPct, 1)],
+      ['Impact', pct(priceImpact(c, v), 2)],
+      ['Ceiling', pct(GUARDS.impactPct, 1)],
+    ),
+    h('span', { class: 'muted t-caption',
+      text: 'Nothing has been sent and nothing has left your wallet. These checks run again every time you open a trade.' }),
+    h('button', { class: 'btn btn-secondary', text: 'Back', on: { click: closeSheet } }))
+}
+
 /* ---------------- registry ---------------- */
 
 type Builder = (r: Route) => HTMLElement
@@ -483,9 +519,14 @@ export const SHEETS: Record<string, Builder> = {
             // that it is gone.
             ? `Settled · ${a.who} holds these now, and they cannot be recalled`
             : 'Settled · nothing about this is going to change now'
-          : settlement(a.amount) === 'pending'
-            ? 'Still settling · we have not seen it yet, and nothing has been taken twice'
-            : 'Still settling · it usually clears within a minute'),
+          : fx && !inbound
+            // A payout in flight is not "settling", it is at a named stage,
+            // and saying which one is the difference between a person waiting
+            // calmly and a person ringing support.
+            ? 'Dollars out, naira on the way · the bank has not confirmed it yet'
+            : settlement(a.amount) === 'pending'
+              ? 'Still settling · we have not seen it yet, and nothing has been taken twice'
+              : 'Still settling · it usually clears within a minute'),
       c ? h('div', { class: 'receipt-co' },
         h('span', { class: 'two-line grow' },
           h('span', { class: 't-body-strong', text: `${c.ticker} · ${c.name}` }),
@@ -537,13 +578,38 @@ export const SHEETS: Record<string, Builder> = {
         // is recorded on the movement now, so this reads it rather than
         // asserting it.
         ['Fee', a.fee ? usd(a.fee) : 'None'],
+        // The two facts that only matter when something has gone wrong, which
+        // is exactly what the fold is for.
+        ['Support reference', supportRef(a)],
+        ...(onChain(a)
+          ? [['On Base', txHash(a.ref).slice(0, 8) + '…' + txHash(a.ref).slice(-6)] as [string, string]]
+          : []),
         ...(c && held ? [['You hold now',
           `${fmtShares(held.shares)} shares · ${usd(held.shares * c.price)}`] as [string, string]] : []),
       ]),
-      h('button', {
-        class: 'btn btn-primary', text: 'Download receipt',
-        on: { click: () => toast('Receipt saved as ' + a.ref + '.pdf') },
-      }),
+      // The proof, for the movements that have one. A product that settles on
+      // a public chain can be checked by somebody who does not trust it, and
+      // hiding that throws away the best argument it has. A naira payout has
+      // no hash and gets no link, because a link to nothing is worse than none.
+      // The proof, beside the copy rather than under it. A record that grows a
+      // section per fact stops fitting on a phone, and this one is measured
+      // against the same ceiling as every other dialog in the product — so the
+      // explorer shares the row the download was using alone, and the support
+      // reference goes into the fold with the rest of the detail you only want
+      // when something has gone wrong.
+      h('div', { class: 'receipt-on' },
+        h('button', {
+          class: 'btn btn-primary', text: 'Download',
+          on: { click: () => toast('Receipt saved as ' + a.ref + '.pdf') },
+        }),
+        onChain(a)
+          ? h('button', {
+              class: 'btn btn-secondary', title: 'Open this transaction on Basescan',
+              on: { click: () => toast('Opening Basescan') },
+            },
+              h('span', { text: 'On Basescan' }),
+              h('span', { class: 'muted', html: icon.external() }))
+          : null),
       // The ways on. A receipt is where somebody has just answered "what did I
       // buy"; the next two questions are "how is it doing" and "what do I hold
       // altogether", and both were a dismissal and a hunt away.
@@ -928,13 +994,27 @@ export const SHEETS: Record<string, Builder> = {
   'send-done': (r) => {
     const a = state.activity.find((x) => x.ref === str(r, 'ref'))!
     const rate = num(r, 'rate', 0)
-    // The rate that was honoured, not the indicative one. Confirming against a
-    // held quote and then being told a different naira figure is the exact
-    // thing the hold exists to prevent.
-    return rate
-      ? done('Sent', `${naira(Math.abs(a.amount) * rate)} is on its way to ${a.who}.`, a,
-             [['Fee', 'None'], ['Rate', '1 dollar = ' + naira(rate)]])
-      : done('Sent', `${usd(Math.abs(a.amount))} is on its way to ${a.who}.`, a, [['Fee', 'None']])
+    // A payout has two stages and this is the end of the first one, so the
+    // sheet says so rather than saying "Sent". The dollars have gone; the
+    // naira have not arrived. Both are true and only one of them is the good
+    // news, and the outcome that claims the second is the one that gets a
+    // person shouting at their landlord.
+    if (rate) {
+      if (!a.settled) {
+        return outcome('On its way',
+          `${usd(Math.abs(a.amount))} has left your wallet. ${naira(Math.abs(a.amount) * rate)} reaches ${a.who} when the bank confirms it.`,
+          [['Stage', 'Dollars out — done'],
+           ['Next', 'Naira into the account'],
+           ['Rate', '1 dollar = ' + naira(rate)],
+           ['Reference', a.ref]],
+          { label: 'Done', onClick: closeSheet },
+          { label: 'See the record', onClick: () => replaceSheet('receipt', { ref: a.ref }) },
+          { celebrate: false })
+      }
+      return done('Paid', `${naira(Math.abs(a.amount) * rate)} reached ${a.who}.`, a,
+                  [['Fee', 'None'], ['Rate', '1 dollar = ' + naira(rate)]])
+    }
+    return done('Sent', `${usd(Math.abs(a.amount))} is on its way to ${a.who}.`, a, [['Fee', 'None']])
   },
 
   /* ----- sending shares -----
@@ -1091,6 +1171,53 @@ export const SHEETS: Record<string, Builder> = {
       h('button', { class: 'btn btn-secondary', text: 'Close', on: { click: closeSheet } }))
   },
 
+  /** One person, as the console sees them. Read-only in every sense that
+   *  matters: there is nothing on this sheet that moves their money, because
+   *  there is nothing anywhere that could. */
+  'admin-person': (r) => {
+    const m = state.members.find((x) => x.id === str(r, 'id'))
+    if (!m) return sheet('Not found', h('p', { class: 'muted', text: 'No such account.' }))
+    return sheet(m.name,
+      figure('Funded', usd(m.funded, false)),
+      panel(
+        ['Identity', m.kyc === 'verified' ? 'Verified' : m.kyc === 'checking' ? 'Checking' : 'Not done'],
+        ['Eligible to trade', m.eligible ? 'Yes' : 'No'],
+        ['Account', m.state === 'active' ? 'Active' : m.state === 'restricted' ? 'Restricted' : 'Closed'],
+        ['Invite', m.invite],
+        ['Joined', m.joined],
+        ['Email', m.email],
+      ),
+      calloutEl('Opening this record is itself written to the audit log. Support can read; nobody can sign.'),
+      h('div', { class: 'receipt-on' },
+        h('button', { class: 'btn btn-secondary', text: 'Copy support reference',
+          on: { click: () => { navigator.clipboard?.writeText(m.id).catch(() => {}); toast('Reference copied') } } }),
+        h('button', { class: 'btn btn-secondary', text: 'Close',
+          on: { click: closeSheet } })))
+  },
+
+  /** Taking the wallet somewhere else.
+   *
+   *  The one flow that proves the product is not custody. It is deliberately
+   *  not a "download your key" button: Coinbase's export puts the key in front
+   *  of the person who owns it, on their device, and the honest version of
+   *  this screen says what that means before it starts rather than after. */
+  'export-wallet': () =>
+    sheet('Take your wallet elsewhere',
+      figure('This wallet is', 'Yours'),
+      panel(
+        ['Network', 'Base'],
+        ['Holds', 'USDC and your tokenised shares'],
+        ['Exported through', 'Coinbase'],
+        ['Tokkenly keeps', 'Nothing'],
+      ),
+      calloutEl('Once the key is in another app, that app can move everything at this address. Nobody can undo a transaction it makes, and we cannot help you recover one.', 'warning'),
+      h('span', { class: 'muted t-caption',
+        text: 'Your Tokkenly account stays open and your history stays here. What moves is control of the wallet.' }),
+      h('button', {
+        class: 'btn btn-primary', text: 'Continue with Coinbase',
+        on: { click: () => { toast('Opening the Coinbase export flow'); closeSheet() } },
+      })),
+
   /** The cards on file. The same shape as the banks sheet, because they do the
    *  same job from the other side. */
   cards: () =>
@@ -1114,6 +1241,8 @@ export const SHEETS: Record<string, Builder> = {
   'invest-review': (r) => {
     const v = num(r, 'v')
     const c = find(str(r, 't'))!
+    const stop = refused(c, v)
+    if (stop) return stop
     return review({
       title: 'Review',
       figureLabel: 'You are adding', figureValue: usd(v), amount: v,
@@ -1126,10 +1255,14 @@ export const SHEETS: Record<string, Builder> = {
         ['Price each', usd(c.price)],
         // What the token costs against the share it tracks. A fee line that
         // stops at the fee is not the whole cost on a tokenised product.
-        [discount(c) >= 0 ? 'Below the real price' : 'Above the real price',
-          `${pct(Math.abs(discount(c)), 2)} · ${c.name} is ${usd(c.mark)}`],
-        ['You receive', fmtShares(v / c.price) + ' shares of ' + c.name],
-        ['Settles', 'In about a minute'],
+        // One independent price, named by where it came from and how fresh it
+        // is. Quoting the venue against itself proves nothing, and quoting two
+        // references proves nothing twice.
+        [discount(c) >= 0 ? 'Below Chainlink' : 'Above Chainlink',
+          `${pct(Math.abs(discount(c)), 2)} · ${usd(c.mark)}, ${c.chainlinkAge}s ago`],
+        ['You receive', fmtShares(v / c.price) + ' ' + c.ticker],
+        ['At least', fmtShares(minReceived(v / c.price, GUARDS.slippagePct)) + ' ' + c.ticker],
+        ['Price impact', pct(priceImpact(c, v), 2)],
       ],
       // The last thing read before money moves is the one that has to carry
       // the risk, not a page in a settings menu nobody opens.
@@ -1160,6 +1293,8 @@ export const SHEETS: Record<string, Builder> = {
   'sell-review': (r) => {
     const v = num(r, 'v')
     const c = find(str(r, 't'))!
+    const stop = refused(c, v, 'sell')
+    if (stop) return stop
     return review({
       title: 'Review',
       figureLabel: 'You are selling', figureValue: usd(v),
@@ -1167,9 +1302,10 @@ export const SHEETS: Record<string, Builder> = {
         ['Sale', usd(v)],
         ['Fee', `${usd(tradeFee(v))} · ${state.fees.trade}%`],
         ['You receive', usd(v - tradeFee(v))],
-        ['Price each', usd(c.price)],
-        ['Shares sold', fmtShares(v / c.price) + ' of ' + c.name],
-        ['Lands in', 'Your wallet'],
+        ['At least', usd(minReceived(v - tradeFee(v), GUARDS.slippagePct))],
+        ['Price each', `${usd(c.price)} · Chainlink ${usd(c.mark)}, ${c.chainlinkAge}s ago`],
+        ['Shares sold', fmtShares(v / c.price) + ' ' + c.ticker],
+        ['Price impact', pct(priceImpact(c, v), 2)],
       ],
       note: 'Whatever you keep carries on tracking the price.',
       // A sale does not leave the account, but neither does a purchase, and

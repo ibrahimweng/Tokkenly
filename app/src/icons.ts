@@ -40,4 +40,8 @@ export const icon = {
   plus: () => svg('<path d="M12 5v14M5 12h14"/>', 18),
   grid: () => svg('<rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/>', 22),
   back: () => svg('<path d="m15 5-7 7 7 7"/>', 20),
+  /** Leaving the product. The only glyph that means "this opens somewhere we
+   *  do not control", so it belongs on the block explorer link and nowhere a
+   *  person would mistake for navigation inside the app. */
+  external: () => svg('<path d="M14 5h5v5"/><path d="M19 5 10 14"/><path d="M18 13v5.5A1.5 1.5 0 0 1 16.5 20h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H11"/>', 18),
 }

@@ -2,10 +2,10 @@ import { h } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, kv, callout, bucketBar, showBucketBar } from '../components/bits'
-import { find, markGap, type Instrument } from '../catalogue'
+import { find, markGap, deviation, type Instrument } from '../catalogue'
 import { barChart, type Range } from '../components/chart'
-import { state, actions, holding, inBucket, money, MASK } from '../state'
-import { usd, pct, signed, shares } from '../format'
+import { state, actions, holding, inBucket, money, assetOn, MASK } from '../state'
+import { usd, pct, signed, shares, shares as fmtShares } from '../format'
 import { go } from '../router'
 import { toast } from '../components/sheet'
 import { celebrate } from '../confetti'
@@ -108,6 +108,30 @@ function depthCard(c: Instrument): HTMLElement {
         h('span', { class: 'muted', html: icon.copy() }))))
 }
 
+/** Every corporate action that has moved the multiplier, newest first. Folded,
+ *  because the number is what matters day to day and the history is what
+ *  matters the one time somebody asks why it is not 1. */
+function foldRows(c: Instrument): HTMLElement {
+  const list = h('div', { class: 'stack-8', hidden: true },
+    ...c.actions.map((a) => h('div', { class: 'kv' },
+      h('span', { class: 'two-line' },
+        h('span', { class: 't-body-strong', text: a.what }),
+        h('small', { text: a.at })),
+      h('span', { class: 't-body-strong nowrap',
+        text: fmtShares(a.from) + ' → ' + fmtShares(a.to) }))))
+  const more = h('button', { class: 'panel-more',
+    text: c.actions.length + (c.actions.length === 1 ? ' corporate action' : ' corporate actions') })
+  more.setAttribute('aria-expanded', 'false')
+  more.addEventListener('click', () => {
+    list.hidden = !list.hidden
+    more.textContent = list.hidden
+      ? c.actions.length + (c.actions.length === 1 ? ' corporate action' : ' corporate actions')
+      : 'Hide the history'
+    more.setAttribute('aria-expanded', String(!list.hidden))
+  })
+  return h('div', { class: 'stack-8' }, more, list)
+}
+
 export function stockScreen(ticker: string): HTMLElement {
   const c = find(ticker)
   if (!c) {
@@ -134,9 +158,16 @@ export function stockScreen(ticker: string): HTMLElement {
     pageHeader(c.name,
       h('div', { class: 'chip-row' },
         h('span', { class: 'pill', text: c.kind === 'etf' ? 'ETF' : 'Company' }),
+        // What you can actually do with it. A market that shows twelve
+        // companies and lets you buy five has to say which five, on the thing
+        // itself, rather than at the point of refusal.
+        h('span', { class: 'pill' + (c.launch ? ' pos' : ' warn'),
+          text: c.launch ? 'Open for trading' : 'Not open yet' }),
         follow, bucketAdd(c),
-        h('button', { class: 'btn btn-primary btn-sm', text: 'Buy ' + c.ticker,
-          on: { click: () => go('/invest/' + c.ticker.toLowerCase() + '/invest') } }))),
+        c.launch
+          ? h('button', { class: 'btn btn-primary btn-sm', text: 'Buy ' + c.ticker,
+              on: { click: () => go('/invest/' + c.ticker.toLowerCase() + '/invest') } })
+          : null)),
     h('div', { class: 'row' },
       h('div', { class: 'stack col-main' },
         card(
@@ -147,6 +178,26 @@ export function stockScreen(ticker: string): HTMLElement {
               markLine(c)),
             timeframes(c)),
           priceChart(c)
+        ),
+        // The one card that makes this a tokenised product rather than a
+        // brokerage: what one token is, against the share it tracks, and every
+        // corporate action that has moved the number.
+        card(
+          cardHead('What one ' + c.ticker + ' is',
+            h('span', { class: 'pill', text: 'B20' })),
+          h('div', { class: 'stack-8' },
+            h('span', { class: 't-display', text: fmtShares(c.multiplier) + ' × ' + c.under }),
+            h('span', { class: 'muted',
+              text: c.multiplier > 1
+                ? `Above one because dividends and corporate actions accrue into the multiplier rather than being paid out. One ${c.ticker} is now worth ${fmtShares(c.multiplier)} ${c.under} shares.`
+                : `One ${c.ticker} tracks exactly one ${c.under} share. Nothing has accrued into it yet.` })),
+          kv('Reference price', usd(c.mark) + ' · Chainlink'),
+          kv('Venue price', usd(c.price) + ' · ' + (deviation(c) >= 0 ? '+' : '−') + pct(Math.abs(deviation(c)), 2)),
+          kv('Checked', c.chainlinkAge + ' seconds ago'),
+          c.actions.length
+            ? foldRows(c)
+            : h('span', { class: 'muted t-caption', text: 'No corporate actions since this token was issued.' }),
+          callout('A tokenised share cannot pay a dividend into your wallet or split into two tokens. Both are expressed as a multiplier, so the token quietly represents more of the underlying share over time.')
         ),
         card(
           cardHead('Growth and valuation'),
@@ -178,15 +229,32 @@ export function stockScreen(ticker: string): HTMLElement {
           cardHead('Your position'),
           held && held.shares > 0
             ? h('div', { class: 'stack-12' },
-                kv('You hold', state.prefs.hideBalances ? MASK : shares(held.shares) + ' shares'),
+                kv('You hold', state.prefs.hideBalances ? MASK : shares(held.shares) + ' ' + c.ticker),
                 kv('Worth', money(held.shares * c.price)),
+                // What it cost, and therefore whether you are up. Both read off
+                // the trades that built the position rather than stored beside
+                // it, so there is no second copy to disagree with the quantity.
+                kv('Average cost', state.prefs.hideBalances ? MASK : usd(held.each) + ' each'),
+                kv('You paid', money(held.cost)),
+                kv('Gain', h('span', { class: held.gain >= 0 ? 'pos t-body-strong' : 'warn t-body-strong',
+                  text: state.prefs.hideBalances
+                    ? MASK
+                    : `${signed(held.gain)} · ${(held.gain >= 0 ? '+' : '−') + pct(Math.abs(held.gainPct))}` })),
                 kv('Today', h('span', { class: c.dayPct >= 0 ? 'pos t-body-strong' : 't-body-strong',
                   text: state.prefs.hideBalances
                     ? MASK : signed((held.shares * c.price * c.dayPct) / 100) })))
             : h('span', { class: 'muted', text: 'You do not own any yet.' }),
-          h('button', { class: 'btn btn-primary', text: 'Buy ' + c.ticker,
-            on: { click: () => go('/invest/' + c.ticker.toLowerCase() + '/invest') } }),
-          held && held.shares > 0
+          // Only if it can actually be bought. A primary button that leads
+          // straight to a refusal is the product wasting somebody's press to
+          // avoid admitting something on the screen they are already on.
+          c.launch && assetOn(c.ticker)
+            ? h('button', { class: 'btn btn-primary', text: 'Buy ' + c.ticker,
+                on: { click: () => go('/invest/' + c.ticker.toLowerCase() + '/invest') } })
+            : h('span', { class: 'muted t-caption',
+                text: c.launch
+                  ? `${c.ticker} is paused. You keep anything you hold, and you can still send it.`
+                  : `${c.ticker} is not open for trading yet. It is here so you can watch it.` }),
+          held && held.shares > 0 && assetOn(c.ticker)
             ? h('button', { class: 'btn btn-secondary', text: 'Sell ' + c.ticker,
                 on: { click: () => go('/invest/' + c.ticker.toLowerCase() + '/sell') } })
             : null,

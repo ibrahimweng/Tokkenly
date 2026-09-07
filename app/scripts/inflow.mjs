@@ -48,10 +48,14 @@ console.log('TWO WAYS IN, AND NEITHER OF THEM IS INSTANT')
   })))
   ok('the two rails are on the screen, not behind a dropdown', rails.length === 2,
      rails.map((r) => r.text).join(' | '))
-  ok('and they say what they cost and how long they take',
-     /Free/.test(rails[0].text) && /minute/.test(rails[0].text) &&
-     /%/.test(rails[1].text) && /[Ss]econd/.test(rails[1].text))
-  ok('a transfer is the default', rails[0].on && !rails[1].on)
+  ok('and the transfer says what it costs and how long it takes',
+     /Free/.test(rails[0].text) && /minute/.test(rails[0].text))
+  ok('a transfer is the default', rails[0].on)
+  // The card rail ships switched off, so this is also the first proof that
+  // the console is not decoration: what operations sets is what a customer
+  // meets, on the same render.
+  ok('a rail operations has switched off reads as off rather than vanishing',
+     /Paused/.test(rails[1].text) && !rails[1].on, rails[1].text)
 
   // The account is dedicated, so there is no reference to quote.
   const va = await p.evaluate(() => document.querySelector('.va-number')?.textContent?.trim())
@@ -136,6 +140,27 @@ console.log('AND SAYS SO, ON THE ONE SCREEN THAT WAS NOT LOOKING')
 
 console.log('A CARD IS THE OTHER RAIL, AND IT COSTS SOMETHING')
 {
+  // Turn it back on from the console, which is the only way it can be turned
+  // on — and the point: the switch that hid the rail is the switch that brings
+  // it back, and no code path exists to do it any other way.
+  await at('/admin/switches')
+  await p.evaluate(() => {
+    const row = [...document.querySelectorAll('.sw-row')].find((e) => /Card funding/.test(e.textContent))
+    row?.querySelector('button')?.click()
+  })
+  await p.waitForTimeout(400)
+  const back = await p.evaluate(() => {
+    const row = [...document.querySelectorAll('.sw-row')].find((e) => /Card funding/.test(e.textContent))
+    return row?.querySelector('button')?.textContent
+  })
+  ok('the console can turn the card rail back on', back === 'On', back ?? 'no switch')
+  await at('/addmoney')
+  const rails = await p.evaluate(() => [...document.querySelectorAll('.rail')].map((e) => ({
+    text: e.innerText.replace(/\n/g, ' · '), off: e.classList.contains('off'),
+  })))
+  ok('and the customer screen shows it on the very next render',
+     !rails[1].off && /%/.test(rails[1].text) && /[Ss]econd/.test(rails[1].text), rails[1].text)
+
   const before = await cash()
   await at('/addmoney?via=card')
   await amount(100)
@@ -198,8 +223,18 @@ console.log('AND THE ONE THAT CHANGES CURRENCY SAYS SO')
   // one entry pretending to be denominated twice.
   ok('as a conversion: two postings, one in each currency',
      bk.posts.some((t) => /Took \$120\.00 from your wallet/.test(t)) &&
-     bk.posts.some((t) => /^Paid ₦[\d,]+ to GTBank$/.test(t)),
+     bk.posts.some((t) => /^₦[\d,]+ queued for GTBank$/.test(t)),
      bk.posts.slice(0, 2).join(' | '))
+  // And in two stages. The dollars have gone; the naira are in our payout
+  // account, not the customer's bank, and nothing calls it done until they are.
+  ok('the naira wait in an account of ours rather than being called delivered',
+     !!bk.balances['Tokkenly payout account'], bk.balances['Tokkenly payout account'] ?? 'nothing queued')
+  await p.waitForTimeout(3600)
+  const bk2 = await books()
+  ok('and the second stage lands them, with nothing left queued',
+     bk2.posts.some((t) => /^₦[\d,]+ reached GTBank$/.test(t)) && !bk2.balances['Tokkenly payout account'],
+     bk2.posts[0])
+  ok('and the books are still level after both stages', bk2.sums.every((off) => !off))
   ok('and the books are still level', bk.sums.every((off) => !off))
 }
 

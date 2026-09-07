@@ -103,7 +103,10 @@ console.log('WHAT FOLDS AND WHAT DOES NOT')
   ok('a review folds nothing', (await p.locator('.panel-more').count()) === 0)
   ok('and still states every term',
      /INVESTMENT/.test(rev) && /FEE/.test(rev) && /TOTAL/.test(rev) &&
-     /YOU RECEIVE/.test(rev) && /REAL PRICE/.test(rev), rev.slice(0, 90))
+     // "Above/Below Chainlink" now, because the product stopped carrying two
+     // independent prices and started naming the one it has.
+     /YOU RECEIVE/.test(rev) && /CHAINLINK/.test(rev) && /AT LEAST/.test(rev) &&
+     /PRICE IMPACT/.test(rev), rev.slice(0, 90))
   // Past four facts the rows pair up, which is what bought the height back.
   ok('past four facts the rows pair up',
      (await p.locator('.panel.pairs').count()) === 1)

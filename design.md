@@ -5883,7 +5883,119 @@ would have found half the answer. Receive names both.
      built next to it. When you make one part of a product true, walk the parts
      that were quietly relying on it being false.
 
-### 11g.40 Still open
+### 11g.40 The rest of the MVP, with dummy data behind it
+
+A read of the MVP spec against the build turned up three lists: things half
+built, things not started, and two things built that the spec puts outside the
+MVP. This tier is all three, on the principle that a prototype's job is to show
+every feature working — the wiring is the engineers' problem and the screens
+are not.
+
+**A token is not a share, and now the product says which.** Everything you hold
+is `AAPLc`, not `AAPL`: the suffix is the whole point of a tokenised product
+and hiding it makes the app a broker pretending. `find()` answers to both, so
+every route, bookmark, palette entry and test written against the bare symbol
+still lands — a naming convention that breaks addresses has cost more than it
+is worth.
+
+The company page gained the card that makes it tokenised rather than brokered:
+**one AAPLc is 1.0043 × AAPL**, above one because a tokenised share cannot pay
+a dividend into your wallet or split into two tokens, so both accrue into a
+B20 multiplier instead. The corporate actions that moved it are folded
+underneath. It is the single most confusing thing about the instrument and the
+product had never mentioned it.
+
+Twelve assets, four of them the approved launch set. The other eight are
+visible and cannot be bought, which is what a market that is honest about its
+pipeline looks like: hiding them makes the product look smaller than it is,
+and letting somebody compose an order in one and refusing at the review wastes
+their afternoon.
+
+**A trade is checked against a price the venue did not supply.** Price impact,
+minimum received, and the gap to the Chainlink reference are on the composer,
+and four refusals sit in front of the button rather than behind it: stale
+reference, deviation over 1.5%, impact over 2%, and an order bigger than the
+book. All of them show their arithmetic — a refusal that does not show its
+working reads as the app being broken.
+
+Two findings came out of building it. The impact curve was purely quadratic
+and read `0.00%` on every order a person could afford, which made both the
+figure and the refusal behind it decoration; it is linear-dominant now, and a
+$2,400 order against METAc's thin book reads 3.56% and is refused. And the
+catalogue briefly carried **two independent prices** — `mark` and a new
+`chainlink` — which are the same fact from the same kind of source, and the
+review printed both. One number, named by where it comes from, with an age on
+it.
+
+**A portfolio knows what it cost.** Average cost and gain per holding, derived
+from the trades that built the position exactly the way the quantity is, so
+the two cannot drift. `basis()` walks the postings and reduces cost
+proportionally on a sale. It went in wrong first: the opening posting is one
+movement carrying every account the replay could not reach, so reading its
+wallet leg as the price of its Apple leg put the average cost at −$39.87 a
+share. A posting that balances Apple against "Apple before this record" is an
+opening position and is priced as one.
+
+**A bank payout is two stages**, because there are two: the dollars leave the
+wallet when it is authorised and the naira reach somebody's bank when the banks
+get round to it. Nothing calls it complete until the second, the naira wait in
+a named account in between, and Transfer shows both directions of flight.
+
+**Identity and permission are different facts.** Five checks — who you are,
+over eighteen, resident, sanctions, and may-hold-this-instrument — each with
+its own state and its own sentence. The last can fail while the others pass,
+which is the commonest real answer and the one a single verified/not-verified
+badge cannot express. There is a button on the screen that produces that
+ending, because a state nobody has seen is a state nobody has designed.
+
+**The wallet says who holds the key.** The product's central claim — that we
+cannot move your money and cannot be made to — was invisible: the address was
+on Receive, the balance on Transfer, and nowhere did it say who could sign. Now
+it is a group of its own, with the export flow, the sponsored-gas ceiling, and
+the invite that let this person in.
+
+**And there is a console.** `/admin`, its own place rather than a section of
+Account, because it is not this person's account: it answers to somebody else
+about everybody else's money, and dressing the two the same is how a support
+agent ends up thinking they are looking at their own settings. Provider health
+with the customer-facing fallback beside each one, nine switches, the pilot
+list, deposits and orders and withdrawals, reconciliation breaks you can work,
+the staff audit log, and the launch gates from "Required before launch" as a
+screen rather than a paragraph in a document.
+
+Two rules it keeps. **Nothing in it can move customer money** — there is no
+key, so this is not a policy anybody has to enforce. And **every switch names
+what a customer sees**: "buying: off" is a boolean, "every buy button is
+replaced by a line saying trading is paused" is a decision.
+
+The switches are wired all the way through. Card funding ships off, so Add
+money shows the card rail as paused rather than hiding it; METAc ships off, so
+its buy button is a sentence; turning off Buying replaces the buy composer's
+button with the reason. `mvp.mjs` flips them from the console and checks the
+customer screen on the very next render, which is the only way to know a switch
+is not decoration.
+
+**Left as they are, on request:** Borrow & Lend and sending a share to another
+person both work and both sit outside the MVP the spec describes. They are the
+two future product families, and they stay demoable.
+
+108. **A switch that changes nothing is a lie with a toggle on it.** An ops
+     console full of booleans nobody has wired is worse than no console: it
+     tells the person flipping it that they have done something. Wire it to the
+     screen, name the consequence in the customer's words on the row, and test
+     the customer screen rather than the state.
+
+109. **Show the pipeline, refuse the order.** A market that hides what is not
+     tradable looks smaller than it is; one that lets you compose an order and
+     refuses at the review wastes the composing. Both, on the thing itself,
+     before the amount.
+
+110. **Two numbers for one fact is one number and a bug waiting.** The
+     catalogue carried a venue price, a "real" price and a Chainlink reference
+     for the same instrument, and the review printed two of them side by side.
+     When a second source arrives, check whether it is a second fact.
+
+### 11g.41 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from
   using the product afterwards. Item 30 was held back until it was asked for,
@@ -5907,6 +6019,11 @@ would have found half the answer. Receive names both.
   reversing posting and the wallet would need somewhere to take it from.
 - A transfer lands on a timer, because there is no webhook to wait for. That is
   the seam a real backend arrives at, and it is one `setTimeout` wide.
+- Every provider is dummy data: CDP, Didit, Switch, 0x, Chainlink and viem are
+  named, their health is shown, their fallbacks are written and none of them is
+  called. That is the seam, and it is the whole remaining engineering job.
+- The console has no roles. Anybody who can reach `/admin` sees everything, and
+  a real one separates support from risk from engineering.
 - One notification is written by the product and five are seeded. Every other
   event still completes inside the dialog that started it, so nothing else has
   anything to announce — but a real product would have a price alert and a

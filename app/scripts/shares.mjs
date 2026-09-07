@@ -33,11 +33,11 @@ console.log('IT STARTS ON THE HOLDING')
   await at(p, '/invest/aapl')
   const btns = await p.evaluate(() => [...document.querySelectorAll('.col-side .btn')].map((e) => e.textContent))
   ok('the action sits beside Buy and Sell, on the position it moves',
-     btns.join(' | ') === 'Buy AAPL | Sell AAPL | Send AAPL to someone', btns.join(' | '))
+     btns.join(' | ') === 'Buy AAPLc | Sell AAPLc | Send AAPLc to someone', btns.join(' | '))
   // MSFT is on the watchlist and not held.
   await at(p, '/invest/msft')
   ok('and is not offered on a company you do not hold',
-     !(await p.evaluate(() => document.body.innerText)).includes('Send MSFT to someone'))
+     !(await p.evaluate(() => document.body.innerText)).includes('Send MSFTc to someone'))
   await at(p, '/invest/msft/send')
   ok('the address still answers, with the thing you would have to do first',
      /do not hold any MSFT/i.test(await p.evaluate(() => document.body.innerText)) &&
@@ -95,9 +95,9 @@ console.log('SENDING ONE')
   ok('it opens at one share, and says what that is in shares',
      /They receive · 1.00 AAPL/.test(summary), summary.slice(0, 60))
   ok('with no fee on either side', /Fee · None, either side/.test(summary))
-  ok('and what you are left holding', /You keep · 22.42 AAPL/.test(summary), summary)
+  ok('and what you are left holding', /You keep · 22.42 AAPLc/.test(summary), summary)
   ok('the button names what goes, not what it is worth',
-     (await p.locator('.col-compose .btn-primary').textContent()) === 'Send 1.00 AAPL')
+     (await p.locator('.col-compose .btn-primary').textContent()) === 'Send 1.00 AAPLc')
   await p.locator('.col-compose .btn-primary').click(); await p.waitForTimeout(500)
   const rev = await p.evaluate(() => document.querySelector('.sheet')?.innerText.replace(/\n/g, ' · ') ?? '')
   ok('the review states the shares, the company and the price',
@@ -105,14 +105,14 @@ console.log('SENDING ONE')
   ok('and warns that it cannot be recalled', /cannot be recalled/.test(rev))
   await p.locator('.scrim .btn-primary').click(); await p.waitForTimeout(900)
   ok('the outcome says who holds them now',
-     /1.00 AAPL now belong to Tunde Bakare/.test(
+     /1.00 AAPLc now belong to Tunde Bakare/.test(
        await p.evaluate(() => document.querySelector('.sheet')?.innerText.replace(/\n/g, ' ') ?? '')))
   await p.getByRole('button', { name: 'See the record' }).click(); await p.waitForTimeout(700)
   const rec = await p.evaluate(() => document.querySelector('.sheet')?.innerText.replace(/\n/g, ' · ') ?? '')
   // The receipt for a share that moved is a receipt about the share, not a
   // line of dollars with a name beside it.
   ok('the receipt names the company it was about',
-     /AAPL · Apple/.test(rec) && /SHARES · 1.00 AAPL/.test(rec), rec.slice(0, 120))
+     /AAPLc · Apple/.test(rec) && /SHARES · 1.00 AAPLc/.test(rec), rec.slice(0, 120))
   ok('the total is above the fold and the arithmetic is behind it',
      /WORTH THEN · \$224.10/.test(rec) && !/PRICE EACH/.test(rec), rec.slice(0, 140))
   await p.locator('.panel-more').click(); await p.waitForTimeout(300)
@@ -181,7 +181,7 @@ console.log('THE PIN STANDS IN FRONT OF IT TOO')
   }
   await p.waitForTimeout(500)
   await p.locator('.scrim .btn-primary').click(); await p.waitForTimeout(1000)
-  ok('and the whole holding can go', /4.80 TSLA now belong to/.test(
+  ok('and the whole holding can go', /4.80 TSLAc now belong to/.test(
      await p.evaluate(() => document.querySelector('.sheet')?.innerText.replace(/\n/g, ' ') ?? '')))
   await p.keyboard.press('Escape'); await p.waitForTimeout(400)
   await at(p, '/invest/tsla')

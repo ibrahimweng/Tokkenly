@@ -496,6 +496,19 @@
 .rail.on small, .rail.on .pos { color: inherit; opacity: 0.72; }
 .rail small { color: var(--muted); }
 
+/* A rail somebody in operations has switched off. It stays on the screen and
+   reads as unavailable rather than vanishing: a door that disappears makes
+   people think they misremembered. */
+.rail.off { background: none; color: var(--muted); }
+.rail.off .mark { opacity: 0.5; }
+
+/* A switch row in the console. The consequence sits under the label and the
+   control is on the right, so nobody flips a thing without reading what it
+   does to somebody. */
+.sw-row { align-items: flex-start; gap: 16px; }
+.sw-row .btn { min-width: 72px; flex: none; }
+.sw-row .subtle { color: var(--subtle); }
+
 /* An account number is there to be copied, so the number is the button. */
 .copy {
   display: inline-flex; align-items: center; gap: 8px;

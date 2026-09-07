@@ -36,7 +36,9 @@ console.log('THE INDEX  eight rows, not ten cards')
     label: e.querySelector('.t-body-strong')?.textContent ?? '',
     value: e.querySelector('.set-value')?.textContent ?? '',
   })))
-  ok('every group is a row', rows.length === 8, rows.length + ' rows')
+// Nine: the wallet became a group of its own when the product started saying
+// who holds the key, what it sponsors, and how somebody got in.
+  ok('every group is a row', rows.length === 9, rows.length + ' rows')
   ok('and every row answers before you tap',
      rows.every((r) => r.value.length > 0),
      rows.map((r) => r.label + ' → ' + r.value).join(' | '))
@@ -46,9 +48,13 @@ console.log('THE INDEX  eight rows, not ten cards')
   // The wall was the index itself: ten cards where eight rows would do. The
   // panel beside it is allowed cards — that is what a panel is for — so the
   // question is whether the column holding the list has any.
+// One card beside the list, and it is the door to the ops console rather than
+// a setting. The wall this was written against was ten cards *of settings*;
+// what is being kept out is a second way to change the same things, not a
+// signpost to a different product.
   ok('the old wall of cards is gone',
-     (await p.locator('main .set-col .card').count()) === 0 &&
-     (await p.locator('main .set-list .set-row').count()) === 8,
+     (await p.locator('main .set-col .card').count()) === 1 &&
+     (await p.locator('main .set-list .set-row').count()) === 9,
      await p.locator('main .set-col .card').count() + ' cards beside the list')
   await p.close()
 }
@@ -151,7 +157,7 @@ console.log('WIDE AND NARROW  a rail beside a panel, or one screen at a time')
   await at(m, '/account')
   ok('and the index alone', (await m.locator('.set-list').count()) === 1)
   ok('with a way back into each group',
-     (await m.locator('.set-row').count()) === 8)
+     (await m.locator('.set-row').count()) === 9)
   await p.close(); await m.close()
 }
 

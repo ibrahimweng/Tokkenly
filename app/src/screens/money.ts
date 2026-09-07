@@ -1,13 +1,13 @@
 import { h } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader, eyebrow } from '../components/shell'
-import { card, cardHead, kv, callout, emptyState, fieldError, amount } from '../components/bits'
+import { card, cardHead, kv, callout, providerNote, emptyState, fieldError, amount } from '../components/bits'
 import { table } from '../components/table'
 import { searchField, searchNote } from '../components/search'
 import { rank, onlyNear } from '../match'
 import { composerScreen } from '../components/composer'
 import {
-  state, movementCeiling, ceilingLabel, holding, cardFee, resolveAccount, WALLET,
+  state, movementCeiling, ceilingLabel, holding, cardFee, resolveAccount, switchOn, WALLET,
   type Destination,
 } from '../state'
 
@@ -229,7 +229,7 @@ function whereSide(opts: { search: boolean }): (Node | null)[] {
         })
       : null,
     peopleCard,
-    card(
+    switchOn('payout.ngn') ? card(
       cardHead('Your own bank'),
       ...state.banks.map((b) =>
         h('button', {
@@ -242,8 +242,12 @@ function whereSide(opts: { search: boolean }): (Node | null)[] {
             h('small', { text: '•••• ' + b.last4 + ' · ' + b.holder })),
           h('span', { class: 'muted', html: icon.chevron() }))),
       h('span', { class: 'muted t-caption', text: 'Dollars out, naira in, at the rate you are shown.' }),
-      h('button', { class: 'link quiet', text: 'Add a bank', on: { click: () => openSheet('banks') } })),
-    payeeCard(),
+      h('button', { class: 'link quiet', text: 'Add a bank', on: { click: () => openSheet('banks') } }))
+      : card(
+          cardHead('Your own bank', h('span', { class: 'pill warn', text: 'Paused' })),
+          h('span', { class: 'muted',
+            text: 'Naira payouts are switched off while we sort something out with the bank rail. Sending dollars to a person or an address still works, and anything already queued will finish.' })),
+    switchOn('payout.ngn') ? payeeCard() : null,
     card(
       cardHead('A Base address'),
       addressField,
@@ -716,7 +720,8 @@ function pastMoves(which: 'in' | 'out'): HTMLElement | null {
 
 export type Via = 'transfer' | 'card'
 
-export const addVia = (): Via => (current().query.get('via') === 'card' ? 'card' : 'transfer')
+export const addVia = (): Via =>
+  (current().query.get('via') === 'card' && switchOn('fund.card') ? 'card' : 'transfer')
 
 /** The two rails, as two choices you can see at once. Not a dropdown: they
  *  differ in what they cost and how long they take, and both facts belong on
@@ -737,9 +742,20 @@ function railPicker(now: Via, head = true): HTMLElement {
     b.setAttribute('aria-pressed', String(key === now))
     return b
   }
+  // A rail that has been switched off is not hidden, it is shown as off. A
+  // door that vanishes makes people think they misremembered; one that says
+  // "not right now" tells them to come back.
+  const cardOn = switchOn('fund.card')
   const rows = h('div', { class: 'stack-8' },
     one('transfer', 'Bank transfer', 'Free', 'A minute or two', icon.convert()),
-    one('card', 'Card', state.fees.card + '%', 'Seconds', icon.wallet()))
+    cardOn
+      ? one('card', 'Card', state.fees.card + '%', 'Seconds', icon.wallet())
+      : h('div', { class: 'rail off' },
+          h('span', { class: 'mark', html: icon.wallet() }),
+          h('span', { class: 'two-line grow' },
+            h('span', { class: 't-body-strong', text: 'Card' }),
+            h('small', { text: 'Paused. Use a transfer — it is free and takes a minute.' })),
+          h('span', { class: 'muted t-caption nowrap', text: 'Off' })))
   // Above the amount, not beside it. Which rail you are on changes the fee,
   // the wait and what can be promised about the rate — so it is the same kind
   // of thing as Send's "To" row, and it goes in the same place, which is also
@@ -832,6 +848,10 @@ export function addMoneyScreen(): HTMLElement {
     lede: () => railPicker(how),
     right: (v) =>
       h('div', { class: 'stack' },
+        // The provider behind this rail, when it is not well. Same source as
+        // the console's metric, so the two cannot disagree about whether the
+        // thing is up.
+        providerNote('switch'),
         how === 'card'
           ? card(
               cardHead('What you pay'),

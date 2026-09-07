@@ -48,7 +48,10 @@ for (const [flow, route, verb] of [['BUY', '/invest/aapl/invest', 'Buy'], ['SELL
     summary: [...document.querySelectorAll('.summary .kv')].map((e) => e.textContent),
   }))
   ok('typing an amount moves the button', /75/.test(after.action ?? ''), after.action ?? '')
-  ok('and the summary follows it', after.summary.some((s) => /sh|share/i.test(s)), after.summary[0] ?? '')
+// The summary names the token you end up holding rather than "shares": what
+// arrives in the wallet is AAPLc, and the review says so.
+  ok('and the summary follows it', after.summary.some((s) => /[A-Z]{2,5}c\b/.test(s)),
+     after.summary.join(' | ').slice(0, 90))
 
   /* over the limit */
   await input.fill('999999')

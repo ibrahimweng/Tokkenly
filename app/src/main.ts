@@ -18,6 +18,7 @@ import { growScreen, borrowScreen, repayScreen, earnScreen, takeOutScreen } from
 import { historyScreen } from './screens/history'
 import { accountScreen } from './screens/settings'
 import { statementScreen } from './screens/statement'
+import { adminScreen } from './screens/admin'
 import { signInScreen, signUpScreen } from './screens/auth'
 import { sendScreen, receiveScreen, addMoneyScreen, withdrawScreen, sendSharesScreen } from './screens/money'
 import { allScreen } from './screens/all'
@@ -85,6 +86,8 @@ function screenFor(r: Route): HTMLElement {
   // a palette entry from an older session and every link already in the wild
   // land where the thing they name now lives.
   if (a === 'statement') return statementScreen()
+  // The ops console. Its own place, because it is not this person's account.
+  if (a === 'admin') return adminScreen()
   if (a === 'account') return accountScreen(b)
   if (a === 'security') return accountScreen('security')
   if (a === 'support') return accountScreen('support')
