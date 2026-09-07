@@ -10,7 +10,7 @@ import {
 } from '../state'
 import { usd, pct, signed, when } from '../format'
 import { go, openSheet } from '../router'
-import { objectArt, level, COINS, WALLET, LEND_RAMP, OWE_RAMP, type ObjectField } from '../components/art'
+import { objectArt, stir, level, COINS, WALLET, LEND_RAMP, OWE_RAMP, type ObjectField } from '../components/art'
 import { hint, type Hint } from '../components/hint'
 
 /* ---------------- the hub ---------------- */
@@ -76,7 +76,8 @@ function productCard(opts: {
   // card's own bottom edge and the empty end of the field faces the button.
   // Four across: the band is about 494 wide and the field is 24 columns, so
   // one copy of it put 20 pixels between dot centres and a 17px ball in each.
-  const band = h('div', { class: 'prod-art' }, objectArt(opts.art, opts.at, opts.ramp))
+  const art = objectArt(opts.art, opts.at, opts.ramp)
+  const band = h('div', { class: 'prod-art' }, art)
   // No second link in the corner. "Repay" and "Take it back" were two more
   // decisions on a card whose job is one, and both are the first thing on the
   // page the button already leads to.
@@ -118,6 +119,11 @@ function productCard(opts: {
   // is the field itself — flipped, and in the other colour — not which end of
   // the card it sits at.
   c.append(words, figures, h('div', { class: 'spacer' }), standing, action, band)
+  // The same answer the three doors on Home give (11g.51): the field parts
+  // around the pointer wherever it is on the card. Reach and push are in the
+  // field's own units, so the picture behaves the same way here as it does
+  // there even though this one is drawn a fifth larger.
+  stir(c, art)
   return c
 }
 

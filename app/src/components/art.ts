@@ -383,77 +383,98 @@ export function objectArt(
    the whole field — and a dot that has been moved is remembered so it can be
    put back in one pass rather than searched for. Frames are asked for by
    pointer movement and stop arriving when it does. */
-/* Both in CSS pixels, because that is the space a hand is in. The field's own
-   units are whatever the composition needed, and a reach written in them would
-   mean something different on every card that used it. */
-const REACH = 420          // how far from the pointer a dot still feels it
-const PUSH = 30            // how far a dot directly under it goes, at most
-const FAINT = 0.5          // under half a pixel is not a movement, it is a cost
+/* Reach and push are in the field's own units — cells, twelve to a column —
+   and not in pixels, which took a second surface to work out. A pixel reach is
+   a different reach on every card that uses it: the doors draw the field at
+   0.37px a unit and the two product cards at 0.44, so the same 420px would
+   cover a fifth less of the picture on the taller card, and less of a picture
+   is a different effect rather than the same one bigger. In the field's units
+   the same number of dots move by the same fraction of their own spacing,
+   whatever size the picture happens to be drawn at, which is the thing that
+   has to stay the same: a hand is one size and so is a dot.
+
+   What does belong in pixels is the floor. Half a pixel of movement is not
+   movement to an eye, whatever it is to the arithmetic, so that one is
+   converted back through the matrix. */
+const REACH = 1130         // ≈ 94 cells, about four fifths of a composition
+const PUSH = 81            // ≈ 6.7 cells: a dot clears its neighbours and
+                           //   lands among the next ones out
+const FAINT = 0.5          // drawn pixels, under which nothing is happening
 
 export function stir(card: HTMLElement, svg: SVGSVGElement): void {
   // A hover effect for a device with no hover, and motion for somebody who
   // asked for none: neither is worth a frame.
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
-  let dots: { el: SVGCircleElement; x: number; y: number }[] | null = null
+  let dots: { el: SVGCircleElement; x: number; y: number; tx: number; ty: number }[] | null = null
   const moved = new Set<SVGCircleElement>()
   let mx = 0, my = 0, queued = false
 
   let homing = 0
   const home = () => {
     if (!moved.size) return
-    // Eased, and only here: see the note on `.homing` in components.css.
+    if (dots) for (const d of dots) { d.tx = 0; d.ty = 0 }
+    // Eased, and only here: see the note on `.stir-home` in components.css.
     const box = svg.parentElement
-    box?.classList.add('homing')
+    box?.classList.add('stir-home')
     for (const el of moved) el.style.transform = ''
     moved.clear()
     clearTimeout(homing)
-    homing = setTimeout(() => box?.classList.remove('homing'), 260)
+    homing = setTimeout(() => box?.classList.remove('stir-home'), 260)
   }
 
   const frame = () => {
     queued = false
     // A push that lands mid-return would be eased, and a pointer coming back
     // into the card would drag the field behind it.
-    if (homing) { clearTimeout(homing); homing = 0; svg.parentElement?.classList.remove('homing') }
+    if (homing) { clearTimeout(homing); homing = 0; svg.parentElement?.classList.remove('stir-home') }
     const m = svg.getScreenCTM()
     if (!m) return
     if (!dots) {
       dots = [...svg.querySelectorAll('circle')].map((el) => ({
-        el, x: Number(el.getAttribute('cx')), y: Number(el.getAttribute('cy')),
+        el, x: Number(el.getAttribute('cx')), y: Number(el.getAttribute('cy')), tx: 0, ty: 0,
       }))
     }
     // The pointer, in the field's own coordinates. Taken from the matrix
     // rather than from the box and the ratio, because the field is cropped
     // and a `slice` crop is exactly where hand arithmetic goes wrong.
+    // The pointer, in the field's own coordinates. Taken off the matrix rather
+    // than off the box and the ratio, because the field is cropped with
+    // `slice` and a cropped ratio is exactly where doing it by hand goes
+    // wrong. The same matrix says how many field units a drawn pixel is.
     const at = new DOMPoint(mx, my).matrixTransform(m.inverse())
-    // One pixel, in field units. The field is cropped with `slice`, so this is
-    // taken off the matrix rather than off the box and the ratio, which is
-    // exactly where doing it by hand goes wrong.
-    const per = 1 / Math.hypot(m.a, m.b)
-    const reach = REACH * per, push = PUSH * per, faint = FAINT * per
+    const faint = FAINT / Math.hypot(m.a, m.b)
     const still = new Set(moved)
     for (const d of dots) {
       const dx = d.x - at.x, dy = d.y - at.y
       const d2 = dx * dx + dy * dy
-      if (d2 > reach * reach) continue
+      if (d2 > REACH * REACH) continue
       const len = Math.sqrt(d2) || 1
       // Cubed falloff. Squared was too flat: at a reach wide enough to be felt
       // from the words the whole field slid as one piece, which is a picture
       // being dragged rather than a picture being pushed through. Cubed keeps
       // the shove local and lets the rest of the reach be a long soft tail.
-      const t = 1 - len / reach
-      const by = push * Math.pow(t, 1.6)
+      const t = 1 - len / REACH
+      const by = PUSH * Math.pow(t, 1.6)
       // And a dot moving less than half a pixel is not moving. Dropping those
       // is most of the field on a wide tile, and every one of them costs a
       // style write and a transition the eye will never see.
       if (by < faint) continue
       const k = by / len
-      d.el.style.transform = `translate(${(dx * k).toFixed(1)}px, ${(dy * k).toFixed(1)}px)`
-      moved.add(d.el)
+      // Rounded to a whole field unit, which is under half a drawn pixel, and
+      // skipped when it has not changed. Out at the edge of the reach a dot's
+      // offset moves by a fraction of a unit a frame however fast the pointer
+      // goes, and writing it again is a style recalculation bought for nothing.
+      // On the larger of the two fields this is most of the field, most frames.
+      const tx = Math.round(dx * k), ty = Math.round(dy * k)
       still.delete(d.el)
+      if (tx === d.tx && ty === d.ty && moved.has(d.el)) continue
+      d.tx = tx; d.ty = ty
+      d.el.style.transform = `translate(${tx}px, ${ty}px)`
+      moved.add(d.el)
     }
     for (const el of still) { el.style.transform = ''; moved.delete(el) }
+    if (still.size && dots) for (const d of dots) if (still.has(d.el)) { d.tx = 0; d.ty = 0 }
   }
 
   card.addEventListener('pointermove', (e) => {

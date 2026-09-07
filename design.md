@@ -6862,6 +6862,48 @@ somebody who asked for no motion none of it happens at any point.
      one back to rest — and let the one that is already following a hand
      follow it.
 
+### 11g.52 The same stir, on a picture drawn a fifth larger
+
+The two product cards on Borrow & Lend take the effect the doors took in
+11g.51, and their fields come down to a third with them. On these two it was
+worse than on the doors, because the ramps put colour in the field: a green one
+and an amber one, at full strength, under a title and a figure somebody is
+actually there to read.
+
+Giving them the stir turned up the thing 11g.51 had got away with. Reach and
+push were in CSS pixels — "because that is the space a hand is in", which is
+true of the hand and false of the picture. The doors draw their field at 0.37px
+a unit and these cards draw theirs at 0.44, so the same 420px reach covers a
+fifth less of the composition here, and a fifth less of a picture is a
+different effect rather than the same effect on a bigger card. What has to stay
+the same is what the field does: the same number of dots moving by the same
+fraction of their own spacing. So reach and push are in the field's units now —
+1130 and 81, about 94 cells and 6.7 — and the same pointer opens the same hole
+in both. Measured: 80 units on a door, 81 on a card.
+
+The one quantity that stays in pixels is the floor. Half a *drawn* pixel is not
+a movement to an eye whatever it is to the arithmetic, and that one is
+converted back through the matrix.
+
+**And a second cost, which was not the writes either.** 2,291 dots is twice a
+door's, and the frame went to 18ms with 38 at worst. The fix was not fewer dots
+or a shorter reach: it was noticing that out in the tail of the falloff a dot's
+offset changes by a fraction of a unit a frame however fast the pointer moves.
+Rounding the offset to a whole field unit — under half a drawn pixel — and
+skipping the write when it has not changed took the worst frame from 38ms to
+25. On the larger field that is most of the field, most frames.
+
+`hover.mjs` reads both surfaces and compares them in field units, which is the
+only place the property this tier is about can be seen at all: pixels would
+report the two as different and be right, and the effect would still be wrong.
+Run against a pixel-defined reach it fails, naming 80 against 68.
+
+134. **Say a size in the units of the thing it is a size of.** A reach across a
+     picture is a number of the picture's own cells; a floor under what an eye
+     can see is a number of screen pixels. Writing both in pixels made the
+     first one wrong on the second surface that used it, and there is no
+     surface count at which that gets easier to notice.
+
 ### 11g.49 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from

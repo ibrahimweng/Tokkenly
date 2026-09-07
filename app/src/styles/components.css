@@ -108,7 +108,12 @@
    figures and the action on the borrowing card, which put a picture in the
    middle of a sentence and made the button read as belonging to the art
    rather than to the offer above it. */
-.prod-art { height: 442px; overflow: hidden; flex: none; margin-top: 24px; }
+/* At a third, the same as the doors and for the same reason: the field was
+   drawn at full ink and became the subject of the card. On these two it was
+   worse than on the doors, because the ramps put colour in it — a green field
+   and an amber one, at full strength, under a title and a figure that are the
+   things somebody is actually here to read. */
+.prod-art { height: 442px; overflow: hidden; flex: none; margin-top: 24px; opacity: 0.34; }
 .prod-art svg { display: block; width: 100%; height: 100%; }
 /* Taller, so the composition does not run out before the card does. */
 .card.prod { min-height: 792px; }
@@ -1294,11 +1299,13 @@ th.right .th-sort { flex-direction: row-reverse; }
    thousand transforms restarting a thousand transitions every frame is the
    whole cost of this effect, and the pointer is already moving continuously,
    so there is nothing for an eased follow to smooth. What does need easing is
-   the way home. `.homing` is set for the length of one return and the class
+   the way home. `.stir-home` is set for the length of one return and the class
    goes off again, so the transition exists for 220ms and not for the rest of
-   the time the field is being pushed around. */
+   the time the field is being pushed around. It is put on whichever box holds
+   a stirred field, so a new surface taking the effect is a call to `stir` and
+   nothing here. */
 @media (prefers-reduced-motion: no-preference) {
-  .gate-art.homing circle { transition: transform 220ms var(--ease); }
+  .stir-home circle { transition: transform 220ms var(--ease); }
 }
 
 @media (max-width: 899px) {

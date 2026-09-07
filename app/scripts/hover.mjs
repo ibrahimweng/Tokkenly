@@ -140,7 +140,7 @@ console.log('reduced motion:', JSON.stringify(rmState))
    who asked for no motion. */
 {
   const shifted = (pg) => pg.evaluate(() => {
-    const cs = [...document.querySelectorAll('.gate .gate-art circle')]
+    const cs = [...document.querySelectorAll('.gate-art circle, .prod-art circle')]
       .map((c) => c.style.transform)
       .filter(Boolean)
       .map((t) => { const m = t.match(/translate\(([-\d.]+)px, ([-\d.]+)px\)/); return m ? Math.hypot(+m[1], +m[2]) : 0 })
@@ -180,6 +180,29 @@ console.log('reduced motion:', JSON.stringify(rmState))
   })
   ok('and no gradient came back to do the job instead', !wash)
   await door.close()
+
+  /* And the two product cards on Borrow & Lend take the same effect. The
+     point of this pair of readings is the one thing that is hard to see by
+     looking: the field there is drawn a fifth larger than the doors', and the
+     dots have to move the same distance *in the field's own units* — the same
+     number of their own spacings — or it is a different effect on a bigger
+     picture rather than the same one. */
+  const prod = await b.newPage({ viewport: { width: 1440, height: 1400 } })
+  await noFonts(prod); await seen(prod)
+  prod.on('pageerror', (e) => errors.push(String(e)))
+  await prod.goto(B + '/grow', { waitUntil: 'networkidle' }); await prod.waitForTimeout(300)
+  const pbox = await prod.locator('.card.prod').first().boundingBox()
+  await prod.mouse.move(pbox.x + pbox.width * 0.35, pbox.y + pbox.height * 0.85); await prod.waitForTimeout(300)
+  const pUnder = await shifted(prod)
+  await prod.mouse.move(0, 0); await prod.waitForTimeout(500)
+  const pGone = await shifted(prod)
+  console.log('prod field  under the pointer', JSON.stringify(pUnder), ' after leaving', JSON.stringify(pGone))
+  ok('the product cards part around the pointer too', pUnder.n > 100 && pUnder.most > 40,
+     `${pUnder.n} dots, furthest ${pUnder.most.toFixed(0)}`)
+  ok('and by the same distance in the field\u2019s own units as a door',
+     Math.abs(pUnder.most - under.most) < 6, `door ${under.most.toFixed(0)}, card ${pUnder.most.toFixed(0)}`)
+  ok('and every dot on them goes home as well', pGone.n === 0, `${pGone.n} still out`)
+  await prod.close()
 
   const still = await rm.newPage(); await noFonts(still)
   await seen(still); await still.goto(B + '/', { waitUntil: 'networkidle' }); await still.waitForTimeout(200)
