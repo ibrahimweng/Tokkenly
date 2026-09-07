@@ -5842,7 +5842,48 @@ four assertions in `inflow.mjs`.
      speed and the checks; ask that first and the rest of the screen follows
      from it.
 
-### 11g.39 Still open
+### 11g.39 Three things a real pending leg turned up
+
+Making the wait real made three other things wrong that had not been wrong
+before, which is what a prototype does when one of its fictions is removed.
+
+**Nothing in the product had ever written a notification.** The five in the
+list are seeded, and the switch in Preferences filtered a fixed set — a control
+that changes what you can see and never what happens. That was survivable while
+every movement completed inside the dialog that started it. It stopped being
+survivable the moment the waiting sheet said "you can close this and carry on",
+because carrying on then meant never being told the money arrived. A transfer
+landing is the only genuinely asynchronous event in this product, so it is the
+one that writes a notification, and it is the first the product has ever
+written: *"$300.00 landed in your wallet · ₦450,000 from GTBank, at ₦1,500 to
+the dollar."*
+
+**A receipt for money that changed currency stated one of its two figures.** It
+said "+$300.00, from GTBank" and stopped, which is the wrong half for the one
+document a person keeps: what they need for their own records is the naira that
+left. It reads both off the ledger now — `conversion(ref)` returns the naira leg
+and the rate from the paired postings — rather than multiplying the dollars by
+whatever the rate is this morning. A record written a fortnight ago at ₦1,494
+that reprints itself at today's rate is not a record.
+
+**And "still settling · it usually clears within a minute" was a promise the
+stuck one cannot keep.** `.98` now means a transfer that never arrives, so its
+receipt says what is actually true: we have not seen it, and nothing has been
+taken twice.
+
+One more, from the other direction: money can now reach you two ways — dollars
+to a Base address, naira to a virtual account — and they were described on two
+screens with neither mentioning the other. Somebody asking "how do I get paid"
+would have found half the answer. Receive names both.
+
+107. **Removing a fiction exposes the ones leaning on it.** The wait was fake,
+     so nothing needed to tell you it had ended, so the notification list could
+     stay a decoration and the receipt could state one currency. Each was
+     defensible on its own and none of them survived the first honest thing
+     built next to it. When you make one part of a product true, walk the parts
+     that were quietly relying on it being false.
+
+### 11g.40 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from
   using the product afterwards. Item 30 was held back until it was asked for,
@@ -5866,6 +5907,10 @@ four assertions in `inflow.mjs`.
   reversing posting and the wallet would need somewhere to take it from.
 - A transfer lands on a timer, because there is no webhook to wait for. That is
   the seam a real backend arrives at, and it is one `setTimeout` wide.
+- One notification is written by the product and five are seeded. Every other
+  event still completes inside the dialog that started it, so nothing else has
+  anything to announce — but a real product would have a price alert and a
+  margin call in here, and neither exists.
 - The name a Nigerian account resolves to comes from a table indexed by the
   last digit. The step is real and the refusal is real; the directory is not.
 - The recipient of a share transfer is still nobody: `sent:AAPL` is an account

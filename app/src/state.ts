@@ -1155,18 +1155,18 @@ export const actions = {
     // here rather than on the screen that waits, because a rule that only
     // exists in a view is a rule one route around the view undoes.
     if (settlement(a.amount) === 'pending') return
-    const naira = Math.round(a.amount * rate)
+    const ngn = Math.round(a.amount * rate)
     ledger.post({
       ref, at: new Date().toISOString(),
-      what: `\u20a6${naira.toLocaleString('en-US')} reached your Tokkenly naira account`,
-      entries: [{ account: 'inflight', amount: -naira }, { account: 'collect', amount: naira }],
+      what: `\u20a6${ngn.toLocaleString('en-US')} reached your Tokkenly naira account`,
+      entries: [{ account: 'inflight', amount: -ngn }, { account: 'collect', amount: ngn }],
     })
     // The conversion itself: two postings, one in each currency, joined by the
     // rate. One entry cannot be denominated twice.
     ledger.post({
       ref, at: new Date().toISOString(), pair: ref, rate,
-      what: `\u20a6${naira.toLocaleString('en-US')} went to the currency desk`,
-      entries: [{ account: 'collect', amount: -naira }, { account: 'desk.ngn', amount: naira }],
+      what: `\u20a6${ngn.toLocaleString('en-US')} went to the currency desk`,
+      entries: [{ account: 'collect', amount: -ngn }, { account: 'desk.ngn', amount: ngn }],
     })
     ledger.post({
       ref, at: new Date().toISOString(), pair: ref, rate,
@@ -1174,6 +1174,21 @@ export const actions = {
       entries: [{ account: 'desk.usd', amount: -a.amount }, { account: 'wallet', amount: a.amount }],
     })
     a.settled = true
+    // The one genuinely asynchronous event in the product, and so the one that
+    // has to say so out loud. The waiting sheet tells people they can close it
+    // and carry on; without this, carrying on means never being told it
+    // arrived. It is also the first notification the product has ever written
+    // — the other five are seeded — which is what finally makes the switch in
+    // Preferences gate something real rather than filter a fixed list.
+    state.notifications.unshift({
+      id: 'n-' + ref,
+      kind: 'money',
+      title: `${usd(a.amount)} landed in your wallet`,
+      body: `\u20a6${ngn.toLocaleString('en-US')} from ${a.who}, at ${naira(rate)} to the dollar.`,
+      at: new Date().toISOString(),
+      read: false,
+      ref,
+    })
     changed()
   },
 

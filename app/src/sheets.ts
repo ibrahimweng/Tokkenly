@@ -15,6 +15,7 @@ import { type Route, closeSheet, replaceSheet, go } from './router'
 import { QA } from './screens/settings'
 import { peopleRows } from './screens/money'
 import { search } from './destinations'
+import * as ledger from './ledger'
 import { BEHIND_MORE } from './components/shell'
 
 /** One year, which is the span a receipt's sparkline should show: long enough
@@ -470,6 +471,7 @@ export const SHEETS: Record<string, Builder> = {
       ? CATALOGUE.find((x) => x.ticker === a.asset!.ticker)
       : a.kind === 'trade' ? CATALOGUE.find((x) => x.name === a.who) : undefined
     const held = c ? holding(c.ticker) : undefined
+    const fx = ledger.conversion(a.ref)
     return sheet(
       'Receipt',
       figure(a.type, (inbound ? '+' : '−') + usd(Math.abs(a.amount)),
@@ -481,7 +483,9 @@ export const SHEETS: Record<string, Builder> = {
             // that it is gone.
             ? `Settled · ${a.who} holds these now, and they cannot be recalled`
             : 'Settled · nothing about this is going to change now'
-          : 'Still settling · it usually clears within a minute'),
+          : settlement(a.amount) === 'pending'
+            ? 'Still settling · we have not seen it yet, and nothing has been taken twice'
+            : 'Still settling · it usually clears within a minute'),
       c ? h('div', { class: 'receipt-co' },
         h('span', { class: 'two-line grow' },
           h('span', { class: 't-body-strong', text: `${c.ticker} · ${c.name}` }),
@@ -499,6 +503,13 @@ export const SHEETS: Record<string, Builder> = {
       // what decides which four are above the fold.
       foldPanel(4, [
         [inbound ? 'From' : 'To', a.who],
+        // Money that changed currency states both figures. Read off the
+        // ledger's paired postings rather than multiplied out here, so a
+        // record written a fortnight ago at ₦1,494 does not reprint itself at
+        // this morning's rate.
+        ...(fx
+          ? [[inbound ? 'You paid' : 'They got', naira(fx.naira)] as [string, string]]
+          : []),
         // A transfer states what left, at the price of the day it left at. The
         // shares are recorded rather than divided out of the amount, because a
         // price that has moved since would silently restate the quantity.
@@ -519,6 +530,7 @@ export const SHEETS: Record<string, Builder> = {
             ['Price each', usd(c.price)] as [string, string],
           ] : []),
         ['When', longWhen(a.at)],
+        ...(fx ? [['Rate', '1 dollar = ' + naira(fx.rate)] as [string, string]] : []),
         // The receipt used to say "None" on every entry, including the trades
         // that charged half a per cent — the one document a person keeps,
         // stating the wrong figure for the one thing it is kept for. The fee

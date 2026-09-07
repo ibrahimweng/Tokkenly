@@ -622,6 +622,21 @@ export function receiveScreen(): HTMLElement {
           kv('Held as', 'Dollars in your wallet'),
           h('span', { class: 'muted t-caption',
             text: 'Anybody with a Base wallet can pay this address. They do not need a Tokkenly account.' })),
+        // The other way money reaches you. Two inbound rails described on two
+        // screens, neither mentioning the other, is the same contradiction as
+        // one errand wearing two names: somebody asking "how do I get paid"
+        // would have found half the answer. An address takes dollars from a
+        // wallet; the naira account takes naira from any Nigerian bank, which
+        // in this market is how a salary arrives.
+        card(
+          cardHead('Or be paid in naira',
+            h('button', { class: 'link', text: 'Add money yourself',
+              on: { click: () => go('/addmoney') } })),
+          kv('Bank', state.va.bank),
+          kv('Account number', state.va.number),
+          kv('Account name', state.va.name),
+          h('span', { class: 'muted t-caption',
+            text: 'This account is yours. Naira paid into it by anybody becomes dollars in your wallet at the rate when it lands.' })),
         received())))
 }
 

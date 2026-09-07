@@ -95,6 +95,45 @@ console.log('THE WALLET DOES NOT MOVE UNTIL THE NAIRA DOES')
      bk2.posts.some((t) => /paid to your wallet/.test(t)))
 }
 
+console.log('AND SAYS SO, ON THE ONE SCREEN THAT WAS NOT LOOKING')
+{
+  // The product had never written a notification: the five in the list were
+  // seeded, and the switch in Preferences filtered a fixed set. A transfer
+  // landing while somebody is on another screen is the only genuinely
+  // asynchronous event here, so it is the one that has to speak.
+  await at('/activity?filter=alerts')
+  const top = await p.evaluate(() => {
+    const row = document.querySelector('.alert-list > .set-row')
+    return row ? row.innerText.replace(/\n/g, ' · ') : ''
+  })
+  ok('the wallet going up while you were elsewhere is told to you',
+     /landed in your wallet/.test(top), top.slice(0, 80))
+  ok('and it names both currencies and the rate it went at',
+     /₦[\d,]+/.test(top) && /to the dollar/.test(top))
+
+  // The document somebody keeps has to carry the half that is not in dollars.
+  const ref = (top.match(/TKN-[A-Z0-9]+/) ?? [])[0]
+  await at('/activity')
+  const receipt = await p.evaluate(async () => {
+    const row = [...document.querySelectorAll('tbody tr, .row-hit')]
+      .find((e) => /Bought dollars|GTBank/.test(e.textContent))
+    row?.click()
+    await new Promise((r) => setTimeout(r, 400))
+    document.querySelector('.panel-more')?.click()
+    await new Promise((r) => setTimeout(r, 200))
+    return document.querySelector('.scrim > .sheet')?.innerText.replace(/\n/g, ' · ') ?? ''
+  })
+  void ref
+  // innerText applies text-transform, so every caps label in this product
+  // comes back uppercased whatever the DOM holds. Match case-insensitively or
+  // match nothing.
+  ok('the receipt for money that changed currency states both figures',
+     /you paid · ₦[\d,]+/i.test(receipt), (receipt.match(/you paid · ₦[\d,]+/i) ?? ['missing'])[0])
+  ok('and the rate it was honoured at, not this morning\u2019s',
+     /rate · 1 dollar = ₦[\d,]+/i.test(receipt), (receipt.match(/rate · 1 dollar = ₦[\d,]+/i) ?? ['missing'])[0])
+  await p.keyboard.press('Escape'); await p.waitForTimeout(250)
+}
+
 console.log('A CARD IS THE OTHER RAIL, AND IT COSTS SOMETHING')
 {
   const before = await cash()
@@ -179,6 +218,18 @@ console.log('A NAME BEFORE A NUMBER')
   }))
   ok('one that resolves to nobody says so, and offers no way on',
      /could not find/i.test(refused.err ?? '') && !refused.name, JSON.stringify(refused))
+}
+
+console.log('BOTH WAYS IN ARE NAMED WHERE SOMEBODY WOULD LOOK FOR THEM')
+{
+  // Dollars reach a Base address and naira reach a virtual account. Two
+  // inbound rails described on two screens, neither mentioning the other, is
+  // the same fault as one errand wearing two names.
+  await at('/receive')
+  const said = await p.evaluate(() => document.body.innerText.replace(/\n/g, ' · '))
+  ok('Receive names the naira account as well as the address',
+     /or be paid in naira/i.test(said) && /9902847713/.test(said))
+  ok('and still leads with the address it is for', /your address/i.test(said))
 }
 
 console.log('\nerrors:', errs.length ? errs : 'none')

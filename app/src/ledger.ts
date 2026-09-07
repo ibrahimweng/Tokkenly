@@ -234,6 +234,27 @@ export function paidOf(kind: string): number {
   return Math.round(n * 1e6) / 1e6
 }
 
+/** The naira half of a conversion, and the rate it was honoured at.
+ *
+ *  A receipt for money that changed currency has to state both figures, and it
+ *  has to state the rate that was actually used rather than today's — a record
+ *  written a fortnight ago at ₦1,494 that reprints itself at whatever the rate
+ *  is this morning is not a record. Both halves of a conversion share a `pair`
+ *  and carry the rate, so the document reads it off the ledger rather than
+ *  multiplying the dollars by a number it found lying around. */
+export function conversion(ref: string): { naira: number; rate: number } | null {
+  let rate = 0
+  let ngn = 0
+  for (const p of book) {
+    if (p.ref !== ref || !p.rate) continue
+    rate = p.rate
+    for (const e of p.entries) {
+      if (account(e.account).currency === 'NGN' && e.amount > 0) ngn = Math.max(ngn, e.amount)
+    }
+  }
+  return rate && ngn ? { naira: ngn, rate } : null
+}
+
 /** Everything that touched one account, newest first. */
 export const touching = (id: string): Posting[] =>
   book.filter((p) => p.entries.some((e) => e.account === id)).reverse()
