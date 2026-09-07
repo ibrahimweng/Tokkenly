@@ -46,6 +46,10 @@ function productCard(opts: {
   rest: string
   art: ArtSpec; ramp: Record<string, string>; at: number
   rows: [string, string | Node][]
+  /** The condition, under the figures. It was inside the headline, which put a
+   *  sell price and a monthly cost in the one line whose job is to say what
+   *  the product is. */
+  caption: string
   cta: string; ctaTo: string
   linkLabel: string; linkTo: string
 }): HTMLElement {
@@ -53,7 +57,9 @@ function productCard(opts: {
   // and the end the account wakes first. On the lending card that puts the lit
   // mass against the words; on the borrowing one it puts it against the card's
   // own edge. Same field, and the two crops are the mirror.
-  const band = h('div', { class: 'prod-art' }, dotArt(opts.art, opts.at, opts.ramp))
+  // Four across: the band is about 494 wide and the field is 24 columns, so
+  // one copy of it put 20 pixels between dot centres and a 17px ball in each.
+  const band = h('div', { class: 'prod-art' }, dotArt(opts.art, opts.at, opts.ramp, [4, 2]))
   const words = h('div', { class: 'stack-8' },
     h('div', { class: 'card-head' },
       h('h2', { class: 't-caps subtle', text: opts.eyebrow }),
@@ -61,17 +67,23 @@ function productCard(opts: {
     h('p', { class: 'prod-say' },
       h('strong', { text: opts.lead + ' ' }),
       h('span', { class: 'muted', text: opts.rest })))
-  const figures = h('div', { class: 'stack-12' }, ...opts.rows.map(([k, v]) => kv(k, v)))
+  const figures = h('div', { class: 'stack-12' },
+    ...opts.rows.map(([k, v]) => kv(k, v)),
+    h('span', { class: 'muted t-caption', text: opts.caption }))
   const action = h('button', { class: 'btn btn-secondary', text: opts.cta,
     on: { click: () => go(opts.ctaTo) } })
 
   const c = card()
   c.classList.add('prod', 'prod-' + opts.key)
-  // The mirror, in one line: the field leads on one card and closes the other.
+  // The mirror, in one line: the field leads on one card and sits under the
+  // figures on the other. The button is last on both, because it is the only
+  // arrangement in which two mirrored cards can put their actions at the same
+  // height — with the band last on one of them, the two buttons were 128px
+  // apart and the borrowing one read as floating in the middle of its card.
   if (opts.key === 'lend') {
     c.append(band, words, figures, h('div', { class: 'spacer' }), action)
   } else {
-    c.append(words, figures, h('div', { class: 'spacer' }), action, band)
+    c.append(words, figures, h('div', { class: 'spacer' }), band, action)
   }
   return c
 }
@@ -129,8 +141,8 @@ export function growScreen(): HTMLElement {
         key: 'lend', eyebrow: 'Lending',
         linkLabel: 'Take it back', linkTo: '/grow/takeout',
         lead: 'Lend your dollars.',
-        rest: `${pct(state.rates.lend)} a year, paid into your wallet every morning. ` +
-          `Nothing is locked up, and ${usd(1000, false)} lent pays about ${usd(monthlyInterest(1000))} a month.`,
+        rest: `${pct(state.rates.lend)} a year, paid into your wallet every morning.`,
+        caption: `Nothing is locked up. ${usd(1000, false)} lent pays about ${usd(monthlyInterest(1000))} a month.`,
         // How much of the money you could spend is out working. Not the whole
         // portfolio: shares are not money you chose to lend or not to.
         art: mirror(BORROW), ramp: LEND_RAMP,
@@ -146,11 +158,10 @@ export function growScreen(): HTMLElement {
         key: 'borrow', eyebrow: 'Borrowing',
         linkLabel: 'Repay', linkTo: '/grow/repay',
         lead: 'Borrow against your shares.',
-        rest: owed() > 0
-          ? `${pct(state.rates.borrow)} a year, and they stay yours the whole time. ` +
-            `Repay any time, no fee. We would only sell if your shares fell below ${money(sellPoint())}.`
-          : `${pct(state.rates.borrow)} a year, and they stay yours the whole time. ` +
-            `A ${usd(1000, false)} loan costs about ${usd(monthlyCost(1000))} a month.`,
+        rest: `${pct(state.rates.borrow)} a year, and they stay yours the whole time.`,
+        caption: owed() > 0
+          ? `Repay any time, no fee. We would only sell if your shares fell below ${money(sellPoint())}.`
+          : `Repay any time, no fee. A ${usd(1000, false)} loan costs about ${usd(monthlyCost(1000))} a month.`,
         // How much of the limit is drawn, which is the one number a borrower
         // is actually watching.
         art: BORROW, ramp: OWE_RAMP,

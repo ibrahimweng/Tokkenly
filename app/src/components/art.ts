@@ -136,6 +136,38 @@ export const OWE_RAMP: Record<string, string> = {
 
 const CELL = 12
 
+/** How much of its cell a dot is allowed to fill.
+ *
+ *  The compositions run to 11 of 12, which on the gateway tiles read as a
+ *  halftone and on a 494px card read as a row of balls: 20.6px between centres
+ *  with a 17.2px dot in each is not a dot field, it is a ball pit. Dropping the
+ *  diameter is half the answer — the other half is the pitch below. */
+const SHRINK = 0.6
+
+/** The field, repeated until the dots are small.
+ *
+ *  A composed field has a fixed number of cells, so the bigger the box it is
+ *  stretched across, the further apart its dots land — and because the crop
+ *  scales by whichever axis needs more, it is the field's twelve rows against
+ *  the band's height that actually sets the pitch. Repeating it in both axes
+ *  is what keeps that pitch fine, and every other copy is reflected, so the
+ *  joins are folds rather than seams and the eye reads one continuous texture
+ *  rather than wallpaper. */
+function repeat(spec: ArtSpec, x: number, y: number): ArtSpec {
+  if (x <= 1 && y <= 1) return spec
+  const wide = (rows: string[]) => rows.map((row) => {
+    let out = ''
+    for (let k = 0; k < x; k++) out += k % 2 ? [...row].reverse().join('') : row
+    return out
+  })
+  const tall = (rows: string[]) => {
+    const out: string[] = []
+    for (let k = 0; k < y; k++) out.push(...(k % 2 ? [...rows].reverse() : rows))
+    return out
+  }
+  return { cols: spec.cols * x, size: tall(wide(spec.size)), tone: tall(wide(spec.tone)) }
+}
+
 /** A cell that is not awake keeps its place and its size and gives up its
  *  tone. Every tone, to the same rung — the first version dimmed each one by a
  *  step, which reads well until you notice that a dim cell has nowhere to go:
@@ -158,8 +190,15 @@ const FLOOR = 0.45
 export const level = (part: number, whole: number): number =>
   FLOOR + (1 - FLOOR) * (whole > 0 ? Math.max(0, Math.min(1, part / whole)) : 0)
 
-export function dotArt(spec: ArtSpec, at = 1, ramp?: Record<string, string>): SVGSVGElement {
+export function dotArt(
+  spec: ArtSpec, at = 1, ramp?: Record<string, string>,
+  /** How many copies of the field fit across and down the box it is drawn
+   *  into. Chosen per surface so every field in the product lands at about six
+   *  pixels between centres, whatever the box is. */
+  tiles: [number, number] = [1, 1],
+): SVGSVGElement {
   const PAINT = ramp ? { ...TONE, ...ramp } : TONE
+  spec = repeat(spec, tiles[0], tiles[1])
   const NS = 'http://www.w3.org/2000/svg'
   const w = spec.cols * CELL
   const hgt = spec.size.length * CELL
@@ -192,7 +231,7 @@ export function dotArt(spec: ArtSpec, at = 1, ramp?: Record<string, string>): SV
       const c = document.createElementNS(NS, 'circle')
       c.setAttribute('cx', String(x * CELL + CELL / 2))
       c.setAttribute('cy', String(y * CELL + CELL / 2))
-      c.setAttribute('r', String(d / 2))
+      c.setAttribute('r', String((d / 2) * SHRINK))
       const tone = spec.tone[y]?.[x] ?? 'b'
       const key = seen <= wake ? tone : SLEEP
       c.setAttribute('fill', PAINT[key] ?? PAINT.b)

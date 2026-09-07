@@ -90,10 +90,10 @@
 .card.prod .stack-12 + .spacer { min-height: 16px; }
 .prod-art { height: 132px; overflow: hidden; flex: none; }
 .prod-art svg { display: block; width: 100%; height: 100%; }
-/* Lending leads with its field; borrowing closes with it. */
+/* Lending leads with its field; borrowing carries it under the figures. Both
+   end on the button, so the two actions sit at the same height. */
 .prod-lend > .prod-art { margin-bottom: 20px; }
-.prod-borrow > .prod-art { margin-top: 20px; }
-.prod-borrow > .btn { margin-bottom: 0 !important; }
+.prod-borrow > .prod-art { margin-bottom: 20px; }
 .prod-borrow > .stack-8:first-child { padding-top: 24px; }
 
 /* The name leads and the sentence finishes in grey. It was the rate at 32px

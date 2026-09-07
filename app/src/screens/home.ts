@@ -294,7 +294,9 @@ function gateway(): HTMLElement {
     a.appendChild(h('span', { class: 'gate-cta' },
       h('span', { text: opts.cta }),
       h('span', { class: 'ic', html: icon.chevron() })))
-    a.appendChild(h('div', { class: 'gate-art' }, dotArt(opts.art, opts.at)))
+    // Twice across, so the pitch lands near six pixels rather than twelve. A
+    // door is 288 or 400 wide and the fields are 24 and 34 columns.
+    a.appendChild(h('div', { class: 'gate-art' }, dotArt(opts.art, opts.at, undefined, [2, 2])))
     return a
   }
   // Two rows, the way D01c has them: the greeting carries the name and the

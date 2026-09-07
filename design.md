@@ -5543,7 +5543,39 @@ field would flatten every tone it was drawn in.
 99. **A pair should be one thing reflected, not two things drawn.** Two
     compositions have to be kept in step by hand forever. A mirror cannot drift.
 
-### 11g.34 Still open
+### 11g.34 A halftone, not a ball pit
+
+Measured: the two Borrow & Lend cards were drawing their field at 20.6px
+between dot centres with a 17.2px dot in each. That is not a dot field, it is a
+row of balls, and it was loud enough to compete with the words beside it.
+
+The cause is that a composed field has a fixed number of cells, so the bigger
+the box it is stretched into, the further apart its dots land — and because the
+crop scales by whichever axis needs more, it was the field's twelve rows
+against the band's height setting the pitch, not its columns against the width.
+Repeating it sideways alone changed nothing.
+
+So the field repeats in both axes now, and every other copy is reflected, so
+the joins are folds rather than seams and it reads as one continuous texture
+rather than as wallpaper. Each dot also gives up 40% of its composed diameter.
+Every field in the product now lands at about six pixels between centres with a
+three pixel dot: the doors on Home went from 12px and 11px to 6.0 and 3.3, and
+the two cards from 20.6 and 17.2 to 5.5 and 2.8.
+
+And the buttons align. The mirror had put the field last on the borrowing card,
+which meant its action sat 128px higher than the lending one and read as
+floating in the middle of the card — the two mirrored halves cannot both end on
+their action if one of them ends on a picture. The field moved to sit under the
+figures and the button is last on both. The conditions came out of the
+headlines with it: a sell price and a monthly cost were sitting in the one line
+whose job is to say what the product is.
+
+100. **A texture is a pitch, not a picture.** Whether a dot field reads as
+     halftone or as polka dots is decided by how many cells land in the box,
+     which is a property of the box and not of the drawing — so it has to be
+     measured on every surface the drawing is used, not settled once.
+
+### 11g.35 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from
   using the product afterwards. Item 30 was held back until it was asked for,
