@@ -151,7 +151,12 @@
   /* One card at a time on a phone, so there is no second card to be as tall
      as, and 460 is a screenful of one offer. */
   .card.prod { min-height: 0; }
-  .prod-art { height: 280px; }
+  /* 280 made each card 578 tall, so Borrow started at 782 on an 844 phone —
+     one card a screen, and the second one only findable by scrolling past a
+     picture. The desktop keeps its 442 exactly as it was asked for; down here
+     the band is what the object needs to still read as an object at 350 wide,
+     which is less than half of it. Both cards are on the first screen now. */
+  .prod-art { height: 160px; }
   .prod-title { font-size: 24px; line-height: 30px; }
   .prod-figure { font-size: 24px; line-height: 30px; }
 }
@@ -195,6 +200,17 @@
 @media (max-width: 899px) {
   .feed-row { padding: 12px 8px; margin-inline: -8px; min-height: 44px; }
 }
+/* A table drawn as rows on a phone (see RowShape in table.ts). It borrows
+   the feed's row and adds the two things a table row has that a feed row does
+   not: a figure that may be two deep, and a control at the end that is not
+   the row's own destination. */
+.row-figure {
+  flex: none; display: flex; flex-direction: column; align-items: flex-end;
+  gap: 2px; text-align: right;
+}
+.row-figure > * { white-space: nowrap; }
+.row-trail { flex: none; display: inline-flex; }
+
 /* The order control, beside the list rather than on a column head. */
 .chip.sort-by { gap: 6px; }
 
@@ -681,6 +697,28 @@
 }
 .pop .muted { font-size: 13px; line-height: 19px; }
 .pop .link { align-self: flex-start; }
+/* A few things, listed. The panel's own padding comes off, because a menu's
+   rows want to reach its edges — a row you can only press the middle of is a
+   row that feels smaller than it looks. */
+.pop:has(.pop-menu) { padding: 8px; }
+.pop-menu { display: flex; flex-direction: column; margin: 0 -0px; }
+.pop-row {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  min-height: 44px; padding: 0 12px; border-radius: 12px;
+  color: var(--ink); text-align: left; width: 100%;
+}
+.pop-row .ic { display: inline-flex; flex: none; color: var(--muted); }
+.pop-row .ic svg { width: 18px; height: 18px; }
+.pop-row.on { background: var(--control); }
+.pop-row.on .ic { color: var(--ink); }
+.pop-row:active { background: var(--control-pressed); }
+/* A state rather than an action: it is in the list because a control that
+   quietly vanishes is not an answer to the question it used to answer. */
+.pop-said { display: flex; align-items: center; min-height: 44px; padding: 0 12px; font-size: 13px; }
+@media (hover: hover) { .pop-row:hover { background: var(--sunken-hover); } }
+/* The chip that opens one. */
+.chip .ic { display: inline-flex; }
+.chip .ic svg { width: 16px; height: 16px; }
 
 /* ---------- toast ---------- */
 .toast-rail { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 60;

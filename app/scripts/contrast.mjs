@@ -155,5 +155,9 @@ const uniq = bad.filter((x) => { const k = x.route.split(' ')[0] + x.sel + x.rat
 console.log(uniq.length ? 'BELOW AA:' : 'BELOW AA: none')
 for (const x of uniq.sort((a, c) => a.ratio - c.ratio))
   console.log(`  ${String(x.ratio).padStart(5)} / ${x.need}  ${String(x.px).padStart(4)}px  ${x.route.padEnd(22)} ${x.sel.slice(0, 44).padEnd(45)} ${JSON.stringify(x.text)}`)
+// A check that reports and never fails is a check the sweep reads as green
+// (rule 129). It counts lines beginning FAIL, so this one says FAIL.
 console.log('total below AA:', uniq.length)
+console.log(`  ${uniq.length ? 'FAIL' : 'ok  '}  every piece of text clears AA on the ground it sits on` +
+            (uniq.length ? `  ${uniq.length} do not` : ''))
 await b.close()

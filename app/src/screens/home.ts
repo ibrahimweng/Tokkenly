@@ -252,7 +252,11 @@ function detailed(): HTMLElement {
           table(
             [{ key: 'who', label: '' }, { key: 'state', label: '' }, { key: 'amt', label: '', align: 'right' }],
             activityRows(4),
-            (i) => openSheet('receipt', { ref: state.activity[i].ref })
+            (i) => openSheet('receipt', { ref: state.activity[i].ref }),
+            undefined,
+            // The `who` cell is already a glyph and two lines — the feed row,
+            // inside a table cell — so on a phone it is placed as it is.
+            { lead: 'who', figure: ['amt'] },
           )
         )),
       h('div', { class: 'stack col-side' }, growCard, positions, available))
@@ -373,7 +377,9 @@ function gateway(): HTMLElement {
       table(
         [{ key: 'who', label: '' }, { key: 'state', label: '' }, { key: 'amt', label: '', align: 'right' }],
         activityRows(5),
-        (i) => openSheet('receipt', { ref: state.activity[i].ref })
+        (i) => openSheet('receipt', { ref: state.activity[i].ref }),
+        undefined,
+        { lead: 'who', figure: ['amt'] },
       )
     )
   )

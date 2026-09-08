@@ -5,6 +5,7 @@ import { initialsOf } from '../format'
 import { openSheet, go, current } from '../router'
 import { isMobile } from '../responsive'
 import { trailFor } from '../destinations'
+import { popover, closeHint } from './hint'
 
 export type Place = 'home' | 'wallet' | 'market' | 'grow' | 'history' | 'account'
 
@@ -320,6 +321,67 @@ export function pageHeader(title: string, right?: Node | null, opts: HeaderOpts 
   if (crumbs) return h('header', { class: 'page-header has-crumbs' }, crumbs, row)
   if (back) return h('header', { class: 'page-header' }, back, row)
   return h('header', { class: 'page-header' }, row)
+}
+
+/** One thing a screen can do, in its header. */
+export interface HeadAction {
+  /** What it is called. Also the label a screen reader hears on the phone,
+   *  where the button is a glyph. */
+  label: string
+  ic: () => string
+  run?: () => void
+  /** A state rather than an action — "All caught up". It is still listed,
+   *  because a control that quietly vanishes is not an answer to the question
+   *  it used to answer. */
+  said?: boolean
+  /** The thing the screen is for. It keeps its words on a phone and is filled
+   *  rather than quiet: a company page whose Buy button became an unlabelled
+   *  glyph would be a company page that had hidden its own point. */
+  strong?: boolean
+}
+
+/** The actions a screen carries beside its title.
+ *
+ *  On a desktop, all of them, as labelled buttons — which is what they have
+ *  always been. On a phone, the first one and a menu for the rest, because
+ *  three labelled buttons do not fit across 390 pixels beside a title and what
+ *  they did instead was wrap onto their own two lines and sit on top of it.
+ *  Activity read "Acti…" under a block saying Mark all read / Statement /
+ *  Export. This is the same answer the nav bar took: one thing visible, the
+ *  rest one press away. */
+export function headActions(...given: (HeadAction | null | false | undefined)[]): HTMLElement {
+  const acts = given.filter(Boolean) as HeadAction[]
+  const full = (a: HeadAction) => a.said
+    ? h('span', { class: 'muted t-caption head-state', text: a.label })
+    : h('button', { class: 'btn btn-secondary btn-sm', on: { click: a.run } },
+        h('span', { class: 'ic', html: a.ic() }), h('span', { text: a.label }))
+  if (!isMobile()) return h('div', { class: 'chip-row' }, ...acts.map(full))
+
+  const doable = acts.filter((a) => !a.said)
+  const first = doable.find((a) => a.strong) ?? doable[0]
+  const rest = acts.filter((a) => a !== first)
+  const row = h('div', { class: 'chip-row' })
+  if (first) {
+    row.appendChild(first.strong
+      ? h('button', { class: 'btn btn-primary btn-sm', text: first.label, on: { click: first.run } })
+      : h('button', { class: 'icon-btn', ariaLabel: first.label, html: first.ic(), on: { click: first.run } }))
+  }
+  if (rest.length) {
+    const more = h('button', { class: 'icon-btn', ariaLabel: 'More on this screen', html: icon.more() })
+    more.setAttribute('aria-expanded', 'false')
+    more.addEventListener('click', (e) => {
+      e.stopPropagation()
+      if (more.getAttribute('aria-expanded') === 'true') { closeHint(); return }
+      closeHint()
+      popover(more, 'More on this screen', h('div', { class: 'pop-menu' },
+        ...rest.map((a) => a.said
+          ? h('span', { class: 'pop-said muted', text: a.label })
+          : h('button', { class: 'pop-row', on: { click: () => { closeHint(); a.run?.() } } },
+              h('span', { class: 'ic', html: a.ic() }), h('span', { text: a.label })))))
+    })
+    row.appendChild(more)
+  }
+  return row
 }
 
 export function eyebrow(label: string, value: string): HTMLElement {

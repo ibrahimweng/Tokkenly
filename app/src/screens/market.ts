@@ -126,7 +126,12 @@ function tableOf(rows: Instrument[],
       bucketCell(c),
     ]),
     (n) => go('/invest/' + rows[n].ticker.toLowerCase()),
-    { current: { key: sort.key, dir: sort.dir }, onSort: sort.onSort }
+    { current: { key: sort.key, dir: sort.dir }, onSort: sort.onSort },
+    // On a phone: the company, its price with today's move under it, and the
+    // bucket button still on the row — deciding while you scan is the point of
+    // a bucket, and it is the one control here that is not "open this
+    // company". The other six columns are on the company's own page.
+    { lead: 'name', figure: ['price', 'day'], trail: 'bucket' },
   )
 }
 

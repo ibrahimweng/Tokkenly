@@ -23,6 +23,17 @@ export const icon = {
   bell: () => svg('<path d="M6 9a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5h-15S6 13 6 9Z"/><path d="M10 18a2 2 0 0 0 4 0"/>', 18),
   search: () => svg('<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/>', 18),
   download: () => svg('<path d="M12 4v10M8 11l4 4 4-4M5 19h14"/>', 18),
+  /* Three dots across. The overflow, wherever a phone runs out of room for
+     the things a screen can do. */
+  more: () => svg('<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>'),
+  /* A watchlist is a star everywhere, and a product that draws it as
+     something else is a product asking people to learn its own word for it. */
+  star: () => svg('<path d="m12 4 2.4 5 5.6.8-4 3.9 1 5.5-5-2.6-5 2.6 1-5.5-4-3.9 5.6-.8z"/>'),
+  /* Lines shortening downward — the filter every product draws. */
+  filter: () => svg('<path d="M4 6h16M7 12h10M10 18h4"/>'),
+  /* Up and down together: an order, not a direction. */
+  order: () => svg('<path d="M7 4v16M7 20l-3-3M7 20l3-3M17 20V4M17 4l-3 3M17 4l3 3"/>'),
+  page: () => svg('<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/>'),
   send: () => svg('<path d="M21 3 10.5 13.5M21 3l-6.8 18-3.7-7.5L3 10.1z"/>', 18),
   receive: () => svg('<path d="M12 4v12M8 12l4 4 4-4M5 20h14"/>', 18),
   /* Three finder squares. Receive is your address and the code for it, and the

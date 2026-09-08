@@ -77,15 +77,25 @@ export function hint(h1: Hint): HTMLElement {
 }
 
 function show(trigger: HTMLElement, spec: Hint): void {
-  const panel = h('div', {
-    class: 'pop', role: 'dialog', ariaLabel: spec.title,
-  },
+  popover(trigger, spec.title,
     h('span', { class: 't-body-strong', text: spec.title }),
     h('span', { class: 'muted', text: spec.body }),
     spec.more
       ? h('button', { class: 'link', text: spec.more.label,
           on: { click: () => { closeHint(); spec.more!.onClick() } } })
       : null)
+}
+
+/** A panel pinned under a trigger, closed by the next one, by Escape, by a
+ *  press anywhere else, and by the app rebuilding its tree underneath it.
+ *
+ *  Written for the question mark and used by everything since that needs to
+ *  put a few things somewhere without taking over the screen: the header's
+ *  overflow on a phone, a filter, an order. One of these open at a time,
+ *  which is the reason it is a module and not a component. */
+export function popover(trigger: HTMLElement, label: string, ...body: (Node | null)[]): void {
+  const panel = h('div', { class: 'pop', role: 'dialog', ariaLabel: label },
+    ...body.filter(Boolean) as Node[])
   document.body.appendChild(panel)
   trigger.setAttribute('aria-expanded', 'true')
 

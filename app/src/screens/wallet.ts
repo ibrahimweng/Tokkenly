@@ -54,13 +54,14 @@ function moved(): HTMLElement {
           rows.map((a) => [
             h('span', { class: 'who' }, directionMark(a.amount),
               h('span', { class: 'two-line' },
-                h('span', { class: 't-body-strong', text: activityLabel(a) }),
-                h('small', { class: 'phone-only', text: when(a.at) }))),
+                h('span', { class: 't-body-strong', text: activityLabel(a) }))),
             h('span', { class: 'muted', text: when(a.at) }),
             h('span', { class: 'muted', text: a.ref }),
             amount(a),
           ]),
-          (i) => openSheet('receipt', { ref: rows[i].ref })
+          (i) => openSheet('receipt', { ref: rows[i].ref }),
+          undefined,
+          { lead: 'who', detail: ['when', 'ref'], figure: ['amt'] },
         )
       : h('span', { class: 'muted', text: 'Nothing has moved through this wallet yet.' })
   )

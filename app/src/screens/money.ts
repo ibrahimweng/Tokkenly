@@ -597,13 +597,14 @@ function pastMoves(which: 'in' | 'out'): HTMLElement | null {
       ],
       rows.map((a) => [
         h('span', { class: 'two-line' },
-          h('span', { class: 't-body-strong', text: activityLabel(a) }),
-          h('small', { class: 'phone-only', text: when(a.at) })),
+          h('span', { class: 't-body-strong', text: activityLabel(a) })),
         h('span', { class: 'muted', text: when(a.at) }),
         h('span', { class: 'muted', text: a.ref }),
         amount(a),
       ]),
-      (i) => openSheet('receipt', { ref: rows[i].ref })
+      (i) => openSheet('receipt', { ref: rows[i].ref }),
+      undefined,
+      { lead: 'w', detail: ['when', 'ref'], figure: ['amt'] },
     )
   )
 }
@@ -727,12 +728,13 @@ function arrived(tab: AddTab, full = true): HTMLElement {
     ],
     rows.map((a) => [
       h('span', { class: 'two-line' },
-        h('span', { class: 't-body-strong', text: activityLabel(a) }),
-        h('small', { class: 'phone-only', text: when(a.at) })),
+        h('span', { class: 't-body-strong', text: activityLabel(a) })),
       h('span', { class: 'muted', text: when(a.at) }),
       amount(a),
     ]),
-    (i) => openSheet('receipt', { ref: rows[i].ref })
+    (i) => openSheet('receipt', { ref: rows[i].ref }),
+    undefined,
+    { lead: 'w', detail: ['when'], figure: ['amt'] },
   ))
 }
 

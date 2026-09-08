@@ -7018,6 +7018,87 @@ opened it on rather than the panel again.
      equal quarter is the thing that breaks it, and the fix is to stop
      dividing by four rather than to shorten the name.
 
+### 11g.55 A table is a shape for comparing across, and a phone has no across
+
+Fifteen customer screens, audited at 390 rather than looked at. Three faults,
+and one thing that looked like a fault and was not.
+
+**A title beside three labelled buttons.** Activity read **"Acti…"** under a
+two-line block saying Mark all read / Statement / Export. The company page did
+the same with two pills and three buttons beside a company's name. It is the
+collision 11g.53 fixed on Home, in two more places, and the answer is the one
+the nav bar took: one thing visible, the rest one press away.
+
+`headActions` is that rule as a component. On a desktop it is what it always
+was — every action, labelled. On a phone it is the first one as a 44px glyph
+and an overflow for the rest, except where the screen has a thing it is *for*:
+a company page whose Buy button became an unlabelled glyph would be a company
+page that had hidden its own point, so an action can be `strong` and keep its
+words. A `said` entry is a state rather than an action — "All caught up" is
+still in the list, because a control that quietly vanishes is not an answer to
+the question it used to answer.
+
+The menu is the question mark's popover, generalised. That machinery already
+handled everything a menu needs and had been handling it for one caller: it
+closes on the next trigger, on Escape, on a press anywhere else, and when the
+app rebuilds its tree underneath it — which this app does on every state
+change. `popover()` is the same code with the hint's content taken out of it.
+
+**Five screens still drew a table.** Nine columns became four became three, and
+three columns of eleven-pixel headers with sort carets on them is a spreadsheet
+somebody has been asked to use with a thumb. Invest showed NAME / PRICE / TODAY
+and fitted three companies.
+
+`table()` takes a `RowShape` now and draws the same cells as the row anatomy
+the activity feed already uses. Columns are named rather than numbered in it,
+so a column moving in the table cannot silently move the phone's second line
+onto a different fact. The lead cell keeps its own structure wherever it has
+one — most of these are already a two-line, or a glyph beside one, because that
+is what they are on a desktop too — so the detail goes *into* the structure
+that is there rather than around it. Wrapping a two-line in a two-line indents
+the row inside itself.
+
+Invest gets the shape that needed the most from it: the company, its price with
+today's move stacked under it, and the bucket button still on the row, because
+deciding while you scan is the point of a bucket and it is the one control
+there that is not "open this company". Six other columns are on the company's
+own page, which is one tap away.
+
+**Two hundred pixels of controls before anything had happened.** Activity spent
+a search field, five filter chips wrapped onto two rows, and an order row —
+420 of an 844 screen. The five go behind one chip that says which one is on and
+carries the unread count, and the order goes behind another beside it. 298
+now, and four rows of the feed are on the first screen instead of one and a
+half.
+
+**And the thing that was not a fault.** Four routes have a different `<h1>` on a
+phone than on a desktop — `/invest/aapl/invest` says "Apple", not "Invest".
+That is the composer correctly presenting as a bottom sheet over its parent
+screen, which is item 54's decision; the sheet's own heading says "Invest". It
+is checked, and it stays.
+
+Two things fell out of the audit that nobody had asked about. The two product
+cards on Borrow & Lend were 578 tall each on a phone, so Borrow started at 782
+on an 844 screen: one card a screen, and the second only findable by scrolling
+past a picture. The desktop keeps its 442 of field exactly as it was asked for;
+the phone's band is 160, which is what the object needs to still read as an
+object at 350 wide, and both cards are on the first screen. And `contrast.mjs`
+found the "Open for trading" pill at 4.44 against the 4.5 a 13px pill needs in
+the light theme — which it had been finding for some time, because **it printed
+its findings and never failed**. That is rule 129 again, on a second harness:
+it says FAIL now, and the tint moved rather than the ink, since the ink is
+every positive figure in the light theme and already clears on the page itself.
+
+137. **A component that changes shape by width belongs in the component.** The
+     phone's version of a table is not a screen's problem to solve five times
+     over — it is the table's, and the screens describe what their columns
+     mean rather than how they stack.
+
+138. **A control that vanishes has not answered the question it used to
+     answer.** "All caught up" is a sentence somebody needs precisely when
+     there is nothing left to press. Moving an action into a menu is fine;
+     letting the state it replaced disappear is not.
+
 ### 11g.49 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from

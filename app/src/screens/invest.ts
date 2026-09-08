@@ -22,13 +22,14 @@ function orders(ticker?: string): HTMLElement {
       ],
       rows.map((a) => [
         h('span', { class: 'two-line' },
-          h('span', { class: 't-body-strong', text: a.type + ' ' + a.who }),
-          h('small', { class: 'phone-only', text: when(a.at) })),
+          h('span', { class: 't-body-strong', text: a.type + ' ' + a.who })),
         h('span', { class: 'muted', text: when(a.at) }),
         h('span', { class: 'muted', text: a.ref }),
         amount(a),
       ]),
-      (i) => openSheet('receipt', { ref: rows[i].ref })
+      (i) => openSheet('receipt', { ref: rows[i].ref }),
+      undefined,
+      { lead: 'w', detail: ['when', 'ref'], figure: ['amt'] },
     )
   )
 }

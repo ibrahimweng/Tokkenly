@@ -1,6 +1,6 @@
 import { h } from '../ui'
 import { icon } from '../icons'
-import { shell, pageHeader } from '../components/shell'
+import { shell, pageHeader, headActions } from '../components/shell'
 import { amount, emptyState } from '../components/bits'
 import { searchField, searchNote } from '../components/search'
 import { rank, onlyNear } from '../match'
@@ -8,6 +8,7 @@ import { state, actions, visibleNotifications, type ActivityKind, type Activity,
 import { usd, shares as fmtShares, activityLabel } from '../format'
 import { go, current, openSheet } from '../router'
 import { isMobile } from '../responsive'
+import { popover, closeHint } from '../components/hint'
 
 const ALERTS = 'alerts'
 
@@ -205,17 +206,16 @@ export function historyScreen(): HTMLElement {
   const sortKey = r.query.get('sort') ?? 'date'
   const sortDir = (r.query.get('dir') ?? 'desc') as 'asc' | 'desc'
   const byAmount = sortKey === 'amt'
+  const order = (key: string) => {
+    const q = new URLSearchParams(r.query)
+    const dir = key === sortKey && sortDir === 'desc' ? 'asc' : 'desc'
+    q.set('sort', key); q.set('dir', dir)
+    go('/activity?' + q.toString())
+  }
   const orderBtn = (key: string, label: string) =>
     h('button', {
       class: 'chip sort-by', ariaPressed: sortKey === key,
-      on: {
-        click: () => {
-          const q = new URLSearchParams(r.query)
-          const dir = key === sortKey && sortDir === 'desc' ? 'asc' : 'desc'
-          q.set('sort', key); q.set('dir', dir)
-          go('/activity?' + q.toString())
-        },
-      },
+      on: { click: () => order(key) },
     }, h('span', { text: label }),
        sortKey === key ? h('small', { text: sortDir === 'desc' ? '↓' : '↑' }) : null)
 
@@ -302,29 +302,65 @@ export function historyScreen(): HTMLElement {
     h('button', { class: 'chip', ariaPressed: id === active,
       on: { click: () => setQuery('filter', id === 'all' ? '' : id) } },
       h('span', { text: label }), extra ?? null)
+  const ALL = [...FILTERS.map((x) => [x.id, x.label] as const), [ALERTS, 'Notices'] as const]
   const chips = h('div', { class: 'chip-row' },
     ...FILTERS.map((x) => chip(x.id, x.label)),
     chip(ALERTS, 'Notices', unread ? h('span', { class: 'chip-count', text: String(unread) }) : null))
 
+  // Five chips wrapped onto two rows, a search field and an order row: two
+  // hundred pixels of controls before a single thing that had happened, on a
+  // screen 844 tall. On a phone the five go behind one button that says which
+  // one is on, and the order goes behind another beside it. The unread count
+  // rides on the filter button, because a number nobody can see is a number
+  // that is not doing its job.
+  const here = ALL.find(([id]) => id === active)?.[1] ?? 'All'
+  const pick = (title: string, ic: () => string, label: string, rows: [string, string, boolean, () => void][]) => {
+    const btn = h('button', { class: 'chip', ariaLabel: title + ': ' + label },
+      h('span', { class: 'ic', html: ic() }), h('span', { text: label }),
+      title === 'Filter' && unread ? h('span', { class: 'chip-count', text: String(unread) }) : null)
+    btn.setAttribute('aria-expanded', 'false')
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation()
+      if (btn.getAttribute('aria-expanded') === 'true') { closeHint(); return }
+      closeHint()
+      popover(btn, title, h('div', { class: 'pop-menu' },
+        ...rows.map(([, text, on, run]) =>
+          h('button', { class: 'pop-row' + (on ? ' on' : ''), ariaPressed: on,
+            on: { click: () => { closeHint(); run() } } },
+            h('span', { text }),
+            on ? h('span', { class: 'ic', html: icon.check() }) : null))))
+    })
+    return btn
+  }
+
+  const controls = isMobile()
+    ? h('div', { class: 'chip-row' },
+        pick('Filter', icon.filter, here,
+          ALL.map(([id, label]) => [id, label + (id === ALERTS && unread ? ` (${unread})` : ''), id === active,
+            () => setQuery('filter', id === 'all' ? '' : id)] as [string, string, boolean, () => void])),
+        pick('Order', icon.order, byAmount ? 'Largest' : 'Newest',
+          [['date', 'Newest first', !byAmount, () => order('date')],
+           ['amt', 'Largest first', byAmount, () => order('amt')]]))
+    : null
+
   return shell(
     'history',
     pageHeader('Activity',
-      h('div', { class: 'chip-row' },
-        // The section that used to hold the notifications said "All caught up"
-        // when there was nothing left to read. The section is gone; the
-        // sentence is not, because a button that quietly vanishes is not an
-        // answer to "did I read them all".
+      // The section that used to hold the notifications said "All caught up"
+      // when there was nothing left to read. The section is gone; the sentence
+      // is not, because a control that quietly vanishes is not an answer to
+      // "did I read them all".
+      headActions(
         unread
-          ? h('button', { class: 'btn btn-secondary btn-sm', text: 'Mark all read',
-              on: { click: () => actions.readAllNotifications() } })
-          : h('span', { class: 'muted t-caption head-state', text: 'All caught up' }),
-        h('button', { class: 'btn btn-secondary btn-sm', text: 'Statement',
-          on: { click: () => go('/statement') } }),
-        h('button', { class: 'btn btn-secondary btn-sm', on: { click: () => openSheet('export') } },
-          h('span', { html: icon.download() }), h('span', { text: 'Export' })))),
-    h('div', { class: 'row', style: { alignItems: 'center' } }, search, chips),
+          ? { label: 'Mark all read', ic: icon.check, run: () => actions.readAllNotifications() }
+          : { label: 'All caught up', ic: icon.check, said: true },
+        { label: 'Statement', ic: icon.page, run: () => go('/statement') },
+        { label: 'Export', ic: icon.download, run: () => openSheet('export') })),
+    isMobile()
+      ? h('div', { class: 'stack-12' }, search, controls)
+      : h('div', { class: 'row', style: { alignItems: 'center' } }, search, chips),
     // Ordering, beside the list it orders rather than on top of a column.
-    h('div', { class: 'chip-row' }, orderBtn('date', 'Newest'), orderBtn('amt', 'Largest')),
+    isMobile() ? null : h('div', { class: 'chip-row' }, orderBtn('date', 'Newest'), orderBtn('amt', 'Largest')),
     list,
   )
 }

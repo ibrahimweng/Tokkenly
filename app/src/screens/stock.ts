@@ -1,6 +1,6 @@
 import { h } from '../ui'
 import { icon } from '../icons'
-import { shell, pageHeader } from '../components/shell'
+import { shell, pageHeader, headActions } from '../components/shell'
 import { card, cardHead, kv, callout, bucketBar, showBucketBar } from '../components/bits'
 import { find, markGap, deviation, type Instrument } from '../catalogue'
 import { barChart, type Range } from '../components/chart'
@@ -9,6 +9,7 @@ import { usd, pct, signed, shares, shares as fmtShares } from '../format'
 import { go } from '../router'
 import { toast } from '../components/sheet'
 import { celebrate } from '../confetti'
+import { isMobile } from '../responsive'
 
 /** The same chart Home draws, with the company's own year behind it. The
  *  ranges are anchored to the twelve months the catalogue already states, so
@@ -155,19 +156,55 @@ export function stockScreen(ticker: string): HTMLElement {
 
   return shell(
     'market',
+    // Two pills and three buttons beside a company's name. On 390 pixels that
+    // wrapped onto its own block and sat on top of the name, so the phone
+    // keeps the one thing this screen is for — buying — and puts the rest
+    // behind the overflow. The pills are not controls at all and move down
+    // into the page, where a state belongs.
     pageHeader(c.name,
-      h('div', { class: 'chip-row' },
-        h('span', { class: 'pill', text: c.kind === 'etf' ? 'ETF' : 'Company' }),
-        // What you can actually do with it. A market that shows twelve
-        // companies and lets you buy five has to say which five, on the thing
-        // itself, rather than at the point of refusal.
-        h('span', { class: 'pill' + (c.launch ? ' pos' : ' warn'),
-          text: c.launch ? 'Open for trading' : 'Not open yet' }),
-        follow, bucketAdd(c),
-        c.launch
-          ? h('button', { class: 'btn btn-primary btn-sm', text: 'Buy ' + c.ticker,
-              on: { click: () => go('/invest/' + c.ticker.toLowerCase() + '/invest') } })
-          : null)),
+      isMobile()
+        ? headActions(
+            c.launch
+              ? { label: 'Buy ' + c.ticker, ic: icon.market, strong: true,
+                  run: () => go('/invest/' + c.ticker.toLowerCase() + '/invest') }
+              : null,
+            { label: watching ? 'Following' : 'Follow', ic: icon.star,
+              run: () => {
+                actions.toggleWatch(c.ticker)
+                toast(watching ? c.ticker + ' removed from your watchlist' : c.ticker + ' added to your watchlist')
+              } },
+            { label: inBucket(c.ticker) ? 'In your bucket' : 'Add to bucket', ic: icon.bucket,
+              run: () => {
+                if (inBucket(c.ticker)) { go('/bucket'); return }
+                // The burst comes from the bucket in the top bar rather than
+                // from the row that was pressed: the row is inside a menu that
+                // is closing, and a burst measured from a detached element
+                // never appears. Where it lands is the better place for it
+                // anyway.
+                const bin = document.querySelector<HTMLElement>('.bucket-btn')
+                if (bin) celebrate(bin)
+                showBucketBar()
+                actions.addToBucket(c.ticker, state.prefs.tradeDefault)
+              } })
+        : h('div', { class: 'chip-row' },
+            h('span', { class: 'pill', text: c.kind === 'etf' ? 'ETF' : 'Company' }),
+            // What you can actually do with it. A market that shows twelve
+            // companies and lets you buy five has to say which five, on the
+            // thing itself, rather than at the point of refusal.
+            h('span', { class: 'pill' + (c.launch ? ' pos' : ' warn'),
+              text: c.launch ? 'Open for trading' : 'Not open yet' }),
+            follow, bucketAdd(c),
+            c.launch
+              ? h('button', { class: 'btn btn-primary btn-sm', text: 'Buy ' + c.ticker,
+                  on: { click: () => go('/invest/' + c.ticker.toLowerCase() + '/invest') } })
+              : null)),
+    // The two states, on the page rather than in the header, on a phone.
+    isMobile()
+      ? h('div', { class: 'chip-row' },
+          h('span', { class: 'pill', text: c.kind === 'etf' ? 'ETF' : 'Company' }),
+          h('span', { class: 'pill' + (c.launch ? ' pos' : ' warn'),
+            text: c.launch ? 'Open for trading' : 'Not open yet' }))
+      : null,
     h('div', { class: 'row' },
       h('div', { class: 'stack col-main' },
         card(

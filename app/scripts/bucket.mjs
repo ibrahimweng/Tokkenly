@@ -94,6 +94,13 @@ const m = await b.newPage({ viewport: { width: 390, height: 844 } })
 await seen(m)
 await m.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 await m.goto(B + '/invest/aapl', { waitUntil: 'domcontentloaded' }); await m.waitForTimeout(400)
+// A company page carries two pills and three buttons beside its name, which
+// does not fit across 390 pixels (11g.55). The phone keeps Buy and puts the
+// other two behind the overflow, so filling the bucket from here is two
+// presses now — and this is the check that the second one is reachable.
+await m.getByRole('button', { name: 'More on this screen' }).click(); await m.waitForTimeout(300)
+ok('the overflow holds what the header could not', (await m.locator('.pop-row').count()) >= 2,
+   (await m.locator('.pop-row').allTextContents()).join(', '))
 await m.getByRole('button', { name: 'Add to bucket' }).click(); await m.waitForTimeout(500)
 await m.goto(B + '/bucket', { waitUntil: 'domcontentloaded' }); await m.waitForTimeout(400)
 ok('the phone top bar carries the bucket', await m.evaluate(() => !!document.querySelector('.bucket-btn')))

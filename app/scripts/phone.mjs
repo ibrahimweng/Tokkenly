@@ -108,5 +108,83 @@ console.log('\nTHE NAV BAR')
      await page.evaluate(() => location.hash))
 }
 
+/* THE SCREENS THEMSELVES
+   Two faults, on every screen that had them. A title beside three labelled
+   buttons wrapped onto its own block and sat on top of them — Activity read
+   "Acti…" under Mark all read / Statement / Export. And five screens still
+   drew a three-column table with sort carets, which is a spreadsheet somebody
+   has been asked to use with a thumb. */
+console.log('\nEVERY SCREEN, ON A PHONE')
+{
+  const ROUTES = ['/', '/invest', '/invest/aapl', '/transfer', '/grow', '/activity',
+    '/statement', '/account', '/security', '/send', '/addmoney', '/withdraw', '/bucket']
+  const clipped = [], tabled = []
+  for (const r of ROUTES) {
+    await page.goto(base + r, { waitUntil: 'networkidle' }); await page.waitForTimeout(200)
+    const said = await page.evaluate(() => {
+      const t = document.querySelector('h1')
+      return {
+        clip: t ? t.scrollWidth > t.clientWidth + 1 : false,
+        tables: document.querySelectorAll('main.content .table').length,
+      }
+    })
+    if (said.clip) clipped.push(r)
+    if (said.tables) tabled.push(`${r} (${said.tables})`)
+  }
+  ok('no screen cuts off its own title', clipped.length === 0, clipped.join(' '))
+  ok('and none of them draws a table at a thumb', tabled.length === 0, tabled.join(' '))
+
+  // The overflow. One action stays, the rest are one press away — and a state
+  // like "All caught up" is listed rather than vanishing, because a control
+  // that quietly disappears is not an answer to the question it used to
+  // answer.
+  await page.goto(base + '/activity', { waitUntil: 'networkidle' }); await page.waitForTimeout(250)
+  await page.getByRole('button', { name: 'More on this screen' }).click(); await page.waitForTimeout(250)
+  const menu = await page.locator('.pop-row, .pop-said').allTextContents()
+  ok('the header keeps one action and lists the rest',
+     menu.some((t) => /Statement/.test(t)) && menu.some((t) => /Export/.test(t)),
+     menu.join(', '))
+  await page.keyboard.press('Escape'); await page.waitForTimeout(200)
+
+  // Five filter chips on two rows, a search field and an order row was two
+  // hundred pixels of controls before a single thing that had happened.
+  const filter = page.locator('.chip').filter({ hasText: 'All' }).first()
+  ok('the filter says which one is on, and how many are unread',
+     /All/.test(await filter.textContent() ?? '') && /\d/.test(await filter.textContent() ?? ''),
+     await filter.textContent())
+  await filter.click(); await page.waitForTimeout(250)
+  const opts = await page.locator('.pop-row').allTextContents()
+  ok('and holds all five of them', opts.length === 5, opts.join(', '))
+  await page.locator('.pop-row', { hasText: 'Trades' }).click(); await page.waitForTimeout(350)
+  ok('and picking one filters the feed',
+     (await page.evaluate(() => location.hash)).includes('filter=trades'),
+     await page.evaluate(() => location.hash))
+
+  // What replaced the table: the feed's own row, everywhere.
+  await page.goto(base + '/invest', { waitUntil: 'networkidle' }); await page.waitForTimeout(300)
+  const shape = await page.evaluate(() => {
+    const row = document.querySelector('main.content .feed-row')
+    if (!row) return null
+    return {
+      figure: !!row.querySelector('.row-figure'),
+      lines: row.querySelector('.row-figure')?.children.length ?? 0,
+      trail: !!row.querySelector('.row-trail'),
+      tall: Math.round(row.getBoundingClientRect().height),
+    }
+  })
+  ok('the companies are rows with a price over its day move, and the bucket still on them',
+     !!shape && shape.figure && shape.lines === 2 && shape.trail && shape.tall >= 44,
+     JSON.stringify(shape))
+
+  // Both product cards on the first screen, which 280 pixels of picture each
+  // did not allow.
+  await page.goto(base + '/grow', { waitUntil: 'networkidle' }); await page.waitForTimeout(300)
+  const second = await page.evaluate(() => {
+    const c = document.querySelectorAll('.card.prod')
+    return c.length > 1 ? Math.round(c[1].getBoundingClientRect().top) : -1
+  })
+  ok('Borrow is on the same screen as Lend', second > 0 && second < 844, `starts at ${second}`)
+}
+
 console.log('\nERRORS: ' + (errs.length ? errs.join('\n') : 'none'))
 await browser.close()

@@ -124,7 +124,11 @@
   --data-2: #6c3bab;
 
   --tint-brand: #e4efea;
-  --tint-positive: #e2f2ea;
+  /* Lifted from #e2f2ea. The positive ink on it came to 4.44 against the 4.5
+     a 13px pill needs, and "Open for trading" is a 13px pill. Moving the tint
+     rather than the ink, because the ink is every positive figure in the light
+     theme and it already clears on the page itself (4.96). */
+  --tint-positive: #eef8f3;
   --tint-warning: #f6efdc;
   --tint-negative: #f8e8e0;
   --scrim: rgba(28, 28, 26, 0.34);
