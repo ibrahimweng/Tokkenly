@@ -368,6 +368,11 @@ function gateway(): HTMLElement {
         sub: 'Borrow against your shares without selling them.',
         reads: whereItIs(state.lent, total, 'lent out'),
         at: level(state.lent, total) })),
+    // On a tablet held upright these two sit beside each other: 746 pixels is
+    // two readable columns and one very wide one, and the feed is the thing
+    // that suffers most from being stretched. One column everywhere else, so
+    // the wrapper is inert at every other width.
+    h('div', { class: 'upright-pair' },
     tasks(),
     // D01c draws the activity straight onto the canvas, with no card behind
     // it — the tiles above are the objects on this screen, and a fourth panel
@@ -381,7 +386,7 @@ function gateway(): HTMLElement {
         undefined,
         { lead: 'who', figure: ['amt'] },
       )
-    )
+    )),
   )
 }
 

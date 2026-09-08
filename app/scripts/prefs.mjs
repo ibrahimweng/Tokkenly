@@ -127,13 +127,34 @@ console.log('THE REMINDERS ON HOME  where they sit, and how to be rid of them')
   await t.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   const home = async () => { await t.goto(B + '/', { waitUntil: 'domcontentloaded' }); await t.waitForTimeout(450) }
   await home()
+  // Reading order rather than child order: the task and the feed share a
+  // wrapper now, because on a tablet held upright they sit beside each other
+  // (11g.56), and one level of nesting is not a change of position. Every
+  // element in the flow, in the order somebody meets it.
   const o = await t.evaluate(() =>
-    [...document.querySelectorAll('main > *')].map((e) => String(e.className || e.tagName).split(' ')[0]))
+    [...document.querySelectorAll('main *')]
+      .map((e) => String(e.className || e.tagName).split(' ')[0])
+      .filter((c) => ['gates', 'task', 'headline'].includes(c)))
   // They used to sit above the balance and the doors, which is where a bank
   // puts what it wants from you rather than what you came for.
+  const feedAt = await t.evaluate(() => {
+    const all = [...document.querySelectorAll('main *')]
+    const f = all.find((e) => /Recent activity/i.test(e.textContent ?? '') && e.classList.contains('card-head'))
+    return f ? all.indexOf(f) : -1
+  })
+  const taskAt = await t.evaluate(() => {
+    const all = [...document.querySelectorAll('main *')]
+    const e = all.find((x) => x.classList.contains('task'))
+    return e ? all.indexOf(e) : -1
+  })
+  const gateAt = await t.evaluate(() => {
+    const all = [...document.querySelectorAll('main *')]
+    const e = all.find((x) => x.classList.contains('gates'))
+    return e ? all.indexOf(e) : -1
+  })
   ok('they sit under the doors and against the activity',
-     o.indexOf('gates') >= 0 && o.indexOf('gates') < o.indexOf('stack-12') &&
-     o.indexOf('stack-12') < o.indexOf('stack-8'), o.join(' > '))
+     gateAt >= 0 && taskAt > gateAt && feedAt > taskAt,
+     `${o.join(' > ')}  (doors ${gateAt}, task ${taskAt}, feed ${feedAt})`)
   ok('the row still goes where it says, and has a way to be put away',
      (await t.locator('.task .task-main').count()) >= 1 &&
      (await t.locator('.task .task-close').count()) >= 1)

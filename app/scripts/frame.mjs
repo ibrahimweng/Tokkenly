@@ -145,5 +145,75 @@ console.log('\nNO OVERSCROLL, EITHER WAY')
   }
 }
 
+/* A TABLET HELD UPRIGHT
+   768, 810 and 834 are every iPad in portrait and all three are under
+   MOBILE_MAX, so the shell stays the phone's — a finger is still a finger at
+   834. The layout does not: 834 is twice 390, and none of the decisions made
+   for 390 survive being stretched. The last two of these are the ones that
+   are easy to get wrong, because the band a tablet held upright occupies is
+   the same band a phone lying on its side occupies, and they want opposite
+   answers. */
+console.log('\nA TABLET HELD UPRIGHT')
+{
+  const look = (p) => p.evaluate(() => {
+    const box = (s) => { const e = document.querySelector(s); if (!e) return null
+      const r = e.getBoundingClientRect(); return { w: Math.round(r.width), h: Math.round(r.height) } }
+    const shown = (s) => { const e = document.querySelector(s); return !!e && getComputedStyle(e).display !== 'none' }
+    return {
+      rail: shown('.railbar'), sidebar: shown('.sidebar'),
+      gate: box('.gate'), art: shown('.gate-art'), glyph: shown('.gate-ic'),
+      pair: (() => { const e = document.querySelector('.upright-pair'); return e ? getComputedStyle(e).display : null })(),
+      wide: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    }
+  })
+
+  for (const [w, hh] of [[768, 1024], [834, 1194]]) {
+    const p = await b.newPage({ viewport: { width: w, height: hh } })
+    await seen(p)
+    await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
+    await p.goto(B + '/', { waitUntil: 'networkidle' }); await p.waitForTimeout(250)
+    const said = await look(p)
+    ok(`at ${w} the shell is still the one a finger uses`,
+       said.rail && !said.sidebar, `rail ${said.rail}, sidebar ${said.sidebar}`)
+    ok(`  and the doors have their pictures back rather than a glyph in a letterbox`,
+       said.art && !said.glyph && !!said.gate && said.gate.h >= 240,
+       said.gate ? `${said.gate.w}x${said.gate.h}, art ${said.art}, glyph ${said.glyph}` : 'no door')
+    ok('  and what splits in two is in two columns', said.pair === 'grid', String(said.pair))
+
+    // Every route, for the one fault that a width change causes most often.
+    const spills = []
+    for (const r of ROUTES) {
+      await p.goto(B + r, { waitUntil: 'networkidle' }); await p.waitForTimeout(90)
+      const over = await p.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+      if (over) spills.push(`${r}:${over}`)
+    }
+    ok(`  and nothing on any of the ${ROUTES.length} routes runs off the side`,
+       spills.length === 0, spills.slice(0, 4).join(' '))
+
+    await p.goto(B + '/grow', { waitUntil: 'networkidle' }); await p.waitForTimeout(220)
+    const pair = await p.evaluate(() => {
+      const c = document.querySelectorAll('.card.prod')
+      if (c.length < 2) return null
+      const a = c[0].getBoundingClientRect(), d = c[1].getBoundingClientRect()
+      return { side: Math.round(d.left) >= Math.round(a.right) - 1, top: Math.abs(a.top - d.top) < 2 }
+    })
+    ok('  and both products are beside each other, level',
+       !!pair && pair.side && pair.top, JSON.stringify(pair))
+    await p.close()
+  }
+
+  // The trap. A phone on its side is 844 wide, which is inside the band, and
+  // 390 tall, which is why the query asks about the height as well.
+  const flat = await b.newPage({ viewport: { width: 844, height: 390 } })
+  await seen(flat)
+  await flat.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
+  await flat.goto(B + '/', { waitUntil: 'networkidle' }); await flat.waitForTimeout(250)
+  const lying = await look(flat)
+  ok('a phone lying on its side is not a tablet',
+     !lying.art && lying.glyph && lying.pair === 'block' && !!lying.gate && lying.gate.h < 140,
+     lying.gate ? `${lying.gate.w}x${lying.gate.h}, art ${lying.art}` : 'no door')
+  await flat.close()
+}
+
 console.log('\nerrors: ' + (errs.length ? errs.join('\n') : 'none'))
 await b.close()

@@ -1461,6 +1461,72 @@ th.right .th-sort { flex-direction: row-reverse; }
 }
 
 
+/* ------------------------------------------- a tablet held upright --
+   768, 810 and 834 are every iPad in portrait, and all three are under
+   MOBILE_MAX, so the shell is the phone's — a floating nav bar, targets a
+   thumb can find, sheets from the bottom. A finger is still a finger at 834.
+   What does not carry over is the phone's layout: 834 is twice 390, and none
+   of the decisions made for 390 hold at twice the width. Three doors 92 tall
+   become letterboxes with a glyph floating in them, and a row puts a name at
+   one edge and a figure at the other with four hundred pixels of nothing
+   between.
+
+   The height is in the query on purpose: a phone lying on its side is 844
+   wide and 390 tall, which is inside the width band and is emphatically not a
+   tablet. `isWideTouch` in responsive.ts is the same query in TypeScript, and
+   the two have to be changed together.
+   ------------------------------------------------------------------------ */
+@media (min-width: 700px) and (max-width: 899px) and (min-height: 700px) {
+  /* The doors get their pictures back. Three across at about 248 each, which
+     is a hair under the 288 the desktop gives them — so the composition that
+     was drawn for that box is being asked for very nearly the same box, and
+     the glyph the phone uses in its place is put away. */
+  .gate { height: 300px; padding: 20px; border-radius: 24px; align-items: stretch; justify-content: flex-start; }
+  .gate-ic { display: none; }
+  .gate-sub, .gate-cta, .gate-art { display: revert; }
+  .gate-art { display: block; height: 148px; }
+  .gate .gate-words { align-items: flex-start; justify-content: flex-start; gap: 8px; height: auto; }
+  .gate .t-title { font-size: 18px; line-height: 24px; text-align: left; -webkit-line-clamp: 2; }
+  .gate-sub { font-size: 13px; line-height: 18px; }
+  .gates { gap: 12px; }
+
+  /* Two columns where the content genuinely splits in two. Not where it does
+     not: Activity's feed is grouped under day headers, and a day whose rows
+     carry on in the next column is a day nobody can read. */
+  .upright-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+  .upright-pair > * { min-width: 0; }
+
+  /* A list of companies has no grouping in it, so it takes the width in two.
+     Scoped to a list inside a card, which is what that is and what Activity's
+     is not. */
+  .card > .feed { display: grid; grid-template-columns: 1fr 1fr; column-gap: 20px; }
+
+  /* And where a list cannot be two columns it stops being one very wide one.
+     Sixty-odd characters is the measure this product reads at everywhere
+     else; the feed keeps its own edges by sitting in a column rather than by
+     having its contents pulled in. */
+  .content > .feed, .content > .stack > .feed { max-width: 620px; }
+
+  /* Both products beside each other, as they are on a desktop. The phone tier
+     hands every row's children `width: 100% !important`, which turned the row
+     back into a column with the second card off the side of the screen — so
+     the width and the flex have to be handed back as loudly as they were
+     taken. The band comes back up with them: at 365 wide the object has room
+     to be an object again. */
+  .row.prods { flex-direction: row; }
+  .row.prods > * { width: auto !important; flex: 1 1 0 !important; min-width: 0; }
+  .prod-art { height: 220px; }
+
+  /* A pair of doors is a pair at this width, not a stack. Same override as
+     the products above, and for the same reason: the phone tier takes the
+     width from every child of a row with an !important on it. */
+  .row.equal { flex-direction: row; }
+  .row.equal > * { width: auto !important; flex: 1 1 0 !important; min-width: 0; }
+
+  /* The page's own gutters. 20 was a phone's; at 834 it is a hairline. */
+  .content { padding-left: 32px; padding-right: 32px; }
+}
+
 /* ---------------------------------------------------------- the wallet --
    The centrepiece is not the number on its own. It is the number, and what
    the number is made of, drawn to scale. */

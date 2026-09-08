@@ -7099,6 +7099,65 @@ every positive figure in the light theme and already clears on the page itself.
      there is nothing left to press. Moving an action into a menu is fine;
      letting the state it replaced disappear is not.
 
+### 11g.56 A tablet held upright
+
+The tablet tier has existed in CSS since 11f.20 and had never been looked at.
+Eight sizes, both ways up, audited rather than admired — and the tier that was
+defined turned out not to be the one that needed the work.
+
+**900 and up is fine.** Sidebar, real tables, header actions labelled, filter
+chips on one row, both products beside each other. No overflow, no clipped
+title, at 900, 1024, 1112, 1194 or 1366. The one thing it spends is 192px of
+gutter at 1366, which is a decision rather than a fault.
+
+**Everything below 900 was the phone.** `MOBILE_MAX` is 899, and 768, 810 and
+834 are every iPad there is in portrait — so an iPad Pro held upright was
+getting a layout drawn for 390 pixels, at twice the width. None of it survives
+being stretched:
+
+- Three doors 92 tall across 260 wide each: letterboxes with a glyph floating
+  in the middle of them.
+- A row with the name at one edge and the figure at the other, and four
+  hundred pixels of nothing between.
+- A 160px band of picture pulled across 754.
+- Body text running to a 794px measure.
+
+The shell is right and stays: a finger is still a finger at 834, so the
+floating nav bar, the 44px targets and the sheets from the bottom are all the
+correct answers. What was wrong was every decision underneath them, and all of
+those were decisions about width.
+
+So the doors get their pictures back — 249 wide against the desktop's 288,
+which is very nearly the box those compositions were drawn for — and the glyph
+that stood in for them is put away. What splits in two goes in two: the task
+beside the feed on Home, the company list in two columns, both products side by
+side. What does not split stops being one very wide column instead: Activity's
+feed is grouped under day headers, and a day whose rows carry on in the next
+column is a day nobody can read, so it is capped at 620 and left alone.
+
+**The trap, and it is the whole reason this tier has a height in it.** A phone
+lying on its side is 844 wide. That is inside the band. It is also 390 tall,
+and two columns of doors with the pictures back is exactly the wrong answer for
+it. `(min-height: 700px)` is what tells a tablet from a phone that has been
+turned over, and `isWideTouch` in responsive.ts is the same query in
+TypeScript — the two have to be changed together, which is written on both of
+them.
+
+One thing that had to be undone twice. The phone tier hands every child of a
+row `width: 100% !important`, which is right for a phone and is why the two
+product cards came back as a column with the second one off the side of the
+screen. A width taken with an `!important` has to be given back with one.
+
+`frame.mjs` reads both sizes and the trap: the shell is still the finger's, the
+doors are 300 tall with their art and no glyph, the pair is a grid, both
+products are beside each other and level, nothing on any of the forty-three
+routes runs off the side — and a phone at 844×390 has none of it.
+
+139. **A breakpoint is a width, and a device is not.** The band a tablet held
+     upright occupies is the same band a phone lying on its side occupies, and
+     they want opposite layouts. Where a rule is really about how much room
+     there is *in both directions*, ask about both.
+
 ### 11g.49 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from
@@ -7196,8 +7255,11 @@ every positive figure in the light theme and already clears on the page itself.
   item 23 — needs a series the product does not have.
 - Everything in 11f.38 that has not been superseded still stands, and the file
   is now further behind: Figma has none of the last four tiers either.
-- The tablet tier is defined by the sidebar and the gutters. Nothing has been
-  drawn for it in Figma, so 900–1199 exists in CSS and nowhere else.
+- The tablet tier is defined by the sidebar and the gutters, and 900–1199 was
+  never the tier that needed the work: it measured clean (11g.56). What did was
+  768–899, where every iPad in portrait had been getting the phone's layout at
+  twice the width. Both are now built and checked, and neither has been drawn
+  in Figma.
 - `settlement()` decides failure on the cents. That is right for a prototype
   and wrong for anything else, and the seam is one function wide when a real
   backend arrives.
