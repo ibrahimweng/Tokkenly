@@ -13,8 +13,14 @@ const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const errs = []
 const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
 
+/* "more" is not on this list. It is a dialog on a desktop and it is not one on
+   a phone: down there the nav bar's own capsule becomes the list, in place,
+   with no scrim over the screen (11g.54). A list that is a dialog at one width
+   and a menu at another cannot be checked by a sweep that asserts a dialog at
+   both, so it is checked where it lives — phone-flows walks it open, into a
+   place and shut again. */
 const ROUTES = [
-  ['/?sheet=jump', 'jump'], ['/?sheet=more', 'more'], ['/?sheet=card', 'card'],
+  ['/?sheet=jump', 'jump'], ['/?sheet=card', 'card'],
   ['/?sheet=put-away&task=verify', 'put-away'], ['/?sheet=pick-who', 'pick-who'],
   ['/activity?sheet=receipt&ref=TKN-8E4J77', 'receipt of a trade'],
   ['/activity?sheet=receipt&ref=TKN-8F2K90', 'receipt of a payment'],

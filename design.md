@@ -6904,6 +6904,120 @@ Run against a pixel-defined reach it fails, naming 80 against 68.
      first one wrong on the second surface that used it, and there is no
      surface count at which that gets easier to notice.
 
+### 11g.53 Three doors across, not three doors down
+
+The phone's Home opened with six hundred pixels of gateway. Three cards, two
+hundred tall each, stacked — and the first thing that had actually happened to
+somebody's money started at 1144 on an 844 screen. A screen and a half of doors
+before a single fact.
+
+A door only has to be big enough to open. The three are a row now: a glyph, a
+word, 92 tall, one finger reaching all three without moving. Everything below
+comes up by about five hundred pixels, which is what puts the feed on the first
+screen — the activity heading lands at 626 and its first row at 672, both above
+the fold, on the same screen as the balance and the doors.
+
+What the tile drops, and why. At 110 wide the sentence is two words a line, the
+percentage is a third line, the call to action is a fourth, and the dot field
+is a smudge. Each of them was a good idea at 288. The glyph and the word are
+the door. The field stays on the desktop, where a picture has room to be a
+picture, and the glyph stays off it for the same reason — two of them would be
+one too many.
+
+The labels sit in a two-line box whether they need two lines or not, so the
+three glyphs are at one height. A row whose icons step up and down reads as
+three unrelated things rather than one rank.
+
+**And the header underneath it was broken.** The greeting truncated to "Good
+evening…", the Simple/Detailed chips sat on top of it, and the bell sat on top
+of the line under that. Six controls across 390 pixels: an avatar, a search, a
+bucket, a bell and two chips. The chips left. Simple/Detailed is a preference
+somebody sets once, not a thing they flip on a visit, and it is in the nav
+bar's panel now with the rest of the settings (11g.54). The greeting reads
+whole again.
+
+`viewToggle` moved from the Home screen into `shell.ts` on the way, because it
+is chrome rather than screen content: it is in the header on a desktop and in
+the panel on a phone, and one control written twice is two controls that will
+drift.
+
+### 11g.54 The capsule becomes the list
+
+The reference was a screen recording of somebody else's app, and what is worth
+taking from it is not a look. It is a structure, and the structure is that
+there are **two objects down there rather than one bar**.
+
+What the video actually does, frame by frame — 495 of them at 60fps, measured
+rather than admired:
+
+- A pill capsule of four icon-only tabs, about 67% of the screen wide, and a
+  circle beside it whose diameter is exactly the capsule's height, with a gap
+  of about 2.7%. The pair is centred as a group with equal margins, floating
+  clear of the bottom edge.
+- The active tab is a soft blurred patch behind the glyph. Not a filled pill —
+  a light left on.
+- Pressing the circle does not open a sheet. **The capsule becomes a panel**:
+  same width, same bottom edge, growing upward. The tabs are gone while it is
+  open. The circle does not move a pixel, and its glyph becomes a cross.
+- The panel is a four-column grid of rounded-square buttons with the label
+  *under* the button. Eleven items flowing 4 / 4 / 3, and the short last row
+  stays where it falls rather than recentring.
+- It arrives out of focus: a scale that is mostly across, from a narrower box,
+  with a blur that resolves as it lands. The circle flashes lighter on press.
+
+Two of those are decisions this file had already made in the other direction,
+and both are worth saying out loud.
+
+**The tabs keep their words.** The reference's are glyphs alone, and 11f.16 put
+the words there on purpose: four unlabelled glyphs is a memory test, and this
+product's whole thesis is teaching somebody their first share. The words stay.
+What that costs is the capsule's height, and it is worth it.
+
+**Which turned out to be why the fourth tab was broken.** "Borrow & Lend" is 78
+pixels wide and a quarter of a 390 phone is 65, so it wrapped — and the second
+line fell through the capsule's rounded bottom, because a 32px corner radius
+eats exactly the place the fourth tab's second line lands. The fix is not a
+shorter name. It is that a tab is as wide as its word rather than a quarter of
+the capsule: Home is 48, Invest 50, Wallet 51, Borrow & Lend 91, and the slack
+goes between them.
+
+**The panel is the "more" sheet, in place.** Same seven places, same `?sheet=more`
+in the address, so the back gesture still closes it and a reload still reopens
+it. What changed is where it is drawn. This is the rule about not sending a
+dialog to a screen of its own, applied to the one piece of chrome that was
+still breaking it — and the button that opened it is under the thumb the whole
+time, which a bottom sheet's close button never is.
+
+The eighth thing in the panel is not a place. Simple/Detailed comes down from
+the Home header (11g.53) and sits under a rule at the foot of the grid, with
+its own label, because a preference in a grid of destinations is a preference
+pretending to be a destination.
+
+**And a menu is not a modal.** There is no scrim: the page above stays lit. What
+a menu needs instead of a scrim is somewhere to press that is not the menu, so
+there is an invisible catcher behind it, and Escape closes it, and so does the
+button itself. Three ways out, because a menu with one way out is a trap on a
+phone. Pressing a place in it navigates in **one** step rather than closing and
+then going — those were two history entries and they raced, which is how a
+press on Support landed back on Home.
+
+`phone.mjs` holds the thirteen assertions: the capsule and the circle are
+separate objects of one height, every label is on one line, the panel is the
+capsule's exact footprint, the circle has not moved, nothing is under 44,
+all three ways out work, and back from a place it sent you to is the screen you
+opened it on rather than the panel again.
+
+135. **A reference is a structure, not a look.** What was worth taking from
+     eight seconds of somebody else's app was that the bar is two objects and
+     the second one becomes the list. What was not worth taking was the thing
+     it does that this product had already decided against for a reason it
+     wrote down.
+
+136. **A tab is as wide as its word.** Equal columns are a layout, not a
+     reading. When one of four names is half again as long as the others, an
+     equal quarter is the thing that breaks it, and the fix is to stop
+     dividing by four rather than to shorten the name.
+
 ### 11g.49 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from

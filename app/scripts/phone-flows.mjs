@@ -53,15 +53,20 @@ await p.goto(base + '/transfer', { waitUntil: 'networkidle' })
 log.push('  wallet after:  ' + (await text('.card .t-display-xl')).trim())
 
 log.push('')
-log.push('RAIL  four tabs and More')
+log.push('RAIL  four tabs, and the capsule that becomes the rest')
 await p.goto(base + '/', { waitUntil: 'networkidle' })
 log.push('  tabs: ' + (await p.locator('.rail-tab').count()) + ', more button: ' + (await p.locator('.rail-more').count()))
+// It is not a sheet down here any more (11g.54). The capsule itself becomes
+// the list, in place, and the button that opened it stays where the thumb
+// left it and turns into the way out.
 await p.locator('.rail-more').click()
-await p.waitForTimeout(200)
-const rows = await p.locator('.sheet-row .t-body-strong').allTextContents()
-log.push('  More reveals: ' + rows.join(', '))
-await p.locator('.sheet-row', { hasText: 'Security' }).click()
-await p.waitForTimeout(220)
+await p.waitForTimeout(300)
+log.push('  the capsule is gone: ' + !(await p.locator('.rail-pill').isVisible()) +
+         ', no dialog over the screen: ' + ((await p.locator('.scrim').count()) === 0))
+const rows = await p.locator('.rail-cell-label').allTextContents()
+log.push('  it reveals: ' + rows.join(', '))
+await p.locator('.rail-cell', { hasText: 'Security' }).click()
+await p.waitForTimeout(260)
 log.push('  tapped Security → ' + p.url().split('#')[1] + ', title ' + (await text('.page-header h1')).trim())
 
 log.push('')

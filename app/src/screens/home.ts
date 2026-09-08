@@ -2,11 +2,11 @@ import { h, link, countTo } from '../ui'
 import { icon } from '../icons'
 import { barChart, type Range } from '../components/chart'
 import { objectArt, stir, level, PIECE, NOTES, PURSE, type ObjectField } from '../components/art'
-import { shell, pageHeader, bell, jumpOpen } from '../components/shell'
+import { shell, pageHeader, bell, jumpOpen, viewToggle } from '../components/shell'
 import { card, cardHead, headLink, kv, amount, directionMark, figureWithEye } from '../components/bits'
 import { table } from '../components/table'
 import {
-  state, actions, holdingsValue, availableToBorrow, buyingPower, verified, LIMITS, money, MASK, inNaira,
+  state, holdingsValue, availableToBorrow, buyingPower, verified, LIMITS, money, MASK, inNaira,
   bucketTotal, bucketCost,
 } from '../state'
 import { usd, signed, when, pct, shares, greeting, activityLabel } from '../format'
@@ -103,17 +103,6 @@ function moneyFigure(cls: string, key: string, value: number): HTMLElement {
   if (state.prefs.hideBalances) el.textContent = money(value)
   else countTo(el, key, value, (n) => money(n))
   return el
-}
-
-function viewToggle(): HTMLElement {
-  const mk = (v: 'simple' | 'detailed', label: string) =>
-    h('button', {
-      class: 'chip',
-      text: label,
-      ariaPressed: state.prefs.homeView === v,
-      on: { click: () => { actions.setHomeView(v); go('/') } },
-    })
-  return h('div', { class: 'chip-row' }, mk('simple', 'Simple'), mk('detailed', 'Detailed'))
 }
 
 function quickAction(label: string, sub: string, ic: string, to: string): HTMLElement {
@@ -287,13 +276,18 @@ function whereItIs(part: number, whole: number, what: string): string {
 function gateway(): HTMLElement {
   const tile = (
     opts: { title: string; sub: string; cta: string; to: string; art: ObjectField
-            lead?: boolean; reads: string; at: number },
+            ic: () => string; lead?: boolean; reads: string; at: number },
   ) => {
     const a = link(opts.to, 'card gate' + (opts.lead ? ' gate-lead' : ''))
     a.style.textDecoration = 'none'
+    // The phone's door is this glyph and one word, and nothing else on the
+    // tile is drawn down there: at 110 wide a sentence is two words a line
+    // and a field of dots is a smudge. Desktop never shows it — the picture
+    // is the recognition up there, and two of them would be one too many.
+    a.appendChild(h('span', { class: 'gate-ic', html: opts.ic() }))
     a.appendChild(h('div', { class: 'gate-words' },
       h('span', { class: 't-title', text: opts.title }),
-      h('span', { class: 'muted', text: opts.sub }),
+      h('span', { class: 'gate-sub muted', text: opts.sub }),
       // The field is decoration that has been given something to say, so what
       // it says is written down as well. It stays aria-hidden and always will:
       // a dot field is not a thing to read a figure off. The sentence is the
@@ -330,7 +324,14 @@ function gateway(): HTMLElement {
         h('div', { class: 'header-actions' },
           // The phone's top bar already carries a search; two of them 40px
           // apart is not twice as findable.
-          isMobile() ? null : jumpOpen(), viewToggle(), bell()))),
+          //
+          // And Simple/Detailed leaves the phone altogether. Two chips, an
+          // avatar, a search, a bucket and a bell is six controls across 390
+          // pixels: they were overlapping the greeting and sitting on top of
+          // the line under it. It is a preference somebody sets once, not a
+          // thing they flip on a visit, so it is in the grid behind the nav
+          // bar with the rest of the settings.
+          isMobile() ? null : jumpOpen(), isMobile() ? null : viewToggle(), bell()))),
     h('div', { class: 'headline' },
       h('div', { class: 'stack-8' },
         h('span', { class: 'muted', text: standing() }),
@@ -347,7 +348,7 @@ function gateway(): HTMLElement {
     // Figma drew is the full field, and the account decides how much of it is
     // awake. Nothing moves and nothing is resized — the picture is the picture.
     h('div', { class: 'gates' },
-      tile({ lead: true, art: PIECE(), to: '/invest', title: 'Invest', cta: 'Buy shares',
+      tile({ lead: true, art: PIECE(), ic: icon.market, to: '/invest', title: 'Invest', cta: 'Buy shares',
         sub: 'Own a piece of Apple, Nvidia or a whole market fund. From $1.',
         reads: whereItIs(holdingsValue(), total, 'in shares'),
         at: level(holdingsValue(), total) }),
@@ -355,11 +356,11 @@ function gateway(): HTMLElement {
       // which is the Transfer place rather than the Withdraw action it used to
       // open. A door labelled "Convert money" that lands on a screen headed
       // "Withdraw to your bank" is the promise in rule 49 half kept.
-      tile({ art: NOTES(), to: '/transfer', title: 'Wallet', cta: 'Move money',
+      tile({ art: NOTES(), ic: icon.wallet, to: '/transfer', title: 'Wallet', cta: 'Move money',
         sub: 'Your dollars, and the naira going in and out.',
         reads: whereItIs(state.cash, total, 'in cash'),
         at: level(state.cash, total) }),
-      tile({ art: PURSE(), to: '/grow', title: 'Borrow & Lend', cta: 'See your limit',
+      tile({ art: PURSE(), ic: icon.grow, to: '/grow', title: 'Borrow & Lend', cta: 'See your limit',
         sub: 'Borrow against your shares without selling them.',
         reads: whereItIs(state.lent, total, 'lent out'),
         at: level(state.lent, total) })),

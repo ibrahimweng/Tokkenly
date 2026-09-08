@@ -16,6 +16,7 @@ import {
 import { sparkline, type Range } from './components/chart'
 import { usd, naira, pct, shares as fmtShares, longWhen, when, isDrawdown } from './format'
 import { type Route, closeSheet, replaceSheet, go } from './router'
+import { isMobile } from './responsive'
 import { QA } from './screens/settings'
 import { peopleRows, addPanels, addTab } from './screens/money'
 import { search } from './destinations'
@@ -1492,6 +1493,11 @@ export const SHEETS: Record<string, Builder> = {
 
 export function buildSheet(r: Route): HTMLElement | null {
   if (!r.sheet) return null
+  // On a phone "more" is not a sheet at all: the nav bar's own capsule becomes
+  // the list, in place, with the button that opened it still under the thumb
+  // (11g.54). The desktop keeps the sheet, because there is no nav bar down
+  // there to grow — the sidebar is the nav bar, and it is already showing.
+  if (r.sheet === 'more' && isMobile()) return null
   const make = SHEETS[r.sheet]
   if (!make) return null
   try {

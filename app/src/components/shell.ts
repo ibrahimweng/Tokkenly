@@ -1,6 +1,6 @@
 import { h, link, append } from '../ui'
 import { icon } from '../icons'
-import { state, visibleNotifications } from '../state'
+import { state, actions, visibleNotifications } from '../state'
 import { initialsOf } from '../format'
 import { openSheet, go, current } from '../router'
 import { isMobile } from '../responsive'
@@ -140,27 +140,88 @@ function topBar(): HTMLElement {
       on: { click: () => go('/support') } }))
 }
 
+/** Simple or Detailed, as two chips. Chrome rather than screen content: it is
+ *  in the header on a desktop and in the nav bar's panel on a phone, and one
+ *  control written twice is two controls that will drift. */
+export function viewToggle(): HTMLElement {
+  const mk = (v: 'simple' | 'detailed', label: string) =>
+    h('button', {
+      class: 'chip', text: label, ariaPressed: state.prefs.homeView === v,
+      on: { click: () => { actions.setHomeView(v); go('/') } },
+    })
+  return h('div', { class: 'chip-row' }, mk('simple', 'Simple'), mk('detailed', 'Detailed'))
+}
+
+/** The nav bar: a capsule of tabs, and a button of its own beside it.
+ *
+ *  Two objects rather than one bar, because they do two different jobs. The
+ *  capsule is where you are; the button is everything else, and everything
+ *  else is a list, not a fifth tab. Pressing it does not open a sheet over the
+ *  screen — the capsule itself becomes the list, growing upward from its own
+ *  bottom edge while the button stays exactly where your thumb left it and
+ *  turns into the way out. The tabs go while it is open: one thing at a time
+ *  in one place, which is the whole reason not to send it to a screen of its
+ *  own.
+ *
+ *  The state is still `?sheet=more`, so the back gesture closes it and a
+ *  reload reopens it. What changed is only where it is drawn. */
 function rail(active: Place): HTMLElement {
+  const open = current().sheet === 'more'
+  const shut = () => history.back()
+
   const pill = h('div', { class: 'rail-pill' })
   for (const p of TABS) {
     // The name, not only the icon. Four unlabelled glyphs is a memory test,
     // and this product's whole thesis is teaching somebody their first share
     // — the sidebar has said Home, Invest, Wallet, Borrow & Lend in words
     // start, and the phone is where most of these people will actually be.
+    // Which is why the tabs are as wide as their words rather than a quarter
+    // each: an equal quarter is 65 pixels and the fourth word is 78, and that
+    // is the whole reason it used to fall out of the bottom of the capsule.
     const tab = h('button', { class: 'rail-tab', on: { click: () => go(p.to) } },
       h('span', { class: 'ic', html: p.ic() }),
       h('span', { class: 'rail-label', text: p.label }))
     if (p.id === active) tab.setAttribute('aria-current', 'page')
     pill.appendChild(tab)
   }
-  const moreOpen = current().sheet === 'more'
+
+  // Seven places, four to a row, the short row left where it falls rather than
+  // centred — a grid that recentres its last row is a grid whose columns stop
+  // meaning anything. Then the one thing in here that is not a place.
+  const panel = h('div', {
+    class: 'rail-panel', role: 'group', ariaLabel: 'The rest of Tokkenly',
+    on: { keydown: (e) => { if ((e as KeyboardEvent).key === 'Escape') shut() } },
+  },
+    h('div', { class: 'rail-grid' },
+      // Replacing rather than pushing: the panel and the place it sends you to
+      // are one step, so back from there is the screen you pressed it on and
+      // not the panel open again. Closing it first would be two — and they
+      // race, which is how a press on Support landed back on Home.
+      ...BEHIND_MORE.map((m) => h('button', {
+        class: 'rail-cell', on: { click: () => go(m.to, true) },
+      },
+        h('span', { class: 'rail-cell-ic', html: m.ic() }),
+        h('span', { class: 'rail-cell-label', text: m.label })))),
+    h('div', { class: 'rail-rule' }),
+    h('div', { class: 'rail-pref' },
+      h('span', { class: 't-caps subtle', text: 'Home view' }), viewToggle()))
+
   const behind = active === 'history' || active === 'account'
   const more = h('button', {
-    class: 'rail-more', html: icon.grid(), ariaLabel: 'More',
-    on: { click: () => (moreOpen ? history.back() : openSheet('more')) },
+    class: 'rail-more', html: open ? icon.close() : icon.grid(),
+    ariaLabel: open ? 'Close' : 'More',
+    on: { click: () => (open ? shut() : openSheet('more')) },
   })
-  more.setAttribute('aria-expanded', String(moreOpen || behind))
-  return h('div', { class: 'railbar' }, pill, more)
+  more.setAttribute('aria-expanded', String(open || behind))
+
+  const bar = h('div', { class: 'railbar' + (open ? ' is-open' : '') },
+    h('div', { class: 'rail-stack' }, pill, open ? panel : null), more)
+  if (!open) return bar
+  // A menu closes when you press away from it. There is no scrim to press —
+  // the page underneath stays lit, because this is a menu and not a modal —
+  // so the thing to press is an invisible one.
+  return h('div', { class: 'rail-root' },
+    h('button', { class: 'rail-catch', ariaLabel: 'Close', on: { click: shut } }), bar)
 }
 
 /* ---------------- the shell ---------------- */

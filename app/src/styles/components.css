@@ -773,56 +773,133 @@
 .railbar::before {
   content: '';
   position: fixed; left: 0; right: 0; bottom: 0; height: 148px;
-  background: linear-gradient(to top, var(--canvas) 46%, transparent);
+  /* Solid as high as the bar itself reaches — 96 of these 148 — or a figure
+     from the page shows through the gap between the capsule and the button
+     beside it, which reads as a hole rather than as two floating objects. */
+  background: linear-gradient(to top, var(--canvas) 70%, transparent);
   pointer-events: none;
   z-index: -1;
 }
+/* Open, the capsule is a panel 221 tall and the page shows beside it. Same
+   answer, taller: the ground under the whole thing goes quiet, and the screen
+   above it stays lit — this is a menu, and a menu does not put the room out. */
+.railbar.is-open::before { height: 380px; background: linear-gradient(to top, var(--canvas) 72%, transparent); }
 /* The pill used to shrink-wrap four circles. With words in it that leaves
    "Transfer" clipped, so it takes the width the row has left over instead —
    capped, because a capsule stretched across a wide phone stops reading as a
    floating control and starts reading as a bar. */
-.rail-pill {
-  display: flex; gap: 2px; padding: 6px;
-  background: var(--sunken); border-radius: 999px;
-  box-shadow: var(--shadow-float);
+/* The capsule and the panel it becomes occupy one slot, so the panel is the
+   capsule's width and stands on the capsule's bottom edge. */
+.rail-stack {
   flex: 1 1 auto; min-width: 0; max-width: 340px;
+  display: flex; flex-direction: column; justify-content: flex-end;
 }
+.rail-pill {
+  display: flex; justify-content: space-between; gap: 2px; padding: 6px;
+  background: var(--sunken); border-radius: 999px;
+  /* A ring rather than a border. A border is a box the height grows for, and
+     the circle beside this has to stay exactly as tall as the capsule. */
+  box-shadow: var(--shadow-float), inset 0 0 0 1px var(--grid);
+  width: 100%; min-width: 0;
+}
+.railbar.is-open .rail-pill { display: none; }
 /* Icon over name. The tab was a 48px circle that grew to 64 when it was the
    one you were on; with a word under the icon the width is set by the word,
    so they share the room evenly and the lit one is told apart by its fill
    rather than by being fatter than its neighbours. */
+/* As wide as its word, not a quarter of the capsule. A quarter is 65 pixels
+   and "Borrow & Lend" is 78, which is why it used to break onto a second line
+   and fall through the capsule's rounded bottom — the corner radius eats
+   exactly the place the fourth tab's second line landed. */
 .rail-tab {
-  flex: 1 1 0; min-width: 0;
-  height: 52px; padding: 0 2px; border-radius: 999px;
+  flex: 0 1 auto; min-width: 0;
+  height: 52px; padding: 0 10px; border-radius: 999px;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
   color: var(--muted);
 }
 .rail-tab .ic { display: grid; place-items: center; height: 18px; }
-/* Two lines, not an ellipsis. The four tabs used to be one word each and the
-   longest of them was "Transfer"; the fourth is "Borrow & Lend" now, which at
-   10px is a couple of pixels over what a quarter of a 390 phone gives it, and
-   "Borrow & Le…" on a tab is a tab nobody can read. Two lines of 12 plus the
-   18px glyph still sit inside the 52 the tab already had. */
+/* One line. The tab is as wide as this is. */
 .rail-label {
   font-size: 10px; line-height: 12px; font-weight: 600; letter-spacing: 0.01em;
-  max-width: 100%; text-align: center; overflow-wrap: break-word;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-  overflow: hidden;
+  text-align: center; white-space: nowrap;
 }
-.rail-tab[aria-current='page'] { background: var(--inverse); color: var(--on-inverse); }
+/* Where you are is a light left on behind the tab, not a white pill printed
+   over it. The pill was the loudest object on the phone — a filled shape at
+   full contrast in the corner of every screen — and it was saying something
+   the icon and the word had already said. */
+.rail-tab[aria-current='page'] { color: var(--ink); position: relative; }
+.rail-tab[aria-current='page']::before {
+  content: ''; position: absolute; inset: 2px;
+  border-radius: 999px; background: var(--control);
+  filter: blur(7px); z-index: -1;
+}
+.rail-tab { isolation: isolate; }
 /* 360 is the width most budget Android phones actually are, and "Transfer" is
    the longest of the four. Below 400 the rail gives up its side gutters
    before it gives up a word. */
 @media (max-width: 399px) {
   .railbar { padding: 0 12px; gap: 8px; }
 }
+/* It never moves. Whatever the capsule beside it is doing, this is where the
+   thumb left it, and it is the way out as well as the way in. */
 .rail-more {
-  width: 64px; height: 64px; border-radius: 999px; flex: none;
+  width: 64px; height: 64px; border-radius: 999px; flex: none; align-self: flex-end;
   background: var(--sunken); color: var(--muted);
   display: grid; place-items: center;
-  box-shadow: var(--shadow-float);
+  box-shadow: var(--shadow-float), inset 0 0 0 1px var(--grid);
 }
-.rail-more[aria-expanded='true'] { background: var(--inverse); color: var(--on-inverse); }
+.rail-more[aria-expanded='true'] { color: var(--ink); }
+.rail-more:active { background: var(--control-pressed); color: var(--ink); }
+
+/* ---- the panel the capsule becomes ---- */
+.rail-root { display: contents; }
+/* No scrim: the page underneath stays lit, because this is a menu and not a
+   modal. What it needs instead is somewhere to press that is not the menu. */
+.rail-catch { position: fixed; inset: 0; z-index: 29; background: none; cursor: default; }
+.rail-panel {
+  width: 100%;
+  background: var(--sunken); border-radius: 24px; padding: 12px;
+  box-shadow: var(--shadow-float), inset 0 0 0 1px var(--grid);
+  display: flex; flex-direction: column; gap: 10px;
+  transform-origin: 50% 100%;
+}
+/* It arrives out of focus and comes to. The capsule is a narrow thing
+   becoming a wide one, so the scale is mostly across; the blur is what makes
+   it read as one object resolving rather than a box being stretched. */
+@media (prefers-reduced-motion: no-preference) {
+  .rail-panel { animation: rail-open 240ms var(--ease); }
+}
+@keyframes rail-open {
+  from { transform: scale(0.72, 0.86); filter: blur(12px); opacity: 0; }
+  to { transform: none; filter: blur(0); opacity: 1; }
+}
+/* Four to a row, and the short row stays where it falls. A grid that
+   recentres its last row is a grid whose columns have stopped meaning
+   anything. */
+.rail-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px 6px; }
+.rail-cell {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  min-width: 0; color: var(--ink);
+}
+.rail-cell-ic {
+  width: 100%; height: 48px; border-radius: 14px;
+  background: var(--control); display: grid; place-items: center;
+}
+.rail-cell-ic svg { width: 20px; height: 20px; }
+.rail-cell:active .rail-cell-ic { background: var(--control-pressed); }
+/* The label is under the button, not inside it — the button is the target and
+   the word is what it is called. Two lines, because "Notifications" is one
+   word and it is longer than a quarter of the capsule. */
+.rail-cell-label {
+  font-size: 10px; line-height: 12px; font-weight: 600; color: var(--muted);
+  text-align: center; overflow-wrap: anywhere;
+}
+.rail-rule { height: 1px; background: var(--grid); margin: 2px 0; }
+.rail-pref { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+/* 44, like everything else a thumb has to find down here (rule 35). It was
+   32, which is the size a chip is on a desktop toolbar and not the size of
+   anything on a phone. */
+.rail-pref .chip { height: 44px; padding: 0 14px; font-size: 12px; }
 
 .grabber {
   width: 40px; height: 4px; border-radius: 999px; background: var(--control-pressed);
@@ -1279,6 +1356,9 @@ th.right .th-sort { flex-direction: row-reverse; }
 /* 140 was the height of a texture. An object needs room to be one: at 140 a
    note's window and a slice's cut are three pixels each and the whole thing
    reads as noise. It sits behind the words, which carry their own z-index. */
+/* The phone's door is a glyph and a word (see the media query below).
+   Desktop draws the picture instead, so it does not also draw the glyph. */
+.gate-ic { display: none; }
 .gate-art {
   position: absolute; left: 0; right: 0; bottom: 0; height: 196px;
   overflow: hidden; pointer-events: none;
@@ -1309,16 +1389,39 @@ th.right .th-sort { flex-direction: row-reverse; }
 }
 
 @media (max-width: 899px) {
-  /* On a phone three of these stack, and 300 tall each is three screens of
-     scrolling before the activity list. They shorten, and the field with
-     them. */
-  .gates { flex-direction: column; gap: 12px; }
-  .gate { flex: none; width: 100%; height: 200px; padding: 20px; border-radius: 24px; }
-  /* The sub line is already hidden down here; a second quiet line under it
-     would be the same crowding by another name. The field still reads. */
-  .gate-reads { display: none; }
-  .gate-art { height: 96px; }
+  /* Three doors across, not three doors down.
+     Stacked at 200 tall each they were 600 pixels of gateway before anything
+     that had happened to your money — the activity list started at 1144 on an
+     844 phone, which is a screen and a half of doors. A door only has to be
+     big enough to open, and one finger reaching all three without moving is
+     what a phone is for. Everything below comes up by about five hundred
+     pixels, which is what puts the feed on the first screen. */
+  .gates { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .gate {
+    flex: none; width: auto; height: 92px; padding: 12px 8px; border-radius: 20px;
+    align-items: center; justify-content: center; gap: 8px;
+  }
+  /* A sentence, a percentage, a call to action and a field of dots, in 110
+     pixels. Each of them was a good idea at 288 and none of them survives the
+     third of a phone this gets: the glyph and the word are the door. */
+  .gate-sub, .gate-reads, .gate-cta, .gate-art { display: none; }
+  /* Two lines' worth of box whether the word needs two or not, so the three
+     glyphs sit at one height. "Borrow & Lend" is the only one that might take
+     both, and a row whose icons step up and down is a row that reads as three
+     unrelated things. */
+  .gate .gate-words { align-items: center; justify-content: center; gap: 0; height: 30px; }
+  .gate .t-title {
+    font-size: 12px; line-height: 15px; text-align: center;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .gate-ic { display: grid; place-items: center; color: var(--ink); }
+  .gate-ic svg { width: 24px; height: 24px; }
+  /* The lead tile stops leading: three across, one of them wider, is a
+     column that does not divide by three. Invest keeps its emphasis by being
+     first, which on a row is where the eye starts anyway. */
+  .gate-lead { flex: none; }
 }
+
 
 /* ---------------------------------------------------------- the wallet --
    The centrepiece is not the number on its own. It is the number, and what
