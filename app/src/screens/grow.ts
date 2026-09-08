@@ -10,7 +10,7 @@ import {
 } from '../state'
 import { usd, pct, signed, when } from '../format'
 import { go, openSheet } from '../router'
-import { objectArt, stir, level, COINS, WALLET, LEND_RAMP, OWE_RAMP, type ObjectField } from '../components/art'
+import { objectArt, stir, level, COINS, WALLET, type ObjectField } from '../components/art'
 import { hint, type Hint } from '../components/hint'
 
 /* ---------------- the hub ---------------- */
@@ -64,7 +64,7 @@ function productCard(opts: {
   title: string
   /** One sentence, saying what you get. Not what it is called again. */
   say: string
-  art: ObjectField; ramp: Record<string, string>; at: number
+  art: ObjectField; at: number
   rows: [string, string | Node, Hint?][]
   /** The one figure this card is about, sitting directly above its button.
    *  Label, value, and a tone when the value is money you owe. */
@@ -82,7 +82,7 @@ function productCard(opts: {
   // card's own bottom edge and the empty end of the field faces the button.
   // Four across: the band is about 494 wide and the field is 24 columns, so
   // one copy of it put 20 pixels between dot centres and a 17px ball in each.
-  const art = objectArt(opts.art, opts.at, opts.ramp)
+  const art = objectArt(opts.art, opts.at)
   const band = h('div', { class: 'prod-art' }, art)
   // No second link in the corner. "Repay" and "Take it back" were two more
   // decisions on a card whose job is one, and both are the first thing on the
@@ -165,7 +165,7 @@ export function growScreen(): HTMLElement {
         say: `Earn ${pct(state.rates.lend)} a year on cash you are not using.`,
         // How much of the money you could spend is out working. Not the whole
         // portfolio: shares are not money you chose to lend or not to.
-        art: COINS(), ramp: LEND_RAMP,
+        art: COINS(),
         at: level(state.lent, state.lent + state.cash),
         rows: [
           ['Interest so far', h('span', { class: 'pos t-body-strong',
@@ -183,7 +183,7 @@ export function growScreen(): HTMLElement {
         say: 'Get cash without selling your shares.',
         // How much of the limit is drawn, which is the one number a borrower
         // is actually watching.
-        art: WALLET(), ramp: OWE_RAMP,
+        art: WALLET(),
         at: level(owed(), Math.max(state.borrowLimit, 1)),
         rows: [
           ['You can borrow', money(availableToBorrow())],
@@ -429,7 +429,11 @@ export function earnScreen(): HTMLElement {
       ['Take out', 'Any time, no fee'],
     ],
     callout: 'Interest lands in your wallet every day. You do not have to do anything.',
-    action: (v) => 'Move ' + usd(v) + ' in',
+    // "Move $500.00 in" was the last of the four verbs for one action: the
+    // door, the page and the position all say lend, and then the button that
+    // does it said move. Nine of the ten composers name their own verb on
+    // their own button; this is the tenth.
+    action: (v) => 'Lend ' + usd(v),
     onAction: (v) => openSheet('earn-review', { v: String(v) }),
     right: (v) => {
       const after = state.lent + v

@@ -7363,6 +7363,131 @@ found the three; it now guards all thirty-one.
      scrolling past nine of them still has to do the work. Both are owed, and
      they are two different pieces of work.
 
+### 11g.59 The ground stops competing with the words
+
+The last eight of the audit, and three more of its findings that did not
+survive being re-checked. That is four wrong out of sixteen, all four wrong the
+same way: a measurement that could not see something reported the thing as
+absent. 03 sliced a dialog at 120 characters. 15 said the empty bucket had no
+action and it has had one all along, drawn by the same helper every other empty
+state uses. 12 said Send opens with nothing to do, on a screen carrying four
+labelled cards, four people, two banks and two forms. 13 said the statement had
+nothing to press, and it had one button — in the wrong place, which is a
+different and smaller thing. **A finding is a measurement, and a measurement
+that cannot see something is not evidence that the thing is not there.**
+
+**The fields.** Three palettes were in use: the text greys for the gateways,
+green for lending, amber for borrowing, and a purple cell inside the first of
+them. The top rung was `#dcdce0`, which is text white. All of it sat under one
+flat `opacity: 0.34` chosen against a near-black card and then applied
+unchanged to a near-white one, where a third of a pale grey is a ghost.
+
+So a picture behind a heading was painted in three hues, reaching full
+contrast, at a strength tuned for the wrong ground. That is not ground. It is a
+second foreground, and the two of them fight — which is what "noisy and
+distracting" means when somebody says it about a decoration.
+
+One ramp now, four rungs, all grey, living in the lower half of the range;
+`--field-*` rather than `--dot-*`, because the loose dots — the coin that spins
+on a buy, the burst out of the bucket — are a different job and want to stay
+bright. And the veil is a token with a value per theme rather than one number,
+because matching two grounds that are not the same measurement is done by eye.
+
+Nothing is lost by dropping the hue, because the hue was never what a field
+said. What it says is how much of it is awake, and that is a count of cells.
+`objectArt` lost its `ramp` parameter along with the two ramps, and
+`--lend-*`/`--owe-*` went with them.
+
+**The disabled button.** `opacity: 0.4` over the primary's own fill, measuring
+3.25:1 in dark and 2.52:1 in light — the least readable label in the product,
+on the one control somebody is staring at while working out why they cannot
+continue. WCAG exempts disabled controls, which is why the contrast sweep never
+flagged it, and is not a reason for it to be unreadable.
+
+A state is a pair of colours, not a dimmer. `--off` sits one rung below
+`--control` so the button reads as recessed rather than as a secondary, and
+`--off-ink` clears 4.5 on it: 5.39:1 in dark, 5.69:1 in light. `contrast.mjs`
+drives two composers to zero and measures the result, because this is the one
+state a sweep of rendered text cannot reach on its own.
+
+**The advert.** 202 pixels of permanent chrome on all forty-three routes,
+advertising a thing that does not exist, to somebody who has already signed up,
+with no way to close it. An advert nobody can close is not an advert, it is
+furniture. It is put away by the same mechanism the home tasks use — one list,
+`prefs.putAway`, so Account's row already brings it back and there are not two
+lists of dismissed things. That row stopped saying "Reminders on Home", which
+was true while the tasks were the only thing in it.
+
+**Four quick amounts, one answer.** Borrow offered `$500 / $1,000 / $1,480 /
+Max` against a `$250` ceiling. Every one of them clamped to $250, and two of
+the four were the same number before the clamp ran. A row of choices where
+every choice gives the same result is not a row of choices.
+
+The screen proposes, because it knows what a sensible amount of its own thing
+looks like. The ceiling disposes, because only the composer knows what this
+account may move today. Anything above the ceiling is dropped, duplicates go,
+and where fewer than two survive the ceiling proposes for itself — quarters,
+rounded down to something a person would say out loud. Borrow now offers `$60 /
+$120 / Max`. Down and never up: a proposed half that is more than half is a
+chip that lies about itself.
+
+**Eighteen stops to the button that spends money.** Nine of them are the
+sidebar, which the skip link has answered since 11f. Five are inside the
+screen: the amount field and the four quick amounts sitting between it and the
+button. Enter in the field is the action now, through the same guard the button
+runs — a keystroke that skips a check the button makes is a second door. The
+promo going takes one more, so it is seventeen for anybody who tabs the whole
+way and two for anybody who does what a form invites.
+
+**The end of the statement.** 1,318 words proving the ledger balances, and one
+`btn-sm` in the side column 3,772 pixels above the bottom of a 5,792-pixel
+page. Somebody who read the whole thing arrived at nothing. The way on is at
+the end now, where the reading stops.
+
+**And the tenth verb.** *See your lending → Lending → Lend more → Lend →*
+"Move $500.00 in". Nine of the ten composers name their own verb on their own
+button. That was the tenth.
+
+**Two checks that were not checking.** Both turned up while this tier was being
+verified, and both are the same fault as the four wrong findings above.
+
+`live.mjs` counts how much of each field is awake by matching `dot-sleep` in a
+cell's `fill`. The token became `field-sleep` here, so nothing matched, every
+cell counted as awake, and the count became the number of circles in the
+composition — a number that cannot change. The gauge check under it then
+compared three constants and passed. It matches the rung rather than the
+token's full name now, and it fails first if it cannot find a sleeping cell at
+all.
+
+`phone.mjs` watches for a heading that clips. Home's heading is a greeting, so
+its length is a function of the time of day: "Good afternoon, Chinaza" is 296px
+in a 290px box at 390, and "Good morning, Chinaza" is not. The check passed
+every morning for three tiers and failed the first time this session ran into
+the afternoon. It measures the longest greeting the heading can hold now,
+whatever the clock says — and the greeting takes the width it is given, down to
+a size still larger than a page name.
+
+146. **A measurement that cannot see something is not evidence of absence.**
+     Four of sixteen findings were wrong, and every one of them was a probe
+     reporting its own blind spot as a fact about the product. Before writing
+     down that a thing is missing, check that the instrument could have seen
+     it.
+
+147. **A state is a pair of colours, not a dimmer.** An opacity applied over a
+     whole control veils the one part of it that still has a job — its label.
+     Wherever a control has to look different, give it colours; save opacity
+     for things that are genuinely fading.
+
+148. **The screen proposes and the ceiling disposes.** A screen knows what a
+     sensible amount of its own thing looks like; only the composer knows what
+     the account may move today. Offering a shortcut that is about to be
+     clamped is offering a press that does nothing.
+
+149. **A check whose input is the clock is only sometimes running.** Anything
+     the product derives from the time, the date or the account's own state
+     gives a suite a different question every run. Feed it the worst case
+     rather than whichever case turned up.
+
 ### 11g.49 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from
@@ -7385,12 +7510,20 @@ found the three; it now guards all thirty-one.
   decided is whether a market this lopsided should be *sorted* by it — the
   filter is a choice somebody makes and a default order is one the product
   makes for them, and nobody has asked for the second.
-- The audit that produced 11g.57 and 11g.58 has eight findings left, none of
-  them blocking. They are in the report rather than in here. What still needs a
-  decision rather than a fix: the default order of a market that is two thirds
-  unbuyable, above; and whether a paused company should be addable to a bucket
-  at all — the door lets it in today on the argument that a pause is temporary,
-  which is a judgement and not a fact.
+- Every finding of the audit that produced 11g.57 to 11g.59 is settled: twelve
+  fixed, and four that were wrong, corrected on the page rather than quietly
+  dropped. What still needs a decision rather than a fix: the default order of
+  a market that is two thirds unbuyable, above; and whether a paused company
+  should be addable to a bucket at all — the door lets it in today on the
+  argument that a pause is temporary, which is a judgement and not a fact.
+- The dot fields are one grey ramp now (11g.59). What that costs is the one
+  thing the three palettes bought: a Borrow & Lend card no longer says which of
+  the two it is in its own colour, and the two products are told apart by their
+  words alone. Nobody has looked at whether that matters on a phone, where the
+  two cards stack and the titles are further apart.
+- `--dot-*` is now only the coin and the confetti. Two tokens for a family of
+  three dots is right while the two families want opposite things, and it is
+  worth re-reading if the coin is ever quietened.
 - Activity is still three presses from Home on a phone, and 11g.58 did not
   change that: it made the screen say where you are once you are there. Whether
   Activity deserves a tab — which would cost Borrow & Lend its own, and that is

@@ -132,10 +132,14 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
     }
   }
   comp.onChange(paint)
-  button.addEventListener('click', () => {
+  const act = (): void => {
     const v = comp.get()
     if (v > 0 && v <= spec.max) spec.onAction(v)
-  })
+  }
+  button.addEventListener('click', act)
+  // Enter in the amount field goes where the button goes. Same guard, because
+  // a keystroke that skips a check the button runs is a second door.
+  comp.onSubmit(act)
   paint(opening, openedCapped)
 
   if (overlaid) {

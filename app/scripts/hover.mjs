@@ -219,4 +219,51 @@ const lowAa = rows.filter((r) => !r.note && r.aa < 4.5)
 console.log('\nfaint (no visible answer):', faint.length ? faint.map((r) => r.label).join(', ') : 'none')
 console.log('below AA on the hovered surface:', lowAa.length ? lowAa.map((r) => `${r.label} ${r.aa}`).join(', ') : 'none')
 console.log('page errors:', errors.length ? errors : 'none')
+
+/* The fields carried three palettes — the text greys, green for lending, amber
+   for borrowing, and a purple cell inside the first — with a top rung at text
+   white and one flat opacity chosen against a near-black card. Behind a
+   heading and a sentence you are meant to read, that is a second foreground.
+   One grey ramp now, kept off both ends of the range, veiled per theme. */
+console.log('\nTHE FIELDS ARE GROUND, NOT FOREGROUND')
+const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
+for (const theme of ['dark', 'light']) {
+  const fp = await b.newPage({ viewport: { width: 1440, height: 1000 } })
+  await seen(fp, { theme })
+  await noFonts(fp)
+  for (const r of ['/', '/grow']) {
+    await fp.goto(B + r, { waitUntil: 'domcontentloaded' }); await fp.waitForTimeout(800)
+    const m = await fp.evaluate(() => {
+      const fills = new Set()
+      for (const c of document.querySelectorAll('.gate-art circle, .prod-art circle')) {
+        const f = getComputedStyle(c).fill
+        if (f && f !== 'none') fills.add(f)
+      }
+      const holder = document.querySelector('.gate-art, .prod-art')
+      return { fills: [...fills], veil: holder ? Number(getComputedStyle(holder).opacity) : null }
+    })
+    const rgb = (c) => c.match(/[\d.]+/g).slice(0, 3).map(Number)
+    // A hue, not the house neutral. Every grey in this product is slightly
+    // cool — --ink is #dcdce0 and --muted is #a6a6ad — so a field painted to
+    // match them carries the same few points of blue. What this is looking for
+    // is the green, the amber and the purple, which are a hundred points wide.
+    const coloured = m.fills.filter((f) => {
+      const [r2, g, b2] = rgb(f)
+      return Math.max(r2, g, b2) - Math.min(r2, g, b2) > 14
+    })
+    ok(`${theme} ${r}: every dot is grey`, m.fills.length > 0 && coloured.length === 0,
+       coloured.length ? coloured.join(' ') : m.fills.length + ' tones')
+    // Neither end of the range: a field at text white competes with the text,
+    // and a field at the card's own colour is not there.
+    const ends = m.fills.filter((f) => {
+      const [r2] = rgb(f)
+      return theme === 'dark' ? r2 > 140 : r2 < 100
+    })
+    ok(`  and none of them reaches full contrast`, ends.length === 0, ends.join(' '))
+    ok(`  and the veil is the theme's own`, m.veil !== null && m.veil !== 0.34,
+       'opacity ' + m.veil)
+  }
+  await fp.close()
+}
+
 await b.close()

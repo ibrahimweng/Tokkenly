@@ -60,6 +60,20 @@
   padding: 20px;
   display: flex; flex-direction: column; gap: 12px;
 }
+/* The way out, in the corner where a way out goes. Quiet until the card is
+   hovered or the button itself is focused: an advert with a loud dismiss is an
+   advert asking to be dismissed. */
+.promo { position: relative; }
+.promo-shut {
+  position: absolute; top: 8px; right: 8px; width: 28px; height: 28px;
+  border-radius: 999px; display: grid; place-items: center;
+  color: var(--subtle); opacity: 0; transition: opacity var(--t-fast) var(--ease);
+}
+.promo-shut svg { width: 14px; height: 14px; }
+.promo:hover .promo-shut, .promo-shut:focus-visible { opacity: 1; }
+@media (hover: none) { .promo-shut { opacity: 1; } }
+.promo-shut:active { background: var(--control-pressed); color: var(--ink); }
+
 .promo-badge {
   width: 32px; height: 32px; border-radius: 10px; background: var(--control);
   display: grid; place-items: center;
@@ -113,7 +127,7 @@
    worse than on the doors, because the ramps put colour in it — a green field
    and an amber one, at full strength, under a title and a figure that are the
    things somebody is actually here to read. */
-.prod-art { height: 442px; overflow: hidden; flex: none; margin-top: 24px; opacity: 0.34; }
+.prod-art { height: 442px; overflow: hidden; flex: none; margin-top: 24px; opacity: var(--art-veil); }
 .prod-art svg { display: block; width: 100%; height: 100%; }
 /* Taller, so the composition does not run out before the card does. */
 .card.prod { min-height: 792px; }
@@ -329,7 +343,7 @@
 .btn-destructive { background: var(--control); color: var(--negative); }
 .btn-inverse { background: var(--sand); color: var(--ink); }
 .btn-sm { height: 40px; padding: 0 18px; width: auto; }
-.btn[disabled] { opacity: 0.4; cursor: not-allowed; }
+.btn[disabled] { background: var(--off); color: var(--off-ink); cursor: not-allowed; }
 
 .chip {
   height: 32px; padding: 0 16px; border-radius: var(--r-pill);
@@ -1115,11 +1129,19 @@
 .icon-btn:active, .chip:active, .key:active,
 .sheet-row:active, .nav-row:active { background: var(--control-pressed); }
 
-/* One disabled rule for everything, not just .btn */
+/* One disabled rule for everything, not just .btn.
+   The opacity was 0.4, which is the whole fault: a blanket veil over a filled
+   button put its label at 3.25:1 in dark and 2.52:1 in light, and that is the
+   label of the control somebody is staring at while working out why they
+   cannot go on. A state is a pair of colours, not a dimmer. */
 .btn[disabled], .chip[disabled], .icon-btn[disabled],
 .field.disabled, button[disabled] {
-  opacity: 0.4; cursor: not-allowed; pointer-events: none;
+  background: var(--off); color: var(--off-ink);
+  cursor: not-allowed; pointer-events: none;
 }
+/* Except where there is no fill to recede: a quiet button has no ground of
+   its own, so it says it is off with its ink alone. */
+.btn-quiet[disabled], .link[disabled] { background: none; color: var(--off-ink); }
 
 /* Loading keeps the label and turns a ring beside it, so the button never
    changes width and the page never jumps. */
@@ -1426,11 +1448,12 @@ th.right .th-sort { flex-direction: row-reverse; }
 .gate-art {
   position: absolute; left: 0; right: 0; bottom: 0; height: 196px;
   overflow: hidden; pointer-events: none;
-  /* Down to a third. The field was drawn at full ink and read as the subject
-     of the card: three tiles of texture with some words on them. It is the
-     second thing on a door, not the first, and a third is the weight at which
-     the title wins and the object is still an object. */
-  opacity: 0.34;
+  /* How far behind the words it sits. It was a flat third, chosen against a
+     near-black card and then applied to a near-white one, where a third of a
+     pale grey is a ghost. The rungs themselves do the quieting now — one grey
+     ramp, kept off both ends of the range — so this is a veil rather than a
+     dimmer, and it has a value per theme. */
+  opacity: var(--art-veil);
   /* And it dissolves into the card before it reaches the words. The words
      already sit above it in the stacking order, which stops them being
      covered and does nothing at all for reading grey text over a field of

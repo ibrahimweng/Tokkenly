@@ -12,21 +12,22 @@
  *
  *  It is drawn as one SVG rather than several hundred spans: a field is upward
  *  of a thousand dots, and that many divs is a thousand nodes for a picture. */
+/** One ramp, four rungs, all grey.
+ *
+ *  There were three: the text greys for the gateways, green for lending, amber
+ *  for borrowing, and a purple cell inside the first of them. Three hues and a
+ *  top rung at text white, behind a heading and a sentence you are meant to
+ *  read. A field is ground. Ground painted at full contrast in a colour of its
+ *  own is not ground, it is a second foreground, and the two of them fight.
+ *
+ *  Nothing is lost by dropping the hue, because the hue was never what the
+ *  field said: what it says is how much of it is awake, and that is a count of
+ *  cells. See `level` below. */
 const TONE: Record<string, string> = {
-  a: 'var(--dot-dim)', b: 'var(--dot-mid)', c: 'var(--dot-lit)', p: 'var(--data-2)',
+  a: 'var(--field-dim)', b: 'var(--field-mid)', c: 'var(--field-lit)', p: 'var(--field-lit)',
   /* Not a composed tone. It is what a cell takes when the account has not
      woken it. */
-  z: 'var(--dot-sleep)',
-}
-
-/** A field's own three rungs, for a card that is about one product rather than
- *  about the account as a whole. Only which colour each rung resolves to
- *  changes, so a cell drawn dim stays dim. */
-export const LEND_RAMP: Record<string, string> = {
-  a: 'var(--lend-dim)', b: 'var(--lend-mid)', c: 'var(--lend-lit)', p: 'var(--lend-lit)',
-}
-export const OWE_RAMP: Record<string, string> = {
-  a: 'var(--owe-dim)', b: 'var(--owe-mid)', c: 'var(--owe-lit)', p: 'var(--owe-lit)',
+  z: 'var(--field-sleep)',
 }
 
 /** The grid a field is drawn on, in SVG user units. */
@@ -328,9 +329,9 @@ export const PURSE = (): ObjectField => field('purse', (() => {
  *  the break and the dust carry — a position you have barely opened shows the
  *  thing itself and little else, and a full one throws it across the band. */
 export function objectArt(
-  f: ObjectField, at = 1, ramp?: Record<string, string>, corner: Corner = 'left',
+  f: ObjectField, at = 1, corner: Corner = 'left',
 ): SVGSVGElement {
-  const PAINT = ramp ? { ...TONE, ...ramp } : TONE
+  const PAINT = TONE
   // Right means mirrored and then cropped from the right, not cropped from the
   // right: see `flip`.
   const src = corner === 'right' ? flip(f) : f

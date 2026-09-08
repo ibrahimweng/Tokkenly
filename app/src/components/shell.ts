@@ -9,6 +9,10 @@ import { popover, closeHint } from './hint'
 
 export type Place = 'home' | 'wallet' | 'market' | 'grow' | 'history' | 'account'
 
+/** The debit-card notice, as a thing that can be put away. Named here because
+ *  two files have to agree on it: the sidebar draws it and Account counts it. */
+export const PROMO = 'promo.card'
+
 interface PlaceDef { id: Place; label: string; to: string; ic: () => string }
 
 /** Six places. On desktop they are a rail; on the phone the first four are
@@ -97,9 +101,20 @@ export function sidebar(active: Place): HTMLElement {
   // Not an <h3>. It sat in the sidebar, which is drawn before the content, so
   // heading navigation on all sixteen signed-in routes landed on an advert
   // before the page's own <h1>. It looks the same and is no longer a landmark.
-  const promo = h(
+  // 202 pixels of permanent chrome on all forty-three routes, advertising a
+  // thing that does not exist yet, to somebody who has already signed up. It
+  // stays, because the waitlist is real and this is where people find it — but
+  // an advert nobody can close is not an advert, it is furniture. It is put
+  // away by the same mechanism the home tasks use, so Account's "bring them
+  // back" already covers it and there is one list of things put away rather
+  // than two.
+  const promo = state.prefs.putAway.includes(PROMO) ? null : h(
     'div',
     { class: 'promo' },
+    h('button', {
+      class: 'promo-shut', ariaLabel: 'Put away the debit card notice',
+      html: icon.close(), on: { click: () => actions.putAwayTask(PROMO) },
+    }),
     h('div', { class: 'promo-badge', html: icon.card() }),
     h('div', { class: 'promo-title', text: 'Debit card\ncoming soon' }),
     h('p', { text: 'Spend your dollars in naira, anywhere that takes a card.' }),

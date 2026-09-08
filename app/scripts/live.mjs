@@ -280,9 +280,14 @@ console.log('THE DOT FIELDS  decoration that has been given something to say')
   const read = async () => {
     await p.goto(B + '/', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(600)
     return p.evaluate(() => [...document.querySelectorAll('.gate')].map((g) => {
+      // Matched on the rung, not on the token's full name. This read
+      // `dot-sleep`, the token was renamed to `field-sleep` (11g.59), and
+      // every cell counted as awake — so the count became the number of
+      // circles in the composition, which never changes, and the gauge check
+      // below passed on three numbers that could not move. Rule 146.
       let awake = 0, asleep = 0
       for (const c of g.querySelectorAll('circle')) {
-        if (/dot-sleep/.test(c.getAttribute('fill') ?? '')) asleep += 1
+        if (/-sleep\)/.test(c.getAttribute('fill') ?? '')) asleep += 1
         else awake += 1
       }
       return { says: g.querySelector('.gate-reads')?.textContent ?? '', awake, asleep }
@@ -290,6 +295,11 @@ console.log('THE DOT FIELDS  decoration that has been given something to say')
   }
   const before = await read()
   ok('all three doors carry a field', before.length === 3)
+  // And that this can see the rung it is counting. A reader that finds no
+  // sleeping cell is a reader that will report every field as full and never
+  // fail, whatever the account does.
+  ok('and the reader can tell an asleep cell from an awake one',
+     before.every((g) => g.asleep > 0), before.map((g) => g.awake + ' awake, ' + g.asleep + ' asleep').join(' | '))
   // The three slices of one portfolio, one door each, so no two of them can
   // be the same picture on an account with its money in more than one place.
   ok('and each one says which slice it is keyed to',

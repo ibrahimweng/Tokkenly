@@ -179,15 +179,34 @@ console.log('THE REMINDERS ON HOME  where they sit, and how to be rid of them')
        JSON.parse(localStorage.getItem('tokkenly.prefs.v1') ?? '{}').prefs?.putAway ?? [])).length === 1)
   await t.goto(B + '/account/preferences', { waitUntil: 'domcontentloaded' }); await t.waitForTimeout(450)
   const back = await t.evaluate(() => [...document.querySelectorAll('.pref-row')]
-    .map((e) => e.innerText.replace(/\n/g, ' · ')).find((x) => /Reminders on Home/.test(x)) ?? '')
+    .map((e) => e.innerText.replace(/\n/g, ' · ')).find((x) => /put away/i.test(x)) ?? '')
   ok('Preferences offers the way back, and counts them', /One is put away/.test(back), back || 'no row')
-  await t.locator('.pref-row', { hasText: 'Reminders on Home' }).getByText('Show them again').click()
+  await t.locator('.pref-row', { hasText: 'put away' }).getByText('Show them again').click()
   await t.waitForTimeout(400)
   await home()
   ok('and it brings them back', (await rows()) === before)
   await t.goto(B + '/account/preferences', { waitUntil: 'domcontentloaded' }); await t.waitForTimeout(450)
   ok('the row goes away when there is nothing to bring back',
-     !(await t.evaluate(() => document.body.innerText)).includes('Reminders on Home'))
+     !(await t.evaluate(() => document.body.innerText)).includes('put away'))
+
+  /* The debit-card notice joins the same list rather than getting a second
+     one. It was 202px of chrome on all forty-three routes with no way to close
+     it, which is furniture rather than an advert. */
+  await home()
+  ok('the sidebar carries the card notice', await t.evaluate(() => !!document.querySelector('.promo')))
+  await t.locator('.promo-shut').click({ force: true }); await t.waitForTimeout(400)
+  ok('and it can be put away', await t.evaluate(() => !document.querySelector('.promo')))
+  await t.goto(B + '/invest', { waitUntil: 'domcontentloaded' }); await t.waitForTimeout(400)
+  ok('and stays away on the next screen', await t.evaluate(() => !document.querySelector('.promo')))
+  ok('as a preference, not a variable',
+     (await t.evaluate(() =>
+       JSON.parse(localStorage.getItem('tokkenly.prefs.v1') ?? '{}').prefs?.putAway ?? []))
+       .includes('promo.card'))
+  await t.goto(B + '/account/preferences', { waitUntil: 'domcontentloaded' }); await t.waitForTimeout(450)
+  await t.locator('.pref-row', { hasText: 'put away' }).getByText('Show them again').click()
+  await t.waitForTimeout(400)
+  await home()
+  ok('and one list brings back both', await t.evaluate(() => !!document.querySelector('.promo')))
   await t.close()
 }
 
@@ -252,6 +271,62 @@ i = p.locator('.amount-box input')
 await i.fill('2000'); await i.dispatchEvent('input'); await p.waitForTimeout(200)
 await p.locator('.btn-primary').first().click(); await p.waitForTimeout(400)
 ok('and "Never" means never', await p.evaluate(() => !document.querySelector('.agree')))
+
+/* A quick amount you cannot use is not a quick amount. Borrow offered $500,
+   $1,000, $1,480 and Max against a $250 ceiling — four presses, one answer,
+   and two of the four were the same number before the clamp even ran. */
+console.log('QUICK AMOUNTS AGAINST THE CEILING')
+{
+  // Its own page. The suite above verifies the account and turns the PIN check
+  // off, and both move the ceiling — a check that reads whatever ceiling the
+  // last test left behind is checking nothing in particular.
+  const q = await b.newPage({ viewport: { width: 1440, height: 1100 } })
+  await seen(q)
+  await q.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
+  for (const r of ['/grow/borrow', '/invest/aapl/invest', '/withdraw', '/grow/earn']) {
+    await q.goto(B + r, { waitUntil: 'domcontentloaded' }); await q.waitForTimeout(550)
+    const m = await q.evaluate(() => ({
+      chips: [...document.querySelectorAll('.chip')].map((e) => e.textContent.trim()),
+      ceiling: document.querySelector('.ruler-note')?.textContent ?? '',
+    }))
+    // [\d,.]+ is greedy and ate the full stop at the end of the sentence, so
+    // this read "250.00." and Number gave NaN, and every comparison against NaN
+    // is false — which is a check that passes whatever the chips say.
+    const found = m.ceiling.match(/Up to \$([\d,]+(?:\.\d+)?)/)
+    // A ceiling this could not read is a check that would pass whatever the
+    // chips said. It says so instead.
+    if (!found) { ok(`${r}: read its ceiling`, false, `no "Up to" in "${m.ceiling}"`); continue }
+    const cap = Number(found[1].replace(/,/g, ''))
+    if (!Number.isFinite(cap)) { ok(`${r}: read its ceiling as a number`, false, JSON.stringify(m.ceiling)); continue }
+    const over = m.chips.filter((c) => /^\$/.test(c) && Number(c.replace(/[^0-9.]/g, '')) > cap + 0.005)
+    ok(`${r} offers nothing above its own ceiling of ${usdish(cap)}`, over.length === 0,
+       m.chips.join(' ') + (over.length ? '   over: ' + over.join(' ') : ''))
+    ok('  and no two of them are the same press', new Set(m.chips).size === m.chips.length,
+       m.chips.join(' '))
+    ok('  and there are at least two to choose between', m.chips.length >= 2, m.chips.join(' '))
+  }
+  await q.close()
+}
+function usdish(n) { return '$' + n.toLocaleString('en-US') }
+
+/* The keyboard route to the button that spends money was eighteen stops. The
+   skip link answers the nine before the screen; this answers the five inside
+   it, which are the field and the four amounts between it and the button. */
+console.log('ENTER IS THE ACTION')
+await at('/invest/aapl/invest')
+{
+  const f = p.locator('.amount-box input')
+  await f.fill('120')
+  await p.keyboard.press('Enter'); await p.waitForTimeout(600)
+  const said = await p.evaluate(() => ({
+    sheet: document.querySelector('.scrim .sheet-head h2')?.textContent?.trim() ?? null,
+    figure: document.querySelector('.scrim .figure .t-display-xl')?.textContent?.trim() ?? null,
+  }))
+  ok('Enter in the amount field goes where the button goes', said.sheet === 'Review',
+     JSON.stringify(said))
+  ok('and it carries the figure that was typed', said.figure === '$120.00', String(said.figure))
+  await p.keyboard.press('Escape'); await p.waitForTimeout(250)
+}
 
 console.log('\nerrors:', errs.length ? errs : 'none')
 await b.close()

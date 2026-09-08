@@ -121,14 +121,24 @@ console.log('\nEVERY SCREEN, ON A PHONE')
   const clipped = [], tabled = []
   for (const r of ROUTES) {
     await page.goto(base + r, { waitUntil: 'networkidle' }); await page.waitForTimeout(200)
+    // The longest text the heading can ever hold, not whichever one is on
+    // screen at the moment this runs. Home's is a greeting, so its length is a
+    // function of the time of day: "Good afternoon, Chinaza" clipped and "Good
+    // morning, Chinaza" did not, and this check passed every morning for three
+    // tiers. A check whose input is the wall clock is only sometimes running.
     const said = await page.evaluate(() => {
       const t = document.querySelector('h1')
-      return {
-        clip: t ? t.scrollWidth > t.clientWidth + 1 : false,
-        tables: document.querySelectorAll('main.content .table').length,
-      }
+      if (!t) return { clip: false, tables: document.querySelectorAll('main.content .table').length }
+      const was = t.textContent
+      const worst = /^Good (morning|afternoon|evening)/.test(was ?? '')
+        ? 'Good afternoon, ' + (was ?? '').split(', ').slice(1).join(', ')
+        : was
+      t.textContent = worst
+      const clip = t.scrollWidth > t.clientWidth + 1
+      t.textContent = was
+      return { clip, worst, tables: document.querySelectorAll('main.content .table').length }
     })
-    if (said.clip) clipped.push(r)
+    if (said.clip) clipped.push(r + (said.worst ? ` ("${said.worst}")` : ''))
     if (said.tables) tabled.push(`${r} (${said.tables})`)
   }
   ok('no screen cuts off its own title', clipped.length === 0, clipped.join(' '))

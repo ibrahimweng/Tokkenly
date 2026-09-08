@@ -150,6 +150,42 @@ for (const step of [0, 1, 2, 3]) {
   await wp.close()
 }
 
+/* The one state the sweep above cannot reach, because it needs a form driven
+   into it: a control that cannot be used. It carried a blanket opacity: 0.4
+   over the primary's own fill and measured 3.25:1 in dark and 2.52:1 in light
+   — the least readable label in the product, on the control somebody is
+   staring at while working out why they cannot continue. WCAG exempts
+   disabled controls, which is why nothing here ever flagged it, and is not a
+   reason for it to be unreadable. */
+for (const theme of ['dark', 'light']) {
+  const dp = await b.newPage({ viewport: { width: 1440, height: 1000 } })
+  await seen(dp, { theme })
+  await noFonts(dp)
+  for (const [route, zero] of [['/grow/borrow', '0'], ['/invest/aapl/invest', '0']]) {
+    await dp.goto(B + route, { waitUntil: 'domcontentloaded' }); await dp.waitForTimeout(500)
+    await dp.locator('.amount-box input').fill(zero)
+    await dp.locator('.amount-box input').blur(); await dp.waitForTimeout(350)
+    const off = await dp.evaluate(() => {
+      const el = document.querySelector('.col-compose .btn-primary, .card .btn-primary')
+      if (!el || !el.hasAttribute('disabled')) return null
+      const s = getComputedStyle(el)
+      return { text: el.textContent.trim(), fg: s.color, bg: s.backgroundColor, op: Number(s.opacity) }
+    })
+    if (!off) { console.log(`  FAIL  ${theme} ${route}: no disabled button to measure`); continue }
+    const f = (v) => { const x = v / 255; return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4) }
+    const L = (c) => { const [r, g, bl] = c.match(/[\d.]+/g).slice(0, 3).map(Number)
+      return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(bl) }
+    const [hi, lo] = [L(off.fg), L(off.bg)].sort((a, c) => c - a)
+    const ratio = Number(((hi + 0.05) / (lo + 0.05)).toFixed(2))
+    // A veil over the whole control is what made it unreadable, so the veil
+    // itself is part of what is checked.
+    const ok = ratio >= 4.5 && off.op === 1
+    console.log(`  ${ok ? 'ok  ' : 'FAIL'}  ${theme} ${route} disabled "${off.text}" reads at ${ratio}:1` +
+                (off.op === 1 ? '' : `, veiled to ${off.op}`))
+  }
+  await dp.close()
+}
+
 const already = new Set()
 const uniq = bad.filter((x) => { const k = x.route.split(' ')[0] + x.sel + x.ratio; if (already.has(k)) return false; already.add(k); return true })
 console.log(uniq.length ? 'BELOW AA:' : 'BELOW AA: none')

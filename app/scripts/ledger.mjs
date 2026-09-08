@@ -155,5 +155,30 @@ console.log('A MOVEMENT THAT WOULD INVENT MONEY DOES NOT HAPPEN')
   ok('and every movement still has both its ends', bk.thin === 0)
 }
 
+/* A 1,318-word proof with nothing at the bottom of it. There was one control
+   and it sat in the side column, 3,772 pixels above the end of a 5,792-pixel
+   page: somebody who read the whole ledger arrived at nothing. */
+{
+  const sp = await b.newPage({ viewport: { width: 1440, height: 1000 } })
+  await seen(sp)
+  await sp.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
+  await sp.goto(B + '/statement', { waitUntil: 'domcontentloaded' }); await sp.waitForTimeout(800)
+  const end = await sp.evaluate(() => {
+    const main = document.querySelector('.col-main')
+    const btns = [...main.querySelectorAll('.btn')]
+    const last = btns[btns.length - 1]
+    return {
+      labels: btns.map((e) => e.textContent.trim()),
+      fromEnd: last ? Math.round(main.getBoundingClientRect().bottom - last.getBoundingClientRect().bottom) : null,
+      words: main.innerText.split(/\s+/).filter(Boolean).length,
+    }
+  })
+  ok(`the reading ends in something to press  (${end.words} words)`,
+     end.labels.length > 0, end.labels.join(' | ') || 'nothing')
+  ok('and it is at the end, not in a column beside it',
+     end.fromEnd !== null && end.fromEnd < 120, end.fromEnd + 'px above the bottom')
+  await sp.close()
+}
+
 console.log('\nerrors:', errs.length ? errs : 'none')
 await b.close()

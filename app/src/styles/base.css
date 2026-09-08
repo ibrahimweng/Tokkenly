@@ -234,6 +234,14 @@ ul { margin: 0; padding: 0; list-style: none; }
      row, so on a phone that row is a touch target rather than a caption. */
   :root { --hdr-route: 44px; --hdr-title: 44px; }
   .page-header h1 { font-size: 22px; line-height: 28px; }
+  /* The greeting is the one heading whose length is not the product's to
+     choose: it is a time of day and a name, and "Good afternoon, Chinaza" is
+     296px in a 290px box at 390 and a 260px box at 360. It read "Good
+     afternoon, Chin…" for half of every day, and the suite that watches for a
+     clipped title passed every morning — a check whose input is the wall clock
+     is a check that is only sometimes running. So the greeting takes the width
+     it is given, down to a size that is still larger than a page name. */
+  .page-header h1.t-display { font-size: clamp(20px, 6.1vw, 26px); }
   /* The title and its controls stay on one line at every width. They used to
      wrap, which is a second header height by another name. */
   .page-header-row > h1 {

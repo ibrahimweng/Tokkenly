@@ -153,7 +153,20 @@ export function statementScreen(): HTMLElement {
               'Money cannot appear here from nowhere. ' +
               'A trade has four ends: dollars one way, shares the other.' }),
           callout('Changing currency takes two movements, one in naira and one in dollars. They share a reference and a rate.')),
-        ...book.map(movement)),
+        ...book.map(movement),
+        // Where the reading actually ends. There was one control on this
+        // screen and it sat in the side column, 3,772 pixels above the bottom
+        // of a 5,792-pixel page: somebody who scrolled the whole ledger
+        // arrived at nothing. The side card keeps its explanation; this is the
+        // way on, at the end.
+        card(
+          h('span', { class: 'muted',
+            text: 'That is every movement on the account. Nothing is left out and nothing is rounded.' }),
+          h('div', { class: 'chip-row' },
+            h('button', { class: 'btn btn-secondary btn-sm', text: 'Back to Activity',
+              on: { click: () => go('/activity') } }),
+            h('button', { class: 'btn btn-quiet btn-sm', text: 'Back to the top',
+              on: { click: () => scrollTo({ top: 0, behavior: 'smooth' }) } })))),
       h('div', { class: 'stack col-side' },
         ...balances(),
         card(
@@ -161,7 +174,5 @@ export function statementScreen(): HTMLElement {
           h('span', { class: 'muted',
             text: 'Every figure in the app is read from these accounts. ' +
               'Your wallet, what you lent, what you owe, every share you hold. ' +
-              'There is no second copy to go wrong.' }),
-          h('button', { class: 'btn btn-secondary btn-sm', text: 'Back to Activity',
-            on: { click: () => go('/activity') } })))))
+              'There is no second copy to go wrong.' })))))
 }

@@ -304,7 +304,7 @@ function gateway(): HTMLElement {
       h('span', { class: 'ic', html: icon.chevron() })))
     // Every door's object sits in the bottom right, away from the words, which
     // start at the left and end well before it.
-    const art = objectArt(opts.art, opts.at, undefined, 'right')
+    const art = objectArt(opts.art, opts.at, 'right')
     a.appendChild(h('div', { class: 'gate-art' }, art))
     // And the whole card is the surface the pointer is felt on, not only the
     // strip the picture occupies: passing over the title already stirs the

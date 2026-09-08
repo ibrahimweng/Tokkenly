@@ -64,11 +64,19 @@ await page.waitForTimeout(320)
 const dis = await page.evaluate(() => {
   const el = document.querySelector('.card .btn-primary')
   const s = getComputedStyle(el)
-  return { disabled: el.hasAttribute('disabled'), opacity: s.opacity, pe: s.pointerEvents }
+  return { disabled: el.hasAttribute('disabled'), opacity: s.opacity, pe: s.pointerEvents,
+           label: el.textContent.trim() }
 })
+// No veil. It was opacity 0.4 over the primary's own fill, which put the label
+// at 3.25:1 in dark and 2.52:1 in light — the least readable text in the
+// product, on the control somebody is staring at while working out why they
+// cannot continue (11g.59). A state is a pair of colours, not a dimmer, so
+// what is checked here is that it is off and that nothing is veiled;
+// contrast.mjs measures whether it can be read.
 ok('a zero amount disables the action',
-   dis.disabled && Math.abs(Number(dis.opacity) - 0.4) < 0.01 && dis.pe === 'none',
-   JSON.stringify(dis))
+   dis.disabled && dis.pe === 'none', JSON.stringify(dis))
+ok('and does it without a veil over the label',
+   Number(dis.opacity) === 1, `"${dis.label}" at opacity ${dis.opacity}`)
 
 console.log('LOADING')
 await go('/grow/borrow?sheet=borrow-review&v=500')
@@ -168,24 +176,33 @@ const dim = await page.evaluate(() => {
     el.setAttribute('disabled', '')
     document.body.appendChild(el)
     const s = getComputedStyle(el)
-    const out = { bg: s.backgroundColor, opacity: s.opacity }
+    const out = { bg: s.backgroundColor, ink: s.color, opacity: s.opacity }
     el.remove()
     return out
   }
   return { primary: probe('btn-primary'), secondary: probe('btn-secondary'),
            destructive: probe('btn-destructive') }
 })
-// Figma dims the variant's own fill rather than repainting it sunken, so a
-// disabled button never vanishes on a card that is already sunken.
-ok('disabled primary keeps its fill',
-   dim.primary.bg === 'rgb(220, 220, 224)' && dim.primary.opacity === '0.4',
-   JSON.stringify(dim.primary))
-ok('disabled secondary keeps its fill',
-   dim.secondary.bg === 'rgb(45, 45, 50)' && dim.secondary.opacity === '0.4',
-   JSON.stringify(dim.secondary))
-ok('disabled destructive keeps its fill',
-   dim.destructive.bg === 'rgb(45, 45, 50)' && dim.destructive.opacity === '0.4',
-   JSON.stringify(dim.destructive))
+/* Figma dims the variant's own fill. That is a drawing instruction and it was
+   followed literally: opacity 0.4 over whatever the variant was painted, which
+   is fine on a grey secondary and is what made a filled primary unreadable.
+   Every variant lands on the same off state now — one rung below --control, so
+   it reads as recessed rather than as a secondary you could press — and it is
+   the same state whichever button it used to be, because "you cannot press
+   this" is one fact and not three. */
+const off = await page.evaluate(() => {
+  const c = getComputedStyle(document.documentElement)
+  return { bg: c.getPropertyValue('--off').trim(), ink: c.getPropertyValue('--off-ink').trim() }
+})
+const asRgb = async (hex) => page.evaluate((h) => {
+  const d = document.createElement('div'); d.style.color = h
+  document.body.appendChild(d); const v = getComputedStyle(d).color; d.remove(); return v
+}, hex)
+const offBg = await asRgb(off.bg)
+for (const [name, got] of Object.entries(dim)) {
+  ok(`disabled ${name} takes the off state`, got.bg === offBg && got.opacity === '1',
+     JSON.stringify(got) + ' against ' + offBg)
+}
 const sunken = await page.evaluate(() =>
   getComputedStyle(document.documentElement).getPropertyValue('--sunken').trim())
 ok('and none of them is repainted to --sunken',

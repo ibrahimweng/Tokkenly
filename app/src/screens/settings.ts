@@ -158,12 +158,16 @@ function preferencesBody(): (Node | null)[] {
       }),
       // Only when there is something to bring back. A row reading "0 hidden"
       // is a control for a state nobody is in.
+      // It said "Reminders on Home", which was true while the home tasks were
+      // the only thing that could be put away. The debit-card notice joins the
+      // same list rather than getting a second one, so the row names the list
+      // instead of naming one thing in it.
       p.putAway.length
         ? prefAction({
-            label: 'Reminders on Home', ic: icon.bell(),
+            label: 'Things you have put away', ic: icon.bell(),
             sub: p.putAway.length === 1 ? 'One is put away' : p.putAway.length + ' are put away',
             action: 'Show them again',
-            onClick: () => { actions.showTasksAgain(); toast('They are back on Home') },
+            onClick: () => { actions.showTasksAgain(); toast('They are back') },
           })
         : null),
     card(

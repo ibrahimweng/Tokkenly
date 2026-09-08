@@ -6,6 +6,13 @@
   --sunken-hover: #202024;   /* a row or a clickable card, one rung above the card it sits in */
   --control: #2d2d32;
   --control-pressed: #38383e;
+  /* A control that cannot be used. One rung below --control so it reads as
+     recessed rather than as a secondary button, and an ink that clears 4.5 on
+     it — this is the state somebody is in while working out why they cannot
+     continue, which is exactly when the label matters. It was a blanket
+     opacity: 0.4 over the primary's own fill, measuring 3.25:1. */
+  --off: #26262b;
+  --off-ink: #9a9aa2;
   --inverse: #dcdce0;        /* filled buttons */
   --inverse-hover: #ececed;  /* one step further from the page than --inverse */
   --sand: #6e4f35;           /* the hero surface, and the button that sits on it */
@@ -26,30 +33,37 @@
   --warning: #e0b341;
   --data-2: #a064db;
 
-  /* The gateway dot field. Its own three rungs, not the text ramp: these are
-     decorative circles with no reading to do, so they keep the values Figma
-     draws even where the text ramp has moved for contrast. */
+  /* Loose dots — the coin that spins on a buy, and the burst that comes out of
+     the bucket. Bright on purpose: both are a moment, and a moment that is
+     quiet is a moment nobody sees. The illustrations do NOT use these; see the
+     field rungs below. */
   --dot-dim: #65656c;
   --dot-mid: #a6a6ad;
   --dot-lit: #dcdce0;
-  /* The two products' own ramps, for the fields on Borrow & Lend. Three rungs
-     each, so a composed field keeps its shape and only changes hue — dropping
-     one flat colour over it would flatten every tone the field was drawn in.
-     Lending takes the positive; borrowing takes the warning, because what you
-     owe is not good news and the product does not pretend otherwise. */
-  --lend-dim: #1d5641;
-  --lend-mid: #2f9a73;
-  --lend-lit: #55e0aa;
-  --owe-dim: #5e4a1c;
-  --owe-mid: #a5822f;
-  --owe-lit: #e8bf51;
-  /* A fourth rung below the field's own three, for the part of a gateway tile's
-     field that the account has not woken. It has to be a rung nothing else uses,
-     because a cell that is asleep has to look asleep whatever tone it was
-     composed in — dimming each tone by one step left the change invisible
-     wherever the composition was already dim, which is most of the top of every
-     field. Visible against the card, and clearly quieter than --dot-dim. */
-  --dot-sleep: #3a3a40;
+
+  /* The dot fields, which are a different job. Four rungs, all grey.
+     They carried three palettes — the text greys for the gateways, green for
+     lending, amber for borrowing, and a purple accent cell — and the top rung
+     climbed to #dcdce0, which is text white. A picture behind a sentence,
+     painted in three hues and reaching full contrast, competes with the
+     sentence: the fields read as noise rather than as ground.
+     So: one grey, and it lives in the lower half of the range. The field still
+     says what it says, because what it says is how much of it is awake, and
+     that survives losing the hue. */
+  --field-sleep: #202024;
+  --field-dim: #2e2e34;
+  --field-mid: #43434b;
+  --field-lit: #5e5e67;
+  /* And how far behind the words it sits. Two values because the rungs above
+     are tuned against a near-black card and the light theme's are not — the
+     old single 0.34 was set in dark and left the light fields as ghosts. */
+  --art-veil: 0.9;
+  /* A rung below the field's own three, for the part of a field the account has
+     not woken. It has to be a rung nothing else uses, because a cell that is
+     asleep has to look asleep whatever tone it was composed in — dimming each
+     tone by one step left the change invisible wherever the composition was
+     already dim, which is most of the top of every field. It is now
+     --field-sleep, above. */
 
   /* A gridline is a landmark, not a mark. It sits one step off the card so it
      reads as behind the bars rather than among them. */
@@ -107,6 +121,8 @@
   --sunken-hover: #f1f1ee;
   --control: #e9e9e4;
   --control-pressed: #dcdcd5;
+  --off: #eeeee9;
+  --off-ink: #5c5c64;
   --inverse: #1a1a1e;        /* filled buttons: dark on light */
   --inverse-hover: #2c2c33;
   --sand: #6e4f35;
@@ -137,16 +153,21 @@
   --dot-dim: #b8b8b2;
   --dot-mid: #8a8a84;
   --dot-lit: #33333a;
-  /* Running the other way, like the grey ramp above it: on paper the dim rung
-     is the pale one and the lit rung is the dark one. */
-  --lend-dim: #a8d6c2;
-  --lend-mid: #3f9b74;
-  --lend-lit: #0f6746;
-  --owe-dim: #ddcda1;
-  --owe-mid: #a98424;
-  --owe-lit: #6f5210;
-  /* Lighter still, because this ramp runs the other way on paper. */
-  --dot-sleep: #e2e2dc;
+
+  /* The field rungs, running the other way as everything does on paper: the
+     sleeping rung is the pale one and the lit rung is the dark one. Grey, and
+     kept off the black end — a field is ground, and ground at full contrast is
+     a foreground. */
+  --field-sleep: #eaeae5;
+  --field-dim: #d2d2cc;
+  --field-mid: #adada6;
+  --field-lit: #86867e;
+  /* Not the dark theme's value. The old single 0.34 was chosen against a
+     near-black card and left the light fields as ghosts; at full strength the
+     same rungs on white read heavier than their dark twins, because dark grey
+     on white is a bigger step than mid grey on black. Matched by eye, which is
+     the only way to match two things that are not the same measurement. */
+  --art-veil: 0.7;
 
   /* A shadow on a light page is a real shadow, not a hole. */
   --shadow-hover: 0 6px 20px rgba(24, 24, 20, 0.14);
