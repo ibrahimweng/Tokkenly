@@ -136,6 +136,21 @@ export const find = (ticker: string): Instrument | undefined => {
 export const LAUNCH = CATALOGUE.filter((c) => c.launch)
 export const tradable = (c: Instrument): boolean => c.launch
 
+/** One company, one address. `AAPLc` is what you hold and `AAPL` is what the
+ *  company is called; `find` resolves both, and the product settled on the
+ *  bare symbol as the one it writes down — see the note on `find` above. The
+ *  Invest list and the search were writing the other one, so a company reached
+ *  from the list and the same company reached from the trail had two
+ *  addresses. That is two bookmarks, two shared links, and a trail that
+ *  disagrees with the address bar about where somebody is standing.
+ *
+ *  So nothing builds a company's address by hand any more. Takes an instrument
+ *  or any ticker either spelling. */
+export const pathOf = (c: Instrument | string): string => {
+  const it = typeof c === 'string' ? find(c) : c
+  return '/invest/' + (it?.under ?? String(c)).toLowerCase()
+}
+
 /** What one token is worth against the share it tracks. A multiplier above 1
  *  means dividends and splits have accrued into it, so a token is worth more
  *  than one share — which is the single most confusing thing about a tokenised

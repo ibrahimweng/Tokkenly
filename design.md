@@ -7266,6 +7266,103 @@ as it was an hour ago; `ftue.mjs` grew three, one per card, because the check
 that was already there only ever pressed the middle one — which is why it never
 caught that the other two were unbuyable.
 
+### 11g.58 Four doors, and the one that led nowhere
+
+The audit's four serious findings, and one the person using it found while
+these were being fixed, which was the worst of the five.
+
+**The shop window.** Nine of the thirteen companies cannot be bought. 11g.57
+put the state on every row where the `+` had been, which is honest and is also
+nine rows of scrolling past things that are not for sale. Honesty about what
+you cannot do is not the same as help doing what you can, so there is a filter
+now: one press, `?open=1`, and the list is the four. Off by default, because
+a market that hides what is coming looks smaller than it is — which is the
+whole reason the nine are on the page.
+
+It is not a seventh category. A category asks what kind of thing this is and
+the filter asks what you can do with it, and the two are not alternatives —
+somebody can want the funds *and* want them buyable. So it wears a tick, it
+stands on the other side of a hairline rule, and it does not scroll away with
+the categories on a phone. The tick is drawn whether it is on or off, at a
+third opacity: a chip that grows a glyph when pressed moves the six chips
+beside it, and a control that shifts the row under your thumb is a control you
+press twice.
+
+An empty list now says which of the two things emptied it. Asking for the
+buyable companies inside ETFs — where there are none — used to answer "try
+another company, fund or ticker", which sends somebody to fix the wrong thing.
+
+**The two doors on Borrow & Lend.** "Borrow money" opened a page headed
+*Borrowing* whose own main button says *Repay*. "Lend dollars" opened
+*Lending*. Neither destination has an amount field on it. That is the old
+"Convert Cash" fault — a door promising an action and delivering a report — in
+two more places, and it survived three tiers because `names.mjs` reads the
+gates on Home, the rail, the quick actions and the wallet's two doors, and a
+product card is none of those.
+
+The doors are named for what they open: **See your borrowing**, **See your
+lending**. The composers stay one press further in, from the report's own
+primary button, which is where somebody who has just read their balance
+actually wants them. `names.mjs` presses both cards now rather than reading
+them, because the CTA is a button with a handler and not an anchor — following
+what a control does is a check, and reading an attribute it does not have
+would not have been one.
+
+**The link.** Ten card headers said "See all", which names nothing and which
+rule 49 has forbidden since the tier that wrote it. They say where they go
+now: *All activity*, *All trades*, *All payments*, *All borrowing and
+lending*. The one on Home mattered most — on a phone it is the whole route to
+Activity, which is the finding this started as.
+
+**One company, two addresses.** The Invest list linked to `/invest/aaplc` and
+the registry, the trail and every other internal link used `/invest/aapl`.
+Both render Apple, so nothing broke and nothing caught it; what it costs is
+two bookmarks, two shared links, and a trail that disagrees with the address
+bar about where somebody is standing. `catalogue.ts` had already decided which
+one wins and written down why — the suffix arrived after every route in the
+product was written against the bare symbol. Nothing builds a company's
+address by hand any more: `pathOf()` does, in one place, and the sixteen sites
+that were building their own now call it.
+
+**And the one the audit missed.** On a phone, Activity and Account had no way
+back and no lit tab. They are places, so on a desktop the rail lights them and
+that is the whole answer; on a phone the capsule holds four tabs and these two
+live behind More, so nothing was lit anywhere. Four unlit tabs, a grey button,
+and a screen you reached through a menu that no longer exists. That is what a
+missing back button feels like, and it is what it was reported as.
+
+There is no step above a top-level place to go back to, and inventing one —
+a ← *Home* on Activity — would claim a hierarchy the rest of the product does
+not have, where all six places are siblings. What was missing is the thing a
+tab does, which is say you are here. So the More button lights, by the same
+recipe the tabs use: the light left on, the word at full contrast. The panel
+marks the cell you are standing on. And the four tabs are still four ways out,
+one press each, which is the same answer the desktop rail gives.
+
+It was already known in the code and only ever said to a screen reader, and
+said wrongly: `aria-expanded` was set true on Activity, which claims the menu
+is open when it is shut. Expanded is about the panel and current is about the
+place. They are different facts and they are two attributes now.
+
+`names.mjs` walks thirty-one routes at 390 and fails if any of them offers no
+back link, no trail, no lit tab, no lit More and no close on its sheet. It
+found the three; it now guards all thirty-one.
+
+143. **Where you are is owed at every width.** A navigation that answers the
+     question with a lit tab has to answer it some other way wherever that tab
+     does not exist. A screen that lights nothing reads as a screen you have
+     fallen into.
+
+144. **An address is a name.** Rule 37 stops at the words on the page and it
+     should not: two URLs for one thing are two names for one thing, and the
+     trail, the bookmark and the shared link will disagree about which. Build
+     them in one place.
+
+145. **Saying what you cannot do is not the same as helping with what you
+     can.** A row that admits it is unbuyable has been honest. The person
+     scrolling past nine of them still has to do the work. Both are owed, and
+     they are two different pieces of work.
+
 ### 11g.49 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from
@@ -7283,17 +7380,21 @@ caught that the other two were unbuyable.
   anything but the wallet balance: "add money" and "buy the bucket" are two
   errands where a card or a bank debit at the point of purchase would be one.
 - The launch set is four companies out of thirteen, and the market shows all
-  thirteen on purpose (11g.34). Nine of them can now be looked at and not
-  bought, from anywhere, which is correct and is also nine rows of a list that
-  answer a press with a state. Whether a market that is two thirds unbuyable
-  should be sorted, filtered or sectioned by that is a product question and it
-  has not been asked.
-- The audit that produced 11g.57 has twelve findings left, none of them
-  blocking. They are in the report rather than in here, and the two that will
-  need a decision rather than a fix are the market's treatment of the launch
-  set above, and whether a paused company should be addable to a bucket at all
-  — the door lets it in today on the argument that a pause is temporary, which
-  is a judgement and not a fact.
+  thirteen on purpose (11g.34). Nine of them can be looked at and not bought,
+  every row says so, and one press takes them away (11g.58). What is still not
+  decided is whether a market this lopsided should be *sorted* by it — the
+  filter is a choice somebody makes and a default order is one the product
+  makes for them, and nobody has asked for the second.
+- The audit that produced 11g.57 and 11g.58 has eight findings left, none of
+  them blocking. They are in the report rather than in here. What still needs a
+  decision rather than a fix: the default order of a market that is two thirds
+  unbuyable, above; and whether a paused company should be addable to a bucket
+  at all — the door lets it in today on the argument that a pause is temporary,
+  which is a judgement and not a fact.
+- Activity is still three presses from Home on a phone, and 11g.58 did not
+  change that: it made the screen say where you are once you are there. Whether
+  Activity deserves a tab — which would cost Borrow & Lend its own, and that is
+  two of the three products — was put and left open.
 - The ledger is built and the statement proves it (11g.35); adding money has a
   real pending leg and two rails (11g.37); Send asks where the money is going
   and Withdraw is one of the answers (11g.38). What is still missing from the

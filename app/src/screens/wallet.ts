@@ -46,7 +46,7 @@ function cashFigure(): HTMLElement {
 function moved(): HTMLElement {
   const rows = state.activity.filter((a) => a.kind === 'payment').slice(0, 6)
   return card(
-    cardHead('Money in and out', headLink('See all', '/activity?filter=payments')),
+    cardHead('Money in and out', headLink('All payments', '/activity?filter=payments')),
     rows.length
       ? table(
           [{ key: 'who', label: 'Who' }, { key: 'when', label: 'When', optional: true },
@@ -174,7 +174,7 @@ export function walletScreen(): HTMLElement {
             () => openSheet('add-money')),
           way('Send', 'To a person, a wallet or a bank', icon.send(), '/send')),
         card(
-          cardHead('Still settling', headLink('See all', '/activity')),
+          cardHead('Still settling', headLink('All activity', '/activity')),
           // What is genuinely between two banks, named in the currency it is
           // sitting in. It is the balance of the account the money waits in
           // rather than a total of the rows below, so a wallet that has not

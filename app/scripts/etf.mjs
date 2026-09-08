@@ -37,6 +37,43 @@ ok('and only the funds are tagged', mixed.tags === 2 && mixed.rows === 13,
 ok('the column is Name, not Company',
    /NAME/.test(await p.evaluate(() => document.querySelector('.table thead')?.innerText ?? '')))
 
+/* Nine of the thirteen cannot be bought. Every row says so, and one press
+   takes the nine away for somebody who came to buy something today. Off by
+   default, because a market that hides what is coming looks smaller than it
+   is — the whole reason the nine are on the page at all. */
+console.log('OPEN FOR TRADING  the shop window says which is which')
+await at('/invest?cat=Everything')
+const shut = await p.evaluate(() => ({
+  chip: !!document.querySelector('.chip-only'),
+  pressed: document.querySelector('.chip-only')?.getAttribute('aria-pressed'),
+  rows: document.querySelectorAll('.table tbody tr').length,
+}))
+ok('the filter is there and starts off', shut.chip && shut.pressed !== 'true', JSON.stringify(shut))
+ok('and the whole market is listed until it is pressed', shut.rows === 13, shut.rows + ' rows')
+await p.locator('.chip-only').click(); await p.waitForTimeout(400)
+const open = await p.evaluate(() => ({
+  where: location.hash,
+  pressed: document.querySelector('.chip-only')?.getAttribute('aria-pressed'),
+  rows: [...document.querySelectorAll('.table tbody tr')].map((r) => r.textContent.match(/^[A-Z]+c/)?.[0]),
+  shutMarks: document.querySelectorAll('.table tbody .shut').length,
+}))
+ok('pressing it is an address, so the list can be linked to', /open=1/.test(open.where), open.where)
+ok('and it leaves the four you can buy', open.rows.length === 4, open.rows.join(' '))
+ok('every one of which is in the launch set',
+   open.shutMarks === 0 && ['AAPLc', 'NVDAc', 'METAc', 'GOOGLc'].every((t) => open.rows.includes(t)),
+   open.rows.join(' ') + `, ${open.shutMarks} still marked`)
+// A category with nothing buyable in it is the case where "try another
+// ticker" would be the wrong thing to say.
+await at('/invest?cat=ETFs&open=1')
+const none = await p.evaluate(() => ({
+  said: document.body.innerText,
+  action: [...document.querySelectorAll('.btn')].map((e) => e.textContent.trim()),
+}))
+ok('an empty category says which of the two things emptied it',
+   /open for trading yet/i.test(none.said), (none.said.match(/Nothing[^\n]*/) ?? ['(nothing)'])[0])
+ok('and offers the one that fixes it', none.action.includes('Show everything'), none.action.join(' | '))
+await at('/invest?cat=Everything')
+
 await at('/invest/voo')
 ok('a fund says so on its own page', /ETF/.test(await text()))
 await at('/invest/aapl')

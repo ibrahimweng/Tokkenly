@@ -2,7 +2,7 @@ import { h } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader, headActions } from '../components/shell'
 import { card, cardHead, kv, callout, bucketBar, showBucketBar } from '../components/bits'
-import { find, markGap, deviation, tradable, type Instrument } from '../catalogue'
+import { find, markGap, deviation, tradable, type Instrument, pathOf } from '../catalogue'
 import { barChart, type Range } from '../components/chart'
 import { state, actions, holding, inBucket, money, assetOn, MASK } from '../state'
 import { usd, pct, signed, shares, shares as fmtShares } from '../format'
@@ -60,7 +60,7 @@ function bucketAdd(c: Instrument): HTMLElement | null {
     celebrate(b)
     showBucketBar()
     actions.addToBucket(c.ticker, state.prefs.tradeDefault)
-    go('/invest/' + c.ticker.toLowerCase())
+    go(pathOf(c))
   })
   return b
 }
@@ -173,7 +173,7 @@ export function stockScreen(ticker: string): HTMLElement {
         ? headActions(
             c.launch
               ? { label: 'Buy ' + c.ticker, ic: icon.market, strong: true,
-                  run: () => go('/invest/' + c.ticker.toLowerCase() + '/invest') }
+                  run: () => go(pathOf(c) + '/invest') }
               : null,
             { label: watching ? 'Following' : 'Follow', ic: icon.star,
               run: () => {
@@ -208,7 +208,7 @@ export function stockScreen(ticker: string): HTMLElement {
             follow, bucketAdd(c),
             c.launch
               ? h('button', { class: 'btn btn-primary btn-sm', text: 'Buy ' + c.ticker,
-                  on: { click: () => go('/invest/' + c.ticker.toLowerCase() + '/invest') } })
+                  on: { click: () => go(pathOf(c) + '/invest') } })
               : null)),
     // The two states, on the page rather than in the header, on a phone.
     isMobile()
@@ -298,14 +298,14 @@ export function stockScreen(ticker: string): HTMLElement {
           // avoid admitting something on the screen they are already on.
           c.launch && assetOn(c.ticker)
             ? h('button', { class: 'btn btn-primary', text: 'Buy ' + c.ticker,
-                on: { click: () => go('/invest/' + c.ticker.toLowerCase() + '/invest') } })
+                on: { click: () => go(pathOf(c) + '/invest') } })
             : h('span', { class: 'muted t-caption',
                 text: c.launch
                   ? `${c.ticker} is paused. You keep anything you hold, and you can still send it.`
                   : `${c.ticker} is not open for trading yet. It is here so you can watch it.` }),
           held && held.shares > 0 && assetOn(c.ticker)
             ? h('button', { class: 'btn btn-secondary', text: 'Sell ' + c.ticker,
-                on: { click: () => go('/invest/' + c.ticker.toLowerCase() + '/sell') } })
+                on: { click: () => go(pathOf(c) + '/sell') } })
             : null,
           // Beside Buy and Sell, on the position it moves, and only when there
           // is a position to move. A share can go to another verified Tokkenly
@@ -313,7 +313,7 @@ export function stockScreen(ticker: string): HTMLElement {
           // person picked does not have one. design.md 11g.27.
           held && held.shares > 0
             ? h('button', { class: 'btn btn-secondary', text: 'Send ' + c.ticker + ' to someone',
-                on: { click: () => go('/invest/' + c.ticker.toLowerCase() + '/send') } })
+                on: { click: () => go(pathOf(c) + '/send') } })
             : null
         ))),
     bucketBar()

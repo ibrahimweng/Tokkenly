@@ -5,7 +5,7 @@ import { card, cardHead, emptyState, bucketBar, showBucketBar } from '../compone
 import { searchField, searchNote } from '../components/search'
 import { rank, onlyNear } from '../match'
 import { table } from '../components/table'
-import { CATALOGUE, CATEGORIES, INDICES, PICKS, find, discount, markGap, tradable, type Instrument } from '../catalogue'
+import { CATALOGUE, CATEGORIES, INDICES, PICKS, find, discount, markGap, tradable, type Instrument, pathOf } from '../catalogue'
 import { state, actions, inBucket } from '../state'
 import { usd, pct } from '../format'
 import { go, current } from '../router'
@@ -21,7 +21,7 @@ function tickerRow(ticker: string): HTMLElement {
     h('span', { class: 'two-line right' },
       h('span', { class: 't-body-strong', text: usd(c.price) }),
       h('small', { class: c.dayPct >= 0 ? 'pos' : 'muted', text: (c.dayPct >= 0 ? '+' : '') + pct(c.dayPct) })))
-  row.addEventListener('click', () => go('/invest/' + c.ticker.toLowerCase()))
+  row.addEventListener('click', () => go(pathOf(c)))
   return row
 }
 
@@ -138,7 +138,7 @@ function tableOf(rows: Instrument[],
       // so the list is where it can be filled.
       bucketCell(c),
     ]),
-    (n) => go('/invest/' + rows[n].ticker.toLowerCase()),
+    (n) => go(pathOf(rows[n])),
     { current: { key: sort.key, dir: sort.dir }, onSort: sort.onSort },
     // On a phone: the company, its price with today's move under it, and the
     // bucket button still on the row — deciding while you scan is the point of
@@ -157,10 +157,19 @@ export function marketScreen(): HTMLElement {
   // of companies that answers a dropped letter with silence is a list that
   // makes people type more carefully rather than one that helps them.
   const FIELDS = (c: Instrument) => [c.ticker, c.name, c.plain, c.tags.join(' ')]
-  const listFor = (t: string): Instrument[] =>
-    t.trim()
+  // Nine of the thirteen companies here cannot be bought yet. Every row says
+  // so now, which is honest and is also nine rows of scrolling past things
+  // that are not for sale. So: one press to see only what is. Off by default,
+  // because a market that hides what is coming is a market that looks smaller
+  // than it is (11g.34) — this narrows the list for somebody who has decided
+  // to buy something today, and leaves it whole for everybody else.
+  const openOnly = r.query.get('open') === '1'
+  const listFor = (t: string): Instrument[] => {
+    const all = t.trim()
       ? rank(t, CATALOGUE, FIELDS)
       : CATALOGUE.filter((c) => cat === 'Everything' || c.tags.includes(cat))
+    return openOnly ? all.filter(tradable) : all
+  }
 
   const sortKey = r.query.get('sort') ?? 'cap'
   const sortDir = (r.query.get('dir') ?? 'desc') as 'asc' | 'desc'
@@ -201,9 +210,23 @@ export function marketScreen(): HTMLElement {
         cardHead(t.trim() ? 'Results' : cat,
           h('span', { class: 'muted t-caption', text: countOf(rows) })),
         searchNote(t, rows.length, onlyNear(t, rows, FIELDS)),
-        rows.length ? tableOf(sorted, { key: sortKey, dir: sortDir, onSort }) : emptyState('Nothing matches that',
-          'Try another company, fund or ticker.',
-          { label: 'Clear the search', onClick: () => go('/invest') })
+        rows.length
+          ? tableOf(sorted, { key: sortKey, dir: sortDir, onSort })
+          // Which of the two things emptied the list. Telling somebody to try
+          // another ticker when what they did was ask for the four buyable
+          // companies inside a category that holds none of them sends them to
+          // fix the wrong thing.
+          : openOnly && !t.trim()
+            ? emptyState('Nothing here is open for trading yet',
+                `Everything in ${cat} is waiting on its contract and eligibility checks. You can still look at any of it.`,
+                { label: 'Show everything', onClick: () => setQuery('open', '') })
+            : emptyState('Nothing matches that',
+                openOnly
+                  ? 'Nothing open for trading matches that. Try another company, or show everything.'
+                  : 'Try another company, fund or ticker.',
+                openOnly
+                  ? { label: 'Show everything', onClick: () => setQuery('open', '') }
+                  : { label: 'Clear the search', onClick: () => go('/invest') })
       ))
   }
 
@@ -229,7 +252,7 @@ export function marketScreen(): HTMLElement {
         label: `${c.ticker} · ${c.name}`,
         hint: usd(c.price),
         group: c.kind === 'etf' ? 'Funds' : 'Companies',
-        pick: () => go('/invest/' + c.ticker.toLowerCase()),
+        pick: () => go(pathOf(c)),
       })),
       onType: paint,
       onCommit: (v) => setQuery('q', v),
@@ -240,9 +263,23 @@ export function marketScreen(): HTMLElement {
     h('p', { class: 'muted desk-only', style: { margin: '0' },
       text: 'US stocks and ETFs, tokenised. You can buy part of one from a dollar, and the market never closes.' }),
     // Seven filters wrapped onto three rows on a phone. One row that scrolls.
-    h('div', { class: 'chip-row chip-scroll' }, ...CATEGORIES.map((c) =>
-      h('button', { class: 'chip', text: c, ariaPressed: c === cat && !term,
-        on: { click: () => setQuery('cat', c) } }))),
+    //
+    // The first one is not a category. A category asks what kind of thing this
+    // is; this asks what you can do with it, and the two answers are not
+    // alternatives — you can want the funds and want them buyable. So it wears
+    // a tick and stands on the other side of a rule, and it stays where the
+    // thumb can reach it when the rest of the row is pushed sideways.
+    h('div', { class: 'chip-row chip-scroll' },
+      h('button', {
+        class: 'chip chip-only', ariaPressed: openOnly,
+        on: { click: () => setQuery('open', openOnly ? '' : '1') },
+      },
+        h('span', { class: 'ic', html: icon.check() }),
+        h('span', { text: 'Open for trading' })),
+      h('span', { class: 'chip-split', ariaHidden: 'true' }),
+      ...CATEGORIES.map((c) =>
+        h('button', { class: 'chip', text: c, ariaPressed: c === cat && !term,
+          on: { click: () => setQuery('cat', c) } }))),
     // Three full-width cards, one per index, was 384px of a 844px screen for
     // three numbers a first-time investor did not come for. On a phone they
     // become a strip you can push sideways.
@@ -271,7 +308,7 @@ export function marketScreen(): HTMLElement {
               h('span', { class: 't-body-strong', text: c.name }),
               h('small', { text: p.line })),
             h('span', { class: 't-body-strong', text: usd(c.price) }))
-          row.addEventListener('click', () => go('/invest/' + c.ticker.toLowerCase()))
+          row.addEventListener('click', () => go(pathOf(c)))
           return row
         })),
       card(cardHead('Your watchlist'), ...state.watchlist.map(tickerRow)),

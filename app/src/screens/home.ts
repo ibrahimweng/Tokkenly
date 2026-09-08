@@ -5,6 +5,7 @@ import { objectArt, stir, level, PIECE, NOTES, PURSE, type ObjectField } from '.
 import { shell, pageHeader, bell, jumpOpen, viewToggle } from '../components/shell'
 import { card, cardHead, headLink, kv, amount, directionMark, figureWithEye } from '../components/bits'
 import { table } from '../components/table'
+import { pathOf } from '../catalogue'
 import {
   state, holdingsValue, availableToBorrow, buyingPower, verified, LIMITS, money, MASK, inNaira,
   bucketTotal, bucketCost,
@@ -198,7 +199,7 @@ function detailed(): HTMLElement {
             text: state.prefs.hideBalances
               ? MASK
               : `${p.gain >= 0 ? '+' : '−'}${usd(Math.abs(p.gain), false)} · ${(p.gain >= 0 ? '+' : '−') + pct(Math.abs(p.gainPct))}` })))
-      row.addEventListener('click', () => go('/invest/' + p.ticker.toLowerCase()))
+      row.addEventListener('click', () => go(pathOf(p.ticker)))
       return row
     })
   )
@@ -248,7 +249,7 @@ function detailed(): HTMLElement {
       h('div', { class: 'stack col-main' },
         chart(),
         card(
-          cardHead('Recent activity', headLink('See all', '/activity')),
+          cardHead('Recent activity', headLink('All activity', '/activity')),
           table(
             [{ key: 'who', label: '' }, { key: 'state', label: '' }, { key: 'amt', label: '', align: 'right' }],
             activityRows(4),
@@ -378,7 +379,7 @@ function gateway(): HTMLElement {
     // it — the tiles above are the objects on this screen, and a fourth panel
     // under them flattens all four.
     h('section', { class: 'stack-8' },
-      cardHead('Recent activity', headLink('See all', '/activity')),
+      cardHead('Recent activity', headLink('All activity', '/activity')),
       table(
         [{ key: 'who', label: '' }, { key: 'state', label: '' }, { key: 'amt', label: '', align: 'right' }],
         activityRows(5),

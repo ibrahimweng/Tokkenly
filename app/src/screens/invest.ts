@@ -14,7 +14,7 @@ function orders(ticker?: string): HTMLElement {
   const rows = state.activity.filter((a) => a.kind === 'trade' && (!ticker || a.who === find(ticker)?.name))
   return card(
     cardHead('Recent orders',
-      h('button', { class: 'link', text: 'See all', on: { click: () => go('/activity?filter=trades') } })),
+      h('button', { class: 'link', text: 'All trades', on: { click: () => go('/activity?filter=trades') } })),
     table(
       [
         { key: 'w', label: 'What' }, { key: 'when', label: 'When', optional: true },

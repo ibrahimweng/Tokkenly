@@ -36,11 +36,12 @@ const cashBefore = (await settled(page, '.hero-figure')).trim()
 await step('wallet cash before: ' + cashBefore.trim())
 
 await page.goto(base + '/grow', { waitUntil: 'networkidle' })
-// The card's button opens the position rather than the composer now (11g.43):
+// The card's button opens the position rather than the composer (11g.43):
 // somebody with an open loan came to look at it, not to take another one. So
 // the journey is one step longer, and the step is part of what is being
-// checked — this is the walk a person actually takes.
-await clickText('Borrow money')
+// checked — this is the walk a person actually takes. It says what it opens
+// now rather than promising an action it does not perform (11g.58).
+await clickText('See your borrowing')
 await step('on ' + page.url().split('#')[1])
 await clickText('Borrow more')
 await step('then on ' + page.url().split('#')[1])

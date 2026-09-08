@@ -11,7 +11,7 @@ import {
 import { pinPad } from './components/pinpad'
 import {
   find, discount, CATALOGUE, refusals, priceImpact, minReceived, deviation, GUARDS,
-  type Instrument,
+  type Instrument, pathOf,
 } from './catalogue'
 import { sparkline, type Range } from './components/chart'
 import { usd, naira, pct, shares as fmtShares, longWhen, when, isDrawdown } from './format'
@@ -666,7 +666,7 @@ export const SHEETS: Record<string, Builder> = {
       // altogether", and both were a dismissal and a hunt away.
       h('div', { class: 'receipt-on' },
         c ? h('button', { class: 'btn btn-secondary', text: 'See ' + c.name,
-          on: { click: () => { closeSheet(); go('/invest/' + c.ticker.toLowerCase()) } } }) : null,
+          on: { click: () => { closeSheet(); go(pathOf(c)) } } }) : null,
         h('button', { class: 'btn btn-secondary', text: 'Your portfolio',
           on: { click: () => { closeSheet(); go('/') } } }))
     )

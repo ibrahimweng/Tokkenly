@@ -142,5 +142,96 @@ console.log('THE TRAIL, AND WHERE IT SAYS YOU CAME FROM')
   ok('and it read some trails', trails >= 12, `${trails} trails`)
 }
 
+/* The two cards on Borrow & Lend were the same fault as Convert Cash and this
+   file could not see them: it reads the gates on Home, the rail, the quick
+   actions and the wallet's two doors, and a product card is none of those. So
+   "Borrow money" opened a report headed Borrowing whose own main button says
+   Repay, and nothing here noticed for three tiers.
+
+   Pressed rather than read, because the CTA is a button with a handler and not
+   an anchor — following what it actually does is the check, and reading an
+   attribute it does not have would not have been one. */
+console.log('THE PRODUCT CARDS')
+{
+  await at('/grow')
+  const n = await p.locator('.card.prod .btn').count()
+  ok('there are two of them', n === 2, n + ' cards')
+  for (let i = 0; i < n; i++) {
+    await at('/grow')
+    const label = (await p.locator('.card.prod .btn').nth(i).textContent()).trim()
+    await p.locator('.card.prod .btn').nth(i).click()
+    await p.waitForTimeout(300)
+    const m = await p.evaluate(() => ({
+      h1: document.querySelector('h1')?.textContent?.trim() ?? '(none)',
+      where: location.hash.replace(/^#/, ''),
+    }))
+    const a = label.toLowerCase(), c = m.h1.toLowerCase()
+    ok(`${label} -> ${m.where}`, a === c || c.includes(a) || a.includes(c), `page says "${m.h1}"`)
+  }
+}
+
+/* Rule 49: a card header link names where it goes, never "see more". Ten of
+   them said "See all", which names nothing — and the one on Home was the only
+   route to the whole of Activity from a phone. */
+console.log('EVERY CARD HEADER LINK NAMES SOMETHING')
+{
+  const VAGUE = /^(see all|see more|view all|more|all|see)$/i
+  const WHERE = ['/', '/invest', '/transfer', '/grow', '/grow/borrowing', '/grow/lending', '/activity', '/account']
+  const bad = []
+  let read = 0
+  for (const r of WHERE) {
+    await at(r)
+    const links = await p.evaluate(() =>
+      [...document.querySelectorAll('.card-head .link, .card-head a.link')]
+        .map((e) => e.textContent.trim()).filter(Boolean))
+    read += links.length
+    for (const l of links) if (VAGUE.test(l)) bad.push(`${r}: "${l}"`)
+  }
+  ok('it read some of them', read >= 6, read + ' links')
+  ok('and none of them says only "see all"', bad.length === 0, bad.join('; '))
+}
+
+/* A screen has to say how to leave it, and on a phone two of them did not.
+   Activity and Account are places, so on a desktop the rail lights them and
+   that is the answer; on a phone the capsule holds four tabs and these two
+   live behind More, so nothing was lit anywhere and the screen read as being
+   nowhere. Every route, at the width where it went wrong. */
+console.log('EVERY SCREEN SAYS HOW TO LEAVE IT, ON A PHONE')
+{
+  const m = await b.newPage({ viewport: { width: 390, height: 844 } })
+  await seen(m)
+  await m.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
+  const ROUTES = [
+    '/', '/invest', '/invest/aapl', '/transfer', '/grow', '/grow/lending', '/grow/borrowing',
+    '/grow/borrow', '/grow/repay', '/grow/earn', '/grow/takeout', '/activity',
+    '/activity?filter=alerts', '/account', '/account/preferences', '/account/security',
+    '/account/details', '/account/payments', '/support', '/bucket', '/send', '/receive',
+    '/addmoney', '/withdraw', '/verify', '/all', '/disclosures', '/statement',
+    '/invest/aapl/invest', '/invest/aapl/sell', '/invest/aapl/send',
+  ]
+  const orphans = []
+  for (const r of ROUTES) {
+    await m.goto('about:blank')
+    await m.goto(B + r, { waitUntil: 'domcontentloaded' }); await m.waitForTimeout(200)
+    const way = await m.evaluate(() => {
+      const vis = (e) => {
+        if (!e) return false
+        const s = getComputedStyle(e), box = e.getBoundingClientRect()
+        return s.display !== 'none' && s.visibility !== 'hidden' && box.width > 0 && box.height > 0
+      }
+      const sheet = document.querySelector('.scrim .sheet')
+      if (sheet) return vis(sheet.querySelector('.close')) ? 'close' : ''
+      if (vis(document.querySelector('.page-back'))) return 'back'
+      if (vis(document.querySelector('.crumbs'))) return 'crumbs'
+      if ([...document.querySelectorAll('.rail-tab')].some((t) => t.getAttribute('aria-current'))) return 'tab'
+      if (vis(document.querySelector('.rail-more.is-here'))) return 'more'
+      return ''
+    })
+    if (!way) orphans.push(r)
+  }
+  ok(`no screen is a dead end at 390  (${ROUTES.length} routes)`, orphans.length === 0, orphans.join(' '))
+  await m.close()
+}
+
 console.log('\nerrors: ' + (errs.length ? errs.join('\n') : 'none'))
 await b.close()

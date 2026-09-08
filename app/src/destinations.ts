@@ -1,6 +1,6 @@
 import { shares, usd } from './format'
 import { state } from './state'
-import { CATALOGUE } from './catalogue'
+import { CATALOGUE, pathOf } from './catalogue'
 
 export type Place = 'home' | 'wallet' | 'market' | 'grow' | 'history' | 'account'
 
@@ -191,7 +191,7 @@ export function search(raw: string): Hit[] {
   }
   for (const p of state.holdings) {
     if (norm(p.ticker + ' ' + p.name).includes(q)) {
-      hits.push({ label: p.name, to: '/invest/' + p.ticker.toLowerCase(), group: 'Your shares',
+      hits.push({ label: p.name, to: pathOf(p.ticker), group: 'Your shares',
                   hint: `${p.ticker} · ${shares(p.shares)} shares` })
     }
   }
@@ -216,7 +216,7 @@ export function search(raw: string): Hit[] {
   for (const c of CATALOGUE) {
     if (held.has(c.ticker)) continue          // already listed under Your shares
     if (!norm(`${c.ticker} ${c.name} ${c.tags.join(' ')}`).includes(q)) continue
-    hits.push({ label: `${c.ticker} · ${c.name}`, to: '/invest/' + c.ticker.toLowerCase(),
+    hits.push({ label: `${c.ticker} · ${c.name}`, to: pathOf(c),
                 group: c.kind === 'etf' ? 'Funds' : 'Companies', hint: usd(c.price) })
   }
 

@@ -69,6 +69,12 @@ function productCard(opts: {
   /** The one figure this card is about, sitting directly above its button.
    *  Label, value, and a tone when the value is money you owe. */
   standing: [string, string, string?]
+  /** What the button says, and where it goes. They have to be the same fact.
+   *  These two read "Borrow money" and "Lend dollars" and opened the position
+   *  pages — a report headed "Borrowing" whose own main button says "Repay".
+   *  A door that promises an action and delivers a report is the same fault as
+   *  the old "Convert Cash" that opened a page called Transfer, and `names.mjs`
+   *  did not see it because it had never read a product card. */
   cta: string; ctaTo: string
 }): HTMLElement {
   // Anchored to the bottom on both, which is the dense end of the composition
@@ -170,7 +176,7 @@ export function growScreen(): HTMLElement {
           }],
         ],
         standing: ['Lent out', money(state.lent)],
-        cta: 'Lend dollars', ctaTo: '/grow/lending',
+        cta: 'See your lending', ctaTo: '/grow/lending',
       }),
       productCard({
         key: 'borrow', title: 'Borrow',
@@ -192,7 +198,7 @@ export function growScreen(): HTMLElement {
         standing: owed() > 0
           ? ['You owe', money(owed()), 'warn']
           : ['Borrowed so far', money(0)],
-        cta: 'Borrow money', ctaTo: '/grow/borrowing',
+        cta: 'See your borrowing', ctaTo: '/grow/borrowing',
       })),
     card(cardHead('Questions people ask'), qgrid)
   )
@@ -203,7 +209,7 @@ export function growScreen(): HTMLElement {
 function loanHistory(): HTMLElement {
   const rows = state.activity.filter((a) => a.kind === 'grow' && a.who === 'Borrowing')
   return card(
-    cardHead('Your loans', h('button', { class: 'link', text: 'See all', on: { click: () => go('/activity?filter=grow') } })),
+    cardHead('Your loans', h('button', { class: 'link', text: 'All borrowing and lending', on: { click: () => go('/activity?filter=grow') } })),
     table(
       [
         { key: 'w', label: 'What' }, { key: 'when', label: 'When', optional: true },
@@ -228,7 +234,7 @@ function loanHistory(): HTMLElement {
 function earnHistory(): HTMLElement {
   const rows = state.activity.filter((a) => a.kind === 'grow' && a.who === 'Lending')
   return card(
-    cardHead('Your earnings', h('button', { class: 'link', text: 'See all', on: { click: () => go('/activity?filter=grow') } })),
+    cardHead('Your earnings', h('button', { class: 'link', text: 'All borrowing and lending', on: { click: () => go('/activity?filter=grow') } })),
     table(
       [
         { key: 'w', label: 'What' }, { key: 'when', label: 'When', optional: true },

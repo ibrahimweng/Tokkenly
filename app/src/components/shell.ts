@@ -167,8 +167,21 @@ export function viewToggle(): HTMLElement {
  *  The state is still `?sheet=more`, so the back gesture closes it and a
  *  reload reopens it. What changed is only where it is drawn. */
 function rail(active: Place): HTMLElement {
-  const open = current().sheet === 'more'
+  const r = current()
+  const open = r.sheet === 'more'
   const shut = () => history.back()
+
+  /** Whether a cell in the panel is the screen you are standing on. Path
+   *  first, then every query the cell names — Activity and Notices are one
+   *  path and two cells, and a cell with no query of its own must not light on
+   *  a filtered version of itself. */
+  const here = (to: string): boolean => {
+    const [path, q] = to.split('?')
+    if (path !== r.path) return false
+    if (!q) return !r.query.get('filter')
+    for (const [k, v] of new URLSearchParams(q)) if (r.query.get(k) !== v) return false
+    return true
+  }
 
   const pill = h('div', { class: 'rail-pill' })
   for (const p of TABS) {
@@ -198,22 +211,39 @@ function rail(active: Place): HTMLElement {
       // are one step, so back from there is the screen you pressed it on and
       // not the panel open again. Closing it first would be two — and they
       // race, which is how a press on Support landed back on Home.
-      ...BEHIND_MORE.map((m) => h('button', {
-        class: 'rail-cell', on: { click: () => go(m.to, true) },
-      },
-        h('span', { class: 'rail-cell-ic', html: m.ic() }),
-        h('span', { class: 'rail-cell-label', text: m.label })))),
+      ...BEHIND_MORE.map((m) => {
+        const cell = h('button', {
+          class: 'rail-cell' + (here(m.to) ? ' on' : ''), on: { click: () => go(m.to, true) },
+        },
+          h('span', { class: 'rail-cell-ic', html: m.ic() }),
+          h('span', { class: 'rail-cell-label', text: m.label }))
+        if (here(m.to)) cell.setAttribute('aria-current', 'page')
+        return cell
+      })),
     h('div', { class: 'rail-rule' }),
     h('div', { class: 'rail-pref' },
       h('span', { class: 't-caps subtle', text: 'Home view' }), viewToggle()))
 
+  // Two of the six places have no tab on a phone, so on Activity and on
+  // Account the capsule lit nothing at all and the bar read as "you are
+  // nowhere" — which is what a missing back button feels like on a screen you
+  // reached through a menu. There is no step above a top-level place to go
+  // back to; what was missing is the thing a tab does, which is say you are
+  // here. The button says it.
+  //
+  // It was already known here and only ever said to a screen reader, and said
+  // wrongly: `aria-expanded` was true on Activity, which claims the menu is
+  // open when it is shut. Expanded is about the panel; current is about the
+  // place; they are different facts and now they are different attributes.
   const behind = active === 'history' || active === 'account'
   const more = h('button', {
-    class: 'rail-more', html: open ? icon.close() : icon.grid(),
-    ariaLabel: open ? 'Close' : 'More',
+    class: 'rail-more' + (behind && !open ? ' is-here' : ''),
+    html: open ? icon.close() : icon.grid(),
+    ariaLabel: open ? 'Close' : behind ? 'More, and you are in here' : 'More',
     on: { click: () => (open ? shut() : openSheet('more')) },
   })
-  more.setAttribute('aria-expanded', String(open || behind))
+  more.setAttribute('aria-expanded', String(open))
+  if (behind) more.setAttribute('aria-current', 'page')
 
   const bar = h('div', { class: 'railbar' + (open ? ' is-open' : '') },
     h('div', { class: 'rail-stack' }, pill, open ? panel : null), more)

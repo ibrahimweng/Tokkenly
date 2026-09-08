@@ -14,7 +14,7 @@ import {
 const ceilingLabel2 = (byBalance: number) => ceilingLabel(byBalance, 'The most you can move here')
 import { walletScreen } from './wallet'
 import { stockScreen } from './stock'
-import { find, type Instrument } from '../catalogue'
+import { find, type Instrument, pathOf } from '../catalogue'
 import { usd, naira, when, shares, activityLabel } from '../format'
 import { openSheet, current, go } from '../router'
 
@@ -448,7 +448,7 @@ function cannotSend(c: Instrument, to: string): HTMLElement {
     // the way back to the list.
     isMobile()
       ? h('button', { class: 'btn btn-secondary', text: 'Choose somebody else',
-          on: { click: () => go('/invest/' + c.ticker.toLowerCase() + '/send') } })
+          on: { click: () => go(pathOf(c) + '/send') } })
       : null,
     callout('Nothing has left your holding. You still hold every share you did a moment ago.'))
   left.classList.add('col-compose')
@@ -476,7 +476,7 @@ export function sendSharesScreen(ticker: string): HTMLElement {
       pageHeader('Send ' + c.name),
       emptyState('You do not hold any ' + c.ticker,
         'You can only send shares you own. Buy some first, then they can go to anybody with a Tokkenly account.',
-        { label: 'Buy ' + c.ticker, onClick: () => go('/invest/' + c.ticker.toLowerCase() + '/invest') }))
+        { label: 'Buy ' + c.ticker, onClick: () => go(pathOf(c) + '/invest') }))
   }
 
   const r = current()
@@ -588,7 +588,7 @@ function pastMoves(which: 'in' | 'out'): HTMLElement | null {
   if (!rows.length) return null
   return card(
     cardHead(which === 'in' ? 'Money you have added' : 'Money you have taken out',
-      h('button', { class: 'link', text: 'See all',
+      h('button', { class: 'link', text: 'All payments',
         on: { click: () => go('/activity?filter=payments') } })),
     table(
       [
@@ -703,7 +703,7 @@ function arrived(tab: AddTab, full = true): HTMLElement {
     .slice(0, full ? 4 : 2)
   const head = cardHead(
     tab === 'base' ? 'Paid to this address' : 'Added this way',
-    h('button', { class: 'link', text: 'See all',
+    h('button', { class: 'link', text: 'All payments',
       on: { click: () => go('/activity?filter=payments') } }))
   if (!rows.length) {
     return card(head, h('span', { class: 'muted',
@@ -902,7 +902,7 @@ function arrivedRows(tab: AddTab, n: number): HTMLElement[] {
   const head = h('div', { class: 'card-head' },
     h('h3', { class: 't-caps subtle',
       text: tab === 'base' ? 'Paid to this address' : 'Added this way' }),
-    h('button', { class: 'link', text: 'See all',
+    h('button', { class: 'link', text: 'All payments',
       on: { click: () => go('/activity?filter=payments') } }))
   if (!rows.length) {
     return [head, h('span', { class: 'muted t-caption', text: tab === 'base'
