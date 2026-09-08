@@ -18,7 +18,7 @@ import { usd, naira, pct, shares as fmtShares, longWhen, when, isDrawdown } from
 import { type Route, closeSheet, replaceSheet, go } from './router'
 import { isMobile } from './responsive'
 import { QA } from './screens/settings'
-import { peopleRows, addPanels, addTab } from './screens/money'
+import { peopleRows, addPanels, addTab, sendWays, addWays } from './screens/money'
 import { search } from './destinations'
 import * as ledger from './ledger'
 import { BEHIND_MORE } from './components/shell'
@@ -410,6 +410,15 @@ function bucketRefused(): HTMLElement | null {
 type Builder = (r: Route) => HTMLElement
 
 export const SHEETS: Record<string, Builder> = {
+  /** The three ways to send, and the three ways money comes in, on a phone.
+   *  They were pages: /send drew a title over three rows and nothing else, and
+   *  picking one drew the same three rows again above the panel you had asked
+   *  for. A question with three answers is a dialog, and this one is asked
+   *  over the wallet, so closing it leaves you where you pressed the button
+   *  rather than on a page with nothing under its title. */
+  'send-ways': () => sheet('Where is it going?', sendWays()),
+  'add-ways': () => sheet('How are you adding it?', addWays()),
+
   /** The rest of the rail. Four places are tabs; these five are behind More. */
   /** Jump to anything: a place, an action, a person you pay, something you
    *  hold, or a reference off a receipt. Typing filters live; the list is

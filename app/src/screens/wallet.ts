@@ -166,12 +166,18 @@ export function walletScreen(): HTMLElement {
       h('div', { class: 'stack col-main' },
         // Two doors: money in and money out. Receive was a third, and it was
         // the same question as Add money asked twice — how does money get into
-        // this wallet. It is a tab inside the one door now. Add money opens in
-        // place, because handing over an account number does not need a screen
-        // change; Send is a page, because it asks four things.
+        // this wallet. It is a way inside the one door now.
+        //
+        // Both doors are addresses. Add money opened a dialog in place, on the
+        // argument that handing over an account number needs no screen change
+        // — true of the account number, and not true of the question in front
+        // of it. There are three ways in, and 11g.61 made both doors ask which
+        // one before answering: on a phone that ask is a sheet over this
+        // screen, and on a wide one it is the rail beside the panel. A door
+        // that skipped the question left Add money answering it two different
+        // ways depending on which control you pressed.
         h('div', { class: 'row equal' },
-          way('Add money', 'Bank transfer, Base or a card', icon.receive(), null,
-            () => openSheet('add-money')),
+          way('Add money', 'Bank transfer, Base or a card', icon.receive(), '/addmoney'),
           way('Send', 'To a person, a wallet or a bank', icon.send(), '/send')),
         card(
           cardHead('Still settling', headLink('All activity', '/activity')),

@@ -826,7 +826,7 @@ export const state: State = {
     { key: 'fund.ngn', label: 'Naira funding', on: true, by: 'ops@tokkenly', at: iso('2026-09-04T11:40'),
       effect: 'Add money by transfer and by card both stop. The account details stay visible and nothing lands.' },
     { key: 'fund.card', label: 'Card funding', on: false, by: 'risk@tokkenly', at: iso('2026-09-06T16:02'),
-      effect: 'The card rail disappears from Add money. Transfers are unaffected.' },
+      effect: 'The card way is shown as paused and stops taking payments. Transfers are unaffected.' },
     { key: 'buy', label: 'Buying', on: true, by: 'ops@tokkenly', at: iso('2026-08-28T08:00'),
       effect: 'Every buy button is replaced by a line saying trading is paused. Selling still works.' },
     { key: 'sell', label: 'Selling', on: true, by: 'ops@tokkenly', at: iso('2026-08-28T08:00'),

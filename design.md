@@ -7580,6 +7580,79 @@ never checked.
      one win. The fix is one queue tick, and the symptom is a redirect that
      looks like it did not happen.
 
+### 11g.61 The index or the thing, never both
+
+11g.60 gave Send and Add money a rail on the left and a panel on the right, and
+the phone got the same two pieces stacked. So on 390 pixels the screen read:
+trail, title, *the three ways again*, and only then the thing you had asked
+for. The people list started at 456 of an 844-pixel screen. Two hundred and
+forty-four of what it had lost were three rows saying, a second time, what the
+trail one line above already said — and the row you had chosen was lit, with
+the two you had not sitting between you and the list you came for.
+
+Account has had the answer since it was split: at this width it drops its index
+entirely and gives the group the whole screen. It was the model for the rail
+and it was the model for this too. The way you picked is the screen now, and
+the trail's middle crumb is how you get back to the three. The panel starts at
+188.
+
+**Which leaves: where do you pick one?** It was a page — `/send` on a phone
+held a title, three rows and nothing else, and closing it had nowhere sensible
+to land. A question with three answers is a dialog. It comes up from the bottom
+over the wallet, so pressing Send does not cost you the screen you were
+reading, and closing it puts you back exactly where you pressed. Picking a way
+takes you to the way. That is rule 151 running the other direction: the control
+is still needed *before* it is used, and the screen it is used from should
+survive it.
+
+**And the two of them had stopped agreeing.** `/send` on a phone asked. Add
+money went straight to Bank transfer without asking, because its redirect was
+unconditional while Send's was gated on the width. Same question, same width,
+two answers. Both ask now, and an address that already names a way — or that
+has a dialog open on it — still goes where it says.
+
+**`/addmoney/card` was three names and none of them was Card.** Card funding is
+switched off in the seed, and the way it was switched off was to fall the tab
+back to bank: the address stayed `/addmoney/card`, the trail read *Bank
+transfer*, and the panel handed over a naira account number. Reachable from
+search in one keystroke — "debit card" returns exactly one hit — and from any
+bookmark. The switch decides what the card panel *says*, not which panel you
+are standing on. It says Card, it says Paused, it says nothing is wrong with
+your card, and it offers the two ways that do work.
+
+The rail's card row was also `disabled`, which is a door nobody can come back
+through — the only routes left to that screen were the two that reached the
+wrong one. A door that vanishes makes people think they misremembered it; a
+door that cannot be opened is a label. It opens, and what is behind it says
+why it is shut.
+
+The switch's own `effect` line still claimed the card rail *disappears* from
+Add money, which stopped being true in 11g.47, where a rail that is off started
+being shown as off. The console had been describing a build it had outlived.
+
+**The wallet's own two doors had stopped matching.** Send went to `/send`; Add
+money opened a dialog in place, on the argument that handing over an account
+number does not need a screen change. That was true of the account number and
+not of the question in front of it — and once `/addmoney` started asking which
+way, the door that skipped the ask meant Add money behaved differently
+depending on which control you pressed. Both doors are addresses now, and both
+end up asking the same question in the same shape at the same width.
+
+That leaves the `add-money` dialog with no door — it is still registered, still
+addressable at `?sheet=add-money`, and still covered by `sheets.mjs`, but
+nothing in the product opens it. It is either a dialog wanting a caller or a
+dialog wanting deleting, and it is written down here rather than guessed at.
+
+153. **A narrow screen shows the index or the thing, never both.** There is one
+     column, and an index repeated above the thing it led to is the width spent
+     twice on the same sentence. If the index is still needed, it is a dialog;
+     if the way back is all that is needed, the trail is already carrying it.
+
+154. **A switch changes what a screen says, not which screen you get.** Routing
+     around a paused feature leaves an address, a trail and a panel disagreeing
+     about where somebody is standing, and search will keep sending them there.
+     Turn the door grey, leave it openable, and let the room explain itself.
+
 ### 11g.49 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from

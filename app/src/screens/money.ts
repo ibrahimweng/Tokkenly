@@ -13,9 +13,10 @@ import {
 
 const ceilingLabel2 = (byBalance: number) => ceilingLabel(byBalance, 'The most you can move here')
 import { stockScreen } from './stock'
+import { walletScreen } from './wallet'
 import { find, type Instrument, pathOf } from '../catalogue'
 import { usd, naira, when, shares, activityLabel } from '../format'
-import { openSheet, current, go } from '../router'
+import { openSheet, current, go, closeSheet } from '../router'
 
 import { isMobile, isSplit } from '../responsive'
 import { toast } from '../components/sheet'
@@ -198,13 +199,17 @@ const wayLabel = (w: Way): string => WAYS.find((x) => x.key === w)!.label
 
 /** The rail. Same rows as the Account index, because it is the same idea and
  *  a second set of rows that looked almost like those would be a second idea
- *  by accident. */
-function sendRail(active?: Way): HTMLElement {
+ *  by accident.
+ *
+ *  `pick` is for the sheet these rows become on a phone: there the answer has
+ *  to close the dialog before it navigates, and a second copy of the rows
+ *  written to do that would be a second idea by accident too. */
+function sendRail(active?: Way, pick?: (w: Way) => void): HTMLElement {
   return h('nav', { class: 'set-list ways' + (active ? ' rail' : ''), ariaLabel: 'Ways to send' },
     ...WAYS.map((w) => {
       const row = h('button', {
         class: 'set-row' + (w.key === active ? ' on' : ''),
-        on: { click: () => go('/send/' + w.key) },
+        on: { click: () => (pick ? pick(w.key) : go('/send/' + w.key)) },
       },
         // A name and a sentence about it, stacked. Account's rows carry a name
         // and a status and fit them side by side; "Someone on Tokkenly" beside
@@ -342,12 +347,19 @@ const wayPanel = (w: Way): (Node | null)[] =>
 
 /** The rail beside a panel, or the panel under a header. One shape, so the
  *  screen does not have to be written three times. */
-function sendShell(w: Way | undefined, steps: { label: string; to?: string }[],
+function sendShell(w: Way, steps: { label: string; to?: string }[],
                    body: (Node | null)[]): HTMLElement {
   const head = pageHeader('Send money', eyebrow('Cash available', usd(state.cash)),
     steps.length ? { steps } : {})
-  if (!isSplit() || !w) {
-    return shell('wallet', head, w ? sendRail(w) : sendRail(), ...body)
+  // Narrow: the way you picked is the whole screen. The rail was drawn above
+  // the panel here as well, which put the two ways you did not choose between
+  // you and the one you did — 244 pixels of an 844-pixel screen, saying a
+  // second time what the trail at the top already says, and pushing the people
+  // list to 456px. The trail's middle crumb goes back to the three ways, which
+  // is what the Account index does at this width: it does not repeat itself
+  // over the group you opened either.
+  if (!isSplit()) {
+    return shell('wallet', head, ...body)
   }
   return shell('wallet', head,
     h('div', { class: 'row set-split' },
@@ -371,9 +383,22 @@ export function sendWhoScreen(): HTMLElement {
     queueMicrotask(() => go('/send/tokkenly', true))
     return sendPicker('tokkenly')
   }
-  // Narrow: the three ways are the whole screen, and picking one is a step.
-  return sendShell(undefined, [], [])
+  // Narrow: the three ways come up from the bottom over the wallet. They were
+  // a page of their own, which meant pressing Send left the wallet for a
+  // screen holding a title and three rows — and closing it had nowhere
+  // sensible to land. A question with three answers is a dialog, and a dialog
+  // belongs over the screen it was opened from.
+  queueMicrotask(() => go('/transfer?sheet=send-ways', true))
+  return walletScreen()
 }
+
+/** The three ways, as the body of a sheet. Picking one closes the dialog and
+ *  goes to that way, the same as every other list a sheet offers. */
+export const sendWays = (): HTMLElement =>
+  sendRail(undefined, (w) => { closeSheet(); go('/send/' + w) })
+
+export const addWays = (): HTMLElement =>
+  addRail(undefined, (t) => { closeSheet(); go('/addmoney/' + t) })
 
 export function sendScreen(sub?: string, forced?: Destination): HTMLElement {
   const picked = WAYS.find((x) => x.key === sub)?.key
@@ -834,9 +859,14 @@ const ADD_TABS: [AddTab, string][] = [['bank', 'Bank transfer'], ['base', 'Base'
 export const addTab = (sub?: string): AddTab => {
   // The way is a path segment now, the same as Send's. `?tab=` is still read
   // for the addresses that predate it.
+  //
+  // Card used to fall back to bank whenever card funding was switched off,
+  // which left /addmoney/card showing the naira account under a trail reading
+  // "Bank transfer" — one screen wearing three names, none of them Card. The
+  // switch decides what the card panel says, not which panel you are on.
   const t = sub ?? current().query.get('tab')
   if (t === 'base') return 'base'
-  if (t === 'card' && switchOn('fund.card')) return 'card'
+  if (t === 'card') return 'card'
   return 'bank'
 }
 
@@ -854,17 +884,22 @@ const IN_WAYS: { key: AddTab; label: string; ic: () => string; sub: () => string
     sub: () => (switchOn('fund.card') ? 'Naira on a card, ' + state.fees.card + '% fee' : 'Paused') },
 ]
 
-function addRail(active: AddTab): HTMLElement {
-  return h('nav', { class: 'set-list ways rail', ariaLabel: 'Ways to add money' },
+function addRail(active?: AddTab, pick?: (t: AddTab) => void): HTMLElement {
+  return h('nav', { class: 'set-list ways' + (active ? ' rail' : ''), ariaLabel: 'Ways to add money' },
     ...IN_WAYS.map((w) => {
       // A rail operations has switched off is shown as off, not hidden. A door
       // that vanishes makes people think they misremembered it; one that says
       // "not right now" tells them to come back.
+      //
+      // It was also `disabled`, which is a door you cannot come back through:
+      // the only ways left to the card screen were search and a bookmark, and
+      // the screen they reached was the naira account under a trail reading
+      // "Bank transfer". A paused door opens onto a screen that says it is
+      // paused — that is what makes it a door rather than a label.
       const off = w.key === 'card' && !switchOn('fund.card')
       const row = h('button', {
         class: 'set-row' + (w.key === active ? ' on' : '') + (off ? ' off' : ''),
-        disabled: off,
-        on: { click: () => (off ? undefined : go('/addmoney/' + w.key)) },
+        on: { click: () => (pick ? pick(w.key) : go('/addmoney/' + w.key)) },
       },
         h('span', { class: 'who' },
           h('span', { class: 'mark', html: w.ic() }),
@@ -932,9 +967,8 @@ export function addTabRow(now: AddTab): HTMLElement {
     // and it is still the rule now the rails are tabs.
     const off = key === 'card' && !switchOn('fund.card')
     const b = h('button', {
-      class: 'chip' + (off ? ' off' : ''), ariaPressed: key === now && !off,
-      disabled: off,
-      on: { click: () => (off ? undefined : go(current().path + '?tab=' + key)) },
+      class: 'chip' + (off ? ' off' : ''), ariaPressed: key === now,
+      on: { click: () => go(current().path + '?tab=' + key) },
     }, h('span', { text: label }), off ? h('small', { text: 'Paused' }) : null)
     if (off) b.title = 'Card funding is off right now. Transfers are unaffected.'
     row.appendChild(b)
@@ -981,6 +1015,25 @@ function basePanel(full = true): HTMLElement {
 function cardPanel(): HTMLElement {
   const plastic = state.cards[0]
   const rate = state.ngnPerUsd
+  // Switched off. The screen still exists, still says Card, and says why it
+  // cannot take a payment — and then points at the two ways that can. A
+  // paused way that hands you an amount box you cannot submit is worse than
+  // one that tells you and moves on.
+  if (!switchOn('fund.card')) {
+    return card(
+      cardHead('Card funding', h('span', { class: 'pill warn', text: 'Paused' })),
+      h('p', { class: 'muted', style: { margin: '0' },
+        text: 'Cards are off right now. Nothing is wrong with your card — we have '
+          + 'stopped taking them for the moment, and we would rather say so than '
+          + 'take the money and hold it.' }),
+      h('div', { class: 'stack-12' },
+        kv('Card', plastic.brand + ' \u2022\u2022\u2022\u2022 ' + plastic.last4),
+        kv('Fee when it is back', state.fees.card + '% of what you pay')),
+      h('button', { class: 'btn btn-primary', text: 'Add money by transfer',
+        on: { click: () => go('/addmoney/bank') } }),
+      h('button', { class: 'btn btn-secondary', text: 'Add USDC on Base',
+        on: { click: () => go('/addmoney/base') } }))
+  }
   let value = 200
   const owed = (v: number) => Math.round(v * rate) + cardFee(Math.round(v * rate))
   const pay = h('span', { class: 't-display-xl', text: naira(owed(value)) })
@@ -1056,8 +1109,12 @@ function alreadyPaid(): HTMLElement {
     btn)
 }
 
-/** One tab's worth of Add money, used by the dialog and by the page behind it
- *  so the two cannot say different things. */
+/** One way's worth of Add money, used by the dialog and by the page behind it
+ *  so the two cannot say different things.
+ *
+ *  The chips are the dialog's alone. The page's way-picker is the rail beside
+ *  the panel, so this handed the page a chip row it destructured straight back
+ *  off again — two way-pickers in one file, one of them never seen. */
 export function addPanels(tab: AddTab, full = true): HTMLElement[] {
   const panel = tab === 'base' ? basePanel(full) : tab === 'card' ? cardPanel() : virtualAccount()
   if (!full) {
@@ -1069,7 +1126,6 @@ export function addPanels(tab: AddTab, full = true): HTMLElement[] {
     return [addTabRow(tab), panel]
   }
   return [
-    addTabRow(tab),
     panel,
     tab === 'bank' ? alreadyPaid() : null,
     providerNote(tab === 'base' ? 'cdp' : 'switch'),
@@ -1100,6 +1156,16 @@ function arrivedRows(tab: AddTab, n: number): HTMLElement[] {
 }
 
 export function addMoneyScreen(sub?: string, forced?: AddTab): HTMLElement {
+  const q = new URLSearchParams(current().query)
+  // Narrow, with nothing in the address saying which way: ask from the bottom,
+  // over the wallet, the same as Send does. This landed on Bank transfer
+  // without asking anything, so one question had two answers at the same
+  // width. An address that already names a way, or that has a dialog open on
+  // it, is not the question — it goes where it says.
+  if (!sub && !forced && !isSplit() && !q.get('tab') && !q.get('sheet')) {
+    queueMicrotask(() => go('/transfer?sheet=add-ways', true))
+    return walletScreen()
+  }
   const tab = forced ?? addTab(sub)
   // An old address names its way in the query, or not at all. Same place, so
   // it goes there rather than being a second copy of it.
@@ -1108,7 +1174,6 @@ export function addMoneyScreen(sub?: string, forced?: AddTab): HTMLElement {
     // its parameters with it: /addmoney?sheet=transfer-review&v=200 is a
     // review somebody is looking at, and a redirect that keeps only the path
     // closes it.
-    const q = new URLSearchParams(current().query)
     q.delete('tab')
     const at = '/addmoney/' + tab + (q.toString() ? '?' + q.toString() : '')
     queueMicrotask(() => go(at, true))
@@ -1117,15 +1182,17 @@ export function addMoneyScreen(sub?: string, forced?: AddTab): HTMLElement {
   // number, on a rail where nothing holds you to the figure — see the note
   // above `AddTab`. The card tab is where a figure now lives, because a card
   // is the only one of the three that is pulled.
-  const [, ...rest] = addPanels(tab)
+  const rest = addPanels(tab)
   const label = IN_WAYS.find((w) => w.key === tab)!.label
   const head = pageHeader('Add money', eyebrow('Cash available', usd(state.cash)),
     { steps: [{ label }] })
-  // The three ways stay beside the one you are reading, so choosing another is
-  // one press rather than a press and a scroll back up to the chips.
+  // Narrow: the way you picked is the whole screen, and the trail is the way
+  // back to the three. See `sendShell` for why it is not the rail again.
   if (!isSplit()) {
-    return shell('wallet', head, addRail(tab), ...rest)
+    return shell('wallet', head, ...rest)
   }
+  // Wide: the three ways stay beside the one you are reading, so choosing
+  // another is one press rather than a press and a scroll back up.
   return shell('wallet', head,
     h('div', { class: 'row set-split' },
       h('div', { class: 'stack set-col' }, addRail(tab)),

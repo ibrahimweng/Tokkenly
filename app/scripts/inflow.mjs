@@ -52,7 +52,14 @@ console.log('TWO WAYS IN, AND NEITHER OF THEM IS INSTANT')
   const rails = await p.evaluate(() => [...document.querySelectorAll('.set-list.ways .set-row')].map((e) => ({
     text: e.querySelector('.t-body-strong')?.textContent.trim() ?? '',
     on: e.getAttribute('aria-current') === 'page',
-    off: e.hasAttribute('disabled'),
+    // A paused way is greyed and says so beside its name. This read
+    // `disabled` instead, which was the mark and the lock at once: the row
+    // could not be opened, so the only routes left to the card screen were
+    // search and a bookmark, and both of those reached the bank panel under a
+    // trail reading "Bank transfer" (11g.61). Off is now what the row says,
+    // and `shut` is checked separately, because they are separate claims.
+    off: e.classList.contains('off') && /Paused/.test(e.textContent ?? ''),
+    shut: e.hasAttribute('disabled'),
   })))
   ok('the ways in are a rail on the screen, not behind a dropdown', rails.length === 3,
      rails.map((r) => r.text + (r.off ? ' (paused)' : '')).join(' | '))
@@ -87,6 +94,25 @@ console.log('TWO WAYS IN, AND NEITHER OF THEM IS INSTANT')
   ok('a rail operations has switched off reads as off rather than vanishing',
      !!cardTab && cardTab.off && !cardTab.on,
      cardTab ? cardTab.text + (cardTab.off ? ' (paused)' : ' (live)') : 'the card row is not on the screen at all')
+  // And it opens. A door that cannot be opened is a label, and the room
+  // behind this one is the only place that explains the pause.
+  ok('and the paused way can still be opened', !!cardTab && !cardTab.shut,
+     cardTab?.shut ? 'the row is disabled' : '')
+  await p.locator('.set-list.ways .set-row', { hasText: 'Debit card' }).click()
+  await p.waitForTimeout(420)
+  const behind = await p.evaluate(() => ({
+    hash: location.hash,
+    trail: [...document.querySelectorAll('.crumbs .crumb')].map((e) => e.textContent.trim()).join(' > '),
+    says: document.querySelector('main section.card')?.textContent ?? '',
+  }))
+  ok('and the address, the trail and the panel behind it all say Card',
+     behind.hash === '#/addmoney/card'
+       && /Debit card$/.test(behind.trail)
+       && /Card funding/.test(behind.says) && /Paused/.test(behind.says),
+     behind.hash + ' | ' + behind.trail)
+  ok('and the paused panel offers the two ways that do work',
+     /Add money by transfer/.test(behind.says) && /Add USDC on Base/.test(behind.says))
+  await at('/addmoney')
 
   // The account is dedicated, so there is no reference to quote.
   const va = await p.evaluate(() => document.querySelector('.va-number')?.textContent?.trim())
