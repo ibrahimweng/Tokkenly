@@ -97,7 +97,9 @@ ok('with the rate on screen', !!r3['Rate'], r3['Rate'] ?? 'missing')
 console.log('THE BUCKET  one payment, one fee')
 await p.goto(B + '/invest/aapl', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
 await p.getByRole('button', { name: 'Add to bucket' }).click(); await p.waitForTimeout(400)
-await p.goto(B + '/invest/ko', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
+// Alphabet rather than Coca-Cola: this is about one fee on a basket, and a
+// company outside the launch set can no longer be put in one (11g.57).
+await p.goto(B + '/invest/googl', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
 await p.getByRole('button', { name: 'Add to bucket' }).click(); await p.waitForTimeout(400)
 await p.goto(B + '/bucket', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
 const sum = await p.evaluate(() => Object.fromEntries(

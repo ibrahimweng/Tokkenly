@@ -3,7 +3,7 @@ import { icon } from './icons'
 import { sheet, figure, panel, foldPanel, outcome, toast } from './components/sheet'
 import { callout as calloutEl, emptyState as emptyStateEl, skeletonList } from './components/bits'
 import {
-  state, actions, owed, monthlyCost, monthlyInterest, holding, bucketTotal,
+  state, actions, owed, monthlyCost, monthlyInterest, holding, bucketTotal, bucketRefusals,
   tradeFee, cardFee, weakPin, ratePassword, LIMITS, type Activity, txHash, onChain, supportRef,
   switchOn, assetOn,
   requestQuote, quoteLive, settlement, grossOf, type Quote, type Destination,
@@ -270,6 +270,24 @@ function review(opts: {
     return el
   }
 
+  // A button that looks ready and refuses on press is a button that made
+  // somebody commit to something the product had already decided against.
+  // Whether there is a connection is known before the sheet is drawn, so it is
+  // said here and the control that cannot work is not drawn at all. The check
+  // on the button stays as the floor under this. (The held-rate path above
+  // reaches the same place by its own route: the quote request rejects while
+  // offline and `fail` leaves no confirm button either.)
+  if (!state.online) {
+    refuse('No connection, so this cannot be sent. Nothing has left your wallet. Try again when you are back online.')
+    return sheet(
+      opts.title,
+      figure(opts.figureLabel, opts.figureValue),
+      panel(...opts.rows),
+      calloutEl(opts.note),
+      refusal,
+      h('button', { class: 'btn btn-secondary', text: 'Back', on: { click: closeSheet } }))
+  }
+
   if (!big) {
     return sheet(
       opts.title,
@@ -352,6 +370,38 @@ function refused(c: Instrument, v: number, kind: 'buy' | 'sell' = 'buy'): HTMLEl
     ),
     h('span', { class: 'muted t-caption',
       text: 'Nothing has been sent and nothing has left your wallet. These checks run again every time you open a trade.' }),
+    h('button', { class: 'btn btn-secondary', text: 'Back', on: { click: closeSheet } }))
+}
+
+/** The same, for a basket. `payBucket` is a loop over `buy`, so a bucket has
+ *  to be refused for every reason a single trade is refused — and it was not
+ *  refused for any of them: a company the composer would not sell you could be
+ *  put in a bucket and paid for at the till without one check running.
+ *
+ *  This is the floor. Nothing outside the launch set can go in a bucket now,
+ *  and the bucket screen will not open a review while anything in it is
+ *  refused, but a bucket is saved between visits and the catalogue is not. As
+ *  with `refused` above there is no confirm button in this sheet, not even a
+ *  disabled one. */
+function bucketRefused(): HTMLElement | null {
+  const bad = bucketRefusals()
+  if (!bad.length) return null
+  const names = bad.map((x) => x.c?.name ?? x.item.ticker)
+  const one = bad.length === 1
+  return sheet('Not this basket',
+    figure('We are not taking this payment',
+      bad.length + (one ? ' company' : ' companies') + ' in the way', 'warn'),
+    ...bad.flatMap((x) => x.bad.map((r) =>
+      calloutEl(`${x.c?.name ?? x.item.ticker}: ${r.title}. ${r.why}`, 'warning'))),
+    h('span', { class: 'muted t-caption',
+      text: `Nothing has been sent and nothing has left your wallet. Take ${one ? 'it' : 'them'} out and the rest can still be paid for together, in one payment.` }),
+    h('button', { class: 'btn btn-primary',
+      text: one ? 'Take out ' + names[0] : `Take out the ${bad.length} we cannot buy`,
+      on: { click: () => {
+        for (const x of bad) actions.removeFromBucket(x.item.ticker)
+        closeSheet()
+        go('/bucket')
+      } } }),
     h('button', { class: 'btn btn-secondary', text: 'Back', on: { click: closeSheet } }))
 }
 
@@ -1343,6 +1393,8 @@ export const SHEETS: Record<string, Builder> = {
 
   /* ----- the bucket ----- */
   'bucket-review': () => {
+    const stop = bucketRefused()
+    if (stop) return stop
     const lines = state.bucket.map((b) => {
       const c = find(b.ticker)!
       return [c.name, `${usd(b.dollars)} · ${fmtShares(b.dollars / c.price)} shares`] as [string, string]

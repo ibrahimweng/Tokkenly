@@ -107,10 +107,16 @@ export const INDICES = [
   { name: 'Dow Jones', value: '41,335.05', pct: -0.13 },
 ]
 
+/** The three the intro puts forward. Every one of them must be in the launch
+ *  set: this list ends in a bucket and then in a payment, and offering a
+ *  company the composer would refuse makes the first thing the product asks
+ *  of somebody the first thing it says no to. `picks()` filters on
+ *  `tradable` as well, so a company leaving the launch set drops out of the
+ *  intro rather than breaking it. */
 export const PICKS = [
-  { ticker: 'VOOc', line: 'The whole US market in one go, for people who do not want to pick' },
   { ticker: 'AAPLc', line: 'A company you already use every day' },
-  { ticker: 'KOc', line: 'Boring on purpose, and pays a dividend four times a year' },
+  { ticker: 'NVDAc', line: 'Makes the chips behind AI, and moves the most of these three' },
+  { ticker: 'GOOGLc', line: 'Search, YouTube and Android, and it pays a dividend' },
 ]
 
 /** By the token you hold, or by the share it tracks. `AAPLc` and `AAPL` both
@@ -190,6 +196,15 @@ export const GUARDS = {
 }
 
 export type Refusal = { code: string; title: string; why: string }
+
+/** Whether a refusal is about the size of the order rather than about the
+ *  company. The two need different sentences and different buttons: an order
+ *  too big for the book is fixed by typing a smaller number, and a company
+ *  that is paused is fixed by taking it out. They also need different
+ *  positions in a queue of reasons — costing an order against the book is
+ *  premature when the number is going to change anyway. */
+export const aboutTheAmount = (r: Refusal): boolean =>
+  r.code === 'impact' || r.code === 'liquidity'
 
 /** Every reason this trade must not go through, in the order a person would
  *  want to hear them. Empty means it is safe to show a confirm button.

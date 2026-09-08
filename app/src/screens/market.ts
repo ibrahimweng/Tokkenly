@@ -5,7 +5,7 @@ import { card, cardHead, emptyState, bucketBar, showBucketBar } from '../compone
 import { searchField, searchNote } from '../components/search'
 import { rank, onlyNear } from '../match'
 import { table } from '../components/table'
-import { CATALOGUE, CATEGORIES, INDICES, PICKS, find, discount, markGap, type Instrument } from '../catalogue'
+import { CATALOGUE, CATEGORIES, INDICES, PICKS, find, discount, markGap, tradable, type Instrument } from '../catalogue'
 import { state, actions, inBucket } from '../state'
 import { usd, pct } from '../format'
 import { go, current } from '../router'
@@ -40,8 +40,21 @@ function rangeBar(c: Instrument): HTMLElement {
       h('small', { text: usd(c.yearHigh, false) })))
 }
 
-/** One tap from the list into the bucket, without leaving the list. */
+/** One tap from the list into the bucket, without leaving the list — for the
+ *  companies you can actually buy. For the rest there is no control at all,
+ *  because the safest version of a control you must not press is a control
+ *  that is not there, and the state takes its place so the gap has a reason
+ *  standing in it. The full sentence is on the company's own page, one tap
+ *  away, the same as its description. */
 function bucketCell(c: Instrument): HTMLElement {
+  if (!tradable(c)) {
+    // `.shut`, not `.tag`: a tag says what a row *is* — the ETF mark beside a
+    // fund's name — and this says what can be done with it. They look alike
+    // and they are not the same thing, which matters the moment anything
+    // counts one of them.
+    return h('span', { class: 'shut', text: 'Not open yet',
+      title: c.ticker + ' is not in the approved launch set yet, so it cannot be bought.' })
+  }
   const inIt = !!inBucket(c.ticker)
   const b = h('button', {
     class: 'icon-btn', ariaLabel: inIt ? c.name + ' is in your bucket' : 'Add ' + c.name + ' to your bucket',

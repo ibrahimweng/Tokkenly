@@ -3,7 +3,7 @@
  *  Opening figures match design.md 11b.4f. */
 
 import { reference, usd, naira, shares as sharesOf } from './format'
-import { CATALOGUE, find } from './catalogue'
+import { CATALOGUE, find, tradable, refusals, type Refusal, type Instrument } from './catalogue'
 import * as ledger from './ledger'
 
 export type ActivityKind = 'payment' | 'trade' | 'grow'
@@ -1252,6 +1252,32 @@ export const bucketCost = (): number => bucketTotal() + tradeFee(bucketTotal())
 export const bucketShortfall = (): number =>
   Math.max(0, bucketCost() - state.cash)
 
+/** Every reason the basket cannot be paid for, company by company. Empty
+ *  means it is safe to show a confirm button.
+ *
+ *  The bucket buys through the same door as a single trade — `payBucket` is a
+ *  loop over `buy` — so it has to be refused for the same reasons. Checking
+ *  only the launch set here would leave a paused asset, a stale reference
+ *  price or an order too big for the book to be found one order into a
+ *  payment that cannot be undone.
+ *
+ *  This is the till. The door, `addToBucket`, checks only the launch set:
+ *  what can never be bought must not go in, but a company that is merely
+ *  paused this morning is a reasonable thing to put by for later. */
+export const bucketRefusals = (): { item: BucketItem; c?: Instrument; bad: Refusal[] }[] =>
+  state.bucket
+    .map((item) => {
+      const c = find(item.ticker)
+      return {
+        item, c,
+        bad: c
+          ? refusals(c, item.dollars, { trading: !switchOn('buy'), asset: !assetOn(item.ticker) })
+          : [{ code: 'missing', title: 'No longer listed',
+               why: `${item.ticker} is not in the catalogue any more. Take it out and the rest can go through.` }],
+      }
+    })
+    .filter((x) => x.bad.length > 0)
+
 export const inBucket = (ticker: string): BucketItem | undefined =>
   state.bucket.find((b) => b.ticker === ticker)
 
@@ -1855,11 +1881,21 @@ export const actions = {
   },
 
   /* ----- the bucket ----- */
-  addToBucket(ticker: string, dollars: number) {
+  /** The bucket is a queue of purchases, so the gate that stands in front of
+   *  buying one company stands in front of joining the queue. Without this
+   *  the bucket is a way round every check in the product: the composer
+   *  refuses a company that is not in the launch set, and the bucket would
+   *  have bought the same company at the till without asking anything.
+   *  Returns whether it went in, so a caller can avoid celebrating a thing
+   *  that did not happen. */
+  addToBucket(ticker: string, dollars: number): boolean {
+    const c = find(ticker)
+    if (!c || !tradable(c)) return false
     const it = state.bucket.find((b) => b.ticker === ticker)
     if (it) it.dollars += dollars
     else state.bucket.push({ ticker, dollars })
     changed()
+    return true
   },
   /** Deliberately does not broadcast. Every listener re-renders the whole
    *  screen, and this is called from a field's own change handler — rebuilding

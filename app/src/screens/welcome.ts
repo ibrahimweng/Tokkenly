@@ -1,7 +1,7 @@
 import { h } from '../ui'
 import { icon } from '../icons'
 import { objectArt, PIECE, NOTES, PURSE } from '../components/art'
-import { PICKS, find, type Instrument } from '../catalogue'
+import { PICKS, find, tradable, type Instrument } from '../catalogue'
 import { state, actions } from '../state'
 import { usd, shares as fmtShares } from '../format'
 import { go } from '../router'
@@ -89,11 +89,18 @@ function pickCard(c: Instrument, why: string): HTMLElement {
       text: `${usd(put, false)} buys ${fmtShares(put / c.price)} shares` }))
 }
 
+/** The last screen of the intro is a list of things to press, and pressing
+ *  one fills a bucket and goes to pay for it. So it can only offer companies
+ *  the product will actually sell: two of the three here were outside the
+ *  launch set, which made the first thing the product asked of somebody the
+ *  first thing it said no to. PICKS is written against the launch set and this
+ *  filters on it as well, so a company leaving the set drops out of the intro
+ *  instead of breaking it. */
 function picks(): HTMLElement {
   const list = h('div', { class: 'welcome-picks' })
   for (const p of PICKS) {
     const c = find(p.ticker)
-    if (c) list.appendChild(pickCard(c, p.line))
+    if (c && tradable(c)) list.appendChild(pickCard(c, p.line))
   }
   return list
 }

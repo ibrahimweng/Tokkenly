@@ -1584,11 +1584,16 @@ th.right .th-sort { flex-direction: row-reverse; }
 /* A fund is not a company, and a person should never have to guess which one
    they are buying. Small, quiet, and beside the name rather than under it. */
 .name-line { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.tag {
+/* And the same shape for a state rather than a category: what can be done
+   with this row, where the control for doing it would have been. Quiet on
+   purpose — nine of thirteen companies are not open yet, and nine amber marks
+   in a list of thirteen reads as a broken page rather than a launch set. */
+.tag, .shut {
   flex: none; padding: 1px 7px; border-radius: 999px;
   background: var(--control); color: var(--muted);
   font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
 }
+.shut { white-space: nowrap; }
 
 /* ----------------------------------------------------------- the check --
    An identity check is four questions, and pretending it is one long form

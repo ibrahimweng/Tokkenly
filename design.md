@@ -7158,6 +7158,114 @@ routes runs off the side — and a phone at 844×390 has none of it.
      they want opposite layouts. Where a rule is really about how much room
      there is *in both directions*, ask about both.
 
+### 11g.57 A back door into the same shop
+
+The pass over the whole product turned up fifteen things. Three of them were
+blocking, and one of those three was wrong: see the end of this section for
+what the probe got wrong and why, because the mistake is more useful than the
+finding was.
+
+The first two were the same mistake in two places. The product has one gate in
+front of buying — `refusals()` in catalogue.ts, seven checks, returned as a
+list rather than a boolean so that a trade refused for two reasons says both.
+Every composer runs it on every keystroke. The bucket did not run it at all.
+
+So: open Coca-Cola, which is verified on Base and not in the approved launch
+set, and the composer refuses it in as many words. Press the `+` on the same
+company in the market list instead, go to the bucket, press Buy all 1, and you
+own it. `$50.25`, a receipt, a row in the ledger, a holding on the home screen.
+Every check in the product, walked round by pressing a different button on the
+same row.
+
+The second was the same hole with the product's own hand on it. The last screen
+of the intro offers three companies to start with, and two of the three —
+the S&P 500 fund and Coca-Cola — were outside the launch set. Pressing either
+of them filled a bucket and went to pay for it, so the first thing the product
+asked of somebody was the first thing it should have said no to. It did not say
+no, because of the hole above; had the hole been closed first, the intro would
+have ended on a refusal instead. Both readings are bad and they are one fix.
+
+**The door and the till are different questions.** `addToBucket` now refuses
+anything outside the launch set, and the `+` is not drawn on those rows at all
+— the state is drawn where the button was, which is the market list's version
+of the pill the company's own page already carried. `bucketAdd` on the company
+page goes the same way, and so does its entry in the phone's overflow, beside
+the Buy button that was already withheld there.
+
+But the door only asks what can *never* be bought. A company that operations
+paused this morning is a perfectly reasonable thing to put by for this
+afternoon, and refusing to let it into a bucket would be the product being
+strict where it has no reason to be. So the till asks the harder question:
+`bucketRefusals()` runs the full `refusals()` over every line, with the
+switches and the paused assets in it, and both the bucket screen and the
+payment sheet read it. META is in the seed as launch-set-and-paused, which is
+exactly that case, and `bucket.mjs` walks it.
+
+`payBucket` is a loop over `buy`, so a basket has to be refused for every
+reason a single trade is refused. Checking only the launch set at the till
+would have left a paused asset or a stale reference price to be discovered one
+order into a payment that cannot be undone.
+
+**Three ways to be stopped, in the order that costs the fewest trips.** Once
+the till checks everything, the bucket screen has three things it might have to
+say and can only say one. Ordering them turned out to matter more than
+expected, and the suite found it: typing `99999` into a row produced *"this
+order is too big for the book"*, which is true, and which sends somebody with
+`$2,480` off to think about market depth instead of about money.
+
+  1. A company the product will not sell. First, because taking it out changes
+     the total — somebody told to add money and then told to take a company out
+     has been sent twice for one problem.
+  2. Not enough money. `Add $X to cover this`, as before.
+  3. The order is too big for the book. Last, because a number you cannot pay
+     for is a number that is about to change anyway.
+
+`aboutTheAmount()` in catalogue.ts is the one place that says which refusals
+are about the size of the order rather than about the company. The two kinds
+need different sentences (*"try a smaller amount"* against *"take it out to pay
+for the rest"*) and different buttons, and the third case gets a real one:
+`Change the amount for Apple`, which focuses and selects that row's field. The
+fix is on this screen, so the button goes to it.
+
+**The refusal's own words, not a second set of them.** Every line the bucket
+shows is the `title` from the refusal that produced it. There is no second
+wording of *"METAc is paused"* anywhere in bucket.ts, which is rule 37 applied
+to a sentence rather than to a noun.
+
+140. **A queue of purchases is a purchase.** Anything that ends in a payment
+     runs the checks the payment runs. A second way to reach the same till is
+     a second front door, not a shortcut, and it needs the same lock.
+
+141. **Ask the cheapest question first.** When several things can stop one
+     action and only one of them can be said, say the one whose fix changes
+     the others. Ordering reasons is part of writing them.
+
+142. **A screen that offers a choice must be able to honour every one of it.**
+     The intro's three cards were a promise the catalogue could keep for one
+     of them. A list of things to press is a list of commitments.
+
+**And the one that was wrong.** The third blocking finding said that with no
+connection the final button does nothing at all — press it and nothing
+happens, no message, no refusal. It was wrong, and the way it was wrong is
+worth writing down: the probe read `.scrim` and sliced the result at 120
+characters. The refusal is real, it is `sheets.ts` line 114, and it says *"No
+connection, so nothing was sent. Try again when you are back online."* — it was
+simply past the 120th character. A measurement that crops its evidence will
+report the crop.
+
+What was actually left was smaller and still worth fixing: the button looked
+ready right up until it was pressed. Whether there is a connection is known
+before the sheet is drawn, so it is said there now, and the button that cannot
+work is not drawn — the same treatment an expired rate already got two tiers
+ago. The check on the button stays as the floor under it. The held-rate path
+arrives at the same place by its own route, because the quote request rejects
+while offline and leaves no confirm button either.
+
+`bucket.mjs` grew nine assertions and every one of them fails against the code
+as it was an hour ago; `ftue.mjs` grew three, one per card, because the check
+that was already there only ever pressed the middle one — which is why it never
+caught that the other two were unbuyable.
+
 ### 11g.49 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from
@@ -7174,6 +7282,18 @@ routes runs off the side — and a phone at 844×390 has none of it.
   wherever it was filled. What it still cannot do is take a payment from
   anything but the wallet balance: "add money" and "buy the bucket" are two
   errands where a card or a bank debit at the point of purchase would be one.
+- The launch set is four companies out of thirteen, and the market shows all
+  thirteen on purpose (11g.34). Nine of them can now be looked at and not
+  bought, from anywhere, which is correct and is also nine rows of a list that
+  answer a press with a state. Whether a market that is two thirds unbuyable
+  should be sorted, filtered or sectioned by that is a product question and it
+  has not been asked.
+- The audit that produced 11g.57 has twelve findings left, none of them
+  blocking. They are in the report rather than in here, and the two that will
+  need a decision rather than a fix are the market's treatment of the launch
+  set above, and whether a paused company should be addable to a bucket at all
+  — the door lets it in today on the argument that a pause is temporary, which
+  is a judgement and not a fact.
 - The ledger is built and the statement proves it (11g.35); adding money has a
   real pending leg and two rails (11g.37); Send asks where the money is going
   and Withdraw is one of the answers (11g.38). What is still missing from the

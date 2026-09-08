@@ -115,6 +115,28 @@ console.log('FINISHING IT LEAVES SOMETHING DONE')
   await p.close()
 }
 
+// The last screen of the intro ends in a bucket and then in a payment, so
+// every card on it has to be a company the product will actually sell. Two of
+// the three were outside the launch set, which made the first thing the
+// product asked of somebody the first thing it said no to — and the check
+// above never caught it because it only ever pressed the middle one.
+console.log('AND EVERY ONE OF THEM CAN BE BOUGHT')
+{
+  for (let i = 0; i < 3; i++) {
+    const p = await page()
+    await p.goto(B + '/welcome/3', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
+    const name = await p.$$eval('.welcome-pick .t-title', (els, n) => els[n]?.textContent.trim() ?? '', i)
+    await p.locator('.welcome-pick').nth(i).click(); await p.waitForTimeout(600)
+    const said = await p.evaluate(() => ({
+      action: document.querySelector('.col-side .btn-primary')?.textContent ?? '',
+      stop: document.querySelector('.field-error')?.innerText.replace(/\n/g, ' ') ?? '',
+    }))
+    ok(`${name || 'pick ' + (i + 1)} leads to a payment, not a refusal`,
+       /^Buy all/.test(said.action), said.action + (said.stop ? ' — ' + said.stop : ''))
+    await p.close()
+  }
+}
+
 console.log('AND THERE IS STILL A WAY PAST IT')
 {
   const p = await page()

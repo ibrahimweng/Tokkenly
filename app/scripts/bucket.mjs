@@ -27,9 +27,40 @@ ok('and the count goes up', (await count()) === '1', 'count ' + (await count()))
 
 await p.goto(B + '/invest/nvda', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
 await p.getByRole('button', { name: 'Add to bucket' }).click(); await p.waitForTimeout(500)
-await p.goto(B + '/invest/ko', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
+await p.goto(B + '/invest/googl', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
 await p.getByRole('button', { name: 'Add to bucket' }).click(); await p.waitForTimeout(500)
 ok('a stock page adds too', (await count()) === '3', 'count ' + (await count()))
+
+// The bucket buys through the same door as a single trade, so it is closed to
+// the same companies. It was not: the composer refused Coca-Cola and the
+// bucket bought it anyway, which made the bucket a way round every check in
+// the product.
+console.log('WHAT IT WILL NOT TAKE')
+await p.goto(B + '/invest/ko', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
+const shut = await p.evaluate(() => ({
+  add: [...document.querySelectorAll('button')].some((x) => /Add to bucket/.test(x.textContent ?? '')),
+  said: /Not open yet/.test(document.body.innerText),
+}))
+ok('a company outside the launch set has no way into the bucket', !shut.add)
+ok('and the page says why the button is missing', shut.said)
+await p.goto(B + '/invest', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
+const rowState = await p.evaluate(() => {
+  const rows = [...document.querySelectorAll('.table tbody tr')]
+  const shut = rows.find((r) => /MSFTc/.test(r.textContent ?? ''))
+  const open = rows.find((r) => /AAPLc/.test(r.textContent ?? ''))
+  return {
+    shutBtn: !!shut?.querySelector('.icon-btn'),
+    shutSays: !!shut?.querySelector('.shut'),
+    // A state is not a category: `.tag` is the ETF mark and nothing else, and
+    // etf.mjs counts them.
+    shutTagged: !!shut?.querySelector('.tag'),
+    openBtn: !!open?.querySelector('.icon-btn'),
+  }
+})
+ok('the list carries the state where the button was',
+   !rowState.shutBtn && rowState.shutSays && !rowState.shutTagged, JSON.stringify(rowState))
+ok('and the companies you can buy still have theirs', rowState.openBtn)
+ok('nothing went in', (await count()) === '3', 'count ' + (await count()))
 
 console.log('THE BUCKET ITSELF')
 await p.goto(B + '/bucket', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
@@ -88,6 +119,62 @@ ok('and cash went down by the total, once', Math.abs((cashBefore - cashAfter) - 
 await p.goto(B + '/activity?filter=trades', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
 const hist = await p.evaluate(() => document.body.innerText)
 ok('each company has its own receipt', /Apple/.test(hist) && /Nvidia/.test(hist))
+
+// A bucket outlives a visit and the launch set does not. META is in the
+// launch set and paused by legal in the seed, which is exactly the company
+// that can be put by this morning and refused this afternoon.
+console.log('PAUSED WHILE IT SAT THERE')
+await p.goto(B + '/invest/meta', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
+await p.getByRole('button', { name: 'Add to bucket' }).click(); await p.waitForTimeout(500)
+ok('a paused company can still be put by for later', (await count()) === '1', 'count ' + (await count()))
+await p.goto(B + '/bucket', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
+const held = await p.evaluate(() => ({
+  said: document.querySelector('.field-error')?.innerText.replace(/\n/g, ' ') ?? null,
+  row: document.querySelector('.bucket-row .warn')?.textContent ?? null,
+  action: document.querySelector('.col-side .btn-primary')?.textContent,
+}))
+ok('the bucket says which one is in the way, on the row', /paused/i.test(held.row ?? ''), held.row ?? 'nothing')
+ok('and in the summary', /paused/i.test(held.said ?? ''), held.said ?? 'nothing')
+ok('and the button is the way out of it', /^Take out/.test(held.action ?? ''), held.action ?? '')
+
+// The floor under the screen. Nothing offers this address, and pressing the
+// button on the screen before it cannot reach it — which is the point.
+await p.goto(B + '/bucket?sheet=bucket-review', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(500)
+const till = await p.evaluate(() => ({
+  text: document.querySelector('.scrim')?.innerText.replace(/\n/g, ' ') ?? '',
+  confirm: [...document.querySelectorAll('.scrim button')].map((x) => x.textContent ?? ''),
+}))
+ok('the payment itself refuses a basket it cannot buy', /Not taking this payment|Not this basket/i.test(till.text),
+   till.text.slice(0, 90))
+ok('and there is no confirm button in it at all',
+   !till.confirm.some((t) => /^Buy all/.test(t)), till.confirm.join(' | '))
+await p.goto(B + '/bucket', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
+await p.locator('.col-side .btn-primary').click(); await p.waitForTimeout(500)
+ok('taking it out leaves an empty bucket', (await count()) === '0', 'count ' + (await count()))
+
+// A button that looks ready and refuses on press is a button that made
+// somebody commit to something the product had already decided against.
+console.log('NO CONNECTION')
+await p.goto(B + '/invest/aapl', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
+await p.getByRole('button', { name: 'Add to bucket' }).click(); await p.waitForTimeout(500)
+// After the navigation, not before it: `online` is read back from the browser
+// on every load, so a reload would put the connection straight back.
+await p.goto(B + '/bucket?sheet=bucket-review', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(500)
+ok('the review offers a confirm while there is a connection',
+   await p.evaluate(() => [...document.querySelectorAll('.scrim button')].some((x) => /^Buy all/.test(x.textContent ?? ''))))
+await p.evaluate(() => window.dispatchEvent(new Event('offline'))); await p.waitForTimeout(400)
+const dark = await p.evaluate(() => ({
+  text: document.querySelector('.scrim')?.innerText.replace(/\n/g, ' ') ?? '',
+  buttons: [...document.querySelectorAll('.scrim button')].map((x) => x.textContent ?? ''),
+}))
+ok('the review says there is no connection before you press anything',
+   /No connection/.test(dark.text), dark.text.slice(0, 120))
+ok('and the button that cannot work is not there',
+   !dark.buttons.some((t) => /^Buy all/.test(t)), dark.buttons.join(' | '))
+await p.evaluate(() => window.dispatchEvent(new Event('online'))); await p.waitForTimeout(300)
+const back = await p.evaluate(() =>
+  [...document.querySelectorAll('.scrim button')].map((x) => x.textContent ?? ''))
+ok('and it comes back when the connection does', back.some((t) => /^Buy all/.test(t)), back.join(' | '))
 
 console.log('PHONE')
 const m = await b.newPage({ viewport: { width: 390, height: 844 } })

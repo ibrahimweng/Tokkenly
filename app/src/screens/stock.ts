@@ -2,7 +2,7 @@ import { h } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader, headActions } from '../components/shell'
 import { card, cardHead, kv, callout, bucketBar, showBucketBar } from '../components/bits'
-import { find, markGap, deviation, type Instrument } from '../catalogue'
+import { find, markGap, deviation, tradable, type Instrument } from '../catalogue'
 import { barChart, type Range } from '../components/chart'
 import { state, actions, holding, inBucket, money, assetOn, MASK } from '../state'
 import { usd, pct, signed, shares, shares as fmtShares } from '../format'
@@ -39,8 +39,15 @@ function priceChart(c: Instrument): HTMLElement {
 
 /** Buying now and deciding later are different intents, so they are different
  *  buttons. This one puts a default amount against the company and leaves it
- *  for the bucket; the amount is editable there. */
-function bucketAdd(c: Instrument): HTMLElement {
+ *  for the bucket; the amount is editable there.
+ *
+ *  Null for a company outside the launch set. The Buy button beside it is
+ *  already withheld there, and leaving this one standing made the bucket a
+ *  way round the refusal: deciding later still ends in buying, so it is
+ *  gated on the same thing. The "Not open yet" pill sits in the same row and
+ *  says why the row is short. */
+function bucketAdd(c: Instrument): HTMLElement | null {
+  if (!tradable(c)) return null
   const already = inBucket(c.ticker)
   const b = h('button', {
     class: 'btn btn-secondary btn-sm',
@@ -173,19 +180,24 @@ export function stockScreen(ticker: string): HTMLElement {
                 actions.toggleWatch(c.ticker)
                 toast(watching ? c.ticker + ' removed from your watchlist' : c.ticker + ' added to your watchlist')
               } },
-            { label: inBucket(c.ticker) ? 'In your bucket' : 'Add to bucket', ic: icon.bucket,
-              run: () => {
-                if (inBucket(c.ticker)) { go('/bucket'); return }
-                // The burst comes from the bucket in the top bar rather than
-                // from the row that was pressed: the row is inside a menu that
-                // is closing, and a burst measured from a detached element
-                // never appears. Where it lands is the better place for it
-                // anyway.
-                const bin = document.querySelector<HTMLElement>('.bucket-btn')
-                if (bin) celebrate(bin)
-                showBucketBar()
-                actions.addToBucket(c.ticker, state.prefs.tradeDefault)
-              } })
+            // Gated on the same thing as Buy above it: deciding later still
+            // ends in buying. The two pills below the header carry the
+            // reason on a phone.
+            tradable(c)
+              ? { label: inBucket(c.ticker) ? 'In your bucket' : 'Add to bucket', ic: icon.bucket,
+                  run: () => {
+                    if (inBucket(c.ticker)) { go('/bucket'); return }
+                    // The burst comes from the bucket in the top bar rather
+                    // than from the row that was pressed: the row is inside a
+                    // menu that is closing, and a burst measured from a
+                    // detached element never appears. Where it lands is the
+                    // better place for it anyway.
+                    const bin = document.querySelector<HTMLElement>('.bucket-btn')
+                    if (bin) celebrate(bin)
+                    showBucketBar()
+                    actions.addToBucket(c.ticker, state.prefs.tradeDefault)
+                  } }
+              : null)
         : h('div', { class: 'chip-row' },
             h('span', { class: 'pill', text: c.kind === 'etf' ? 'ETF' : 'Company' }),
             // What you can actually do with it. A market that shows twelve
