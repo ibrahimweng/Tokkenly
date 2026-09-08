@@ -48,7 +48,6 @@ const FLAT: Record<string, () => HTMLElement> = {
   activity: historyScreen,
   wallet: walletScreen,
   history: historyScreen,
-  send: sendScreen,
   // Withdraw and Convert were one errand each and both were Send with the
   // destination already answered. They still resolve, to the bank rail: an
   // address somebody bookmarked should not break because the product learned
@@ -56,7 +55,6 @@ const FLAT: Record<string, () => HTMLElement> = {
   withdraw: withdrawScreen,
   convert: withdrawScreen,
   receive: receiveScreen,
-  addmoney: addMoneyScreen,
   bucket: bucketScreen,
   disclosures: disclosuresScreen,
 }
@@ -91,6 +89,10 @@ function screenFor(r: Route): HTMLElement {
   if (a === 'statement') return statementScreen()
   // The ops console. Its own place, because it is not this person's account.
   if (a === 'admin') return adminScreen()
+  // Send is three ways, each with an address of its own, so it nests. The bare
+  // /send still resolves, to the rail with nothing chosen yet.
+  if (a === 'send') return sendScreen(b)
+  if (a === 'addmoney') return addMoneyScreen(b)
   if (a === 'account') return accountScreen(b)
   if (a === 'security') return accountScreen('security')
   if (a === 'support') return accountScreen('support')

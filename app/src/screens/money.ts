@@ -12,13 +12,12 @@ import {
 } from '../state'
 
 const ceilingLabel2 = (byBalance: number) => ceilingLabel(byBalance, 'The most you can move here')
-import { walletScreen } from './wallet'
 import { stockScreen } from './stock'
 import { find, type Instrument, pathOf } from '../catalogue'
 import { usd, naira, when, shares, activityLabel } from '../format'
 import { openSheet, current, go } from '../router'
 
-import { isMobile } from '../responsive'
+import { isMobile, isSplit } from '../responsive'
 import { toast } from '../components/sheet'
 
 /** Names only. Cash goes to anybody, so the Tokkenly flag on a person is
@@ -87,9 +86,12 @@ export function peopleRows(onPick: (who: string) => void): HTMLElement[] {
 /** Where the money is going, read off the address. `to` names it; `rail` says
  *  which kind of thing it is, so a person called "0x…" and an address are
  *  never confused for each other. */
-export function destination(): Destination | null {
+export function destination(way?: 'tokkenly' | 'bank' | 'base'): Destination | null {
   const r = current()
-  const rail = r.query.get('rail')
+  // The way comes from the path now — /send/bank is a bank whatever the query
+  // says. `?rail=` is still read for the addresses that predate the split, and
+  // for the review dialog, which is rebuilt from its own parameters.
+  const rail = way ? (way === 'base' ? 'chain' : way) : r.query.get('rail')
   const to = r.query.get('to')
   if (rail === 'bank') {
     const own = state.banks.find((b) => b.id === to)
@@ -140,7 +142,7 @@ function payeeCard(): HTMLElement {
   pick.addEventListener('change', check)
   go2.addEventListener('click', () => {
     if (!name) return
-    go('/send?rail=bank&to=' + encodeURIComponent(name) +
+    go('/send/bank?to=' + encodeURIComponent(name) +
        '&bank=' + encodeURIComponent(pick.value) + '&acct=' + encodeURIComponent(acct.value))
   })
 
@@ -158,17 +160,78 @@ function payeeCard(): HTMLElement {
 /** Every place the money could go, in one column. Three groups, because the
  *  three behave differently, and the group is the fastest way to say which
  *  kind of thing you are about to pay. */
-function whereSide(opts: { search: boolean }): (Node | null)[] {
+/* ---------------------------------------------------------------------------
+   Three ways, in a rail.
+
+   This was four cards down one screen — people, your own banks, somebody
+   else's account, a Base address — and then the composer replaced the lot of
+   them, so the way you had chosen stopped being on screen the moment you
+   chose it. Two things were wrong with that. A person who picked the wrong
+   way had to go back to change it, and the trail said "Wallet › Send money"
+   at every step of an errand with three of them.
+
+   So it is the shape Account already uses: the ways stay in a rail on the
+   left, the one you picked fills the panel on the right, and the panel is
+   where the whole errand happens — the list, then the amount, then the
+   review, which is a dialog because it is a commit. The rail never moves.
+
+   And the two bank cards became one. They were split because one needs a name
+   check and the other does not, which is a fact about the second step and not
+   a reason for two doors: a bank account is a bank account, and whose it is
+   is the first thing the panel asks.
+   --------------------------------------------------------------------------- */
+
+type Way = 'tokkenly' | 'bank' | 'base'
+
+const WAYS: { key: Way; label: string; ic: () => string; sub: () => string }[] = [
+  { key: 'tokkenly', label: 'Someone on Tokkenly', ic: icon.account,
+    sub: () => 'Dollars, in about a minute' },
+  { key: 'bank', label: 'A bank account', ic: icon.convert,
+    sub: () => (switchOn('payout.ngn') ? 'Dollars out, naira in' : 'Paused') },
+  { key: 'base', label: 'USDC on Base', ic: icon.wallet,
+    sub: () => 'Dollars on the network' },
+]
+
+const wayOf = (d: Destination): Way =>
+  d.rail === 'bank' ? 'bank' : d.rail === 'chain' ? 'base' : 'tokkenly'
+const wayLabel = (w: Way): string => WAYS.find((x) => x.key === w)!.label
+
+/** The rail. Same rows as the Account index, because it is the same idea and
+ *  a second set of rows that looked almost like those would be a second idea
+ *  by accident. */
+function sendRail(active?: Way): HTMLElement {
+  return h('nav', { class: 'set-list ways' + (active ? ' rail' : ''), ariaLabel: 'Ways to send' },
+    ...WAYS.map((w) => {
+      const row = h('button', {
+        class: 'set-row' + (w.key === active ? ' on' : ''),
+        on: { click: () => go('/send/' + w.key) },
+      },
+        // A name and a sentence about it, stacked. Account's rows carry a name
+        // and a status and fit them side by side; "Someone on Tokkenly" beside
+        // "Dollars, in about a minute" in a 320px column is two ellipses.
+        h('span', { class: 'who' },
+          h('span', { class: 'mark', html: w.ic() }),
+          h('span', { class: 'two-line' },
+            h('span', { class: 't-body-strong', text: w.label }),
+            h('small', { text: w.sub() }))),
+        h('span', { class: 'muted set-chev', html: icon.chevron() }))
+      if (w.key === active) row.setAttribute('aria-current', 'page')
+      return row
+    }))
+}
+
+/** Everybody you have paid, searchable. The list narrows as you type and the
+ *  address is only touched on Enter, because a route change rebuilds the tree
+ *  and takes the focus with it. */
+function peopleWay(): (Node | null)[] {
   const r = current()
   const term = r.query.get('q') ?? ''
-  const setTerm = (v: string) => go('/send' + (v ? '?q=' + encodeURIComponent(v) : ''))
   const people = byRecent(PEOPLE())
-  const PEOPLE_FIELDS = (n: string) => [n, lastPaid(n)]
-
+  const FIELDS = (n: string) => [n, lastPaid(n)]
   const row = (n: string) =>
     h('button', {
       class: 'sheet-row',
-      on: { click: () => go('/send?to=' + encodeURIComponent(n)) },
+      on: { click: () => go('/send/tokkenly?to=' + encodeURIComponent(n)) },
     },
       h('span', { class: 'avatar', text: initials(n) }),
       h('span', { class: 'two-line' },
@@ -176,65 +239,57 @@ function whereSide(opts: { search: boolean }): (Node | null)[] {
         h('small', { text: lastPaid(n) })),
       h('span', { class: 'muted', html: icon.chevron() }))
 
-  // The list narrows as you type. The address is only touched on Enter,
-  // because a route change rebuilds the tree and takes the focus with it.
-  const peopleCard = h('div', { class: 'stack' })
+  const list = h('div', { class: 'stack' })
   const paint = (t: string): void => {
-    const found = t.trim() ? rank(t, people, PEOPLE_FIELDS) : people
-    peopleCard.replaceChildren(card(
-      cardHead('Someone on Tokkenly'),
-      searchNote(t, found.length, onlyNear(t, found, PEOPLE_FIELDS)),
+    const found = t.trim() ? rank(t, people, FIELDS) : people
+    list.replaceChildren(card(
+      cardHead('Who is it going to'),
+      searchNote(t, found.length, onlyNear(t, found, FIELDS)),
       found.length
         ? h('div', { class: 'sheet-list' }, ...found.map(row))
         : emptyState('Nobody by that name',
-            'Search another name, or use one of the ways below.',
-            { label: 'Clear the search', onClick: () => go('/send') })))
+            'Search another name, or pick another way to send.',
+            { label: 'Clear the search', onClick: () => go('/send/tokkenly') })))
   }
   paint(term)
 
-  const address = h('input', { placeholder: 'Paste a Base address' })
-  const addressField = h('label', { class: 'field' }, address)
-  const addressError = fieldError(
-    h('span', { html: icon.alert() }), h('span', { text: 'Paste a full Base address' }))
-  addressError.hidden = true
-  const submitAddress = () => {
-    const v = address.value.trim()
-    // The mistake is shown where it was made, not in a toast that has gone by.
-    const bad = v.length < 8
-    addressField.classList.toggle('error', bad)
-    addressError.hidden = !bad
-    if (bad) { address.focus(); return }
-    go('/send?rail=chain&to=' + encodeURIComponent(v.slice(0, 6) + '…' + v.slice(-4)))
-  }
-  address.addEventListener('input', () => {
-    addressField.classList.remove('error')
-    addressError.hidden = true
-  })
+  return [
+    searchField({
+      placeholder: 'Search a name',
+      value: term,
+      suggest: (t) => rank(t, people, FIELDS).slice(0, 7).map((n) => ({
+        label: n, hint: 'Send dollars', group: 'People',
+        pick: () => go('/send/tokkenly?to=' + encodeURIComponent(n)),
+      })),
+      onType: paint,
+      onCommit: (v) => go('/send/tokkenly' + (v ? '?q=' + encodeURIComponent(v) : '')),
+    }),
+    list,
+    card(
+      cardHead('What this way is'),
+      kv('Arrives', 'In about a minute, any day'),
+      kv('Fee', 'No fee'),
+      kv('Currency', 'Dollars, both ends')),
+  ]
+}
 
-  const cards: (Node | null)[] = [
-    opts.search
-      ? searchField({
-          placeholder: 'Search a name',
-          value: r.query.get('q') ?? '',
-          // Picking a name here is the whole screen: it goes straight to the
-          // composer with that person already in it.
-          suggest: (t) => rank(t, people, PEOPLE_FIELDS).slice(0, 7).map((n) => ({
-            label: n,
-            hint: 'Send dollars',
-            group: 'People',
-            pick: () => go('/send?to=' + encodeURIComponent(n)),
-          })),
-          onType: paint,
-          onCommit: setTerm,
-        })
-      : null,
-    peopleCard,
-    switchOn('payout.ngn') ? card(
-      cardHead('Your own bank'),
+/** Your own banks, and then anybody else's. Whose account it is decides one
+ *  thing only — whether a name has to come back from the bank before the money
+ *  can go — so it is a question inside this way rather than two ways. */
+function bankWay(): (Node | null)[] {
+  if (!switchOn('payout.ngn')) {
+    return [card(
+      cardHead('A bank account', h('span', { class: 'pill warn', text: 'Paused' })),
+      h('span', { class: 'muted',
+        text: 'Bank payouts are off right now. You can still send dollars to a person or a wallet. Anything already on its way will finish.' }))]
+  }
+  return [
+    card(
+      cardHead('One of your banks'),
       ...state.banks.map((b) =>
         h('button', {
           class: 'sheet-row',
-          on: { click: () => go('/send?rail=bank&to=' + encodeURIComponent(b.id)) },
+          on: { click: () => go('/send/bank?to=' + encodeURIComponent(b.id)) },
         },
           h('span', { class: 'mark', html: icon.convert() }),
           h('span', { class: 'two-line grow' },
@@ -242,67 +297,134 @@ function whereSide(opts: { search: boolean }): (Node | null)[] {
             h('small', { text: '•••• ' + b.last4 + ' · ' + b.holder })),
           h('span', { class: 'muted', html: icon.chevron() }))),
       h('span', { class: 'muted t-caption', text: 'Dollars out, naira in.' }),
-      h('button', { class: 'link quiet', text: 'Add a bank', on: { click: () => openSheet('banks') } }))
-      : card(
-          cardHead('Your own bank', h('span', { class: 'pill warn', text: 'Paused' })),
-          h('span', { class: 'muted',
-            text: 'Bank payouts are off right now. You can still send dollars to a person or a wallet. Anything already on its way will finish.' })),
-    switchOn('payout.ngn') ? payeeCard() : null,
-    card(
-      cardHead('A Base address'),
-      addressField,
-      addressError,
-      h('button', { class: 'btn btn-secondary', text: 'Continue', on: { click: submitAddress } }),
-      callout('Base network only. Anything else sent here is lost.', 'warning')),
+      h('button', { class: 'link quiet', text: 'Add a bank', on: { click: () => openSheet('banks') } })),
+    payeeCard(),
   ]
-  return cards
 }
 
-/** The whole list, as one column. This is the right-hand column of the
- *  composer, where there is one column to be. */
-const whereColumn = (opts: { search: boolean }): HTMLElement =>
-  h('div', { class: 'stack' }, ...whereSide(opts))
+/** A Base address, checked for shape before it is used. */
+function baseWay(): (Node | null)[] {
+  const address = h('input', { placeholder: 'Paste a Base address' })
+  const field = h('label', { class: 'field' }, address)
+  const err = fieldError(
+    h('span', { html: icon.alert() }), h('span', { text: 'Paste a full Base address' }))
+  err.hidden = true
+  const submit = () => {
+    const v = address.value.trim()
+    // The mistake is shown where it was made, not in a toast that has gone by.
+    const bad = v.length < 8
+    field.classList.toggle('error', bad)
+    err.hidden = !bad
+    if (bad) { address.focus(); return }
+    go('/send/base?to=' + encodeURIComponent(v.slice(0, 6) + '…' + v.slice(-4)))
+  }
+  address.addEventListener('input', () => { field.classList.remove('error'); err.hidden = true })
+  address.addEventListener('keydown', (e) => {
+    if ((e as KeyboardEvent).key === 'Enter') { e.preventDefault(); submit() }
+  })
+  return [
+    card(
+      cardHead('Where is it going'),
+      field,
+      err,
+      h('button', { class: 'btn btn-secondary', text: 'Continue', on: { click: submit } }),
+      callout('Base network only. Anything else sent here is lost.', 'warning')),
+    card(
+      cardHead('What this way is'),
+      kv('Network', 'Base, and only Base'),
+      kv('Fee', 'No fee'),
+      kv('Final', 'A sent transaction cannot be recalled')),
+  ]
+}
 
-/** And the whole list as a page, where there is no composer yet and the four
- *  groups would otherwise run 1,300px down one side of a wide screen. The
- *  split is by how the money leaves: dollars on the left, naira on the right. */
+const wayPanel = (w: Way): (Node | null)[] =>
+  w === 'bank' ? bankWay() : w === 'base' ? baseWay() : peopleWay()
+
+/** The rail beside a panel, or the panel under a header. One shape, so the
+ *  screen does not have to be written three times. */
+function sendShell(w: Way | undefined, steps: { label: string; to?: string }[],
+                   body: (Node | null)[]): HTMLElement {
+  const head = pageHeader('Send money', eyebrow('Cash available', usd(state.cash)),
+    steps.length ? { steps } : {})
+  if (!isSplit() || !w) {
+    return shell('wallet', head, w ? sendRail(w) : sendRail(), ...body)
+  }
+  return shell('wallet', head,
+    h('div', { class: 'row set-split' },
+      h('div', { class: 'stack set-col' }, sendRail(w)),
+      h('div', { class: 'stack grow set-panel' }, ...body)))
+}
+
+/** The ways, with nothing chosen yet. On a phone that is the whole screen; on
+ *  a wide one the first way fills the panel, because a column of rows beside
+ *  nothing is a screen that looks broken. */
+function sendPicker(w: Way): HTMLElement {
+  return sendShell(w, [{ label: wayLabel(w) }], wayPanel(w))
+}
+
 export function sendWhoScreen(): HTMLElement {
-  const [search, people, own, payee, address] = whereSide({ search: true })
-  return shell(
-    'wallet',
-    pageHeader('Send money', eyebrow('Cash available', usd(state.cash))),
-    search,
-    isMobile()
-      ? h('div', { class: 'stack' }, people, own, payee, address)
-      : h('div', { class: 'row' },
-          h('div', { class: 'stack col-main' }, people, address),
-          h('div', { class: 'stack col-side' }, own, payee)))
+  // Wide: a column of rows beside nothing is a screen that looks broken, so
+  // the first way fills the panel — and the address says so, because a screen
+  // showing one thing under an address that names another is the fault this
+  // tier is here to fix.
+  if (isSplit()) {
+    queueMicrotask(() => go('/send/tokkenly', true))
+    return sendPicker('tokkenly')
+  }
+  // Narrow: the three ways are the whole screen, and picking one is a step.
+  return sendShell(undefined, [], [])
 }
 
-export function sendScreen(forced?: Destination): HTMLElement {
-  const to = forced ?? destination()
-  // No destination yet, so the screen is the question. At every width: the
-  // composer has nothing to compose until it knows where the money is going,
-  // and a composer with a blank target is a form with a hole in it.
-  if (!to) return sendWhoScreen()
+export function sendScreen(sub?: string, forced?: Destination): HTMLElement {
+  const picked = WAYS.find((x) => x.key === sub)?.key
+  // An address that names its way in the query rather than its path — /send?to=,
+  // /send?rail=chain&to=, /withdraw — is the same place as the one that names
+  // it in the path, and one thing with two addresses is what rule 144 is for.
+  // So it goes there, replacing rather than pushing: an old link should not
+  // cost a step in the history somebody then has to press back through.
+  if (!picked && !forced) {
+    const old = destination()
+    if (old) {
+      const q = new URLSearchParams(current().query)
+      q.delete('rail')
+      const at = '/send/' + wayOf(old) + (q.toString() ? '?' + q.toString() : '')
+      // After this render, not during it. `go` calls the route handler
+      // straight away, so redirecting inside a render paints the destination
+      // and then has this render's own result mounted on top of it — the
+      // redirect works and is immediately undone.
+      queueMicrotask(() => go(at, true))
+      // The way it is about to become, not the picker: `sendWhoScreen` queues
+      // a redirect of its own on a wide screen, and two queued redirects race
+      // — the second one landed last and dropped the query this one is
+      // carrying, which is the destination and any open dialog.
+      return sendPicker(wayOf(old))
+    }
+  }
+  const to = forced ?? destination(picked)
+  const w: Way | undefined = to ? wayOf(to) : picked
+  if (!w) return sendWhoScreen()
+  if (!to) return sendPicker(w)
+
   const bank = to.rail === 'bank'
   const rate = state.ngnPerUsd
-  // Built once and handed back on every repaint: the amount changing must not
-  // wipe an address somebody is halfway through pasting.
-  const side = isMobile() ? null : whereColumn({ search: false })
-  return composerScreen({
-    place: 'wallet',
-    base: walletScreen,
-    right: () => side!,
-    // On a phone the sheet is all there is, so the row opens the picker. On a
-    // wide screen the list is the column beside it, and a Change that opens a
-    // dialog to do what the next column already does is a second way to the
-    // same place.
+  const split = isSplit()
+  const steps = [{ label: wayLabel(w), to: '/send/' + w }, { label: to.name }]
+
+  const spec = {
+    place: 'wallet' as const,
+    // On a phone the composer is a sheet over the way it came from, so closing
+    // it lands on the list rather than on the wallet. On a wide screen the way
+    // is the lit row in the rail beside it and there is nothing to go under.
+    base: () => sendPicker(w),
+    // Who it is going to, above the amount. On a wide screen the rail is two
+    // inches to the left, so this states the target rather than offering to
+    // change it: a Change that opens what the next column already shows is a
+    // second way to one place.
     lede: () => h('div', { class: 'stack-8' },
       h('span', { class: 't-caps subtle', text: 'To' }),
-      h(side ? 'div' : 'button', {
+      h(split ? 'div' : 'button', {
         class: 'sheet-row', style: { background: 'var(--control)' },
-        on: side ? {} : { click: () => go('/send') },
+        on: split ? {} : { click: () => go('/send/' + w) },
       },
         bank
           ? h('span', { class: 'mark', html: icon.convert() })
@@ -318,9 +440,9 @@ export function sendScreen(forced?: Destination): HTMLElement {
             : to.bankId
               ? '•••• ' + (to.number ?? '').slice(-4) + ' · ' + state.person.name
               : to.bank + ' · ' + to.number })),
-        side ? null : h('span', { class: 'link quiet', text: 'Change' }))),
+        split ? null : h('span', { class: 'link quiet', text: 'Change' }))),
     title: 'Send money',
-    eyebrow: ['Cash available', usd(state.cash)],
+    eyebrow: ['Cash available', usd(state.cash)] as [string, string],
     cardLabel: 'How much',
     cardRight: 'Cash ' + usd(state.cash),
     initial: Math.min(bank ? 300 : 120, state.cash),
@@ -344,7 +466,7 @@ export function sendScreen(forced?: Destination): HTMLElement {
         ],
     // No 'To' row: the lede above already names them, and the same fact twice
     // in one dialog reads as a mistake.
-    summary: (v) => bank
+    summary: (v: number): [string, string, string?][] => bank
       ? [
           ['You send', usd(v)],
           ['Rate', '1 dollar = ' + naira(rate)],
@@ -360,10 +482,25 @@ export function sendScreen(forced?: Destination): HTMLElement {
     callout: bank
       ? 'You get a firm rate on the next screen. It is held for ninety seconds.'
       : 'We move money every day, holidays included.',
-    action: (v) => 'Send ' + usd(v),
-    onAction: (v) => openSheet('send-review', { v: String(v), ...railParams(to) }),
-    bottom: bank ? (pastMoves('out') ?? undefined) : undefined,
-  })
+    action: (v: number) => 'Send ' + usd(v),
+    onAction: (v: number) => openSheet('send-review', { v: String(v), ...railParams(to) }),
+  }
+
+  // Wide: the ways stay in the rail and the amount fills the panel, so the
+  // whole errand happens in one place and the way you took is still on screen
+  // while you take it.
+  if (split) {
+    return shell('wallet',
+      pageHeader('Send money', eyebrow('Cash available', usd(state.cash)), { steps }),
+      h('div', { class: 'row set-split' },
+        h('div', { class: 'stack set-col' }, sendRail(w)),
+        h('div', { class: 'stack grow set-panel' },
+          composerScreen({ ...spec, inline: true }),
+          bank ? pastMoves('out') : null)))
+  }
+  // Narrow: the composer is a sheet over the list it came from, which is the
+  // one shape every composer in the product takes at this width.
+  return composerScreen({ ...spec, bottom: bank ? (pastMoves('out') ?? undefined) : undefined })
 }
 
 /** The destination, as the parameters a sheet can be re-opened from. A dialog
@@ -442,7 +579,7 @@ function cannotSend(c: Instrument, to: string): HTMLElement {
     h('span', { class: 'muted',
       text: `A tokenised share is a security, not a payment. We have to know who is receiving one before we hand it over, which means ${first} needs a verified Tokkenly account first. Cash has no such rule.` }),
     h('button', { class: 'btn btn-primary', text: 'Send ' + first + ' cash instead',
-      on: { click: () => go('/send?to=' + encodeURIComponent(to)) } }),
+      on: { click: () => go('/send/tokkenly?to=' + encodeURIComponent(to)) } }),
     // On a wide screen the list of people who can receive it is the column
     // beside this; on a phone there is nothing but this card, so it carries
     // the way back to the list.
@@ -555,7 +692,13 @@ export function sendSharesScreen(ticker: string): HTMLElement {
  *  screen showing an account number — two answers to "how does money get in",
  *  on two screens, neither naming the other. It is the Base tab now. The
  *  address still resolves, because somebody has it bookmarked. */
+/** Receive was its own address for the same screen, which is one thing with
+ *  two names. It is the Base way of Add money, so it goes there. */
 export function receiveScreen(): HTMLElement {
+  const q = new URLSearchParams(current().query)
+  q.delete('tab')
+  const at = '/addmoney/base' + (q.toString() ? '?' + q.toString() : '')
+  queueMicrotask(() => go(at, true))
   return addMoneyScreen('base')
 }
 
@@ -688,11 +831,51 @@ export type AddTab = 'bank' | 'base' | 'card'
 
 const ADD_TABS: [AddTab, string][] = [['bank', 'Bank transfer'], ['base', 'Base'], ['card', 'Card']]
 
-export const addTab = (): AddTab => {
-  const t = current().query.get('tab')
+export const addTab = (sub?: string): AddTab => {
+  // The way is a path segment now, the same as Send's. `?tab=` is still read
+  // for the addresses that predate it.
+  const t = sub ?? current().query.get('tab')
   if (t === 'base') return 'base'
   if (t === 'card' && switchOn('fund.card')) return 'card'
   return 'bank'
+}
+
+/** The three ways money comes in, as a rail. Same shape as the ways out: a
+ *  name, a sentence about it, and the details in the panel beside it. They
+ *  were chips above the panel, which is the right control for three of a kind
+ *  and the wrong one once the question is "which of these do I want" rather
+ *  than "which of these am I looking at". */
+const IN_WAYS: { key: AddTab; label: string; ic: () => string; sub: () => string }[] = [
+  { key: 'bank', label: 'Bank transfer', ic: icon.convert,
+    sub: () => 'Naira from any Nigerian bank' },
+  { key: 'base', label: 'USDC on Base', ic: icon.wallet,
+    sub: () => 'Dollars from any Base wallet' },
+  { key: 'card', label: 'Debit card', ic: icon.card,
+    sub: () => (switchOn('fund.card') ? 'Naira on a card, ' + state.fees.card + '% fee' : 'Paused') },
+]
+
+function addRail(active: AddTab): HTMLElement {
+  return h('nav', { class: 'set-list ways rail', ariaLabel: 'Ways to add money' },
+    ...IN_WAYS.map((w) => {
+      // A rail operations has switched off is shown as off, not hidden. A door
+      // that vanishes makes people think they misremembered it; one that says
+      // "not right now" tells them to come back.
+      const off = w.key === 'card' && !switchOn('fund.card')
+      const row = h('button', {
+        class: 'set-row' + (w.key === active ? ' on' : '') + (off ? ' off' : ''),
+        disabled: off,
+        on: { click: () => (off ? undefined : go('/addmoney/' + w.key)) },
+      },
+        h('span', { class: 'who' },
+          h('span', { class: 'mark', html: w.ic() }),
+          h('span', { class: 'two-line' },
+            h('span', { class: 't-body-strong', text: w.label }),
+            h('small', { text: w.sub() }))),
+        off ? h('span', { class: 'pill warn', text: 'Paused' }) : null,
+        h('span', { class: 'muted set-chev', html: icon.chevron() }))
+      if (w.key === active) row.setAttribute('aria-current', 'page')
+      return row
+    }))
 }
 
 /** What has already come in this way. Split by rail, because a tab that lists
@@ -916,41 +1099,52 @@ function arrivedRows(tab: AddTab, n: number): HTMLElement[] {
       amount(a)))]
 }
 
-export function addMoneyScreen(forced?: AddTab): HTMLElement {
-  const tab = forced ?? addTab()
-  const [tabs, ...rest] = addPanels(tab)
+export function addMoneyScreen(sub?: string, forced?: AddTab): HTMLElement {
+  const tab = forced ?? addTab(sub)
+  // An old address names its way in the query, or not at all. Same place, so
+  // it goes there rather than being a second copy of it.
+  if (!sub) {
+    // Carrying the query with it. It dropped it, which took an open dialog and
+    // its parameters with it: /addmoney?sheet=transfer-review&v=200 is a
+    // review somebody is looking at, and a redirect that keeps only the path
+    // closes it.
+    const q = new URLSearchParams(current().query)
+    q.delete('tab')
+    const at = '/addmoney/' + tab + (q.toString() ? '?' + q.toString() : '')
+    queueMicrotask(() => go(at, true))
+  }
   // The composer is gone. It asked how much before handing over an account
   // number, on a rail where nothing holds you to the figure — see the note
   // above `AddTab`. The card tab is where a figure now lives, because a card
   // is the only one of the three that is pulled.
-  return shell(
-    'wallet',
-    pageHeader('Add money', eyebrow('Cash available', usd(state.cash))),
-    tabs,
-    h('div', { class: 'row' },
-      h('div', { class: 'stack col-compose' }, ...rest.slice(0, tab === 'bank' ? 2 : 1)),
-      h('div', { class: 'stack grow' },
-        ...rest.slice(tab === 'bank' ? 2 : 1),
-        card(
-          cardHead('The three ways in'),
-          kv('Bank transfer', 'Naira from any Nigerian bank'),
-          kv('Base', 'Dollars from any Base wallet'),
-          kv('Card', 'Naira on a debit card, ' + state.fees.card + '% fee'),
-          h('span', { class: 'muted t-caption',
-            text: 'The first two take no amount. You are given the details and you pay in.' })))))
+  const [, ...rest] = addPanels(tab)
+  const label = IN_WAYS.find((w) => w.key === tab)!.label
+  const head = pageHeader('Add money', eyebrow('Cash available', usd(state.cash)),
+    { steps: [{ label }] })
+  // The three ways stay beside the one you are reading, so choosing another is
+  // one press rather than a press and a scroll back up to the chips.
+  if (!isSplit()) {
+    return shell('wallet', head, addRail(tab), ...rest)
+  }
+  return shell('wallet', head,
+    h('div', { class: 'row set-split' },
+      h('div', { class: 'stack set-col' }, addRail(tab)),
+      h('div', { class: 'stack grow set-panel' }, ...rest)))
 }
 
-/** The old Withdraw, which is Send with the destination already answered.
- *  It keeps its address rather than its screen: a redirect, not a copy, so
- *  there is one composer for the errand and no second one to drift from it. */
+/** The old Withdraw and Convert, which were each one errand and were both Send
+ *  with the destination already answered.
+ *
+ *  They rendered the composer in place, so the address stayed /withdraw and the
+ *  trail could only say "Wallet › Send money" — it had no way to name the bank
+ *  rail, because the rail was not in the address. Now that a way has an address
+ *  of its own, the honest thing is to go there: one place, one name, one trail.
+ *  Replacing rather than pushing, so back from the composer is the wallet and
+ *  not this address again. */
 export function withdrawScreen(): HTMLElement {
   const own = state.banks[0]
-  // The composer itself, with the destination already answered — not a
-  // redirect. A redirect would paint the picker for one frame and then jump,
-  // and the point of keeping the address is that it lands where it always did.
-  if (!own) return sendScreen()
-  return sendScreen({
-    rail: 'bank', name: own.name, bankId: own.id, bank: own.name, number: own.number,
-  })
+  const at = '/send/bank' + (own ? '?to=' + encodeURIComponent(own.id) : '')
+  queueMicrotask(() => go(at, true))
+  return sendScreen('bank')
 }
 

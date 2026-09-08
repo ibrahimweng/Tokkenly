@@ -31,7 +31,7 @@ for (const [route, title] of [
   // checked here is that it is still a place with a heading and a trail, not
   // that it still has a name of its own.
   ['/addmoney', 'Add money'], ['/withdraw', 'Send money'],
-  ['/invest/aapl/invest', 'Invest'], ['/grow/borrow', 'Borrow'],
+  ['/invest/aapl/invest', 'Buy'], ['/grow/borrow', 'Borrow'],
   ['/grow/earn', 'Lend'], ['/grow/repay', 'Repay'],
 ]) {
   const p = await page()
@@ -57,18 +57,28 @@ for (const [route, title] of [
   ok('the phone still gets a sheet with a grabber and a keypad', grabber === 1 && keypad === 1)
   await p.close()
 }
-{ // changing the recipient without leaving the screen
+{ // changing your mind without leaving the screen
   const p = await page()
-  await p.goto(B + '/send?to=Tunde%20Bakare', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(250)
-  const people = p.locator('.stack.grow .sheet-row')
-  const listed = await people.count()
+  await p.goto(B + '/send/tokkenly?to=Tunde%20Bakare', { waitUntil: 'domcontentloaded' })
+  await p.waitForTimeout(350)
+  // The three ways stay in a rail beside the amount (11g.60), so changing the
+  // way is one press and the errand never leaves the screen. It was a column
+  // of everybody you have ever paid, which answered "who" and could not
+  // answer "how".
+  const ways = p.locator('.set-col .set-row')
   const before = await p.locator('.col-compose .sheet-row .t-body-strong').first().textContent()
-  await people.nth(0).click(); await p.waitForTimeout(300)
-  const after = await p.locator('.col-compose .sheet-row .t-body-strong').first().textContent()
-  // The list is the column beside the amount, not a dialog opened from a
-  // Change link that opened from a dialog.
-  ok('the column beside it picks who you are paying',
-     listed >= 4 && !!after && after !== before, `${listed} listed, ${before} → ${after}`)
+  const lit = await p.locator('.set-col .set-row.on .t-body-strong').textContent()
+  ok('the ways stay beside the amount, with the one you took lit',
+     (await ways.count()) === 3 && lit === 'Someone on Tokkenly',
+     `${await ways.count()} ways, lit ${lit}`)
+  await ways.nth(1).click(); await p.waitForTimeout(350)
+  const now = await p.evaluate(() => ({
+    at: location.hash.replace(/^#/, ''),
+    lit: document.querySelector('.set-col .set-row.on .t-body-strong')?.textContent ?? '',
+  }))
+  ok('and picking another one is one press, in place',
+     now.at === '/send/bank' && now.lit === 'A bank account', JSON.stringify(now))
+  ok('and it was aimed at somebody before that', !!before, String(before))
   await p.close()
 }
 
@@ -181,14 +191,21 @@ console.log('SORTING  ordering is part of the address')
 console.log('MOVING AROUND  four navigators, one registry')
 {
   const p = await page(1600, 1000)
-  await p.goto(B + '/withdraw', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(250)
-  // Parents only (11g.50). The trail's job is the step you cannot see; the
-  // step you can see is the <h1>. Ending on the page you are standing on made
-  // this header read "Send to your bank" over a title reading "Send money".
+  await p.goto(B + '/withdraw', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
+  // Where you are, and everything you passed (11g.60). It named parents only,
+  // which is the half of the question a person standing on step three of an
+  // errand is not asking. The last step is not a link, because a crumb you can
+  // press to go where you already are is a control that does nothing.
   const crumbs = (await p.locator('.crumb').allTextContents()).join(' > ')
-  const title = await p.locator('h1').first().textContent()
-  ok('a trail says where you came from, not where you are',
-     crumbs === 'Wallet' && title === 'Send money', `${crumbs} / ${title}`)
+  const ends = await p.evaluate(() => {
+    const all = [...document.querySelectorAll('.crumb')]
+    const last = all[all.length - 1]
+    return { text: last?.textContent?.trim(), link: last?.tagName.toLowerCase() === 'a' }
+  })
+  ok('a trail says where you are and what you passed',
+     crumbs === 'Wallet > Send money > A bank account > GTBank', crumbs)
+  ok('and the step you are on is not a link', ends.text === 'GTBank' && !ends.link,
+     JSON.stringify(ends))
   await p.locator('.crumb').first().click(); await p.waitForTimeout(250)
   ok('and the trail steps back up', p.url().endsWith('#/transfer'), new URL(p.url()).hash)
 

@@ -92,7 +92,14 @@ for (const d of [...doors, ...rail, ...quick]) {
 }
 ok('and it checked something', checked >= 7, `${checked} labels`)
 
-/* The trail is a navigator too, and it was the one nothing here read.
+/* The trail ends where you are (11g.60). It used to name parents only, which
+   made "where am I" a question the trail declined to answer on the three
+   screens that most needed it. Now the steps you passed are links and the last
+   one is not, so what is checked is both halves: every parent goes somewhere
+   real that is genuinely above here, and the last one goes nowhere because it
+   is here.
+
+   The trail is a navigator too, and it was the one nothing here read.
    Two faults were living in it. It ended on the page you were standing on,
    drawn from the registry's searchable label rather than the screen's title,
    so /receive read "Wallet > Receive money" over an <h1> saying "Add money"
@@ -109,7 +116,8 @@ console.log('THE TRAIL, AND WHERE IT SAYS YOU CAME FROM')
 {
   const places = new Set(rail.map((r) => r.to).filter(Boolean))
   const TRAILED = [
-    '/addmoney', '/receive', '/withdraw', '/send', '/bucket', '/invest/aapl',
+    '/addmoney', '/addmoney/base', '/receive', '/withdraw',
+    '/send/tokkenly', '/send/bank', '/send/base', '/bucket', '/invest/aapl',
     '/invest/aapl/invest', '/invest/aapl/sell', '/invest/aapl/send',
     '/grow/earn', '/grow/takeout', '/grow/borrow', '/grow/repay',
     '/statement', '/verify', '/all', '/disclosures',
@@ -122,20 +130,54 @@ console.log('THE TRAIL, AND WHERE IT SAYS YOU CAME FROM')
     })))
     if (!t.length) continue
     trails += 1
+    // Where the browser actually is. Several old addresses now go to the one
+    // the thing lives at — /withdraw is the bank way of Send — so the trail
+    // belongs to that path and not to the one this loop typed.
+    // The whole address, and its path. A crumb reading /send/bank on
+    // /send/bank?to=gt is one step up rather than this page: the query is
+    // where the destination lives, so dropping it makes a real step look like
+    // a link to itself.
+    const now = await p.evaluate(() => location.hash.replace(/^#/, ''))
+    const at2 = now.split('?')[0]
     const bad = []
-    for (const c of t) {
+    for (let i = 0; i < t.length; i++) {
+      const c = t[i]
+      const last = i === t.length - 1
+      // The last step is where you are standing. It says so and it is not a
+      // link: a crumb you can press to go where you already are is a control
+      // that does nothing.
+      if (last) {
+        if (c.to) bad.push(`"${c.label}" is where you are and is still a link`)
+        continue
+      }
       if (!c.to) { bad.push(`"${c.label}" goes nowhere`); continue }
-      if (c.to === r) { bad.push(`"${c.label}" is this page`); continue }
+      if (c.to === now) { bad.push(`"${c.label}" is this page`); continue }
       // Somewhere a person could have come from: a tab in the navigation, or
       // a screen this one sits inside.
-      if (!places.has(c.to) && !r.startsWith(c.to + '/')) {
-        bad.push(`"${c.label}" (${c.to}) is neither a tab nor a step above ${r}`)
+      // A tab in the navigation, a screen this one sits inside, or this same
+      // screen with less of the question answered — /send/bank is one step up
+      // from /send/bank?to=gt, because the destination is in the query.
+      const above = places.has(c.to) || at2.startsWith(c.to + '/') || (c.to === at2 && now !== at2)
+      if (!above) {
+        bad.push(`"${c.label}" (${c.to}) is neither a tab nor a step above ${now}`)
         continue
       }
       await at(c.to)
-      const h1 = await p.evaluate(() => document.querySelector('h1')?.textContent?.trim() ?? '(none)')
-      const a = c.label.toLowerCase(), b2 = h1.toLowerCase()
-      if (!(a === b2 || b2.includes(a) || a.includes(b2))) bad.push(`"${c.label}" opens a page called "${h1}"`)
+      // The name the destination gives itself. On a screen that is a rail and
+      // a panel — Account, and now Send and Add money — the <h1> names the
+      // screen and the lit row names the panel, and a crumb pointing at a
+      // panel is answered by the row rather than by the title. Either will do.
+      const said = await p.evaluate(() => [
+        document.querySelector('h1')?.textContent?.trim(),
+        document.querySelector('.set-row.on .t-body-strong')?.textContent?.trim(),
+      ].filter(Boolean))
+      const a = c.label.toLowerCase()
+      const fits = said.some((n) => {
+        const b2 = n.toLowerCase()
+        return a === b2 || b2.includes(a) || a.includes(b2)
+      })
+      if (!fits) bad.push(`"${c.label}" opens a page called "${said.join('" or "')}"`)
+      await at(r)
     }
     ok(`${r}  ${t.map((c) => c.label).join(' > ')}`, bad.length === 0, bad.join('; '))
   }

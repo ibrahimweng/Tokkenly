@@ -103,18 +103,17 @@ await page.locator('.empty .btn').click(); await page.waitForTimeout(150)
 ok('the empty state clears the search', page.url().endsWith('#/activity'), page.url().split('#')[1])
 
 console.log('EMPTY, on a phone')
-await go('/send?q=zzzzz', 390)
+// The people live in the Tokkenly way now (11g.60); /send is the three ways.
+await go('/send/tokkenly?q=zzzzz', 390)
 const t2 = await page.locator('.empty h2').first().textContent().catch(() => null)
 ok('the picker search finds nobody', t2 === 'Nobody by that name', t2 ?? 'no empty state')
-await go('/send?q=tunde', 390)
-// Scoped to the people card. Send now lists your own banks in the same row
-// anatomy, which is right — they are destinations too — so an unscoped count
-// was measuring the whole screen rather than the search.
-const n = await page.locator('.card', { hasText: 'Someone on Tokkenly' }).locator('.sheet-row').count()
+await go('/send/tokkenly?q=tunde', 390)
+// Scoped to the people card, which is the whole of this way's panel.
+const n = await page.locator('.card', { hasText: 'Who is it going to' }).locator('.sheet-row').count()
 ok('the picker search filters', n === 1, `${n} row(s)`)
 
 console.log('ERROR')
-await go('/send', 390)
+await go('/send/base', 390)
 await page.locator('input[placeholder="Paste a Base address"]').fill('0x12')
 await page.locator('.btn-secondary', { hasText: 'Continue' }).click()
 await page.waitForTimeout(120)

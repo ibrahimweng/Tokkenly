@@ -111,7 +111,10 @@ for (const [start, label, expect] of [
   ['/account/legal', 'Close my account', 'Close your account'],
   ['/account/details', 'Change', 'Change your mobile number'],
   ['/support', 'Email us', 'Email us'],
-  ['/withdraw', 'Add a bank', 'Your banks'],
+  // /withdraw is the bank way of Send now and goes straight to the composer
+  // for your first bank; the list of banks, and Add a bank with it, is the way
+  // itself (11g.60).
+  ['/send/bank', 'Add a bank', 'Your banks'],
 ]) {
   await page.goto(base + start, { waitUntil: 'networkidle' })
   await page.getByText(label, { exact: true }).first().click()

@@ -321,23 +321,47 @@ export function shell(active: Place, ...bands: (Node | false | null)[]): HTMLEle
 
 /** Where you are, as a trail you can step back up. Drawn from the registry,
  *  so it can never name a screen that is not there. */
-function breadcrumbs(): HTMLElement | null {
+function breadcrumbs(here?: string, steps?: { label: string; to?: string }[]): HTMLElement | null {
   const r = current()
-  // Parents only. The last step of a trail is the page you are standing on,
-  // and the page you are standing on is the <h1> one line below it — so
-  // printing it again was a repetition where the two agreed, and a
-  // contradiction where they did not: the registry's label is written to be
-  // searched ("Take back what you lent") and a title is written to be read
-  // ("Take out"). Seven headers named the same screen twice, two of them
-  // ("Receive money" over "Add money", "Send to your bank" over "Send money")
-  // with words that read as two different places. Every step is a link now,
-  // which is the whole job of a trail: a parent you cannot otherwise see.
-  const trail = trailFor(r.path, r.query).slice(0, -1)
+  // Parents, and then where you are.
+  //
+  // It used to stop at the parents. The argument was that the last step of a
+  // trail is the page you are standing on, and that page is the <h1> one line
+  // below — so printing it again was a repetition where the two agreed and a
+  // contradiction where they did not, the registry's label being written to be
+  // searched ("Take back what you lent") and a title to be read ("Take out").
+  // The contradiction was the real fault and it is fixed by taking the last
+  // crumb's words from the screen's own title, which is what `here` is. The
+  // repetition is the price, and it buys the thing a trail is for: a person
+  // reading it can see the whole path at once rather than the path up to
+  // wherever they are not. It is not a link, and it is quieter than the steps
+  // that are, so it reads as the end of the trail rather than another step.
+  const trail = trailFor(r.path, r.query)
   if (!trail.length) return null
+  // The registry knows the addresses; a flow knows its own steps. One address
+  // can be several places — /send/bank is the list of your banks and then a
+  // composer aimed at one of them — and the registry cannot see the
+  // difference because the difference is in the query. So a screen may hand
+  // over its own tail, and it replaces the registry's last entry rather than
+  // being appended to it, because that entry is the screen doing the handing.
+  const parents = trail.slice(0, -1).map((d) => ({ label: d.label, to: d.to as string | undefined }))
+  const tail: { label: string; to?: string }[] = steps?.length
+    ? steps
+    : [{ label: here ?? trail[trail.length - 1].label }]
+  const all = [...parents, ...tail]
+  // One step is not a trail. A place lights its own row in the navigation and
+  // that is the answer to "where am I" at the top level.
+  if (all.length < 2) return null
   const nav = h('nav', { class: 'crumbs', ariaLabel: 'Where you are' })
-  trail.forEach((d, i) => {
+  all.forEach((d, i) => {
     if (i) nav.appendChild(h('span', { class: 'crumb-sep', html: icon.chevron() }))
-    nav.appendChild(link(d.to, 'crumb', d.label))
+    if (i === all.length - 1 || !d.to) {
+      const now = h('span', { class: 'crumb' + (i === all.length - 1 ? ' now' : ''), text: d.label })
+      if (i === all.length - 1) now.setAttribute('aria-current', 'page')
+      nav.appendChild(now)
+    } else {
+      nav.appendChild(link(d.to, 'crumb', d.label))
+    }
   })
   return nav
 }
@@ -353,15 +377,28 @@ function breadcrumbs(): HTMLElement | null {
 export interface HeaderOpts {
   crumbs?: boolean
   back?: { label: string; to: string }
+  /** What this screen contributes to the trail, when the registry cannot know
+   *  it. One address can be several places — `/send/bank` is the list of your
+   *  banks and then a composer aimed at one of them, and the difference is in
+   *  the query. These replace the registry's last entry, which is this screen,
+   *  and the last of them is where you are. */
+  steps?: { label: string; to?: string }[]
 }
 
 export function pageHeader(title: string, right?: Node | null, opts: HeaderOpts = {}): HTMLElement {
   const b = opts.back
-  const back = b
+  // A trail where there is room for one, a single step up where there is not.
+  // A screen asking for `back` used to get it at every width, which is why the
+  // two Borrow & Lend positions were the only screens under a place with no
+  // trail at all — one target is the right answer on 390 pixels and the wrong
+  // answer on 1440, where the question is not only how to leave but where you
+  // have been.
+  const trail = opts.crumbs === false || underOverlay ? null : breadcrumbs(title, opts.steps)
+  const back = b && (isMobile() || !trail)
     ? h('button', { class: 'page-back', on: { click: () => go(b.to) } },
         h('span', { class: 'ic', html: icon.back() }), h('span', { text: b.label }))
     : null
-  const crumbs = back || opts.crumbs === false || underOverlay ? null : breadcrumbs()
+  const crumbs = back ? null : trail
   const row = h('div', { class: 'page-header-row' }, h('h1', { text: title }), right ?? null)
   if (crumbs) return h('header', { class: 'page-header has-crumbs' }, crumbs, row)
   if (back) return h('header', { class: 'page-header' }, back, row)

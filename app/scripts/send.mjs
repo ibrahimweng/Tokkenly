@@ -12,7 +12,8 @@ const p = await b.newPage({ viewport: { width: 390, height: 844 } })
 // screen and reporting on it.
 await seen(p)
 p.on('pageerror', (e) => errs.push('phone pageerror: ' + e.message))
-await p.goto(base + '/send', { waitUntil: 'networkidle' })
+// /send is the three ways now (11g.60); the people live in the Tokkenly one.
+await p.goto(base + '/send/tokkenly', { waitUntil: 'networkidle' })
 await p.waitForTimeout(200)
 log.push('PHONE  /send')
 log.push('  title:  ' + (await p.locator('.page-header h1').textContent()))
@@ -45,7 +46,7 @@ log.push('  outcome: ' + (await p.locator('.sheet .t-title').textContent()))
 const d = await b.newPage({ viewport: { width: 1440, height: 1024 } })
 await seen(d)
 d.on('pageerror', (e) => errs.push('desktop pageerror: ' + e.message))
-await d.goto(base + '/send', { waitUntil: 'networkidle' })
+await d.goto(base + '/send/tokkenly', { waitUntil: 'networkidle' })
 await d.waitForTimeout(200)
 log.push('')
 // With a destination, because a bare /send is the question rather than the

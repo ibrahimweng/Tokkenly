@@ -7488,6 +7488,98 @@ a size still larger than a page name.
      gives a suite a different question every run. Feed it the worst case
      rather than whichever case turned up.
 
+### 11g.60 The trail ends where you are
+
+Three things, and the first two are the same thing.
+
+**The trail stopped at the parents.** 11g.50 took the last step off it, and the
+argument was good: the last step of a trail is the page you are standing on,
+that page is the `<h1>` one line below, so printing it again is a repetition
+where the two agree and a contradiction where they do not — the registry's
+label is written to be searched ("Take back what you lent") and a title is
+written to be read ("Take out"). Seven headers named one screen twice.
+
+What that missed is that the contradiction was the fault and the repetition was
+the price of the fix, and the fix chosen threw away what a trail is for. Asked
+where the routing was on Invest and on Borrow & Lend, the answer was that a
+person three steps into an errand could see the steps they had passed and not
+the one they were on. So the trail ends where you are, and the contradiction is
+solved properly: the last crumb takes its words from the screen's own title,
+not from the registry. It is not a link — a crumb you can press to go where you
+already are is a control that does nothing — and it is a rung quieter than the
+steps that are.
+
+A trail of one step is still no trail: a place lights its own row in the
+navigation and that is the answer at the top level.
+
+The two Borrow & Lend positions were the only screens under a place with no
+trail at all, because asking for a `back` link suppressed it. One target is the
+right answer on 390 pixels and the wrong one on 1440, where the question is not
+only how to leave but where you have been — so a header with both takes the
+trail where there is room for one and the single step up where there is not.
+
+And `/invest/aapl/invest` was headed "Invest", which is the name of the place it
+sits inside: the trail read *Invest › Apple › Invest* the moment it started
+naming where you are. Invest is the place, buying is what you do in it, and the
+button on the company page that opens the screen already said Buy. It is
+**Buy** now.
+
+**Send was four cards, and then it was none of them.** Someone on Tokkenly,
+your own bank, somebody else's account, a Base address — and the moment you
+picked one, the composer replaced the lot, so the way you had chosen stopped
+being on screen. Picking the wrong one cost a trip back, and the trail said
+*Wallet › Send money* at every step of an errand with three of them.
+
+It is the shape Account already uses: the ways in a rail on the left, the one
+you picked filling the panel on the right, and the whole errand happening in
+that panel — the list, then the amount, then the review, which stays a dialog
+because it is a commit. The rail never moves, and the row you are on stays lit
+while the review is open.
+
+The two bank cards became one. They were split because one needs a name check
+from the bank and the other does not, which is a fact about the second step and
+not a reason for two doors: a bank account is a bank account, and whose it is is
+the first thing the panel asks.
+
+Add money got the same treatment, from three chips to three rows, and
+`/receive` — which was a second name for the Base one — goes to it.
+
+**And every way has an address.** `/send/tokkenly`, `/send/bank`, `/send/base`,
+`/addmoney/bank`, `/addmoney/base`, `/addmoney/card`. That is what lets the
+trail name the step, because a trail is built from an address; it is also rule
+144 applied to a screen that was six places at two addresses. Everything that
+pointed at the old ones goes to the new ones — `/send?to=`, `/send?rail=chain`,
+`/withdraw`, `/convert`, `/receive` — rather than rendering a second copy of
+the same place.
+
+A redirect during a render is a trap worth writing down. `go` calls the route
+handler synchronously, so redirecting inside a render paints the destination
+and then has the calling render's own result mounted on top of it: the redirect
+works and is immediately undone. It goes in a `queueMicrotask`. Two of them
+queued at once is a second trap — the picker queues one of its own, and the
+second landed last and dropped the query the first was carrying.
+
+`names.mjs` was written against the old contract and is written against this
+one: every step but the last is a link that goes somewhere genuinely above
+here, and the last is not a link because it is here. It also learned that a
+crumb pointing at a rail-and-panel screen is answered by the lit row rather
+than by the title, which is how Account has worked since it was split and was
+never checked.
+
+150. **A trail that stops at the parents answers half the question.** Where you
+     came from is only useful beside where you are. If the two disagree, fix
+     the disagreement; do not delete one of them.
+
+151. **A control that is still needed after it is used stays on screen.** The
+     ways to send were a question the screen asked and then threw away, so
+     changing your mind cost a trip back to a screen that no longer existed.
+     Anything a person may want to revise belongs beside what it produced.
+
+152. **Redirect after the render, never during it.** A router that dispatches
+     synchronously will run the new screen inside the old one and let the old
+     one win. The fix is one queue tick, and the symptom is a redirect that
+     looks like it did not happen.
+
 ### 11g.49 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from

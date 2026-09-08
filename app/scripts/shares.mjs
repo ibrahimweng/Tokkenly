@@ -78,7 +78,7 @@ console.log('THE REFUSAL  built first, because it is the part that has to be rig
   await p.getByRole('button', { name: /Send Chidi cash instead/ }).click()
   await p.waitForTimeout(400)
   ok('which goes to Send money, with them already in it',
-     decodeURIComponent(await p.evaluate(() => location.hash)) === '#/send?to=Chidi Nwosu',
+     decodeURIComponent(await p.evaluate(() => location.hash)) === '#/send/tokkenly?to=Chidi Nwosu',
      decodeURIComponent(await p.evaluate(() => location.hash)))
   await at(p, '/invest/aapl')
   ok('and nothing left the holding on the way', (await holdingOf(p)) === before, before)

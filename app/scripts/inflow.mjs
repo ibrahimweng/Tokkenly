@@ -43,17 +43,24 @@ await verify(p)
 console.log('TWO WAYS IN, AND NEITHER OF THEM IS INSTANT')
 {
   await at('/addmoney')
-  // The rails are tabs now, and there are three: a bank transfer, a Base
-  // address and a card. Card funding is switched off in the seeded console, so
-  // two of them show — which is the switch working, not a missing tab.
-  const rails = await p.evaluate(() => [...document.querySelectorAll('.content > .chip-row .chip')].map((e) => ({
-    text: e.textContent.trim(), on: e.getAttribute('aria-pressed') === 'true',
+  // The rails are a rail now (11g.60), the same shape as the ways out and as
+  // Account: three rows on the left, the details of the one you picked on the
+  // right. They were chips above the panel, which is the right control for
+  // "which of these am I looking at" and the wrong one for "which of these do
+  // I want". Card funding is switched off in the seeded console, so one of the
+  // three is shown paused — which is the switch working, not a missing way.
+  const rails = await p.evaluate(() => [...document.querySelectorAll('.set-list.ways .set-row')].map((e) => ({
+    text: e.querySelector('.t-body-strong')?.textContent.trim() ?? '',
+    on: e.getAttribute('aria-current') === 'page',
+    off: e.hasAttribute('disabled'),
   })))
-  ok('the ways in are tabs on the screen, not behind a dropdown', rails.length >= 2,
-     rails.map((r) => r.text).join(' | '))
+  ok('the ways in are a rail on the screen, not behind a dropdown', rails.length === 3,
+     rails.map((r) => r.text + (r.off ? ' (paused)' : '')).join(' | '))
   ok('and a bank transfer is one of them, first',
      rails[0].text === 'Bank transfer' && rails[0].on)
-  ok('and the Base address is another', rails.some((r) => r.text === 'Base'))
+  ok('and the Base address is another', rails.some((r) => r.text === 'USDC on Base'))
+  ok('and a switched-off way is shown off rather than hidden',
+     rails.some((r) => r.text === 'Debit card' && r.off), rails.map((r) => r.text).join(' | '))
   // Neither of the two asks how much before it says where. The bank tab does
   // carry an amount further down — "I have sent it", which is how a naira
   // transfer gets matched to a dollar credit — but it sits under the account
@@ -76,10 +83,10 @@ console.log('TWO WAYS IN, AND NEITHER OF THEM IS INSTANT')
   // meets, on the same render.
   // By name rather than by index: the rails were two and are three, and a test
   // that counts positions breaks every time one is added.
-  const cardTab = rails.find((r) => /^Card/.test(r.text))
+  const cardTab = rails.find((r) => /card/i.test(r.text))
   ok('a rail operations has switched off reads as off rather than vanishing',
-     !!cardTab && /Paused/.test(cardTab.text) && !cardTab.on,
-     cardTab ? cardTab.text : 'the card tab is not on the screen at all')
+     !!cardTab && cardTab.off && !cardTab.on,
+     cardTab ? cardTab.text + (cardTab.off ? ' (paused)' : ' (live)') : 'the card row is not on the screen at all')
 
   // The account is dedicated, so there is no reference to quote.
   const va = await p.evaluate(() => document.querySelector('.va-number')?.textContent?.trim())
@@ -182,19 +189,19 @@ console.log('A CARD IS THE OTHER RAIL, AND IT COSTS SOMETHING')
   })
   ok('the console can turn the card rail back on', back === 'On', back ?? 'no switch')
   await at('/addmoney')
-  // The rails are tabs rather than cards now, so the proof that the switch
-  // reached the customer is the tab losing its Paused label and becoming
-  // pressable, on the same render.
-  const tabs = await p.evaluate(() => [...document.querySelectorAll('.content > .chip-row .chip')].map((e) => ({
+  // The rails are a rail now (11g.60), so the proof that the switch reached
+  // the customer is the row losing its Paused pill and becoming pressable, on
+  // the same render.
+  const tabs = await p.evaluate(() => [...document.querySelectorAll('.set-list.ways .set-row')].map((e) => ({
     text: e.textContent.trim(), off: e.classList.contains('off'), dead: e.hasAttribute('disabled'),
   })))
-  const cardTab2 = tabs.find((t) => /^Card/.test(t.text))
+  const cardTab2 = tabs.find((t) => /card/i.test(t.text))
   ok('and the customer screen shows it on the very next render',
      !!cardTab2 && !cardTab2.off && !cardTab2.dead && !/Paused/.test(cardTab2.text),
      cardTab2 ? cardTab2.text : 'no card tab')
 
   const before = await cash()
-  await at('/addmoney?tab=card')
+  await at('/addmoney/card')
   await amount(100)
   // Every cost in money, once (rule 10): the fee is naira on the composer,
   // beside the naira it is added to, and the two come to the figure on the
@@ -228,11 +235,22 @@ console.log('A CARD IS THE OTHER RAIL, AND IT COSTS SOMETHING')
 console.log('ONE SEND, THREE PLACES FOR IT TO GO')
 {
   await at('/send')
-  const groups = await p.evaluate(() =>
-    [...document.querySelectorAll('.card-head h2')].map((e) => e.textContent))
+  // Three ways, in a rail (11g.60). They were four cards down one screen, and
+  // the two bank ones were split because one needs a name check — which is a
+  // fact about the second step, not a reason for two doors.
+  const ways = await p.evaluate(() =>
+    [...document.querySelectorAll('.set-list.ways .set-row .t-body-strong')].map((e) => e.textContent))
   ok('the screen asks where before it asks how much',
-     ['Someone on Tokkenly', 'Your own bank', 'Somebody else’s account', 'A Base address']
-       .every((g) => groups.includes(g)), groups.join(' | '))
+     ['Someone on Tokkenly', 'A bank account', 'USDC on Base'].every((g) => ways.includes(g)),
+     ways.join(' | '))
+  ok('and whose bank account it is is a question inside the bank way',
+     await p.evaluate(async () => {
+       location.hash = '#/send/bank'
+       await new Promise((r) => setTimeout(r, 500))
+       const heads = [...document.querySelectorAll('.card-head h2, .card-head h3')].map((e) => e.textContent)
+       return heads.some((t) => /One of your banks/.test(t)) &&
+              heads.some((t) => /Somebody else/.test(t))
+     }))
   ok('and there is no separate Withdraw screen to drift from it',
      await p.evaluate(async () => {
        location.hash = '#/withdraw'
@@ -244,7 +262,7 @@ console.log('ONE SEND, THREE PLACES FOR IT TO GO')
 console.log('AND THE ONE THAT CHANGES CURRENCY SAYS SO')
 {
   const before = await cash()
-  await at('/send?rail=bank&to=gt')
+  await at('/send/bank?to=gt')
   await amount(120)
   const shown = await p.evaluate(() => Object.fromEntries(
     [...document.querySelectorAll('.summary .kv')].map((e) => [...e.children].map((c) => c.textContent))))
@@ -284,7 +302,9 @@ console.log('AND THE ONE THAT CHANGES CURRENCY SAYS SO')
 
 console.log('A NAME BEFORE A NUMBER')
 {
-  await at('/send')
+  // Somebody else's account is a question inside the bank way now, not a card
+  // of its own on the screen that asks which way (11g.60).
+  await at('/send/bank')
   const acct = p.locator('input[placeholder*="10-digit"]')
   await acct.fill('0123456783'); await p.waitForTimeout(300)
   const found = await p.evaluate(() => document.querySelector('.found:not([hidden])')?.innerText.replace(/\n/g, ' '))
@@ -303,14 +323,18 @@ console.log('BOTH WAYS IN ARE NAMED WHERE SOMEBODY WOULD LOOK FOR THEM')
 {
   // Dollars reach a Base address and naira reach a virtual account. Two
   // inbound rails described on two screens, neither mentioning the other, was
-  // the same fault as one errand wearing two names. They are three tabs on one
-  // screen now (11g.47), so the other ways in are not referred to in a
-  // sentence — they are on the screen, named and one press away. /receive is
-  // that screen opened on its Base tab.
+  // the same fault as one errand wearing two names. They are three rows in a
+  // rail on one screen now (11g.60), so the other ways in are not referred to
+  // in a sentence — they are on the screen, named and one press away.
+  // /receive is that screen opened on its Base way, and goes there.
   await at('/receive')
   const said = await p.evaluate(() => document.body.innerText.replace(/\n/g, ' · '))
   ok('Receive names the other ways in rather than describing them',
-     /Bank transfer/.test(said) && /Card/.test(said) && /Naira from any Nigerian bank/.test(said))
+     /Bank transfer/.test(said) && /Debit card/i.test(said) &&
+     /Naira from any Nigerian bank/.test(said), said.slice(0, 90))
+  ok('and the address it went to is the one the way lives at',
+     (await p.evaluate(() => location.hash)) === '#/addmoney/base',
+     await p.evaluate(() => location.hash))
   ok('and still leads with the address it is for', /your address/i.test(said))
   // One screen, one name. The trail said "Receive money" over a title reading
   // "Add money" until 11g.50 — two names for a place a person is standing in.

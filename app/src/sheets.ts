@@ -516,7 +516,7 @@ export const SHEETS: Record<string, Builder> = {
       h('div', { class: 'sheet-list' },
         ...peopleRows((who) => {
           closeSheet()
-          go('/send?to=' + encodeURIComponent(who))
+          go('/send/tokkenly?to=' + encodeURIComponent(who))
         })),
       calloutEl('Only people already in your list can be paid without a second check.')),
 
@@ -966,7 +966,7 @@ export const SHEETS: Record<string, Builder> = {
   'add-money': () => sheet('Add money',
     ...addPanels(addTab(), false),
     h('button', { class: 'link quiet', text: 'Open the full page',
-      on: { click: () => go('/addmoney?tab=' + addTab()) } })),
+      on: { click: () => go('/addmoney/' + addTab()) } })),
 
   banks: () => {
     const name = h('input', { placeholder: 'Bank name' })

@@ -1254,9 +1254,11 @@ th.right .th-sort { flex-direction: row-reverse; }
    title, the tabs under it, the jump-to overlay, and the index at /all. */
 
 .crumbs { display: flex; align-items: center; gap: 8px; font-size: 12px; line-height: 16px; }
-/* Every crumb is a link now — the trail names parents only, and the page you
-   are on is the title (11g.50) — so there is no lit final step to style. */
+/* The steps you have passed are links; where you are is not. Quieter than the
+   links beside it, because it is the end of the trail rather than another
+   step somebody could take. */
 .crumb { color: var(--muted); }
+.crumb.now { color: var(--subtle); }
 .crumb-sep { display: inline-flex; color: var(--subtle); opacity: 0.6; }
 .crumb-sep svg { width: 12px; height: 12px; }
 
@@ -2228,6 +2230,14 @@ th.right .th-sort { flex-direction: row-reverse; }
   font-size: 14px;
 }
 .set-chev { flex: none; display: flex; }
+/* A row that carries a name and a sentence rather than a name and a status.
+   The two stack, so the name has the whole column and neither is clipped. */
+.set-list.ways .set-row { align-items: flex-start; }
+.set-list.ways .who { gap: 14px; align-items: flex-start; }
+.set-list.ways .who .t-body-strong { white-space: normal; }
+.set-list.ways .mark { margin-top: 1px; }
+.set-list.ways small { color: var(--muted); white-space: normal; }
+.set-list.ways .set-chev { margin-top: 6px; }
 /* The selected row on a split screen. It is the only lit row in the panel,
    the way one nav row is the only lit row in the sidebar. */
 .set-row.on { background: var(--control); }

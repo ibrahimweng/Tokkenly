@@ -32,10 +32,27 @@ export const DESTINATIONS: Destination[] = [
   { label: 'Send money', to: '/send', place: 'wallet', kind: 'action', primary: true,
     also: 'pay transfer withdraw convert cash out naira bank payout wallet address',
     hint: 'To a person, a wallet or a bank' },
-  { label: 'Receive money', to: '/receive', place: 'wallet', kind: 'action', primary: true, also: 'address qr get paid base wallet address 0x copy receive add money', hint: 'Your Base address, inside Add money' },
+  // The three ways money comes in, as addresses of their own. Receive was a
+  // second name for the Base one; it still resolves and goes there.
+  { label: 'Bank transfer', to: '/addmoney/bank', place: 'wallet', kind: 'screen',
+    also: 'naira nigerian account virtual deposit pay in', hint: 'Naira from any Nigerian bank' },
+  { label: 'USDC on Base', to: '/addmoney/base', place: 'wallet', kind: 'screen',
+    also: 'receive address qr get paid 0x copy wallet onchain', hint: 'Dollars from any Base wallet' },
+  { label: 'Debit card', to: '/addmoney/card', place: 'wallet', kind: 'screen',
+    also: 'card visa mastercard naira instant', hint: 'Naira on a card' },
+  // The three ways to send, as addresses of their own. They were four cards on
+  // one screen, which meant the palette could offer "Send money" and nothing
+  // else, and the trail could not say which way somebody had taken.
+  { label: 'Someone on Tokkenly', to: '/send/tokkenly', place: 'wallet', kind: 'screen',
+    also: 'person friend name pay someone dollars instant', hint: 'Dollars, in about a minute' },
+  { label: 'A bank account', to: '/send/bank', place: 'wallet', kind: 'screen',
+    also: 'naira nigeria payout withdraw cash out gtbank kuda transfer account number',
+    hint: 'Dollars out, naira in' },
+  { label: 'USDC on Base', to: '/send/base', place: 'wallet', kind: 'screen',
+    also: 'chain crypto wallet address 0x onchain network', hint: 'Dollars on the network' },
   // Still listed, because it is what people search for. It resolves into Send
   // with the destination already answered rather than to a screen of its own.
-  { label: 'Send to your bank', to: '/withdraw', place: 'wallet', kind: 'action', primary: true, also: 'convert cash out naira payout', hint: 'Dollars out, naira into your bank' },
+
   { label: 'Your banks', to: '/transfer?sheet=banks', place: 'wallet', kind: 'screen', primary: true, also: 'account number gtbank kuda payout' },
   { label: 'Your naira account', to: '/account/payments', place: 'wallet', kind: 'screen', primary: true,
     also: 'virtual account number where to send naira deposit providus', hint: 'Where to send naira' },
@@ -162,11 +179,17 @@ function trailTo(here: Destination, path: string): Destination[] {
     ?? roots.find((d) => !d.staff)
   const trail: Destination[] = []
   if (root && root !== here) trail.push(root)
-  // A stock's action sits under the stock, which sits under Invest.
+  // Every address between the place and here that is a screen of its own. A
+  // stock's action sits under the stock, which sits under Invest; a way of
+  // sending sits under Send, which sits under the wallet. It was written for
+  // the first of those alone and had to be written again for the second, so
+  // it is written once for any depth instead.
   const parts = path.split('/').filter(Boolean)
-  if (parts[0] === 'invest' && parts[1] && parts[2]) {
-    const stock = DESTINATIONS.find((d) => bare(d.to) === `/${parts[0]}/${parts[1]}`)
-    if (stock && stock !== here) trail.push(stock)
+  for (let n = 1; n < parts.length; n++) {
+    const up = '/' + parts.slice(0, n).join('/')
+    if (root && up === bare(root.to)) continue
+    const step = DESTINATIONS.find((d) => bare(d.to) === up)
+    if (step && step !== here && !trail.includes(step)) trail.push(step)
   }
   trail.push(here)
   return trail
@@ -199,7 +222,7 @@ export function search(raw: string): Hit[] {
   for (const a of state.activity) {
     if (a.kind === 'payment' && !seenWho.has(a.who) && norm(a.who).includes(q)) {
       seenWho.add(a.who)
-      hits.push({ label: a.who, to: '/send?to=' + encodeURIComponent(a.who), group: 'People', hint: 'Send money' })
+      hits.push({ label: a.who, to: '/send/tokkenly?to=' + encodeURIComponent(a.who), group: 'People', hint: 'Send money' })
     }
   }
   for (const a of state.activity) {
@@ -229,10 +252,10 @@ export function search(raw: string): Hit[] {
   if (asAmount && Number(asAmount[1].replace(/,/g, '')) > 0) {
     const v = Number(asAmount[1].replace(/,/g, ''))
     hits.unshift(
-      { label: `Send ${usd(v)}`, to: '/send?v=' + v, group: 'Move money', hint: 'Pick who, then confirm' },
+      { label: `Send ${usd(v)}`, to: '/send', group: 'Move money', hint: 'Pick who, then confirm' },
       { label: `Add ${usd(v)}`, to: '/addmoney?v=' + v, group: 'Move money', hint: 'Naira in, dollars out' },
       { label: `Withdraw ${usd(v)}`, to: '/withdraw?v=' + v, group: 'Move money', hint: 'Dollars out to your bank' },
-      { label: `Pay ${usd(v)} to a Nigerian account`, to: '/send?v=' + v, group: 'Move money', hint: 'Any account, name checked first' },
+      { label: `Pay ${usd(v)} to a Nigerian account`, to: '/send/bank', group: 'Move money', hint: 'Any account, name checked first' },
     )
   }
 

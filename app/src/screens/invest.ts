@@ -40,7 +40,11 @@ export function investScreen(ticker: string): HTMLElement {
   return composerScreen({
     place: 'market',
     base: () => stockScreen(ticker),
-    title: 'Invest',
+    // "Buy", not "Invest". Invest is the place; buying is the thing you do
+    // inside it, and the trail read "Invest › Apple › Invest" the moment it
+    // started naming where you are. The button on the company page that opens
+    // this already says Buy, and so does this screen's own primary.
+    title: 'Buy',
     eyebrow: ['Cash available', usd(state.cash)],
     cardLabel: 'How much',
     cardRight: 'Cash ' + usd(state.cash),

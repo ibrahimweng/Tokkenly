@@ -43,6 +43,15 @@ export interface ComposerSpec {
    *  trade". Both take the button away rather than letting somebody press it
    *  and be refused a screen later. */
   guard?: (v: number) => { title: string; why: string }[]
+  /** Hand back the composing card on its own rather than a whole screen, for
+   *  a caller that has somewhere of its own to put it. Send does: the three
+   *  ways stay in a rail beside it while the amount is typed, so the composer
+   *  is a panel in that screen and not a screen of its own. The phone is
+   *  unaffected — there the composer is a sheet either way, because there is
+   *  no second column to be beside. */
+  inline?: boolean
+  /** What the header says, when the caller is drawing the header itself. */
+  header?: HTMLElement
 }
 
 /** The way to the full disclosures, under the button that takes the risk. The
@@ -165,6 +174,9 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
   // A stated width, not an inline one: the stacking rule has to be able to
   // release it below 1240, and it cannot outrank a style attribute.
   left.classList.add('col-compose')
+
+  // The card alone, for a screen that has its own shell to put it in.
+  if (spec.inline) return left
 
   return shell(
     spec.place,
