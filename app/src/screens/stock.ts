@@ -1,15 +1,15 @@
 import { h } from '../ui'
 import { icon } from '../icons'
-import { shell, pageHeader, headActions } from '../components/shell'
+import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, kv, callout, bucketBar, showBucketBar } from '../components/bits'
-import { find, markGap, deviation, tradable, type Instrument, pathOf } from '../catalogue'
-import { barChart, type Range } from '../components/chart'
+import { CATALOGUE, find, markGap, deviation, tradable, type Instrument, pathOf } from '../catalogue'
+import { barChart, sparkline, type Range } from '../components/chart'
 import { state, actions, holding, inBucket, money, assetOn, MASK } from '../state'
 import { usd, pct, signed, shares, shares as fmtShares } from '../format'
 import { go } from '../router'
 import { toast } from '../components/sheet'
-import { celebrate } from '../confetti'
 import { isMobile } from '../responsive'
+import { celebrate } from '../confetti'
 
 /** The same chart Home draws, with the company's own year behind it. The
  *  ranges are anchored to the twelve months the catalogue already states, so
@@ -37,6 +37,118 @@ function priceChart(c: Instrument): HTMLElement {
   })
 }
 
+/** A year, drawn small. Same span the receipt's sparkline uses: long enough to
+ *  be a shape rather than a squiggle, short enough to be about now.
+ *
+ *  The percentage is the company's own — how far it has come from its year low,
+ *  which is what the big chart's 1Y draws too, so the little line and the big
+ *  one are the same claim. The receipt's version pins it at a constant, which
+ *  nobody can see on a screen showing one company; in a strip of thirteen side
+ *  by side it would have drawn thirteen identical climbs, and a graph that is
+ *  the same shape for every company is decoration wearing the clothes of data. */
+const spark = (c: Instrument): Range => ({
+  key: '1Y', days: 365, pct: ((c.price - c.yearLow) / c.yearLow) * 100,
+  vol: 0.09, fmt: () => '', over: 'this year',
+})
+
+/** The market, as a strip you can run a thumb along.
+ *
+ *  A company page used to be a dead end: you arrived from Invest, read it, and
+ *  went back to the list to reach the next one. The list comes with you now —
+ *  every company in the catalogue, its name, its day, and its year as a line
+ *  small enough to read at a glance. The one you are on is lit, and the strip
+ *  scrolls it into view on arrival, so the strip is also the answer to "where
+ *  am I in this list".
+ *
+ *  All thirteen, not the four that can be bought. The market shows thirteen on
+ *  purpose (11g.34) and a strip that quietly held four would be a second
+ *  opinion about what exists. Nine of them say "Not open yet" when you get
+ *  there, which is the screen's job and not the strip's. */
+function coStrip(now: Instrument): HTMLElement {
+  const strip = h('nav', { class: 'co-strip', ariaLabel: 'Companies' })
+  for (const c of CATALOGUE) {
+    const on = c.ticker === now.ticker
+    const cell = h('button', {
+      class: 'co-cell' + (on ? ' on' : ''),
+      on: { click: () => { if (!on) go(pathOf(c)) } },
+    },
+      h('span', { class: 'two-line' },
+        h('span', { class: 't-body-strong', text: c.name }),
+        h('small', { class: c.dayPct >= 0 ? 'pos' : 'warn',
+          text: (c.dayPct >= 0 ? '+' : '\u2212') + pct(Math.abs(c.dayPct)) })),
+      sparkline(spark(c), c.price, c.ticker.charCodeAt(0)))
+    if (on) cell.setAttribute('aria-current', 'page')
+    strip.appendChild(cell)
+  }
+  // After the mount, not during it: an element that is not in the document has
+  // no scroll box to scroll.
+  queueMicrotask(() => {
+    strip.querySelector('.co-cell.on')?.scrollIntoView({ block: 'nearest', inline: 'center' })
+  })
+  return strip
+}
+
+/** Which two companies a swipe or an arrow key reaches from here.
+ *
+ *  Module level, and read by one listener installed once, because the app
+ *  rebuilds its whole tree on every state change: a keydown handler added per
+ *  render would leave a stack of stale ones, and a single press would page
+ *  several companies at once. */
+let beside: { prev: Instrument; next: Instrument } | null = null
+let keysWired = false
+
+/** Where a horizontal drag must not start. The chart reads the pointer itself,
+ *  the strip scrolls sideways on its own, and a table that scrolls sideways is
+ *  a third thing that owns the axis. Taking the gesture from any of them would
+ *  make the page lurch when somebody meant to do something inside it. */
+const OWNS_THE_AXIS = '.ch-plot, .co-strip, .table-scroll, .chip-row, .tf-row, input, textarea'
+
+function pageable(el: HTMLElement, now: Instrument): void {
+  const i = CATALOGUE.findIndex((c) => c.ticker === now.ticker)
+  // Wrapping, so a swipe always does something. A pager that stops dead at
+  // Disney reads as broken rather than as finished.
+  beside = {
+    prev: CATALOGUE[(i - 1 + CATALOGUE.length) % CATALOGUE.length],
+    next: CATALOGUE[(i + 1) % CATALOGUE.length],
+  }
+
+  let x0 = 0, y0 = 0, tracking = false
+  el.addEventListener('touchstart', (e) => {
+    tracking = false
+    if (e.touches.length !== 1) return
+    if ((e.target as Element).closest?.(OWNS_THE_AXIS)) return
+    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; tracking = true
+  }, { passive: true })
+  el.addEventListener('touchend', (e) => {
+    if (!tracking) return
+    tracking = false
+    const dx = e.changedTouches[0].clientX - x0
+    const dy = e.changedTouches[0].clientY - y0
+    // Far enough to be meant, and sideways enough not to be a scroll that
+    // wandered. 1.6 rather than 1: a thumb travelling up a long page is never
+    // perfectly vertical, and paging the screen out from under somebody who
+    // was reading it is the worst thing this gesture can do.
+    if (Math.abs(dx) < 64 || Math.abs(dx) < Math.abs(dy) * 1.6) return
+    go(pathOf(dx < 0 ? beside!.next : beside!.prev))
+  }, { passive: true })
+
+  if (keysWired) return
+  keysWired = true
+  addEventListener('keydown', (e) => {
+    // A company screen has to be the thing on screen, and nothing else can be
+    // holding the keyboard: a dialog owns the arrows while it is open, and so
+    // does anything somebody is typing in.
+    if (!beside || !document.querySelector('.co-strip')) return
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
+    if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return
+    if (document.querySelector('.scrim')) return
+    const t = e.target as HTMLElement | null
+    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return
+    e.preventDefault()
+    go(pathOf(e.key === 'ArrowLeft' ? beside.prev : beside.next))
+  })
+}
+
 /** Buying now and deciding later are different intents, so they are different
  *  buttons. This one puts a default amount against the company and leaves it
  *  for the bucket; the amount is editable there.
@@ -49,9 +161,15 @@ function priceChart(c: Instrument): HTMLElement {
 function bucketAdd(c: Instrument): HTMLElement | null {
   if (!tradable(c)) return null
   const already = inBucket(c.ticker)
+  // The same plus the list carries, and for the same reason: this is one press
+  // beside the price, not a second call to action competing with Buy. It was a
+  // labelled button in the header, sitting between the company's name and the
+  // thing the screen is actually for.
   const b = h('button', {
-    class: 'btn btn-secondary btn-sm',
-    text: already ? 'In your bucket · ' + usd(already.dollars, false) : 'Add to bucket',
+    class: 'icon-btn' + (already ? ' on' : ''),
+    ariaLabel: already ? c.name + ' is in your bucket' : 'Add ' + c.name + ' to your bucket',
+    title: already ? 'In your bucket · ' + usd(already.dollars, false) : 'Add to bucket',
+    html: already ? icon.check() : icon.plus(),
   })
   b.addEventListener('click', () => {
     if (already) { go('/bucket'); return }
@@ -60,9 +178,39 @@ function bucketAdd(c: Instrument): HTMLElement | null {
     celebrate(b)
     showBucketBar()
     actions.addToBucket(c.ticker, state.prefs.tradeDefault)
-    go(pathOf(c))
   })
   return b
+}
+
+/** Buy, on a phone, where a thumb already is.
+ *
+ *  On a wide screen the button lives in the position card beside the chart and
+ *  is on screen the whole time you are reading. On a phone that card is the
+ *  last of six and the button landed 2,876 pixels down a 3,232-pixel page — so
+ *  the one thing this screen is for was off the end of it. It used to be in the
+ *  header, and the header is a name now.
+ *
+ *  Not both. The card's button is dropped at this width, so Buy is in exactly
+ *  one place at every width rather than twice at one of them. Sticky rather
+ *  than fixed, and in the same container as the bucket bar, so when there is
+ *  something in the bucket the two stack instead of landing on each other. */
+function buyBar(c: Instrument): HTMLElement | null {
+  if (!isMobile() || !c.launch || !assetOn(c.ticker)) return null
+  return h('div', { class: 'buy-bar' },
+    h('span', { class: 'two-line grow' },
+      h('span', { class: 't-body-strong', text: c.name }),
+      h('small', { text: usd(c.price) + ' each' })),
+    h('button', { class: 'btn btn-primary btn-sm', text: 'Buy ' + c.ticker,
+      on: { click: () => go(pathOf(c) + '/invest') } }))
+}
+
+/** The foot of the screen: what you are looking at, and what is already in the
+ *  bucket. Either, both or neither. */
+function footBars(c: Instrument): HTMLElement | null {
+  const buy = buyBar(c)
+  const bucket = bucketBar()
+  if (!buy && !bucket) return null
+  return h('div', { class: 'bars' }, buy, bucket)
 }
 
 /** What you are paying over or under the real share. On a tokenised product
@@ -150,8 +298,12 @@ export function stockScreen(ticker: string): HTMLElement {
   const held = holding(c.ticker)
   const watching = state.watchlist.includes(c.ticker)
 
+  // Secondary in both states now. It used to go primary when you were not
+  // following, which put the loudest button on the screen against a control
+  // that only changes what a list shows you — and it sits beside the price now
+  // rather than beside Buy, where a primary would read as the purchase.
   const follow = h('button', {
-    class: watching ? 'btn btn-secondary btn-sm' : 'btn btn-primary btn-sm',
+    class: 'btn btn-secondary btn-sm',
     text: watching ? 'Following' : 'Follow',
     on: {
       click: () => {
@@ -161,62 +313,22 @@ export function stockScreen(ticker: string): HTMLElement {
     },
   })
 
-  return shell(
+  const page = shell(
     'market',
-    // Two pills and three buttons beside a company's name. On 390 pixels that
-    // wrapped onto its own block and sat on top of the name, so the phone
-    // keeps the one thing this screen is for — buying — and puts the rest
-    // behind the overflow. The pills are not controls at all and move down
-    // into the page, where a state belongs.
-    pageHeader(c.name,
-      isMobile()
-        ? headActions(
-            c.launch
-              ? { label: 'Buy ' + c.ticker, ic: icon.market, strong: true,
-                  run: () => go(pathOf(c) + '/invest') }
-              : null,
-            { label: watching ? 'Following' : 'Follow', ic: icon.star,
-              run: () => {
-                actions.toggleWatch(c.ticker)
-                toast(watching ? c.ticker + ' removed from your watchlist' : c.ticker + ' added to your watchlist')
-              } },
-            // Gated on the same thing as Buy above it: deciding later still
-            // ends in buying. The two pills below the header carry the
-            // reason on a phone.
-            tradable(c)
-              ? { label: inBucket(c.ticker) ? 'In your bucket' : 'Add to bucket', ic: icon.bucket,
-                  run: () => {
-                    if (inBucket(c.ticker)) { go('/bucket'); return }
-                    // The burst comes from the bucket in the top bar rather
-                    // than from the row that was pressed: the row is inside a
-                    // menu that is closing, and a burst measured from a
-                    // detached element never appears. Where it lands is the
-                    // better place for it anyway.
-                    const bin = document.querySelector<HTMLElement>('.bucket-btn')
-                    if (bin) celebrate(bin)
-                    showBucketBar()
-                    actions.addToBucket(c.ticker, state.prefs.tradeDefault)
-                  } }
-              : null)
-        : h('div', { class: 'chip-row' },
-            h('span', { class: 'pill', text: c.kind === 'etf' ? 'ETF' : 'Company' }),
-            // What you can actually do with it. A market that shows twelve
-            // companies and lets you buy five has to say which five, on the
-            // thing itself, rather than at the point of refusal.
-            h('span', { class: 'pill' + (c.launch ? ' pos' : ' warn'),
-              text: c.launch ? 'Open for trading' : 'Not open yet' }),
-            follow, bucketAdd(c),
-            c.launch
-              ? h('button', { class: 'btn btn-primary btn-sm', text: 'Buy ' + c.ticker,
-                  on: { click: () => go(pathOf(c) + '/invest') } })
-              : null)),
-    // The two states, on the page rather than in the header, on a phone.
-    isMobile()
-      ? h('div', { class: 'chip-row' },
-          h('span', { class: 'pill', text: c.kind === 'etf' ? 'ETF' : 'Company' }),
-          h('span', { class: 'pill' + (c.launch ? ' pos' : ' warn'),
-            text: c.launch ? 'Open for trading' : 'Not open yet' }))
-      : null,
+    // The company's name, and nothing else. It carried two pills and three
+    // buttons: a kind, a trading state, Follow, Add to bucket and Buy — five
+    // things beside a name, two of which were never controls at all. Together
+    // they read as a toolbar, and the two pills read as buttons that did not
+    // work.
+    //
+    // Each has a truer home. Follow and the bucket sit beside the price, on the
+    // card about the price, because the price is what you are deciding
+    // against. The kind and the trading state are facts about the token, so
+    // they go in the card that explains the token. And Buy was already on the
+    // position, where the money is: it was on this screen twice.
+    pageHeader(c.name),
+    // The market comes with you. See `coStrip`.
+    coStrip(c),
     h('div', { class: 'row' },
       h('div', { class: 'stack col-main' },
         card(
@@ -225,7 +337,11 @@ export function stockScreen(ticker: string): HTMLElement {
               h('span', { class: 't-caps subtle', text: 'Token price' }),
               h('span', { class: 't-display-xl', text: usd(c.price) }),
               markLine(c)),
-            timeframes(c)),
+            // Hard right of the figure. Following and the bucket are both
+            // "come back to this", and the price is the thing you would be
+            // coming back to look at.
+            h('div', { class: 'price-acts' }, follow, bucketAdd(c))),
+          timeframes(c),
           priceChart(c)
         ),
         // The one card that makes this a tokenised product rather than a
@@ -240,6 +356,14 @@ export function stockScreen(ticker: string): HTMLElement {
               text: c.multiplier > 1
                 ? `Above one because dividends and corporate actions accrue into the multiplier rather than being paid out. One ${c.ticker} is now worth ${fmtShares(c.multiplier)} ${c.under} shares.`
                 : `One ${c.ticker} tracks exactly one ${c.under} share. Nothing has accrued into it yet.` })),
+          // The two pills that used to sit beside the name. They were states
+          // wearing the shape of buttons; here they are two rows among the
+          // other facts about what one of these is.
+          kv('Kind', c.kind === 'etf' ? 'ETF' : 'Company'),
+          // The colour is kept: "Not open yet" is the reason there is no Buy
+          // button on this screen, and a grey row would leave that unsaid.
+          kv('Trading', h('span', { class: c.launch ? 'pos t-body-strong' : 'warn t-body-strong',
+            text: c.launch ? 'Open for trading' : 'Not open yet' })),
           kv('Reference price', usd(c.mark) + ' · Chainlink'),
           kv('Venue price', usd(c.price) + ' · ' + (deviation(c) >= 0 ? '+' : '−') + pct(Math.abs(deviation(c)), 2)),
           kv('Checked', c.chainlinkAge + ' seconds ago'),
@@ -297,8 +421,13 @@ export function stockScreen(ticker: string): HTMLElement {
           // straight to a refusal is the product wasting somebody's press to
           // avoid admitting something on the screen they are already on.
           c.launch && assetOn(c.ticker)
-            ? h('button', { class: 'btn btn-primary', text: 'Buy ' + c.ticker,
-                on: { click: () => go(pathOf(c) + '/invest') } })
+            // On a phone this button is the standing bar at the foot of the
+            // screen instead; see `buyBar`. Two of them would be the repetition
+            // the bar exists to spare somebody.
+            ? (isMobile()
+                ? null
+                : h('button', { class: 'btn btn-primary', text: 'Buy ' + c.ticker,
+                    on: { click: () => go(pathOf(c) + '/invest') } }))
             : h('span', { class: 'muted t-caption',
                 text: c.launch
                   ? `${c.ticker} is paused. You keep anything you hold, and you can still send it.`
@@ -316,6 +445,10 @@ export function stockScreen(ticker: string): HTMLElement {
                 on: { click: () => go(pathOf(c) + '/send') } })
             : null
         ))),
-    bucketBar()
+    footBars(c)
   )
+  // A swipe left or right pages to the company beside this one, and so do the
+  // arrow keys. See `pageable`.
+  pageable(page, c)
+  return page
 }

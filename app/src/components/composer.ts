@@ -111,11 +111,37 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
   const guardNote = calloutEl('', 'warning')
   guardNote.hidden = true
   const summaryBox = h('div', { class: 'stack-8 summary' })
+  /* On a phone the terms fold to the three that are money.
+   *
+   *  The buy composer is 870 pixels of content in a 743-pixel dialog, so its
+   *  own Buy button sits below the fold and has to be scrolled to — on the
+   *  screen where money leaves. `trade.mjs` was written to catch exactly that
+   *  and never saw it, because it was reading the first `.btn-primary` in the
+   *  document and finding one on the page *behind* the dialog.
+   *
+   *  Nothing is dropped. What you cannot buy without seeing is what it costs
+   *  and what it comes to; how many shares, the slippage floor and the gap to
+   *  the real price open on one tap, and are all stated again on the review,
+   *  which is the commit point. Item 61's ceiling holds either way: no dialog
+   *  scrolls on a 390 by 844 phone. */
+  const KEEP = 3
+  let open = false
   const rightBox = h('div', { class: 'stack grow' })
   const button = h('button', { class: 'btn btn-primary' })
 
   function paint(v: number, capped = false): void {
-    summaryBox.replaceChildren(...spec.summary(v).map(([k, val, cls]) => kv(k, val, cls ?? '')))
+    const rows = spec.summary(v).map(([k, val, cls]) => kv(k, val, cls ?? ''))
+    if (!mobile || rows.length <= KEEP + 1) {
+      summaryBox.replaceChildren(...rows)
+    } else {
+      const rest = rows.length - KEEP
+      const more = h('button', {
+        class: 'panel-more', text: open ? 'Fewer details' : rest + ' more details',
+      })
+      more.setAttribute('aria-expanded', String(open))
+      more.addEventListener('click', () => { open = !open; paint(comp.get(), capped) })
+      summaryBox.replaceChildren(...(open ? rows : rows.slice(0, KEEP)), more)
+    }
     if (!overlaid && spec.right) rightBox.replaceChildren(spec.right(v))
     button.textContent = spec.action(v)
     // Every reason at once. A trade can be refused because it is paused *and*
@@ -162,7 +188,13 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
       mobile ? null : calloutEl(spec.callout),
       button,
       spec.risky ? riskLink() : null)
-    if (mobile) out.querySelector('.sheet')?.prepend(h('div', { class: 'grabber' }))
+    if (mobile) {
+      const panel = out.querySelector('.sheet')
+      panel?.prepend(h('div', { class: 'grabber' }))
+      // Named, so the two compressions that get this dialog under item 61's
+      // ceiling land on the one dialog that needs them and on nothing else.
+      panel?.classList.add('sheet-compose')
+    }
     return out
   }
 

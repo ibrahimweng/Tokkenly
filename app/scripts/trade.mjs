@@ -169,18 +169,117 @@ for (const route of ['/invest/aapl/invest', '/invest/aapl/sell']) {
   await p.goto(B + route, { waitUntil: 'domcontentloaded' })
   await p.waitForTimeout(400)
   const m = await p.evaluate(() => {
-    const btn = document.querySelector('.btn-primary')
+    // The composer's own button, not the first primary in the document. On a
+    // phone the composer is a dialog over the company page, and that page has
+    // primaries of its own — so this read `.btn-primary` and got the *page's*
+    // Buy, which used to sit in the header at bottom 164 and passed happily
+    // while the button this check is named after sat below the fold. A check
+    // that measures the wrong element agrees with itself forever. Rule 146.
+    const sheet = document.querySelector('.scrim .sheet')
+    const btn = (sheet ?? document).querySelector('.btn-primary')
     const r = btn?.getBoundingClientRect()
+    const s = sheet
     return {
       overflowX: document.documentElement.scrollWidth - document.documentElement.clientWidth,
       keypad: !!document.querySelector('.keypad'),
       buttonReachable: r ? r.bottom <= window.innerHeight + 1 : false,
       buttonBottom: r ? Math.round(r.bottom) : null,
+      buttonIs: btn?.textContent?.trim().slice(0, 24) ?? null,
+      dialogOverflow: s ? s.scrollHeight - s.clientHeight : 0,
     }
   })
+  ok(route + ' does not hide its action inside a scroll', m.dialogOverflow <= 2,
+     m.dialogOverflow + 'px of the dialog is below its own fold')
   ok(route + ' does not overflow', m.overflowX === 0, 'overflowX ' + m.overflowX)
   ok(route + ' has the keypad', m.keypad)
-  ok(route + ' keeps the button on screen', m.buttonReachable, 'bottom ' + m.buttonBottom)
+  ok(route + ' keeps the button on screen', m.buttonReachable,
+     (m.buttonIs ?? 'no button') + ' at bottom ' + m.buttonBottom)
+  await p.close()
+}
+
+/* A COMPANY PAGE  a name, the market beside it, and one Buy
+   -----------------------------------------------------------------------
+   The header carried a kind, a trading state, Follow, Add to bucket and Buy:
+   five things beside a name, two of which were never controls. It is a name
+   now, and each of the five is where it belongs — 11g.63. */
+console.log('A COMPANY PAGE  a name, the market beside it, and one Buy')
+{
+  const p = await page(1280, 1000)
+  await p.goto(B + '/invest/aapl', { waitUntil: 'domcontentloaded' })
+  await p.waitForTimeout(500)
+  const m = await p.evaluate(() => {
+    const head = document.querySelector('.page-header')
+    const token = [...document.querySelectorAll('.col-main section.card')][1]
+    return {
+      headControls: [...head.querySelectorAll('button, a')]
+        .filter((e) => !e.closest('.crumbs')).map((e) => e.textContent.trim()),
+      priceActs: [...document.querySelectorAll('.price-acts > *')]
+        .map((e) => e.textContent.trim() || e.getAttribute('aria-label')),
+      plusIsIcon: !!document.querySelector('.price-acts .icon-btn')
+        && !document.querySelector('.price-acts .icon-btn').textContent.trim(),
+      tokenRows: [...token.querySelectorAll('.kv')].map((e) => e.textContent.replace(/\s+/g, ' ').trim()),
+      pills: [...document.querySelectorAll('.page-header .pill')].map((e) => e.textContent.trim()),
+      cells: document.querySelectorAll('.co-cell').length,
+      sparks: document.querySelectorAll('.co-cell .spark svg').length,
+      lit: document.querySelector('.co-cell.on')?.textContent?.replace(/\s+/g, ' ').trim(),
+      buys: [...document.querySelectorAll('main .btn-primary')]
+        .map((e) => e.textContent.trim()).filter((t) => /^Buy /.test(t)),
+    }
+  })
+  ok('the header is a name and nothing else', m.headControls.length === 0, m.headControls.join(' | '))
+  ok('and the two states are not pills up there any more', m.pills.length === 0, m.pills.join(' | '))
+  ok('they are rows in the card that explains the token',
+     m.tokenRows.some((r) => /^Kind/.test(r)) && m.tokenRows.some((r) => /^TradingOpen for trading/.test(r)),
+     m.tokenRows.slice(0, 3).join(' | '))
+  ok('Follow and the bucket sit beside the price',
+     m.priceActs.length === 2 && /Follow/.test(m.priceActs[0]) && /bucket/.test(m.priceActs[1] ?? ''),
+     m.priceActs.join(' | '))
+  // The same control the list carries. A labelled button here was a second
+  // call to action standing next to the purchase.
+  ok('and the bucket is a plus, with its name said out loud rather than printed',
+     m.plusIsIcon, m.priceActs[1])
+  ok('the market comes with you, all thirteen', m.cells === 13, m.cells + ' cells')
+  ok('each with its own year drawn beside it', m.sparks === 13, m.sparks + ' sparklines')
+  ok('and the one you are on is lit', /Apple/.test(m.lit ?? ''), m.lit)
+  // Buy was on this screen twice: once in the header and once on the position.
+  ok('Buy is on the screen exactly once', m.buys.length === 1, m.buys.join(' | '))
+
+  // Left and right page between companies, which is what makes the strip a
+  // way through the market rather than a decoration.
+  await p.keyboard.press('ArrowRight'); await p.waitForTimeout(420)
+  const fwd = await p.evaluate(() => location.hash)
+  await p.keyboard.press('ArrowLeft'); await p.waitForTimeout(420)
+  const back = await p.evaluate(() => location.hash)
+  ok('the arrows page between companies, one press at a time',
+     fwd === '#/invest/nvda' && back === '#/invest/aapl', fwd + ' then ' + back)
+  // A dialog owns the keyboard while it is open.
+  await p.goto(B + '/invest/aapl?sheet=jump'); await p.waitForTimeout(500)
+  await p.keyboard.press('ArrowRight'); await p.waitForTimeout(400)
+  ok('and a dialog keeps them while it is open',
+     (await p.evaluate(() => location.hash)).startsWith('#/invest/aapl'),
+     await p.evaluate(() => location.hash))
+  await p.close()
+}
+{
+  const p = await page(390, 844)
+  await p.goto(B + '/invest/aapl', { waitUntil: 'domcontentloaded' })
+  await p.waitForTimeout(500)
+  const m = await p.evaluate(() => {
+    const bar = document.querySelector('.buy-bar')
+    const r = bar?.getBoundingClientRect()
+    return {
+      bar: !!bar, onScreen: r ? r.bottom <= window.innerHeight + 1 : false,
+      buys: [...document.querySelectorAll('main .btn-primary')]
+        .map((e) => e.textContent.trim()).filter((t) => /^Buy /.test(t)),
+      overflowX: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    }
+  })
+  // The position card is the last of six on a phone and its button landed
+  // 2,876 pixels down. The bar is that button, moved to where a thumb is —
+  // and the card gives it up, so Buy is in one place at either width.
+  ok('a phone stands Buy at the foot of the screen', m.bar && m.onScreen, JSON.stringify(m))
+  ok('and still only once', m.buys.length === 1, m.buys.join(' | '))
+  ok('the strip does not push the page sideways', m.overflowX === 0, 'overflowX ' + m.overflowX)
   await p.close()
 }
 

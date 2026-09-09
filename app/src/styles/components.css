@@ -727,6 +727,74 @@
   .beam-bloom { border-radius: calc(var(--r-sheet) + 30px) calc(var(--r-sheet) + 30px) 0 0; }
 }
 
+/* ---------- the company strip ----------
+
+   The market, carried onto the company page. A row you can run a thumb along:
+   every company in the catalogue, its name, its day, and its year as a line
+   small enough to take in without reading. The one you are on is lit and is
+   scrolled into view on arrival, so the strip answers "where am I in this
+   list" as well as "what else is there".
+
+   It scrolls sideways on its own. Swiping the page *body* pages to the next
+   company instead — two gestures on one screen, which works only because the
+   page ignores any drag that starts inside something owning the axis: this
+   strip, the chart, a sideways table. See `OWNS_THE_AXIS` in stock.ts. */
+.co-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  /* Room for a focus ring, which a scroll box clips on every edge it owns.
+     Padding only: this is the first thing in `main` on this screen, and a
+     negative margin to cancel it would start the page's body two pixels above
+     where every other screen starts it. `frame.mjs` measures exactly that. */
+  padding: 2px;
+  scrollbar-width: none;
+}
+.co-strip::-webkit-scrollbar { display: none; }
+
+.co-cell {
+  flex: none;
+  scroll-snap-align: center;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px 14px;
+  text-align: left;
+  background: var(--sunken);
+  border-radius: var(--r-panel);
+  transition: background 120ms var(--ease);
+}
+.co-cell .two-line { gap: 2px; }
+/* Two channels, not one. Thirteen cells that differ only by a background one
+   rung apart is a lit state nobody finds; the name coming up to full ink is
+   the half that actually reads. Rule 147. */
+.co-cell .t-body-strong { white-space: nowrap; color: var(--muted); }
+.co-cell small { font-size: 12px; }
+/* Wide enough to be a shape, short enough that eight of them fit across a
+   phone's thumb-swipe. The receipt's sparkline is 56px tall and full width;
+   this is the same drawing at a tenth of the area. */
+.co-cell .spark { width: 52px; height: 26px; flex: none; }
+
+.co-cell.on { background: var(--control); }
+.co-cell.on .t-body-strong { color: var(--ink); }
+@media (hover: hover) {
+  .co-cell:hover { background: var(--sunken-hover); }
+  .co-cell.on:hover { background: var(--control-pressed); }
+}
+.co-cell:active { background: var(--control-pressed); }
+
+@media (max-width: 899px) {
+  .co-cell { min-height: 60px; }
+}
+
+/* Follow and the bucket, hard right of the token price. They were beside the
+   company's name, where they read as a toolbar; the price is what somebody is
+   deciding against, so it is what they belong to. */
+.price-acts { display: flex; align-items: center; gap: 8px; flex: none; }
+
 /* The company a trade's receipt is about, and the shape it has been in. */
 .receipt-co { display: flex; align-items: flex-start; gap: 16px; }
 .spark { height: 56px; width: 100%; }
@@ -1225,6 +1293,18 @@
   /* The ruler and its hint are not rendered on a phone at all now, so the
      rules that used to shorten one and hide the other have nothing to do. */
   .sheet .key { height: 48px; }
+  /* The buy composer is the tallest thing the product puts on a phone: a
+     figure, a keypad, the terms, the button and a disclosure, in 743 pixels.
+     Folding the terms to the three that are money got most of the way; these
+     two get the rest, and they are scoped to this dialog because no other one
+     is close to the ceiling. 44 is the tap minimum, so the keys stop there
+     rather than at 48. */
+  .sheet-compose { gap: 10px; padding-bottom: 8px; }
+  .sheet-compose .key { height: 44px; }
+  /* The grabber is the affordance; eight more pixels under it is the same
+     affordance stated twice, and this is the one dialog that cannot spare
+     them. */
+  .sheet-compose .sheet-head { padding-top: 0; }
   .sheet .amount-box { padding: 4px 20px; }
   .sheet .amount-box input { font-size: 30px; line-height: 40px; width: 180px; }
   .sheet .chip-row .chip { flex: 1 1 0; padding: 0 8px; }
@@ -1974,6 +2054,28 @@ th.right .th-sort { flex-direction: row-reverse; }
   box-shadow: var(--shadow-float);
   animation: rise var(--t-base) var(--ease);
 }
+/* Two bars at the foot of a company page: what you are looking at, and what is
+   already in the bucket. One sticky container so they stack rather than landing
+   on each other; the children give up their own stickiness to it. */
+.bars {
+  position: sticky; bottom: 20px; z-index: 20;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.bars > .bucket-bar { position: static; bottom: auto; }
+.buy-bar {
+  display: flex; align-items: center; gap: 16px;
+  padding: 12px 12px 12px 20px; border-radius: var(--r-pill);
+  background: var(--surface);
+  box-shadow: var(--shadow-float);
+  animation: rise var(--t-base) var(--ease);
+}
+.buy-bar .btn { flex: none; }
+@media (max-width: 899px) {
+  .bars { bottom: calc(var(--nav-h) + 44px); }
+  .buy-bar { padding: 10px 10px 10px 16px; gap: 12px; }
+}
+@media (prefers-reduced-motion: reduce) { .buy-bar { animation: none; } }
+
 .bucket-bar .mark { flex: none; }
 .bucket-bar .btn { flex: none; }
 .bucket-bar-close { width: 36px; height: 36px; background: none; }

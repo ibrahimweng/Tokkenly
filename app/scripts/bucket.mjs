@@ -26,9 +26,9 @@ ok('a row adds without navigating away', (await p.evaluate(() => location.hash))
 ok('and the count goes up', (await count()) === '1', 'count ' + (await count()))
 
 await p.goto(B + '/invest/nvda', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
-await p.getByRole('button', { name: 'Add to bucket' }).click(); await p.waitForTimeout(500)
+await p.getByRole('button', { name: /Add .+ to your bucket/ }).click(); await p.waitForTimeout(500)
 await p.goto(B + '/invest/googl', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
-await p.getByRole('button', { name: 'Add to bucket' }).click(); await p.waitForTimeout(500)
+await p.getByRole('button', { name: /Add .+ to your bucket/ }).click(); await p.waitForTimeout(500)
 ok('a stock page adds too', (await count()) === '3', 'count ' + (await count()))
 
 // The bucket buys through the same door as a single trade, so it is closed to
@@ -38,7 +38,12 @@ ok('a stock page adds too', (await count()) === '3', 'count ' + (await count()))
 console.log('WHAT IT WILL NOT TAKE')
 await p.goto(B + '/invest/ko', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
 const shut = await p.evaluate(() => ({
-  add: [...document.querySelectorAll('button')].some((x) => /Add to bucket/.test(x.textContent ?? '')),
+  // By accessible name, not by text. The control is a plus icon on this screen
+  // now (11g.63) and prints nothing at all, so a textContent search finds
+  // nothing whether the button is there or not — a check that passes by being
+  // unable to see the thing it is about.
+  add: [...document.querySelectorAll('button')].some((x) =>
+    /Add .+ to your bucket|Add to bucket/.test((x.getAttribute('aria-label') ?? '') + ' ' + (x.textContent ?? ''))),
   said: /Not open yet/.test(document.body.innerText),
 }))
 ok('a company outside the launch set has no way into the bucket', !shut.add)
@@ -125,7 +130,7 @@ ok('each company has its own receipt', /Apple/.test(hist) && /Nvidia/.test(hist)
 // that can be put by this morning and refused this afternoon.
 console.log('PAUSED WHILE IT SAT THERE')
 await p.goto(B + '/invest/meta', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
-await p.getByRole('button', { name: 'Add to bucket' }).click(); await p.waitForTimeout(500)
+await p.getByRole('button', { name: /Add .+ to your bucket/ }).click(); await p.waitForTimeout(500)
 ok('a paused company can still be put by for later', (await count()) === '1', 'count ' + (await count()))
 await p.goto(B + '/bucket', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
 const held = await p.evaluate(() => ({
@@ -156,7 +161,7 @@ ok('taking it out leaves an empty bucket', (await count()) === '0', 'count ' + (
 // somebody commit to something the product had already decided against.
 console.log('NO CONNECTION')
 await p.goto(B + '/invest/aapl', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400)
-await p.getByRole('button', { name: 'Add to bucket' }).click(); await p.waitForTimeout(500)
+await p.getByRole('button', { name: /Add .+ to your bucket/ }).click(); await p.waitForTimeout(500)
 // After the navigation, not before it: `online` is read back from the browser
 // on every load, so a reload would put the connection straight back.
 await p.goto(B + '/bucket?sheet=bucket-review', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(500)
@@ -181,14 +186,22 @@ const m = await b.newPage({ viewport: { width: 390, height: 844 } })
 await seen(m)
 await m.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 await m.goto(B + '/invest/aapl', { waitUntil: 'domcontentloaded' }); await m.waitForTimeout(400)
-// A company page carries two pills and three buttons beside its name, which
-// does not fit across 390 pixels (11g.55). The phone keeps Buy and puts the
-// other two behind the overflow, so filling the bucket from here is two
-// presses now — and this is the check that the second one is reachable.
-await m.getByRole('button', { name: 'More on this screen' }).click(); await m.waitForTimeout(300)
-ok('the overflow holds what the header could not', (await m.locator('.pop-row').count()) >= 2,
-   (await m.locator('.pop-row').allTextContents()).join(', '))
-await m.getByRole('button', { name: 'Add to bucket' }).click(); await m.waitForTimeout(500)
+// A company page used to carry two pills and three buttons beside its name,
+// which does not fit across 390 pixels — so the phone kept Buy and put the rest
+// behind an overflow menu, and filling the bucket from here took two presses.
+// The header is a name now and the bucket is a plus beside the price (11g.63),
+// so it is one press, in the open, above the fold.
+const reach = await m.evaluate(() => {
+  const b = document.querySelector('.price-acts .icon-btn')
+  const r = b?.getBoundingClientRect()
+  return { there: !!b, onScreen: r ? r.bottom <= window.innerHeight + 1 : false,
+           menu: !!document.querySelector('.head-more, .pop-row'),
+           top: r ? Math.round(r.top) : null }
+})
+ok('the bucket is one press from a company page, in the open', reach.there && reach.onScreen,
+   JSON.stringify(reach))
+ok('and there is no overflow menu left to hide it in', !reach.menu)
+await m.locator('.price-acts .icon-btn').click(); await m.waitForTimeout(500)
 await m.goto(B + '/bucket', { waitUntil: 'domcontentloaded' }); await m.waitForTimeout(400)
 ok('the phone top bar carries the bucket', await m.evaluate(() => !!document.querySelector('.bucket-btn')))
 ok('and the bucket screen does not overflow',

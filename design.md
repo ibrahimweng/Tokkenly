@@ -7737,6 +7737,88 @@ and the confirmation is still framed in green.
      is the one a screenshot of a dark sheet on a dark scrim will not make for
      you.
 
+### 11g.63 A name, the market beside it, and one Buy
+
+A company page carried a kind, a trading state, Follow, Add to bucket and Buy
+across the top: five things beside a name, two of which were never controls at
+all. Together they read as a toolbar, and the two pills read as buttons that did
+not work. Each has a truer home, and the header is a name.
+
+**The two pills are facts, so they are rows.** Company or ETF, and whether it can
+be bought — these are things about the token, and the card that explains the
+token is where the other things about it already live, beside the reference
+price and the multiplier. The colour survives the move: "Not open yet" is the
+reason there is no Buy button on the screen, and a grey row would leave that
+unsaid. The phone had worked this way since 11g.43, which dropped both pills out
+of its header for exactly this argument; the desktop simply never got it.
+
+**Follow and the bucket sit beside the price.** Both mean "come back to this",
+and the price is the thing you would be coming back to look at. The bucket is
+the plus the market list carries, not a labelled button: a second call to action
+standing next to the purchase is two things asking to be pressed. Follow stops
+going primary when you are not following — the loudest button on a screen should
+not belong to a control that changes what a list shows you.
+
+**And Buy was on the screen twice**, in the header and on the position. Once
+now, and in a different place at each width, because the two widths are not the
+same problem. On a wide screen the position card is beside the chart and on
+screen the whole time. On a phone it is the last of six cards and the button
+landed 2,876 pixels down a 3,232-pixel page — the one thing the screen is for,
+off the end of it. So a phone gets a standing bar at the foot and the card gives
+its button up. Sticky rather than fixed, and sharing a container with the bucket
+bar so the two stack instead of landing on each other.
+
+**The market comes with you.** All thirteen companies as a strip along the top,
+each with its name, its day and its year drawn small; the one you are on is lit
+and is scrolled into view on arrival. Swipe the page and it pages to the next
+company; the strip scrolls sideways under a thumb of its own; left and right do
+the same on a keyboard, which is also what makes the feature reachable without
+a pointer. A company page was a dead end before this — you arrived from Invest,
+read it, and went back to the list to reach the next one.
+
+Two gestures on one screen work only because the page refuses any drag that
+starts inside something that owns the horizontal axis: the strip, the chart,
+a table that scrolls sideways. And it refuses anything under 64 pixels or
+steeper than 1.6 to 1, because a thumb travelling up a long page is never
+perfectly vertical and paging the screen out from under somebody who was
+reading it is the worst thing this gesture can do.
+
+The sparklines are each company's own year. The receipt's version pins the
+percentage at a constant, which nobody can catch on a screen showing one
+company; thirteen side by side would have drawn thirteen identical climbs.
+
+**And two things the checks were not seeing.**
+
+`trade.mjs` asserts that the buy composer keeps its button on screen on a phone.
+It was reading the first `.btn-primary` in the document — and on a phone the
+composer is a dialog *over* the company page, which had a Buy in its header at
+bottom 164. So the check passed for years by measuring a button on the page
+behind the thing it was checking. Taking the header's Buy away is what made it
+look, and what it found was the composer's own button at 891 on an 844-pixel
+screen: 127 pixels of a purchase dialog below its own fold, against item 61's
+rule that no dialog scrolls on a phone.
+
+Fixed by folding the composer's terms on a phone to the three that are money —
+what it costs, the fee, what it comes to — with the rest one tap away and all of
+them stated again on the review, which is the commit point. That got most of the
+way; the last of it came out of the dialog's own chrome, and the keypad's keys
+stopping at the 44-pixel tap minimum rather than 48. Buy now ends at 771 of 844
+at 360, 390 and 414.
+
+The bucket's absence check had the same shape of fault waiting: it asked whether
+any button's *text* said "Add to bucket", and the control is an icon now, so it
+would have found nothing whether the button was there or not.
+
+157. **A control is not a fact, and a fact is not a control.** A pill that
+     cannot be pressed sitting in a row of buttons teaches somebody that some of
+     the buttons do not work. States belong in the page, beside the other things
+     that are true about the thing; the header is for its name.
+
+158. **The same action can want a different place at each width without wanting
+     two.** A button that is on screen throughout on a desktop and two thousand
+     pixels down on a phone is not one design serving both — it is one design
+     and one accident. Move it, do not duplicate it.
+
 ### 11g.49 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from
