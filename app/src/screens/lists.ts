@@ -91,7 +91,10 @@ function bucketCell(c: Instrument): HTMLElement {
 function listTable(rows: Instrument[], extra?: (c: Instrument) => Node): HTMLElement {
   return table(
     [
-      { key: 'name', label: 'Company' },
+      // "Name", not "Company". The market's own list says Name, and two of the
+      // thirteen rows are funds — a mixed list whose column calls them
+      // companies has contradicted the ETF tag beside it. Rule 37.
+      { key: 'name', label: 'Name' },
       { key: 'price', label: 'Price', align: 'right' },
       { key: 'day', label: 'Today', align: 'right' },
       { key: 'year', label: 'This year', align: 'right', optional: true },
@@ -99,7 +102,13 @@ function listTable(rows: Instrument[], extra?: (c: Instrument) => Node): HTMLEle
     ],
     rows.map((c) => [
       h('span', { class: 'two-line' },
-        h('span', { class: 't-body-strong', text: c.ticker + ' · ' + c.name }),
+        // The fund tag, the same as the market's own list carries. A mixed
+        // list that calls a fund a company is a list that has not said the one
+        // thing separating the two rows, and the category screens are the
+        // longest mixed lists in the product.
+        h('span', { class: 'name-line' },
+          h('span', { class: 't-body-strong', text: c.ticker + ' · ' + c.name }),
+          c.kind === 'etf' ? h('span', { class: 'tag', text: 'ETF' }) : null),
         // Desktop only, the same as the market's own list, for the reason
         // that list already learned. The phone row gives this cell about 190px
         // and the sentence wants 280, so it ellipsised to an unreadable half

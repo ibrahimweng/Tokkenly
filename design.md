@@ -8203,6 +8203,15 @@ cannot be bought, and the card three lines below says so — so it is *Everythin
 listed*. And the sentence under each heading counts what is closed rather than
 implying everything on it is for sale.
 
+Capping the card broke two claims that had been true of it, and `etf.mjs` is
+what said so. The ETF tag was on the market's rows and not on `listTable`'s, so
+the moment the full mixed list moved to a screen of its own the funds stopped
+being marked anywhere — a list that calls a fund a company, which is the exact
+thing that tag exists to prevent. And the two tables disagreed about the first
+column: the market's says *Name*, this one said *Company*, on a list where two
+of the thirteen rows are not one. Both were written in 11g.65 and neither showed
+until the card stopped being the only place the list lived.
+
 170. **A preview is five rows and a door; a list is all of them.** A card that
      holds everything is a card the next section hides behind. Cap it, page it
      in place, and put the whole thing one press away — and do not cap the page

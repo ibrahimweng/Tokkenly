@@ -23,13 +23,22 @@ ok('and they are named the way the site names them',
 ok('every row in it is tagged',
    (await p.evaluate(() => document.querySelectorAll('.table tbody .tag').length)) === 2,
    (await p.evaluate(() => document.querySelectorAll('.table tbody .tag').length)) + ' tags')
+// The card on Invest previews five rows now (11g.69), so the mixed list in
+// full is the category's own screen. Both are checked: the card has to count
+// the whole thing in its heading even while it shows five of it.
 await at('/invest?cat=Everything')
+const head = await p.evaluate(() => [...document.querySelectorAll('.card-head')]
+  .map((e) => e.innerText).find((t) => /compan|ETF/.test(t)))
+const shown = await p.evaluate(() => document.querySelectorAll('.table tbody tr').length)
+ok('the card previews five of them', shown === 5, shown + ' rows')
+ok('and still counts all thirteen', /11 compan/.test(head ?? '') && /2 ETF/.test(head ?? ''), head ?? '')
+await at('/invest/list/everything')
 const mixed = await p.evaluate(() => ({
-  count: [...document.querySelectorAll('.card-head')].map((e) => e.innerText).find((t) => /compan|ETF/.test(t)),
+  count: [...document.querySelectorAll('.card-head')].map((e) => e.innerText).find((t) => /listed|open/.test(t)),
   tags: document.querySelectorAll('.table tbody .tag').length,
   rows: document.querySelectorAll('.table tbody tr').length,
 }))
-ok('a mixed list does not call a fund a company', /ETF/.test(mixed.count ?? ''), mixed.count ?? '')
+ok('a mixed list says how many of it is open', /open for trading/.test(mixed.count ?? ''), mixed.count ?? '')
 // Thirteen now: METAc joined the catalogue as one of the four launch assets.
 // Still two funds, which is the thing being checked.
 ok('and only the funds are tagged', mixed.tags === 2 && mixed.rows === 13,
@@ -47,9 +56,13 @@ const shut = await p.evaluate(() => ({
   chip: !!document.querySelector('.chip-only'),
   pressed: document.querySelector('.chip-only')?.getAttribute('aria-pressed'),
   rows: document.querySelectorAll('.table tbody tr').length,
+  head: [...document.querySelectorAll('.card-head')].map((e) => e.innerText).find((t) => /compan|ETF/.test(t)),
 }))
 ok('the filter is there and starts off', shut.chip && shut.pressed !== 'true', JSON.stringify(shut))
-ok('and the whole market is listed until it is pressed', shut.rows === 13, shut.rows + ' rows')
+// Five shown, thirteen counted: the filter hides nothing until it is pressed,
+// and the card says so in its heading even while it previews.
+ok('and nothing is filtered out until it is pressed',
+   shut.rows === 5 && /11 compan/.test(shut.head ?? ''), `${shut.rows} of ${shut.head}`)
 await p.locator('.chip-only').click(); await p.waitForTimeout(400)
 const open = await p.evaluate(() => ({
   where: location.hash,
