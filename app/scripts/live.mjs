@@ -37,7 +37,7 @@ for (const [route, title] of [
   const p = await page()
   await p.goto(B + route, { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(250)
   const d = await p.evaluate(() => ({
-    dialog: !!document.querySelector('.scrim > .sheet'),
+    dialog: !!document.querySelector('.scrim .sheet'),
     h1: document.querySelector('.content .page-header h1')?.textContent,
     trail: !!document.querySelector('.crumbs'),
   }))

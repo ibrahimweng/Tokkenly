@@ -66,7 +66,13 @@ for (const [w, hh, tag] of [[1440, 1000, 'DESKTOP'], [390, 844, 'PHONE']]) {
     await p.goto(B + r, { waitUntil: 'domcontentloaded' })
     await p.waitForTimeout(400)
     const d = await p.evaluate(() => {
-      const s = document.querySelector('.scrim > .sheet')
+      // A descendant, not a direct child. A confirmation that is glad about
+      // itself is wrapped so its beam has somewhere outside the panel to
+      // breathe (11g.62), which puts the panel one level down — and a check
+      // that insists on the old depth reports the dialog as missing when it is
+      // sitting right there. `.sheet` is the panel's own class either way; a
+      // scrim holds nothing else wearing it.
+      const s = document.querySelector('.scrim .sheet')
       if (!s) return null
       return { h: Math.round(s.getBoundingClientRect().height), scrolls: s.scrollHeight - s.clientHeight > 2 }
     })
@@ -144,6 +150,38 @@ console.log('THE OUTCOME  a coin, and only when there is something to celebrate'
   await buy(200)
   ok('a trade that settled turns a coin',
      (await p.locator('.coin canvas').count()) === 1 && (await p.locator('.tick').count()) === 0)
+  // And breathes, around the outside (11g.62). The coin is the moment landing;
+  // the beam is the frame being pleased about it, and they are both here on
+  // purpose. The wrapper has to be outside the sheet: two of the three layers
+  // sit behind the panel and bloom past its edge, and the sheet is a scrolling
+  // box that would crop them to nothing.
+  ok('and the sheet breathes a beam around itself',
+     (await p.locator('.beam > .sheet.sheet-glad').count()) === 1)
+  const layers = await p.evaluate(() => {
+    const w = document.querySelector('.beam')
+    return [getComputedStyle(w, '::after').opacity, getComputedStyle(w, '::before').opacity,
+            getComputedStyle(document.querySelector('.beam-bloom')).opacity].map(Number)
+  })
+  ok('all three of its layers are painting', layers.every((n) => n > 0), layers.join(' / '))
+  // The halo has to reach past the sheet or none of it is ever seen: it sits
+  // behind an opaque panel and only the spill shows. The first port scaled the
+  // layers by 0.9 the way the component it came from does, which on a 675px
+  // sheet put the whole halo *inside* the panel — visible in a screenshot only
+  // as the absence of a glow, which is the easiest kind of fault to ship.
+  const spill = await p.evaluate(() => {
+    const s = document.querySelector('.beam > .sheet').getBoundingClientRect()
+    const h = document.querySelector('.beam-bloom').getBoundingClientRect()
+    return { x: Math.round((h.width - s.width) / 2), y: Math.round((h.height - s.height) / 2) }
+  })
+  ok('and the halo reaches past the sheet on both axes', spill.x > 8 && spill.y > 8,
+     `${spill.x}px across, ${spill.y}px down`)
+  // Seventeen numbers on seventeen periods, none of them a multiple of another.
+  // If the frame loop is not running they hold still, and the beam is a static
+  // green edge rather than a breath.
+  const bw = async () => p.evaluate(() =>
+    getComputedStyle(document.querySelector('.beam')).getPropertyValue('--bw1').trim())
+  const first = await bw(); await p.waitForTimeout(1500); const second = await bw()
+  ok('and the breath is actually moving', !!first && first !== second, `${first} -> ${second}`)
   ok('and the gradient it replaced is gone',
      (await p.evaluate(() => getComputedStyle(document.querySelector('.sheet-done'), '::before').content)) === 'none')
   ok('the coin is not read out to anybody',
@@ -169,6 +207,7 @@ console.log('THE OUTCOME  a coin, and only when there is something to celebrate'
   const said = await p.evaluate(() => document.querySelector('.sheet')?.innerText.replace(/\n/g, ' ') ?? '')
   ok('one that did not come back confirmed does not', /Still settling/.test(said) &&
      (await p.locator('.coin').count()) === 0 && (await p.locator('.tick').count()) === 1, said.slice(0, 46))
+  ok('and it is not framed in green either', (await p.locator('.beam').count()) === 0)
   await p.close()
 }
 

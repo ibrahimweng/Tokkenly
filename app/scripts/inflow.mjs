@@ -185,7 +185,7 @@ console.log('AND SAYS SO, ON THE ONE SCREEN THAT WAS NOT LOOKING')
     await new Promise((r) => setTimeout(r, 400))
     document.querySelector('.panel-more')?.click()
     await new Promise((r) => setTimeout(r, 200))
-    return document.querySelector('.scrim > .sheet')?.innerText.replace(/\n/g, ' · ') ?? ''
+    return document.querySelector('.scrim .sheet')?.innerText.replace(/\n/g, ' · ') ?? ''
   })
   void ref
   // innerText applies text-transform, so every caps label in this product

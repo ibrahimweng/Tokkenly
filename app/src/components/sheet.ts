@@ -3,6 +3,7 @@ import { icon } from '../icons'
 import { closeSheet } from '../router'
 import { say } from '../announce'
 import { spinCoin } from './coin'
+import { breathe } from '../beam'
 
 /* ---------------- what makes a sheet a dialog ----------------
 
@@ -251,8 +252,22 @@ export function outcome(
       ? h('button', { class: 'btn btn-secondary', text: secondary.label, on: { click: secondary.onClick } })
       : null
   )
-  el.querySelector('.sheet')?.classList.add('sheet-done')
-  if (glad) el.querySelector('.sheet')?.classList.add('sheet-glad')
+  const box = el.querySelector<HTMLElement>('.sheet')
+  box?.classList.add('sheet-done')
+  if (glad && box) {
+    box.classList.add('sheet-glad')
+    // The beam has to live outside the sheet, not in it: two of its three
+    // layers sit behind the panel and bloom past its edge, and the sheet is a
+    // scrolling box with `overflow: auto` that would crop them to nothing. So
+    // the panel gets a wrapper, and the wrapper is what breathes.
+    const wrap = h('div', { class: 'beam' }, h('div', { class: 'beam-bloom' }))
+    box.replaceWith(wrap)
+    wrap.appendChild(box)
+    // After this task, not during it: the render loop has not mounted the
+    // dialog yet, and the frame loop drops any beam whose element is not in
+    // the document — which a beam registered one line too early would be.
+    queueMicrotask(() => { if (wrap.isConnected) breathe(wrap) })
+  }
   return el
 }
 

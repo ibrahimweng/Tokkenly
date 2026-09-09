@@ -227,7 +227,7 @@ console.log('CHANGING THE PIN  refused at the moment it is typed, not on save')
   await p.waitForTimeout(300)
   for (const d of ['8', '2', '6', '1']) await tap(p, d)
   await p.waitForTimeout(500)
-  ok('and matching saves it', (await p.locator('.scrim > .sheet').count()) === 0)
+  ok('and matching saves it', (await p.locator('.scrim .sheet').count()) === 0)
   ok('the row says when it changed',
      /changed \d+ \w+ \d{4}/.test(
        await p.locator('.set-row', { hasText: 'App PIN' }).locator('small').textContent()))
@@ -291,10 +291,10 @@ console.log('THE PASSWORD  length beats punctuation')
   await cu.fill('wrong one'); await p.waitForTimeout(100)
   await p.locator('.sheet .btn-primary').click(); await p.waitForTimeout(400)
   ok('the wrong current password does not save',
-     (await p.locator('.scrim > .sheet').count()) === 1)
+     (await p.locator('.scrim .sheet').count()) === 1)
   await cu.fill('harmattan evening walk'); await p.waitForTimeout(100)
   await p.locator('.sheet .btn-primary').click(); await p.waitForTimeout(500)
-  ok('the right one does', (await p.locator('.scrim > .sheet').count()) === 0)
+  ok('the right one does', (await p.locator('.scrim .sheet').count()) === 0)
   await p.close()
 }
 

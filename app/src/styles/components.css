@@ -578,6 +578,155 @@
   to { opacity: 1; transform: scale(1) }
 }
 
+
+/* ---------- the breathing beam ----------
+
+   A halo around the confirmation sheet that swells and settles, so the moment
+   money lands has something around it as well as the coin turning inside it.
+
+   Ported from `border-beam` — Copyright (c) 2026 Jakub Antalik, MIT — the
+   engine under Spectrum UI's Beam Card, as CSS rather than as a dependency: this product has no
+   React and no runtime dependencies, and the whole effect is three stacked
+   layers of radial gradient. Geometry, blur radii and opacities are the shipped
+   `pulse-outside` numbers; the colours are the product's green instead of the
+   nine hues it ships with, and the hue cycle is fourteen degrees rather than a
+   full revolution. See `beam.ts` for the seventeen numbers that breathe and why
+   they are driven from a frame loop rather than from keyframes.
+
+   Three layers, outward: a one-pixel ring on the sheet's own edge, a soft core
+   ten pixels beyond it, and a wide halo thirty beyond that. The last two sit
+   behind the sheet, so only the part that spills past it is ever seen — which
+   is why the wrapper isolates its stacking context and why the sheet under it
+   has to stay opaque. */
+
+@property --bw1 { syntax: "<number>"; initial-value: 1; inherits: true; }
+@property --bh1 { syntax: "<number>"; initial-value: 1; inherits: true; }
+@property --bw2 { syntax: "<number>"; initial-value: 1; inherits: true; }
+@property --bh2 { syntax: "<number>"; initial-value: 1; inherits: true; }
+@property --bw3 { syntax: "<number>"; initial-value: 1; inherits: true; }
+@property --bh3 { syntax: "<number>"; initial-value: 1; inherits: true; }
+@property --bgh { syntax: "<number>"; initial-value: 1; inherits: true; }
+@property --bop-tl { syntax: "<number>"; initial-value: 1; inherits: true; }
+@property --bop-tr { syntax: "<number>"; initial-value: 1; inherits: true; }
+@property --bop-bl { syntax: "<number>"; initial-value: 1; inherits: true; }
+@property --bop-br { syntax: "<number>"; initial-value: 1; inherits: true; }
+@property --bx1 { syntax: "<length>"; initial-value: 0px; inherits: true; }
+@property --by1 { syntax: "<length>"; initial-value: 0px; inherits: true; }
+@property --bx2 { syntax: "<length>"; initial-value: 0px; inherits: true; }
+@property --by2 { syntax: "<length>"; initial-value: 0px; inherits: true; }
+@property --bx3 { syntax: "<length>"; initial-value: 0px; inherits: true; }
+@property --by3 { syntax: "<length>"; initial-value: 0px; inherits: true; }
+@property --beam-opacity { syntax: "<number>"; initial-value: 0; inherits: true; }
+@property --beam-hue { syntax: "<angle>"; initial-value: 0deg; inherits: true; }
+
+.beam {
+  position: relative;
+  max-width: 100%;
+  border-radius: var(--r-sheet);
+  overflow: visible;
+  isolation: isolate;
+  animation: beam-in 600ms ease forwards;
+}
+@keyframes beam-in { to { --beam-opacity: 1 } }
+
+/* The edge. One pixel of colour riding the sheet's own border, masked to the
+   ring by excluding the content box from the padding box. */
+.beam::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r-sheet);
+  padding: 1px;
+  clip-path: inset(0 round var(--r-sheet));
+  background:
+    radial-gradient(ellipse calc(23.0% * var(--bw1)) calc(9.5% * var(--bh1) * var(--bgh)) at calc(27% + var(--bx1)) calc(0% + var(--by1)), rgba(var(--beam-0), var(--bop-tl)), transparent),
+    radial-gradient(ellipse calc(21.3% * var(--bw2)) calc(5.5% * var(--bh2) * var(--bgh)) at calc(73% + var(--bx2)) calc(-1% + var(--by2)), rgba(var(--beam-6), var(--bop-tr)), transparent),
+    radial-gradient(ellipse calc(4.3% * var(--bw3)) calc(22.0% * var(--bh3) * var(--bgh)) at calc(100% + var(--bx3)) calc(33% + var(--by3)), rgba(var(--beam-7), var(--bop-tr)), transparent),
+    radial-gradient(ellipse calc(5.5% * var(--bw1)) calc(19.0% * var(--bh1) * var(--bgh)) at calc(101% + var(--bx1)) calc(72% + var(--by1)), rgba(var(--beam-8), var(--bop-br)), transparent),
+    radial-gradient(ellipse calc(24.1% * var(--bw2)) calc(6.5% * var(--bh2) * var(--bgh)) at calc(67% + var(--bx2)) calc(100% + var(--by2)), rgba(var(--beam-4), var(--bop-br)), transparent),
+    radial-gradient(ellipse calc(17.2% * var(--bw3)) calc(10.5% * var(--bh3) * var(--bgh)) at calc(24% + var(--bx3)) calc(101% + var(--by3)), rgba(var(--beam-1), var(--bop-bl)), transparent),
+    radial-gradient(ellipse calc(4.9% * var(--bw1)) calc(20.0% * var(--bh1) * var(--bgh)) at calc(0% + var(--bx1)) calc(60% + var(--by1)), rgba(var(--beam-2), var(--bop-bl)), transparent),
+    radial-gradient(ellipse calc(3.7% * var(--bw2)) calc(16.0% * var(--bh2) * var(--bgh)) at calc(-1% + var(--bx2)) calc(28% + var(--by2)), rgba(var(--beam-3), var(--bop-tl)), transparent);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 2;
+  will-change: opacity, filter;
+  opacity: calc(var(--beam-opacity) * var(--beam-edge-o));
+  filter: hue-rotate(var(--beam-hue)) brightness(var(--beam-bright)) saturate(var(--beam-sat));
+}
+
+/* The core, a few pixels beyond the edge and behind the sheet, so only its
+   blurred bleed is ever seen. */
+.beam::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  z-index: -1;
+  border-radius: calc(var(--r-sheet) + 6px);
+  background:
+    radial-gradient(ellipse calc(23.0% * var(--bw1)) calc(9.5% * var(--bh1) * var(--bgh)) at calc(27% + var(--bx1)) calc(0% + var(--by1)), rgba(var(--beam-0), var(--bop-tl)), transparent),
+    radial-gradient(ellipse calc(21.3% * var(--bw2)) calc(5.5% * var(--bh2) * var(--bgh)) at calc(73% + var(--bx2)) calc(-1% + var(--by2)), rgba(var(--beam-6), var(--bop-tr)), transparent),
+    radial-gradient(ellipse calc(4.3% * var(--bw3)) calc(22.0% * var(--bh3) * var(--bgh)) at calc(100% + var(--bx3)) calc(33% + var(--by3)), rgba(var(--beam-7), var(--bop-tr)), transparent),
+    radial-gradient(ellipse calc(5.5% * var(--bw1)) calc(19.0% * var(--bh1) * var(--bgh)) at calc(101% + var(--bx1)) calc(72% + var(--by1)), rgba(var(--beam-8), var(--bop-br)), transparent),
+    radial-gradient(ellipse calc(24.1% * var(--bw2)) calc(6.5% * var(--bh2) * var(--bgh)) at calc(67% + var(--bx2)) calc(100% + var(--by2)), rgba(var(--beam-4), var(--bop-br)), transparent),
+    radial-gradient(ellipse calc(17.2% * var(--bw3)) calc(10.5% * var(--bh3) * var(--bgh)) at calc(24% + var(--bx3)) calc(101% + var(--by3)), rgba(var(--beam-1), var(--bop-bl)), transparent),
+    radial-gradient(ellipse calc(4.9% * var(--bw1)) calc(20.0% * var(--bh1) * var(--bgh)) at calc(0% + var(--bx1)) calc(60% + var(--by1)), rgba(var(--beam-2), var(--bop-bl)), transparent),
+    radial-gradient(ellipse calc(3.7% * var(--bw2)) calc(16.0% * var(--bh2) * var(--bgh)) at calc(-1% + var(--bx2)) calc(28% + var(--by2)), rgba(var(--beam-3), var(--bop-tl)), transparent);
+  pointer-events: none;
+  will-change: opacity, filter;
+  opacity: calc(var(--beam-opacity) * var(--beam-core-o));
+  filter: blur(var(--beam-core-blur)) hue-rotate(var(--beam-hue))
+          brightness(var(--beam-bright)) saturate(var(--beam-sat));
+}
+
+/* The halo. Fewer blobs, bigger, blurred far enough to read as light in the air
+   rather than as a shape. It does not breathe its own alpha — the core's
+   corners do that, and two things dipping at once reads as flicker. */
+.beam-bloom {
+  position: absolute;
+  inset: -8% -6%;
+  z-index: -1;
+  border-radius: calc(var(--r-sheet) + 30px);
+  background:
+    radial-gradient(ellipse 31.6% 15.0% at 27% 3%, rgba(var(--beam-0), var(--beam-bloom-a)), transparent),
+    radial-gradient(ellipse 28.7% 10.0% at 73% 1%, rgba(var(--beam-6), var(--beam-bloom-a)), transparent),
+    radial-gradient(ellipse 7.5% 31.0% at 100% 33%, rgba(var(--beam-7), var(--beam-bloom-a)), transparent),
+    radial-gradient(ellipse 8.6% 28.0% at 101% 72%, rgba(var(--beam-8), var(--beam-bloom-a)), transparent),
+    radial-gradient(ellipse 34.5% 11.0% at 67% 99%, rgba(var(--beam-4), var(--beam-bloom-a)), transparent),
+    radial-gradient(ellipse 25.3% 16.0% at 24% 99%, rgba(var(--beam-1), var(--beam-bloom-a)), transparent),
+    radial-gradient(ellipse 8.0% 29.0% at 0% 60%, rgba(var(--beam-2), var(--beam-bloom-a)), transparent);
+  pointer-events: none;
+  will-change: opacity, filter;
+  opacity: calc(var(--beam-opacity) * var(--beam-halo-o));
+  filter: blur(var(--beam-halo-blur)) hue-rotate(var(--beam-hue))
+          brightness(var(--beam-bright)) saturate(var(--beam-sat));
+}
+
+/* Somebody who has asked for less motion keeps the halo and loses the breath:
+   the sheet is still framed in green, and nothing moves. `beam.ts` never
+   registers, so the seventeen properties hold their initial values. */
+@media (prefers-reduced-motion: reduce) {
+  .beam { animation: none; --beam-opacity: 1; }
+}
+
+/* On a phone the sheet comes up flush to the left, right and bottom of the
+   screen, so the halo has one edge to spill from and the other three go over
+   the side. That is the right answer rather than a fault: the top edge and its
+   two corners are where the eye already is when a sheet arrives. The ring
+   follows the sheet's own shape so it does not draw corners nobody can see. */
+@media (max-width: 899px) {
+  .beam { width: 100%; border-radius: var(--r-sheet) var(--r-sheet) 0 0; }
+  .beam::after {
+    border-radius: var(--r-sheet) var(--r-sheet) 0 0;
+    clip-path: inset(0 round var(--r-sheet) var(--r-sheet) 0 0);
+  }
+  .beam::before { border-radius: calc(var(--r-sheet) + 10px) calc(var(--r-sheet) + 10px) 0 0; }
+  .beam-bloom { border-radius: calc(var(--r-sheet) + 30px) calc(var(--r-sheet) + 30px) 0 0; }
+}
+
 /* The company a trade's receipt is about, and the shape it has been in. */
 .receipt-co { display: flex; align-items: flex-start; gap: 16px; }
 .spark { height: 56px; width: 100%; }

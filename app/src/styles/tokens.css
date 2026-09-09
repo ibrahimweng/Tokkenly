@@ -37,6 +37,33 @@
      the bucket. Bright on purpose: both are a moment, and a moment that is
      quiet is a moment nobody sees. The illustrations do NOT use these; see the
      field rungs below. */
+  /* The breathing beam around a confirmation (11g.62). Nine slots, because the
+     effect it is ported from has nine, and nine greens rather than the nine
+     hues it ships with: a rainbow here would be the loudest thing in the
+     product, and 11g.59 spent a tier taking colour out of the ground. Kept as
+     components so the halo can breathe its alpha per corner. */
+  --beam-0: 63, 217, 155;
+  --beam-1: 52, 208, 130;
+  --beam-2: 104, 232, 168;
+  --beam-3: 34, 180, 120;
+  --beam-4: 126, 240, 176;
+  --beam-6: 96, 226, 128;
+  --beam-7: 44, 196, 148;
+  --beam-8: 150, 238, 175;
+  --beam-bloom-a: 0.77;
+  --beam-core-blur: 3px;
+  --beam-halo-blur: 22.5px;
+  /* 1.9 is the shipped figure and it was chosen for nine hues, where blowing
+     one channel out just moves you along the rainbow. On a single green it
+     moves you off it: the blue channel clips first and the whole beam reads
+     teal. Pulled back until the light stays green at its brightest, and the
+     opacities lifted to buy back what the brightness gave up. */
+  --beam-bright: 1.45;
+  --beam-sat: 1.2;
+  --beam-edge-o: 0.94;
+  --beam-core-o: 0.44;
+  --beam-halo-o: 0.42;
+
   --dot-dim: #65656c;
   --dot-mid: #a6a6ad;
   --dot-lit: #dcdce0;
@@ -138,6 +165,26 @@
   --negative: #ab3d16;   /* #b8431a was 4.47:1 on --control, just under AA */
   --warning: #8a6510;
   --data-2: #6c3bab;
+
+  /* Deeper greens on white, and the shipped light-theme weights: a glow on a
+     pale ground has less contrast to spend, so it leans on travel and on a
+     wider, softer core rather than on brightness. */
+  --beam-0: 15, 125, 85;
+  --beam-1: 20, 132, 78;
+  --beam-2: 31, 148, 102;
+  --beam-3: 10, 92, 62;
+  --beam-4: 46, 165, 112;
+  --beam-6: 38, 146, 74;
+  --beam-7: 13, 118, 92;
+  --beam-8: 58, 162, 106;
+  --beam-bloom-a: 1;
+  --beam-core-blur: 6px;
+  --beam-halo-blur: 15px;
+  --beam-bright: 1.7;
+  --beam-sat: 0.6;
+  --beam-edge-o: 1.96;
+  --beam-core-o: 1.04;
+  --beam-halo-o: 0.42;
 
   --tint-brand: #e4efea;
   /* Lifted from #e2f2ea. The positive ink on it came to 4.44 against the 4.5

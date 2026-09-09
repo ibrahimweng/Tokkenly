@@ -7653,6 +7653,90 @@ dialog wanting deleting, and it is written down here rather than guessed at.
      about where somebody is standing, and search will keep sending them there.
      Turn the door grey, leave it openable, and let the room explain itself.
 
+### 11g.62 A light around the thing that just happened
+
+Asked for a more celebratory confirmation, and given the thing itself to look
+at: Spectrum UI's Beam Card, and inside it `border-beam` by Jakub Antalík
+(MIT). Two beams on that page — one that travels the edge and one that
+breathes. The breathing one.
+
+**What was taken, and what was not.** The install line is
+`shadcn@latest add @spectrumui/beam-card`, which wants shadcn, React 18 and
+Tailwind; this product has none of the three and no runtime dependencies at
+all. But the React component's whole job is to build a stylesheet string, so
+what came across is the recipe, not the package: three stacked layers of radial
+gradient — a one-pixel ring on the sheet's own edge, a soft core six pixels
+beyond it, a wide halo past that — and seventeen custom properties breathing
+their size, position and per-corner opacity on seventeen periods, none of them
+a multiple of another. That last part is why it reads as something alive rather
+than as a pulse, and it is why the breath is driven from one frame loop capped
+near thirty frames a second rather than from keyframes: seventeen numbers out
+of step is not a thing CSS can say in one animation. Geometry, blur radii,
+phase offsets and opacities are the shipped `pulse-outside` figures.
+
+**Two deliberate departures, and one forced one.**
+
+The palette. It ships nine hues on a rainbow, cycling a full hue revolution
+every fourteen seconds. Dropped in here it would be the loudest thing in the
+product, and 11g.59 spent a whole tier taking colour *out* of the ground so the
+words could be read. So the nine slots are nine greens — the product's own —
+and the revolution is narrowed to fourteen degrees either side, which keeps the
+light moving between a cooler and a warmer green rather than through
+everything.
+
+Brightness, which followed from that. The shipped multiplier is 1.9, and on
+nine hues blowing a channel out only slides you along the rainbow. On a single
+green it slides you off it: blue clips first and the whole beam reads teal. The
+first build was measurably correct and visibly the wrong colour. Pulled back to
+1.45, with the layer opacities lifted to buy back the light that gave up.
+
+And the geometry, which was not a choice. The component sizes its glow in
+pixels tuned for a card about 348 by 200, and pulls the layers in with
+`scale(0.95, 0.9)` so the light hugs rather than boxes. On a card that leaves
+the halo spilling about seventeen pixels past the edge. On this sheet — 480 by
+675 — the same numbers put the halo at 513 by 662, which is *narrower than the
+sheet it is supposed to be glowing around*: the entire effect rendered
+faithfully and then hid behind the panel. The blobs are proportions of the
+reference card now, and the outsets are percentages of the sheet. `sheets.mjs`
+measures the spill on both axes, because a halo that has vanished behind its
+own card looks exactly like a halo nobody wrote.
+
+**Where it goes.** Every outcome that is glad about itself: Sent, Paid, Sent
+shares, Bought, Sold, Borrowed, Repaid, Lent, Taken back. "Still settling" gets
+neither the coin nor the beam, for the reason it already got neither the coin
+nor the wash — that one has not come back confirmed, and a product pleased
+about its own silence is a product lying.
+
+The coin stays. They are different jobs: the coin is the moment landing, the
+beam is the frame being pleased about it, and the coin is inside the sheet
+while the beam is outside it. Which is not a figure of speech — the beam
+*cannot* be inside. Two of its three layers sit behind the panel and are only
+ever seen where they spill past its edge, and the sheet is a scrolling box with
+`overflow: auto` that crops them to nothing. So the panel is wrapped, and the
+wrapper is what breathes.
+
+On a phone the sheet comes up flush to the left, right and bottom of the
+screen, so the light has one edge to spill from and the other three go over the
+side. That is the right answer and not a fault: the top edge and its two
+corners are where the eye already is when a sheet arrives.
+
+Somebody who has asked for less motion keeps the halo and loses the breath. The
+frame loop never registers, the seventeen properties hold their initial values,
+and the confirmation is still framed in green.
+
+155. **A ported effect keeps its numbers and loses its dimensions.** Opacities,
+     periods, blur radii and phase offsets travel; anything measured in pixels
+     was measured against the box the original sat in. Re-express it as a
+     proportion of the box it is going into, or ship something that renders
+     perfectly and cannot be seen.
+
+156. **An effect that is invisible fails silently, so check the geometry and
+     not the styles.** Every computed value can be correct while the thing is
+     hidden behind the object it decorates. Assert the overlap — how far it
+     reaches past what it is drawn around — because that is the claim, and it
+     is the one a screenshot of a dark sheet on a dark scrim will not make for
+     you.
+
 ### 11g.49 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from
