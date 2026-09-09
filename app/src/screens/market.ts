@@ -1,7 +1,7 @@
 import { h } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
-import { card, cardHead, emptyState, bucketBar, showBucketBar } from '../components/bits'
+import { card, cardHead, headLink, emptyState, bucketBar, showBucketBar } from '../components/bits'
 import { searchField, searchNote } from '../components/search'
 import { rank, onlyNear } from '../match'
 import { table } from '../components/table'
@@ -315,7 +315,14 @@ export function marketScreen(): HTMLElement {
     results,
     h('div', { class: 'row equal' },
       card(
-        cardHead('Where people start'),
+        // The heading is the way in, the same pattern the wallet uses for
+        // "All activity". The card keeps its rows, because Invest is a page
+        // you scan; the screen is there for when four rows is not enough.
+        //
+        // And the link names what is on the other side rather than saying
+        // "See all", which names nothing — rule 49, and `names.mjs` caught all
+        // three the first time they were written.
+        cardHead('Where people start', headLink('Why these three', '/invest/list/starters')),
         ...PICKS.map((p) => {
           const c = find(p.ticker)!
           const row = h('div', { class: 'kv', style: { cursor: 'pointer' } },
@@ -326,8 +333,9 @@ export function marketScreen(): HTMLElement {
           row.addEventListener('click', () => go(pathOf(c)))
           return row
         })),
-      card(cardHead('Your watchlist'), ...state.watchlist.map(tickerRow)),
-      card(cardHead('Moving today'),
+      card(cardHead('Your watchlist', headLink('Everything you follow', '/invest/list/watchlist')),
+        ...state.watchlist.map(tickerRow)),
+      card(cardHead('Moving today', headLink('Up and down today', '/invest/list/movers')),
         ...[...CATALOGUE].sort((a, b) => Math.abs(b.dayPct) - Math.abs(a.dayPct)).slice(0, 4)
           .map((c) => tickerRow(c.ticker)))),
     // Once, at the foot of the page. A risk line on every card is a risk line

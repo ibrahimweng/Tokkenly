@@ -7,6 +7,7 @@ import { barChart, sparkline, type Range } from '../components/chart'
 import { state, actions, holding, inBucket, money, assetOn, MASK } from '../state'
 import { usd, pct, signed, shares, shares as fmtShares } from '../format'
 import { go } from '../router'
+import { pageable, beside as besideOf } from '../components/pager'
 import { toast } from '../components/sheet'
 import { isMobile } from '../responsive'
 import { celebrate } from '../confetti'
@@ -86,67 +87,6 @@ function coStrip(now: Instrument): HTMLElement {
     strip.querySelector('.co-cell.on')?.scrollIntoView({ block: 'nearest', inline: 'center' })
   })
   return strip
-}
-
-/** Which two companies a swipe or an arrow key reaches from here.
- *
- *  Module level, and read by one listener installed once, because the app
- *  rebuilds its whole tree on every state change: a keydown handler added per
- *  render would leave a stack of stale ones, and a single press would page
- *  several companies at once. */
-let beside: { prev: Instrument; next: Instrument } | null = null
-let keysWired = false
-
-/** Where a horizontal drag must not start. The chart reads the pointer itself,
- *  the strip scrolls sideways on its own, and a table that scrolls sideways is
- *  a third thing that owns the axis. Taking the gesture from any of them would
- *  make the page lurch when somebody meant to do something inside it. */
-const OWNS_THE_AXIS = '.ch-plot, .co-strip, .table-scroll, .chip-row, .tf-row, input, textarea'
-
-function pageable(el: HTMLElement, now: Instrument): void {
-  const i = CATALOGUE.findIndex((c) => c.ticker === now.ticker)
-  // Wrapping, so a swipe always does something. A pager that stops dead at
-  // Disney reads as broken rather than as finished.
-  beside = {
-    prev: CATALOGUE[(i - 1 + CATALOGUE.length) % CATALOGUE.length],
-    next: CATALOGUE[(i + 1) % CATALOGUE.length],
-  }
-
-  let x0 = 0, y0 = 0, tracking = false
-  el.addEventListener('touchstart', (e) => {
-    tracking = false
-    if (e.touches.length !== 1) return
-    if ((e.target as Element).closest?.(OWNS_THE_AXIS)) return
-    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; tracking = true
-  }, { passive: true })
-  el.addEventListener('touchend', (e) => {
-    if (!tracking) return
-    tracking = false
-    const dx = e.changedTouches[0].clientX - x0
-    const dy = e.changedTouches[0].clientY - y0
-    // Far enough to be meant, and sideways enough not to be a scroll that
-    // wandered. 1.6 rather than 1: a thumb travelling up a long page is never
-    // perfectly vertical, and paging the screen out from under somebody who
-    // was reading it is the worst thing this gesture can do.
-    if (Math.abs(dx) < 64 || Math.abs(dx) < Math.abs(dy) * 1.6) return
-    go(pathOf(dx < 0 ? beside!.next : beside!.prev))
-  }, { passive: true })
-
-  if (keysWired) return
-  keysWired = true
-  addEventListener('keydown', (e) => {
-    // A company screen has to be the thing on screen, and nothing else can be
-    // holding the keyboard: a dialog owns the arrows while it is open, and so
-    // does anything somebody is typing in.
-    if (!beside || !document.querySelector('.co-strip')) return
-    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
-    if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return
-    if (document.querySelector('.scrim')) return
-    const t = e.target as HTMLElement | null
-    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return
-    e.preventDefault()
-    go(pathOf(e.key === 'ArrowLeft' ? beside.prev : beside.next))
-  })
 }
 
 /** Buying now and deciding later are different intents, so they are different
@@ -448,7 +388,8 @@ export function stockScreen(ticker: string): HTMLElement {
     footBars(c)
   )
   // A swipe left or right pages to the company beside this one, and so do the
-  // arrow keys. See `pageable`.
-  pageable(page, c)
+  // arrow keys — the same control the indices and the lists use.
+  const near = besideOf(CATALOGUE.map((x) => ({ key: x.ticker, to: pathOf(x) })), c.ticker)
+  pageable(page, { prev: near.prev.to, next: near.next.to, alive: '.co-strip' })
   return page
 }

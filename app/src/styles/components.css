@@ -727,24 +727,24 @@
   .beam-bloom { border-radius: calc(var(--r-sheet) + 30px) calc(var(--r-sheet) + 30px) 0 0; }
 }
 
-/* ---------- an index, opened ----------
+/* ---------- moving between screens that are a set ----------
 
-   Next and previous with the three named between them. Buttons rather than
-   only a gesture, because somebody was asked to press through a set of three
-   and a swipe nobody is told about is a feature only the people who already
-   know it find. The swipe and the arrow keys work as well; they are the same
-   idea from 11g.63. */
-.ix-pager { display: flex; align-items: center; gap: 8px; }
-.ix-step { flex: none; }
+   Previous, the names, next. Three sets use it: the thirteen companies, the
+   three indices and the groupings on Invest. Buttons rather than only a
+   gesture, because a swipe nobody is told about is a feature only the people
+   who already know it ever find; the swipe and the arrow keys work as well.
+   See `components/pager.ts`. */
+.pager { display: flex; align-items: center; gap: 8px; }
+.pager-step { flex: none; }
 /* One chevron, turned, rather than a second drawing to keep in step. */
-.ix-step.back svg { transform: rotate(180deg); }
-.ix-tabs {
+.pager-step.back svg { transform: rotate(180deg); }
+.pager-tabs {
   display: flex; gap: 8px; flex: 1 1 auto; min-width: 0;
   overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none;
   padding: 2px;
 }
-.ix-tabs::-webkit-scrollbar { display: none; }
-.ix-tab {
+.pager-tabs::-webkit-scrollbar { display: none; }
+.pager-tab {
   flex: none; min-height: 44px; padding: 0 18px;
   border-radius: var(--r-pill);
   background: var(--sunken); color: var(--muted);
@@ -752,19 +752,41 @@
   transition: background 120ms var(--ease), color 120ms var(--ease);
 }
 /* Two channels, the same as every other lit row in the product. Rule 147. */
-.ix-tab.on { background: var(--control); color: var(--ink); }
+.pager-tab.on { background: var(--control); color: var(--ink); }
 @media (hover: hover) {
-  .ix-tab:hover { background: var(--sunken-hover); }
-  .ix-tab.on:hover { background: var(--control-pressed); }
+  .pager-tab:hover { background: var(--sunken-hover); }
+  .pager-tab.on:hover { background: var(--control-pressed); }
 }
-.ix-tab:active { background: var(--control-pressed); }
-@media (max-width: 899px) { .ix-tab { padding: 0 14px; } }
+.pager-tab:active { background: var(--control-pressed); }
+@media (max-width: 899px) { .pager-tab { padding: 0 14px; } }
 
 /* The two things a row can say instead of offering a plus. Both are longer
    than a plus, and a pill reading "NOT OPE" is worse than one on two lines.
    Doubled up on `.shut` because that rule sets nowrap and sits later in this
    file: at equal specificity the last one wins, and the last one is not this. */
-.shut.ix-shut { white-space: normal; text-align: right; line-height: 14px; }
+.shut.wraps { white-space: normal; text-align: right; line-height: 14px; }
+
+/* One of the three the product puts forward, with the reason it does. A row
+   rather than a table cell: the reason is a sentence, and a sentence in a
+   column is a column that has to be as wide as the longest one. */
+.start-row {
+  display: flex; align-items: center; gap: 16px;
+  min-height: 56px; padding: 8px 0; cursor: pointer;
+  border-radius: var(--r-panel);
+}
+.start-row .spark { width: 64px; height: 28px; flex: none; }
+.start-row .right { align-items: flex-end; text-align: right; flex: none; }
+@media (hover: hover) { .start-row:hover { background: var(--sunken-hover); } }
+.start-row:active { background: var(--control-pressed); }
+@media (max-width: 899px) {
+  .start-row { gap: 12px; }
+  .start-row .spark { width: 48px; }
+}
+
+/* Two controls at the end of one row: put it in the bucket, or stop following
+   it. They are different verbs and the watchlist is the one screen that needs
+   both. */
+.row-acts { display: inline-flex; align-items: center; gap: 4px; }
 
 /* A card that goes somewhere says so before it is pressed. */
 .door-card { cursor: pointer; transition: background 120ms var(--ease); }

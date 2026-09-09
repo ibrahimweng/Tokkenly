@@ -60,9 +60,9 @@ console.log('THE PAGER  press next, and next again')
   await p.goto(B + '/invest/index/sp500', { waitUntil: 'domcontentloaded' })
   await p.waitForTimeout(500)
   ok('all three are named at the top',
-     (await p.evaluate(() => [...document.querySelectorAll('.ix-tab')]
+     (await p.evaluate(() => [...document.querySelectorAll('.pager-tab')]
        .map((e) => e.textContent.trim()).join('|'))) === 'S&P 500|Nasdaq-100|Dow Jones')
-  const next = async () => { await p.locator('.ix-step').last().click(); await p.waitForTimeout(420) }
+  const next = async () => { await p.locator('.pager-step').last().click(); await p.waitForTimeout(420) }
   await next(); const one = await hash(p)
   await next(); const two = await hash(p)
   await next(); const three = await hash(p)
@@ -71,9 +71,9 @@ console.log('THE PAGER  press next, and next again')
   // Three pages that stop dead at the third read as broken rather than as
   // finished, and Next is the control this page was asked for.
   ok('and wraps rather than stopping dead', three === '#/invest/index/sp500', three)
-  await p.locator('.ix-step').first().click(); await p.waitForTimeout(420)
+  await p.locator('.pager-step').first().click(); await p.waitForTimeout(420)
   ok('Previous goes the other way', (await hash(p)) === '#/invest/index/dow', await hash(p))
-  await p.locator('.ix-tab', { hasText: 'Nasdaq-100' }).click(); await p.waitForTimeout(420)
+  await p.locator('.pager-tab', { hasText: 'Nasdaq-100' }).click(); await p.waitForTimeout(420)
   ok('and a name goes straight there', (await hash(p)) === '#/invest/index/nasdaq', await hash(p))
   await p.keyboard.press('ArrowLeft'); await p.waitForTimeout(420)
   ok('the arrow keys page as well', (await hash(p)) === '#/invest/index/sp500', await hash(p))
@@ -182,12 +182,12 @@ console.log('PHONE')
   await p.goto(B + '/invest/index/sp500', { waitUntil: 'domcontentloaded' })
   await p.waitForTimeout(500)
   const m = await p.evaluate(() => {
-    const pager = document.querySelector('.ix-pager').getBoundingClientRect()
+    const pager = document.querySelector('.pager').getBoundingClientRect()
     const h1 = document.querySelector('h1')
     return {
       over: document.documentElement.scrollWidth - document.documentElement.clientWidth,
       pagerUp: pager.bottom <= window.innerHeight + 1,
-      taps: [...document.querySelectorAll('.ix-tab, .ix-step')]
+      taps: [...document.querySelectorAll('.pager-tab, .pager-step')]
         .map((e) => Math.round(e.getBoundingClientRect().height)),
       rows: document.querySelectorAll('.feed-row').length,
       // A sentence beside the title used to squeeze it to "S&P …" here.

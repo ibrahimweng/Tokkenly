@@ -67,6 +67,15 @@ export const DESTINATIONS: Destination[] = [
     also: 'nasdaq index technology hundred qqq', hint: 'The hundred largest on the Nasdaq' },
   { label: 'Dow Jones', to: '/invest/index/dow', place: 'market', kind: 'screen',
     also: 'dow jones industrial average thirty index', hint: 'Thirty large American companies' },
+  // The three groupings Invest ends in. Popular is not among them: it is a
+  // chip on Invest that filters the market table, and a screen for it would be
+  // that same list at a second address (11g.65).
+  { label: 'Where people start', to: '/invest/list/starters', place: 'market', kind: 'screen',
+    also: 'starter first buy beginner picks suggestions new', hint: 'The three we put forward, and why' },
+  { label: 'Your watchlist', to: '/invest/list/watchlist', place: 'market', kind: 'screen',
+    also: 'following follow watch list saved', hint: 'What you are following' },
+  { label: 'Moving today', to: '/invest/list/movers', place: 'market', kind: 'screen',
+    also: 'movers gainers fallers up down biggest move today', hint: 'Up and down, apart' },
   { label: 'Your bucket', to: '/bucket', place: 'market', kind: 'screen', primary: true,
     also: 'basket cart picked saved pay later checkout', hint: 'Companies you have picked, not yet paid for' },
   { label: 'Apple', to: '/invest/aapl', place: 'market', kind: 'screen', also: 'aapl stock company' },

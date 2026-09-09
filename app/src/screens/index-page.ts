@@ -4,11 +4,12 @@ import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, kv, callout, bucketBar, showBucketBar } from '../components/bits'
 import { table } from '../components/table'
 import { barChart, type Range } from '../components/chart'
-import { INDEXES, findIndex, beside, listedIn, type Index, type Member } from '../indices'
+import { INDEXES, findIndex, listedIn, type Index, type Member } from '../indices'
 import { find, tradable, pathOf } from '../catalogue'
 import { state, actions, inBucket, assetOn } from '../state'
 import { usd, pct } from '../format'
 import { go } from '../router'
+import { pagerRow, pageable, beside, type Stop } from '../components/pager'
 import { celebrate } from '../confetti'
 
 /* An index, opened.
@@ -25,6 +26,9 @@ import { celebrate } from '../confetti'
    and its indicative price, and says it is not listed. Twenty dead rows dressed
    as live ones would be the product lying about what it sells — and the gap is
    worth showing, because it is what the launch set looks like at index scale. */
+
+/** The three, as the pager knows them. */
+const STOPS: Stop[] = INDEXES.map((i) => ({ key: i.key, label: i.name, to: '/invest/index/' + i.key }))
 
 /** The level over a year, drawn from the same seeded series every other chart
  *  in the product draws from. An index has no bid and no ask, so there is no
@@ -51,47 +55,15 @@ function levelChart(ix: Index): HTMLElement {
   })
 }
 
-/** Next and previous, with the three named between them.
- *
- *  Explicitly buttons rather than only a gesture: this is a set of three, a
- *  person asked to press through them, and a swipe nobody is told about is a
- *  feature only somebody who already knows finds. The arrow keys and the swipe
- *  from 11g.63 work here too, because they are the same idea. */
-function pager(ix: Index): HTMLElement {
-  const { prev, next } = beside(ix.key)
-  const step = (to: Index, where: 'prev' | 'next') =>
-    h('button', {
-      class: 'icon-btn ix-step' + (where === 'prev' ? ' back' : ''),
-      ariaLabel: (where === 'prev' ? 'Previous index, ' : 'Next index, ') + to.name,
-      title: to.name,
-      // One chevron, turned. A second SVG that is the first one mirrored is a
-      // second drawing to keep in step with the first.
-      html: icon.chevron(),
-      on: { click: () => go('/invest/index/' + to.key) },
-    })
-  const tabs = h('nav', { class: 'ix-tabs', ariaLabel: 'Indices' },
-    ...INDEXES.map((x) => {
-      const on = x.key === ix.key
-      const b = h('button', {
-        class: 'ix-tab' + (on ? ' on' : ''),
-        text: x.name,
-        on: { click: () => { if (!on) go('/invest/index/' + x.key) } },
-      })
-      if (on) b.setAttribute('aria-current', 'page')
-      return b
-    }))
-  return h('div', { class: 'ix-pager' }, step(prev, 'prev'), tabs, step(next, 'next'))
-}
-
 /** One press into the bucket, for the rows Tokkenly sells. The same plus the
  *  market list and the company page carry. */
 function bucketCell(m: Member): HTMLElement {
   const c = m.ticker ? find(m.ticker) : undefined
   // Not listed, not for sale, and no control at all rather than one that
   // refuses: the safest version of a button you must not press is no button.
-  if (!c) return h('span', { class: 'shut ix-shut', text: 'Not listed here',
+  if (!c) return h('span', { class: 'shut wraps', text: 'Not listed here',
     title: m.name + ' is in this index. Tokkenly does not list it.' })
-  if (!tradable(c)) return h('span', { class: 'shut ix-shut', text: 'Not open yet',
+  if (!tradable(c)) return h('span', { class: 'shut wraps', text: 'Not open yet',
     title: c.ticker + ' is not in the approved launch set yet, so it cannot be bought.' })
   const inIt = !!inBucket(c.ticker)
   const b = h('button', {
@@ -218,7 +190,7 @@ export function indexScreen(key?: string): HTMLElement {
     // phone — and it was the same sentence the What this is card prints two
     // inches below, which is one description in two places.
     pageHeader(ix.name),
-    pager(ix),
+    pagerRow(STOPS, ix.key, 'Indices'),
     h('div', { class: 'row' },
       h('div', { class: 'stack col-main' },
         card(
@@ -245,48 +217,10 @@ export function indexScreen(key?: string): HTMLElement {
         how(ix),
         wholeThing(ix))),
     bucketBar())
-  // The swipe and the arrow keys, the same as a company page. The pager above
-  // is the one that has to be visible; these are for somebody who has already
-  // worked out that this is a set of three.
-  swipeable(page, ix)
+  // The swipe and the arrow keys, the same as a company page and the lists.
+  // The pager above is the one that has to be visible; these are for somebody
+  // who has already worked out that this is a set of three.
+  const { prev, next } = beside(STOPS, ix.key)
+  pageable(page, { prev: prev.to, next: next.to, alive: '.pager' })
   return page
-}
-
-/* The gesture, kept apart from the screen so the screen reads as a screen.
-   Same rules as 11g.63: far enough to be meant, sideways enough not to be a
-   scroll that wandered, and never taken from something that owns the axis. */
-const OWNS_THE_AXIS = '.ch-plot, .ix-tabs, .table-scroll, .chip-row, input, textarea'
-let paging: { prev: Index; next: Index } | null = null
-let keysWired = false
-
-function swipeable(el: HTMLElement, ix: Index): void {
-  paging = beside(ix.key)
-  let x0 = 0, y0 = 0, tracking = false
-  el.addEventListener('touchstart', (e) => {
-    tracking = false
-    if (e.touches.length !== 1) return
-    if ((e.target as Element).closest?.(OWNS_THE_AXIS)) return
-    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; tracking = true
-  }, { passive: true })
-  el.addEventListener('touchend', (e) => {
-    if (!tracking) return
-    tracking = false
-    const dx = e.changedTouches[0].clientX - x0
-    const dy = e.changedTouches[0].clientY - y0
-    if (Math.abs(dx) < 64 || Math.abs(dx) < Math.abs(dy) * 1.6) return
-    go('/invest/index/' + (dx < 0 ? paging!.next.key : paging!.prev.key))
-  }, { passive: true })
-
-  if (keysWired) return
-  keysWired = true
-  addEventListener('keydown', (e) => {
-    if (!paging || !document.querySelector('.ix-pager')) return
-    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
-    if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return
-    if (document.querySelector('.scrim')) return
-    const t = e.target as HTMLElement | null
-    if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return
-    e.preventDefault()
-    go('/invest/index/' + (e.key === 'ArrowLeft' ? paging.prev.key : paging.next.key))
-  })
 }

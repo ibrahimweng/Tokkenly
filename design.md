@@ -7882,6 +7882,72 @@ with the whole index in it is the one that stays.
      right until the first screen where it is not, and then it will contradict
      the sentence printed beside it. The unit belongs to the caller.
 
+### 11g.65 Four rows is not an answer
+
+Invest ended in three cards holding three, four and however-many rows, with no
+way to see the rest and nothing to do from any of them but leave. Each is a
+question somebody is actually asking — what should I start with, what am I
+following, what is moving — and each answer was four rows long.
+
+Three screens, and each had to earn its address, because a screen that is the
+same table under a different heading is a second door to one room.
+
+**Where people start** carries the reason the product puts each company
+forward, which the card never had room for, and then separates two things the
+rest of the product blurs: `tradable` means "in the approved launch set", not
+"you can buy it this afternoon". Meta is in the set and switched off. On the
+one screen whose job is to tell somebody where to begin, a first buy landing on
+a paused company is the wrong outcome, so what is open and what is paused are
+two cards rather than one list. The paused one is named rather than dropped —
+a company that vanishes makes people think they misremembered it.
+
+**Your watchlist** does the thing the card could not: stop following, from the
+list, rather than by opening thirteen company pages. Emptied, it says what
+following is for instead of showing a blank.
+
+**Moving today** splits up from down. "Moving" without a direction is two
+questions in one list — the thing that is up four per cent and the thing that
+is down four are both moving and nobody is looking for both at once — and it
+leads with the widest move, which is the thing the card's four rows were
+approximating.
+
+**Popular is deliberately not among them.** It is a chip on Invest that filters
+the market table, the table is not capped, and a fourth screen would have been
+that same list at a second address — rule 144, and the thing four sections
+opening out would most easily have got wrong. The strip names it and sends you
+to the chip.
+
+**And the third copy of one idea became one.** Three sets of screens now step
+through each other — the thirteen companies, the three indices, these
+groupings — and each had grown its own row of names and its own swipe handler.
+Three chances to drift, three places to fix anything found in one, and by the
+third it was plainly a component: `components/pager.ts` holds the row, the
+gesture and the single keydown listener, and the company page and the index
+page were moved onto it in the same change rather than left as the two that
+came first.
+
+The cards on Invest keep their rows and gain a link in the heading, the same
+"All activity" pattern the wallet already uses. Invest stays a page you scan;
+the screens are for when four rows is not enough.
+
+All three of those links said "See all" when they were written, and `names.mjs`
+failed on all three: rule 49 has held since 11g, and "See all" names nothing.
+They say what is on the other side now — *Why these three*, *Everything you
+follow*, *Up and down today*. Worth writing down that the rule caught it rather
+than a person, which is the whole point of having put it in a suite.
+
+161. **A section that opens out has to open onto more than the same rows.** The
+     easy version of "give it a screen" is the list it already showed at a new
+     address. If nothing can be added — an order that means something, a
+     control the card had no room for, a distinction the summary blurred — then
+     the card was the right size and the heading should lead to what already
+     exists.
+
+162. **The third copy is the one that proves it was a component.** Two similar
+     things can be a coincidence; three is a shape. Extract it when the third
+     arrives and move the first two across in the same change, or ship three
+     versions of one idea that will drift.
+
 ### 11g.49 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from

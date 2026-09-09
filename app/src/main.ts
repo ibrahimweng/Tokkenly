@@ -25,6 +25,7 @@ import { adminScreen } from './screens/admin'
 import { signInScreen, signUpScreen } from './screens/auth'
 import { sendScreen, receiveScreen, addMoneyScreen, withdrawScreen, sendSharesScreen } from './screens/money'
 import { indexScreen } from './screens/index-page'
+import { listScreen } from './screens/lists'
 import { allScreen } from './screens/all'
 import { welcomeScreen } from './screens/welcome'
 import { verifyScreen } from './screens/verify'
@@ -103,6 +104,9 @@ function screenFor(r: Route): HTMLElement {
     // The three indices. `index` rather than a bare key, because everything
     // else under /invest is something you can hold and an index is not.
     if (b === 'index') return indexScreen(c)
+    // The groupings Invest ends in, opened out. `list` for the same reason as
+    // `index`: everything else under /invest is a thing you can hold.
+    if (b === 'list') return listScreen(c)
     if (c === 'invest') return investScreen(b)
     if (c === 'sell') return sellScreen(b)
     if (c === 'send') return sendSharesScreen(b)
