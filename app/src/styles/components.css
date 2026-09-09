@@ -727,6 +727,50 @@
   .beam-bloom { border-radius: calc(var(--r-sheet) + 30px) calc(var(--r-sheet) + 30px) 0 0; }
 }
 
+/* ---------- an index, opened ----------
+
+   Next and previous with the three named between them. Buttons rather than
+   only a gesture, because somebody was asked to press through a set of three
+   and a swipe nobody is told about is a feature only the people who already
+   know it find. The swipe and the arrow keys work as well; they are the same
+   idea from 11g.63. */
+.ix-pager { display: flex; align-items: center; gap: 8px; }
+.ix-step { flex: none; }
+/* One chevron, turned, rather than a second drawing to keep in step. */
+.ix-step.back svg { transform: rotate(180deg); }
+.ix-tabs {
+  display: flex; gap: 8px; flex: 1 1 auto; min-width: 0;
+  overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none;
+  padding: 2px;
+}
+.ix-tabs::-webkit-scrollbar { display: none; }
+.ix-tab {
+  flex: none; min-height: 44px; padding: 0 18px;
+  border-radius: var(--r-pill);
+  background: var(--sunken); color: var(--muted);
+  font-size: 14px; font-weight: 600;
+  transition: background 120ms var(--ease), color 120ms var(--ease);
+}
+/* Two channels, the same as every other lit row in the product. Rule 147. */
+.ix-tab.on { background: var(--control); color: var(--ink); }
+@media (hover: hover) {
+  .ix-tab:hover { background: var(--sunken-hover); }
+  .ix-tab.on:hover { background: var(--control-pressed); }
+}
+.ix-tab:active { background: var(--control-pressed); }
+@media (max-width: 899px) { .ix-tab { padding: 0 14px; } }
+
+/* The two things a row can say instead of offering a plus. Both are longer
+   than a plus, and a pill reading "NOT OPE" is worse than one on two lines.
+   Doubled up on `.shut` because that rule sets nowrap and sits later in this
+   file: at equal specificity the last one wins, and the last one is not this. */
+.shut.ix-shut { white-space: normal; text-align: right; line-height: 14px; }
+
+/* A card that goes somewhere says so before it is pressed. */
+.door-card { cursor: pointer; transition: background 120ms var(--ease); }
+@media (hover: hover) { .door-card:hover { background: var(--sunken-hover); } }
+.door-card:active { background: var(--control-pressed); }
+
 /* ---------- the company strip ----------
 
    The market, carried onto the company page. A row you can run a thumb along:

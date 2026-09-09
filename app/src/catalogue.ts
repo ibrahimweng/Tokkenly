@@ -101,12 +101,6 @@ export function markGap(c: Instrument): { pct: string; word: string; over: boole
 
 export const CATEGORIES = ['Popular', 'ETFs', 'Technology', 'Steady', 'Consumer', 'Health', 'Everything']
 
-export const INDICES = [
-  { name: 'S&P 500', value: '5,648.40', pct: 0.42 },
-  { name: 'Nasdaq', value: '17,713.62', pct: 0.71 },
-  { name: 'Dow Jones', value: '41,335.05', pct: -0.13 },
-]
-
 /** The three the intro puts forward. Every one of them must be in the launch
  *  set: this list ends in a bucket and then in a payment, and offering a
  *  company the composer would refuse makes the first thing the product asks

@@ -50,6 +50,11 @@ export interface ChartSpec {
    *  trader's instrument on a saver's screen and made the busiest block on
    *  Home out of a number that only goes up and down slowly. */
   shape?: 'candles' | 'area'
+  /** What the numbers are. Money everywhere in the product except an index,
+   *  whose level is not a price: nobody holds 5,648 and it does not cost
+   *  anything. Drawing dollar signs on it would have the chart contradicting
+   *  the sentence the index page prints beside it. */
+  unit?: 'money' | 'points'
 }
 
 export interface Candle { o: number; h: number; l: number; c: number }
@@ -118,12 +123,12 @@ function niceTicks(lo: number, hi: number, want = 4): number[] {
  *  The decimals come from the gap between labels, not from the size of the
  *  number — over a day a $16,000 portfolio moves $50, and three labels all
  *  reading "$16.1K" is an axis that has stopped saying anything. */
-export function compact(n: number, step = Math.abs(n) || 1): string {
+export function compact(n: number, step = Math.abs(n) || 1, money = true): string {
   const a = Math.abs(n)
   const [div, suffix] = a >= 1e9 ? [1e9, 'B'] : a >= 1e6 ? [1e6, 'M'] : a >= 1e3 ? [1e3, 'K'] : [1, '']
-  if (!suffix) return usd(n, false)
+  if (!suffix) return money ? usd(n, false) : String(Math.round(n))
   const dp = Math.max(0, Math.min(2, Math.ceil(-Math.log10(step / div))))
-  return '$' + (n / div).toFixed(dp) + suffix
+  return (money ? '$' : '') + (n / div).toFixed(dp) + suffix
 }
 
 /** Bars are only readable down to a certain width, and only interesting above
@@ -194,6 +199,12 @@ export function sparkline(r: Range, endValue: number, seed = 7): HTMLElement {
 }
 
 export function barChart(spec: ChartSpec): HTMLElement {
+  // One formatter, read by every figure this chart prints. It was `usd` at
+  // nine call sites, which is the right answer eight times and the wrong one
+  // on an index.
+  const money = spec.unit !== 'points'
+  const val = (n: number): string =>
+    money ? usd(n) : n.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   const height = spec.height ?? 200
   let range = spec.ranges.find((r) => r.key === spec.initial) ?? spec.ranges[0]
   let vals: number[] = []
@@ -253,7 +264,7 @@ export function barChart(spec: ChartSpec): HTMLElement {
     const step = marks.length > 1 ? marks[1] - marks[0] : hi - lo
     grid.replaceChildren(...marks.map((v) =>
       h('div', { class: 'ch-line', style: { bottom: at(v) + '%' } },
-        h('span', { class: 'ch-tick', text: compact(v, step) }))))
+        h('span', { class: 'ch-tick', text: compact(v, step, money) }))))
 
     if (spec.shape === 'area') drawArea()
     else bars.replaceChildren(...candles.map((k, i) => {
@@ -308,13 +319,13 @@ export function barChart(spec: ChartSpec): HTMLElement {
     overlay.replaceChildren()
     if (spec.mark !== undefined) {
       overlay.appendChild(h('span', { class: 'ch-mark', style: { bottom: at(spec.mark) + '%' } },
-        h('span', { class: 'ch-mark-tag', text: (spec.markLabel ?? 'Real price') + ' ' + usd(spec.mark) })))
+        h('span', { class: 'ch-mark-tag', text: (spec.markLabel ?? 'Real price') + ' ' + val(spec.mark) })))
     }
     // The period's own high and low, on the edge where a trader looks for them.
     overlay.appendChild(h('span', { class: 'ch-edge high', style: { bottom: at(hi) + '%' } },
-      h('span', { text: 'High ' + usd(hi) })))
+      h('span', { text: 'High ' + val(hi) })))
     overlay.appendChild(h('span', { class: 'ch-edge low', style: { bottom: at(lo) + '%' } },
-      h('span', { text: 'Low ' + usd(lo) })))
+      h('span', { text: 'Low ' + val(lo) })))
 
     // Axis labels are generated, not listed: twelve months of them fit a
     // desktop card and crowd into each other on a phone. The width says how
@@ -333,7 +344,7 @@ export function barChart(spec: ChartSpec): HTMLElement {
     const change = spec.endValue - from
     caption.className = 't-caption ' + (change >= 0 ? 'pos' : 'warn')
     caption.textContent =
-      `${change >= 0 ? '+' : '−'}${usd(Math.abs(change))} (${change >= 0 ? '+' : '−'}${pct(Math.abs(range.pct))}) ` +
+      `${change >= 0 ? '+' : '−'}${val(Math.abs(change))} (${change >= 0 ? '+' : '−'}${pct(Math.abs(range.pct))}) ` +
       (range.over ?? 'over ' + range.key)
 
     // The four numbers are the latest period at full resolution — a fixed
@@ -344,8 +355,8 @@ export function barChart(spec: ChartSpec): HTMLElement {
     plot.setAttribute('role', 'img')
     plot.setAttribute('aria-label',
       `${spec.title ?? 'Value over time'}. ${range.over ?? 'Over ' + range.key}: ` +
-      `${usd(from)} on ${dateAt(range, 0).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}, ` +
-      `${usd(spec.endValue)} now, a low of ${usd(lo)} and a high of ${usd(hi)}.`)
+      `${val(from)} on ${dateAt(range, 0).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}, ` +
+      `${val(spec.endValue)} now, a low of ${val(lo)} and a high of ${val(hi)}.`)
 
     for (const c of chips.children) {
       (c as HTMLElement).setAttribute('aria-pressed', String(c.textContent === range.key))
@@ -361,9 +372,9 @@ export function barChart(spec: ChartSpec): HTMLElement {
     ohlc.replaceChildren(
       ...([['O', k.o], ['H', k.h], ['L', k.l], ['C', k.c]] as [string, number][]).map(([l, v]) =>
         h('span', { class: 'ch-num' },
-          h('span', { class: 'subtle', text: l }), h('span', { text: usd(v) }))),
+          h('span', { class: 'subtle', text: l }), h('span', { text: val(v) }))),
       h('span', { class: (d >= 0 ? 'pos' : 'warn') + ' t-caption',
-        text: `${d >= 0 ? '+' : '−'}${usd(Math.abs(d))} (${d >= 0 ? '+' : '−'}${pct(Math.abs((d / (from || 1)) * 100))})` }))
+        text: `${d >= 0 ? '+' : '−'}${val(Math.abs(d))} (${d >= 0 ? '+' : '−'}${pct(Math.abs((d / (from || 1)) * 100))})` }))
   }
 
   // ---- the hover: which candle, what it did, and when
@@ -384,7 +395,7 @@ export function barChart(spec: ChartSpec): HTMLElement {
     // are on rather than the last one.
     if (spec.shape !== 'area') paintOhlc(k, from)
     tip.replaceChildren(
-      h('span', { class: 't-body-strong', text: usd(vals[i]) }),
+      h('span', { class: 't-body-strong', text: val(vals[i]) }),
       h('span', { class: (d >= 0 ? 'pos' : 'warn') + ' t-caption',
         text: `${d >= 0 ? '+' : '−'}${pct(Math.abs((d / from) * 100))}` }),
       h('span', { class: 'muted t-caption', text: range.fmt(dateAt(range, i / (vals.length - 1))) }))

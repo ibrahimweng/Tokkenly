@@ -5,7 +5,8 @@ import { card, cardHead, emptyState, bucketBar, showBucketBar } from '../compone
 import { searchField, searchNote } from '../components/search'
 import { rank, onlyNear } from '../match'
 import { table } from '../components/table'
-import { CATALOGUE, CATEGORIES, INDICES, PICKS, find, discount, markGap, tradable, type Instrument, pathOf } from '../catalogue'
+import { CATALOGUE, CATEGORIES, PICKS, find, discount, markGap, tradable, type Instrument, pathOf } from '../catalogue'
+import { INDEXES, listedIn } from '../indices'
 import { state, actions, inBucket } from '../state'
 import { usd, pct } from '../format'
 import { go, current } from '../router'
@@ -283,16 +284,30 @@ export function marketScreen(): HTMLElement {
     // Three full-width cards, one per index, was 384px of a 844px screen for
     // three numbers a first-time investor did not come for. On a phone they
     // become a strip you can push sideways.
-    h('div', { class: 'row equal indices' }, ...INDICES.map((i) =>
-      // Level and move on one line: three cards across the page each holding a
-      // stat in the top-left corner read as three cards that did not finish.
-      // Negative takes the same warn the table gives it, not a quiet grey.
-      card(
+    // They open now (11g.64). They were the only figures on this screen that
+    // could not be pressed, which on a page where every other number leads
+    // somewhere reads as three cards that are broken rather than three that
+    // are only information.
+    h('div', { class: 'row equal indices' }, ...INDEXES.map((i) => {
+      const c = card(
         h('span', { class: 't-caps subtle', text: i.name }),
         h('div', { class: 'kv' },
-          h('span', { class: 't-display', text: i.value }),
+          h('span', { class: 't-display', text: i.level }),
           h('span', { class: (i.pct >= 0 ? 'pos' : 'warn') + ' t-body-strong nowrap',
-            text: (i.pct >= 0 ? '+' : '') + pct(i.pct, 2) + ' today' }))))),
+            text: (i.pct >= 0 ? '+' : '') + pct(i.pct, 2) + ' today' })),
+        // What is behind the card, said on the card. "Three cards you can
+        // press" is only useful if it looks like one.
+        h('span', { class: 'subtle t-caption',
+          text: `${i.count} companies · ${listedIn(i).length} on Tokkenly` }))
+      c.classList.add('door-card')
+      c.setAttribute('role', 'link')
+      c.tabIndex = 0
+      c.addEventListener('click', () => go('/invest/index/' + i.key))
+      c.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go('/invest/index/' + i.key) }
+      })
+      return c
+    })),
     // The list is the page, not a neighbour of the page. Seven columns of
     // company data cannot share 730px with a side column: the cells collide
     // and the year range lands on top of the price. It takes the full width,

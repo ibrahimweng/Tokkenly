@@ -7819,6 +7819,69 @@ would have found nothing whether the button was there or not.
      pixels down on a phone is not one design serving both — it is one design
      and one accident. Move it, do not duplicate it.
 
+### 11g.64 Three numbers that led nowhere
+
+Invest carried the S&P 500, the Nasdaq and the Dow Jones across the top, and
+there was nothing behind any of them. They were the only figures on a screen
+where every other number opens something — a company, a holding, a receipt —
+and a number that cannot be pressed among numbers that can does not read as
+information. It reads as broken.
+
+Each has a page: where it stands, a year of it, what the number actually
+measures, how to read it, and the companies inside it by weight. Next and
+Previous at the top walk the three and wrap round, because three pages that
+stop dead at the third read as unfinished; the three are named between the
+arrows so the pager is also an index; and the swipe and the arrow keys from
+11g.63 work here too, because it is the same idea about the same kind of set.
+
+**The table is the page, and it is the awkward part.** Tokkenly lists thirteen
+instruments. The S&P has five hundred. So a table of what is in an index is
+mostly a table of things this product does not sell, and there were two ways to
+handle that and only one of them is honest. A row Tokkenly lists opens the
+company and carries the plus that fills the bucket. A row it does not carries
+its name, its weight and an indicative price, and says **Not listed here**.
+Twenty-eight of the S&P's thirty-two rows say it.
+
+That ratio is the point rather than an embarrassment. It is what the launch set
+looks like at index scale, and `indices.mjs` asserts it directly — every row
+must either offer a plus or say why it does not, and the shut ones must
+outnumber the live ones. The tempting failure here is dressing dead rows as
+live, and the check exists to make that fail loudly.
+
+The Dow is the one index this product can show whole, because it only has
+thirty companies. It says so, and it is the one with no fund on Tokkenly to
+buy it in a single holding — which the page states rather than leaving the
+card empty.
+
+**A chart that argued with the page it was on.** The level card prints "an
+index level is not a price. Nobody holds one, and it cannot be bought" — and
+the chart under it drew a dollar sign on every axis label, every high and low,
+and all four OHLC figures. `barChart` formatted with `usd` at nine call sites,
+which is the right answer on the eight screens that came before this one and
+the wrong one here. It takes a `unit` now, and one formatter serves all nine.
+
+Membership is not invented. Coca-Cola is in the S&P and the Dow and is not on
+the Nasdaq; the Nasdaq-100 excludes banks by rule, which is why JPMorgan is
+missing from it and why the page says so. Weights and levels are indicative and
+labelled as such, on the same footing as every other price in this prototype.
+Two Tokkenly companies — Nike and Disney — sit below the S&P's top thirty and
+are listed anyway, because cutting them would show somebody a company they can
+own and an index it is in without putting the two together.
+
+`INDICES` in the catalogue held a name, a level and a move for each. The array
+with the whole index in it is the one that stays.
+
+159. **A figure among figures that lead somewhere has to lead somewhere.**
+     Consistency of behaviour is read before content: three cards that look
+     like the pressable ones and are not teach somebody that pressing things
+     here sometimes fails. Either give it a destination or stop it looking like
+     the things that have one.
+
+160. **A component that formats money will format anything as money.** A
+     helper called at nine sites with no way to say what the number is will be
+     right until the first screen where it is not, and then it will contradict
+     the sentence printed beside it. The unit belongs to the caller.
+
 ### 11g.49 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from

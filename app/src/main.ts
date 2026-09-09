@@ -24,6 +24,7 @@ import { statementScreen } from './screens/statement'
 import { adminScreen } from './screens/admin'
 import { signInScreen, signUpScreen } from './screens/auth'
 import { sendScreen, receiveScreen, addMoneyScreen, withdrawScreen, sendSharesScreen } from './screens/money'
+import { indexScreen } from './screens/index-page'
 import { allScreen } from './screens/all'
 import { welcomeScreen } from './screens/welcome'
 import { verifyScreen } from './screens/verify'
@@ -99,6 +100,9 @@ function screenFor(r: Route): HTMLElement {
 
   if (a === 'market' || a === 'invest') {
     if (!b) return marketScreen()
+    // The three indices. `index` rather than a bare key, because everything
+    // else under /invest is something you can hold and an index is not.
+    if (b === 'index') return indexScreen(c)
     if (c === 'invest') return investScreen(b)
     if (c === 'sell') return sellScreen(b)
     if (c === 'send') return sendSharesScreen(b)

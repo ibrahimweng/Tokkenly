@@ -58,6 +58,15 @@ export const DESTINATIONS: Destination[] = [
     also: 'virtual account number where to send naira deposit providus', hint: 'Where to send naira' },
 
   { label: 'Invest', to: '/invest', place: 'market', kind: 'place', primary: true, also: 'market stocks shares etfs browse buy' },
+  // The three indices. They are not things you can hold, so they sit under
+  // Invest as screens rather than as actions, and the trail reads
+  // Invest › S&P 500 the same as it reads Invest › Apple.
+  { label: 'S&P 500', to: '/invest/index/sp500', place: 'market', kind: 'screen',
+    also: 'sp500 s&p index five hundred largest us market level', hint: 'The five hundred largest US companies' },
+  { label: 'Nasdaq-100', to: '/invest/index/nasdaq', place: 'market', kind: 'screen',
+    also: 'nasdaq index technology hundred qqq', hint: 'The hundred largest on the Nasdaq' },
+  { label: 'Dow Jones', to: '/invest/index/dow', place: 'market', kind: 'screen',
+    also: 'dow jones industrial average thirty index', hint: 'Thirty large American companies' },
   { label: 'Your bucket', to: '/bucket', place: 'market', kind: 'screen', primary: true,
     also: 'basket cart picked saved pay later checkout', hint: 'Companies you have picked, not yet paid for' },
   { label: 'Apple', to: '/invest/aapl', place: 'market', kind: 'screen', also: 'aapl stock company' },
