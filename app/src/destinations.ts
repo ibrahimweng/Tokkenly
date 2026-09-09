@@ -18,6 +18,18 @@ export interface Destination {
   /** The staff console. It shares the `account` group so it sorts with the
    *  rest of the settings, but it is nobody's parent except its own screens'. */
   staff?: boolean
+  /** A thing on a page rather than a page.
+   *
+   *  A company has an address, and it needs one: the trail is built from this
+   *  registry, so a company missing from it has no way back (11g.67). What it
+   *  is not is a screen of the product. Invest, the three indices and the
+   *  three groupings are the pages; the thirteen companies are rows on them,
+   *  and listing all thirteen and their three actions each in the index of
+   *  screens turned eight entries into thirty-three and told somebody reading
+   *  it that Tokkenly has thirty-three places under Invest.
+   *
+   *  So: addressable, trailed, findable — and not listed as a screen. */
+  item?: boolean
   hint?: string
 }
 
@@ -41,16 +53,17 @@ const COMPANIES: Destination[] = CATALOGUE.flatMap((c) => {
   const words = `${c.ticker} ${c.under} ${c.name} `
     + `${c.kind === 'etf' ? 'etf fund index tracker' : 'stock share company'} ${c.tags.join(' ')}`
   const page: Destination = { label: c.name, to: at, place: 'market', kind: 'screen',
-    also: words, hint: c.plain }
+    also: words, hint: c.plain, item: true }
   if (!tradable(c)) return [page]
   return [
     page,
     { label: 'Invest in ' + c.name, to: at + '/invest', place: 'market', kind: 'action',
-      also: 'buy ' + words },
+      also: 'buy ' + words, item: true },
     { label: 'Sell ' + c.name, to: at + '/sell', place: 'market', kind: 'action',
-      also: 'sell ' + words },
+      also: 'sell ' + words, item: true },
     { label: 'Send ' + c.name + ' to someone', to: at + '/send', place: 'market', kind: 'action',
-      also: 'gift give transfer ' + words + ' to a person', hint: 'To another Tokkenly account' },
+      also: 'gift give transfer ' + words + ' to a person', hint: 'To another Tokkenly account',
+      item: true },
   ]
 })
 
@@ -185,6 +198,11 @@ export const DESTINATIONS: Destination[] = [
   { label: 'Everything', to: '/all', place: 'account', kind: 'screen', primary: true, also: 'all screens index directory sitemap' },
 ]
 
+/** The pages, which is what an index of screens is an index of. Everything
+ *  reads this; the breadcrumbs read the full list, because a trail has to be
+ *  able to name a row you are standing on. */
+export const SCREENS: Destination[] = DESTINATIONS.filter((d) => !d.item)
+
 export const PLACE_LABEL: Record<Place, string> = {
   home: 'Home', wallet: 'Wallet', market: 'Invest',
   grow: 'Borrow & Lend', history: 'Activity', account: 'Account',
@@ -261,12 +279,12 @@ export interface Hit { label: string; to: string; group: string; hint?: string }
 export function search(raw: string): Hit[] {
   const q = norm(raw.trim())
   if (!q) {
-    return DESTINATIONS.filter((d) => d.kind !== 'screen' || d.primary)
+    return SCREENS.filter((d) => d.kind !== 'screen' || d.primary)
       .slice(0, 8)
       .map((d) => ({ label: d.label, to: d.to, group: PLACE_LABEL[d.place], hint: d.hint }))
   }
   const hits: Hit[] = []
-  for (const d of DESTINATIONS) {
+  for (const d of SCREENS) {
     const hay = norm(d.label + ' ' + (d.also ?? '') + ' ' + PLACE_LABEL[d.place])
     if (hay.includes(q)) hits.push({ label: d.label, to: d.to, group: PLACE_LABEL[d.place], hint: d.hint })
   }

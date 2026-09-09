@@ -2,7 +2,7 @@ import { h, link } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader, eyebrow } from '../components/shell'
 import { card, cardHead } from '../components/bits'
-import { DESTINATIONS, PLACE_LABEL, type Place, type Destination } from '../destinations'
+import { SCREENS, PLACE_LABEL, type Place, type Destination } from '../destinations'
 import { searchField, searchNote } from '../components/search'
 import { rank, onlyNear } from '../match'
 import { current, go } from '../router'
@@ -22,7 +22,7 @@ export function allScreen(): HTMLElement {
   const grid = h('div', { class: 'all-grid' })
   const note = h('div')
   const paint = (t: string): void => {
-    const found = t.trim() ? rank(t, DESTINATIONS, FIELDS) : DESTINATIONS
+    const found = t.trim() ? rank(t, SCREENS, FIELDS) : SCREENS
     const groups = order
       .map((place) => [place, found.filter((d) => d.place === place)] as const)
       .filter(([, items]) => items.length)
@@ -41,11 +41,11 @@ export function allScreen(): HTMLElement {
   paint(term)
 
   return shell('account',
-    pageHeader('Everything', eyebrow('Screens', String(DESTINATIONS.length))),
+    pageHeader('Everything', eyebrow('Screens', String(SCREENS.length))),
     searchField({
       placeholder: 'Search every screen',
       value: term,
-      suggest: (t) => rank(t, DESTINATIONS, FIELDS).slice(0, 7).map((d) => ({
+      suggest: (t) => rank(t, SCREENS, FIELDS).slice(0, 7).map((d) => ({
         label: d.label, hint: d.hint, group: PLACE_LABEL[d.place], pick: () => go(d.to),
       })),
       onType: paint,

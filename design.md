@@ -8084,6 +8084,18 @@ somebody opening a link you sent them came through nothing, so theirs reads
 The suite takes the thirteen from the product rather than typing them, which is
 the actual repair to what let this through: reverted, it names all twelve.
 
+**And then the index said the product had thirty-three places under Invest.**
+Registering the companies fixed the trails and broke the thing the registry
+also feeds: Everything is an index of screens, and it grew from eight entries
+under Invest to thirty-three, twelve of them reading "Sell Meta" or "Send
+Alphabet to someone". A company is a row on a page, not a page. Two jobs were
+sharing one list — addressing, which every company needs, and enumerating the
+screens, which is about pages — so a destination can now say it is an item:
+addressable, trailed and findable, and not listed as a screen. Everything is
+back to eight under Invest, and the palette drops the duplicate it had started
+offering, since the catalogue pass beneath it already names every company with
+its ticker and its price.
+
 165. **A list written by hand beside a list that grows will fall behind it.**
      The catalogue gained nine companies and the registry gained none, and
      nothing failed — the screens all rendered, the search all worked, and the
@@ -8094,6 +8106,12 @@ the actual repair to what let this through: reverted, it names all twelve.
      or a pager is one screen you are browsing. Push the entry that got you
      into it and replace every step within it, or the way out is as many
      presses as the number of things somebody looked at.
+
+169. **Addressable is not the same as listed.** A registry that answers "what
+     is above this screen" and a registry that answers "what screens are there"
+     are two questions, and a row that must be in the first is not automatically
+     wanted in the second. Give the entry a way to say which it is before the
+     index fills with things that are rows on a page.
 
 167. **One address reached several ways cannot say which way you took.** That
      is the price of one company having one address, and it is worth paying.

@@ -218,13 +218,21 @@ console.log('EVERY COMPANY, NOT A SAMPLE')
   ok('every one of them has a trail', missing.length === 0, missing.join(', '))
   ok('and every trail starts at Invest and ends where you are', wrong.length === 0, wrong.join(' | '))
 
-  // The same registry is what Everything reads, so the twelve were absent
-  // from the index of every screen too.
+  // Everything is an index of screens, and a company is a row on one rather
+  // than a screen of its own. Registering all thirteen for their trails turned
+  // Invest's eight entries into thirty-three, most of them reading "Sell Meta"
+  // — which told anybody reading the index that the product has thirty-three
+  // places under Invest. Addressable, trailed, findable, not listed.
   await at('/all')
-  const listed = await p.evaluate(() => document.body.innerText)
-  const absent = ['Apple', 'Disney', 'Nike', 'Nvidia', 'Coca-Cola', 'Microsoft', 'Tesla', 'Amazon']
-    .filter((x) => !new RegExp(x, 'i').test(listed))
-  ok('and Everything lists them', absent.length === 0, absent.join(', '))
+  const inv = await p.evaluate(() => {
+    const c = [...document.querySelectorAll('section.card')]
+      .find((x) => /^Invest$/i.test(x.querySelector('.card-head')?.textContent?.trim() ?? ''))
+    return c ? [...c.querySelectorAll('.all-row')].map((e) => e.querySelector('.t-body-strong')?.textContent?.trim()) : []
+  })
+  const PAGES = ['Invest', 'S&P 500', 'Nasdaq-100', 'Dow Jones',
+                 'Where people start', 'Your watchlist', 'Moving today', 'Your bucket']
+  ok('Everything lists the pages under Invest', PAGES.every((x) => inv.includes(x)), inv.join(', '))
+  ok('and nothing else', inv.length === PAGES.length, inv.length + ' rows: ' + inv.join(', '))
 }
 
 console.log('THE TRAIL NAMES THE LIST YOU CAME THROUGH')
