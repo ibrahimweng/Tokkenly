@@ -93,6 +93,57 @@ const rev = await p.evaluate(() => document.querySelector('.scrim')?.innerText.r
 ok('and the review carries it beside the fee', /real price/i.test(rev) && /\$166\.77/.test(rev),
    (rev.match(/(BELOW|ABOVE) THE REAL PRICE[^%]*%/i) ?? [''])[0].trim())
 
+console.log('THE TWO CONTROLS BESIDE THE PRICE')
+{
+  /* `--sunken` is the card colour — the token file says so itself — so an
+     icon button resting on a card had a surface identical to the thing behind
+     it. Beside Following, which is filled, that read as one button and one
+     decoration rather than as two controls. */
+  await at('/invest/aapl')
+  const m = await p.evaluate(() => {
+    const row = document.querySelector('.price-acts')
+    const card = row.closest('section.card')
+    const bg = getComputedStyle(card).backgroundColor
+    return {
+      card: bg,
+      kids: [...row.children].map((e) => ({
+        t: (e.textContent || e.getAttribute('aria-label') || '?').trim().slice(0, 20),
+        bg: getComputedStyle(e).backgroundColor,
+        box: Math.round(e.getBoundingClientRect().width) + 'x' + Math.round(e.getBoundingClientRect().height),
+      })),
+    }
+  })
+  ok('there are two of them', m.kids.length === 2, m.kids.map((k) => k.t).join(' | '))
+  ok('and neither wears the card it sits on', m.kids.every((k) => k.bg !== m.card),
+     m.kids.map((k) => k.t + ' ' + k.bg).join(' | ') + ' on ' + m.card)
+  ok('and they read as one control', new Set(m.kids.map((k) => k.bg)).size === 1,
+     m.kids.map((k) => k.bg).join(' vs '))
+  // The same height as each other, which is not 44 at this width: `.btn-sm` is
+  // 40 with a mouse and 44 with a thumb, and the plus follows it rather than
+  // standing four pixels taller than the pill beside it.
+  const high = m.kids.map((k) => Number(k.box.split('x')[1]))
+  ok('and stand the same height', high[0] === high[1], m.kids.map((k) => k.box).join(' '))
+  // On a phone both have to clear 44, which is where the pill grows to meet it.
+  const phone = await b.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true })
+  await seen(phone)
+  await phone.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
+  await phone.goto(B + '/invest/aapl', { waitUntil: 'domcontentloaded' })
+  await phone.waitForTimeout(600)
+  const tap = await phone.evaluate(() => [...document.querySelector('.price-acts').children]
+    .map((e) => { const q = e.getBoundingClientRect(); return Math.round(q.width) + 'x' + Math.round(q.height) }))
+  ok('and both clear 44 on a phone', tap.every((x) => Number(x.split('x')[1]) >= 44), tap.join(' '))
+  await phone.close()
+
+  // The plus on the market's own rows is deliberately left flat: it is alone
+  // in its column there, and its position is what says it is pressable.
+  await at('/invest')
+  const list = await p.evaluate(() => {
+    const e = document.querySelector('.table .icon-btn')
+    return e ? getComputedStyle(e).backgroundColor : null
+  })
+  ok("and the list's plus is untouched", list === 'rgb(22, 22, 25)', String(list))
+}
+
 console.log('THE STRIP IS ONE PAGE, NOT THIRTEEN')
 {
   /* Swiping the strip used to push a history entry per company, so somebody

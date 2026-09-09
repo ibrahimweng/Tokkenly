@@ -860,6 +860,22 @@
    company's name, where they read as a toolbar; the price is what somebody is
    deciding against, so it is what they belong to. */
 .price-acts { display: flex; align-items: center; gap: 8px; flex: none; }
+/* The plus, given a body.
+   `--sunken` is the card colour — the token file says so in its own comment,
+   "every card in the main column" — so an `.icon-btn` resting on a card has a
+   surface that matches the thing behind it exactly. On the Invest rows that is
+   fine: the plus is alone in its column and its position says what it is. Here
+   it sits eight pixels from Following, which is filled, and two controls side
+   by side where only one has a body reads as one button and one decoration.
+   So it takes the same ramp Following takes: `--control` at rest, one rung up
+   under the pointer. */
+.price-acts .icon-btn { background: var(--control); color: var(--ink); }
+/* And matched to its neighbour's height. `.btn-sm` is 40 with a mouse and 44
+   with a thumb; `.icon-btn` is a flat 44 at every width. Nobody could see the
+   four pixels while the plus had no body — two filled pills beside each other
+   at different heights is a different matter. */
+.price-acts .icon-btn { width: 40px; height: 40px; }
+@media (max-width: 899px) { .price-acts .icon-btn { width: 44px; height: 44px; } }
 
 /* The company a trade's receipt is about, and the shape it has been in. */
 .receipt-co { display: flex; align-items: flex-start; gap: 16px; }
@@ -2439,6 +2455,7 @@ th.right .th-sort { flex-direction: row-reverse; }
   /* -- small controls -- */
   .suggest-row:hover { background: var(--control); }
   .icon-btn:hover { background: var(--control); color: var(--ink); }
+  .price-acts .icon-btn:hover { background: var(--control-pressed); }
   .close:hover { background: var(--inverse-hover); }
   /* An unselected chip warms up. A selected one stays selected — turning it
      grey under the pointer reads as "click to clear" on a control that does

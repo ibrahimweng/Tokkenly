@@ -8101,6 +8101,49 @@ the actual repair to what let this through: reverted, it names all twelve.
      and make sure the screen still reads correctly for somebody who arrives
      with none of it.
 
+### 11g.68 A button wearing the card
+
+The company page on a phone, at 390 and 360, on a company you hold, one you do
+not, one that cannot be bought and a fund.
+
+Nearly all of it held. No horizontal overflow and no clipped text on any of the
+four at either width; titles whole, including "S&P 500 ETF"; the trail there on
+all of them, which is 11g.67's; the strip's thirteen cells at 60px, scrolling
+the company you are on into view on arrival; the swipe paging both ways,
+wrapping past the ends, and adding no history entry, with a drag begun on the
+chart correctly doing nothing. Nothing is stranded at the bottom either: the
+last card clears the standing Buy bar by 24px where there is one, and the
+navigation by 52px where there is not.
+
+One thing. **The plus beside Following had no body.** `.icon-btn` fills itself
+with `--sunken`, and `--sunken` is the card colour — the token file says so in
+its own comment, *every card in the main column* — so a control resting on a
+card had a surface identical to the thing behind it. Measured, the plus and the
+card were both `rgb(22, 22, 25)`: a contrast ratio of exactly 1. Eight pixels to
+its left, Following was filled at `rgb(45, 45, 50)`. Two controls side by side,
+one with a body and one without, which reads as a button and a decoration.
+
+It is the plus the market's own rows carry, which is what was asked for and is
+right there: alone in its column, position is what says it is pressable. Beside
+a filled pill it is not, so this one takes the same ramp Following takes and the
+list's is left exactly as it was.
+
+Giving it a body exposed four pixels nobody could see before. `.btn-sm` is 40
+high with a mouse and 44 with a thumb; `.icon-btn` is a flat 44 at every width.
+Two unfilled shapes at different heights is nothing; two filled pills beside
+each other at different heights is a misalignment. The plus follows the pill
+now, at both sizes.
+
+The suite reads the colours rather than the screenshot — both controls against
+the card they sit on, both against each other, both heights, and the market
+list's plus still flat.
+
+168. **A surface token names a surface, not a control.** `--sunken` is what a
+     card is made of, so anything else painted with it disappears the moment it
+     sits on one. A control needs a colour chosen against its own background,
+     and the check is arithmetic on the two values rather than a look at it —
+     the glyph stays perfectly legible while the button around it vanishes.
+
 ### 11g.49 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from
