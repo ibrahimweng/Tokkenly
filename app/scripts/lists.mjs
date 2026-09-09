@@ -182,23 +182,55 @@ console.log('YOUR WATCHLIST  the thing the card could not do')
 
 console.log('PHONE')
 {
-  const p = await page(390, 844)
-  for (const k of ['starters', 'watchlist', 'movers']) {
-    await p.goto(B + '/invest/list/' + k, { waitUntil: 'domcontentloaded' })
-    await p.waitForTimeout(500)
-    const g = await p.evaluate(() => {
-      const h1 = document.querySelector('h1')
-      return {
-        over: document.documentElement.scrollWidth - document.documentElement.clientWidth,
-        taps: [...document.querySelectorAll('.pager-tab, .pager-step')]
-          .map((e) => Math.round(e.getBoundingClientRect().height)),
-        title: h1.scrollWidth <= h1.clientWidth + 1,
-      }
-    })
-    ok(k + ' fits the phone', g.over === 0 && g.title, JSON.stringify(g))
-    ok('  and its controls clear 44px', g.taps.every((n) => n >= 44), g.taps.join(','))
+  // 360 as well as 390. Both of this batch's faults were invisible at 390 on
+  // one screen and plain at 360 on all three, and the narrow phone is the one
+  // that finds them.
+  for (const w of [390, 360]) {
+    const p = await page(w, 844)
+    // The watchlist is not persisted, so it is filled the way a person fills
+    // it — by following companies — and never by reaching into storage.
+    await p.goto(B + '/invest', { waitUntil: 'domcontentloaded' })
+    await p.waitForTimeout(450)
+    for (const t of ['AAPLc', 'NVDAc', 'MSFTc']) {
+      await p.evaluate((t) => { location.hash = '/stock/' + t }, t)
+      await p.waitForTimeout(300)
+      const f = p.locator('button', { hasText: /^Follow$/i }).first()
+      if (await f.count()) { await f.click(); await p.waitForTimeout(150) }
+    }
+    for (const k of ['starters', 'watchlist', 'movers']) {
+      await p.evaluate((k) => { location.hash = '/invest/list/' + k }, k)
+      await p.waitForTimeout(500)
+      const g = await p.evaluate(() => {
+        const h1 = document.querySelector('h1')
+        const box = document.querySelector('.pager-tabs')
+        const on = box.querySelector('.pager-tab.on')
+        const a = on.getBoundingClientRect(), b = box.getBoundingClientRect()
+        return {
+          over: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+          taps: [...document.querySelectorAll('.pager-tab, .pager-step')]
+            .map((e) => Math.round(e.getBoundingClientRect().height)),
+          title: h1.scrollWidth <= h1.clientWidth + 1,
+          // The tab you are on, whole — see the same check in indices.mjs.
+          lit: on.textContent.trim(),
+          litWhole: a.left >= b.left - 1 && a.right <= b.right + 1,
+          // Nothing on the row may be cut. The company description was in the
+          // name cell at every width: about 280px of sentence in a 190px box,
+          // so twelve of movers' thirteen rows and all five of the watchlist's
+          // ellipsised to an unreadable half. It is desktop-only now, the same
+          // as the market's own list.
+          cut: [...document.querySelectorAll('.feed-row *')]
+            .filter((e) => !e.children.length && e.textContent.trim())
+            .filter((e) => e.clientWidth > 0 && e.scrollWidth > e.clientWidth + 1)
+            .map((e) => e.textContent.trim().slice(0, 24)),
+        }
+      })
+      ok(`${w}  ${k} fits the phone`, g.over === 0 && g.title, JSON.stringify({ over: g.over, title: g.title }))
+      ok('  and its controls clear 44px', g.taps.every((n) => n >= 44), g.taps.join(','))
+      ok('  the strip names the screen you are on', g.litWhole, g.lit)
+      ok('  and no row is cut mid-sentence', g.cut.length === 0, g.cut.join(' | '))
+    }
+    await p.close()
   }
-  await p.close()
 }
 
 console.log('\nerrors:', errs.length ? errs : 'none')

@@ -7948,6 +7948,85 @@ than a person, which is the whole point of having put it in a suite.
      arrives and move the first two across in the same change, or ship three
      versions of one idea that will drift.
 
+### 11g.66 A strip that named everywhere but here
+
+Six new screens — three indices, three groupings — checked at 390 and 360.
+
+Most of it held. No horizontal overflow on any of the six at either width; no
+tap target under 44px; no desktop table left on a phone, every
+one of them becoming a list of `.feed-row`s — 32, 30, 30, 5 and 13, plus the
+four `.start-row`s that are all Where people start has; titles whole; the trail right; the
+pager above the fold. Swiping pages the set, and the chart and the strip both
+refuse the gesture, so a drag inside them does not throw the screen sideways.
+
+Two things did not.
+
+**The strip never scrolled to the screen you were on.** It is wider than a
+phone — by 74 to 104px on the indices and 261 to 291px on the lists — and it
+started at its left edge every time, `scrollLeft` 0 on all six at both widths.
+So Dow Jones showed a row reading *S&P 500 · Nasdaq-100*, and at 360 the three
+lists each showed *Popular* and nothing else. The one control on the screen
+whose entire job is saying where you are was naming two places you are not, and
+the tab carrying `aria-current="page"` was the one nobody could see. Five of six
+screens were wrong at 360, three of six at 390.
+
+The lit tab is centred on mount now, in one `requestAnimationFrame` after the
+tree is connected, by arithmetic on `scrollLeft` rather than by
+`scrollIntoView`, which also scrolls every ancestor and would have moved the
+page. Centred rather than merely brought inside the box, because the point of
+the strip is the set: the neighbours either side are what make it read as one.
+At the ends the browser clamps it, which is right — the last tab cannot be
+centred and should sit against the edge.
+
+**And the company description clipped on every list row.** `listTable` put
+`c.plain` in the name cell at every width. On a phone that cell is about 190px
+and the sentence wants about 280, so all five watchlist rows were over by 133 to
+149px at 390 and 163 to 179px at 360, and twelve of movers' thirteen by 61 to
+206px and 91 to 236px. `text-overflow: ellipsis` meant it truncated on a word
+rather than mid-letter, which makes it tidy and still unreadable.
+
+The market's own list had already solved this, and had left the reason in a
+comment: the same `<small>` is `desk-only` there because the sentence wrapped to
+four lines and turned a list of companies into a wall. The new table copied that
+list's columns and its plus button and not the argument underneath them. Four
+options, measured on movers at 360, where the rows are 68px and the page 1810:
+
+| | row | page | |
+|---|---|---|---|
+| ellipsised | 68px | 1810 | unreadable on every row |
+| clamped to two lines | 84px | 2028 | seven of thirteen still cut |
+| wrapping freely | 68–144px | 2208 | the wall the market list removed |
+| desktop only | 68px | 1738 | the sentence is one tap away |
+
+Dropping it costs nothing per row, because the 44px bucket button already sets
+the row's floor. It is the market list's answer, which is the point: a company
+should read the same wherever it is met.
+
+Where people start escaped both the clip and, at 390, the strip — the first by
+accident. Its `listTable` has no rows at all today, because the launch set is
+four companies, three of them are the picks and the fourth is paused. Switch
+Meta back on and the same rows appear there.
+
+Worth writing down how both got through. The phone checks these screens already
+had — no sideways scroll, controls at 44px, the title not cut — all passed
+while both faults were live. They were the right checks for the faults of the
+tier that wrote them, and neither of them asks whether the thing on screen can
+be read or whether the control that says where you are is showing. Both suites
+now fail on both faults with the fix reverted, which is the only evidence that a
+new check is a check.
+
+163. **A strip that scrolls has to open at the thing you are on.** A horizontal
+     set of names wider than the screen starts at its left edge unless something
+     moves it, so the later members show a row of everywhere except here. If one
+     item is marked as current, that is the item that has to be visible — and
+     centred, so the set still reads as a set.
+
+164. **A second view of the same row inherits the first one's arguments, not
+     just its columns.** Copying a table's shape copies what it looks like and
+     none of what it learned. Before shipping the copy, find the decisions the
+     original made against itself — the column it hides, the width it refuses —
+     and either carry them or say why this one is different.
+
 ### 11g.49 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from

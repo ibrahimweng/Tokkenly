@@ -96,7 +96,14 @@ function listTable(rows: Instrument[], extra?: (c: Instrument) => Node): HTMLEle
     rows.map((c) => [
       h('span', { class: 'two-line' },
         h('span', { class: 't-body-strong', text: c.ticker + ' · ' + c.name }),
-        h('small', { text: c.plain })),
+        // Desktop only, the same as the market's own list, for the reason
+        // that list already learned. The phone row gives this cell about 190px
+        // and the sentence wants 280, so it ellipsised to an unreadable half
+        // on twelve of movers' thirteen rows and all five of the watchlist's.
+        // Letting it wrap instead ran rows from 68px to 144px and turned a
+        // list you scan into a wall you read. It is on the company's own page,
+        // one tap from here.
+        h('small', { class: 'desk-only', text: c.plain })),
       h('span', { text: usd(c.price) }),
       h('span', { class: c.dayPct >= 0 ? 'pos' : 'warn',
         text: (c.dayPct >= 0 ? '+' : '−') + pct(Math.abs(c.dayPct)) }),

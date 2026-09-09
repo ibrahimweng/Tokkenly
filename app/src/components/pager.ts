@@ -52,6 +52,23 @@ export function pagerRow(stops: Stop[], now: string, label: string): HTMLElement
       if (on) b.setAttribute('aria-current', 'page')
       return b
     }))
+  // The strip is wider than a phone and starts at its left edge, so on the
+  // later stops of a set the tab you were on sat off the right side: at 360 the
+  // three lists all showed "Popular" and nothing else. That is the one control
+  // on the screen whose whole job is saying where you are, naming somewhere you
+  // are not — and the tab carrying `aria-current` was the one nobody could see.
+  //
+  // Centred rather than merely nudged into view, because the point of the strip
+  // is the set: the neighbours either side are what make it read as one.
+  const lit = tabs.querySelector<HTMLElement>('.pager-tab.on')
+  if (lit) {
+    requestAnimationFrame(() => {
+      if (!lit.isConnected) return
+      const a = lit.getBoundingClientRect()
+      const box = tabs.getBoundingClientRect()
+      tabs.scrollLeft += a.left - box.left - (tabs.clientWidth - a.width) / 2
+    })
+  }
   // `i` is -1 when the current screen is not itself one of the stops — the
   // strip on Invest's own groupings names Popular, which lives on Invest
   // rather than on a screen of its own. Stepping from nowhere starts at the

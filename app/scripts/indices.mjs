@@ -203,5 +203,30 @@ console.log('PHONE')
   await p.close()
 }
 
+console.log('THE STRIP ON A PHONE  it has to name the index you are on')
+{
+  // The strip is wider than a phone, so it scrolls — and it used to start at
+  // its left edge on every screen, which meant Dow Jones showed a row reading
+  // "S&P 500  Nasdaq-100" and nothing else. The one control whose whole job is
+  // saying where you are was naming two places you are not, and the tab
+  // carrying `aria-current` was the one nobody could see.
+  for (const w of [390, 360]) {
+    const p = await page(w, 844)
+    for (const key of ['sp500', 'nasdaq', 'dow']) {
+      await p.goto(B + '/invest/index/' + key, { waitUntil: 'domcontentloaded' })
+      await p.waitForTimeout(500)
+      const s = await p.evaluate(() => {
+        const box = document.querySelector('.pager-tabs')
+        const on = box.querySelector('.pager-tab.on')
+        const a = on.getBoundingClientRect(), b = box.getBoundingClientRect()
+        return { name: on.textContent.trim(), whole: a.left >= b.left - 1 && a.right <= b.right + 1,
+                 scrolls: box.scrollWidth > box.clientWidth + 1 }
+      })
+      ok(`${w}  ${key} shows its own tab, whole`, s.whole, JSON.stringify(s))
+    }
+    await p.close()
+  }
+}
+
 console.log('\nerrors:', errs.length ? errs : 'none')
 await b.close()
