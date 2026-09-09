@@ -3,9 +3,10 @@ import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, headLink, emptyState, bucketBar, showBucketBar } from '../components/bits'
 import { searchField, searchNote } from '../components/search'
+import { pageBar } from '../components/pager'
 import { rank, onlyNear } from '../match'
 import { table } from '../components/table'
-import { CATALOGUE, CATEGORIES, PICKS, find, discount, markGap, tradable, type Instrument, pathOf } from '../catalogue'
+import { CATALOGUE, CATEGORIES, PICKS, find, discount, markGap, tradable, catSlug, type Instrument, pathOf } from '../catalogue'
 import { INDEXES, listedIn } from '../indices'
 import { state, actions, inBucket } from '../state'
 import { usd, pct } from '../format'
@@ -202,17 +203,28 @@ export function marketScreen(): HTMLElement {
   // fault the bucket's amount field hit and for the same reason. So the
   // address is only touched on Enter, and typing repaints this one card.
   const results = h('div', { class: 'stack' })
+  // Five rows, and the arrows walk the rest of them. The card used to hold the
+  // whole category — thirteen rows on Everything — which put whatever follows
+  // it a screen and a half down. Held here rather than in the address: paging
+  // a card is not somewhere you have been, and a route change would rebuild
+  // the tree and take the focus out of the search field above.
+  const PER = 5
+  let page = 0
   const paint = (t: string): void => {
     const rows = listFor(t)
     const sorted = [...rows].sort((a, b) =>
       (cmp[sortKey] ?? cmp.cap)(a, b) * (sortDir === 'asc' ? 1 : -1))
+    const pages = Math.max(1, Math.ceil(sorted.length / PER))
+    if (page >= pages) page = 0
+    const shown = sorted.slice(page * PER, page * PER + PER)
+    const turn = (n: number) => { page = Math.min(Math.max(0, n), pages - 1); paint(t) }
     results.replaceChildren(
       card(
         cardHead(t.trim() ? 'Results' : cat,
           h('span', { class: 'muted t-caption', text: countOf(rows) })),
         searchNote(t, rows.length, onlyNear(t, rows, FIELDS)),
         rows.length
-          ? tableOf(sorted, { key: sortKey, dir: sortDir, onSort })
+          ? tableOf(shown, { key: sortKey, dir: sortDir, onSort })
           // Which of the two things emptied the list. Telling somebody to try
           // another ticker when what they did was ask for the four buyable
           // companies inside a category that holds none of them sends them to
@@ -227,7 +239,15 @@ export function marketScreen(): HTMLElement {
                   : 'Try another company, fund or ticker.',
                 openOnly
                   ? { label: 'Show everything', onClick: () => setQuery('open', '') }
-                  : { label: 'Clear the search', onClick: () => go('/invest') })
+                  : { label: 'Clear the search', onClick: () => go('/invest') }),
+        // "View more" names nothing, and rule 49 is the reason this product
+        // does not ship links that say it. The count and the category are what
+        // somebody wants to know before pressing.
+        rows.length
+          ? pageBar(page, pages, turn, t.trim() ? undefined : {
+              label: rows.length === 1 ? `The one in ${cat}` : `All ${rows.length} in ${cat}`,
+              to: '/invest/list/' + catSlug(cat) })
+          : null,
       ))
   }
 

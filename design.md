@@ -8162,6 +8162,53 @@ list's plus still flat.
      and the check is arithmetic on the two values rather than a look at it —
      the glyph stays perfectly legible while the button around it vanishes.
 
+### 11g.69 Five rows, and a door to the rest
+
+The card on Invest held the whole category. Thirteen rows on Everything, eleven
+on Popular before the chips were counted — which put the three index cards and
+the three grouping cards a screen and a half below it, on the screen that is
+meant to show somebody what they can buy.
+
+Five rows now, with `‹ 1 of 3 ›` at the foot of the card and a link to all of
+them beside it. The arrows repaint the card and never touch the address: paging
+a card is not somewhere you have been (rule 166), and a route change here would
+rebuild the tree and take the focus out of the search field above it, which is
+the fault 11g.19 fixed and the reason this card already repainted itself while
+somebody types.
+
+The arrows stop at the ends. The strips on the company and index pages wrap,
+because a set of three or four has no natural end and stopping dead at the last
+reads as broken; a list of thirteen read five at a time does have one, and an
+arrow that quietly returns to the first row looks like the list restarted rather
+than finished. A control that refuses is dimmed rather than removed — at the
+ends it still has to say it is an arrow.
+
+**And each chip is a screen.** 11g.65 argued the opposite and was right at the
+time: a screen showing the same rows at a second address is a second door to one
+room, and the card held every row. The card is a five-row preview now, so the
+room has one door and the seven chips have seven screens — Popular, ETFs,
+Technology, Steady, Consumer, Health and Everything listed — each with the whole
+category, the strip of the seven at the top, the swipe and the arrow keys. The
+fourth stop on the groupings strip led to `/invest?cat=Popular` and leads to a
+screen like its three neighbours now.
+
+The link is not "View more". Rule 49 has held since 11g and it is the same
+species: it says `All 13 in Everything`, `All 6 in Popular`, `The one in Health`
+— the count and the category, which is what somebody wants to know before
+deciding to press.
+
+Two things the change made honest by accident. "Everything you can buy" was the
+obvious title for the seventh screen and it is false — nine of the thirteen
+cannot be bought, and the card three lines below says so — so it is *Everything
+listed*. And the sentence under each heading counts what is closed rather than
+implying everything on it is for sale.
+
+170. **A preview is five rows and a door; a list is all of them.** A card that
+     holds everything is a card the next section hides behind. Cap it, page it
+     in place, and put the whole thing one press away — and do not cap the page
+     you land on, because a preview inside a destination is a door to a room you
+     are standing in.
+
 ### 11g.49 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from

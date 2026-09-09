@@ -734,6 +734,25 @@
    gesture, because a swipe nobody is told about is a feature only the people
    who already know it ever find; the swipe and the arrow keys work as well.
    See `components/pager.ts`. */
+/* Five at a time, and the way to all of it. Sits at the foot of a card, so it
+   is the last thing read rather than a control competing with the first row. */
+.page-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding-top: 4px;
+}
+.page-turn { display: flex; align-items: center; gap: 8px; }
+.page-turn .icon-btn { width: 36px; height: 36px; }
+/* A control that refuses is quieter, not invisible: at the ends of the list
+   the arrow has to still say it is an arrow. */
+.page-turn .icon-btn[disabled] { opacity: 0.35; pointer-events: none; }
+.page-more { display: inline-flex; align-items: center; gap: 4px; min-height: 36px; }
+.page-more .ic { display: inline-flex; width: 16px; height: 16px; }
+.page-more .ic svg { width: 100%; height: 100%; }
+@media (max-width: 899px) {
+  .page-turn .icon-btn { width: 44px; height: 44px; }
+  .page-more { min-height: 44px; }
+}
+
 .pager { display: flex; align-items: center; gap: 8px; }
 .pager-step { flex: none; }
 /* One chevron, turned, rather than a second drawing to keep in step. */

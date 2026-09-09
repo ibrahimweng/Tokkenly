@@ -1,6 +1,6 @@
 import { shares, usd } from './format'
 import { state } from './state'
-import { CATALOGUE, pathOf, tradable } from './catalogue'
+import { CATALOGUE, CATEGORIES, catSlug, inCategory, pathOf, tradable } from './catalogue'
 
 export type Place = 'home' | 'wallet' | 'market' | 'grow' | 'history' | 'account'
 
@@ -48,6 +48,25 @@ export interface Destination {
  *  as a button that refuses — and the address still carries a correct trail
  *  either way, because `trailFor` finds the company above it.
  */
+/** The chips on Invest, each as a screen.
+ *
+ *  The card on Invest shows five rows and pages through the rest, so the rest
+ *  need somewhere to be: a chip that filters a card is a filter, and a chip
+ *  with a screen behind it is a place. 11g.65 argued against exactly this and
+ *  was right at the time — a screen showing the same rows at a second address
+ *  is a second door to one room — but the card is a five-row preview now, so
+ *  the room is only behind the one door. */
+const CATEGORY_PAGES: Destination[] = CATEGORIES.map((c) => ({
+  // Not "everything you can buy": nine of the thirteen cannot be, and the
+  // card three lines down says so.
+  label: c === 'Everything' ? 'Everything listed' : c,
+  to: '/invest/list/' + catSlug(c),
+  place: 'market' as Place,
+  kind: 'screen' as const,
+  also: 'category filter chip ' + c + ' companies shares stocks',
+  hint: `${inCategory(c).length} ${inCategory(c).length === 1 ? 'company' : 'companies and funds'}`,
+}))
+
 const COMPANIES: Destination[] = CATALOGUE.flatMap((c) => {
   const at = pathOf(c)
   const words = `${c.ticker} ${c.under} ${c.name} `
@@ -124,6 +143,7 @@ export const DESTINATIONS: Destination[] = [
     also: 'movers gainers fallers up down biggest move today', hint: 'Up and down, apart' },
   { label: 'Your bucket', to: '/bucket', place: 'market', kind: 'screen', primary: true,
     also: 'basket cart picked saved pay later checkout', hint: 'Companies you have picked, not yet paid for' },
+  ...CATEGORY_PAGES,
   ...COMPANIES,
 
   { label: 'Borrow & Lend', to: '/grow', place: 'grow', kind: 'place', primary: true,

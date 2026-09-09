@@ -8,9 +8,12 @@
    times. Where people start carries reasons and separates what is paused from
    what can be bought today; the watchlist can stop following without opening
    thirteen company pages; movers splits up from down, because "moving" without
-   a direction is two questions in one list. And Popular is deliberately not
-   among them — it is a chip on Invest that filters an uncapped table, so a
-   screen for it would be that list at a second address. */
+   a direction is two questions in one list.
+
+   Popular is among them now, and so are the other six chips. It was not, while
+   the card on Invest held the whole category: a screen for it would have been
+   those rows at a second address. The card shows five and pages through the
+   rest, so each chip has one screen with the whole of it (11g.69). */
 import { chromium } from 'playwright'
 import { seen } from './seen.mjs'
 
@@ -74,6 +77,68 @@ console.log('THE THREE SCREENS  each with a reason to exist')
   await p.close()
 }
 
+console.log('FIVE ROWS, AND THE WAY TO ALL OF THEM')
+{
+  /* The card on Invest held the whole category — thirteen rows on Everything —
+     which put whatever follows it a screen and a half down. Five now, with the
+     arrows walking the rest in place and a link to the whole thing. */
+  const p = await page()
+  await p.goto(B + '/invest?cat=Everything', { waitUntil: 'domcontentloaded' })
+  await p.waitForTimeout(500)
+  const read = () => p.evaluate(() => {
+    const c = [...document.querySelectorAll('section.card')].find((x) => x.querySelector('.page-bar'))
+    return {
+      rows: c ? c.querySelectorAll('.table tbody tr').length : 0,
+      at: c?.querySelector('.page-turn [role=status]')?.textContent?.trim(),
+      more: c?.querySelector('.page-more')?.textContent?.trim(),
+      to: c?.querySelector('.page-more')?.getAttribute('href'),
+      backOff: c?.querySelector('.page-turn .icon-btn.back')?.hasAttribute('disabled'),
+      fwdOff: c?.querySelector('.page-turn .icon-btn:not(.back)')?.hasAttribute('disabled'),
+    }
+  })
+  const one = await read()
+  ok('the card shows five', one.rows === 5, one.rows + ' rows')
+  ok('and says which five', one.at === '1 of 3', String(one.at))
+  // An arrow that wraps on a list with an end reads as the list restarting.
+  ok('with nothing before the first', one.backOff === true)
+  ok('and something after it', one.fwdOff === false)
+  await p.locator('.page-turn .icon-btn:not(.back)').click(); await p.waitForTimeout(350)
+  await p.locator('.page-turn .icon-btn:not(.back)').click(); await p.waitForTimeout(350)
+  const last = await read()
+  ok('the arrows walk to the end', last.at === '3 of 3', String(last.at))
+  ok('and stop there', last.fwdOff === true)
+  ok('the last page holds what is left', last.rows === 3, last.rows + ' rows')
+  // Rule 49. "View more" names nothing; this says what is on the other side.
+  ok('and the link names where it goes', /All 13 in Everything/.test(one.more ?? ''), String(one.more))
+  ok('and goes there', one.to === '#/invest/list/everything', String(one.to))
+  await p.close()
+}
+
+console.log('A SCREEN PER CHIP')
+{
+  const p = await page()
+  for (const [slug, title, n] of [['popular', 'Popular', 6], ['etfs', 'ETFs', 2],
+                                  ['health', 'Health', 1], ['everything', 'Everything listed', 13]]) {
+    await p.goto(B + '/invest/list/' + slug, { waitUntil: 'domcontentloaded' })
+    await p.waitForTimeout(500)
+    const m = await p.evaluate(() => ({
+      h1: document.querySelector('h1')?.textContent?.trim(),
+      trail: [...document.querySelectorAll('.crumbs .crumb')].map((e) => e.textContent.trim()).join(' > '),
+      lit: document.querySelector('.pager-tab.on')?.textContent?.trim(),
+      tabs: document.querySelectorAll('.pager-tab').length,
+      rows: document.querySelectorAll('.table tbody tr').length,
+      capped: !!document.querySelector('.page-bar'),
+    }))
+    ok(`${slug} is a screen of its own`, m.h1 === title && m.trail === 'Invest > ' + title, JSON.stringify(m))
+    ok('  with the whole category on it', m.rows === n, m.rows + ' of ' + n)
+    // The card previews; the screen is the whole thing. Capping it too would
+    // be a page inside a page.
+    ok('  and no five-row cap', !m.capped)
+    ok('  and the strip names all seven', m.tabs === 7 && m.lit !== undefined, m.tabs + ' tabs, on ' + m.lit)
+  }
+  await p.close()
+}
+
 console.log('THE PAGER  and the one that is not a screen')
 {
   const p = await page()
@@ -83,13 +148,16 @@ console.log('THE PAGER  and the one that is not a screen')
   ok('Next walks the set', (await hash(p)) === '#/invest/list/watchlist', await hash(p))
   await p.keyboard.press('ArrowRight'); await p.waitForTimeout(420)
   ok('and so do the arrow keys', (await hash(p)) === '#/invest/list/movers', await hash(p))
-  // Popular has no screen on purpose: the market table is not capped, so a
-  // screen for it would be the same list at a second address.
+  // Popular used to have no screen: the card on Invest held the whole
+  // category, so a screen for it would have been the same rows at a second
+  // address. The card shows five now, so the fourth stop is a screen like the
+  // other three (11g.69).
   await p.keyboard.press('ArrowRight'); await p.waitForTimeout(450)
-  ok('and Popular in the set is the chip on Invest, not a fourth screen',
-     (await hash(p)) === '#/invest?cat=Popular', await hash(p))
-  ok('which lands on the market table with that filter on',
-     await p.evaluate(() => /POPULAR/i.test(document.querySelector('.card-head')?.textContent ?? '')))
+  ok('and the fourth stop is a screen too', (await hash(p)) === '#/invest/list/popular', await hash(p))
+  ok('which is the whole category, not a filtered card',
+     await p.evaluate(() => document.querySelector('h1')?.textContent?.trim() === 'Popular'
+       && document.querySelectorAll('.table tbody tr').length === 6),
+     await p.evaluate(() => document.querySelectorAll('.table tbody tr').length + ' rows'))
   await p.close()
 }
 

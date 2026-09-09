@@ -90,6 +90,51 @@ export function pagerRow(stops: Stop[], now: string, label: string): HTMLElement
     step(at(i < 0 ? 0 : i + 1), false))
 }
 
+/** Five at a time, with a way to the whole thing.
+ *
+ *  A card that holds everything is a card somebody scrolls past to reach the
+ *  next one. Five rows is a preview: enough to see what kind of list this is,
+ *  short enough that what follows the card is still on the screen. The arrows
+ *  page through the rest in place, and the link is the way to all of it.
+ *
+ *  The arrows stop at the ends rather than wrapping. The pager strips wrap
+ *  because a set of three or four has no natural end; a list of thirteen read
+ *  five at a time does, and an arrow that quietly returns you to the first row
+ *  looks like the list restarted rather than finished.
+ *
+ *  Nothing here touches the address. Paging a card is not somewhere you have
+ *  been — the same argument the strips make — and this app rebuilds its whole
+ *  tree on a route change, which would take the focus out of the search field
+ *  above it. So the card repaints itself.
+ */
+export function pageBar(
+  page: number, pages: number, turn: (n: number) => void,
+  more?: { label: string; to: string },
+): HTMLElement {
+  const step = (to: number, back: boolean) => {
+    const b = h('button', {
+      class: 'icon-btn pager-step' + (back ? ' back' : ''),
+      ariaLabel: back ? 'The five before' : 'The next five',
+      html: icon.chevron(),
+      on: { click: () => turn(to) },
+    })
+    if (to < 0 || to >= pages) b.setAttribute('disabled', '')
+    return b
+  }
+  return h('div', { class: 'page-bar' },
+    pages > 1
+      ? h('div', { class: 'page-turn' },
+          step(page - 1, true),
+          h('span', { class: 'muted t-caption', role: 'status',
+            text: `${page + 1} of ${pages}` }),
+          step(page + 1, false))
+      : h('span'),
+    more
+      ? h('a', { class: 'link page-more', href: '#' + more.to, text: more.label },
+          h('span', { class: 'ic', html: icon.chevron() }))
+      : null)
+}
+
 /** Where a drag must not start. The chart reads the pointer itself, a pager's
  *  own names scroll sideways, and a table that scrolls sideways is a third
  *  thing that owns the axis. Taking the gesture from any of them makes the

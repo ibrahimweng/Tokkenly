@@ -101,6 +101,18 @@ export function markGap(c: Instrument): { pct: string; word: string; over: boole
 
 export const CATEGORIES = ['Popular', 'ETFs', 'Technology', 'Steady', 'Consumer', 'Health', 'Everything']
 
+/** A category, as an address. The chips filter the table on Invest; each of
+ *  them also has a screen of its own now, because the card on Invest shows
+ *  five rows and the rest have to live somewhere. */
+export const catSlug = (c: string): string => c.toLowerCase().replace(/[^a-z0-9]/g, '')
+export const catOf = (slug: string): string | undefined =>
+  CATEGORIES.find((c) => catSlug(c) === slug.toLowerCase())
+
+/** Everything in a category, which is what its screen shows and what the card
+ *  on Invest shows the first five of. */
+export const inCategory = (cat: string): Instrument[] =>
+  CATALOGUE.filter((c) => cat === 'Everything' || c.tags.includes(cat))
+
 /** The three the intro puts forward. Every one of them must be in the launch
  *  set: this list ends in a bucket and then in a payment, and offering a
  *  company the composer would refuse makes the first thing the product asks

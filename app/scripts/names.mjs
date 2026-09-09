@@ -196,13 +196,16 @@ console.log('THE TRAIL, AND WHERE IT SAYS YOU CAME FROM')
    company is covered the day it is added. */
 console.log('EVERY COMPANY, NOT A SAMPLE')
 {
-  await at('/invest?cat=Everything')
+  // The card on Invest previews five now (11g.69), so the whole set is on the
+  // category's own screen. Taken from the product either way — a fourteenth
+  // company is covered the day it is added.
+  await at('/invest/list/everything')
   const n = await p.locator('.table tbody tr').count()
   ok('the market lists them all', n >= 13, n + ' rows')
   const missing = []
   const wrong = []
   for (let i = 0; i < n; i++) {
-    await at('/invest?cat=Everything')
+    await at('/invest/list/everything')
     await p.locator('.table tbody tr').nth(i).click()
     await p.waitForTimeout(420)
     const m = await p.evaluate(() => ({
@@ -212,7 +215,7 @@ console.log('EVERY COMPANY, NOT A SAMPLE')
     }))
     if (!m.trail.length) { missing.push(m.at || '(' + m.name + ')'); continue }
     // Invest first, the company last. The middle crumb is the grouping you
-    // came through, which here is the Everything chip.
+    // came through, which here is the Everything screen.
     if (m.trail[0] !== 'Invest' || m.trail[m.trail.length - 1] !== m.name) wrong.push(m.name + ': ' + m.trail.join(' > '))
   }
   ok('every one of them has a trail', missing.length === 0, missing.join(', '))
@@ -230,7 +233,11 @@ console.log('EVERY COMPANY, NOT A SAMPLE')
     return c ? [...c.querySelectorAll('.all-row')].map((e) => e.querySelector('.t-body-strong')?.textContent?.trim()) : []
   })
   const PAGES = ['Invest', 'S&P 500', 'Nasdaq-100', 'Dow Jones',
-                 'Where people start', 'Your watchlist', 'Moving today', 'Your bucket']
+                 'Where people start', 'Your watchlist', 'Moving today', 'Your bucket',
+                 // The seven chips, each a screen since the card on Invest was
+                 // capped at five rows (11g.69).
+                 'Popular', 'ETFs', 'Technology', 'Steady', 'Consumer', 'Health',
+                 'Everything listed']
   ok('Everything lists the pages under Invest', PAGES.every((x) => inv.includes(x)), inv.join(', '))
   ok('and nothing else', inv.length === PAGES.length, inv.length + ' rows: ' + inv.join(', '))
 }

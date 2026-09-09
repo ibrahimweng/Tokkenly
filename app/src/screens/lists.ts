@@ -5,7 +5,7 @@ import { card, cardHead, kv, emptyState, bucketBar, showBucketBar } from '../com
 import { table } from '../components/table'
 import { sparkline, type Range } from '../components/chart'
 import { pagerRow, pageable, beside, type Stop } from '../components/pager'
-import { CATALOGUE, PICKS, find, tradable, discount, type Instrument, pathOf } from '../catalogue'
+import { CATALOGUE, CATEGORIES, PICKS, find, tradable, discount, catSlug, catOf, inCategory, type Instrument, pathOf } from '../catalogue'
 import { state, actions, inBucket, assetOn } from '../state'
 import { usd, pct } from '../format'
 import { go } from '../router'
@@ -31,9 +31,11 @@ import { celebrate } from '../confetti'
     - Moving today is the whole market ranked by movement, gainers and fallers
       apart, because "moving" without a direction is two questions in one list.
 
-   Popular is not among them. It is a chip on Invest that filters the table,
-   the table is not capped, and a fourth screen would have been that same list
-   at a second address. The strip names it and sends you to the chip. */
+   Popular is among them now, and so are the other six chips. It was not: a
+   chip filtered an uncapped card on Invest, and a screen showing those same
+   rows at a second address is a second door to one room. The card shows five
+   rows and pages through the rest, so the room is behind one door again and
+   each chip has a screen with the whole of it. */
 
 /** A year, drawn small. Same span and shape the company strip uses. */
 const spark = (c: Instrument): Range => ({
@@ -42,9 +44,11 @@ const spark = (c: Instrument): Range => ({
 })
 
 const STOPS: Stop[] = [
-  // Popular goes back to Invest with the chip on. It is the one grouping that
-  // already has a screen: the market table itself.
-  { key: 'popular', label: 'Popular', to: '/invest?cat=Popular' },
+  // Popular has a screen of its own now. It used to send you back to Invest
+  // with the chip on, because the card there held the whole category and a
+  // second address for the same rows is a second door to one room (11g.65).
+  // The card shows five now, so the room is behind one door again.
+  { key: 'popular', label: 'Popular', to: '/invest/list/popular' },
   { key: 'starters', label: 'Where people start', to: '/invest/list/starters' },
   { key: 'watchlist', label: 'Your watchlist', to: '/invest/list/watchlist' },
   { key: 'movers', label: 'Moving today', to: '/invest/list/movers' },
@@ -274,8 +278,56 @@ function movers(): (Node | null)[] {
   ]
 }
 
+/* ---------------------------------------------------------- a category --
+   A chip on Invest, opened out.
+
+   The card on Invest shows five rows of the chip you have picked and pages
+   through the rest. This is where the rest lives, with the whole list at once
+   and a strip of the seven so you can move between them without going back. */
+const CAT_STOPS: Stop[] = CATEGORIES.map((c) => ({
+  key: catSlug(c), label: c, to: '/invest/list/' + catSlug(c),
+}))
+
+function categoryScreen(cat: string): HTMLElement {
+  const rows = inCategory(cat)
+  const open = rows.filter(tradable)
+  const page = shell(
+    'market',
+    pageHeader(cat === 'Everything' ? 'Everything listed' : cat),
+    pagerRow(CAT_STOPS, catSlug(cat), 'Categories on Invest'),
+    h('div', { class: 'stack' },
+      card(
+        cardHead(cat === 'Everything' ? 'All of it' : 'Everything in ' + cat,
+          h('span', { class: 'muted t-caption',
+            text: `${rows.length} listed · ${open.length} open for trading` })),
+        // The gap said out loud, the same as the index pages say it. Four of
+        // the thirteen can be bought today, and a list that does not mention
+        // that is a list somebody scrolls before finding out.
+        h('span', { class: 'subtle t-caption',
+          text: open.length === rows.length
+            ? (rows.length === 1
+                ? 'It is open for trading today.'
+                : 'Every one of these is open for trading today.')
+            : rows.length === 1
+              ? 'It is listed but not open for trading yet. You can look at it, and follow it.'
+              : `${rows.length - open.length} of these ${rows.length - open.length === 1 ? 'is' : 'are'} `
+                + 'listed but not open for trading yet. You can look at any of them, '
+                + 'and follow any of them.' }),
+        rows.length
+          ? listTable(rows)
+          : emptyState('Nothing in this one yet',
+              'No company on Tokkenly carries this category.',
+              { label: 'Go to Invest', onClick: () => go('/invest') }, 'search'))),
+    bucketBar())
+  const { prev, next } = beside(CAT_STOPS, catSlug(cat))
+  pageable(page, { prev: prev.to, next: next.to, alive: '.pager' })
+  return page
+}
+
 export function listScreen(sub?: string): HTMLElement {
   const key = sub ?? ''
+  const cat = catOf(key)
+  if (cat) return categoryScreen(cat)
   const title = TITLES[key]
   if (!title) {
     return shell('market', pageHeader('Not found'),
