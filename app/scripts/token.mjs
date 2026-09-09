@@ -93,5 +93,35 @@ const rev = await p.evaluate(() => document.querySelector('.scrim')?.innerText.r
 ok('and the review carries it beside the fee', /real price/i.test(rev) && /\$166\.77/.test(rev),
    (rev.match(/(BELOW|ABOVE) THE REAL PRICE[^%]*%/i) ?? [''])[0].trim())
 
+console.log('THE STRIP IS ONE PAGE, NOT THIRTEEN')
+{
+  /* Swiping the strip used to push a history entry per company, so somebody
+     who looked at nine pressed the browser's Back nine times to get out, and
+     every press showed them a company they had already dismissed. The strip is
+     a list you are browsing; arriving at it is the move worth remembering. */
+  await at('/invest?cat=Consumer')
+  const before = await p.evaluate(() => history.length)
+  await p.locator('.table tbody tr').filter({ hasText: 'Disney' }).first().click()
+  await p.waitForTimeout(450)
+  ok('tapping a company is a real move', (await p.evaluate(() => location.hash)) === '#/invest/dis',
+     await p.evaluate(() => location.hash))
+  for (let i = 0; i < 5; i++) { await p.keyboard.press('ArrowRight'); await p.waitForTimeout(300) }
+  const walked = await p.evaluate(() => location.hash)
+  const grew = await p.evaluate((n) => history.length - n, before)
+  ok('five steps along it move you', walked !== '#/invest/dis', walked)
+  ok('and leave one entry, not six', grew === 1, 'history grew by ' + grew)
+  await p.goBack(); await p.waitForTimeout(500)
+  ok('so Back goes to the list you came in from',
+     (await p.evaluate(() => location.hash)) === '#/invest?cat=Consumer',
+     await p.evaluate(() => location.hash))
+  // The same set, reached by its own names rather than by the keyboard.
+  await at('/invest/index/sp500')
+  const b2 = await p.evaluate(() => history.length)
+  await p.locator('.pager-tab', { hasText: 'Dow Jones' }).click(); await p.waitForTimeout(450)
+  await p.locator('.pager-step').last().click(); await p.waitForTimeout(450)
+  ok('the indices behave the same', (await p.evaluate((n) => history.length - n, b2)) === 0,
+     'history grew by ' + (await p.evaluate((n) => history.length - n, b2)))
+}
+
 console.log('\nerrors:', errs.length ? errs : 'none')
 await b.close()

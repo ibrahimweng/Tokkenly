@@ -1,6 +1,6 @@
 import { shares, usd } from './format'
 import { state } from './state'
-import { CATALOGUE, pathOf } from './catalogue'
+import { CATALOGUE, pathOf, tradable } from './catalogue'
 
 export type Place = 'home' | 'wallet' | 'market' | 'grow' | 'history' | 'account'
 
@@ -20,6 +20,39 @@ export interface Destination {
   staff?: boolean
   hint?: string
 }
+
+/** Every company, generated from the catalogue.
+ *
+ *  This was four hand-written lines for Apple, and that is exactly how twelve
+ *  of the thirteen ended up with no trail at all: the registry is what the
+ *  breadcrumbs read, so a company missing from it got a bare title and no way
+ *  back to Invest but the rail. Disney, Nike, Coca-Cola and nine others, on
+ *  the screen the whole product is for. A list written by hand beside a list
+ *  that grows is a list that will fall behind it, so this one is derived.
+ *
+ *  The page for all thirteen; the three actions only for the ones that can
+ *  actually be bought. Offering "Invest in Disney" in a search box, when the
+ *  screen behind it says Disney is not open for trading, is the same mistake
+ *  as a button that refuses — and the address still carries a correct trail
+ *  either way, because `trailFor` finds the company above it.
+ */
+const COMPANIES: Destination[] = CATALOGUE.flatMap((c) => {
+  const at = pathOf(c)
+  const words = `${c.ticker} ${c.under} ${c.name} `
+    + `${c.kind === 'etf' ? 'etf fund index tracker' : 'stock share company'} ${c.tags.join(' ')}`
+  const page: Destination = { label: c.name, to: at, place: 'market', kind: 'screen',
+    also: words, hint: c.plain }
+  if (!tradable(c)) return [page]
+  return [
+    page,
+    { label: 'Invest in ' + c.name, to: at + '/invest', place: 'market', kind: 'action',
+      also: 'buy ' + words },
+    { label: 'Sell ' + c.name, to: at + '/sell', place: 'market', kind: 'action',
+      also: 'sell ' + words },
+    { label: 'Send ' + c.name + ' to someone', to: at + '/send', place: 'market', kind: 'action',
+      also: 'gift give transfer ' + words + ' to a person', hint: 'To another Tokkenly account' },
+  ]
+})
 
 /** One list, read by the jump-to overlay, the index, the breadcrumbs and the
  *  tabs. Four navigators that disagree are worse than one, so they share a
@@ -78,11 +111,7 @@ export const DESTINATIONS: Destination[] = [
     also: 'movers gainers fallers up down biggest move today', hint: 'Up and down, apart' },
   { label: 'Your bucket', to: '/bucket', place: 'market', kind: 'screen', primary: true,
     also: 'basket cart picked saved pay later checkout', hint: 'Companies you have picked, not yet paid for' },
-  { label: 'Apple', to: '/invest/aapl', place: 'market', kind: 'screen', also: 'aapl stock company' },
-  { label: 'Invest in Apple', to: '/invest/aapl/invest', place: 'market', kind: 'action', also: 'buy aapl shares' },
-  { label: 'Sell Apple', to: '/invest/aapl/sell', place: 'market', kind: 'action', also: 'aapl shares' },
-  { label: 'Send Apple to someone', to: '/invest/aapl/send', place: 'market', kind: 'action',
-    also: 'gift give transfer aapl shares to a person', hint: 'To another Tokkenly account' },
+  ...COMPANIES,
 
   { label: 'Borrow & Lend', to: '/grow', place: 'grow', kind: 'place', primary: true,
     also: 'earn grow interest yield loan credit save lending' },
@@ -174,15 +203,26 @@ export function trailFor(path: string, query: URLSearchParams): Destination[] {
     if (!q) return true
     return new URLSearchParams(q).get('filter') === query.get('filter')
   })
+  if (here) return trailTo(here, path)
   // A step inside a flow keeps the flow's trail. /verify/number is not its own
   // destination and should not be — but losing the way back on step two of
-  // four is worse than a slightly generic crumb.
-  const step = here ?? DESTINATIONS.find((d) => {
-    const p = bare(d.to)
-    return p !== '/' && path.startsWith(p + '/')
-  })
-  if (!step) return []
-  return trailTo(step, path)
+  // four is worse than a slightly generic crumb. The same is true of the
+  // twenty-seven action addresses under the nine companies that cannot be
+  // bought: /invest/dis/invest is a real screen and was a dead end.
+  //
+  // The deepest registered ancestor, not the first one that matches. /invest
+  // matches /invest/dis/invest too, and taking it put the place at the end of
+  // its own trail — "Disney › Invest" — because `trailTo` pushes whatever it
+  // was handed last. Sorting by length asks the question the caller meant:
+  // what is the nearest thing above this that has a name.
+  const up = DESTINATIONS
+    .filter((d) => bare(d.to) !== '/' && path.startsWith(bare(d.to) + '/'))
+    .sort((a, b) => bare(b.to).length - bare(a.to).length)[0]
+  if (!up) return []
+  // That ancestor is a parent, not this screen. The caller replaces the last
+  // entry with the screen's own title, so it needs something of its own to
+  // replace — otherwise Disney is dropped and the trail reads "Invest › Buy".
+  return [...trailTo(up, path), { label: '', to: path, place: up.place, kind: 'screen' }]
 }
 
 function trailTo(here: Destination, path: string): Destination[] {

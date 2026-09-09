@@ -14,6 +14,17 @@ import { go } from '../router'
 
    One row, one gesture, one keydown listener.
 
+   And one history entry. Every way of moving inside a set — the names, the
+   chevrons, the swipe, the arrow keys — replaces the entry rather than pushing
+   one, because a set is a thing you are browsing and not thirteen places you
+   have been. Pushing meant somebody who swiped through nine companies pressed
+   the browser's Back nine times to get out, and each press showed them a
+   company they had already dismissed. Replacing leaves exactly one entry for
+   the whole set, so Back goes to the list they came in from.
+
+   Arriving is still a push: the list to the company is a real move, and it is
+   the entry Back is supposed to find.
+
    The listener is module-level on purpose. This app rebuilds its whole tree on
    every state change, so a handler added per render leaves a stack of stale
    ones and a single arrow press walks several screens at once. One listener,
@@ -39,7 +50,7 @@ export function pagerRow(stops: Stop[], now: string, label: string): HTMLElement
       // One chevron, turned. A second SVG that is the first one mirrored is a
       // second drawing to keep in step with the first.
       html: icon.chevron(),
-      on: { click: () => go(to.to) },
+      on: { click: () => go(to.to, true) },
     })
   const tabs = h('nav', { class: 'pager-tabs', ariaLabel: label },
     ...stops.map((s) => {
@@ -47,7 +58,7 @@ export function pagerRow(stops: Stop[], now: string, label: string): HTMLElement
       const b = h('button', {
         class: 'pager-tab' + (on ? ' on' : ''),
         text: s.label,
-        on: { click: () => { if (!on) go(s.to) } },
+        on: { click: () => { if (!on) go(s.to, true) } },
       })
       if (on) b.setAttribute('aria-current', 'page')
       return b
@@ -116,7 +127,7 @@ export function pageable(
     // perfectly vertical, and paging the screen out from under somebody who
     // was reading it is the worst thing this gesture can do.
     if (Math.abs(dx) < 64 || Math.abs(dx) < Math.abs(dy) * 1.6) return
-    go(dx < 0 ? armed.next : armed.prev)
+    go(dx < 0 ? armed.next : armed.prev, true)
   }, { passive: true })
 
   if (wired) return
@@ -131,7 +142,7 @@ export function pageable(
     const t = e.target as HTMLElement | null
     if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return
     e.preventDefault()
-    go(e.key === 'ArrowLeft' ? armed.prev : armed.next)
+    go(e.key === 'ArrowLeft' ? armed.prev : armed.next, true)
   })
 }
 

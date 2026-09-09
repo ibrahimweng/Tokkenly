@@ -8027,6 +8027,80 @@ new check is a check.
      original made against itself — the column it hides, the width it refuses —
      and either carry them or say why this one is different.
 
+### 11g.67 Twelve pages with no way back
+
+A screenshot of Disney's page, and a question: why is there no routing on this
+screen. There was none, and there was none on eleven others.
+
+**The registry held four hand-written lines for Apple.** `DESTINATIONS` is what
+the breadcrumbs read, so Apple's page said `Invest › Apple` and every other
+company's said nothing at all — no trail, no back button, a bare title on the
+screen the whole product exists for. Disney, Nike, Coca-Cola, Johnson &
+Johnson, Nvidia, Microsoft, Meta, Alphabet, Tesla, Amazon and both funds. The
+same registry is what Everything reads, so twelve of the thirteen were missing
+from the index of every screen too.
+
+It survived because one of the two navigators that could see them was already
+right: `search` walks the catalogue itself in a second pass, so typing "Disney"
+always found Disney. The product looked findable and was not navigable, and
+`names.mjs` sampled `/invest/aapl` — the one that worked.
+
+So the list is derived now. Every company gets a destination built from
+`CATALOGUE`; the three actions are built only for the ones that can actually be
+bought, because offering "Invest in Disney" in a search box, against a screen
+that then says Disney is not open for trading, is a button that refuses wearing
+a different hat. A fourteenth company is covered the day it is added, which is
+the only version of this that stays true.
+
+Registering them exposed a second fault underneath. `trailFor` falls back to a
+registered *ancestor* for an address that is not its own destination — the
+steps inside a flow, and the twenty-seven action addresses under the nine
+companies that cannot be bought. It took the first match, and `/invest` matches
+`/invest/dis/invest` as surely as `/invest/dis` does, so the place landed at the
+end of its own trail: `Disney › Invest`. It takes the deepest match now, and
+appends a placeholder for the screen itself, because the caller replaces the
+last entry with the screen's own title and an ancestor is not that.
+
+**And the strip was thirteen places you had been.** Every step pushed a history
+entry: from Invest into a company and five steps along the strip grew history
+by six, and the browser's Back walked you back through five companies you had
+already dismissed before it let you out. Now it grows by one. Arriving is still
+a push, because tapping a company on a list is a real move and it is the entry
+Back is supposed to find; moving *inside* the set replaces, whether by the
+names, the chevrons, the swipe or the arrow keys, on all three sets at once —
+they share one component, so they share the answer.
+
+**The trail names the list you came through.** One company has one address from
+every way in — that is 11g.34's rule and it is the right one — so the address
+cannot say whether you tapped Disney on Moving today, under the Consumer chip
+or in the S&P's own table. `whence.ts` holds the last grouping you stood in, so
+the trail reads `Invest › Moving today › Disney`. It is memory rather than
+address: it survives the strip, because swiping from Disney to Nike leaves you
+where the list put you; it is dropped the moment you leave Invest, so a company
+opened later from the wallet does not claim a list you saw an hour ago; and
+somebody opening a link you sent them came through nothing, so theirs reads
+`Invest › Disney`, which is the truth for that visit.
+
+The suite takes the thirteen from the product rather than typing them, which is
+the actual repair to what let this through: reverted, it names all twelve.
+
+165. **A list written by hand beside a list that grows will fall behind it.**
+     The catalogue gained nine companies and the registry gained none, and
+     nothing failed — the screens all rendered, the search all worked, and the
+     only symptom was an absence. Derive the second list from the first, or
+     accept that it is a snapshot of the day somebody typed it.
+
+166. **Moving inside a set is not a place you have been.** A strip, a carousel
+     or a pager is one screen you are browsing. Push the entry that got you
+     into it and replace every step within it, or the way out is as many
+     presses as the number of things somebody looked at.
+
+167. **One address reached several ways cannot say which way you took.** That
+     is the price of one company having one address, and it is worth paying.
+     If the screen needs to know, hold it in memory, drop it when you leave,
+     and make sure the screen still reads correctly for somebody who arrives
+     with none of it.
+
 ### 11g.49 Still open
 
 - All forty-four items of the audit are settled, and seven more that came from
@@ -8156,3 +8230,15 @@ new check is a check.
 - `settlement()` decides failure on the cents. That is right for a prototype
   and wrong for anything else, and the seam is one function wide when a real
   backend arrives.
+- The trail on a share send repeats the company: `Invest › Disney › Send
+  Disney`, because the registry's label and the screen's title both name it.
+  It predates 11g.67 — Apple read the same way — and it is either a shorter
+  title or a shorter crumb, which is a decision about words rather than a bug.
+- Where people start renders no table. `tradable` is four companies, three of
+  them are the picks and the fourth is paused, so "everything else you can buy
+  today" has nothing to hold and the card does not appear at all. The screen is
+  correct and thin, and it fills itself the day the launch set grows.
+- The add-money dialog has no door. It is registered, reachable at
+  `?sheet=add-money`, and covered by `sheets.mjs`, and nothing in the product
+  opens it. It is either a dialog wanting a caller or a dialog wanting
+  deleting.

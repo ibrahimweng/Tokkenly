@@ -14,6 +14,7 @@ import { walletScreen } from './screens/wallet'
 import { marketScreen } from './screens/market'
 import { stockScreen } from './screens/stock'
 import { investScreen, sellScreen } from './screens/invest'
+import { noteRoute } from './whence'
 import {
   growScreen, borrowScreen, repayScreen, earnScreen, takeOutScreen,
   lendingScreen, borrowingScreen,
@@ -135,6 +136,9 @@ function render(r: Route): void {
   const keepScroll = r.path === lastPath ? window.scrollY : 0
   const arrived = r.path !== lastPath
   lastPath = r.path
+  // Before the screen is built, because a company page reads it while it
+  // builds: which grouping you came through, so its trail can say so.
+  noteRoute(r)
   app.replaceChildren(screenFor(r))
   const screen = app.firstElementChild as HTMLElement | null
   const sheetEl = buildSheet(r)

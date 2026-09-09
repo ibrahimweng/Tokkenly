@@ -184,6 +184,76 @@ console.log('THE TRAIL, AND WHERE IT SAYS YOU CAME FROM')
   ok('and it read some trails', trails >= 12, `${trails} trails`)
 }
 
+/* Twelve of the thirteen companies had no trail at all.
+   -------------------------------------------------------------------------
+   The registry is what the breadcrumbs read, and it held four hand-written
+   lines for Apple. So Apple's page said Invest > Apple and Disney's said
+   nothing: a bare title, on the screen the whole product is for, with no way
+   back but the rail. This file passed the whole time because the list above
+   samples /invest/aapl.
+
+   So the set is taken from the product rather than typed here. A fourteenth
+   company is covered the day it is added. */
+console.log('EVERY COMPANY, NOT A SAMPLE')
+{
+  await at('/invest?cat=Everything')
+  const n = await p.locator('.table tbody tr').count()
+  ok('the market lists them all', n >= 13, n + ' rows')
+  const missing = []
+  const wrong = []
+  for (let i = 0; i < n; i++) {
+    await at('/invest?cat=Everything')
+    await p.locator('.table tbody tr').nth(i).click()
+    await p.waitForTimeout(420)
+    const m = await p.evaluate(() => ({
+      at: location.hash.replace(/^#/, ''),
+      name: document.querySelector('h1')?.textContent?.trim() ?? '',
+      trail: [...document.querySelectorAll('.crumbs .crumb')].map((e) => e.textContent.trim()),
+    }))
+    if (!m.trail.length) { missing.push(m.at || '(' + m.name + ')'); continue }
+    // Invest first, the company last. The middle crumb is the grouping you
+    // came through, which here is the Everything chip.
+    if (m.trail[0] !== 'Invest' || m.trail[m.trail.length - 1] !== m.name) wrong.push(m.name + ': ' + m.trail.join(' > '))
+  }
+  ok('every one of them has a trail', missing.length === 0, missing.join(', '))
+  ok('and every trail starts at Invest and ends where you are', wrong.length === 0, wrong.join(' | '))
+
+  // The same registry is what Everything reads, so the twelve were absent
+  // from the index of every screen too.
+  await at('/all')
+  const listed = await p.evaluate(() => document.body.innerText)
+  const absent = ['Apple', 'Disney', 'Nike', 'Nvidia', 'Coca-Cola', 'Microsoft', 'Tesla', 'Amazon']
+    .filter((x) => !new RegExp(x, 'i').test(listed))
+  ok('and Everything lists them', absent.length === 0, absent.join(', '))
+}
+
+console.log('THE TRAIL NAMES THE LIST YOU CAME THROUGH')
+{
+  // One company has one address from every way in, so the address cannot say
+  // which way that was. The trail can, and it is memory rather than address:
+  // a link somebody sent you came through nothing.
+  const via = async (from, who) => {
+    await at(from)
+    await p.locator('.table tbody tr, .feed-row, .start-row').filter({ hasText: who }).first().click()
+    await p.waitForTimeout(450)
+    return p.evaluate(() => [...document.querySelectorAll('.crumbs .crumb')].map((e) => e.textContent.trim()).join(' > '))
+  }
+  ok('from Moving today', (await via('/invest/list/movers', 'Disney')) === 'Invest > Moving today > Disney',
+     await via('/invest/list/movers', 'Disney'))
+  ok('from a chip on Invest', (await via('/invest?cat=Consumer', 'Disney')) === 'Invest > Consumer > Disney')
+  ok("from an index's own table", (await via('/invest/index/sp500', 'Disney')) === 'Invest > S&P 500 > Disney')
+  // Cold, in a tab that has been nowhere: no grouping to name, and the trail
+  // says only what it knows.
+  const cold = await b.newPage({ viewport: { width: 1280, height: 1000 } })
+  await seen(cold)
+  await cold.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
+  await cold.goto(B + '/invest/dis', { waitUntil: 'domcontentloaded' })
+  await cold.waitForTimeout(500)
+  const alone = await cold.evaluate(() => [...document.querySelectorAll('.crumbs .crumb')].map((e) => e.textContent.trim()).join(' > '))
+  ok('and a link somebody sent you names no list', alone === 'Invest > Disney', alone)
+  await cold.close()
+}
+
 /* The two cards on Borrow & Lend were the same fault as Convert Cash and this
    file could not see them: it reads the gates on Home, the rail, the quick
    actions and the wallet's two doors, and a product card is none of those. So

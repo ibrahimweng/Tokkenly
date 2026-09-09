@@ -11,6 +11,7 @@ import { pageable, beside as besideOf } from '../components/pager'
 import { toast } from '../components/sheet'
 import { isMobile } from '../responsive'
 import { celebrate } from '../confetti'
+import { cameThrough } from '../whence'
 
 /** The same chart Home draws, with the company's own year behind it. The
  *  ranges are anchored to the twelve months the catalogue already states, so
@@ -71,7 +72,8 @@ function coStrip(now: Instrument): HTMLElement {
     const on = c.ticker === now.ticker
     const cell = h('button', {
       class: 'co-cell' + (on ? ' on' : ''),
-      on: { click: () => { if (!on) go(pathOf(c)) } },
+      // Replaced, not pushed — see the note on the header below.
+      on: { click: () => { if (!on) go(pathOf(c), true) } },
     },
       h('span', { class: 'two-line' },
         h('span', { class: 't-body-strong', text: c.name }),
@@ -237,6 +239,7 @@ export function stockScreen(ticker: string): HTMLElement {
   }
   const held = holding(c.ticker)
   const watching = state.watchlist.includes(c.ticker)
+  const came = cameThrough()
 
   // Secondary in both states now. It used to go primary when you were not
   // following, which put the loudest button on the screen against a control
@@ -266,7 +269,18 @@ export function stockScreen(ticker: string): HTMLElement {
     // against. The kind and the trading state are facts about the token, so
     // they go in the card that explains the token. And Buy was already on the
     // position, where the money is: it was on this screen twice.
-    pageHeader(c.name),
+    // The trail names the grouping you came through, because the address
+    // cannot. One company has one address from all seven ways in, so
+    // `Invest › Disney` was the trail whether you tapped it on Moving today,
+    // under the Consumer chip or in the S&P's table. `cameThrough` is memory
+    // rather than address: a link somebody sent you came through nothing, and
+    // reads `Invest › Disney`, which is the truth for that visit.
+    //
+    // The strip below replaces its history entry rather than pushing one, so
+    // browsing thirteen companies leaves one entry and Back returns to the
+    // list you came from rather than walking you back through all of them.
+    pageHeader(c.name, undefined,
+      { steps: came ? [came, { label: c.name }] : undefined }),
     // The market comes with you. See `coStrip`.
     coStrip(c),
     h('div', { class: 'row' },
