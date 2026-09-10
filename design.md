@@ -8331,6 +8331,45 @@ the builder resolves it from the component's description like the other seven.
      It survived a fidelity check because the check compared the screens I had
      already chosen to look at, and none of them had a table.
 
+### 11g.72 Ten components, and the two things the pass found
+
+Every shape the product reuses is now a component or a component set, named after
+the thing the product calls it rather than after what it looks like: Mark, Mark
+letter, Two line, Caption, Icon button, Row figure, Key value, Card head, Ledger
+leg, Set row. Ten sets, seventy-one variants, and 7,860 instances across the 176
+frames. A variant is a real variation — the icon in a mark, the tone of a figure,
+whether a key-value row ends in a chevron or a number — and the sets nest, so a
+Key value contains a Two line and a Set row contains a Mark.
+
+The method matters more than the count. Componentising by structural repetition
+finds page bodies and chart bars; componentising by the product's own class names
+finds the vocabulary, because a class name is a claim about what a thing *is*.
+`two-line` appears 1,296 times, and it is one idea, not 1,296.
+
+Doing the pass found two defects that had been in the file since the first screen.
+
+Every heading meant to be in capitals was in sentence case. `text-transform:
+uppercase` lives in CSS and the converter was reading the DOM, so YOUR DETAILS and
+THIS ACCOUNT and WHAT WE HOLD ABOUT YOU had all quietly become Your details, This
+account, What we hold about you.
+
+Icons built from anything but a single `<path>` never matched. The browser
+serialises `<rect x="4" .../>` as `<rect x="4" ...></rect>`, so the exact string
+compare failed for `wallet`, `bell`, `grid`, `alert` and `face`, and the fallback
+compared concatenated `d` attributes, which multi-element icons do not have.
+Every one of them fell through to a raw inline drawing.
+
+And the pass caused a defect of its own, which is the useful part. The signature
+that decides whether two shapes are the same could not see inside an inline
+drawing, so ninety-two different drawings all matched `Mark, Icon=Drawn` and
+became one picture ninety-two times. The fix for the icon matcher removed most of
+them; hashing the drawing into the signature removed the rest.
+
+173. **Making two things one component is a claim that they are the same thing.**
+     The claim is only as good as what the comparison can see. A signature that
+     cannot look inside a drawing will say two drawings are identical, and the
+     component set will state it ninety-two times without blinking.
+
 ### 11g.49 Still open
 
 - Buying and selling is the one page in the file that was hand-built rather
