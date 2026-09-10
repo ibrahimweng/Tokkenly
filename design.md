@@ -8239,8 +8239,69 @@ with a company you cannot buy, and that is on the company's own page.
      you land on, because a preview inside a destination is a door to a room you
      are standing in.
 
+### 11g.70 A design file that is a build, not a photograph
+
+The Figma file held ten screenshots. A screenshot is the one artefact that
+cannot disagree with the product — it *is* the product, flattened — and a file
+that cannot disagree cannot be read. So the flow was built again, natively.
+
+Underneath: twenty-nine colour variables in Dark and Light, eight text styles in
+Geist, eleven spacing steps, three effect styles, two paint styles, and
+forty-four icons lifted out of `icons.ts` as components with every stroke bound
+to `ink/muted`. On top of that, a component for each part of the interface that
+appears on more than one screen — the button set's ten variants, the card and
+its head, the KV row, the callout, the chip, the icon button, the feed row, the
+trail, the page header, the pager strip, the page bar, the empty state, the top
+bar, the tab bar, the nav rail, the search field, the amount box, the standing
+bar, the company strip cell, the timeframe pill, the tag, the chart block, and
+the three pieces of a pop-up: close, dialog, sheet.
+
+Ten frames sit on that: Apple, Buy, Sell, Send Apple and Your bucket, each at
+1440 with its 390 beside it. Nothing in them is an image. The candles are
+rectangles from a series, the sparkline is a path, the ruler is fifty-nine ticks
+and a needle, and the rail carries its promo and its account row because those
+are 202 and 48 pixels of every signed-in screen and leaving them out would make
+the rail look like something the product does not have.
+
+Redrawing it found three things a screenshot carries without comment:
+
+- **The trail forgets the company.** `/invest/AAPL/invest` renders
+  `Invest › Buy`, `/invest/AAPL/sell` renders `Invest › Sell`, and the share
+  send renders `Invest › Send Apple`. Every crumb names where it goes, so rule
+  49 is satisfied — but the step in between is missing, and the crumb above
+  *"Buy $250.00 of Apple"* takes you to the market rather than back to Apple.
+  11g.67 gave twelve pages a way back and did not reach the three composers.
+- **`icon.card` is an arrow.** `M7 17 17 7M17 13V7h-6` is `icon.buy` with the
+  coordinates moved. It is the badge on "Debit card coming soon", the mark on
+  Payment methods, and the mark on Add money · Debit card: three places that
+  say card and draw an arrow.
+- **`.bucket-btn .dot` inherits colours and nothing else.** The rules that make
+  a count a count — absolute position, a pill radius, a min-width, a 16px line —
+  live under `.bell .dot`, and the bucket's dot is not a bell's. On a phone with
+  three things in the bucket it renders as a 9x20 white block in normal flow,
+  shoving the icon and clipping at the button's edge. The Figma draws it as it
+  is meant to look, which is the first time the two have differed on purpose.
+
+171. **A file made of pictures of the product cannot disagree with it.** Which
+     is the whole use of a design file: the disagreements are the findings.
+     Three came out of redrawing five screens that had been screenshotted the
+     same week and read as fine.
+
 ### 11g.49 Still open
 
+- Three findings from 11g.70 are flagged and not fixed, because they are
+  product changes raised in the middle of a design batch: the trail that drops
+  the company on Buy, Sell and Send shares; `icon.card` drawing an arrow in the
+  three places that talk about a card; and `.bucket-btn .dot` missing every rule
+  that makes it a pill. The first is a routing decision — whether the composer's
+  parent is the company or the grouping you came through — and the other two are
+  a path and a selector.
+- The share-send trail reads `Invest › Send Apple` rather than
+  `Invest › Disney › Send Disney`, so the repetition noted earlier is gone; what
+  replaced it is the missing company step above.
+- The Figma file is a build now (11g.70), which means it can drift. Nothing
+  keeps the twenty-nine variables in step with `tokens.css` except somebody
+  re-running the export, and no suite watches it.
 - All forty-four items of the audit are settled, and seven more that came from
   using the product afterwards. Item 30 was held back until it was asked for,
   and was then built without generating anything: see 11g.18, and 11g.10 for
