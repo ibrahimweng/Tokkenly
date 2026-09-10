@@ -1,7 +1,7 @@
 import { h, link, countTo } from '../ui'
 import { icon } from '../icons'
 import { barChart, type Range } from '../components/chart'
-import { objectArt, stir, level, PIECE, NOTES, PURSE, type ObjectField } from '../components/art'
+import { objectArt, stir, level, PIECE, NOTES, PURSE, SIGNAL, type ObjectField } from '../components/art'
 import { shell, pageHeader, bell, jumpOpen, viewToggle } from '../components/shell'
 import { card, cardHead, headLink, kv, amount, directionMark, figureWithEye } from '../components/bits'
 import { table } from '../components/table'
@@ -10,7 +10,7 @@ import {
   state, holdingsValue, availableToBorrow, buyingPower, verified, LIMITS, money, MASK, inNaira,
   bucketTotal, bucketCost,
 } from '../state'
-import { usd, signed, when, pct, shares, greeting, activityLabel } from '../format'
+import { usd, naira, signed, when, pct, shares, greeting, activityLabel } from '../format'
 import { go, openSheet } from '../router'
 import { isMobile } from '../responsive'
 
@@ -243,7 +243,10 @@ function detailed(): HTMLElement {
         // screen. The slot is the door to the place instead, so this row is
         // three ways into the product rather than two doors and an errand.
         quickAction('Wallet', 'Your cash, in and out', icon.wallet(), '/transfer'),
-        quickAction('Borrow', 'Against your shares', icon.download(), '/grow/borrow'))),
+        quickAction('Borrow', 'Against your shares', icon.download(), '/grow/borrow'),
+        // The fourth errand, and the only one that is not about the portfolio:
+        // airtime, data and a meter, paid out of the same dollars.
+        quickAction('Spend', 'Airtime, data, light', icon.spend(), '/spend'))),
     tasks(),
     h('div', { class: 'row' },
       h('div', { class: 'stack col-main' },
@@ -272,6 +275,24 @@ function whereItIs(part: number, whole: number, what: string): string {
   const share = Math.round((part / whole) * 100)
   if (share === 0 && part > 0) return `Under 1% of your money ${what}`
   return `${share}% of your money ${what}`
+}
+
+/* What the fourth door is keyed to.
+   The other three read a balance against the portfolio. There is no balance
+   here: naira bought for a bill leave the same minute they arrive, which is
+   the whole argument for the place existing. So it reads the flow instead —
+   what has gone on bills, against everything that has gone out at all. */
+const billsOut = (): number =>
+  state.activity.filter((a) => a.bill).reduce((t, a) => t + Math.abs(a.amount), 0)
+
+const paidOut = (): number =>
+  state.activity.filter((a) => a.kind === 'payment' && a.amount < 0)
+    .reduce((t, a) => t + Math.abs(a.amount), 0)
+
+function billsSay(): string {
+  const n = state.activity.filter((a) => a.bill).reduce((t, a) => t + a.bill!.naira, 0)
+  if (!n) return 'Nothing paid for yet'
+  return `${naira(n)} on bills so far`
 }
 
 /** Figma 06 Desktop, D01c Home — gateway. Three tiles, 400 / 288 / 288 in a
@@ -368,7 +389,14 @@ function gateway(): HTMLElement {
       tile({ art: PURSE(), ic: icon.grow, to: '/grow', title: 'Borrow & Lend', cta: 'See your limit',
         sub: 'Borrow against your shares without selling them.',
         reads: whereItIs(state.lent, total, 'lent out'),
-        at: level(state.lent, total) })),
+        at: level(state.lent, total) }),
+      // The fourth door does not answer "where is my money", because spending
+      // is not a place money sits. It answers "what has left, and on what" —
+      // which is the same question one step further on, and the only reading
+      // this door could honestly carry.
+      tile({ art: SIGNAL(), ic: icon.spend, to: '/spend', title: 'Spend', cta: 'Pay a bill',
+        sub: 'Airtime, data and light, straight out of your dollars.',
+        reads: billsSay(), at: level(billsOut(), paidOut()) })),
     // On a tablet held upright these two sit beside each other: 746 pixels is
     // two readable columns and one very wide one, and the feed is the thing
     // that suffers most from being stretched. One column everywhere else, so

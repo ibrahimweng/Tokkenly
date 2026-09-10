@@ -6,7 +6,7 @@ import {
   state, actions, owed, monthlyCost, monthlyInterest, holding, bucketTotal, bucketRefusals,
   tradeFee, cardFee, weakPin, ratePassword, LIMITS, type Activity, txHash, onChain, supportRef,
   switchOn, assetOn,
-  requestQuote, quoteLive, settlement, grossOf, type Quote, type Destination,
+  requestQuote, quoteLive, settlement, grossOf, billOutcome, type Quote, type Destination,
 } from './state'
 import { pinPad } from './components/pinpad'
 import {
@@ -19,6 +19,7 @@ import { type Route, closeSheet, replaceSheet, go } from './router'
 import { isMobile } from './responsive'
 import { QA } from './screens/settings'
 import { peopleRows, addPanels, addTab, sendWays, addWays } from './screens/money'
+import { billFrom } from './screens/spend'
 import { search } from './destinations'
 import * as ledger from './ledger'
 import { BEHIND_MORE } from './components/shell'
@@ -71,6 +72,12 @@ function review(opts: {
    *  this needs a deliberate second step. Omit for anything that is not a
    *  payment out. */
   amount?: number
+  /** A reason this particular confirmation must not go through, asked at the
+   *  moment the button is pressed. `settlement` reads the cents of the dollar
+   *  figure, which works everywhere the person typed dollars; a bill is typed
+   *  in naira and its dollars are an artefact of the rate, so it brings its
+   *  own refusal. Returning a string refuses in place and writes nothing. */
+  refuseWith?: () => string | undefined
   /** A rate this sheet is honouring, for the two flows that change currency.
    *  The rows, the button and what confirming does are all functions of it,
    *  because all three change when the quote does. When present, the plain
@@ -118,6 +125,11 @@ function review(opts: {
     // The other side can say no, and when it does nothing is written: the
     // ledger is not touched, the sheet stays where it is, and the reason is on
     // screen rather than in a toast that has gone by the time you look up.
+    const own = opts.refuseWith?.()
+    if (own) {
+      refuse(own)
+      return
+    }
     if (settlement(opts.amount ?? 0) === 'declined') {
       refuse('Your bank said no. Nothing left your account. Check with them, or try less.')
       return
@@ -603,7 +615,15 @@ export const SHEETS: Record<string, Builder> = {
       // afterwards. The order here is the order of importance, because that is
       // what decides which four are above the fold.
       foldPanel(4, [
-        [inbound ? 'From' : 'To', a.who],
+        // A bill's subject is the number or the meter, not the network that
+        // took the money — and on a prepaid meter the twenty digits are the
+        // whole reason the record is kept, so they are above the fold and the
+        // supplier, which the figure above and the feed row both already name,
+        // goes into it.
+        ...(a.bill
+          ? [[a.type === 'Electricity' ? 'Meter' : 'Number', a.bill.target] as [string, string],
+             ...(a.bill.token ? [['Token', a.bill.token] as [string, string]] : [])]
+          : [[inbound ? 'From' : 'To', a.who] as [string, string]]),
         // Money that changed currency states both figures. Read off the
         // ledger's paired postings rather than multiplied out here, so a
         // record written a fortnight ago at ₦1,494 does not reprint itself at
@@ -625,6 +645,9 @@ export const SHEETS: Record<string, Builder> = {
         ['Reference', a.ref],
 
         /* ----- folded ----- */
+        ...(a.bill
+          ? [[a.type === 'Electricity' ? 'Supplier' : 'Network', a.who] as [string, string]]
+          : []),
         ...(a.asset ? [['Price each', usd(a.asset.price)] as [string, string]]
           : c ? [
             [a.type === 'Sold' ? 'Sale' : 'Investment', usd(grossOf(a))] as [string, string],
@@ -1083,6 +1106,105 @@ export const SHEETS: Record<string, Builder> = {
                   [['Fee', 'None'], ['Rate', '1 dollar = ' + naira(rate)]])
     }
     return done('Sent', `${usd(Math.abs(a.amount))} is on its way to ${a.who}.`, a, [['Fee', 'None']])
+  },
+
+  /* ----- spend -----
+     One review for three errands, because they are one movement: naira reach
+     somebody who is not us, and the dollars they cost leave the wallet. What
+     differs is the line under the figure, and that is the thing being bought.
+
+     The refusal is on the naira, not the dollars. `settlement` reads the cents
+     of the figure a person typed, which works everywhere they typed dollars;
+     here they typed naira and the dollars are an artefact of the rate, so a
+     refusal on the cents could never be reached deliberately and would fire at
+     random on the ones that could. A naira figure ending in 99 is a network
+     saying no, and it says so before anything is written. */
+  'spend-review': (r) => {
+    const b = billFrom(r.query)
+    if (!b) {
+      return sheet('Review', h('p', { class: 'muted',
+        text: 'That is not something we can pay for. Go back and pick it again.' }))
+    }
+    const rate = state.ngnPerUsd
+    const dollars = Math.round((b.naira / rate) * 100) / 100
+    return review({
+      title: 'Review',
+      figureLabel: b.what, figureValue: naira(b.naira),
+      // Not the naira: the ceiling and the PIN are about what leaves the
+      // wallet, and what leaves the wallet is dollars.
+      amount: dollars,
+      rows: [
+        [b.way === 'electricity' ? 'Meter' : 'Number', b.target],
+        // The name off the register, restated at the commit. It is the reason
+        // the check exists, and a review is the last screen before the money
+        // cannot come back.
+        ...(b.holder ? [['Registered to', b.holder] as [string, string]] : []),
+        ...(b.note ? [['What you get', b.note] as [string, string]] : []),
+        ...(b.kind
+          ? [['Kind', b.kind === 'prepaid' ? 'Prepaid · a token' : 'Postpaid · off the bill'] as [string, string]]
+          : []),
+        [b.way === 'electricity' ? 'Supplier' : 'Network', b.who],
+        ['Costs you', usd(dollars)],
+        ['Rate', '1 dollar = ' + naira(rate)],
+        ['Fee', 'No fee'],
+      ],
+      note: b.way === 'electricity'
+        ? 'Check the name on the meter. A payment to the wrong one cannot be recalled.'
+        : 'Check the number. A top-up to the wrong one cannot be recalled.',
+      action: 'Pay ' + naira(b.naira),
+      refuseWith: () => billOutcome(b.naira) === 'declined'
+        ? `${b.who} would not take that payment. Nothing left your wallet. Try again, or try a different amount.`
+        : undefined,
+      onConfirm: () => {
+        const a = actions.payBill({
+          what: b.what, who: b.who, naira: b.naira, target: b.target,
+          // What the record says it was for. A bundle names itself; a meter
+          // names the kind and whose it is, which is what a receipt reopened
+          // in six months has to be able to say.
+          note: b.note ?? (b.holder
+            ? `${b.kind === 'prepaid' ? 'Prepaid' : 'Postpaid'} · ${b.holder}`
+            : undefined),
+          prepaid: b.kind === 'prepaid',
+        }, rate)
+        replaceSheet('spend-done', { ref: a.ref })
+      },
+    })
+  },
+  'spend-done': (r) => {
+    const a = state.activity.find((x) => x.ref === str(r, 'ref'))!
+    const b = a.bill!
+    const token = b.token
+    const line = a.type === 'Data'
+      ? `${a.note} is on ${b.target}.`
+      : a.type === 'Airtime'
+        ? `${naira(b.naira)} is on ${b.target}.`
+        : token
+          ? `${naira(b.naira)} of units bought. The token is below.`
+          : `${naira(b.naira)} has gone against ${b.target}.`
+    const rows: [string, string][] = [
+      [a.type === 'Electricity' ? 'Meter' : 'Number', b.target],
+      ['Paid', naira(b.naira)],
+      ['Cost you', usd(Math.abs(a.amount))],
+    ]
+    // "Electricity bought" is not what a postpaid payment did: nothing was
+    // bought, something was paid down. Airtime and data were bought.
+    if (!token) {
+      return done(a.type === 'Electricity' ? 'Paid' : a.type + ' added', line, a, rows.slice(0, 2))
+    }
+    // The token is the product, not a detail of it: somebody is standing at a
+    // meter with a phone in one hand. So it is the first row and the primary
+    // button puts it on the clipboard — and it is on the receipt too, because
+    // the one thing worse than losing it is losing it and having nowhere to
+    // look.
+    return outcome(
+      'Token ready', line,
+      [['Token', token], ...rows, ['Reference', a.ref]],
+      { label: 'Copy the token',
+        onClick: () => {
+          navigator.clipboard?.writeText(token.replace(/ /g, '')).catch(() => undefined)
+          toast('Token copied', 'success')
+        } },
+      { label: 'See the record', onClick: () => replaceSheet('receipt', { ref: a.ref }) })
   },
 
   /* ----- sending shares -----

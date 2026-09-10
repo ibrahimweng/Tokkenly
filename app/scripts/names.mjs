@@ -39,7 +39,7 @@ const doors = await p.evaluate(() =>
     label: e.querySelector('.t-title')?.textContent?.trim(),
     to: (e.getAttribute('href') || '').replace(/^#/, ''),
   })))
-ok('there are three of them', doors.length === 3, doors.map((d) => d.label).join(' | '))
+ok('there are four of them', doors.length === 4, doors.map((d) => d.label).join(' | '))
 
 console.log('THE RAIL')
 await at('/')
@@ -61,7 +61,7 @@ const quick = await d.evaluate(() =>
     label: e.querySelector('.t-title, .t-body-strong')?.textContent?.trim(),
     to: (e.getAttribute('href') || '').replace(/^#/, ''),
   })).filter((d) => d.label && d.to))
-ok('it read the quick actions', quick.length === 3, quick.map((q) => q.label).join(' | '))
+ok('it read the quick actions', quick.length === 4, quick.map((q) => q.label).join(' | '))
 await d.close()
 await at('/transfer')
 const ways = await p.evaluate(() =>

@@ -312,6 +312,30 @@ export const NOTES = (): ObjectField => field('notes', (() => {
   return any(both(back, not(cut)), front)
 })(), WIDE)
 
+/** Spend: a handset, with the signal coming off it.
+ *
+ *  Not a receipt, which is what the rail's glyph is — a glyph has one job and
+ *  gets one line; a door has a picture, and a picture of a piece of paper on
+ *  the same screen as two notes and a purse is three flat rectangles. The
+ *  handset is the object all three errands actually happen on, and the arcs
+ *  are the one thing on this screen that is drawn as energy rather than as a
+ *  thing, which is what electricity and a bundle of data have in common.
+ *
+ *  The arcs radiate from the phone's bottom corner into the empty half of the
+ *  band, so the drift carries them rather than fighting them. */
+export const SIGNAL = (): ObjectField => field('signal', (() => {
+  const body = rrect(4, 6, 30, 42, 4)
+  // The screen, as a missing ring inside the silhouette — the same trick the
+  // wallet's seam uses, because a gap is the only line a field of dots draws.
+  const screen = both(rrect(7.4, 11, 26.6, 38, 2), not(rrect(9, 12.6, 25, 36.4, 1.6)))
+  const ear = rrect(13, 8.2, 21, 9.6, 0.6)
+  // Three arcs, thickening outward, so the near one reads as coming off the
+  // handset and the far one as already halfway across the band.
+  const arc = (r: number, t: number) =>
+    both(ringGap(30, 42, r - t, r), wedge(30, 42, r + 1, 284, 346))
+  return any(both(body, not(any(screen, ear))), arc(17, 1.8), arc(26, 2.1), arc(35, 2.4))
+})(), WIDE)
+
 /** Borrow and lend, which is two products and so is two things: the wallet,
  *  with a coin standing against it. The card standing out of the wallet is on
  *  the card behind this door and not here — at this size it was a bump. */

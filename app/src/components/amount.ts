@@ -1,10 +1,14 @@
 import { h } from '../ui'
 import { icon } from '../icons'
-import { usd, parseAmount } from '../format'
+import { parseAmount, USD, type Unit } from '../format'
 import { isMobile } from '../responsive'
 
 export interface AmountComposer {
   el: HTMLElement
+  /** What this composer counts in. The keypad reads it so a naira pad does
+   *  not step in kobo, and every caller that writes the figure back out reads
+   *  it so the composer and its summary agree about the currency. */
+  unit: Unit
   get(): number
   set(v: number): void
   /** `capped` is true when the figure asked for was more than the maximum.
@@ -19,14 +23,15 @@ export interface AmountComposer {
 /** The phone enters an amount with a keypad, the way the Figma screens do.
  *  Digits are read as cents so the decimal point never has to be typed. */
 export function keypad(comp: AmountComposer): HTMLElement {
+  const m = comp.unit.minor
   const press = (d: string) => {
-    const cents = Math.round(comp.get() * 100).toString()
-    const next = cents === '0' ? d : cents + d
-    comp.set(Number(next.slice(0, 9)) / 100)
+    const small = Math.round(comp.get() * m).toString()
+    const next = small === '0' ? d : small + d
+    comp.set(Number(next.slice(0, 9)) / m)
   }
   const back = () => {
-    const cents = Math.round(comp.get() * 100).toString()
-    comp.set(Number(cents.slice(0, -1) || '0') / 100)
+    const small = Math.round(comp.get() * m).toString()
+    comp.set(Number(small.slice(0, -1) || '0') / m)
   }
   const pad = h('div', { class: 'keypad' })
   for (const d of ['1', '2', '3', '4', '5', '6', '7', '8', '9']) {
@@ -45,7 +50,11 @@ export function amountComposer(opts: {
   max: number
   note?: string
   quick?: { label: string; value: number }[]
+  /** Dollars unless the screen says otherwise. Airtime, data and electricity
+   *  are priced in naira and bought in naira, so those three say otherwise. */
+  unit?: Unit
 }): AmountComposer {
+  const unit = opts.unit ?? USD
   // The composer never holds a figure above its own ceiling, not even the one
   // it was handed. A screen that asks to open at more than the account can
   // move gets the ceiling, and the caller is told to say why.
@@ -58,7 +67,7 @@ export function amountComposer(opts: {
   const input = h('input', {
     type: 'text',
     inputmode: 'decimal',
-    value: usd(value),
+    value: unit.fmt(value),
     ariaLabel: 'Amount',
   })
 
@@ -82,7 +91,7 @@ export function amountComposer(opts: {
   // ruler" named the control without saying what it did or where it stopped,
   // which is most of why the ruler read as texture.
   const hint = h('p', { class: 'ruler-note',
-    text: `Drag to adjust, or type. Up to ${usd(opts.max)}.` })
+    text: `Drag to adjust, or type. Up to ${unit.fmt(opts.max)}.` })
 
   /* Amounts a screen proposes, filtered by what this composer can actually
    * take. Borrow offered $500, $1,000, $1,480 and Max against a $250 ceiling:
@@ -99,17 +108,16 @@ export function amountComposer(opts: {
   // about itself, and a proposal that rounds up towards a ceiling is a chip
   // that gets clamped.
   const step = (n: number): number => {
-    if (n >= 1000) return Math.floor(n / 50) * 50
-    if (n >= 100) return Math.floor(n / 10) * 10
-    return Math.floor(n / 5) * 5
+    const band = unit.bands.find((b) => n >= b.at) ?? unit.bands[unit.bands.length - 1]
+    return Math.floor(n / band.to) * band.to
   }
   function usableQuick(): { label: string; value: number }[] {
     const already = new Set<number>()
     const keep = (opts.quick ?? []).filter((q) => {
-      if (q.value > opts.max + 0.005 || q.value <= 0) return false
-      const cents = Math.round(q.value * 100)
-      if (already.has(cents)) return false
-      already.add(cents)
+      if (q.value > opts.max + 0.5 / unit.minor || q.value <= 0) return false
+      const small = Math.round(q.value * unit.minor)
+      if (already.has(small)) return false
+      already.add(small)
       return true
     })
     // Three or it is not a row. Below that the ceiling proposes the whole
@@ -120,8 +128,8 @@ export function amountComposer(opts: {
     if (keep.length >= 3) return keep
     const half = step(opts.max / 2), quarter = step(opts.max / 4)
     return [
-      ...(quarter > 0 ? [{ label: usd(quarter, false), value: quarter }] : []),
-      ...(half > quarter ? [{ label: usd(half, false), value: half }] : []),
+      ...(quarter > 0 ? [{ label: unit.fmt(quarter, false), value: quarter }] : []),
+      ...(half > quarter ? [{ label: unit.fmt(half, false), value: half }] : []),
       ...(opts.max > half ? [{ label: 'Max', value: opts.max }] : []),
     ]
   }
@@ -172,15 +180,15 @@ export function amountComposer(opts: {
   }
 
   function commit(v: number, syncField: boolean): void {
-    const asked = Math.max(0, Math.round(v * 100) / 100)
+    const asked = Math.max(0, Math.round(v * unit.minor) / unit.minor)
     value = Math.min(opts.max, asked)
-    if (syncField) input.value = usd(value)
+    if (syncField) input.value = unit.fmt(value)
     draw()
     for (const fn of subs) fn(value, asked > opts.max)
   }
 
   input.addEventListener('input', () => commit(parseAmount(input.value), false))
-  input.addEventListener('blur', () => (input.value = usd(value)))
+  input.addEventListener('blur', () => (input.value = unit.fmt(value)))
   input.addEventListener('focus', () => input.select())
 
   let dragging = false
@@ -223,6 +231,7 @@ export function amountComposer(opts: {
 
   return {
     el,
+    unit,
     get: () => value,
     set: (v) => commit(v, true),
     onChange: (fn) => {

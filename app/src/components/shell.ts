@@ -7,7 +7,7 @@ import { isMobile } from '../responsive'
 import { trailFor } from '../destinations'
 import { popover, closeHint } from './hint'
 
-export type Place = 'home' | 'wallet' | 'market' | 'grow' | 'history' | 'account'
+export type Place = 'home' | 'wallet' | 'market' | 'grow' | 'spend' | 'history' | 'account'
 
 /** The debit-card notice, as a thing that can be put away. Named here because
  *  two files have to agree on it: the sidebar draws it and Account counts it. */
@@ -15,8 +15,15 @@ export const PROMO = 'promo.card'
 
 interface PlaceDef { id: Place; label: string; to: string; ic: () => string }
 
-/** Six places. On desktop they are a rail; on the phone the first four are
- *  tabs and the rest arrive behind More. Same six either way. */
+/** Seven places. On desktop they are a rail; on the phone the first four are
+ *  tabs and the rest arrive behind More. Same seven either way.
+ *
+ *  Spend is fifth rather than third. It belongs beside the wallet by subject —
+ *  it is money going out — and putting it there would have pushed Borrow &
+ *  Lend off the phone's four tabs, which is a change to Borrow & Lend made in
+ *  passing while adding something else. The phone reaches it through the door
+ *  on Home and through the grid behind More, which is where the other three
+ *  places already live. */
 /* The names the product is called by everywhere else: the marketing site's
    tabs are Home, Invest, Wallet, Activity. The ids stay as they were, so the
    lit-row logic and every `place:` in the registry keep working, and the old
@@ -26,11 +33,13 @@ const PLACES: PlaceDef[] = [
   { id: 'market', label: 'Invest', to: '/invest', ic: icon.market },
   { id: 'wallet', label: 'Wallet', to: '/transfer', ic: icon.wallet },
   { id: 'grow', label: 'Borrow & Lend', to: '/grow', ic: icon.grow },
+  { id: 'spend', label: 'Spend', to: '/spend', ic: icon.spend },
   { id: 'history', label: 'Activity', to: '/activity', ic: icon.history },
   { id: 'account', label: 'Account', to: '/account', ic: icon.account },
 ]
 const TABS = PLACES.slice(0, 4)
 export const BEHIND_MORE: { label: string; sub: string; to: string; ic: () => string }[] = [
+  { label: 'Spend', sub: 'Airtime, data and light', to: '/spend', ic: icon.spend },
   { label: 'Activity', sub: 'Everything that has moved', to: '/activity', ic: icon.history },
   { label: 'Notifications', sub: 'What we have told you', to: '/activity?filter=alerts', ic: icon.bell },
   { label: 'Account', sub: 'Your details and your address', to: '/account', ic: icon.account },
@@ -214,7 +223,7 @@ function rail(active: Place): HTMLElement {
     pill.appendChild(tab)
   }
 
-  // Seven places, four to a row, the short row left where it falls rather than
+  // Eight cells, four to a row. A short row is left where it falls rather than
   // centred — a grid that recentres its last row is a grid whose columns stop
   // meaning anything. Then the one thing in here that is not a place.
   const panel = h('div', {

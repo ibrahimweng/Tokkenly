@@ -230,7 +230,10 @@ console.log('MOVING AROUND  four navigators, one registry')
   await p.goto(B + '/all', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(250)
   const groups = await p.locator('.all-grid .card').count()
   const rows = await p.locator('.all-row').count()
-  ok('the index lists every destination', groups === 6 && rows >= 24, `${groups} groups, ${rows} rows`)
+  // Seven groups since Spend became a place. The index is built from the same
+  // registry the rail and the palette read, so a place missing from one of
+  // them is a place missing from all three.
+  ok('the index lists every destination', groups === 7 && rows >= 24, `${groups} groups, ${rows} rows`)
   await p.close()
 }
 
@@ -311,7 +314,7 @@ console.log('THE DOT FIELDS  decoration that has been given something to say')
     }))
   }
   const before = await read()
-  ok('all three doors carry a field', before.length === 3)
+  ok('all four doors carry a field', before.length === 4)
   // And that this can see the rung it is counting. A reader that finds no
   // sleeping cell is a reader that will report every field as full and never
   // fail, whatever the account does.
@@ -319,10 +322,15 @@ console.log('THE DOT FIELDS  decoration that has been given something to say')
      before.every((g) => g.asleep > 0), before.map((g) => g.awake + ' awake, ' + g.asleep + ' asleep').join(' | '))
   // The three slices of one portfolio, one door each, so no two of them can
   // be the same picture on an account with its money in more than one place.
-  ok('and each one says which slice it is keyed to',
-     before.every((g) => /% of your money (in|lent)/.test(g.says)), before.map((g) => g.says).join(' | '))
+  // Spend is the fourth and is not a slice of it: spending is not a place
+  // money sits, so its field reads the flow — what has gone on bills — and it
+  // is checked for saying something rather than for saying a percentage.
+  ok('the first three say which slice they are keyed to',
+     before.slice(0, 3).every((g) => /% of your money (in|lent)/.test(g.says)),
+     before.map((g) => g.says).join(' | '))
+  ok('and the fourth says what has gone out', /bills/.test(before[3].says), before[3].says)
   ok('no two are at the same level',
-     new Set(before.map((g) => g.awake)).size === 3, before.map((g) => g.awake + '/' + (g.awake + g.asleep)).join(' '))
+     new Set(before.map((g) => g.awake)).size === 4, before.map((g) => g.awake + '/' + (g.awake + g.asleep)).join(' '))
   // A gauge that does not move is a picture. $1,000 out of cash and lent out
   // has to show up on the two doors it is about, and not on the third.
   await p.goto(B + '/grow/earn', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(500)

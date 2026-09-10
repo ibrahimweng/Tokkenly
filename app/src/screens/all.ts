@@ -13,7 +13,7 @@ import { current, go } from '../router'
 export function allScreen(): HTMLElement {
   const term = current().query.get('q') ?? ''
   const FIELDS = (d: Destination) => [d.label, d.also, d.hint, PLACE_LABEL[d.place]]
-  const order: Place[] = ['home', 'wallet', 'market', 'grow', 'history', 'account']
+  const order: Place[] = ['home', 'wallet', 'market', 'grow', 'spend', 'history', 'account']
 
   const setTerm = (v: string) => go('/all' + (v ? '?q=' + encodeURIComponent(v) : ''))
 

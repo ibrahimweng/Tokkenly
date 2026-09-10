@@ -62,7 +62,7 @@ const FILTERS: { id: string; label: string; kinds: ActivityKind[] | null }[] = [
 
 type Nature =
   | 'bought' | 'sold' | 'shares-out'
-  | 'added' | 'received' | 'sent' | 'withdrew'
+  | 'added' | 'received' | 'sent' | 'withdrew' | 'bill'
   | 'borrowed' | 'repaid' | 'lent' | 'tookback' | 'interest'
   | 'security' | 'notice'
 
@@ -74,6 +74,11 @@ const NATURE: Record<Nature, { ic: () => string; tag: string }> = {
   received: { ic: icon.arrowIn, tag: 'Received' },
   sent: { ic: icon.send, tag: 'Sent' },
   withdrew: { ic: icon.arrowOut, tag: 'Withdrawn' },
+  // Its own tag, not 'Sent'. Nothing was sent to anybody: a number was topped
+  // up, a bundle was bought, a meter was loaded. The three share one tag
+  // because the feed's tag says what kind of event a row is, and the row
+  // itself already says which of the three it was.
+  bill: { ic: icon.spend, tag: 'Bill' },
   borrowed: { ic: icon.download, tag: 'Borrowed' },
   repaid: { ic: icon.repay, tag: 'Repaid' },
   lent: { ic: icon.grow, tag: 'Lent' },
@@ -99,6 +104,7 @@ function natureOf(a: Activity): Nature {
     return 'lent'
   }
   if (a.amount > 0) return a.rail === 'bank' || a.rail === 'card' ? 'added' : 'received'
+  if (a.bill) return 'bill'
   return a.note === 'Converted to naira' || a.note === 'Paid out in naira' ? 'withdrew' : 'sent'
 }
 

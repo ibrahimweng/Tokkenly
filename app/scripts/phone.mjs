@@ -77,8 +77,11 @@ console.log('\nTHE NAV BAR')
   ok('and the button has not moved a pixel',
      !!moreOpen && !!more && moreOpen.x === more.x && moreOpen.bottom === more.bottom,
      moreOpen ? `${moreOpen.x}@${moreOpen.bottom} against ${more.x}@${more.bottom}` : 'gone')
-  ok('it holds the seven places that are not tabs',
-     (await page.locator('.rail-cell').count()) === 7)
+  // Eight cells: the four places with no tab, and the four things in here
+  // that are not places. Two full rows, which is why Spend went in at the top
+  // of the grid rather than being left to sit on a row of its own.
+  ok('it holds everything that is not a tab',
+     (await page.locator('.rail-cell').count()) === 8)
   const targets = await page.evaluate(() => [...document.querySelectorAll('.rail-cell, .rail-pref .chip, .rail-more')]
     .map((e) => Math.round(e.getBoundingClientRect().height)).filter((n) => n < 44))
   ok('and nothing in it is under a thumb (rule 35)', targets.length === 0, targets.join(' '))

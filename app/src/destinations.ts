@@ -2,7 +2,7 @@ import { shares, usd } from './format'
 import { state } from './state'
 import { CATALOGUE, CATEGORIES, catSlug, inCategory, pathOf, tradable } from './catalogue'
 
-export type Place = 'home' | 'wallet' | 'market' | 'grow' | 'history' | 'account'
+export type Place = 'home' | 'wallet' | 'market' | 'grow' | 'spend' | 'history' | 'account'
 
 export interface Destination {
   label: string
@@ -161,6 +161,22 @@ export const DESTINATIONS: Destination[] = [
   { label: 'Borrow', to: '/grow/borrow', place: 'grow', kind: 'action', primary: true, also: 'loan against shares credit', hint: 'Against the shares you own' },
   { label: 'Repay', to: '/grow/repay', place: 'grow', kind: 'action', primary: true, also: 'pay back loan owed', hint: 'Clear what you owe' },
 
+  /* Spend. Three errands that are the reason a person keeps a naira balance
+     "just in case" — and a person who keeps a naira balance just in case has
+     already left. Each is its own address, because each asks a different
+     question first: whose number, which bundle, whose meter. */
+  { label: 'Spend', to: '/spend', place: 'spend', kind: 'place', primary: true,
+    also: 'bills pay airtime data electricity light nepa recharge top up meter token naira' },
+  { label: 'Airtime', to: '/spend/airtime', place: 'spend', kind: 'screen', primary: true,
+    also: 'recharge credit top up phone number mtn airtel glo 9mobile vtu',
+    hint: 'Any Nigerian number' },
+  { label: 'Data', to: '/spend/data', place: 'spend', kind: 'screen', primary: true,
+    also: 'internet bundle gigabytes gb mb subscription mtn airtel glo 9mobile',
+    hint: 'Bundles from the four networks' },
+  { label: 'Electricity', to: '/spend/electricity', place: 'spend', kind: 'screen', primary: true,
+    also: 'light nepa power units meter token prepaid postpaid disco ikeja eko phed aedc',
+    hint: 'A prepaid token, or a postpaid bill' },
+
   { label: 'Operations', to: '/admin', place: 'account', kind: 'place', primary: true, staff: true,
     also: 'admin ops console staff switches providers reconciliation audit launch pilot kill switch',
     hint: 'Staff view: switches, providers, reconciliation' },
@@ -225,7 +241,7 @@ export const SCREENS: Destination[] = DESTINATIONS.filter((d) => !d.item)
 
 export const PLACE_LABEL: Record<Place, string> = {
   home: 'Home', wallet: 'Wallet', market: 'Invest',
-  grow: 'Borrow & Lend', history: 'Activity', account: 'Account',
+  grow: 'Borrow & Lend', spend: 'Spend', history: 'Activity', account: 'Account',
 }
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9 ]/g, '')

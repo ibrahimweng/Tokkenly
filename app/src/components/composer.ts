@@ -1,6 +1,6 @@
 import { h } from '../ui'
 import { icon } from '../icons'
-import { usd } from '../format'
+import { USD, type Unit } from '../format'
 import { shell, pageHeader, eyebrow, renderBase, type Place } from './shell'
 import { card, cardHead, kv, callout as calloutEl, fieldError } from './bits'
 import { amountComposer, keypad } from './amount'
@@ -52,6 +52,11 @@ export interface ComposerSpec {
   inline?: boolean
   /** What the header says, when the caller is drawing the header itself. */
   header?: HTMLElement
+  /** What this composer counts in. Dollars unless the screen says otherwise:
+   *  airtime, data and electricity are priced and bought in naira, so the
+   *  amount, the ceiling and the message that names the ceiling are all in
+   *  naira and the dollar cost is a line in the summary. */
+  unit?: Unit
 }
 
 /** The way to the full disclosures, under the button that takes the risk. The
@@ -96,11 +101,13 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
   const opening = Math.min(spec.initial, spec.max)
   const openedCapped = spec.initial > spec.max
 
+  const unit = spec.unit ?? USD
   const comp = amountComposer({
     initial: opening,
     max: spec.max,
     note: spec.note,
     quick: spec.quick,
+    unit,
   })
 
   const capNote = fieldError()
@@ -163,7 +170,7 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
     capNote.hidden = !capped
     if (capped) {
       capNote.replaceChildren(h('span', { html: icon.alert() }),
-        h('span', { text: `${spec.maxLabel ?? 'The most you can use here'} is ${usd(spec.max)}.` }))
+        h('span', { text: `${spec.maxLabel ?? 'The most you can use here'} is ${unit.fmt(spec.max)}.` }))
     }
   }
   comp.onChange(paint)

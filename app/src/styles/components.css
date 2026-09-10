@@ -1808,16 +1808,21 @@ th.right .th-sort { flex-direction: row-reverse; }
 }
 
 @media (max-width: 899px) {
-  /* Three doors across, not three doors down.
+  /* The doors across, not down.
      Stacked at 200 tall each they were 600 pixels of gateway before anything
      that had happened to your money — the activity list started at 1144 on an
      844 phone, which is a screen and a half of doors. A door only has to be
-     big enough to open, and one finger reaching all three without moving is
+     big enough to open, and one finger reaching all of them without moving is
      what a phone is for. Everything below comes up by about five hundred
-     pixels, which is what puts the feed on the first screen. */
-  .gates { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+     pixels, which is what puts the feed on the first screen.
+
+     Four columns since Spend. A fourth door left to wrap would have been one
+     door on a row of its own, which reads as a mistake rather than as a
+     door — and two rows of two would have put the feed back below the fold,
+     which is the thing this row was arranged to stop. */
+  .gates { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
   .gate {
-    flex: none; width: auto; height: 92px; padding: 12px 8px; border-radius: 20px;
+    flex: none; width: auto; height: 92px; padding: 12px 6px; border-radius: 20px;
     align-items: center; justify-content: center; gap: 8px;
   }
   /* A sentence, a percentage, a call to action and a field of dots, in 110

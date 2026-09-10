@@ -25,6 +25,7 @@ import { statementScreen } from './screens/statement'
 import { adminScreen } from './screens/admin'
 import { signInScreen, signUpScreen } from './screens/auth'
 import { sendScreen, receiveScreen, addMoneyScreen, withdrawScreen, sendSharesScreen } from './screens/money'
+import { spendScreen } from './screens/spend'
 import { indexScreen } from './screens/index-page'
 import { listScreen } from './screens/lists'
 import { allScreen } from './screens/all'
@@ -95,6 +96,10 @@ function screenFor(r: Route): HTMLElement {
   // Send is three ways, each with an address of its own, so it nests. The bare
   // /send still resolves, to the rail with nothing chosen yet.
   if (a === 'send') return sendScreen(b)
+  // Spend is three ways, each with an address of its own, so it nests the
+  // same way. The bare /spend is the place: the three ways, and what you
+  // have already paid for.
+  if (a === 'spend') return spendScreen(b)
   if (a === 'addmoney') return addMoneyScreen(b)
   if (a === 'account') return accountScreen(b)
   if (a === 'security') return accountScreen('security')

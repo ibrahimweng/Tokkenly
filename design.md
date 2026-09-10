@@ -8370,6 +8370,101 @@ them; hashing the drawing into the signature removed the rest.
      cannot look inside a drawing will say two drawings are identical, and the
      component set will state it ninety-two times without blinking.
 
+### 11g.73 Spend: the errands that were keeping a naira balance alive
+
+The PRD asks for a fourth thing the product does, and it is the one that decides
+whether anybody actually holds dollars here. Airtime, data and a meter are small
+and urgent and constant, and a person who cannot do them out of their dollars
+keeps a naira balance "just in case" — and a person who keeps a naira balance
+just in case has already left. The dollars become the money they do not touch,
+and a product whose whole argument is "hold dollars" has quietly become a
+savings account nobody visits.
+
+So Spend is a place, not a screen: a fifth row in the rail, a fourth door on
+Home, and three ways under it. `/spend/airtime`, `/spend/data`,
+`/spend/electricity`. Convert is not among them, on the same argument in
+reverse: naira you want to *keep* is a balance and belongs in the wallet with
+the rest of your money. This place is for naira that leaves the same minute it
+arrives.
+
+**Where it went in the rail.** Fifth, after Borrow & Lend, not third beside the
+wallet where it belongs by subject. The phone's four tabs are `PLACES.slice(0,
+4)`, so putting Spend where it reads best would have pushed Borrow & Lend behind
+the More grid — a change to Borrow & Lend, made in passing, while adding
+something else. The phone reaches Spend through the door on Home and through the
+grid behind More, which is where three of the seven places already live.
+
+**The fourth door.** Three doors on Home read as one sentence about where your
+money is: in shares, in cash, lent out. Spend is not a fourth place money sits,
+so its field could not be keyed to a balance. It reads the flow instead — what
+has gone on bills, against everything that has gone out at all — and its picture
+is a handset with the signal coming off it, because that is the object all three
+errands actually happen on and because it is the one drawing on that screen made
+of energy rather than of a thing. On a phone the row goes from three columns to
+four; two rows of two would have put the activity feed back below the fold,
+which is the thing that row was arranged to stop (11g.34).
+
+**A composer that counts in naira.** Airtime is bought in naira. A screen asking
+for $0.63 of airtime is asking the wrong question, and a keypad that steps in
+cents is stepping in the wrong unit — ₦50 is loose change and $50 is not. So the
+unit travels with the amount: how to write it, how small a step is, and what a
+round number looks like at that scale. `Unit` in `format.ts`, `USD` and `NGN`,
+threaded through `amountComposer` and `ComposerSpec`. Every ceiling in the
+product is a dollar figure because dollars are what the wallet holds; a ceiling
+somebody cannot compare against the figure in front of them is not a ceiling
+they can work within, so it is converted once and floored to a whole naira.
+
+**Data is a list, not a keypad.** The price of a bundle is the price of the
+bundle. A composer in front of a fixed price is a question with one right
+answer, so Data is six rows and no keypad — which is also why it is the one of
+the three that never opens a composer at all.
+
+**The network is part of who, not how much.** The prefix names it and four chips
+correct it, on the step that asks for the number and on no other. A number
+ported to another network keeps the prefix it was born with, so the guess is a
+good default and never an assertion. It was in the composer's lede first, which
+was the same question asked in two places and sixty-four pixels of a dialog that
+has to fit in 844 (item 61). Moving it up fixed both.
+
+**The meter check is the step.** Paying the wrong meter is money gone and there
+is nobody to ask for it back, so the number is checked and a name comes back.
+Two of the ten meter numbers do not resolve, because a validator that always
+says yes has not validated anything, and a refusal nobody can reach is a refusal
+nobody has tested. The prepaid token is minted from the reference, so a receipt
+opened tomorrow shows the same twenty digits somebody typed into a wall.
+
+**The refusal is on the naira.** `settlement()` reads the cents of the figure a
+person typed, which works on every screen where they typed dollars. Here they
+typed naira and the dollars are an artefact of the rate — so a refusal keyed to
+the cents could never be reached deliberately and would fire at random on the
+ones that could. `billOutcome()` refuses any naira figure ending in 99, before
+anything is written, and `review()` gained `refuseWith` so a flow can bring its
+own refusal rather than inheriting one that does not fit it.
+
+**And it goes through the books.** A bill is a conversion: the wallet pays
+dollars, our desk converts, the network is paid naira. Two postings joined by a
+rate and a pair, which is exactly what Add money and a bank payout already are —
+the only difference is that this one ends at a network instead of at a bank.
+`biller` is a new account in *theirs*. The trial balance still comes to nothing
+in dollars, in naira and in shares with three bills in it.
+
+Three rows in the seeded history had claimed this all along — "Data top up",
+"MTN airtime", "Ikeja Electric", written as ordinary payments to invented
+payees. They are real bills now, with real naira, a real meter and a real token,
+and the replay posts both halves of each.
+
+174. **A unit is part of an amount, not a decoration on it.** A composer that
+     writes `$` because every composer before it wrote `$` will step in cents on
+     a currency that has none, cap at a figure nobody can check, and ask for
+     $0.63 of a thing that costs ₦1,000. What travels with the number is how to
+     write it, how small a step is, and what a round number looks like at that
+     scale.
+
+175. **A test that decides an outcome must be reachable on purpose.** A refusal
+     keyed to a figure the person did not type is a refusal that fires at random
+     and can never be demonstrated. Where a flow changes the unit, it brings its
+     own refusal with it.
+
 ### 11g.49 Still open
 
 - Buying and selling is the one page in the file that was hand-built rather

@@ -36,6 +36,39 @@ export const shares = (n: number): string =>
 export const naira = (n: number): string =>
   '₦' + Math.round(n).toLocaleString('en-US')
 
+/** What a composer is counting in.
+ *
+ *  Every amount in the product used to be dollars, so the composer wrote `$`
+ *  and stepped in cents and nobody had to say so. Airtime does not work that
+ *  way: you buy ₦1,000 of it, the price of a data plan is a naira price, and
+ *  a screen that asks for $0.63 of airtime is asking the wrong question. So
+ *  the unit travels with the amount — how to write it, how small a step is,
+ *  and what a round number looks like at that scale, because ₦50 is loose
+ *  change and $50 is not.
+ *
+ *  `minor` is how many of the smallest countable part make one: 100 cents to
+ *  the dollar, and one naira to the naira, which is what stops a keypad
+ *  offering kobo nobody has used in twenty years. */
+export interface Unit {
+  fmt: (n: number, full?: boolean) => string
+  minor: number
+  /** Round a proposed amount down to something a person would say out loud.
+   *  Bands, largest first: at or above `at`, round down to a multiple of `to`. */
+  bands: { at: number; to: number }[]
+}
+
+export const USD: Unit = {
+  fmt: (n, full = true) => usd(n, full),
+  minor: 100,
+  bands: [{ at: 1000, to: 50 }, { at: 100, to: 10 }, { at: 0, to: 5 }],
+}
+
+export const NGN: Unit = {
+  fmt: (n) => naira(n),
+  minor: 1,
+  bands: [{ at: 100000, to: 5000 }, { at: 10000, to: 1000 }, { at: 1000, to: 100 }, { at: 0, to: 50 }],
+}
+
 /** Morning, afternoon or evening, by the clock on the device. It was the
  *  fixed string "Good morning", which is a small lie at eleven at night and
  *  the kind that makes everything else on the screen easier to doubt. */
@@ -82,11 +115,16 @@ export function parseAmount(raw: string): number {
 /** How an entry reads in a one-line list. History has columns for who and
  *  what; a list has one line, so a borrowing or lending entry names which. */
 export function activityLabel(
-  a: { kind: string; type: string; who: string; asset?: { ticker: string } },
+  a: { kind: string; type: string; who: string; asset?: { ticker: string }
+       bill?: { target: string } },
 ): string {
   // A share that changed hands names the share. "Sent Tunde Bakare" is what a
   // cash payment says, and the two are not the same event.
   if (a.asset) return `${a.type} ${a.asset.ticker} ${a.type === 'Sent' ? 'to' : 'from'} ${a.who}`
+  // A bill names what it loaded, not who took the money. "Airtime MTN" is the
+  // shape every other payment takes and it is the wrong shape here: nobody
+  // recognises a recharge by the network, they recognise it by the number.
+  if (a.bill) return `${a.type} for ${a.bill.target}`
   if (a.kind !== 'grow') return a.type + ' ' + a.who
   const map: Record<string, string> = {
     Interest: 'Interest on what you lent',

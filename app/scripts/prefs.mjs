@@ -33,7 +33,7 @@ await at('/')
 // The three doors, which only the Simple view draws. It used to look for the
 // words "Buy Stocks", which stopped being a door label when every door was
 // made to carry the name of the place it opens.
-ok('and back again', (await p.locator('.card.gate').count()) === 3, 'simple')
+ok('and back again', (await p.locator('.card.gate').count()) === 4, 'simple')
 
 console.log('THEME')
 await acct()

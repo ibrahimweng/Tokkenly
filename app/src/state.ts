@@ -5,6 +5,7 @@
 import { reference, usd, naira, shares as sharesOf } from './format'
 import { CATALOGUE, find, tradable, refusals, type Refusal, type Instrument } from './catalogue'
 import * as ledger from './ledger'
+import { tokenFor } from './bills'
 
 export type ActivityKind = 'payment' | 'trade' | 'grow'
 
@@ -33,6 +34,16 @@ export interface Activity {
    *  receipt for the wrong event. Recorded at the price of the day, like the
    *  fee, because the value of what was sent is not what it is worth now. */
   asset?: { ticker: string; shares: number; price: number }
+  /** What was actually bought, when it was not money and not a share. A
+   *  recharge is a payment of dollars whose subject is a phone number, and a
+   *  receipt that says "−$3.34 to MTN" is a receipt for the wrong event:
+   *  the fact somebody keeps it for is which number it went to, and on a
+   *  prepaid meter it is the twenty digits they have to type into the wall.
+   *  Recorded on the movement rather than derived, for the same reason `asset`
+   *  is — the token is a function of the reference and the reference does not
+   *  change, but the network's name and the meter's owner are facts about the
+   *  day it was paid. */
+  bill?: { target: string; naira: number; token?: string }
   settled: boolean
 }
 
@@ -376,7 +387,13 @@ export function txHash(ref: string): string {
  *  banks and a desk, and putting a Basescan link on it would be the product
  *  claiming a proof it does not have. */
 export const onChain = (a: Activity): boolean =>
-  a.kind === 'trade' || (a.kind === 'payment' && a.note !== 'Converted to naira' && a.note !== 'Paid out in naira')
+  // A bill never does either. The dollars leave the wallet through our desk
+  // and what reaches the network is naira, so there is no hash to link to and
+  // a Basescan button on a ₦500 recharge would be the product claiming a
+  // proof it does not have.
+  !a.bill
+  && (a.kind === 'trade'
+    || (a.kind === 'payment' && a.note !== 'Converted to naira' && a.note !== 'Paid out in naira'))
 
 /** The reference support will ask for. The same one on the screen, in the
  *  email, and in the admin record — one string, so nobody has to translate. */
@@ -605,11 +622,36 @@ function remember(): void {
 const tickerOf = (name: string): string | undefined =>
   CATALOGUE.find((c) => c.name === name)?.ticker
 
-/** What one already-recorded movement did to the ledger. */
-function legsFor(a: Activity): { entries: ledger.Entry[]; kind?: string } | null {
+/** What one already-recorded movement did to the ledger.
+ *
+ *  Usually one posting. A movement that changed currency is two, because a
+ *  single entry cannot be denominated twice — so the second one is named
+ *  separately and carries the same reference and rate, which is what makes the
+ *  pair readable back as one conversion. */
+interface Legs {
+  entries: ledger.Entry[]
+  kind?: string
+  rate?: number
+  naira?: ledger.Entry[]
+}
+
+function legsFor(a: Activity): Legs | null {
   const amt = Math.abs(a.amount)
   const fee = a.fee ?? 0
   if (a.kind === 'payment') {
+    // A bill changes currency, so it is two postings joined by the rate that
+    // was struck — exactly what `payBill` writes when one is paid today. The
+    // rate is read back off the record rather than off this morning's screen:
+    // a recharge bought at ₦1,500 does not restate itself when the naira
+    // moves.
+    if (a.bill) {
+      return {
+        entries: [{ account: 'wallet', amount: -amt }, { account: 'desk.usd', amount: amt }],
+        rate: a.bill.naira / amt,
+        naira: [{ account: 'desk.ngn', amount: -a.bill.naira },
+                { account: 'biller', amount: a.bill.naira }],
+      }
+    }
     return a.amount >= 0
       ? { entries: [{ account: 'chain', amount: -amt }, { account: 'wallet', amount: amt }] }
       : { entries: [{ account: 'wallet', amount: -amt }, { account: 'chain', amount: amt }] }
@@ -723,7 +765,12 @@ export function openBooks(): void {
   for (const a of rows) {
     const legs = legsFor(a)
     if (!legs) continue
-    ledger.post({ ref: a.ref, at: a.at, what: activityLine(a), kind: legs.kind, entries: legs.entries })
+    ledger.post({ ref: a.ref, at: a.at, what: activityLine(a), kind: legs.kind,
+                  entries: legs.entries, rate: legs.rate, pair: legs.naira ? a.ref : undefined })
+    if (legs.naira) {
+      ledger.post({ ref: a.ref, at: a.at, pair: a.ref, rate: legs.rate,
+                    what: `${naira(a.bill!.naira)} paid to ${a.who}`, entries: legs.naira })
+    }
   }
 }
 
@@ -731,7 +778,7 @@ export function openBooks(): void {
  *  who and what; a statement line has one sentence. */
 function activityLine(a: Activity): string {
   if (a.asset) return `${a.type} ${sharesOf(a.asset.shares)} ${a.asset.ticker} ${a.type === 'Sent' ? 'to' : 'from'} ${a.who}`
-  if (a.kind === 'grow') return `${a.type} \u00b7 ${a.who}`
+  if (a.kind === 'grow') return `${a.type} · ${a.who}`
   // A trade is "of", not "to" or "from": you bought $420 of Apple, you did not
   // buy $420 to it.
   if (a.kind === 'trade') return `${a.type} ${usd(Math.abs(a.amount))} of ${a.who}`
@@ -837,6 +884,8 @@ export const state: State = {
       effect: 'Sending to a person, an address or a bank all stop.' },
     { key: 'payout.ngn', label: 'Bank payouts', on: true, by: 'ops@tokkenly', at: iso('2026-09-02T10:15'),
       effect: 'The bank rail disappears from Send. Payouts already queued still finish.' },
+    { key: 'spend.bills', label: 'Bills', on: true, by: 'ops@tokkenly', at: iso('2026-09-08T09:30'),
+      effect: 'Airtime, data and electricity all stop. Spend still opens and says why.' },
     { key: 'asset.METAc', label: 'METAc', on: false, by: 'legal@tokkenly', at: iso('2026-09-05T12:00'),
       effect: 'Meta cannot be bought or sold. Existing holders keep the position and can still send it.' },
   ],
@@ -855,6 +904,9 @@ export const state: State = {
     { key: 'switch', name: 'Switch', does: 'Naira in and out', state: 'down',
       metric: 'Webhooks failing since 07:14', since: iso('2026-09-07T07:14'),
       fallback: 'Naira funding and bank payouts both stop. USDC in and out is unaffected, and the app says which.' },
+    { key: 'baxi', name: 'Baxi', does: 'Airtime, data and electricity', state: 'up',
+      metric: '312 bills today, 2 refused by the network',
+      fallback: 'Spend stops taking payments. Nothing is charged and the screen says the partner is down.' },
   ],
   audit: [
     { at: iso('2026-09-07T08:12'), who: 'risk@tokkenly', kind: 'change',
@@ -872,7 +924,7 @@ export const state: State = {
     { id: 'REC-0448', what: 'Switch says a payout settled. We have no confirmation.',
       ours: 'Queued 14:22', theirs: 'Settled 14:25', by: 180000, state: 'open', opened: iso('2026-09-07T14:40') },
     { id: 'REC-0447', what: 'A deposit landed with no matching virtual account',
-      ours: 'Nothing', theirs: '\u20a6120,000 to 9902847002', by: 120000, state: 'working', opened: iso('2026-09-06T09:11') },
+      ours: 'Nothing', theirs: '₦120,000 to 9902847002', by: 120000, state: 'working', opened: iso('2026-09-06T09:11') },
     { id: 'REC-0441', what: 'Fee taken twice on one order', ours: '$2.09', theirs: '$4.18',
       by: 2.09, state: 'cleared', opened: iso('2026-09-04T16:30') },
   ],
@@ -993,14 +1045,17 @@ export const state: State = {
     { ref: 'TKN-5Y3D31', kind: 'trade', who: 'Nvidia', type: 'Bought', amount: -380, fee: 1.89, at: iso('2026-08-26T11:05'), settled: true },
     { ref: 'TKN-4X1C25', kind: 'payment', who: 'Rent', type: 'Sent', amount: -620, at: iso('2026-08-24T07:00'), settled: true },
     { ref: 'TKN-3V0A04', kind: 'payment', who: 'Tunde Bakare', type: 'Sent', amount: -30, at: iso('2026-08-22T10:22'), settled: true },
-    { ref: 'TKN-2T9Y81', kind: 'payment', who: 'Data top up', type: 'Sent', amount: -12, at: iso('2026-08-20T18:35'), settled: true },
+    { ref: 'TKN-2T9Y81', kind: 'payment', who: 'Airtel', type: 'Data', amount: -1, at: iso('2026-08-20T18:35'),
+      note: '3GB for 30 days', bill: { target: '0802 431 9087', naira: 1500 }, settled: true },
     { ref: 'TKN-2S4X70', kind: 'grow', who: 'Borrowing', type: 'Borrowed', amount: 500, at: iso('2026-08-12T10:40'), settled: true },
     { ref: 'TKN-2R7W58', kind: 'payment', who: 'Chidi Nwosu', type: 'Received', amount: 65, at: iso('2026-08-11T13:05'), rail: 'base', settled: true },
-    { ref: 'TKN-1Q6V47', kind: 'payment', who: 'MTN airtime', type: 'Sent', amount: -8, at: iso('2026-08-09T19:48'), settled: true },
+    { ref: 'TKN-1Q6V47', kind: 'payment', who: 'Airtel', type: 'Airtime', amount: -2, at: iso('2026-08-09T19:48'),
+      bill: { target: '0802 431 9087', naira: 3000 }, settled: true },
     { ref: 'TKN-1P5U36', kind: 'trade', who: 'S&P 500 ETF', type: 'Bought', amount: -300, fee: 1.49, at: iso('2026-08-07T15:22'), settled: true },
     { ref: 'TKN-1N4T25', kind: 'payment', who: 'Ngozi Eze', type: 'Sent', amount: -150, at: iso('2026-08-05T11:30'), settled: true },
     { ref: 'TKN-0M3S14', kind: 'grow', who: 'Lending', type: 'Lent', amount: -740, at: iso('2026-08-03T09:15'), settled: true },
-    { ref: 'TKN-0L2R03', kind: 'payment', who: 'Ikeja Electric', type: 'Sent', amount: -34, at: iso('2026-08-01T07:40'), settled: true },
+    { ref: 'TKN-0L2R03', kind: 'payment', who: 'Ikeja Electric', type: 'Electricity', amount: -10, at: iso('2026-08-01T07:40'),
+      note: 'Prepaid · CHINAZA OKORO', bill: { target: '4512 3456 780', naira: 15000, token: tokenFor('TKN-0L2R03') }, settled: true },
     { ref: 'TKN-0K1Q92', kind: 'payment', who: 'Payroll', type: 'Received', amount: 1500, at: iso('2026-07-31T08:00'), rail: 'bank', settled: true },
     { ref: 'TKN-0J0P81', kind: 'trade', who: 'Apple', type: 'Bought', amount: -560, fee: 2.79, at: iso('2026-07-29T14:12'), settled: true },
   ],
@@ -1063,7 +1118,7 @@ export const inNaira = (dollars: number): string | null => {
  *  for themselves. */
 export const rateLine = (): string => {
   const at = new Date(state.rateAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
-  return `${naira(state.ngnPerUsd)} to the dollar \u00b7 indicative, quoted ${at}`
+  return `${naira(state.ngnPerUsd)} to the dollar · indicative, quoted ${at}`
 }
 
 export const nairaAside = (dollars: number): string | null => {
@@ -1096,6 +1151,21 @@ export function settlement(amount: number): Settlement {
   if (cents === 99) return 'declined'
   if (cents === 98) return 'pending'
   return 'ok'
+}
+
+/** The same rule, on the naira side.
+ *
+ *  `settlement` reads the cents of a dollar figure, which is the figure a
+ *  person typed on every screen that uses it. On a bill they typed naira and
+ *  the dollars are derived, so the cents are an artefact of the rate and a
+ *  refusal could never be reached deliberately. So a bill is refused on the
+ *  naira: anything ending in 99 is a network saying no.
+ *
+ *  There is no pending case. A bank payout waits on a bank; a top-up does
+ *  not — the network takes it or it does not, and a row that sat open for a
+ *  ₦500 recharge would be a worse lie than either outcome. */
+export function billOutcome(naira: number): 'ok' | 'declined' {
+  return Math.round(Math.abs(naira)) % 100 === 99 ? 'declined' : 'ok'
 }
 
 /* ----------------------------------------------------------- your money --
@@ -1311,7 +1381,9 @@ function record(a: Omit<Activity, 'ref' | 'at' | 'settled'> & Partial<Activity>)
     amount: a.amount,
     note: a.note,
     fee: a.fee,
+    rail: a.rail,
     asset: a.asset,
+    bill: a.bill,
   }
   state.activity.unshift(entry)
   return entry
@@ -1385,7 +1457,7 @@ export const actions = {
     state.audit.unshift({
       at: sw.at, who: by, kind: 'change',
       what: (sw.on ? 'Turned on ' : 'Turned off ') + sw.label.toLowerCase(),
-      target: 'Switch \u00b7 ' + key,
+      target: 'Switch · ' + key,
     })
     changed()
   },
@@ -1400,7 +1472,7 @@ export const actions = {
     state.audit.unshift({
       at: new Date().toISOString(), who: by, kind: 'change',
       what: to === 'cleared' ? 'Cleared a reconciliation break' : 'Picked up a reconciliation break',
-      target: 'Break \u00b7 ' + id,
+      target: 'Break · ' + id,
     })
     changed()
   },
@@ -1474,7 +1546,7 @@ export const actions = {
       // So this half only ever writes what has actually happened.
       const naira = Math.round(amount * rate)
       const account = to.bankId ? 'bank:' + to.bankId : 'payee:' + to.name
-      ledger.account(account, to.name + (to.number ? ' \u00b7\u00b7\u00b7\u00b7 ' + to.number.slice(-4) : ''))
+      ledger.account(account, to.name + (to.number ? ' ···· ' + to.number.slice(-4) : ''))
       const a = record({
         kind: 'payment', who: to.name, type: 'Sent', amount: -amount,
         note: to.bankId ? 'Converted to naira' : 'Paid out in naira',
@@ -1490,7 +1562,7 @@ export const actions = {
       // on its way out.
       ledger.post({
         ref: a.ref, at: a.at, pair: a.ref, rate,
-        what: `\u20a6${naira.toLocaleString('en-US')} queued for ${to.name}`,
+        what: `₦${naira.toLocaleString('en-US')} queued for ${to.name}`,
         entries: [{ account: 'desk.ngn', amount: -naira }, { account: 'payout', amount: naira }],
       })
       setTimeout(() => actions.landPayout(a.ref, rate), PAYOUT_MS)
@@ -1506,6 +1578,52 @@ export const actions = {
       `Sent ${usd(amount)} to ${to.name}`,
       [{ account: 'wallet', amount: -amount }, { account: far, amount }],
     )
+    changed()
+    return a
+  },
+
+  /* A bill, paid out of dollars.
+   *
+   *  Airtime, data and a meter are one movement wearing three hats: naira
+   *  reach somebody who is not us, and the dollars they cost leave the
+   *  wallet. That is a conversion, so it is two postings joined by the rate
+   *  the person was shown — one in each currency, because a single entry
+   *  cannot be denominated twice.
+   *
+   *  It settles at once, and that is not a shortcut. A bank payout waits on
+   *  a bank and has an account to wait in; a top-up has nothing to wait for.
+   *  The network takes it or refuses it, and a refusal never gets here: the
+   *  review checks `billOutcome` before it confirms, so nothing is written
+   *  and nothing leaves the wallet. */
+  payBill(bill: { what: string; who: string; naira: number; target: string;
+                  prepaid?: boolean; note?: string },
+          rate = state.ngnPerUsd): Activity {
+    const dollars = Math.round((bill.naira / rate) * 100) / 100
+    actions.countAgainstLimit(dollars)
+    const a = record({
+      kind: 'payment', who: bill.who, type: bill.what, amount: -dollars,
+      note: bill.note,
+      bill: { target: bill.target, naira: bill.naira },
+      settled: true,
+    })
+    // The token is what a prepaid payment actually buys, and it is derived
+    // from the reference, so it can only be minted once the record has one.
+    // Written down rather than recomputed on every read: a receipt opened
+    // tomorrow has to show the same twenty digits somebody typed into a wall.
+    if (bill.prepaid) a.bill!.token = tokenFor(a.ref)
+    ledger.post({
+      ref: a.ref, at: a.at, pair: a.ref, rate,
+      what: `Took ${usd(dollars)} from your wallet`,
+      entries: [{ account: 'wallet', amount: -dollars }, { account: 'desk.usd', amount: dollars }],
+    })
+    ledger.post({
+      ref: a.ref, at: a.at, pair: a.ref, rate,
+      what: `${naira(bill.naira)} paid to ${bill.who}`,
+      entries: [
+        { account: 'desk.ngn', amount: -bill.naira },
+        { account: 'biller', amount: bill.naira },
+      ],
+    })
     changed()
     return a
   },
@@ -1540,8 +1658,8 @@ export const actions = {
       : state.banks.find((b) => b.id === via.id) ?? state.banks[0]
     const account = via.kind === 'card' ? 'card:' + from.id : 'bank:' + from.id
     const label = via.kind === 'card'
-      ? (from as Card).brand + ' \u00b7\u00b7\u00b7\u00b7 ' + from.last4
-      : (from as Bank).name + ' \u00b7\u00b7\u00b7\u00b7 ' + from.last4
+      ? (from as Card).brand + ' ···· ' + from.last4
+      : (from as Bank).name + ' ···· ' + from.last4
     ledger.account(account, label)
     // A card takes its cut in naira, on the naira, so it is added to what you
     // pay rather than taken out of what you get — and the review says both
@@ -1560,8 +1678,8 @@ export const actions = {
     ledger.post({
       ref: a.ref, at: a.at, rate,
       what: via.kind === 'card'
-        ? `${label} charged \u20a6${naira.toLocaleString('en-US')}`
-        : `\u20a6${naira.toLocaleString('en-US')} sent from ${label}`,
+        ? `${label} charged ₦${naira.toLocaleString('en-US')}`
+        : `₦${naira.toLocaleString('en-US')} sent from ${label}`,
       entries: [
         { account, amount: -(naira + fee) },
         { account: 'inflight', amount: naira },
@@ -1590,14 +1708,14 @@ export const actions = {
       ?? 'payee:' + a.who
     ledger.post({
       ref, at: new Date().toISOString(),
-      what: `\u20a6${ngn.toLocaleString('en-US')} reached ${a.who}`,
+      what: `₦${ngn.toLocaleString('en-US')} reached ${a.who}`,
       entries: [{ account: 'payout', amount: -ngn }, { account, amount: ngn }],
     })
     a.settled = true
     state.notifications.unshift({
       id: 'n-' + ref,
       kind: 'money',
-      title: `\u20a6${ngn.toLocaleString('en-US')} reached ${a.who}`,
+      title: `₦${ngn.toLocaleString('en-US')} reached ${a.who}`,
       body: `The ${usd(Math.abs(a.amount))} left your wallet earlier; the bank has it now.`,
       at: new Date().toISOString(),
       read: false,
@@ -1623,14 +1741,14 @@ export const actions = {
     const ngn = Math.round(a.amount * rate)
     ledger.post({
       ref, at: new Date().toISOString(),
-      what: `\u20a6${ngn.toLocaleString('en-US')} reached your Tokkenly naira account`,
+      what: `₦${ngn.toLocaleString('en-US')} reached your Tokkenly naira account`,
       entries: [{ account: 'inflight', amount: -ngn }, { account: 'collect', amount: ngn }],
     })
     // The conversion itself: two postings, one in each currency, joined by the
     // rate. One entry cannot be denominated twice.
     ledger.post({
       ref, at: new Date().toISOString(), pair: ref, rate,
-      what: `\u20a6${ngn.toLocaleString('en-US')} went to the currency desk`,
+      what: `₦${ngn.toLocaleString('en-US')} went to the currency desk`,
       entries: [{ account: 'collect', amount: -ngn }, { account: 'desk.ngn', amount: ngn }],
     })
     ledger.post({
@@ -1649,7 +1767,7 @@ export const actions = {
       id: 'n-' + ref,
       kind: 'money',
       title: `${usd(a.amount)} landed in your wallet`,
-      body: `\u20a6${ngn.toLocaleString('en-US')} from ${a.who}, at ${naira(rate)} to the dollar.`,
+      body: `₦${ngn.toLocaleString('en-US')} from ${a.who}, at ${naira(rate)} to the dollar.`,
       at: new Date().toISOString(),
       read: false,
       ref,

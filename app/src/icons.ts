@@ -12,6 +12,15 @@ export const icon = {
   grow: () => svg('<path d="M5 20V10M12 20V4M19 20v-7"/>'),
   history: () => svg('<path d="M4 7h16M4 12h16M4 17h10"/>'),
   account: () => svg('<circle cx="12" cy="8" r="3.4"/><path d="M5 20c1.2-3.4 3.8-5 7-5s5.8 1.6 7 5"/>'),
+  /* Spend. A receipt, because the three errands under it — a recharge, a
+     bundle, a meter — all end in one, and no single one of their glyphs
+     stands for the other two. */
+  spend: () => svg('<path d="M6 3h12v17.5l-3-1.7-3 1.7-3-1.7-3 1.7z"/><path d="M9.5 8.5h5M9.5 12.5h5"/>'),
+  /* The three things Spend pays for, each drawn as the object rather than as
+     an abstraction of it: a handset, the bars a signal is read off, a bolt. */
+  phone: () => svg('<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.5 18.5h3"/>'),
+  signal: () => svg('<path d="M12 19.5h.01"/><path d="M8.8 16.3a4.5 4.5 0 0 1 6.4 0"/><path d="M6 13.5a8.5 8.5 0 0 1 12 0"/><path d="M3.2 10.7a12.5 12.5 0 0 1 17.6 0"/>'),
+  bolt: () => svg('<path d="M13.5 2.5 5 13.5h5.5L10 21.5 19 10.5h-5.5z"/>'),
   arrowIn: () => svg('<path d="M17 7 7 17M7 10v7h7"/>', 16),
   arrowOut: () => svg('<path d="M7 17 17 7M17 14V7h-7"/>', 16),
   chevron: () => svg('<path d="m9 5 7 7-7 7"/>', 16),

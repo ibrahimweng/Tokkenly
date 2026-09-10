@@ -108,6 +108,13 @@ const FIXED: Account[] = [
     what: 'Wallets outside Tokkenly' },
   { id: 'market', name: 'The market', currency: 'USD', book: 'theirs',
     what: 'Where a tokenised share is bought and sold' },
+  // Airtime, data and a meter are all naira paid to somebody who is not us,
+  // through the partner that reaches them. One account rather than one per
+  // network: the statement names the network in the line, and a ledger with
+  // an account per telco is a ledger that has confused a counterparty with a
+  // category.
+  { id: 'biller', name: 'Bill partners', currency: 'NGN', book: 'theirs',
+    what: 'Networks and discos paid on your behalf' },
   // Not a fiction: this account is where the balances this record does not
   // contain came from. An opening position has a history, and a prototype
   // that pretends otherwise is the thing this file exists to stop.
