@@ -8212,6 +8212,27 @@ column: the market's says *Name*, this one said *Company*, on a list where two
 of the thirteen rows are not one. Both were written in 11g.65 and neither showed
 until the card stopped being the only place the list lived.
 
+The seven measured clean on a phone at 390 and 360 — no overflow, nothing cut,
+no target under 44, the strip scrolling the chip you are on into view, the swipe
+wrapping both ways and adding no history, and Back from one returning to Invest
+with that chip still set. Two things were found and deliberately left, and one
+was cut.
+
+Left: the ETF badge takes 34px out of a lead cell that has 192px at 390 and
+162px at 360, so `QQQc · Nasdaq-100 ETF` runs to three lines and stands 84px
+against everyone else's 68 — and both fund names end in "ETF" already, so on
+those rows the badge is the word twice. And four of the seven do not fill a
+phone: Health ends 302px above the navigation, ETFs 218, Consumer 208, Steady
+170. Rule 82 says dead space is a symptom of a missing answer, and 11g.17 says
+the cure is not an invented card; a category holding one company is honestly one
+row.
+
+Cut: the card said the same thing twice. `2 listed · 0 open for trading` in the
+heading, and underneath it *"2 of these are listed but not open for trading
+yet"* — the same fact in two registers on a card holding two rows. The count
+stays; it costs the sentence's second half, which said what you can still do
+with a company you cannot buy, and that is on the company's own page.
+
 170. **A preview is five rows and a door; a list is all of them.** A card that
      holds everything is a card the next section hides behind. Cap it, page it
      in place, and put the whole thing one press away — and do not cap the page

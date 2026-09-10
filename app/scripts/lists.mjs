@@ -128,6 +128,8 @@ console.log('A SCREEN PER CHIP')
       tabs: document.querySelectorAll('.pager-tab').length,
       rows: document.querySelectorAll('.table tbody tr').length,
       capped: !!document.querySelector('.page-bar'),
+      counts: [...document.querySelectorAll('main section.card *')]
+        .filter((e) => !e.children.length && /open for trading/i.test(e.textContent ?? '')).length,
     }))
     ok(`${slug} is a screen of its own`, m.h1 === title && m.trail === 'Invest > ' + title, JSON.stringify(m))
     ok('  with the whole category on it', m.rows === n, m.rows + ' of ' + n)
@@ -135,6 +137,9 @@ console.log('A SCREEN PER CHIP')
     // be a page inside a page.
     ok('  and no five-row cap', !m.capped)
     ok('  and the strip names all seven', m.tabs === 7 && m.lit !== undefined, m.tabs + ' tabs, on ' + m.lit)
+    // The count says how many are open. It used to say it again in a sentence
+    // underneath — the same fact twice on a card holding two rows.
+    ok('  and says how many are open, once', m.counts === 1, m.counts + ' places')
   }
   await p.close()
 }

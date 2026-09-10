@@ -309,19 +309,10 @@ function categoryScreen(cat: string): HTMLElement {
         cardHead(cat === 'Everything' ? 'All of it' : 'Everything in ' + cat,
           h('span', { class: 'muted t-caption',
             text: `${rows.length} listed · ${open.length} open for trading` })),
-        // The gap said out loud, the same as the index pages say it. Four of
-        // the thirteen can be bought today, and a list that does not mention
-        // that is a list somebody scrolls before finding out.
-        h('span', { class: 'subtle t-caption',
-          text: open.length === rows.length
-            ? (rows.length === 1
-                ? 'It is open for trading today.'
-                : 'Every one of these is open for trading today.')
-            : rows.length === 1
-              ? 'It is listed but not open for trading yet. You can look at it, and follow it.'
-              : `${rows.length - open.length} of these ${rows.length - open.length === 1 ? 'is' : 'are'} `
-                + 'listed but not open for trading yet. You can look at any of them, '
-                + 'and follow any of them.' }),
+        // The gap is said once, in the count above. It used to be said twice —
+        // "2 listed · 0 open for trading" and then a sentence underneath
+        // reading "2 of these are listed but not open for trading yet", which
+        // is the same fact in two registers on a card holding two rows.
         rows.length
           ? listTable(rows)
           : emptyState('Nothing in this one yet',
