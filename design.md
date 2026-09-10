@@ -8287,8 +8287,57 @@ Redrawing it found three things a screenshot carries without comment:
      Three came out of redrawing five screens that had been screenshotted the
      same week and read as fine.
 
+### 11g.71 The other eight flows, and the table that was a column
+
+The file now holds every screen the product has. Nine pages, one per flow, in
+the order a person meets them: getting in, home, browsing the market, buying
+and selling, money in and out, borrow and lend, activity and records, account
+and settings, operations. Eighty-eight screens, each drawn twice — 1440 with
+its 390 beside it — for 176 frames. Every sheet and modal is its own frame,
+named to the screen it opens from, because that is how the product addresses
+them and because a modal you cannot select is a modal you cannot edit.
+
+Getting the spec into Figma turned out to be the hard part, and the way it
+failed is worth writing down. The spec went in as a base64 string pasted into
+the plugin call. Two of the first eight pastes arrived wrong: one with
+characters substituted, one 504 characters short. Both produced a plausible
+inflate and then a `SyntaxError` from `JSON.parse` several hundred thousand
+characters in, which is the worst kind of failure — late, unhelpful, and
+indistinguishable from a bug in the inflater. The first fix was a checksum on
+the payload, so a bad one says so before it builds anything. The second fix
+removed the problem: the spec is deflated, wrapped in a greyscale PNG, and
+POSTed straight to Figma with curl, and a stored PNG reader unpacks it inside
+the plugin. The bytes never pass through the conversation, so they cannot be
+mistyped, and the build call went from twelve thousand characters to four
+hundred.
+
+Then the file disagreed with the product, which is what it is for. Every table
+in it was a column. The converter read direction off `display`, and anything
+that was not flex or grid became vertical — right for a div, wrong for a
+`<tr>`, and there is one `components/table.ts` behind every table in the
+product. So the S&P 500 constituents, the index lists, the home positions, the
+lending and borrowing rows and the operations tables were all stacks of single
+cells: a header that read `#`, `Company`, `Weight`, `Price`, `Today` one under
+the other, and thirty-two companies doing the same. One line, eight pages
+rebuilt.
+
+One art component was missing. The Borrowing card draws `WALLET()`, and its
+dot field had never been made into a component, so ten frames carried an empty
+box where 2,291 dots should be. It is `art/wallet` now, four vectors deep, and
+the builder resolves it from the component's description like the other seven.
+
+172. **A default is a decision about everything you did not look at.** The
+     converter's fallback was one line and it was wrong from the first screen.
+     It survived a fidelity check because the check compared the screens I had
+     already chosen to look at, and none of them had a table.
+
 ### 11g.49 Still open
 
+- Buying and selling is the one page in the file that was hand-built rather
+  than captured, so the table fix did not reach it. Its five screens are
+  composers and outcomes and hold no table, so nothing is wrong today; it is a
+  seam, not a defect, and the page will drift from the other eight the first
+  time the converter changes again.
 - Three findings from 11g.70 are flagged and not fixed, because they are
   product changes raised in the middle of a design batch: the trail that drops
   the company on Buy, Sell and Send shares; `icon.card` drawing an arrow in the
