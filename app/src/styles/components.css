@@ -1537,11 +1537,12 @@
 .nav-row, .whoami, .btn, .chip, .icon-btn, .close, .sheet-row, .sheet-row .mark,
 .key, .jump-hit, .jump-open, .all-row, .th-sort, .th-sort .caret, .crumb,
 .rail-tab, .rail-more, .link, a.link, a.card, label.field, .page-back,
-.table tbody td, .table tbody .mark, .hero-bar .seg, .hero-rows .hero-row {
+.table tbody td, .table tbody .mark, .hero-bar .seg {
   transition:
     background-color var(--t-fast) var(--ease),
     color var(--t-fast) var(--ease),
     box-shadow var(--t-fast) var(--ease),
+    height var(--t-base) var(--ease),
     transform var(--t-fast) var(--ease),
     opacity var(--t-fast) var(--ease);
 }
@@ -2020,52 +2021,76 @@ th.right .th-sort { flex-direction: row-reverse; }
 /* ---------------------------------------------------------- the wallet --
    The centrepiece is not the number on its own. It is the number, and what
    the number is made of, drawn to scale. */
-.hero-cash { padding: 32px; gap: 24px; }
+/* Pressing anywhere on the card opens the breakdown, so it says so with the
+   cursor and lifts a rung like every other pressable card in the product. */
+.hero-cash { padding: 32px; gap: 24px; text-align: left; align-items: stretch; cursor: pointer; }
+.hero-cash:hover { background: var(--sunken-hover); }
 .hero-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
 .hero-figure { font-size: 56px; line-height: 64px; font-weight: 600; letter-spacing: -0.03em; }
 .hero-aside { text-align: right; align-items: flex-end; max-width: 340px; }
 
 /* Four parts, four colours. The three balances take a ramp — strongest to
    lightest — because they are three of one kind of thing, and what is lent
-   takes the positive green because it is the one part that is earning. The
-   fourth colour arrived when the bar stopped saying "Dollars" and started
-   saying USDC and USDT separately, which it had to once the legend under it
-   became the balance list. */
-.hero-bar { display: flex; gap: 3px; height: 12px; }
-.hero-bar .seg { border-radius: 999px; min-width: 8px; }
+   takes the positive green because it is the one part that is earning. */
+.hero-bar { display: flex; align-items: center; gap: 3px; height: 22px; }
+.hero-bar .seg { height: 12px; border-radius: 999px; min-width: 8px; }
 .hero-bar .seg.a { background: var(--part-1); }
 .hero-bar .seg.b { background: var(--positive); }
 .hero-bar .seg.c { background: var(--part-3); }
 .hero-bar .seg.d { background: var(--part-2); }
 
-/* The legend and the balance list, which were two renderings of one list in
-   two cards. Two columns on a wide card so four rows do not become a column
-   of four; one column as soon as the names and figures would meet. */
-.hero-rows { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 32px; }
-.hero-row { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 6px 0; }
-.hero-row .dot { width: 10px; height: 10px; border-radius: 999px; flex: none; }
-.hero-row .dot.a { background: var(--part-1); }
-.hero-row .dot.b { background: var(--positive); }
-.hero-row .dot.c { background: var(--part-3); }
-.hero-row .dot.d { background: var(--part-2); }
-.hero-row .two-line { min-width: 0; }
-.hero-row .two-line > * { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hero-row .right { text-align: right; margin-left: auto; flex: none; }
+/* The reveal. Four lines and a resting line, all in one grid cell, all
+   transparent but one — so the row under the bar has the height of its tallest
+   line at all times and the card cannot jump as the pointer crosses it.
+   Nothing here is a layout change; it is four opacities. */
+.hero-read { display: grid; min-height: 22px; }
+/* `visibility` as well as opacity, and it is not a belt-and-braces flourish.
+   Text at opacity 0 is still text: it is in the accessibility tree for a screen
+   reader to read out, and `contrast.mjs` folds element opacity into the ratio
+   and correctly calls it unreadable — six lines of it, which is what caught
+   this. `visibility: hidden` leaves both trees while keeping the element in
+   layout, so the row under the bar still holds its height and the card does
+   not jump as the pointer crosses it. */
+.hero-read > .read {
+  grid-area: 1 / 1; display: flex; align-items: center; gap: 10px; min-width: 0;
+  opacity: 0; visibility: hidden; transform: translateY(3px);
+  transition: opacity var(--t-fast) var(--ease), transform var(--t-fast) var(--ease),
+    visibility var(--t-fast);
+}
+.hero-read .read > * { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* The mark that ties a name to its band. Lettered rather than scoped to the
+   card, because the same four appear in the breakdown dialog and they have to
+   be the same four. `.dot` on its own belongs to the bell and the bucket — a
+   count in a pill — so only the lettered ones take this. */
+.dot.a, .dot.b, .dot.c, .dot.d {
+  width: 10px; height: 10px; border-radius: 999px; flex: none; align-self: center;
+}
+.dot.a { background: var(--part-1); }
+.dot.b { background: var(--positive); }
+.dot.c { background: var(--part-3); }
+.dot.d { background: var(--part-2); }
+/* The resting line shows when nothing is hovered, and gets out of the way the
+   moment something is. */
+.hero-read > .rest { opacity: 1; visibility: visible; transform: none; gap: 16px; flex-wrap: wrap; }
+.hero-read .key { display: inline-flex; align-items: center; gap: 7px; }
+
+/* The card opens something, so it says so. Top right, out of the figure's way,
+   and it leans in with the rest of the card on hover. */
+.hero-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+/* A thumb needs 44 (item 35) and the glyph is 16, so the button is 44 and pulls
+   itself back into the corner with margin rather than pushing the figure down
+   to make room for a target nobody can see. */
+.hero-go {
+  flex: none; display: grid; place-items: center;
+  width: 44px; height: 44px; margin: -12px -12px -12px 0;
+}
 
 @media (max-width: 899px) {
   .hero-cash { padding: 20px; gap: 20px; }
   .hero-figure { font-size: 40px; line-height: 48px; }
   .hero-top { flex-direction: column; gap: 16px; }
   .hero-aside { text-align: left; align-items: flex-start; max-width: none; }
-  .hero-rows { grid-template-columns: 1fr; gap: 0; }
 }
-/* The card is the full width of the page, but the main column beside a side
-   column is not — and at the split the two-column legend puts a name and a
-   figure 12px apart. One column from there down. */
-@media (min-width: 900px) and (max-width: 1180px) {
-  .hero-rows { grid-template-columns: 1fr; gap: 0; }
-}
-
 /* The wallet's two doors. */
 .way { flex-direction: row; align-items: center; gap: 16px; text-align: left; }
 .way .promo-badge { flex: none; }
@@ -2641,18 +2666,17 @@ th.right .th-sort { flex-direction: row-reverse; }
      falls back. The legend sits after the bar in the document, and CSS only
      reads forwards, so :has on the card is what joins them. A browser without
      it drops these three rules and keeps the bar's own hover above. */
-  .hero-cash:has(.seg.a:hover) .hero-row:not(.a),
-  .hero-cash:has(.seg.b:hover) .hero-row:not(.b),
-  .hero-cash:has(.seg.c:hover) .hero-row:not(.c),
-  .hero-cash:has(.seg.d:hover) .hero-row:not(.d) { opacity: 0.45; }
-  .hero-cash:has(.hero-row.a:hover) .seg:not(.a),
-  .hero-cash:has(.hero-row.b:hover) .seg:not(.b),
-  .hero-cash:has(.hero-row.c:hover) .seg:not(.c),
-  .hero-cash:has(.hero-row.d:hover) .seg:not(.d) { opacity: 0.42; }
-  .hero-cash:has(.hero-row.a:hover) .hero-row:not(.a),
-  .hero-cash:has(.hero-row.b:hover) .hero-row:not(.b),
-  .hero-cash:has(.hero-row.c:hover) .hero-row:not(.c),
-  .hero-cash:has(.hero-row.d:hover) .hero-row:not(.d) { opacity: 0.45; }
+  /* Hovering a band grows it, dims the rest, and fills the line underneath
+     with that band's name and figures. The band grows in height rather than
+     scaling, because a scaled pill takes its corner radius with it. */
+  .hero-bar .seg:hover { height: 22px; }
+  .hero-cash:has(.seg:hover) .hero-read > .rest { opacity: 0; visibility: hidden; }
+  .hero-cash:has(.seg.a:hover) .hero-read > .read.a,
+  .hero-cash:has(.seg.b:hover) .hero-read > .read.b,
+  .hero-cash:has(.seg.c:hover) .hero-read > .read.c,
+  .hero-cash:has(.seg.d:hover) .hero-read > .read.d {
+    opacity: 1; visibility: visible; transform: none;
+  }
 }
 
 /* ------------------------------------------------------- reduced motion --

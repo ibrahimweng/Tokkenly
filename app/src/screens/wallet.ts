@@ -3,7 +3,7 @@ import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, headLink, kv, callout, amount, directionMark, figureWithEye, spentBar } from '../components/bits'
 import { table } from '../components/table'
-import { state, buyingPower, availableToBorrow, alsoIn, rateLine, limits, leftThisMonth, verified, money, moneyNaira, settlement, type Activity } from '../state'
+import { state, buyingPower, availableToBorrow, alsoIn, limits, leftThisMonth, verified, money, moneyNaira, settlement, type Activity } from '../state'
 import * as ledger from '../ledger'
 import { usd, naira, when, activityLabel } from '../format'
 import { go, openSheet } from '../router'
@@ -129,70 +129,106 @@ function moved(): HTMLElement {
    total" on an account holding $3,720. Money you have and money you could owe
    do not add up, and a single bar said they did.
    --------------------------------------------------------------------------- */
-function cashHero(): HTMLElement {
-  // What the bar is made of, and what the rows under it are. One list, read
-  // twice — as widths and as figures — rather than two lists that can drift.
-  const nairaUsd = state.naira / state.ngnPerUsd
-  const parts: { key: Asset | 'lent'; value: number; cls: string }[] = [
+/** The four parts of what this account holds, in the order the bar draws them.
+ *  One list, read three ways — as widths, as a reveal on hover, and as rows in
+ *  the dialog — so none of the three can drift from the other two. */
+export function parts(): { key: Asset | 'lent'; value: number; cls: string }[] {
+  return [
     { key: 'usdc', value: state.usdc, cls: 'a' },
     { key: 'usdt', value: state.usdt, cls: 'd' },
-    { key: 'ngn', value: nairaUsd, cls: 'c' },
+    { key: 'ngn', value: state.naira / state.ngnPerUsd, cls: 'c' },
     { key: 'lent', value: state.lent, cls: 'b' },
   ]
-  const total = parts.reduce((t, p) => t + p.value, 0)
-  const name = (k: Asset | 'lent') => (k === 'lent' ? 'Lent out' : assetOf(k)!.name)
-  const figure = (p: { key: Asset | 'lent'; value: number }) =>
-    p.key === 'lent' ? money(p.value) : balanceText(p.key)
+}
+export const partName = (k: Asset | 'lent'): string =>
+  k === 'lent' ? 'Lent out' : assetOf(k)!.name
+export const partFigure = (p: { key: Asset | 'lent'; value: number }): string =>
+  p.key === 'lent' ? money(p.value) : balanceText(p.key)
+export const partUnder = (p: { key: Asset | 'lent'; value: number }): string => {
+  if (p.key === 'lent') return 'Paying ' + state.rates.lend + '% a year'
+  const nets = netsFor(p.key)
+  return nets.length ? nets.map((n) => n.name).join(' · ') : assetOf(p.key)!.what
+}
+export const partAlso = (p: { key: Asset | 'lent'; value: number }): string =>
+  p.key === 'lent' ? moneyNaira(p.value * state.ngnPerUsd) : balanceAlso(p.key)
 
-  return h('section', { class: 'card hero-cash' },
-    h('div', { class: 'hero-top' },
+function cashHero(): HTMLElement {
+  const list = parts()
+  const nairaUsd = state.naira / state.ngnPerUsd
+
+  // A div rather than a button, and the chevron is the real control.
+  //
+  // As a button it contained the eye, and a button inside a button is invalid
+  // HTML: the parser lifts the inner one out, and the press that was meant to
+  // cover the balance opened the breakdown instead. `prefs` caught it —
+  // pressing the eye on the wallet stopped working entirely.
+  //
+  // So the card is a plain element with a click on it, because the ask was that
+  // pressing anywhere on the card opens the breakdown, and one real button
+  // inside it carries the semantics: tab to the chevron, press Enter, and the
+  // click bubbles to the same handler. The eye is the one press the card lets
+  // through to its own control.
+  return h('div', { class: 'card hero-cash',
+    on: { click: (e: Event) => {
+      if ((e.target as HTMLElement).closest('.eye-btn')) return
+      openSheet('balances')
+    } } },
+    h('div', { class: 'hero-head' },
       h('div', { class: 'stack-8' },
         h('span', { class: 't-caps subtle', text: 'Money you can spend' }),
         figureWithEye(cashFigure()),
         alsoIn(state.cash + nairaUsd)
-          ? h('span', { class: 'stack-8' },
-              h('span', { class: 'muted', text: alsoIn(state.cash + nairaUsd)! }),
-              // The rate, its time and what it is: the one number here that a
-              // person cannot check for themselves, so it says where it came
-              // from rather than appearing as a fact of nature.
-              h('span', { class: 'subtle t-caption', text: rateLine() }))
+          ? h('span', { class: 'muted', text: alsoIn(state.cash + nairaUsd)! })
           : null),
-      // The same money with what you have lent added back. Two figures rather
-      // than a sentence, because the difference between them is the one thing
-      // this card is trying to say about lending.
-      h('div', { class: 'stack-8 hero-aside' },
-        h('span', { class: 't-caps subtle', text: 'Including what you lent' }),
-        h('span', { class: 't-display', text: money(total) }),
-        h('span', { class: 'muted',
-          text: 'Borrowing is credit rather than balance, so it is not in either figure.' }))),
+      h('button', { class: 'muted hero-go', html: icon.chevron(),
+        ariaLabel: 'What you hold, in full' })),
 
     h('div', { class: 'hero-bar', ariaLabel: 'How your money is arranged' },
-      ...parts.map((p) =>
+      ...list.map((p) =>
         h('span', { class: 'seg ' + p.cls, style: { flex: String(Math.max(p.value, 1)) },
-          ariaLabel: `${name(p.key)} ${figure(p)}`,
-          title: `${name(p.key)} — ${figure(p)}` }))),
+          ariaLabel: `${partName(p.key)} ${partFigure(p)}`,
+          title: `${partName(p.key)} — ${partFigure(p)}` }))),
 
-    // The legend and the balance list, which were the same list. A dot to tie
-    // each row to its width, the name, what it is or where it travels, the
-    // figure, and what that is in the other currency.
-    h('div', { class: 'hero-rows' },
-      ...parts.map((p) => {
-        const nets = p.key === 'lent' ? [] : netsFor(p.key)
-        return h('div', { class: 'hero-row ' + p.cls },
+    // The reveal, and the whole of what is under the bar now.
+    //
+    // Four rows of name, network, figure and second currency sat here at rest.
+    // It was the most crowded part of the most crowded card in the product,
+    // and none of it is a thing somebody reads every time they open the
+    // wallet — it is a thing they go and look at.
+    //
+    // So: nothing at rest but a line of held height, the width of one row, so
+    // the card does not jump when it fills. Hovering a segment fills it with
+    // that segment's name and figure while the segment grows and the rest of
+    // the bar dims. All four are in the DOM, stacked in one grid cell, and CSS
+    // picks the one whose segment is hovered — no state, no listener, and the
+    // reveal cannot disagree with the bar because it is drawn from the same
+    // list.
+    //
+    // Hover is not a way to give somebody information they need, which is why
+    // the whole card is a button: the dialog behind it says all of this in
+    // rows, and that is the path a phone, a keyboard and a screen reader take.
+    h('div', { class: 'hero-read' },
+      ...list.map((p) =>
+        h('span', { class: 'read ' + p.cls },
           h('span', { class: 'dot ' + p.cls }),
-          h('span', { class: 'two-line grow' },
-            h('span', { class: 't-body-strong', text: name(p.key) }),
-            h('small', { text: p.key === 'lent'
-              ? 'Paying ' + state.rates.lend + '% a year'
-              : nets.length ? nets.map((n) => n.name).join(' · ') : assetOf(p.key)!.what })),
-          h('span', { class: 'two-line right' },
-            h('span', { class: 't-body-strong', text: figure(p) }),
-            h('small', { class: 'muted', text: p.key === 'lent'
-              ? moneyNaira(p.value * state.ngnPerUsd)
-              : balanceAlso(p.key) })))
-      }))
-  )
+          h('span', { class: 't-body-strong', text: partName(p.key) }),
+          h('span', { class: 'muted', text: partFigure(p) }),
+          h('span', { class: 'subtle', text: partAlso(p) }))),
+      // At rest: a key, not an instruction. Four dots and four names in the
+      // bar's own order, so the colours mean something before anybody touches
+      // anything — and no figures, which is the whole point of the change.
+      //
+      // It says nothing about hovering, because a phone cannot hover and a
+      // line of interface explaining itself is a line that failed to. The
+      // chevron is the affordance; hover is a shortcut for people who have a
+      // pointer, and finding it is not required to get the numbers.
+      h('span', { class: 'read rest' },
+        ...list.map((p) =>
+          h('span', { class: 'key' },
+            h('span', { class: 'dot ' + p.cls }),
+            h('span', { class: 'muted', text: partName(p.key) }))))))
 }
+
 
 /** What you could put to work, which is not a balance. */
 function buyingPowerCard(): HTMLElement {

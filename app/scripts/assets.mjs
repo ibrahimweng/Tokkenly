@@ -35,12 +35,21 @@ d.on('pageerror', (e) => errs.push('pageerror: ' + e.message))
 log.push('THREE BALANCES, NOT ONE')
 await d.goto(base + '/transfer', { waitUntil: 'networkidle' })
 await d.waitForTimeout(350)
-// One card now: the bar's legend and the balance list were the same list, so
-// the rows under the bar are where the three are named (11g.75).
-const names = await d.locator('.hero-cash .hero-row .t-body-strong').allTextContents()
+// The card is a figure and a bar now; the rows moved into the dialog behind it
+// (11g.77). Pressing the card is the path a phone and a keyboard take, so it is
+// the path this walks.
+const openHold = async () => {
+  if (!(await d.locator('.sheet').count())) {
+    await d.locator('.hero-cash').click(); await d.waitForTimeout(450)
+  }
+}
+await openHold()
+const names = await d.locator('.sheet .sheet-row .t-body-strong').allTextContents()
 ok('the wallet lists all three, and what is lent',
-   names.join(' ') === 'USDC $1,680.00 USDT $800.00 Naira ₦145,000 Lent out $1,240.00',
+   names.join(' ') === 'USDC $1,680.00 USDT $800.00 Naira ₦145,000 Lent out $1,240.00 Including what you lent',
    names.join(' · '))
+await d.keyboard.press('Escape'); await d.waitForTimeout(300)
+// And the bar is still the same four, said as widths rather than as figures.
 const segs = await d.locator('.hero-bar .seg').count()
 ok('and the bar is made of the same four', segs === 4, segs + ' segments')
 await d.screenshot({ path: '/tmp/shots/assets-01-wallet.png', fullPage: true })
@@ -65,7 +74,9 @@ log.push('A PAYMENT MOVES THE ONE IT NAMED')
 const balances = async () => {
   await d.goto(base + '/transfer', { waitUntil: 'networkidle' })
   await d.waitForTimeout(350)
-  const rows = await d.locator('.hero-cash .hero-row').allInnerTexts()
+  await d.locator('.hero-cash').click(); await d.waitForTimeout(450)
+  const rows = await d.locator('.sheet .sheet-row').allInnerTexts()
+  await d.keyboard.press('Escape'); await d.waitForTimeout(250)
   return rows.map((r) => r.split('\n').filter(Boolean))
 }
 const before = await balances()

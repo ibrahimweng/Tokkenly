@@ -6,7 +6,7 @@ import {
   state, actions, owed, monthlyCost, monthlyInterest, holding, bucketTotal, bucketRefusals,
   tradeFee, cardFee, weakPin, ratePassword, LIMITS, type Activity, txHash, onChain, supportRef,
   switchOn, assetOn,
-  requestQuote, quoteLive, settlement, grossOf, billOutcome, payAsset,
+  requestQuote, quoteLive, settlement, grossOf, billOutcome, payAsset, money, rateLine,
   type Quote, type Destination,
 } from './state'
 import { pinPad } from './components/pinpad'
@@ -21,6 +21,7 @@ import { isMobile } from './responsive'
 import { QA } from './screens/settings'
 import { peopleRows, addPanels, addTab, sendWays, addWays } from './screens/money'
 import { billFrom } from './screens/spend'
+import { parts, partName, partFigure, partUnder, partAlso } from './screens/wallet'
 import { assetOf, netOf, shortAddress, DOLLARS, type Asset } from './assets'
 import { assetLine } from './components/purse'
 import { search } from './destinations'
@@ -1014,6 +1015,49 @@ export const SHEETS: Record<string, Builder> = {
     ...addPanels(addTab(), false),
     h('button', { class: 'link quiet', text: 'Open the full page',
       on: { click: () => go('/addmoney/' + addTab()) } })),
+
+  /** Everything the wallet's card stopped saying.
+   *
+   *  The card is a figure and a bar now, and a bar is a shape rather than a
+   *  statement: it says the dollars are most of it without saying how much any
+   *  of it is. This is where the sentence lives. Four rows — what each one is,
+   *  where it travels, what it holds and what that is in the other currency —
+   *  then the total with what is lent added back, then the rate the naira
+   *  figures were struck at. No line about borrowing: there is no borrowing on
+   *  this dialog, and a sentence explaining the absence of a thing is a
+   *  sentence about nothing. The buying-power card on the wallet makes that
+   *  point beside the figure it is actually about.
+   *
+   *  It is reached by pressing the card, which is the only path a phone, a
+   *  keyboard or a screen reader has to it: hovering a band is a shortcut for
+   *  a mouse and never the only way to a fact.
+   *
+   *  Rule 11g.54: it opens over the wallet rather than on a screen of its own,
+   *  and it carries a door to the statement — which is the same four accounts
+   *  with every posting that moved them. */
+  balances: () => {
+    const list = parts()
+    const total = list.reduce((t, p) => t + p.value, 0)
+    return sheet('What you hold',
+      h('div', { class: 'sheet-list' },
+        ...list.map((p) =>
+          h('div', { class: 'sheet-row' },
+            h('span', { class: 'dot ' + p.cls }),
+            h('span', { class: 'two-line grow' },
+              h('span', { class: 't-body-strong', text: partName(p.key) }),
+              h('small', { text: partUnder(p) })),
+            h('span', { class: 'two-line right' },
+              h('span', { class: 't-body-strong', text: partFigure(p) }),
+              h('small', { class: 'muted', text: partAlso(p) }))))),
+      // The same anatomy as the rows above it, so it reads as their sum rather
+      // than as a fifth thing they are among.
+      h('div', { class: 'sheet-row' },
+        h('span', { class: 't-body-strong grow', text: 'Including what you lent' }),
+        h('span', { class: 't-title', text: money(total) })),
+      h('span', { class: 'subtle t-caption', text: rateLine() }),
+      h('button', { class: 'btn btn-quiet', text: 'See every account',
+        on: { click: () => { closeSheet(); go('/statement') } } }))
+  },
 
   banks: () => {
     const name = h('input', { placeholder: 'Bank name' })

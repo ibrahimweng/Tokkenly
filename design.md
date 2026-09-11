@@ -8799,6 +8799,58 @@ of the thing they act on.
      the thing 11g.75 got wrong: equal things take equal widths, and a thing
      takes the width of its own scope.
 
+### 11g.77 A bar is a shape, and the sentence goes behind it
+
+The wallet's top card was carrying about twenty-four separate things. Two
+labels, two display figures, the naira equivalent, the rate line, a disclaimer,
+the bar, and four rows each with a name, a network, a figure and a second
+currency. Every one of them was defensible on its own and the card was
+unreadable.
+
+What it is now, at rest: **"Money you can spend", the figure, the naira it comes
+to, the bar, and a key.** Five things. The key is four coloured dots and four
+names in the bar's own order — no figures — so the colours mean something
+before anybody touches anything.
+
+**Hovering a band grows it and fills the line underneath with that band's
+figures.** The band goes from 12px to 22px and the rest of the bar drops to
+0.42; the line under it becomes `● USDC $1,680.00 ₦2,520,000`. All five lines —
+four bands and the resting key — are in the DOM stacked in one grid cell, and
+CSS picks the one whose band is hovered. No state, no listener, and the reveal
+cannot disagree with the bar because both are drawn from `parts()`. The band
+animates its **height** rather than a scale, because a scaled pill takes its
+corner radius with it.
+
+**And the whole card is a button.** Pressing it opens *What you hold*: the four
+rows in full — name, where it travels, figure, and the other currency — the
+total with what is lent added back, and the rate the naira figures were struck
+at. That is the path a phone takes, and a keyboard, and a screen reader; hover
+is a shortcut for people who have a pointer and it is never the only way to a
+number. A phone cannot hover at all, which is the reason the resting line is a
+key rather than the sentence "hover a band" — a line of interface explaining
+itself is a line that failed to.
+
+Two things came out in the building. The dots vanished in the dialog, because
+they had been scoped to the card — they are lettered now (`.dot.a` through
+`.dot.d`) and belong to the palette rather than to one screen, which is the only
+way the same four marks can appear in two places and stay the same four. And the
+total row arrived carrying "borrowing is credit rather than balance, so it is in
+neither figure", which is a sentence about a thing that is not on the dialog;
+buying power makes that point on the wallet, beside the figure it is about.
+
+The phone dialog comes to 532 against item 61's ceiling of 692.
+
+184. **A bar is a shape, not a statement.** It says the dollars are most of it
+     without saying how much any of it is, and that is the right amount to say
+     at a glance. The figures behind it are a thing people go and look at rather
+     than a thing they read every time — so put them one press away and let the
+     shape do the work it is good at.
+
+185. **Hover is a shortcut, never the only way.** Anything revealed on hover
+     must be reachable without a pointer, because a phone has none and a
+     keyboard has none. The test is not whether the hover is nice; it is
+     whether the same fact has a second path that a thumb can take.
+
 ### 11g.49 Still open
 
 - Buying and selling is the one page in the file that was hand-built rather
@@ -8824,17 +8876,12 @@ of the thing they act on.
   further than "it can drift" — the file is a photograph of a version that no
   longer ships, which is the exact failure 11g.70 was built to end. Re-running
   the converter over the nine flows is the fix and nobody has asked for it.
-- The wallet's top card is carrying about twenty-four separate things — two
-  labels, two display figures, the naira equivalent, the rate line, a
-  disclaimer, the bar, and four rows each with a name, a network line, a figure
-  and a second-currency figure. That is too many and it was raised as too many.
-  Four ways out were put up — strip the detail, drop what is not spendable from
-  a card about spending, show the detail on a press, or redline it in Figma —
-  and the redline was chosen, so the card is unchanged until that comes back.
 - The Figma file key is not written down anywhere in this repository. Every
   Figma batch ran in-session and the key went with the session, which is the
   mechanical reason nothing has been watching that file drift (11g.70's own
-  open item). The next push to Figma records the key here.
+  open item). The next push to Figma records the key here. The redline that was
+  going to go through Figma came back as words instead (11g.77), so the file is
+  now four batches behind rather than three.
 - The ramp `--part-1/2/3` (11g.75) has one consumer, the wallet's bar. It is
   written as a palette idea rather than a wallet one on the argument that parts
   of a total are a thing and not a screen, and that argument is only proved the
