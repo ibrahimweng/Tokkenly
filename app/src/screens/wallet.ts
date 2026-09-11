@@ -3,7 +3,8 @@ import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, headLink, kv, callout, amount, directionMark, figureWithEye, spentBar } from '../components/bits'
 import { table } from '../components/table'
-import { state, buyingPower, availableToBorrow, alsoIn, inflightNaira, outboundNaira, rateLine, limits, leftThisMonth, verified, money, moneyNaira } from '../state'
+import { state, buyingPower, availableToBorrow, alsoIn, rateLine, limits, leftThisMonth, verified, money, moneyNaira, settlement, type Activity } from '../state'
+import * as ledger from '../ledger'
 import { usd, naira, when, activityLabel } from '../format'
 import { go, openSheet } from '../router'
 import { balanceText, balanceAlso } from '../components/purse'
@@ -36,15 +37,49 @@ function cashFigure(): HTMLElement {
   return el
 }
 
-/** What has actually moved through this wallet.
+/** Where a movement that has not finished has actually got to.
  *
- *  The screen listed what is still in flight — which is usually nothing — and
- *  then stopped, leaving a column that ended 160px above the one beside it. It
- *  was also the only screen in the product about your cash that never showed
- *  what happened to it: Home has a recent list, the wallet did not. The empty
- *  space and the missing list were the same hole. */
+ *  Money in transit is at a named place — our collection account on the way in,
+ *  the payout account on the way out — and the naira sitting there is the same
+ *  naira this row is about. Read off the ledger rather than multiplied out of
+ *  the dollars, so the row and the statement cannot disagree.
+ *
+ *  "In route but not landed" is the thing a person actually wants to know, and
+ *  it is not the same sentence in both directions: on the way in nobody has
+ *  been charged twice, on the way out the bank has not confirmed. */
+function stage(a: Activity): string {
+  const c = ledger.conversion(a.ref)
+  const inbound = a.amount > 0
+  if (inbound) {
+    return settlement(a.amount) === 'pending'
+      ? (c ? naira(c.naira) + ' in route · we have not seen it yet, and nothing was taken twice'
+           : 'In route · we have not seen it yet, and nothing was taken twice')
+      : (c ? naira(c.naira) + ' in route · has not landed yet'
+           : 'In route · has not landed yet')
+  }
+  return c ? 'Dollars out · ' + naira(c.naira) + ' in route to the bank, not landed yet'
+           : 'On its way · the bank has not confirmed it yet'
+}
+
+/* What has moved through this wallet, and what has not finished moving.
+   -------------------------------------------------------------------------
+   "Still settling" was a card of its own holding two figures: naira between
+   banks on the way in, and naira on the way out. Neither is a balance anybody
+   can do anything with — they are transactions that have not finished, and the
+   list below was already the place this product keeps transactions. A card
+   whose contents belong in the thing underneath it is a card.
+
+   So it is gone, and what it held leads this list instead: everything unfinished
+   first, each row saying where its money has actually got to. The two figures
+   did not go with the card — they are on the rows whose money they are, which
+   is where somebody looking at one transfer would look for them. */
 function moved(): HTMLElement {
-  const rows = state.activity.filter((a) => a.kind === 'payment').slice(0, 6)
+  // Unfinished first, always, however old. A transfer from Tuesday that has
+  // not landed outranks a payment from this morning that has: one of them is
+  // a question and the other is a record.
+  const waiting = state.activity.filter((a) => !a.settled)
+  const rows = [...waiting,
+    ...state.activity.filter((a) => a.settled && a.kind === 'payment')].slice(0, 8)
   return card(
     cardHead('Money in and out', headLink('All payments', '/activity?filter=payments')),
     rows.length
@@ -54,7 +89,8 @@ function moved(): HTMLElement {
           rows.map((a) => [
             h('span', { class: 'who' }, directionMark(a.amount),
               h('span', { class: 'two-line' },
-                h('span', { class: 't-body-strong', text: activityLabel(a) }))),
+                h('span', { class: 't-body-strong', text: activityLabel(a) }),
+                a.settled ? null : h('small', { class: 'inroute', text: stage(a) }))),
             h('span', { class: 'muted', text: when(a.at) }),
             h('span', { class: 'muted', text: a.ref }),
             amount(a),
@@ -204,10 +240,6 @@ function limitsCard(): HTMLElement {
 }
 
 export function walletScreen(): HTMLElement {
-  const pending = state.activity.filter((a) => !a.settled)
-  const flight = inflightNaira()
-  const outbound = outboundNaira()
-
   return shell(
     'wallet',
     // No eyebrow: it printed buying power 60px above the card that prints
@@ -218,60 +250,28 @@ export function walletScreen(): HTMLElement {
     // from wrapping onto separate lines — which they did, once the column came
     // in to the 1008 the file draws.
     cashHero(),
-    // Two doors: money in and money out. Receive was a third, and it was the
-    // same question as Add money asked twice — how does money get into this
-    // wallet. It is a way inside the one door now.
-    //
-    // Both doors are addresses. Add money opened a dialog in place, on the
-    // argument that handing over an account number needs no screen change —
-    // true of the account number, and not true of the question in front of
-    // it. There are three ways in, and 11g.61 made both doors ask which one
-    // before answering: on a phone that ask is a sheet over this screen, and
-    // on a wide one it is the rail beside the panel. A door that skipped the
-    // question left Add money answering it two different ways depending on
-    // which control you pressed.
-    //
-    // They sit directly under the card rather than at the top of the left
-    // column, because the card is what they act on. Read down: here is your
-    // money, here is what it is made of, here is how you move it. From inside
-    // a column they were the same two doors offset 8px left of the figure
-    // they belong to, with the limits card level with them on the right —
-    // which made "how do I move this" look like one of four things on a page
-    // rather than the next thing to do.
-    h('div', { class: 'row equal' },
-      way('Add money', 'A bank, a stablecoin or a card', icon.receive(), '/addmoney'),
-      way('Send', 'To a person, a wallet or a bank', icon.send(), '/send')),
     h('div', { class: 'row' },
       h('div', { class: 'stack col-main' },
-        card(
-          cardHead('Still settling', headLink('All activity', '/activity')),
-          // What is genuinely between two banks, named in the currency it is
-          // sitting in. It is the balance of the account the money waits in
-          // rather than a total of the rows below, so a wallet that has not
-          // gone up and a figure that says why cannot disagree.
-          flight > 0
-            ? h('div', { class: 'kv' },
-                h('span', { class: 't-caps subtle', text: 'On its way to us' }),
-                h('span', { class: 't-body-strong', text: naira(flight) }))
-            : null,
-          // And the other direction. Dollars that have left the wallet but
-          // whose naira have not reached anybody's bank are in an account with
-          // a name, not in a state of hopefulness.
-          outbound > 0
-            ? h('div', { class: 'kv' },
-                h('span', { class: 't-caps subtle', text: 'On its way out' }),
-                h('span', { class: 't-body-strong', text: naira(outbound) }))
-            : null,
-          pending.length
-            ? h('div', { class: 'stack-12' }, ...pending.map((a) =>
-                h('div', { class: 'kv' },
-                  h('span', { class: 'who' }, directionMark(a.amount),
-                    h('span', { class: 'two-line' },
-                      h('span', { class: 't-body-strong', text: activityLabel(a) }),
-                      h('small', { text: when(a.at) }))),
-                  amount(a))))
-            : h('span', { class: 'muted', text: 'Nothing is in flight. Everything you have sent or received has landed.' })
-        ),
+        // Two doors: money in and money out. Receive was a third, and it was
+        // the same question as Add money asked twice — how does money get into
+        // this wallet. It is a way inside the one door now.
+        //
+        // Both doors are addresses. Add money opened a dialog in place, on the
+        // argument that handing over an account number needs no screen change
+        // — true of the account number, and not true of the question in front
+        // of it. There are three ways in, and 11g.61 made both doors ask which
+        // one before answering: on a phone that ask is a sheet over this
+        // screen, and on a wide one it is the rail beside the panel. A door
+        // that skipped the question left Add money answering it two different
+        // ways depending on which control you pressed.
+        //
+        // They lead the column rather than spanning the page. Full width they
+        // were two 660px cards holding one line each, and a door twice the
+        // width of the list it sits above reads as the page's subject rather
+        // than as a way out of it. The column is the width of what they act on.
+        h('div', { class: 'row equal' },
+          way('Add money', 'A bank, a stablecoin or a card', icon.receive(), '/addmoney'),
+          way('Send', 'To a person, a wallet or a bank', icon.send(), '/send')),
         moved()),
       h('div', { class: 'stack col-side' },
         // Beside the limits, because both are about what you may spend rather

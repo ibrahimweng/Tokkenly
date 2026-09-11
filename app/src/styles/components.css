@@ -526,6 +526,11 @@
   display: grid; place-items: center; flex: none;
 }
 .who { display: flex; align-items: center; gap: 12px; }
+/* A row whose money has not arrived. Not a warning — nothing is wrong with a
+   transfer that is still travelling — so it takes the same quiet as any second
+   line, and the word "route" does the work rather than a colour. It is only
+   ever on rows that lead the list, so it does not need to shout to be found. */
+.two-line small.inroute { color: var(--subtle); white-space: normal; }
 .two-line { display: flex; flex-direction: column; }
 .two-line small { color: var(--muted); font-size: 12px; }
 
