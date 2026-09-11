@@ -408,6 +408,14 @@
 /* a placeholder is text someone has to read to know what the field wants */
 .field input::placeholder { color: var(--muted); }
 
+/* Detailed's quick actions, equal. They were `.grow`, which is flex 1 1 auto —
+   the basis is the content, so the card with the longest sentence in it came
+   out widest and four shortcuts of equal standing looked like a ranking. The
+   same sentence lengths then made them different heights, which is the same
+   fault read the other way, so the row stretches too. */
+.row.tiles { align-items: stretch; }
+.row.tiles > * { flex: 1 1 0; min-width: 0; }
+
 /* ---------- amount composer ---------- */
 .amount-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .amount-box {
@@ -589,6 +597,38 @@
 }
 @keyframes fade { from { opacity: 0 } to { opacity: 1 } }
 @keyframes rise { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: none } }
+
+/* ---------- something on this screen just changed ----------
+   `swap()` in ui.ts puts this on whatever was refilled. What arrives comes up
+   from eight pixels and fades in, at the one duration set aside for content
+   changing rather than for a control responding.
+
+   The children animate, not the box: a box that faded would take its own
+   background with it and read as the card blinking. Staggered so a list lands
+   row by row, and capped at the eighth — past that the delay is longer than
+   the animation and somebody is waiting for a table. */
+.swapped > * { animation: swap-in var(--t-swap) var(--ease) both; }
+/* The element itself rather than what is in it, for the changes that are one
+   thing: a refusal appearing, a code that is now a different code. */
+.swapped-self { animation: swap-in var(--t-swap) var(--ease) both; }
+.swapped > :nth-child(2) { animation-delay: 30ms; }
+.swapped > :nth-child(3) { animation-delay: 60ms; }
+.swapped > :nth-child(4) { animation-delay: 90ms; }
+.swapped > :nth-child(5) { animation-delay: 120ms; }
+.swapped > :nth-child(6) { animation-delay: 150ms; }
+.swapped > :nth-child(7) { animation-delay: 180ms; }
+.swapped > :nth-child(n + 8) { animation-delay: 200ms; }
+@keyframes swap-in { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
+
+/* A whole screen's worth of rows is a different shape of change from a summary
+   rewriting itself: there the stagger is the point, and the eye follows it
+   down. Inside a dialog there is no room for it to be a journey, so it lands
+   at once. */
+.sheet .swapped > * { animation-delay: 0s !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .swapped > *, .swapped-self { animation: none; }
+}
 
 /* ---------- the outcome, revealed ----------
 
@@ -1492,7 +1532,7 @@
 .nav-row, .whoami, .btn, .chip, .icon-btn, .close, .sheet-row, .sheet-row .mark,
 .key, .jump-hit, .jump-open, .all-row, .th-sort, .th-sort .caret, .crumb,
 .rail-tab, .rail-more, .link, a.link, a.card, label.field, .page-back,
-.table tbody td, .table tbody .mark, .hero-bar .seg, .hero-legend .leg {
+.table tbody td, .table tbody .mark, .hero-bar .seg, .hero-rows .hero-row {
   transition:
     background-color var(--t-fast) var(--ease),
     color var(--t-fast) var(--ease),
@@ -1923,6 +1963,9 @@ th.right .th-sort { flex-direction: row-reverse; }
      is a hair under the 288 the desktop gives them — so the composition that
      was drawn for that box is being asked for very nearly the same box, and
      the glyph the phone uses in its place is put away. */
+  /* Three doors here, not four: Wallet is on the rail at this width, so its
+     door goes and the other three get the room back. */
+  .gates { grid-template-columns: repeat(3, 1fr); }
   .gate { height: 300px; padding: 20px; border-radius: 24px; align-items: stretch; justify-content: flex-start; }
   .gate-ic { display: none; }
   .gate-sub, .gate-cta, .gate-art { display: revert; }
@@ -1975,29 +2018,55 @@ th.right .th-sort { flex-direction: row-reverse; }
 .hero-cash { padding: 32px; gap: 24px; }
 .hero-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
 .hero-figure { font-size: 56px; line-height: 64px; font-weight: 600; letter-spacing: -0.03em; }
-.hero-aside { text-align: right; align-items: flex-end; }
+.hero-aside { text-align: right; align-items: flex-end; max-width: 340px; }
 
+/* Four parts, four colours. The three balances take a ramp — strongest to
+   lightest — because they are three of one kind of thing, and what is lent
+   takes the positive green because it is the one part that is earning. The
+   fourth colour arrived when the bar stopped saying "Dollars" and started
+   saying USDC and USDT separately, which it had to once the legend under it
+   became the balance list. */
 .hero-bar { display: flex; gap: 3px; height: 12px; }
 .hero-bar .seg { border-radius: 999px; min-width: 8px; }
-.hero-bar .seg.a { background: var(--inverse); }
+.hero-bar .seg.a { background: var(--part-1); }
 .hero-bar .seg.b { background: var(--positive); }
-.hero-bar .seg.c { background: var(--control-pressed); }
+.hero-bar .seg.c { background: var(--part-3); }
+.hero-bar .seg.d { background: var(--part-2); }
 
-.hero-legend { display: flex; gap: 32px; flex-wrap: wrap; }
-.leg { display: flex; align-items: flex-start; gap: 10px; }
-.leg .dot { width: 10px; height: 10px; border-radius: 999px; flex: none; margin-top: 5px; }
-.leg .dot.a { background: var(--inverse); }
-.leg .dot.b { background: var(--positive); }
-.leg .dot.c { background: var(--control-pressed); }
-.leg small { color: var(--muted); }
+/* The legend and the balance list, which were two renderings of one list in
+   two cards. Two columns on a wide card so four rows do not become a column
+   of four; one column as soon as the names and figures would meet. */
+.hero-rows { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 32px; }
+.hero-row { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 6px 0; }
+.hero-row .dot { width: 10px; height: 10px; border-radius: 999px; flex: none; }
+.hero-row .dot.a { background: var(--part-1); }
+.hero-row .dot.b { background: var(--positive); }
+.hero-row .dot.c { background: var(--part-3); }
+.hero-row .dot.d { background: var(--part-2); }
+.hero-row .two-line { min-width: 0; }
+.hero-row .two-line > * { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hero-row .right { text-align: right; margin-left: auto; flex: none; }
 
 @media (max-width: 899px) {
   .hero-cash { padding: 20px; gap: 20px; }
   .hero-figure { font-size: 40px; line-height: 48px; }
   .hero-top { flex-direction: column; gap: 16px; }
-  .hero-aside { text-align: left; align-items: flex-start; }
-  .hero-legend { gap: 12px; flex-direction: column; }
+  .hero-aside { text-align: left; align-items: flex-start; max-width: none; }
+  .hero-rows { grid-template-columns: 1fr; gap: 0; }
 }
+/* The card is the full width of the page, but the main column beside a side
+   column is not — and at the split the two-column legend puts a name and a
+   figure 12px apart. One column from there down. */
+@media (min-width: 900px) and (max-width: 1180px) {
+  .hero-rows { grid-template-columns: 1fr; gap: 0; }
+}
+
+/* The wallet's two doors. */
+.way { flex-direction: row; align-items: center; gap: 16px; text-align: left; }
+.way .promo-badge { flex: none; }
+.way .two-line { min-width: 0; gap: 2px; }
+.way .muted { white-space: normal; }
+.way-go { flex: none; display: inline-flex; }
 
 /* A payment over the figure you set is not stopped by a second sheet — that
    is a second thing to dismiss. It is stopped by a tick, which is a deliberate
@@ -2567,15 +2636,18 @@ th.right .th-sort { flex-direction: row-reverse; }
      falls back. The legend sits after the bar in the document, and CSS only
      reads forwards, so :has on the card is what joins them. A browser without
      it drops these three rules and keeps the bar's own hover above. */
-  .hero-cash:has(.seg.a:hover) .leg:not(:nth-child(1)),
-  .hero-cash:has(.seg.b:hover) .leg:not(:nth-child(2)),
-  .hero-cash:has(.seg.c:hover) .leg:not(:nth-child(3)) { opacity: 0.45; }
-  .hero-cash:has(.leg:nth-child(1):hover) .seg:not(.a),
-  .hero-cash:has(.leg:nth-child(2):hover) .seg:not(.b),
-  .hero-cash:has(.leg:nth-child(3):hover) .seg:not(.c) { opacity: 0.42; }
-  .hero-cash:has(.leg:nth-child(1):hover) .leg:not(:nth-child(1)),
-  .hero-cash:has(.leg:nth-child(2):hover) .leg:not(:nth-child(2)),
-  .hero-cash:has(.leg:nth-child(3):hover) .leg:not(:nth-child(3)) { opacity: 0.45; }
+  .hero-cash:has(.seg.a:hover) .hero-row:not(.a),
+  .hero-cash:has(.seg.b:hover) .hero-row:not(.b),
+  .hero-cash:has(.seg.c:hover) .hero-row:not(.c),
+  .hero-cash:has(.seg.d:hover) .hero-row:not(.d) { opacity: 0.45; }
+  .hero-cash:has(.hero-row.a:hover) .seg:not(.a),
+  .hero-cash:has(.hero-row.b:hover) .seg:not(.b),
+  .hero-cash:has(.hero-row.c:hover) .seg:not(.c),
+  .hero-cash:has(.hero-row.d:hover) .seg:not(.d) { opacity: 0.42; }
+  .hero-cash:has(.hero-row.a:hover) .hero-row:not(.a),
+  .hero-cash:has(.hero-row.b:hover) .hero-row:not(.b),
+  .hero-cash:has(.hero-row.c:hover) .hero-row:not(.c),
+  .hero-cash:has(.hero-row.d:hover) .hero-row:not(.d) { opacity: 0.45; }
 }
 
 /* ------------------------------------------------------- reduced motion --

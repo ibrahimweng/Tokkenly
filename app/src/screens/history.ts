@@ -1,4 +1,4 @@
-import { h } from '../ui'
+import { h, swap } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader, headActions } from '../components/shell'
 import { amount, emptyState } from '../components/bits'
@@ -277,7 +277,7 @@ export function historyScreen(): HTMLElement {
     const note = onAlerts
       ? searchNote(t, rows.length, onlyNear(t, visibleNotifications(), NFIELDS))
       : searchNote(t, rows.length, onlyNear(t, matched, FIELDS))
-    list.replaceChildren(
+    swap(list,
       note ?? h('span', { hidden: true }),
       rows.length ? feed
         : t.trim() || active !== 'all'

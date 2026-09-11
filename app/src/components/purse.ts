@@ -1,6 +1,5 @@
 import { h } from '../ui'
-import { icon } from '../icons'
-import { ASSETS, assetOf, netsFor, netOf, type Asset } from '../assets'
+import { assetOf, netsFor, netOf, type Asset } from '../assets'
 import { state, MASK } from '../state'
 import { usd, naira } from '../format'
 import { isMobile } from '../responsive'
@@ -138,29 +137,3 @@ export function assetLine(asset: Asset, net?: string): string {
   const n = net ? netOf(net) : undefined
   return n ? `${a.name} on ${n.name}` : a.name
 }
-
-/* ------------------------------------------------------------- a balance row --
-   The wallet's own list. A mark, a name, what it is, and the figure — the
-   same anatomy as every other row in the product, so three balances read as
-   three of one thing rather than as three arrangements. */
-
-export function purseRow(key: Asset, onClick?: () => void): HTMLElement {
-  const a = assetOf(key)!
-  const nets = netsFor(key)
-  const body = [
-    h('span', { class: 'mark', html: key === 'ngn' ? icon.convert() : icon.coin() }),
-    h('span', { class: 'two-line grow' },
-      h('span', { class: 't-body-strong', text: a.name }),
-      h('small', { text: nets.length ? nets.map((n) => n.name).join(' · ') : a.what })),
-    h('span', { class: 'two-line right' },
-      h('span', { class: 't-body-strong', text: balanceText(key) }),
-      h('small', { class: 'muted', text: balanceAlso(key) })),
-  ]
-  if (!onClick) return h('div', { class: 'sheet-row' }, ...body)
-  return h('button', { class: 'sheet-row', on: { click: onClick } }, ...body,
-    h('span', { class: 'muted', html: icon.chevron() }))
-}
-
-/** Every balance, in the order they are offered. */
-export const purseRows = (onPick?: (a: Asset) => void): HTMLElement[] =>
-  ASSETS.map((a) => purseRow(a.key, onPick ? () => onPick(a.key) : undefined))

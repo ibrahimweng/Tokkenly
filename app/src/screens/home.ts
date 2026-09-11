@@ -12,7 +12,7 @@ import {
 } from '../state'
 import { usd, naira, signed, when, pct, shares, greeting, activityLabel } from '../format'
 import { go, openSheet } from '../router'
-import { isMobile } from '../responsive'
+import { isMobile, isWideTouch } from '../responsive'
 
 /** The line under the greeting, which used to assert that nothing needed
  *  attention on every render — including on an account that had not verified,
@@ -339,6 +339,10 @@ function gateway(): HTMLElement {
   // and stay beside the toggle.
   const total = worth()
   const move = dayMove()
+  // A phone, and not a tablet held upright: `isMobile` covers both, and the
+  // tablet gets the desktop's three doors because it gets the desktop's
+  // pictures on them.
+  const phone = isMobile() && !isWideTouch()
   return shell(
     'home',
     // The greeting is the page's title here, so it takes the header row and the
@@ -378,14 +382,21 @@ function gateway(): HTMLElement {
         sub: 'Own a piece of Apple, Nvidia or a whole market fund. From $1.',
         reads: whereItIs(holdingsValue(), total, 'in shares'),
         at: level(holdingsValue(), total) }),
-      // Its own copy describes both directions — "between naira and dollars" —
-      // which is the Transfer place rather than the Withdraw action it used to
-      // open. A door labelled "Convert money" that lands on a screen headed
-      // "Withdraw to your bank" is the promise in rule 49 half kept.
-      tile({ art: NOTES(), ic: icon.wallet, to: '/transfer', title: 'Wallet', cta: 'Move money',
-        sub: 'USDC, USDT and naira, and what goes in and out.',
-        reads: whereItIs(state.cash, total, 'in cash'),
-        at: level(state.cash, total) }),
+      // The Wallet door, on the phone only.
+      //
+      // Everywhere else the rail is on screen with Wallet lit in it, so the
+      // door is a second way to a place you can already see — and it was the
+      // one costing the other three their width: four doors in a 1008 column
+      // came out at 220 each, against the 400/288/288 the composition was
+      // drawn for. On a phone the rail is four tabs at the bottom and the
+      // doors are the screen, so a big target for the place money moves
+      // through earns its third of the row.
+      phone
+        ? tile({ art: NOTES(), ic: icon.wallet, to: '/transfer', title: 'Wallet', cta: 'Move money',
+            sub: 'USDC, USDT and naira, and what goes in and out.',
+            reads: whereItIs(state.cash, total, 'in cash'),
+            at: level(state.cash, total) })
+        : null,
       tile({ art: PURSE(), ic: icon.grow, to: '/grow', title: 'Borrow & Lend', cta: 'See your limit',
         sub: 'Borrow against your shares without selling them.',
         reads: whereItIs(state.lent, total, 'lent out'),

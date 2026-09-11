@@ -1,4 +1,4 @@
-import { h } from '../ui'
+import { h, swap, show } from '../ui'
 import { icon } from '../icons'
 import { toast } from '../components/sheet'
 import { fieldError } from '../components/bits'
@@ -123,8 +123,8 @@ function submit(opts: {
   check?: () => string | null
 }): void {
   const fail = (why: string): void => {
-    opts.error.replaceChildren(h('span', { html: icon.alert() }), h('span', { text: why }))
-    opts.error.hidden = false
+    swap(opts.error, h('span', { html: icon.alert() }), h('span', { text: why }))
+    show(opts.error, true)
     say(why)
   }
   opts.button.addEventListener('click', () => {

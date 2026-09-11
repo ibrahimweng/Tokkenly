@@ -8588,6 +8588,156 @@ the argument for fixing it.
      also why an override in a composer never writes back to the default: the
      two are different kinds of answer and always were.
 
+### 11g.75 One card on the wallet, three doors on Home, and motion on everything that swaps
+
+Three things, and the first two are the same argument from opposite ends: a
+screen should not say a thing twice, and it should not make you look for a
+thing it is already showing.
+
+**The wallet was one subject cut in half.** "Money you can spend" was a figure,
+a bar and a legend. "What you hold" was the three balances as rows. The legend
+was already a small version of those rows — the same names, the same figures,
+twelve pixels apart in two cards — so the two were one card somebody had drawn
+twice. Merged, the anatomy reads down: the two figures that differ by exactly
+what you have lent, the bar that splits them, and the rows that name each part.
+
+The bar had to change to make that work. It drew *Dollars*, and the rows under
+it name USDC and USDT, so the bar now does too — four parts, four rows, and the
+legend **is** the balance list rather than a summary of it. Nothing in the card
+is said twice now, and the caption that used to total it in prose is gone,
+because the second figure says it.
+
+**Buying power left with it.** It had the top-right of the card, which was fine
+while the card held one figure and a bar. Merge the balance list in and it
+becomes a fourth figure sitting beside three balances under a heading about
+money you can spend — and it is not a balance, it is your cash plus a credit
+limit. Four numbers that look alike under one heading is an invitation to add
+them, and these four do not add up. It has its own card in the side column,
+beside the limits, where the other thing about credit already lives, and it says
+what it is made of in a sentence.
+
+The rate line was the other thing said twice. Both halves carried it — the
+figure needs it to explain its naira equivalent, the balance list needed it to
+explain three of them — and one card only needs it once, under the figure.
+
+**And the two doors came out from under the column.** Add money and Send were
+the first thing in the left column, which put them 8px left of the figure they
+act on with the limits card level with them on the right — four things on a
+page, rather than the next thing to do. Under the card, full width, they read in
+order: here is your money, here is what it is made of, here is how you move it.
+Laid across rather than down, because stacked they were two 190px cards holding
+four lines each, and two of those side by side is more empty card than card.
+
+**The wallet door on Home goes away above the phone.** Everywhere with a rail,
+Wallet is lit in it while a door to Wallet sits in the middle of the screen; the
+door is a second way to a place you can already see. It was also the one costing
+the other three their width — four doors in a 1008 column come out at 220 each,
+against the 400/288/288 the composition was drawn for. On a phone there is no
+rail, only four tabs at the bottom, and the doors are the screen: there the
+Wallet door earns its place and keeps it. Detailed keeps all four shortcuts,
+because those are a strip of equal shortcuts rather than a composition — they
+are equal width now, and equal height, which is the same fault read twice: the
+card with the longest sentence was widest, and once that was fixed it was
+tallest.
+
+**A fourth colour, and why it is not a fourth hue.** Splitting the dollars
+needed a fourth segment. Every hue in the file means something — positive,
+negative, warning — and a balance is none of those, so the three balances take
+three steps of the ink and what is lent keeps the positive green, because it is
+the one part that is earning. `--part-1/2/3` are written out as a ramp rather
+than borrowed from `--inverse`, `--muted` and `--control-pressed`, which is what
+they were at first: `--control-pressed` is furniture grey and disappeared into
+the card at 10px, which is fatal for the dot that ties a row to its width. Each
+step is at least 3:1 on the card it sits on — what a graphic carrying meaning
+needs — and far enough from the next to be told apart.
+
+**Then: the product never said anything had changed.**
+
+This app rebuilds its whole tree on every state change, which hides the problem
+by making everything equally sudden. The places that genuinely change *in
+place* — no navigation, no dialog — are the ones written by hand: a list
+narrowing as you type, the panel beside a rail becoming a different panel, a
+summary rewriting itself, a warning appearing under a field somebody just
+pasted into. Those are exactly the changes nobody sees, because there is no
+page turn to mark them and no scroll. The screen was different and the eye was
+not told.
+
+Four calls, one behaviour: what arrives fades up from eight pixels below, in
+the product's one curve, over 240ms.
+
+- `swap(host, …)` — replace what is inside something and let what arrives say
+  so. A list, a panel, a summary.
+- `settle(host)` — the same announcement for content a caller filled itself.
+- `settleSelf(el)` — for a thing that *is* the change rather than a box of
+  changes. `swap` animates the children, which is right for a list and wrong
+  for a 121-cell QR code.
+- `show(el, on)` — every note, warning and refusal in the product is drawn
+  hidden and un-hidden when it applies, so the one moment worth marking was a
+  thing blinking into existence.
+
+240ms is deliberately the slowest of the three durations in the file, and the
+file now says why all three exist: `--t-fast` (110) and `--t-base` (160) are
+feedback on something you just did, so they have to be gone before you look up.
+A swap is telling you about something you did **not** do, and a change nobody
+notices is a change that did not communicate.
+
+**Filling a box for the first time is not a change.** The first version fired
+on every call including the one that draws the screen, so arriving at `/all`
+was the whole page fading up — and the contrast suite, which reads colours off
+the DOM, measured a heading at 3.54:1 because it was still at 60% opacity on
+its way in. The suite was right twice: the reading was wrong *and* the thing it
+was reading should not have been moving. `countTo` already makes exactly this
+distinction for exactly this reason, and now so does this. A full re-render
+makes new elements, which drop out of the record on their own — so only a box
+that survived its own repaint can announce anything, which is the definition of
+an in-place change stated as a mechanism.
+
+Two limits, written down rather than worked around. It animates entrances and
+not exits: an element that has been replaced is already gone by the time
+anything could animate it, and keeping the old tree alive to see it out would be
+a second copy of the truth for the sake of a fade. And the stagger down a list
+is capped at eight rows — a forty-row table taking 800ms to finish is a table
+you wait for.
+
+The composer needed one more thought. It repaints on every keystroke and on
+every frame of a drag, so announcing every repaint would strobe the one control
+somebody is actually holding. What is worth announcing is the summary becoming a
+*different* summary — a currency change rewriting the terms, the fold opening, a
+guard adding a row — which is what the row **labels** say and the figures do not.
+It watches the labels.
+
+Left alone on purpose: the chart, the PIN dots, the held-rate clock, and the
+screen replace itself. The first three are already moving and the fourth is a
+navigation, which has its own answer.
+
+**Three suites had to be told, and one of them got stronger for it.** `names`
+and `prefs` counted four doors on Home; `live` read the four fields and checked
+that lending $1,000 filled the *lent out* gauge while it emptied the *cash*
+one. Losing the Wallet door lost the second half of that pair, because lending
+moves cash into what is lent and both are money you have — the share of the
+portfolio in shares does not move either way. Rather than drop the half, the
+suite now sells $450 of Apple afterwards and watches the Invest field come down
+with it. A gauge wired to fill and never drain would have passed the shorter
+version, and that is a picture with an animation on it.
+
+179. **A legend and a list of the same things are one thing drawn twice.** If
+     the key under a chart names the same rows, with the same figures, as the
+     table beside it, there is one component there and somebody has built two.
+     Merge them and the chart's key becomes the list, which is the only version
+     that cannot drift.
+
+180. **A door to where you already are is not a door.** A shortcut that
+     duplicates a persistent navigation costs the shortcuts beside it their
+     width and teaches nothing. Which means the same screen can be right to
+     show it on a phone and wrong to show it on a desktop: what changed is not
+     the content, it is whether the rail is on screen.
+
+181. **A change nobody notices is a change that did not communicate.** Anything
+     that swaps in place — a filtered list, a replaced panel, a figure that is
+     now a different figure, a row that appeared because a state turned on —
+     has to announce itself, because there is no page turn to do it. This is
+     the one thing motion is for that nothing else can do.
+
 ### 11g.49 Still open
 
 - Buying and selling is the one page in the file that was hand-built rather
@@ -8607,7 +8757,16 @@ the argument for fixing it.
   replaced it is the missing company step above.
 - The Figma file is a build now (11g.70), which means it can drift. Nothing
   keeps the twenty-nine variables in step with `tokens.css` except somebody
-  re-running the export, and no suite watches it.
+  re-running the export, and no suite watches it. It has now drifted: Spend
+  (11g.73), the three balances and the networks (11g.74), and the merged wallet
+  card and the motion pass (11g.75) exist only in the product. Three batches is
+  further than "it can drift" — the file is a photograph of a version that no
+  longer ships, which is the exact failure 11g.70 was built to end. Re-running
+  the converter over the nine flows is the fix and nobody has asked for it.
+- The ramp `--part-1/2/3` (11g.75) has one consumer, the wallet's bar. It is
+  written as a palette idea rather than a wallet one on the argument that parts
+  of a total are a thing and not a screen, and that argument is only proved the
+  second time something is drawn to scale.
 - All forty-four items of the audit are settled, and seven more that came from
   using the product afterwards. Item 30 was held back until it was asked for,
   and was then built without generating anything: see 11g.18, and 11g.10 for

@@ -121,6 +121,91 @@ let runs = 0
 const still = (): boolean =>
   typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
 
+/* ---------------------------------------------------------------------------
+   Something on this screen just changed.
+
+   This app rebuilds its whole tree on every state change, so the things that
+   genuinely *change in place* — without a navigation and without a dialog —
+   are the ones that do it themselves: a list narrowing as you type, the panel
+   beside a rail becoming a different panel, a summary rewriting itself because
+   you moved the amount, a row appearing because you turned something on.
+
+   Those are exactly the changes nobody sees. There is no page turn to mark
+   them and no scroll, so the screen is different and the eye was not told. The
+   answer is small and consistent: what arrives fades up from eight pixels
+   below, in the product's one curve, at the one duration set aside for this.
+
+   Only what arrived. A stagger walks down a list so it reads as rows landing
+   rather than a block appearing, and it is capped — a forty-row table that
+   took eight hundred milliseconds to finish would be a table you wait for.
+
+   It says nothing the first time a box is filled, because that is the screen
+   being drawn rather than something changing on it — the same distinction
+   `countTo` makes, for the same reason.
+
+   It animates entrances and not exits, and that is a real limit rather than an
+   oversight: an element that has been replaced is already gone by the time
+   anything could animate it, and keeping the old tree alive to see it out
+   would be a second copy of the truth for the sake of a fade. Written down
+   rather than worked around.
+   --------------------------------------------------------------------------- */
+
+/** Replace what is inside something, and let what arrives say so. */
+export function swap(host: Element, ...children: Child[]): void {
+  host.replaceChildren()
+  append(host, children)
+  settle(host)
+}
+
+/** The same announcement, for content that arrived some other way — a row that
+ *  stopped being hidden, a panel a caller filled itself. */
+export function settle(host: Element): void {
+  restart(host, 'swapped')
+}
+
+/** And for a thing that is itself the change rather than a box of changes: a
+ *  warning appearing, a picture that is now a different picture. `swap` moves
+ *  the children, which is right for a list and wrong for a hundred-and-
+ *  twenty-one-cell QR code. */
+export function settleSelf(el: Element): void {
+  restart(el, 'swapped-self')
+}
+
+/* Which elements have already been drawn once, and in which of the two ways.
+ *
+ *  Filling a box for the first time is not a change — it is the screen being
+ *  drawn — and `countTo` makes exactly this distinction for exactly this
+ *  reason. Without it every one of these calls fired on first paint, which is
+ *  a whole screen fading up when you arrive at it and, on `/all`, a heading
+ *  measured at 3.5:1 by the contrast suite because it was still at 60%
+ *  opacity. A full re-render makes new elements, so it drops out of this map
+ *  on its own: only a box that survived its own repaint can animate. */
+const drawn = new WeakMap<Element, Set<string>>()
+
+function restart(el: Element, cls: string): void {
+  if (still()) return
+  let before = drawn.get(el)
+  if (!before) drawn.set(el, (before = new Set()))
+  if (!before.has(cls)) { before.add(cls); return }
+  // Off and on again in one frame. Re-adding a class an element already has
+  // does not restart a CSS animation, and the second time a list refilters is
+  // exactly when somebody is watching for it.
+  el.classList.remove(cls)
+  void (el as HTMLElement).offsetWidth
+  el.classList.add(cls)
+}
+
+/** Show or hide something, and let it arrive rather than appear.
+ *
+ *  Every note, warning and refusal in the product is drawn hidden and un-
+ *  hidden when it applies, which means the one moment worth marking — the
+ *  moment it starts applying — was a thing blinking into existence. */
+export function show(el: HTMLElement, on: boolean): void {
+  const was = el.hidden
+  el.hidden = !on
+  if (on && was) settleSelf(el)
+}
+
 /** A figure that travels to its new value rather than jumping to it. The first
  *  paint never animates: arriving on a screen is not a change. */
 export function countTo(

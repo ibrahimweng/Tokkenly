@@ -6,30 +6,24 @@ import { table } from '../components/table'
 import { state, buyingPower, availableToBorrow, alsoIn, inflightNaira, outboundNaira, rateLine, limits, leftThisMonth, verified, money, moneyNaira } from '../state'
 import { usd, naira, when, activityLabel } from '../format'
 import { go, openSheet } from '../router'
-import { purseRow } from '../components/purse'
-import { ASSETS } from '../assets'
+import { balanceText, balanceAlso } from '../components/purse'
+import { assetOf, netsFor, type Asset } from '../assets'
 
+/* A door, across rather than down. Stacked — badge, gap, title, sub — it was
+   a 190px card holding four lines of content, and two of them side by side
+   under the balance card left the page with more empty card than card. Across,
+   the same four things take one line each and the door is the height of what
+   is in it. The chevron is the other half of the fix: a stacked card with a
+   badge on it looks like a card, and this is a way somewhere. */
 function way(label: string, sub: string, ic: string, to: string | null, onClick?: () => void): HTMLElement {
-  const b = h('button', { class: 'card', style: { textAlign: 'left', flex: '1' },
-    on: { click: () => (onClick ? onClick() : go(to!)) } })
-  b.appendChild(h('div', { class: 'promo-badge', html: ic }))
-  b.appendChild(h('div', { class: 'stack-8' },
-    h('span', { class: 't-title', text: label }),
-    h('span', { class: 'muted', text: sub })))
-  return b
+  return h('button', { class: 'card way', on: { click: () => (onClick ? onClick() : go(to!)) } },
+    h('div', { class: 'promo-badge', html: ic }),
+    h('span', { class: 'two-line grow' },
+      h('span', { class: 't-title', text: label }),
+      h('span', { class: 'muted', text: sub })),
+    h('span', { class: 'muted way-go', html: icon.chevron() }))
 }
 
-/** The centrepiece of the wallet. Not just the number: what the number is
- *  made of. Cash and what is lent out, drawn to scale so the
- *  proportions are readable at a glance.
- *
- *  What is deliberately not in the bar is what the shares would lend against.
- *  It used to be a third segment, which made a credit limit look like a third
- *  kind of balance and let the caption total all three: "$5,200.00 in total"
- *  on an account holding $3,720. Money you have and money you could owe do not
- *  add up, and a single bar said they did. Borrowing capacity is still on the
- *  screen — it is what turns the balance into buying power — but it is named
- *  as borrowing, on its own line, beside a figure that says so. */
 /** The wallet's own figure, travelling rather than jumping when money moves. */
 function cashFigure(): HTMLElement {
   // Everything you could spend today, whichever of the three it is in. The
@@ -40,17 +34,6 @@ function cashFigure(): HTMLElement {
   if (state.prefs.hideBalances) el.textContent = money(spendable)
   else countTo(el, 'wallet.cash', spendable, (n) => money(n))
   return el
-}
-
-/** The three, as rows. What each one is, where it travels, what it holds, and
- *  what that is in the other currency — which is the question somebody holding
- *  two of them is always half-asking. */
-function balances(): HTMLElement {
-  return card(
-    cardHead('What you hold', h('button', { class: 'link', text: 'Add money',
-      on: { click: () => go('/addmoney') } })),
-    h('div', { class: 'sheet-list' }, ...ASSETS.map((a) => purseRow(a.key))),
-    h('span', { class: 'subtle t-caption', text: rateLine() }))
 }
 
 /** What has actually moved through this wallet.
@@ -84,18 +67,46 @@ function moved(): HTMLElement {
   )
 }
 
+/* ---------------------------------------------------------------------------
+   One card, because it was one subject.
+
+   "Money you can spend" was a figure, a bar and a legend; "What you hold" was
+   the three balances as rows. The legend was already a small version of those
+   rows — the same names, the same figures, twelve pixels apart in two cards —
+   so the two were one card that had been cut in half.
+
+   Merged, the anatomy is: the two figures that differ by exactly what you have
+   lent, the bar that splits them, and the rows that name each part. The bar's
+   legend *is* the balance list now; there is nothing said twice, and the
+   caption that used to total it in prose is gone because the second figure
+   says it.
+
+   Buying power went with it. It is not a balance — it is your cash plus a
+   credit limit — and sitting it beside three balances under a heading about
+   money you can spend was inviting somebody to add four numbers that do not
+   add up. It has its own card, beside the limits, where the other thing about
+   credit already lives.
+
+   What has never been in the bar, and still is not, is what the shares would
+   lend against. It was a segment once, which made a credit limit look like a
+   kind of balance and let the caption total it with the rest: "$5,200.00 in
+   total" on an account holding $3,720. Money you have and money you could owe
+   do not add up, and a single bar said they did.
+   --------------------------------------------------------------------------- */
 function cashHero(): HTMLElement {
-  // What the bar is made of. Naira is one of the parts now rather than a
-  // conversion of another part: it is money this account holds, in a currency
-  // it holds it in, and drawing it as a slice of the dollars would be drawing
-  // the same money twice.
+  // What the bar is made of, and what the rows under it are. One list, read
+  // twice — as widths and as figures — rather than two lists that can drift.
   const nairaUsd = state.naira / state.ngnPerUsd
-  const parts = [
-    { label: 'Dollars', value: state.cash, cls: 'a', hint: 'USDC and USDT, ready to spend or send' },
-    { label: 'Naira', value: nairaUsd, cls: 'c', hint: moneyNaira(state.naira) + ', for bills and payouts' },
-    { label: 'Lent out', value: state.lent, cls: 'b', hint: 'Paying ' + state.rates.lend + '% a year' },
+  const parts: { key: Asset | 'lent'; value: number; cls: string }[] = [
+    { key: 'usdc', value: state.usdc, cls: 'a' },
+    { key: 'usdt', value: state.usdt, cls: 'd' },
+    { key: 'ngn', value: nairaUsd, cls: 'c' },
+    { key: 'lent', value: state.lent, cls: 'b' },
   ]
   const total = parts.reduce((t, p) => t + p.value, 0)
+  const name = (k: Asset | 'lent') => (k === 'lent' ? 'Lent out' : assetOf(k)!.name)
+  const figure = (p: { key: Asset | 'lent'; value: number }) =>
+    p.key === 'lent' ? money(p.value) : balanceText(p.key)
 
   return h('section', { class: 'card hero-cash' },
     h('div', { class: 'hero-top' },
@@ -110,30 +121,51 @@ function cashHero(): HTMLElement {
               // from rather than appearing as a fact of nature.
               h('span', { class: 'subtle t-caption', text: rateLine() }))
           : null),
+      // The same money with what you have lent added back. Two figures rather
+      // than a sentence, because the difference between them is the one thing
+      // this card is trying to say about lending.
       h('div', { class: 'stack-8 hero-aside' },
-        h('span', { class: 't-caps subtle', text: 'Buying power' }),
-        h('span', { class: 't-display', text: money(buyingPower()) }),
+        h('span', { class: 't-caps subtle', text: 'Including what you lent' }),
+        h('span', { class: 't-display', text: money(total) }),
         h('span', { class: 'muted',
-          text: `Your cash plus the ${money(availableToBorrow())} your shares would lend against` }))),
+          text: 'Borrowing is credit rather than balance, so it is not in either figure.' }))),
 
     h('div', { class: 'hero-bar', ariaLabel: 'How your money is arranged' },
       ...parts.map((p) =>
         h('span', { class: 'seg ' + p.cls, style: { flex: String(Math.max(p.value, 1)) },
-          ariaLabel: `${p.label} ${money(p.value)}`,
-          title: `${p.label} — ${money(p.value)}. ${p.hint}.` }))),
+          ariaLabel: `${name(p.key)} ${figure(p)}`,
+          title: `${name(p.key)} — ${figure(p)}` }))),
 
-    h('div', { class: 'hero-legend' },
-      ...parts.map((p) =>
-        h('div', { class: 'leg' },
+    // The legend and the balance list, which were the same list. A dot to tie
+    // each row to its width, the name, what it is or where it travels, the
+    // figure, and what that is in the other currency.
+    h('div', { class: 'hero-rows' },
+      ...parts.map((p) => {
+        const nets = p.key === 'lent' ? [] : netsFor(p.key)
+        return h('div', { class: 'hero-row ' + p.cls },
           h('span', { class: 'dot ' + p.cls }),
-          h('span', { class: 'two-line' },
-            h('span', { class: 't-body-strong', text: `${p.label} ${money(p.value)}` }),
-            h('small', { text: p.hint }))))),
-
-    h('span', { class: 'subtle t-caption',
-      text: `${money(total)} in total across your three balances and what you have lent. `
-        + 'Borrowing is credit, not balance, so it is not in this figure.' })
+          h('span', { class: 'two-line grow' },
+            h('span', { class: 't-body-strong', text: name(p.key) }),
+            h('small', { text: p.key === 'lent'
+              ? 'Paying ' + state.rates.lend + '% a year'
+              : nets.length ? nets.map((n) => n.name).join(' · ') : assetOf(p.key)!.what })),
+          h('span', { class: 'two-line right' },
+            h('span', { class: 't-body-strong', text: figure(p) }),
+            h('small', { class: 'muted', text: p.key === 'lent'
+              ? moneyNaira(p.value * state.ngnPerUsd)
+              : balanceAlso(p.key) })))
+      }))
   )
+}
+
+/** What you could put to work, which is not a balance. */
+function buyingPowerCard(): HTMLElement {
+  return card(
+    cardHead('Buying power', headLink('Borrow & Lend', '/grow')),
+    h('span', { class: 't-display', text: money(buyingPower()) }),
+    h('span', { class: 'muted',
+      text: `Your cash plus the ${money(availableToBorrow())} your shares would lend `
+        + 'against. Credit, not balance.' }))
 }
 
 /** What is left of the month, and what is stopping you.
@@ -186,24 +218,31 @@ export function walletScreen(): HTMLElement {
     // from wrapping onto separate lines — which they did, once the column came
     // in to the 1008 the file draws.
     cashHero(),
+    // Two doors: money in and money out. Receive was a third, and it was the
+    // same question as Add money asked twice — how does money get into this
+    // wallet. It is a way inside the one door now.
+    //
+    // Both doors are addresses. Add money opened a dialog in place, on the
+    // argument that handing over an account number needs no screen change —
+    // true of the account number, and not true of the question in front of
+    // it. There are three ways in, and 11g.61 made both doors ask which one
+    // before answering: on a phone that ask is a sheet over this screen, and
+    // on a wide one it is the rail beside the panel. A door that skipped the
+    // question left Add money answering it two different ways depending on
+    // which control you pressed.
+    //
+    // They sit directly under the card rather than at the top of the left
+    // column, because the card is what they act on. Read down: here is your
+    // money, here is what it is made of, here is how you move it. From inside
+    // a column they were the same two doors offset 8px left of the figure
+    // they belong to, with the limits card level with them on the right —
+    // which made "how do I move this" look like one of four things on a page
+    // rather than the next thing to do.
+    h('div', { class: 'row equal' },
+      way('Add money', 'A bank, a stablecoin or a card', icon.receive(), '/addmoney'),
+      way('Send', 'To a person, a wallet or a bank', icon.send(), '/send')),
     h('div', { class: 'row' },
       h('div', { class: 'stack col-main' },
-        balances(),
-        // Two doors: money in and money out. Receive was a third, and it was
-        // the same question as Add money asked twice — how does money get into
-        // this wallet. It is a way inside the one door now.
-        //
-        // Both doors are addresses. Add money opened a dialog in place, on the
-        // argument that handing over an account number needs no screen change
-        // — true of the account number, and not true of the question in front
-        // of it. There are three ways in, and 11g.61 made both doors ask which
-        // one before answering: on a phone that ask is a sheet over this
-        // screen, and on a wide one it is the rail beside the panel. A door
-        // that skipped the question left Add money answering it two different
-        // ways depending on which control you pressed.
-        h('div', { class: 'row equal' },
-          way('Add money', 'A bank, a stablecoin or a card', icon.receive(), '/addmoney'),
-          way('Send', 'To a person, a wallet or a bank', icon.send(), '/send')),
         card(
           cardHead('Still settling', headLink('All activity', '/activity')),
           // What is genuinely between two banks, named in the currency it is
@@ -235,6 +274,10 @@ export function walletScreen(): HTMLElement {
         ),
         moved()),
       h('div', { class: 'stack col-side' },
+        // Beside the limits, because both are about what you may spend rather
+        // than what you hold, and the other thing about credit already lives
+        // here.
+        buyingPowerCard(),
         limitsCard(),
         card(
           cardHead('Payment methods', h('button', { class: 'link', text: 'Add a bank', on: { click: () => openSheet('banks') } })),

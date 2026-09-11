@@ -39,7 +39,10 @@ const doors = await p.evaluate(() =>
     label: e.querySelector('.t-title')?.textContent?.trim(),
     to: (e.getAttribute('href') || '').replace(/^#/, ''),
   })))
-ok('there are four of them', doors.length === 4, doors.map((d) => d.label).join(' | '))
+// Three at this width. The Wallet door went when the rail is on screen with
+// Wallet lit in it — a door to where you already are (11g.75). The phone,
+// which has no rail, still has four.
+ok('there are three of them', doors.length === 3, doors.map((d) => d.label).join(' | '))
 
 console.log('THE RAIL')
 await at('/')

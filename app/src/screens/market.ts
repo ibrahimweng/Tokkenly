@@ -1,4 +1,4 @@
-import { h } from '../ui'
+import { h, swap } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, headLink, emptyState, bucketBar, showBucketBar } from '../components/bits'
@@ -218,7 +218,7 @@ export function marketScreen(): HTMLElement {
     if (page >= pages) page = 0
     const shown = sorted.slice(page * PER, page * PER + PER)
     const turn = (n: number) => { page = Math.min(Math.max(0, n), pages - 1); paint(t) }
-    results.replaceChildren(
+    swap(results,
       card(
         cardHead(t.trim() ? 'Results' : cat,
           h('span', { class: 'muted t-caption', text: countOf(rows) })),

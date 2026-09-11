@@ -33,6 +33,17 @@
   --warning: #e0b341;
   --data-2: #a064db;
 
+  /* Parts of one total, for anything drawn to scale: a stacked bar, the dots
+     that read it back. Three steps of the ink rather than three hues, because
+     they are three of one thing — the hues in this file all mean something
+     (positive, negative, warning) and a balance is none of those. Each is at
+     least 3:1 on the card it sits on, which is what a graphic carrying meaning
+     needs, and each is far enough from the next to be told apart at 10px.
+     --part-1 is --inverse; it is written out so the ramp reads as a ramp. */
+  --part-1: #dcdce0;
+  --part-2: #9a9aa2;
+  --part-3: #62626b;
+
   /* Loose dots — the coin that spins on a buy, and the burst that comes out of
      the bucket. Bright on purpose: both are a moment, and a moment that is
      quiet is a moment nobody sees. The illustrations do NOT use these; see the
@@ -107,11 +118,23 @@
   --shadow-float: 0 10px 30px rgba(0, 0, 0, 0.55);
   --shadow-toast: 0 8px 30px rgba(0, 0, 0, 0.5);
 
-  /* Motion. One curve and one duration for every state change in the product,
-     so a hover, a press and a focus ring all move at the same speed. */
+  /* Motion. One curve, and three durations that answer three different
+     questions — so a hover, a press and a focus ring still all move at the
+     same speed, and a thing being replaced does not.
+
+       fast   a state on something you are touching: a hover, a press
+       base   a state on something you are not: a sheet, the rail, a ring
+       swap   the content of something changed while you were looking at it
+
+     The third is the slowest on purpose. The first two are feedback on an
+     action you just took, so they have to be out of the way before you look
+     up; a swap is telling you something you did not do — a list refiltered, a
+     panel replaced, a figure that is now a different figure — and a change
+     nobody notices is a change that did not communicate. */
   --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
   --t-fast: 110ms;
   --t-base: 160ms;
+  --t-swap: 240ms;
 
   --r-card: 20px;
   --r-panel: 16px;
@@ -165,6 +188,10 @@
   --negative: #ab3d16;   /* #b8431a was 4.47:1 on --control, just under AA */
   --warning: #8a6510;
   --data-2: #6c3bab;
+
+  --part-1: #1a1a1e;
+  --part-2: #767680;
+  --part-3: #949490;
 
   /* Deeper greens on white, and the shipped light-theme weights: a glow on a
      pale ground has less contrast to spend, so it leans on travel and on a

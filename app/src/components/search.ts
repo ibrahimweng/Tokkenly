@@ -1,4 +1,4 @@
-import { h } from '../ui'
+import { h, swap, show } from '../ui'
 import { icon } from '../icons'
 import { say } from '../announce'
 
@@ -92,7 +92,7 @@ export function searchField(spec: SearchSpec): HTMLElement {
     // Emptied, not just hidden. aria-controls points at this element, and a
     // hidden list still holding the answers to the last query is a list a
     // screen reader can be walked into.
-    panel.replaceChildren()
+    swap(panel)
     shown = []
     on = -1
     input.setAttribute('aria-expanded', 'false')
@@ -122,7 +122,7 @@ export function searchField(spec: SearchSpec): HTMLElement {
       row.addEventListener('mousedown', (e) => { e.preventDefault(); close(); s.pick() })
       panel.appendChild(row)
     })
-    panel.hidden = false
+    show(panel, true)
     input.setAttribute('aria-expanded', 'true')
     paintCursor()
   }

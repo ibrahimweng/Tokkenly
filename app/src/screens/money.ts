@@ -1,4 +1,4 @@
-import { h } from '../ui'
+import { h, swap, settleSelf, show } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader, eyebrow } from '../components/shell'
 import { card, cardHead, kv, callout, callout as calloutEl, providerNote, emptyState, fieldError, amount } from '../components/bits'
@@ -135,10 +135,10 @@ function payeeCard(): HTMLElement {
     name = resolveAccount(acct.value)
     field.classList.toggle('error', !name && acct.value.replace(/\D/g, '').length === 10)
     err.hidden = !!name || acct.value.replace(/\D/g, '').length < 10
-    found.hidden = !name
+    show(found, !!name)
     go2.hidden = !name
     if (name) {
-      found.replaceChildren(
+      swap(found,
         h('span', { class: 't-caps subtle', text: 'Account name' }),
         h('span', { class: 't-title', text: name }),
         h('small', { class: 'muted', text: pick.value + ' · ' + acct.value }))
@@ -256,7 +256,7 @@ function peopleWay(): (Node | null)[] {
   const list = h('div', { class: 'stack' })
   const paint = (t: string): void => {
     const found = t.trim() ? rank(t, people, FIELDS) : people
-    list.replaceChildren(card(
+    swap(list, card(
       cardHead('Who is it going to'),
       searchNote(t, found.length, onlyNear(t, found, FIELDS)),
       found.length
@@ -352,16 +352,16 @@ function walletWay(): (Node | null)[] {
     // rather than re-labelled — and a network the new token does not carry
     // cannot survive the change.
     if (!netsFor(asset).some((n) => n.key === net)) net = defaultNet(asset)!.key
-    nets.replaceChildren(netRow({ asset, get: () => net, set: (n) => { net = n; check() } })!)
+    swap(nets, netRow({ asset, get: () => net, set: (n) => { net = n; check() } })!)
     address.setAttribute('placeholder', netOf(net)!.example)
   }
   const check = (): void => {
     const v = address.value.trim()
     const why = wrongNetwork(net, v)
     field.classList.toggle('error', !!why)
-    err.hidden = !why
+    show(err, !!why)
     if (why) err.lastElementChild!.textContent = why
-    standing.hidden = !!why
+    show(standing, !why)
     go2.toggleAttribute('disabled', !v || !!why)
   }
   const submit = (): void => {
@@ -1147,19 +1147,23 @@ function basePanel(full = true): HTMLElement {
     // Its own code per address, so scanning one and reading the other cannot
     // send money to two different places.
     qr.replaceChildren()
+    // The code is one picture, not a hundred and twenty-one changes. `swap`
+    // animates the children and would set a hundred and twenty-one animations
+    // running; what changed here is the code.
+    settleSelf(qr)
     let seed = 0
     for (let i = 0; i < address.length; i++) seed = (seed * 31 + address.charCodeAt(i)) | 0
     for (let i = 0; i < 121; i++) {
       seed = (seed * 1103515245 + 12345) % 2147483648
       qr.appendChild(h('span', { class: Math.abs(seed) % 100 > 45 ? 'on' : '' }))
     }
-    warn.replaceChildren(
+    swap(warn,
       h('span', { html: icon.alert() }),
       h('span', { text: full
         ? `${a.name} on ${n.name} only. Anything else sent to this address `
           + 'does not arrive and cannot be recovered.'
         : `${a.name} on ${n.name} only. Anything else is lost.` }))
-    nets.replaceChildren(netRow({ asset, get: () => net, set: (v) => { net = v; paint() },
+    swap(nets, netRow({ asset, get: () => net, set: (v) => { net = v; paint() },
       label: 'On this network' })!)
   }
   const copy = () => {

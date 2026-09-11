@@ -1,4 +1,4 @@
-import { h } from '../ui'
+import { h, swap } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, kv, callout, emptyState, toggle, choice, prefAction } from '../components/bits'
@@ -537,7 +537,7 @@ function supportBody(): (Node | null)[] {
   const answers = h('div', { class: 'stack' })
   const paint = (t: string): void => {
     const list = t.trim() ? rank(t, QA, FIELDS) : [...QA]
-    answers.replaceChildren(qaCard(list, t))
+    swap(answers, qaCard(list, t))
   }
   paint(term)
 

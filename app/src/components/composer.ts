@@ -1,4 +1,4 @@
-import { h } from '../ui'
+import { h, swap, show, settle } from '../ui'
 import { icon } from '../icons'
 import { USD, type Unit } from '../format'
 import { shell, pageHeader, eyebrow, renderBase, type Place } from './shell'
@@ -172,8 +172,21 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
   const rightBox = h('div', { class: 'stack grow' })
   const button = h('button', { class: 'btn btn-primary' })
 
+  /* What the summary said last time, as its labels rather than its figures.
+   *
+   *  This repaints on every keystroke and on every frame of a drag, so
+   *  announcing it as a change would strobe the one control somebody is
+   *  actually holding. What is worth announcing is the summary becoming a
+   *  *different* summary — a currency change rewrites the terms, the fold
+   *  opens, a guard adds a row — and that is exactly what the labels say and
+   *  the figures do not. */
+  let saidLast = ''
+
   function paint(v: number, capped = false): void {
     const rows = spec.summary(v).map(([k, val, cls]) => kv(k, val, cls ?? ''))
+    const saying = spec.summary(v).map(([k]) => k).join('|') + (open ? '+' : '')
+    const different = saidLast !== '' && saidLast !== saying
+    saidLast = saying
     if (!mobile || rows.length <= KEEP + 1) {
       summaryBox.replaceChildren(...rows)
     } else {
@@ -185,6 +198,7 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
       more.addEventListener('click', () => { open = !open; paint(comp.get(), capped) })
       summaryBox.replaceChildren(...(open ? rows : rows.slice(0, KEEP)), more)
     }
+    if (different) settle(summaryBox)
     if (!overlaid && spec.right) rightBox.replaceChildren(spec.right(v))
     button.textContent = spec.action(v)
     // Every reason at once. A trade can be refused because it is paused *and*
@@ -192,9 +206,9 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
     // half a problem — they come back with a smaller order and meet the pause
     // they were never told about.
     const stop = spec.guard?.(v) ?? []
-    guardNote.hidden = !stop.length
+    show(guardNote, stop.length > 0)
     if (stop.length) {
-      guardNote.replaceChildren(
+      swap(guardNote,
         h('span', { html: icon.alert() }),
         h('div', { class: 'stack-8' },
           ...stop.map((s) => h('span', { class: 'two-line' },
@@ -203,9 +217,9 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
     }
     button.toggleAttribute('disabled', v <= 0 || v > spec.max || stop.length > 0)
     // Say why the figure stopped where it did, at the place it stopped.
-    capNote.hidden = !capped
+    show(capNote, capped)
     if (capped) {
-      capNote.replaceChildren(h('span', { html: icon.alert() }),
+      swap(capNote, h('span', { html: icon.alert() }),
         h('span', { text: `${spec.maxLabel ?? 'The most you can use here'} is ${unit.fmt(spec.max)}.` }))
     }
   }

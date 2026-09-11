@@ -1,4 +1,4 @@
-import { h } from './ui'
+import { h, swap, show } from './ui'
 import { icon } from './icons'
 import { sheet, figure, panel, foldPanel, outcome, toast } from './components/sheet'
 import { callout as calloutEl, emptyState as emptyStateEl, skeletonList } from './components/bits'
@@ -117,8 +117,8 @@ function review(opts: {
   // that has gone by the time you look up.
   const refusal = h('div', { class: 'hold expired', hidden: true })
   const refuse = (why: string) => {
-    refusal.hidden = false
-    refusal.replaceChildren(h('span', { html: icon.alert() }), h('span', { text: why }))
+    show(refusal, true)
+    swap(refusal, h('span', { html: icon.alert() }), h('span', { text: why }))
   }
 
   const button = h('button', { class: 'btn btn-primary', text: actionNow() })
@@ -170,7 +170,7 @@ function review(opts: {
     const gate = h('div', { class: 'stack-8 pin-gate' })
     const ask = (error?: string) => {
       if (actions.pinLocked()) {
-        gate.replaceChildren(
+        swap(gate,
           h('span', { class: 't-caps subtle', text: 'Locked' }),
           h('span', { class: 'field-error', role: 'status',
             text: 'Five wrong tries. Set a new PIN from Account before moving this much.' }),
@@ -189,11 +189,11 @@ function review(opts: {
           }
           // Correct: the pad gives way to the button that names the amount, so
           // what is about to happen is still on screen when it happens.
-          gate.replaceChildren(button)
+          swap(gate, button)
           button.focus()
         },
       })
-      gate.replaceChildren(
+      swap(gate,
         h('span', { class: 't-caps subtle', text: 'Authorise with your PIN' }),
         pad.el)
       if (error) pad.reject(error)
@@ -222,11 +222,11 @@ function review(opts: {
       clearInterval(timer)
       quote = null
       refusal.hidden = true
-      rows.replaceChildren(skeletonList(3))
+      swap(rows, skeletonList(3))
       clock.className = 'hold'
       clock.replaceChildren(h('span', { html: icon.info() }),
         h('span', { text: 'Getting you a rate.' }))
-      foot.replaceChildren()
+      swap(foot)
       requestQuote().then((q) => { quote = q; draw() }).catch(fail)
     }
 
@@ -237,24 +237,24 @@ function review(opts: {
       clearInterval(timer)
       // The skeleton goes with the attempt. Leaving it under an error message
       // says "still loading" and "it failed" at the same time.
-      rows.replaceChildren()
+      swap(rows)
       clock.className = 'hold expired'
       clock.replaceChildren(h('span', { html: icon.alert() }),
         h('span', { text: state.online
           ? 'Could not get a rate just now. Nothing has been sent.'
           : 'No connection, so there is no rate to hold. Nothing has been sent.' }))
-      foot.replaceChildren(h('button', {
+      swap(foot, h('button', {
         class: 'btn btn-secondary', text: 'Try again', on: { click: ask },
       }))
     }
 
     const draw = (): void => {
-      rows.replaceChildren(panel(...rowsNow()))
+      swap(rows, panel(...rowsNow()))
       button.textContent = actionNow()
       // A held rate does not exempt a large withdrawal from the PIN. The gate
       // is rebuilt with each quote, so a rate taken and left to expire cannot
       // leave an already-authorised button sitting there for the next one.
-      foot.replaceChildren(big ? pinGate() : button)
+      swap(foot, big ? pinGate() : button)
       clock.classList.remove('expired')
       tick()
       clearInterval(timer)
@@ -284,7 +284,7 @@ function review(opts: {
         h('span', { text: 'That rate has run out. Take a new one to carry on.' }))
       // The button goes rather than greying: a dead control you can still
       // press is how a stale rate gets spent.
-      foot.replaceChildren(h('button', {
+      swap(foot, h('button', {
         class: 'btn btn-primary', text: 'Get a new rate', on: { click: ask },
       }))
     }
@@ -822,7 +822,7 @@ export const SHEETS: Record<string, Builder> = {
       error?: string,
     ) => {
       const pad = pinPad({ hint, onFull: (v) => onFull(v, pad) })
-      wrap.replaceChildren(
+      swap(wrap,
         h('span', { class: 't-caps subtle', text: title }),
         pad.el)
       if (error) pad.reject(error)

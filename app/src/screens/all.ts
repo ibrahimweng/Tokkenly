@@ -1,4 +1,4 @@
-import { h, link } from '../ui'
+import { h, link, swap } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader, eyebrow } from '../components/shell'
 import { card, cardHead } from '../components/bits'
@@ -26,8 +26,8 @@ export function allScreen(): HTMLElement {
     const groups = order
       .map((place) => [place, found.filter((d) => d.place === place)] as const)
       .filter(([, items]) => items.length)
-    note.replaceChildren(searchNote(t, found.length, onlyNear(t, found, FIELDS)) ?? h('span', { hidden: true }))
-    grid.replaceChildren(...groups.map(([place, items]) =>
+    swap(note, searchNote(t, found.length, onlyNear(t, found, FIELDS)) ?? h('span', { hidden: true }))
+    swap(grid, ...groups.map(([place, items]) =>
       card(
         cardHead(PLACE_LABEL[place]),
         h('div', { class: 'stack-8' },

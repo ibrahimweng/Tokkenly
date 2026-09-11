@@ -30,10 +30,11 @@ ok('home screen follows the setting', /PORTFOLIO OVER TIME/i.test(await text()),
 await acct()
 await p.getByRole('button', { name: 'Simple', exact: true }).click(); await p.waitForTimeout(300)
 await at('/')
-// The three doors, which only the Simple view draws. It used to look for the
-// words "Buy Stocks", which stopped being a door label when every door was
-// made to carry the name of the place it opens.
-ok('and back again', (await p.locator('.card.gate').count()) === 4, 'simple')
+// The doors, which only the Simple view draws. It used to look for the words
+// "Buy Stocks", which stopped being a door label when every door was made to
+// carry the name of the place it opens. Three at this width since 11g.75:
+// Wallet is on the rail here, so its door went.
+ok('and back again', (await p.locator('.card.gate').count()) === 3, 'simple')
 
 console.log('THEME')
 await acct()

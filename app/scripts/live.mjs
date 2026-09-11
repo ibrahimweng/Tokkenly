@@ -314,23 +314,26 @@ console.log('THE DOT FIELDS  decoration that has been given something to say')
     }))
   }
   const before = await read()
-  ok('all four doors carry a field', before.length === 4)
+  // Three above the phone, not four: Wallet lost its door when the rail is on
+  // screen with Wallet lit in it (11g.75), and the field it carried went with
+  // it. The phone still has all four and does not draw their fields at all.
+  ok('all three doors carry a field', before.length === 3)
   // And that this can see the rung it is counting. A reader that finds no
   // sleeping cell is a reader that will report every field as full and never
   // fail, whatever the account does.
   ok('and the reader can tell an asleep cell from an awake one',
      before.every((g) => g.asleep > 0), before.map((g) => g.awake + ' awake, ' + g.asleep + ' asleep').join(' | '))
-  // The three slices of one portfolio, one door each, so no two of them can
-  // be the same picture on an account with its money in more than one place.
-  // Spend is the fourth and is not a slice of it: spending is not a place
-  // money sits, so its field reads the flow — what has gone on bills — and it
-  // is checked for saying something rather than for saying a percentage.
-  ok('the first three say which slice they are keyed to',
-     before.slice(0, 3).every((g) => /% of your money (in|lent)/.test(g.says)),
+  // Two slices of one portfolio, one door each, so neither can be the same
+  // picture on an account with its money in more than one place. Spend is the
+  // third and is not a slice of it: spending is not a place money sits, so its
+  // field reads the flow — what has gone on bills — and it is checked for
+  // saying something rather than for saying a percentage.
+  ok('the first two say which slice they are keyed to',
+     before.slice(0, 2).every((g) => /% of your money (in|lent)/.test(g.says)),
      before.map((g) => g.says).join(' | '))
-  ok('and the fourth says what has gone out', /bills/.test(before[3].says), before[3].says)
+  ok('and the third says what has gone out', /bills/.test(before[2].says), before[2].says)
   ok('no two are at the same level',
-     new Set(before.map((g) => g.awake)).size === 4, before.map((g) => g.awake + '/' + (g.awake + g.asleep)).join(' '))
+     new Set(before.map((g) => g.awake)).size === 3, before.map((g) => g.awake + '/' + (g.awake + g.asleep)).join(' '))
   // A gauge that does not move is a picture. $1,000 out of cash and lent out
   // has to show up on the two doors it is about, and not on the third.
   await p.goto(B + '/grow/earn', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(500)
@@ -340,12 +343,30 @@ console.log('THE DOT FIELDS  decoration that has been given something to say')
   await p.locator('.scrim .btn-primary').first().click(); await p.waitForTimeout(1000)
   await p.keyboard.press('Escape'); await p.waitForTimeout(300)
   const after = await read()
-  ok('moving money wakes one field and quiets another',
-     after[1].awake < before[1].awake && after[2].awake > before[2].awake,
+  ok('moving money wakes the field it is about',
+     after[1].awake > before[1].awake,
      before.map((g, i) => `${g.awake}\u2192${after[i].awake}`).join(' '))
   ok('and leaves the one it is not about alone', after[0].awake === before[0].awake)
-  ok('the words follow the field', after[2].says !== before[2].says,
-     `${before[2].says} \u2192 ${after[2].says}`)
+  ok('the words follow the field', after[1].says !== before[1].says,
+     `${before[1].says} \u2192 ${after[1].says}`)
+  // And a field has to be able to empty as well as fill. Lending moves cash
+  // into what is lent and both are money you have, so the share of the
+  // portfolio in shares does not move — selling is what takes it down. Without
+  // this the suite would pass on a gauge wired to fill and never drain, which
+  // is a picture with an animation on it.
+  await p.goto(B + '/invest/aapl/sell', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(500)
+  const sale = p.locator('.amount-box input')
+  // Under `confirmOver`, because a sale over it asks for a PIN and this suite
+  // is about the field rather than about the keypad.
+  await sale.fill('450'); await sale.dispatchEvent('input'); await p.waitForTimeout(250)
+  await p.locator('.btn-primary').first().click(); await p.waitForTimeout(500)
+  await p.locator('.scrim .btn-primary').first().click(); await p.waitForTimeout(1200)
+  await p.keyboard.press('Escape'); await p.waitForTimeout(300)
+  const sold = await read()
+  ok('and selling quiets the field about shares', sold[0].awake < after[0].awake,
+     `${after[0].awake} \u2192 ${sold[0].awake}`)
+  ok('and its words follow it down', sold[0].says !== after[0].says,
+     `${after[0].says} \u2192 ${sold[0].says}`)
   // No account, no reading: the intro shows the field exactly as it is drawn.
   const w = await b.newPage({ viewport: { width: 1440, height: 900 } })
   await w.addInitScript(`try { localStorage.removeItem('tokkenly.prefs.v1'); sessionStorage.setItem('tokkenly.unlocked','1') } catch {}`)

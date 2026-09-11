@@ -1,4 +1,4 @@
-import { h } from '../ui'
+import { h, swap, show } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader, eyebrow } from '../components/shell'
 import {
@@ -271,7 +271,7 @@ function numberPanel(w: Way): (Node | null)[] {
   const paint = (): void => {
     const n = netNow()
     const ready = validNumber(input.value)
-    netBox.hidden = !ready
+    show(netBox, ready)
     guess.textContent = ready && n && !picked
       ? `Looks like ${n.name}, by the prefix. Change it if the number was ported.`
       : ''
@@ -290,7 +290,7 @@ function numberPanel(w: Way): (Node | null)[] {
   const submit = (): void => {
     if (!validNumber(input.value)) {
       field.classList.add('error')
-      err.hidden = false
+      show(err, true)
       input.focus()
       return
     }
@@ -435,7 +435,7 @@ function dataPanel(num: string, n: Network): (Node | null)[] {
   const list = h('div', { class: 'sheet-list' })
   {
     const plans = plansFor(n.key)
-    list.replaceChildren(...plans.map((p) => {
+    swap(list, ...plans.map((p) => {
       const tooMuch = p.price > ceiling
       return h('button', {
         class: 'sheet-row', disabled: tooMuch,
@@ -542,7 +542,7 @@ function meterPanel(disco: string, kind: MeterKind, start: string): (Node | null
 
   const paint = (): void => {
     const raw = input.value.replace(/[^0-9]/g, '')
-    found.replaceChildren()
+    swap(found)
     field.classList.remove('error')
     err.hidden = true
     go2.toggleAttribute('disabled', true)
@@ -553,19 +553,19 @@ function meterPanel(disco: string, kind: MeterKind, start: string): (Node | null
       // shouting at somebody who has done nothing wrong yet.
       if (raw.length < 11) return
       field.classList.add('error')
-      err.hidden = false
+      show(err, true)
       err.lastElementChild!.textContent = 'A meter number is eleven to thirteen digits.'
       return
     }
     const m = resolveMeter(raw)
     if (!m) {
       field.classList.add('error')
-      err.hidden = false
+      show(err, true)
       err.lastElementChild!.textContent =
         `${d.name} has no meter with that number. Check the digits on the meter itself.`
       return
     }
-    found.replaceChildren(
+    swap(found,
       h('div', { class: 'set-banner' },
         h('span', { class: 'mark', html: icon.check() }),
         h('span', { class: 'two-line grow' },

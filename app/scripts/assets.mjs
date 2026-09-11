@@ -35,12 +35,14 @@ d.on('pageerror', (e) => errs.push('pageerror: ' + e.message))
 log.push('THREE BALANCES, NOT ONE')
 await d.goto(base + '/transfer', { waitUntil: 'networkidle' })
 await d.waitForTimeout(350)
-const held = d.locator('.card', { hasText: 'What you hold' })
-const names = await held.locator('.sheet-row .t-body-strong').allTextContents()
-ok('the wallet lists all three', names.join(' ') === 'USDC $1,680.00 USDT $800.00 Naira ₦145,000',
+// One card now: the bar's legend and the balance list were the same list, so
+// the rows under the bar are where the three are named (11g.75).
+const names = await d.locator('.hero-cash .hero-row .t-body-strong').allTextContents()
+ok('the wallet lists all three, and what is lent',
+   names.join(' ') === 'USDC $1,680.00 USDT $800.00 Naira ₦145,000 Lent out $1,240.00',
    names.join(' · '))
 const segs = await d.locator('.hero-bar .seg').count()
-ok('and the bar is made of them', segs === 3, segs + ' segments')
+ok('and the bar is made of the same four', segs === 4, segs + ' segments')
 await d.screenshot({ path: '/tmp/shots/assets-01-wallet.png', fullPage: true })
 
 /* ---------------- the statement keeps them apart ---------------- */
@@ -63,8 +65,7 @@ log.push('A PAYMENT MOVES THE ONE IT NAMED')
 const balances = async () => {
   await d.goto(base + '/transfer', { waitUntil: 'networkidle' })
   await d.waitForTimeout(350)
-  const rows = await d.locator('.card', { hasText: 'What you hold' })
-    .locator('.sheet-row').allInnerTexts()
+  const rows = await d.locator('.hero-cash .hero-row').allInnerTexts()
   return rows.map((r) => r.split('\n').filter(Boolean))
 }
 const before = await balances()

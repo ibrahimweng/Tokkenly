@@ -1,4 +1,4 @@
-import { h } from '../ui'
+import { h, swap } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, kv, emptyState, fieldError } from '../components/bits'
@@ -119,7 +119,7 @@ export function bucketScreen(): HTMLElement {
       }
     }
 
-    summary.replaceChildren(
+    swap(summary,
       kv('Investment', usd(total)),
       kv('Fee', `${usd(tradeFee(total))} · ${state.fees.trade}%`),
       kv('Total', usd(bucketCost())),
