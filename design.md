@@ -8738,6 +8738,67 @@ version, and that is a picture with an animation on it.
      has to announce itself, because there is no page turn to do it. This is
      the one thing motion is for that nothing else can do.
 
+### 11g.76 Money in transit is a transaction, and a door is the width of what it acts on
+
+Two corrections from using 11g.75, and one of them is a correction to 11g.75.
+
+**"Still settling" was a card around two figures that were not balances.** It
+held naira between banks on the way in, and naira on the way out — and neither
+is money anybody can do anything with. They are transfers that have not
+finished. The list directly underneath it was already where this product keeps
+transfers. A card whose entire contents belong in the thing below it is a card
+and nothing else, and on an account with nothing in flight it was 160px saying
+"nothing is happening".
+
+So it is gone, and what it held leads the list instead. Everything unfinished
+sorts first, however old: a transfer from Tuesday that has not landed outranks
+a payment from this morning that has, because one of them is a question and the
+other is a record. Each unfinished row says where its money has actually got
+to —
+
+    Received GTBank
+    ₦300,000 in route · has not landed yet
+    Today 06:39 · TKN-VCF6PT                               +$200.00
+
+— so the two figures did not disappear with the card. They moved onto the rows
+whose money they are, which is where somebody looking at one transfer would
+look for them.
+
+Three things that took care. The naira is read off the ledger **by reference**
+rather than multiplied out of the dollars, so the row and the statement cannot
+drift apart — `conversion(ref)` already existed for receipts and this is the
+same question asked from a list. The sentence differs by direction, because the
+reassurance differs: on the way in nothing has been taken twice, on the way out
+the bank has not confirmed. And it is not styled as a warning, because nothing
+is wrong with a transfer that is still travelling — it takes the same quiet as
+any second line and lets the word *route* do the work rather than a colour.
+
+The phrasing is owed to what OPay does: **in route, has not landed.** That is
+the sentence, and it is better than "still settling" because settling is a word
+about the system and landing is a word about the money.
+
+**And the doors went back inside the column.** 11g.75 moved them out from under
+the left column to the full width of the page, on the argument that they act on
+the card above them and should read in order with it. The order was right and
+the width was wrong: full width they were two 660px cards holding one line
+each, and a door twice the width of the list it sits above reads as the page's
+subject rather than as a way out of it. They lead the column now, at the width
+of the thing they act on.
+
+182. **Money in transit is a transaction, not a balance.** A figure for money on
+     its way invites being read as money you have, and a person cannot spend it,
+     move it, or do anything but wait for it. The same fact as a row with a
+     state is honest, and it lands in the place people already look for the
+     thing it is about. It also has somewhere to say the one sentence that
+     matters, which a figure does not: where it has got to, and what that means
+     for them.
+
+183. **A control should be the width of what it acts on.** Width is a claim
+     about importance, and a door wider than the list it opens onto claims to
+     be the subject of the page. This is the same rule as 11g.75's, applied to
+     the thing 11g.75 got wrong: equal things take equal widths, and a thing
+     takes the width of its own scope.
+
 ### 11g.49 Still open
 
 - Buying and selling is the one page in the file that was hand-built rather
@@ -8763,6 +8824,17 @@ version, and that is a picture with an animation on it.
   further than "it can drift" — the file is a photograph of a version that no
   longer ships, which is the exact failure 11g.70 was built to end. Re-running
   the converter over the nine flows is the fix and nobody has asked for it.
+- The wallet's top card is carrying about twenty-four separate things — two
+  labels, two display figures, the naira equivalent, the rate line, a
+  disclaimer, the bar, and four rows each with a name, a network line, a figure
+  and a second-currency figure. That is too many and it was raised as too many.
+  Four ways out were put up — strip the detail, drop what is not spendable from
+  a card about spending, show the detail on a press, or redline it in Figma —
+  and the redline was chosen, so the card is unchanged until that comes back.
+- The Figma file key is not written down anywhere in this repository. Every
+  Figma batch ran in-session and the key went with the session, which is the
+  mechanical reason nothing has been watching that file drift (11g.70's own
+  open item). The next push to Figma records the key here.
 - The ramp `--part-1/2/3` (11g.75) has one consumer, the wallet's bar. It is
   written as a palette idea rather than a wallet one on the argument that parts
   of a total are a thing and not a screen, and that argument is only proved the
