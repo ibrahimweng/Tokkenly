@@ -8,8 +8,8 @@ import { rank, onlyNear } from '../match'
 import { table } from '../components/table'
 import { CATALOGUE, CATEGORIES, PICKS, find, discount, markGap, tradable, catSlug, type Instrument, pathOf } from '../catalogue'
 import { INDEXES, listedIn } from '../indices'
-import { state, actions, inBucket } from '../state'
-import { usd, pct } from '../format'
+import { state, actions, inBucket, priced} from '../state'
+import { pct } from '../format'
 import { go, current } from '../router'
 import { celebrate } from '../confetti'
 
@@ -21,7 +21,7 @@ function tickerRow(ticker: string): HTMLElement {
       h('span', { class: 't-body-strong', text: c.ticker }),
       h('small', { text: c.name })),
     h('span', { class: 'two-line right' },
-      h('span', { class: 't-body-strong', text: usd(c.price) }),
+      h('span', { class: 't-body-strong', text: priced(c.price) }),
       h('small', { class: c.dayPct >= 0 ? 'pos' : 'muted', text: (c.dayPct >= 0 ? '+' : '') + pct(c.dayPct) })))
   row.addEventListener('click', () => go(pathOf(c)))
   return row
@@ -34,12 +34,12 @@ function rangeBar(c: Instrument): HTMLElement {
   const span = Math.max(c.yearHigh - c.yearLow, 0.0001)
   const at = Math.min(100, Math.max(0, ((c.price - c.yearLow) / span) * 100))
   return h('span', { class: 'range', ariaLabel:
-    `${usd(c.price)} against a year between ${usd(c.yearLow)} and ${usd(c.yearHigh)}` },
+    `${priced(c.price)} against a year between ${priced(c.yearLow)} and ${priced(c.yearHigh)}` },
     h('span', { class: 'range-track' },
       h('span', { class: 'range-at', style: { left: at + '%' } })),
     h('span', { class: 'range-ends' },
-      h('small', { text: usd(c.yearLow, false) }),
-      h('small', { text: usd(c.yearHigh, false) })))
+      h('small', { text: priced(c.yearLow, false) }),
+      h('small', { text: priced(c.yearHigh, false) })))
 }
 
 /** One tap from the list into the bucket, without leaving the list — for the
@@ -118,7 +118,7 @@ function tableOf(rows: Instrument[],
         // wrapped to four lines, which turned a list of companies
         // into a wall. It is on the stock page, one tap away.
         h('small', { class: 'desk-only', text: c.plain })),
-      h('span', { class: 't-body-strong nowrap', text: usd(c.price) }),
+      h('span', { class: 't-body-strong nowrap', text: priced(c.price) }),
       h('span', { class: (c.dayPct >= 0 ? 'pos' : 'warn') + ' t-body-strong nowrap',
         text: (c.dayPct >= 0 ? '+' : '') + pct(c.dayPct) }),
       // What the token costs against the share it tracks, and the
@@ -128,7 +128,7 @@ function tableOf(rows: Instrument[],
       h('span', { class: 'two-line right' },
         h('span', { class: (markGap(c).over ? 'warn' : 'pos') + ' t-body-strong nowrap',
           text: markGap(c).pct + ' ' + markGap(c).word }),
-        h('small', { text: usd(c.mark) })),
+        h('small', { text: priced(c.mark) })),
       rangeBar(c),
       h('span', { class: 'muted nowrap', text: c.cap }),
       h('span', { class: 'muted nowrap', text: c.dividend ? pct(c.dividend) : '—' }),
@@ -271,7 +271,7 @@ export function marketScreen(): HTMLElement {
       // one-row table with its name in it.
       suggest: (t) => rank(t, CATALOGUE, FIELDS).slice(0, 7).map((c) => ({
         label: `${c.ticker} · ${c.name}`,
-        hint: usd(c.price),
+        hint: priced(c.price),
         group: c.kind === 'etf' ? 'Funds' : 'Companies',
         pick: () => go(pathOf(c)),
       })),
@@ -349,7 +349,7 @@ export function marketScreen(): HTMLElement {
             h('span', { class: 'two-line' },
               h('span', { class: 't-body-strong', text: c.name }),
               h('small', { text: p.line })),
-            h('span', { class: 't-body-strong', text: usd(c.price) }))
+            h('span', { class: 't-body-strong', text: priced(c.price) }))
           row.addEventListener('click', () => go(pathOf(c)))
           return row
         })),

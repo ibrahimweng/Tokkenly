@@ -6,8 +6,9 @@ import { table } from '../components/table'
 import { amount } from '../components/bits'
 import {
   state, holdingsValue, owed, availableToBorrow, sellPoint,
-  monthlyCost, monthlyInterest, movementCeiling, ceilingLabel, money, MASK,
+  monthlyCost, monthlyInterest, movementCeiling, ceilingLabel, money, MASK, payAsset,
 } from '../state'
+import { DOLLARS, type Asset } from '../assets'
 import { usd, pct, signed, when } from '../format'
 import { go, openSheet } from '../router'
 import { objectArt, stir, level, COINS, WALLET, type ObjectField } from '../components/art'
@@ -259,6 +260,7 @@ function earnHistory(): HTMLElement {
 /* ---------------- borrow ---------------- */
 
 export function borrowScreen(): HTMLElement {
+  let borrowAsset: Asset = payAsset()
   const shares = holdingsValue()
   const avail = availableToBorrow()
   return composerScreen({
@@ -295,7 +297,8 @@ export function borrowScreen(): HTMLElement {
     callout: 'Your shares stay yours and keep earning. We only sell if they fall to the level above.',
     risky: true,
     action: (v) => 'Borrow ' + usd(v),
-    onAction: (v) => openSheet('borrow-review', { v: String(v) }),
+    pay: { assets: DOLLARS, get: () => borrowAsset, set: (a: Asset) => { borrowAsset = a }, label: 'Landing in' },
+    onAction: (v) => openSheet('borrow-review', { v: String(v), a: borrowAsset }),
     right: (v) => {
       const after = state.borrowed + v
       const trigger = after * (state.rates.collateral / 100)
@@ -349,6 +352,7 @@ export function borrowScreen(): HTMLElement {
 /* ---------------- repay ---------------- */
 
 export function repayScreen(): HTMLElement {
+  let repayAsset: Asset = payAsset()
   const total = owed()
   return composerScreen({
     place: 'grow',
@@ -377,7 +381,8 @@ export function repayScreen(): HTMLElement {
     },
     callout: 'Repaying frees the same amount up to borrow again whenever you want.',
     action: (v) => 'Repay ' + usd(v),
-    onAction: (v) => openSheet('repay-review', { v: String(v) }),
+    pay: { assets: DOLLARS, get: () => repayAsset, set: (a: Asset) => { repayAsset = a }, label: 'Paying with' },
+    onAction: (v) => openSheet('repay-review', { v: String(v), a: repayAsset }),
     right: () =>
       card(
         cardHead('What you owe'),
@@ -406,6 +411,7 @@ export function repayScreen(): HTMLElement {
 /* ---------------- earn ---------------- */
 
 export function earnScreen(): HTMLElement {
+  let earnAsset: Asset = payAsset()
   return composerScreen({
     place: 'grow',
     base: growScreen,
@@ -434,7 +440,8 @@ export function earnScreen(): HTMLElement {
     // does it said move. Nine of the ten composers name their own verb on
     // their own button; this is the tenth.
     action: (v) => 'Lend ' + usd(v),
-    onAction: (v) => openSheet('earn-review', { v: String(v) }),
+    pay: { assets: DOLLARS, get: () => earnAsset, set: (a: Asset) => { earnAsset = a }, label: 'Paying with' },
+    onAction: (v) => openSheet('earn-review', { v: String(v), a: earnAsset }),
     right: (v) => {
       const after = state.lent + v
       const yearly = (after * state.rates.lend) / 100
@@ -466,6 +473,7 @@ export function earnScreen(): HTMLElement {
 /* ---------------- take out ---------------- */
 
 export function takeOutScreen(): HTMLElement {
+  let takeoutAsset: Asset = payAsset()
   return composerScreen({
     place: 'grow',
     base: growScreen,
@@ -490,7 +498,8 @@ export function takeOutScreen(): HTMLElement {
     ],
     callout: 'Interest already paid stays in your wallet. Only what you leave in keeps earning.',
     action: (v) => 'Take out ' + usd(v),
-    onAction: (v) => openSheet('takeout-review', { v: String(v) }),
+    pay: { assets: DOLLARS, get: () => takeoutAsset, set: (a: Asset) => { takeoutAsset = a }, label: 'Landing in' },
+    onAction: (v) => openSheet('takeout-review', { v: String(v), a: takeoutAsset }),
     right: (v) => {
       const rest = Math.max(0, state.lent - v)
       const yearly = (rest * state.rates.lend) / 100

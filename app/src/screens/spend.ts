@@ -10,6 +10,8 @@ import { state, movementCeiling, ceilingLabel, switchOn, type Activity } from '.
 import { usd, naira, when, activityLabel, NGN } from '../format'
 import { current, go, openSheet } from '../router'
 import { isSplit } from '../responsive'
+import { payRow } from '../components/purse'
+import { ASSETS, assetOf, type Asset } from '../assets'
 import {
   NETWORKS, networkOf, guessNetwork, validNumber, digitsOf, prettyNumber,
   plansFor, planOf, DISCOS, discoOf, validMeter, resolveMeter, prettyMeter,
@@ -24,11 +26,25 @@ import {
    person who keeps a naira balance just in case has already left, because the
    dollars they came here for are now the money they do not touch.
 
-   So the product does the errands itself, out of the dollars, at the rate on
-   the screen. Nothing is held in naira: the wallet pays, our desk converts,
-   the network is paid. That is two postings joined by a rate, which is the
-   same movement Add money and a bank payout already are — the difference is
-   only that this one ends at a network rather than at a bank.
+   So the product does the errands itself, at the rate on the screen, out of
+   whichever balance you point it at.
+
+   That last clause is new, and it corrects something this file used to argue.
+   It said "nothing is held in naira" — that every bill converted on the way
+   out, so the dollars were always the money and naira never sat still. That
+   was true of the product when it was written and it was the wrong thing to
+   be true. Somebody paid in naira, or who converted a month's bills in one go
+   at a rate they liked, was being told the product had no way to hold what
+   they had. It has one now, and this place is the main reason to use it.
+
+   So a bill is one of two movements depending on where it is paid from, and
+   they are genuinely different rather than one wearing two labels:
+
+     from naira        one posting. The naira you hold are the naira the
+                       network takes. No desk, no rate, nothing quoted.
+     from a stablecoin a conversion: two postings joined by the rate on the
+                       screen, one in each currency, because a single entry
+                       cannot be denominated twice.
 
    The shape is Send's, because it is the same shape: three ways in a rail,
    the one you picked filling the panel, and the whole errand happening in
@@ -36,9 +52,8 @@ import {
    because it is a commit. On a phone the rail is the place's own index and
    the composer is a sheet over the step that opened it.
 
-   What is not here is converting. Naira you want to keep is a balance and
-   belongs in the wallet with the rest of your money; this place is for naira
-   that leaves the same minute it arrives.
+   What is still not here is converting for its own sake. Naira you want to
+   keep arrives as naira through Add money; this place spends it.
    --------------------------------------------------------------------------- */
 
 type Way = 'airtime' | 'data' | 'electricity'
@@ -70,16 +85,38 @@ const METER_CAP = 200000
  *  compare against the figure in front of them is not a ceiling they can
  *  work within — so it is converted once, here, and floored to a whole naira
  *  because the composer must never offer a figure the wallet cannot cover. */
-const nairaCeiling = (own: number): number =>
-  Math.min(own, Math.floor(Math.min(state.cash, movementCeiling()) * state.ngnPerUsd))
+const nairaCeiling = (own: number, asset: Asset = 'usdc'): number =>
+  // Paid from naira, what stops you first is the naira you hold — but the
+  // monthly ceiling still applies, because item 06 is one limit policy for
+  // every outflow and a bill paid out of naira is an outflow. It is a dollar
+  // figure, so it is brought into naira to be compared here.
+  Math.min(own,
+    Math.floor(Math.min(asset === 'ngn' ? state.naira / state.ngnPerUsd : state.cash,
+                        movementCeiling()) * state.ngnPerUsd))
 
 /** Which ceiling is actually doing the stopping, so the message names the real
  *  one. Four can bind here — the money, the month, the single payment, and the
  *  network's own limit — and the first three already have one sentence each. */
-const capLabel = (own: number, whose: string): string =>
-  own < Math.floor(Math.min(state.cash, movementCeiling()) * state.ngnPerUsd)
-    ? whose
-    : ceilingLabel(state.cash, 'The most you can spend here')
+const capLabel = (own: number, whose: string, asset: Asset = 'usdc'): string => {
+  const held = asset === 'ngn' ? state.naira / state.ngnPerUsd : state.cash
+  if (own < Math.floor(Math.min(held, movementCeiling()) * state.ngnPerUsd)) return whose
+  if (asset === 'ngn' && held <= movementCeiling()) return 'What you hold in naira'
+  return ceilingLabel(held, 'The most you can spend here')
+}
+
+/** The three, with naira first when there is naira to spend. A bill is the one
+ *  errand naira is actually for, so a balance that can cover it should not be
+ *  the third pill along. */
+const spendAssets = (): Asset[] => ASSETS.map((a) => a.key)
+
+/** What each balance would have to give up for a bill of this many naira.
+ *  Naira pays naira; a stablecoin pays the dollars it converts to. */
+const needsFor = (ngn: number) => (a: Asset): number =>
+  a === 'ngn' ? ngn : ngn / state.ngnPerUsd
+
+/** Which balance an address names, falling back to the preference. */
+const assetFrom = (q: URLSearchParams): Asset =>
+  (assetOf(q.get('a') ?? '') ? q.get('a') : state.prefs.payWith) as Asset
 
 /* ------------------------------------------------------------------- rail --
    The same rows as Send's, because it is the same idea: a way you are taking,
@@ -188,7 +225,7 @@ function pausedPanel(w: Way): HTMLElement {
 function targetRow(title: string, sub: string, ic: () => string, back: string): Node {
   const split = isSplit()
   return h('div', { class: 'stack-8' },
-    h('span', { class: 't-caps subtle', text: 'For' }),
+    h('span', { class: 't-caps subtle compose-label', text: 'For' }),
     h(split ? 'div' : 'button', {
       class: 'sheet-row', style: { background: 'var(--control)' },
       on: split ? {} : { click: () => go(back) },
@@ -310,7 +347,12 @@ function airtimeScreen(num: string): HTMLElement {
   const q = current().query
   const net = networkOf(q.get('net') ?? '') ?? guessNetwork(num) ?? NETWORKS[0]
   const rate = state.ngnPerUsd
-  const max = nairaCeiling(AIRTIME_CAP)
+  // The address wins over the preference, so a link that names a balance opens
+  // on it. Nothing in the product writes one today; the review reads `a` and
+  // so should the screen that fills it, or the two disagree about the same
+  // address.
+  let asset: Asset = assetFrom(q)
+  const max = nairaCeiling(AIRTIME_CAP, asset)
   const steps = [{ label: 'Airtime', to: '/spend/airtime' }, { label: prettyNumber(num) }]
 
   const spec = {
@@ -323,7 +365,13 @@ function airtimeScreen(num: string): HTMLElement {
     unit: NGN,
     initial: Math.min(1000, max),
     max,
-    maxLabel: capLabel(AIRTIME_CAP, 'The most a network takes in one recharge'),
+    maxLabel: capLabel(AIRTIME_CAP, 'The most a network takes in one recharge', asset),
+    pay: {
+      assets: spendAssets(),
+      get: () => asset,
+      set: (a: Asset) => { asset = a },
+      needs: needsFor(1000),
+    },
     note: 'Goes straight onto the number. Usually within a few seconds.',
     quick: [
       { label: naira(200), value: 200 },
@@ -340,16 +388,25 @@ function airtimeScreen(num: string): HTMLElement {
     // 'Number' because the lede names it, and no 'Arrives' because the line
     // under the figure says it — and on a phone a fifth row is the one that
     // pushes this dialog past 743 and puts a fold button under the fold.
-    summary: (v: number): [string, string, string?][] => [
-      ['Costs you', usd(v / rate)],
-      ['Rate', '1 dollar = ' + naira(rate)],
-      ['Fee', 'No fee'],
-      ['Network', net.name],
-    ],
-    callout: 'Paid out of your dollars at the rate above. Nothing is held in naira.',
+    summary: (v: number): [string, string, string?][] => asset === 'ngn'
+      // Nothing converts, so there is no cost in another currency and no rate:
+      // the figure typed is the figure that leaves, and printing a rate here
+      // would be printing a number nobody was quoted.
+      ? [
+          ['Comes out of', 'Your naira'],
+          ['Fee', 'No fee'],
+          ['Network', net.name],
+        ]
+      : [
+          ['Costs you', usd(v / rate)],
+          ['Rate', '1 dollar = ' + naira(rate)],
+          ['Fee', 'No fee'],
+          ['Network', net.name],
+        ],
+    callout: 'Paid straight out of the balance above. What reaches the network is naira.',
     action: (v: number) => 'Buy ' + naira(v) + ' airtime',
     onAction: (v: number) => openSheet('spend-review', {
-      way: 'airtime', to: num, net: net.key, v: String(v),
+      way: 'airtime', to: num, net: net.key, v: String(v), a: asset,
     }),
   }
 
@@ -371,7 +428,9 @@ function airtimeScreen(num: string): HTMLElement {
  *  bundle is the price of the bundle, and a keypad in front of a fixed price
  *  is a question with one right answer. */
 function dataPanel(num: string, n: Network): (Node | null)[] {
-  const ceiling = nairaCeiling(METER_CAP)
+  const q = current().query
+  const asset: Asset = assetFrom(q)
+  const ceiling = nairaCeiling(METER_CAP, asset)
 
   const list = h('div', { class: 'sheet-list' })
   {
@@ -380,7 +439,8 @@ function dataPanel(num: string, n: Network): (Node | null)[] {
       const tooMuch = p.price > ceiling
       return h('button', {
         class: 'sheet-row', disabled: tooMuch,
-        on: { click: () => openSheet('spend-review', { way: 'data', to: num, net: n.key, plan: p.key }) },
+        on: { click: () => openSheet('spend-review',
+          { way: 'data', to: num, net: n.key, plan: p.key, a: asset }) },
       },
         h('span', { class: 'mark', html: icon.signal() }),
         h('span', { class: 'two-line grow' },
@@ -397,9 +457,19 @@ function dataPanel(num: string, n: Network): (Node | null)[] {
     card(
       cardHead('Which bundle', h('span', { class: 'muted', text: 'Cash ' + usd(state.cash) })),
       targetRow(prettyNumber(num), n.name + ' · phone number', icon.phone, '/spend/data'),
+      // A page rather than a dialog, so this navigates: the choice has to
+      // survive into the review, and the list of plans has to redraw against
+      // the balance that would pay for them.
+      payRow({
+        assets: spendAssets(), get: () => asset, needs: needsFor(1500),
+        set: (a) => go(`/spend/data?to=${digitsOf(num)}&net=${n.key}&a=${a}`),
+      }),
       list,
-      callout('Every price is what the network charges. Paid out of your dollars at '
-        + `${naira(state.ngnPerUsd)} to the dollar, with no fee on top.`)),
+      callout(asset === 'ngn'
+        ? 'Every price is what the network charges, paid straight out of your naira. '
+          + 'Nothing is converted.'
+        : 'Every price is what the network charges. Paid out of your dollars at '
+          + `${naira(state.ngnPerUsd)} to the dollar, with no fee on top.`)),
     card(
       cardHead('What a bundle is'),
       kv('Starts', 'The moment it lands'),
@@ -552,7 +622,8 @@ function meterCompose(disco: string, kind: MeterKind, meter: string): HTMLElemen
   const d = discoOf(disco)!
   const m = resolveMeter(meter)!
   const rate = state.ngnPerUsd
-  const max = nairaCeiling(METER_CAP)
+  let asset: Asset = assetFrom(current().query)
+  const max = nairaCeiling(METER_CAP, asset)
   const steps = [
     { label: 'Electricity', to: '/spend/electricity' },
     { label: d.name, to: `/spend/electricity?disco=${disco}&kind=${kind}` },
@@ -571,7 +642,13 @@ function meterCompose(disco: string, kind: MeterKind, meter: string): HTMLElemen
     unit: NGN,
     initial: Math.min(10000, max),
     max,
-    maxLabel: capLabel(METER_CAP, 'The most a disco takes against one meter'),
+    maxLabel: capLabel(METER_CAP, 'The most a disco takes against one meter', asset),
+    pay: {
+      assets: spendAssets(),
+      get: () => asset,
+      set: (a: Asset) => { asset = a },
+      needs: needsFor(10000),
+    },
     note: kind === 'prepaid'
       ? 'You get a token to type into the meter.'
       : 'Comes off what you owe on your next bill.',
@@ -583,20 +660,26 @@ function meterCompose(disco: string, kind: MeterKind, meter: string): HTMLElemen
     ],
     lede: () => targetRow(m.name, prettyMeter(meter) + ' · ' + d.name, icon.bolt,
       `/spend/electricity?disco=${disco}&kind=${kind}&meter=${meter}`),
-    summary: (v: number): [string, string, string?][] => [
-      ['Costs you', usd(v / rate)],
-      ['Rate', '1 dollar = ' + naira(rate)],
-      ['Fee', 'No fee'],
-      // Not 'Kind': the line under the figure already says which, in the words
-      // that matter — a token you type in, or money off the next bill.
-      ['Arrives', kind === 'prepaid' ? 'Straight away' : 'Against your next bill'],
-    ],
+    summary: (v: number): [string, string, string?][] => asset === 'ngn'
+      ? [
+          ['Comes out of', 'Your naira'],
+          ['Fee', 'No fee'],
+          ['Arrives', kind === 'prepaid' ? 'Straight away' : 'Against your next bill'],
+        ]
+      : [
+          ['Costs you', usd(v / rate)],
+          ['Rate', '1 dollar = ' + naira(rate)],
+          ['Fee', 'No fee'],
+          // Not 'Kind': the line under the figure already says which, in the
+          // words that matter — a token you type in, or money off the bill.
+          ['Arrives', kind === 'prepaid' ? 'Straight away' : 'Against your next bill'],
+        ],
     callout: kind === 'prepaid'
       ? 'The token comes back on the next screen and stays on the receipt.'
       : 'This is a payment against the account, not a settlement of it.',
     action: (v: number) => 'Pay ' + naira(v),
     onAction: (v: number) => openSheet('spend-review', {
-      way: 'electricity', disco, kind, meter, v: String(v),
+      way: 'electricity', disco, kind, meter, v: String(v), a: asset,
     }),
   }
 
@@ -710,16 +793,21 @@ export interface BillOrder {
    *  exists, so it is stated again at the commit. */
   holder?: string
   kind?: MeterKind
+  /** Which balance pays for it. Carried on the address so the review is
+   *  rebuildable from it — a dialog that lost this on a refresh would be a
+   *  dialog about a different payment. */
+  asset: Asset
 }
 
 export function billFrom(q: URLSearchParams): BillOrder | null {
   const way = q.get('way') as Way | null
+  const asset = assetFrom(q)
   if (way === 'airtime') {
     const to = digitsOf(q.get('to') ?? '')
     const net = networkOf(q.get('net') ?? '') ?? guessNetwork(to)
     const v = Number(q.get('v') ?? 0)
     if (!validNumber(to) || !net || !(v > 0)) return null
-    return { way, what: 'Airtime', who: net.name, target: prettyNumber(to), naira: v }
+    return { way, what: 'Airtime', who: net.name, target: prettyNumber(to), naira: v, asset }
   }
   if (way === 'data') {
     const to = digitsOf(q.get('to') ?? '')
@@ -727,7 +815,7 @@ export function billFrom(q: URLSearchParams): BillOrder | null {
     if (!validNumber(to) || !p) return null
     const net = networkOf(q.get('net') ?? '') ?? guessNetwork(to) ?? NETWORKS[0]
     return { way, what: 'Data', who: net.name, target: prettyNumber(to),
-             naira: p.price, note: `${p.size} for ${p.lasts}` }
+             naira: p.price, note: `${p.size} for ${p.lasts}`, asset }
   }
   if (way === 'electricity') {
     const d = discoOf(q.get('disco') ?? '')
@@ -737,7 +825,7 @@ export function billFrom(q: URLSearchParams): BillOrder | null {
     if (!d || !m || !(v > 0)) return null
     const kind: MeterKind = q.get('kind') === 'postpaid' ? 'postpaid' : 'prepaid'
     return { way, what: 'Electricity', who: d.name, target: prettyMeter(meter), naira: v,
-             holder: m.name, kind }
+             holder: m.name, kind, asset }
   }
   return null
 }

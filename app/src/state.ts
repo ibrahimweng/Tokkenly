@@ -6,6 +6,7 @@ import { reference, usd, naira, shares as sharesOf } from './format'
 import { CATALOGUE, find, tradable, refusals, type Refusal, type Instrument } from './catalogue'
 import * as ledger from './ledger'
 import { tokenFor } from './bills'
+import { purseFor, assetOf, defaultNet, type Asset } from './assets'
 
 export type ActivityKind = 'payment' | 'trade' | 'grow'
 
@@ -44,6 +45,17 @@ export interface Activity {
    *  change, but the network's name and the meter's owner are facts about the
    *  day it was paid. */
   bill?: { target: string; naira: number; token?: string }
+  /** Which of the three balances this moved — out on a payment, in on a
+   *  deposit. Recorded rather than assumed: "$45 to Tunde" does not say
+   *  whether the USDC or the USDT went, and somebody looking at two dollar
+   *  balances that no longer add up wants the answer from the record rather
+   *  than from arithmetic. Absent on the movements where nothing was chosen
+   *  — interest paid in, a drawdown — which take the default. */
+  purse?: Asset
+  /** Which network it travelled on, for the movements that travelled. A
+   *  payment on TRON and a payment on Ethereum cost different money and go
+   *  wrong in different ways, so "on the chain" is not an answer. */
+  net?: string
   settled: boolean
 }
 
@@ -54,6 +66,13 @@ export interface Prefs {
   /** Where Home opens. Simple is three doors and the number; Detailed is the
    *  chart, the positions and the rest. */
   homeView: 'simple' | 'detailed'
+  /** What you pay with unless you say otherwise, and what a price is quoted
+   *  in. One setting rather than two, because they are one decision: somebody
+   *  whose money is in naira wants to be told what things cost in naira, and
+   *  somebody holding USDC does not want a second figure under every price.
+   *  A composer can be overridden for one payment; doing so does not move
+   *  this. */
+  payWith: Asset
   theme: 'dark' | 'light'
   /** The product is for Nigerians holding dollars, so the naira line beside a
    *  figure is the setting people actually change. */
@@ -78,6 +97,7 @@ export interface Prefs {
 
 export const DEFAULT_PREFS: Prefs = {
   homeView: 'simple',
+  payWith: 'usdc',
   theme: 'dark',
   showNaira: true,
   tradeDefault: 50,
@@ -528,6 +548,11 @@ export interface State {
      bank. They are the balances of named accounts now, derived on every read,
      so the only way to change one is to post a movement that balances. */
   readonly cash: number
+  /** The two halves of it, for the one screen that is about which is which. */
+  readonly usdc: number
+  readonly usdt: number
+  /** And the naira, in naira. */
+  readonly naira: number
   readonly lent: number
   readonly interestPaid: number
   readonly borrowed: number
@@ -638,6 +663,11 @@ interface Legs {
 function legsFor(a: Activity): Legs | null {
   const amt = Math.abs(a.amount)
   const fee = a.fee ?? 0
+  // Which purse moved, and which network it moved over. Both are recorded on
+  // the movement; both fall back to the defaults for the rows written before
+  // there was anything to record.
+  const mine = purseFor(a.purse ?? 'usdc')
+  const far = 'chain.' + (a.net ?? 'base')
   if (a.kind === 'payment') {
     // A bill changes currency, so it is two postings joined by the rate that
     // was struck — exactly what `payBill` writes when one is paid today. The
@@ -645,16 +675,23 @@ function legsFor(a: Activity): Legs | null {
     // a recharge bought at ₦1,500 does not restate itself when the naira
     // moves.
     if (a.bill) {
+      // Paid out of naira, there is no conversion: the naira you held are the
+      // naira the network took, and inventing a desk between them would be
+      // inventing a rate that nobody was quoted.
+      if (a.purse === 'ngn') {
+        return { entries: [{ account: 'wallet.ngn', amount: -a.bill.naira },
+                           { account: 'biller', amount: a.bill.naira }] }
+      }
       return {
-        entries: [{ account: 'wallet', amount: -amt }, { account: 'desk.usd', amount: amt }],
+        entries: [{ account: mine, amount: -amt }, { account: 'desk.usd', amount: amt }],
         rate: a.bill.naira / amt,
         naira: [{ account: 'desk.ngn', amount: -a.bill.naira },
                 { account: 'biller', amount: a.bill.naira }],
       }
     }
     return a.amount >= 0
-      ? { entries: [{ account: 'chain', amount: -amt }, { account: 'wallet', amount: amt }] }
-      : { entries: [{ account: 'wallet', amount: -amt }, { account: 'chain', amount: amt }] }
+      ? { entries: [{ account: far, amount: -amt }, { account: mine, amount: amt }] }
+      : { entries: [{ account: mine, amount: -amt }, { account: far, amount: amt }] }
   }
   if (a.kind === 'trade') {
     // A share handed to somebody moves units and no money at all, which is
@@ -675,25 +712,25 @@ function legsFor(a: Activity): Legs | null {
       : []
     return a.type === 'Sold'
       ? { entries: [{ account: 'market', amount: -(amt + fee) },
-                    { account: 'wallet', amount: amt }, { account: 'fees', amount: fee },
+                    { account: mine, amount: amt }, { account: 'fees', amount: fee },
                     ...shares] }
-      : { entries: [{ account: 'wallet', amount: -amt },
+      : { entries: [{ account: mine, amount: -amt },
                     { account: 'market', amount: amt - fee }, { account: 'fees', amount: fee },
                     ...shares] }
   }
   if (a.who === 'Lending') {
     if (a.type === 'Interest') {
       return { kind: 'lend-interest',
-        entries: [{ account: 'interest', amount: -amt }, { account: 'wallet', amount: amt }] }
+        entries: [{ account: 'interest', amount: -amt }, { account: mine, amount: amt }] }
     }
     return a.type === 'Lent'
-      ? { entries: [{ account: 'wallet', amount: -amt }, { account: 'lent', amount: amt }] }
-      : { entries: [{ account: 'lent', amount: -amt }, { account: 'wallet', amount: amt }] }
+      ? { entries: [{ account: mine, amount: -amt }, { account: 'lent', amount: amt }] }
+      : { entries: [{ account: 'lent', amount: -amt }, { account: mine, amount: amt }] }
   }
   if (a.who === 'Borrowing') {
     return a.type === 'Borrowed'
-      ? { entries: [{ account: 'loan', amount: -amt }, { account: 'wallet', amount: amt }] }
-      : { entries: [{ account: 'wallet', amount: -amt }, { account: 'loan', amount: amt }] }
+      ? { entries: [{ account: 'loan', amount: -amt }, { account: mine, amount: amt }] }
+      : { entries: [{ account: mine, amount: -amt }, { account: 'loan', amount: amt }] }
   }
   return null
 }
@@ -704,8 +741,17 @@ function legsFor(a: Activity): Legs | null {
  *  instant. */
 const PAYOUT_MS = 3400
 
-/** Where the account actually stands, which the replay has to arrive at. */
-const TODAY = { wallet: 2480, lent: 1240, loan: -380, 'loan.int': -8.9 }
+/** Where the account actually stands, which the replay has to arrive at.
+ *
+ *  The $2,480 that used to be one wallet is two, because it always was two —
+ *  a person paid in USDT and a person paid in USDC hold different things, and
+ *  the product was rounding that off. The naira is the third, and it is not a
+ *  rounding of anything: it is money somebody chose to keep in naira, which is
+ *  a thing this product now lets them do. */
+const TODAY: Record<string, number> = {
+  'wallet.usdc': 1680, 'wallet.usdt': 800, 'wallet.ngn': 145000,
+  lent: 1240, loan: -380, 'loan.int': -8.9,
+}
 
 /** And what it holds, in shares. The order is the order the portfolio reads
  *  in, because the holdings list is now derived and an account's row appears
@@ -727,7 +773,7 @@ export function openBooks(): void {
   ledger.reset()
   for (const [t, each] of Object.entries(OPENING_COST)) ledger.setOpeningCost(t, each)
   const rows = [...state.activity].reverse()      // oldest first
-  const after: Record<string, number> = { wallet: 0, lent: 0, loan: 0, 'loan.int': 0 }
+  const after: Record<string, number> = Object.fromEntries(Object.keys(TODAY).map((k) => [k, 0]))
   // Every ticker the replay touches, plus the ones the account opened with:
   // a trade in something not in the opening position still has to arrive at
   // the right count, and a ticker with no history has to arrive at its.
@@ -745,7 +791,14 @@ export function openBooks(): void {
   const opening = Object.entries(TODAY)
     .map(([id, target]) => ({ account: id, amount: Math.round((target - after[id]) * 100) / 100 }))
     .filter((e) => Math.abs(e.amount) > 1e-9)
-  const sum = opening.reduce((t, e) => t + e.amount, 0)
+  // One counter-account per currency. The opening position is naira as well as
+  // dollars now, and a posting has to come to nothing in every currency it
+  // touches — balancing ₦145,000 against a dollar account would have been the
+  // one thing this ledger exists to refuse.
+  const sum = opening.filter((e) => ledger.account(e.account).currency === 'USD')
+    .reduce((t, e) => t + e.amount, 0)
+  const sumNgn = opening.filter((e) => ledger.account(e.account).currency === 'NGN')
+    .reduce((t, e) => t + e.amount, 0)
   // Each ticker balances against its own "before this record" account. One
   // shared account cannot do it: a posting has to come to nothing in every
   // currency it touches, and Apple and Tesla are two of them.
@@ -760,7 +813,12 @@ export function openBooks(): void {
   ledger.post({
     ref: 'TKN-OPENING', at: rows[0]?.at ?? new Date().toISOString(),
     what: 'What the account already held',
-    entries: [...opening, { account: 'opening', amount: -Math.round(sum * 100) / 100 }, ...held],
+    entries: [...opening,
+              { account: 'opening', amount: -Math.round(sum * 100) / 100 },
+              ...(Math.abs(sumNgn) > 1e-9
+                ? [{ account: 'opening.ngn', amount: -Math.round(sumNgn * 100) / 100 }]
+                : []),
+              ...held],
   })
   for (const a of rows) {
     const legs = legsFor(a)
@@ -834,7 +892,17 @@ export const state: State = {
     address: '12 Awolowo Road, Ikoyi, Lagos',
     joined: 'March 2024',
   },
-  get cash() { return ledger.balanceOf('wallet') },
+  /** Dollars you can spend, whichever of the two they are. Every ceiling, every
+   *  composer and every "can you afford this" in the product reads this, and
+   *  none of them cares which issuer — what cares is the payment itself, and
+   *  the payment is asked. */
+  get cash() { return ledger.balanceOf('wallet.usdc') + ledger.balanceOf('wallet.usdt') },
+  get usdc() { return ledger.balanceOf('wallet.usdc') },
+  get usdt() { return ledger.balanceOf('wallet.usdt') },
+  /** And the naira, which is not dollars and is not converted into them
+   *  anywhere a person can spend it. It is its own balance because it is its
+   *  own money. */
+  get naira() { return ledger.balanceOf('wallet.ngn') },
   get lent() { return ledger.balanceOf('lent') },
   get interestPaid() { return ledger.paidOf('lend-interest') },
   get borrowed() { return -ledger.balanceOf('loan') },
@@ -1063,6 +1131,16 @@ export const state: State = {
 
 /* ---------- derived ---------- */
 
+/** Everything this account holds, in dollars.
+ *
+ *  Naira is in it, converted at today's rate for this figure and for no other:
+ *  a total has to be in one currency to be a total, and the alternative — a
+ *  headline that quietly leaves out one of three balances — is worse than a
+ *  conversion that says what it is. The naira balance is shown in naira
+ *  everywhere it is shown on its own. */
+export const worth = (): number =>
+  state.cash + state.naira / state.ngnPerUsd + state.lent + holdingsValue()
+
 export const holdingsValue = (): number =>
   state.holdings.reduce((t, h) => t + h.shares * h.price, 0)
 
@@ -1107,10 +1185,16 @@ export const visibleNotifications = (): Notif[] =>
  *
  *  Covered along with the dollar figure when balances are hidden: hiding one
  *  and printing the other in naira is not hiding anything. */
-export const inNaira = (dollars: number): string | null => {
+export const alsoIn = (dollars: number): string | null => {
   if (!state.prefs.showNaira) return null
   if (state.prefs.hideBalances) return MASK
-  return `About ${naira(dollars * state.ngnPerUsd)}`
+  // Whichever one is not leading. An account that counts in naira does not
+  // want a naira figure repeated under a naira figure; it wants to know what
+  // that is in dollars, which is the question it had before it changed the
+  // setting.
+  return state.prefs.payWith === 'ngn'
+    ? `About ${usd(dollars)}`
+    : `About ${naira(dollars * state.ngnPerUsd)}`
 }
 
 /** Where that figure came from. A rate with no time and no name on it is a
@@ -1122,7 +1206,7 @@ export const rateLine = (): string => {
 }
 
 export const nairaAside = (dollars: number): string | null => {
-  const n = inNaira(dollars)
+  const n = alsoIn(dollars)
   return n === null ? null : `${n} at today\u2019s indicative rate`
 }
 
@@ -1164,6 +1248,20 @@ export function settlement(amount: number): Settlement {
  *  There is no pending case. A bank payout waits on a bank; a top-up does
  *  not — the network takes it or it does not, and a row that sat open for a
  *  ₦500 recharge would be a worse lie than either outcome. */
+/** Which balance a movement takes when nobody was asked.
+ *
+ *  Interest paid in, a drawdown, the fee on a bucket — nothing on those
+ *  screens offers a choice, so they follow the preference. Naira is not an
+ *  option: you cannot buy a share with it and you cannot borrow into it, so
+ *  an account set to naira still trades in the stablecoin it holds most of.
+ *  Falling back rather than refusing, because the alternative is a Buy button
+ *  that stops working when somebody changes a setting about airtime. */
+export const payAsset = (): Asset => {
+  const want = state.prefs.payWith
+  if (want !== 'ngn') return want
+  return state.usdt > state.usdc ? 'usdt' : 'usdc'
+}
+
 export function billOutcome(naira: number): 'ok' | 'declined' {
   return Math.round(Math.abs(naira)) % 100 === 99 ? 'declined' : 'ok'
 }
@@ -1175,7 +1273,26 @@ export function billOutcome(naira: number): 'ok' | 'declined' {
 export const MASK = '\u2022\u2022\u2022\u2022\u2022\u2022'
 
 export const money = (n: number, cents = true): string =>
-  state.prefs.hideBalances ? MASK : usd(n, cents)
+  state.prefs.hideBalances ? MASK : priced(n, cents)
+
+/** A figure in whatever this account counts in.
+ *
+ *  Everything in the product is held and quoted in dollars, because that is
+ *  what the wallet holds and what a share costs. That is the right default and
+ *  it is the wrong one for somebody whose money is in naira: "$175.42" is a
+ *  price they have to do arithmetic on before they know whether they can
+ *  afford it, and a product that makes people do arithmetic about their own
+ *  money has not finished.
+ *
+ *  So the figure follows the setting. One setting, not two: what you pay with
+ *  and what you are quoted in are the same decision, and offering them
+ *  separately would let somebody ask to be quoted in a currency they do not
+ *  hold.
+ *
+ *  Not masked, unlike `money`. A price is not your business and hiding it
+ *  would hide the market. */
+export const priced = (n: number, cents = true): string =>
+  state.prefs.payWith === 'ngn' ? naira(n * state.ngnPerUsd) : usd(n, cents)
 
 export const moneyNaira = (n: number): string =>
   state.prefs.hideBalances ? MASK : naira(n)
@@ -1384,6 +1501,12 @@ function record(a: Omit<Activity, 'ref' | 'at' | 'settled'> & Partial<Activity>)
     rail: a.rail,
     asset: a.asset,
     bill: a.bill,
+    // Which balance moved, and on what. Dropped here once already, in the
+    // same way `rail` was: a field the callers were carefully setting and the
+    // record was quietly throwing away, so a payment made in this session
+    // replayed out of the default purse rather than the one it named.
+    purse: a.purse,
+    net: a.net,
   }
   state.activity.unshift(entry)
   return entry
@@ -1536,8 +1659,34 @@ export const actions = {
                  naira in, at the rate — which makes it a conversion, so it is
                  two postings joined by that rate rather than one.
   */
-  sendMoney(to: Destination, amount: number, rate = state.ngnPerUsd): Activity {
-    actions.countAgainstLimit(amount)
+  sendMoney(to: Destination, amount: number, rate = state.ngnPerUsd,
+            asset: Asset = state.prefs.payWith, net?: string): Activity {
+    // One limit policy for every outflow (item 06), and the limit is a dollar
+    // figure — so a payment made in naira counts the dollars it is worth
+    // rather than the naira it is. Counting the naira put ₦145,000 against a
+    // $1,000 month and shut the account after one bill.
+    actions.countAgainstLimit(asset === 'ngn' ? amount / rate : amount)
+    // Naira out to a Nigerian bank, from naira. No desk, no rate, no second
+    // posting: the naira you held are the naira that left, and a conversion
+    // between naira and naira is a fiction with a spread in it.
+    if (to.rail === 'bank' && asset === 'ngn') {
+      const account = to.bankId ? 'bank:' + to.bankId : 'payee:' + to.name
+      ledger.account(account, to.name + (to.number ? ' ···· ' + to.number.slice(-4) : ''))
+      const a = record({
+        kind: 'payment', who: to.name, type: 'Sent', amount: -Math.round(amount) / rate,
+        note: to.bankId ? 'Converted to naira' : 'Paid out in naira',
+        purse: 'ngn', settled: false,
+      })
+      ledger.post({
+        ref: a.ref, at: a.at,
+        what: `${naira(amount)} queued for ${to.name}`,
+        entries: [{ account: 'wallet.ngn', amount: -amount },
+                  { account: 'payout', amount: amount }],
+      })
+      setTimeout(() => actions.landPayout(a.ref, rate), PAYOUT_MS)
+      changed()
+      return a
+    }
     if (to.rail === 'bank') {
       // Two stages, because there are two. The dollars leave the wallet the
       // moment it is authorised and the naira reach somebody's bank when the
@@ -1550,12 +1699,12 @@ export const actions = {
       const a = record({
         kind: 'payment', who: to.name, type: 'Sent', amount: -amount,
         note: to.bankId ? 'Converted to naira' : 'Paid out in naira',
-        settled: false,
+        purse: asset, settled: false,
       })
       ledger.post({
         ref: a.ref, at: a.at, pair: a.ref, rate,
-        what: `Took ${usd(amount)} from your wallet`,
-        entries: [{ account: 'wallet', amount: -amount }, { account: 'desk.usd', amount }],
+        what: `Took ${usd(amount)} from your ${assetOf(asset)!.name}`,
+        entries: [{ account: purseFor(asset), amount: -amount }, { account: 'desk.usd', amount }],
       })
       // The naira are ours until the bank has them. `payout` is the account
       // they wait in, and it is the figure the Transfer screen shows as money
@@ -1571,24 +1720,30 @@ export const actions = {
     }
     // Dollars, and the far end is the only difference: a Tokkenly account, or
     // the network for anything outside it.
-    const far = to.rail === 'tokkenly' ? 'person:' + to.name : 'chain'
+    const on = net ?? defaultNet(asset)?.key ?? 'base'
+    const far = to.rail === 'tokkenly' ? 'person:' + to.name : 'chain.' + on
     if (to.rail === 'tokkenly') ledger.account(far, to.name)
     const a = move(
-      { kind: 'payment', who: to.name, type: 'Sent', amount: -amount },
+      { kind: 'payment', who: to.name, type: 'Sent', amount: -amount,
+        purse: asset, net: to.rail === 'tokkenly' ? undefined : on },
       `Sent ${usd(amount)} to ${to.name}`,
-      [{ account: 'wallet', amount: -amount }, { account: far, amount }],
+      [{ account: purseFor(asset), amount: -amount }, { account: far, amount }],
     )
     changed()
     return a
   },
 
-  /* A bill, paid out of dollars.
+  /* A bill, paid out of whichever balance was chosen.
    *
-   *  Airtime, data and a meter are one movement wearing three hats: naira
-   *  reach somebody who is not us, and the dollars they cost leave the
-   *  wallet. That is a conversion, so it is two postings joined by the rate
-   *  the person was shown — one in each currency, because a single entry
-   *  cannot be denominated twice.
+   *  Airtime, data and a meter all end in naira reaching somebody who is not
+   *  us. What differs is where those naira came from, and the two cases are
+   *  genuinely different movements rather than one movement with a label:
+   *
+   *    from naira        one posting. The naira you held are the naira the
+   *                      network took. No desk, no rate, nothing quoted.
+   *    from a stablecoin a conversion: two postings joined by the rate the
+   *                      person was shown, one in each currency, because a
+   *                      single entry cannot be denominated twice.
    *
    *  It settles at once, and that is not a shortcut. A bank payout waits on
    *  a bank and has an account to wait in; a top-up has nothing to wait for.
@@ -1596,13 +1751,17 @@ export const actions = {
    *  review checks `billOutcome` before it confirms, so nothing is written
    *  and nothing leaves the wallet. */
   payBill(bill: { what: string; who: string; naira: number; target: string;
-                  prepaid?: boolean; note?: string },
+                  prepaid?: boolean; note?: string; asset?: Asset },
           rate = state.ngnPerUsd): Activity {
+    const asset = bill.asset ?? state.prefs.payWith
     const dollars = Math.round((bill.naira / rate) * 100) / 100
+    // Counted whichever balance paid. Item 06 says one limit policy for every
+    // outflow, and a bill paid from naira is an outflow — the ceiling is a
+    // dollar figure, so what is counted is what it was worth.
     actions.countAgainstLimit(dollars)
     const a = record({
       kind: 'payment', who: bill.who, type: bill.what, amount: -dollars,
-      note: bill.note,
+      note: bill.note, purse: asset,
       bill: { target: bill.target, naira: bill.naira },
       settled: true,
     })
@@ -1611,10 +1770,20 @@ export const actions = {
     // Written down rather than recomputed on every read: a receipt opened
     // tomorrow has to show the same twenty digits somebody typed into a wall.
     if (bill.prepaid) a.bill!.token = tokenFor(a.ref)
+    if (asset === 'ngn') {
+      ledger.post({
+        ref: a.ref, at: a.at,
+        what: `${naira(bill.naira)} paid to ${bill.who}`,
+        entries: [{ account: 'wallet.ngn', amount: -bill.naira },
+                  { account: 'biller', amount: bill.naira }],
+      })
+      changed()
+      return a
+    }
     ledger.post({
       ref: a.ref, at: a.at, pair: a.ref, rate,
-      what: `Took ${usd(dollars)} from your wallet`,
-      entries: [{ account: 'wallet', amount: -dollars }, { account: 'desk.usd', amount: dollars }],
+      what: `Took ${usd(dollars)} from your ${assetOf(asset)!.name}`,
+      entries: [{ account: purseFor(asset), amount: -dollars }, { account: 'desk.usd', amount: dollars }],
     })
     ledger.post({
       ref: a.ref, at: a.at, pair: a.ref, rate,
@@ -1650,7 +1819,8 @@ export const actions = {
      `inflight` — an account that is neither yours nor ours, which is exactly
      what money between two banks is. The wallet does not move until step two,
      and because every balance is derived there is no way to make it. */
-  startAddMoney(amount: number, via: { kind: 'transfer' | 'card'; id?: string }, rate = state.ngnPerUsd): Activity {
+  startAddMoney(amount: number, via: { kind: 'transfer' | 'card'; id?: string },
+                rate = state.ngnPerUsd, into: Asset = state.prefs.payWith): Activity {
     actions.countAgainstLimit(amount)
     const naira = Math.round(amount * rate)
     const from = via.kind === 'card'
@@ -1673,7 +1843,7 @@ export const actions = {
       // endings — a card that declines and one that goes unanswered — but
       // anything else starts pending and stays pending until the naira is
       // actually in our account.
-      settled: false,
+      purse: into, settled: false,
     })
     ledger.post({
       ref: a.ref, at: a.at, rate,
@@ -1744,6 +1914,27 @@ export const actions = {
       what: `₦${ngn.toLocaleString('en-US')} reached your Tokkenly naira account`,
       entries: [{ account: 'inflight', amount: -ngn }, { account: 'collect', amount: ngn }],
     })
+    // Naira in, naira kept. Nothing is converted, so there is no desk and no
+    // rate: the money simply moves from the account we collected it into to
+    // the one that is yours. This is the movement the product used to have no
+    // way to make, which is why every naira that arrived had to become
+    // dollars whether anybody wanted that or not.
+    if (a.purse === 'ngn') {
+      ledger.post({
+        ref, at: new Date().toISOString(),
+        what: `${naira(ngn)} paid into your naira balance`,
+        entries: [{ account: 'collect', amount: -ngn }, { account: 'wallet.ngn', amount: ngn }],
+      })
+      a.settled = true
+      state.notifications.unshift({
+        id: 'n-' + ref, kind: 'money',
+        title: `${naira(ngn)} landed in your naira balance`,
+        body: `From ${a.who}. Nothing was converted.`,
+        at: new Date().toISOString(), read: false, ref, emailed: 'always',
+      })
+      changed()
+      return
+    }
     // The conversion itself: two postings, one in each currency, joined by the
     // rate. One entry cannot be denominated twice.
     ledger.post({
@@ -1753,8 +1944,9 @@ export const actions = {
     })
     ledger.post({
       ref, at: new Date().toISOString(), pair: ref, rate,
-      what: `Converted to ${usd(a.amount)} and paid to your wallet`,
-      entries: [{ account: 'desk.usd', amount: -a.amount }, { account: 'wallet', amount: a.amount }],
+      what: `Converted to ${usd(a.amount)} and paid to your ${assetOf(a.purse ?? 'usdc')!.name}`,
+      entries: [{ account: 'desk.usd', amount: -a.amount },
+                { account: purseFor(a.purse ?? 'usdc'), amount: a.amount }],
     })
     a.settled = true
     // The one genuinely asynchronous event in the product, and so the one that
@@ -1780,7 +1972,8 @@ export const actions = {
    *  take the money and add the shares only `if (h)`, so a first purchase —
    *  the one the whole product is for — charged the wallet, created nothing,
    *  and reported "you now own undefined shares". */
-  buy(ticker: string, dollars: number): { activity: Activity; shares: number; fee: number; invested: number } {
+  buy(ticker: string, dollars: number,
+      asset: Asset = payAsset()): { activity: Activity; shares: number; fee: number; invested: number } {
     const c = find(ticker)
     if (!c) throw new Error('No such instrument: ' + ticker)
     // Never spend money that is not there, whatever the caller asks for —
@@ -1799,9 +1992,9 @@ export const actions = {
     // dollars, because an account holding "the value of your Apple" would move
     // every time the market did, which is not a thing a ledger account does.
     const activity = move(
-      { kind: 'trade', who: c.name, type: 'Bought', amount: -(spend + fee), fee },
+      { kind: 'trade', who: c.name, type: 'Bought', amount: -(spend + fee), fee, purse: asset },
       `Bought ${usd(spend)} of ${c.name}`,
-      [{ account: 'wallet', amount: -(spend + fee) },
+      [{ account: purseFor(asset), amount: -(spend + fee) },
        { account: 'market', amount: spend },
        { account: 'fees', amount: fee },
        { account: 'float:' + c.ticker, amount: -shares },
@@ -1814,7 +2007,8 @@ export const actions = {
   /** And selling is bounded by what is actually held, so a holding can never
    *  go negative and the wallet can never be paid for shares that were not
    *  there. A position sold out entirely leaves rather than sitting at zero. */
-  sell(ticker: string, dollars: number): { activity: Activity; shares: number; fee: number; proceeds: number } {
+  sell(ticker: string, dollars: number,
+       asset: Asset = payAsset()): { activity: Activity; shares: number; fee: number; proceeds: number } {
     const h = holding(ticker)
     const c = find(ticker)
     if (!h || !c) throw new Error('Nothing held in ' + ticker)
@@ -1826,10 +2020,10 @@ export const actions = {
     // shares go back the way they came, and a position sold out entirely
     // leaves the list because nothing is left in custody to read.
     const activity = move(
-      { kind: 'trade', who: c.name, type: 'Sold', amount: value - fee, fee },
+      { kind: 'trade', who: c.name, type: 'Sold', amount: value - fee, fee, purse: asset },
       `Sold ${usd(value)} of ${c.name}`,
       [{ account: 'market', amount: -value },
-       { account: 'wallet', amount: value - fee },
+       { account: purseFor(asset), amount: value - fee },
        { account: 'fees', amount: fee },
        { account: 'held:' + c.ticker, amount: -shares },
        { account: 'float:' + c.ticker, amount: shares }],
@@ -1879,29 +2073,29 @@ export const actions = {
     return { activity, shares, value }
   },
 
-  borrow(amount: number): Activity {
+  borrow(amount: number, asset: Asset = payAsset()): Activity {
     actions.countAgainstLimit(amount)
     // The loan account goes negative by what you drew, because it is not
     // yours. The wallet goes up by the same. Nothing was created.
     const a = move(
-      { kind: 'grow', who: 'Borrowing', type: 'Borrowed', amount },
+      { kind: 'grow', who: 'Borrowing', type: 'Borrowed', amount, purse: asset },
       `Drew ${usd(amount)} against your shares`,
-      [{ account: 'loan', amount: -amount }, { account: 'wallet', amount }],
+      [{ account: 'loan', amount: -amount }, { account: purseFor(asset), amount }],
     )
     changed()
     return a
   },
 
-  repay(amount: number): Activity {
+  repay(amount: number, asset: Asset = payAsset()): Activity {
     // Interest first, then principal. Both are liabilities of yours, so
     // clearing them moves money from one of your accounts to another — the
     // interest was charged when it accrued, not when it is paid.
     const toInterest = Math.min(amount, state.interestOwed)
     const toPrincipal = Math.min(amount - toInterest, state.borrowed)
     const a = move(
-      { kind: 'grow', who: 'Borrowing', type: 'Repaid', amount: -(toInterest + toPrincipal) },
+      { kind: 'grow', who: 'Borrowing', type: 'Repaid', amount: -(toInterest + toPrincipal), purse: asset },
       `Repaid ${usd(toInterest + toPrincipal)} of what you owe`,
-      [{ account: 'wallet', amount: -(toInterest + toPrincipal) },
+      [{ account: purseFor(asset), amount: -(toInterest + toPrincipal) },
        { account: 'loan.int', amount: toInterest },
        { account: 'loan', amount: toPrincipal }],
     )
@@ -1909,22 +2103,22 @@ export const actions = {
     return a
   },
 
-  lend(amount: number): Activity {
+  lend(amount: number, asset: Asset = payAsset()): Activity {
     const a = move(
-      { kind: 'grow', who: 'Lending', type: 'Lent', amount: -amount },
+      { kind: 'grow', who: 'Lending', type: 'Lent', amount: -amount, purse: asset },
       `Lent ${usd(amount)} into the pool`,
-      [{ account: 'wallet', amount: -amount }, { account: 'lent', amount }],
+      [{ account: purseFor(asset), amount: -amount }, { account: 'lent', amount }],
     )
     changed()
     return a
   },
 
-  takeBack(amount: number): Activity {
+  takeBack(amount: number, asset: Asset = payAsset()): Activity {
     const back = Math.min(amount, state.lent)
     const a = move(
-      { kind: 'grow', who: 'Lending', type: 'Taken back', amount: back },
+      { kind: 'grow', who: 'Lending', type: 'Taken back', amount: back, purse: asset },
       `Took ${usd(back)} back out of the pool`,
-      [{ account: 'lent', amount: -back }, { account: 'wallet', amount: back }],
+      [{ account: 'lent', amount: -back }, { account: purseFor(asset), amount: back }],
     )
     changed()
     return a
@@ -2059,7 +2253,7 @@ export const actions = {
       move(
         { kind: 'trade', who: 'Tokkenly', type: 'Fee', amount: -fee, fee },
         `Fee on one payment for ${lines.length} ${lines.length === 1 ? 'company' : 'companies'}`,
-        [{ account: 'wallet', amount: -fee }, { account: 'fees', amount: fee }],
+        [{ account: purseFor(payAsset()), amount: -fee }, { account: 'fees', amount: fee }],
       )
     }
     spent += fee

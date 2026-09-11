@@ -4,6 +4,8 @@ import { USD, type Unit } from '../format'
 import { shell, pageHeader, eyebrow, renderBase, type Place } from './shell'
 import { card, cardHead, kv, callout as calloutEl, fieldError } from './bits'
 import { amountComposer, keypad } from './amount'
+import { payRow } from './purse'
+import { type Asset } from '../assets'
 import { isMobile } from '../responsive'
 import { current, closeSheet, go } from '../router'
 import { modalOver } from './sheet'
@@ -57,6 +59,21 @@ export interface ComposerSpec {
    *  amount, the ceiling and the message that names the ceiling are all in
    *  naira and the dollar cost is a line in the summary. */
   unit?: Unit
+  /** Which balance this payment comes out of, when there is a choice.
+   *
+   *  It sits under the amount rather than in a settings screen, because it is
+   *  part of the same question: how much, and in what. Answering it here is
+   *  for this payment only — the default in Account is a preference and a
+   *  composer is not the place to change a preference. */
+  pay?: {
+    assets: Asset[]
+    get: () => Asset
+    set: (a: Asset) => void
+    /** What this payment needs, per balance, so one that cannot cover it says
+     *  so on the pill rather than after the button. */
+    needs?: (a: Asset) => number
+    label?: string
+  }
 }
 
 /** The way to the full disclosures, under the button that takes the risk. The
@@ -110,6 +127,18 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
     unit,
   })
 
+  // Which balance pays. Changing it repaints everything that named a figure,
+  // because in naira the same payment is a different number.
+  const pay = spec.pay
+    ? payRow({
+        assets: spec.pay.assets,
+        get: spec.pay.get,
+        needs: spec.pay.needs,
+        label: spec.pay.label,
+        set: (a) => { spec.pay!.set(a); paint(comp.get()) },
+      })
+    : null
+
   const capNote = fieldError()
   capNote.hidden = true
   // The market's refusal, not the account's. It reads as a callout rather than
@@ -131,7 +160,14 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
    *  the real price open on one tap, and are all stated again on the review,
    *  which is the commit point. Item 61's ceiling holds either way: no dialog
    *  scrolls on a 390 by 844 phone. */
-  const KEEP = 3
+  /* Three of the terms stay on a phone, one when there is a balance to pick.
+     This dialog fits in 743 with nothing to spare (item 61) and the picker
+     asks a question the summary cannot answer, so it is paid for out of the
+     summary — the right place to take it from, because which currency is
+     leaving your account is a larger fact than the arithmetic behind the
+     total, and the arithmetic is one press away rather than gone. The whole
+     of it is stated again on the review, which is the commit. */
+  const KEEP = spec.pay ? 1 : 3
   let open = false
   const rightBox = h('div', { class: 'stack grow' })
   const button = h('button', { class: 'btn btn-primary' })
@@ -187,7 +223,7 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
   if (overlaid) {
     const out = modalOver(renderBase(spec.base), spec.title, () => history.back(),
       spec.lede ? spec.lede() : null,
-      comp.el, capNote,
+      comp.el, capNote, pay,
       // The keypad is the phone's way in. A dialog has a keyboard already, and
       // room for the sentence the phone has to drop.
       mobile ? keypad(comp) : null,
@@ -208,7 +244,7 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
   const left = card(
     cardHead(spec.cardLabel, h('span', { class: 'muted', text: spec.cardRight })),
     spec.lede ? spec.lede() : null,
-    comp.el, capNote, summaryBox, guardNote, calloutEl(spec.callout), button,
+    comp.el, capNote, pay, summaryBox, guardNote, calloutEl(spec.callout), button,
     spec.risky ? riskLink() : null)
   // A stated width, not an inline one: the stacking rule has to be able to
   // release it below 1240, and it cannot outrank a style attribute.

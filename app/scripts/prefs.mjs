@@ -48,14 +48,14 @@ console.log('NAIRA BESIDE DOLLARS')
 await at('/transfer')
 ok('naira is there by default', /About \u20a6[\d,]+/.test(await text()))
 await acct()
-await p.getByRole('button', { name: /Show naira beside dollars/ }).click(); await p.waitForTimeout(300)
+await p.getByRole('button', { name: /Show the other currency/ }).click(); await p.waitForTimeout(300)
 await at('/transfer')
 ok('turning it off removes it', !/About \u20a6[\d,]+/.test(await text()))
 await at('/withdraw')
 ok('but Convert still shows naira, because that is what it is about',
    /₦/.test(await text()))
 await acct()
-await p.getByRole('button', { name: /Show naira beside dollars/ }).click(); await p.waitForTimeout(300)
+await p.getByRole('button', { name: /Show the other currency/ }).click(); await p.waitForTimeout(300)
 
 console.log('HIDE MY BALANCES  the switch, and where it sits')
 {

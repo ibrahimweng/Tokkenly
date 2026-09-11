@@ -9,6 +9,7 @@ import { usd, initialsOf } from '../format'
 import { openSheet, go, current } from '../router'
 import { toast } from '../components/sheet'
 import { isSplit } from '../responsive'
+import { assetOf, type Asset } from '../assets'
 
 /* ------------------------------------------------------------------------
    Account is an index, not a wall.
@@ -172,9 +173,23 @@ function preferencesBody(): (Node | null)[] {
         : null),
     card(
       cardHead('Money'),
+      // The one setting that decides two things, because they are one thing:
+      // what you are quoted in, and what a payment takes unless you say
+      // otherwise. A person holding naira wants prices in naira; a person
+      // holding USDC does not want a second figure under every price. Set
+      // once, and overridable on any single payment without moving it.
+      choice({
+        label: 'What you pay with', ic: icon.coin(),
+        sub: 'Prices are quoted in this, and payments take it unless you pick another',
+        options: [
+          { label: 'USDC', value: 'usdc' }, { label: 'USDT', value: 'usdt' },
+          { label: 'Naira', value: 'ngn' },
+        ],
+        get: () => p.payWith, set: (v) => { actions.setPref('payWith', v as Asset); back() },
+      }),
       toggle({
-        label: 'Show naira beside dollars', ic: icon.convert(),
-        sub: 'Every balance in both currencies, at today’s indicative rate',
+        label: 'Show the other currency', ic: icon.convert(),
+        sub: 'A second line under every balance, at today’s indicative rate',
         get: () => p.showNaira, set: (v) => { actions.setPref('showNaira', v); back() },
       }),
       toggle({
@@ -578,8 +593,10 @@ export const GROUPS: Group[] = [
     // in the list beside it, and whose account this is takes one word.
     status: () => state.person.name.split(' ')[0], body: detailsBody },
   { key: 'preferences', label: 'Preferences', ic: icon.grid(),
-    status: () => (state.prefs.homeView === 'simple' ? 'Simple' : 'Detailed') + ' · ' +
-      (state.prefs.theme === 'dark' ? 'Dark' : 'Light'), body: preferencesBody },
+    // What you pay with leads, because it is the one that changes what every
+    // other screen says.
+    status: () => assetOf(state.prefs.payWith)!.name + ' · ' +
+      (state.prefs.homeView === 'simple' ? 'Simple' : 'Detailed'), body: preferencesBody },
   { key: 'notifications', label: 'Notifications', ic: icon.bell(),
     status: () => onCount() + ' of 4', body: notificationsBody },
   { key: 'security', label: 'Security', ic: icon.lock(),

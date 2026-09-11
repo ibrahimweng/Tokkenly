@@ -65,7 +65,10 @@ console.log('TWO WAYS IN, AND NEITHER OF THEM IS INSTANT')
      rails.map((r) => r.text + (r.off ? ' (paused)' : '')).join(' | '))
   ok('and a bank transfer is one of them, first',
      rails[0].text === 'Bank transfer' && rails[0].on)
-  ok('and the Base address is another', rails.some((r) => r.text === 'USDC on Base'))
+  // Not "USDC on Base" since 11g.74: which token and which chain is the
+  // question this way asks, and a door that has answered it has decided for
+  // somebody about a network.
+  ok('and a crypto wallet is another', rails.some((r) => r.text === 'A crypto wallet'))
   ok('and a switched-off way is shown off rather than hidden',
      rails.some((r) => r.text === 'Debit card' && r.off), rails.map((r) => r.text).join(' | '))
   // Neither of the two asks how much before it says where. The bank tab does
@@ -111,7 +114,7 @@ console.log('TWO WAYS IN, AND NEITHER OF THEM IS INSTANT')
        && /Card funding/.test(behind.says) && /Paused/.test(behind.says),
      behind.hash + ' | ' + behind.trail)
   ok('and the paused panel offers the two ways that do work',
-     /Add money by transfer/.test(behind.says) && /Add USDC on Base/.test(behind.says))
+     /Add money by transfer/.test(behind.says) && /Add a stablecoin/.test(behind.says))
   await at('/addmoney')
 
   // The account is dedicated, so there is no reference to quote.
@@ -140,8 +143,13 @@ console.log('THE WALLET DOES NOT MOVE UNTIL THE NAIRA DOES')
   const bk = await books()
   ok('the naira is in an account that is neither yours nor ours to spend',
      !!bk.balances['On its way to us'], bk.balances['On its way to us'] ?? 'nothing in flight')
-  ok('the wallet has not moved', money(bk.balances['Your wallet']) === before,
-     `${before} → ${money(bk.balances['Your wallet'])}`)
+  // Three purses since 11g.74. What must not have moved is all of them, so
+  // the check is the sum rather than one account — a version of this that
+  // watched only the USDC would pass on a transfer landing in the USDT.
+  const purses = (b) => money(b.balances['Your USDC']) + money(b.balances['Your USDT'])
+    + money(b.balances['Your naira']) / 1500
+  ok('no balance of yours has moved', Math.abs(purses(bk) - before) < 0.02,
+     `${before} → ${purses(bk).toFixed(2)}`)
   ok('and the books are still level', bk.sums.every((off) => !off))
 
   await p.waitForTimeout(2800)                     // the transfer lands
@@ -151,9 +159,12 @@ console.log('THE WALLET DOES NOT MOVE UNTIL THE NAIRA DOES')
   const bk2 = await books()
   ok('with nothing left in flight', !bk2.balances['On its way to us'],
      bk2.balances['On its way to us'] ?? 'empty')
+  // And the last step names which balance it landed in, because there are
+  // three of them now and "your wallet" is no longer an answer.
   ok('and every step of it named', bk2.posts.some((t) => /reached your Tokkenly naira account/.test(t)) &&
      bk2.posts.some((t) => /went to the currency desk/.test(t)) &&
-     bk2.posts.some((t) => /paid to your wallet/.test(t)))
+     bk2.posts.some((t) => /paid to your USD[CT]/.test(t)),
+     bk2.posts.slice(0, 3).join(' | '))
 }
 
 console.log('AND SAYS SO, ON THE ONE SCREEN THAT WAS NOT LOOKING')
@@ -267,7 +278,7 @@ console.log('ONE SEND, THREE PLACES FOR IT TO GO')
   const ways = await p.evaluate(() =>
     [...document.querySelectorAll('.set-list.ways .set-row .t-body-strong')].map((e) => e.textContent))
   ok('the screen asks where before it asks how much',
-     ['Someone on Tokkenly', 'A bank account', 'USDC on Base'].every((g) => ways.includes(g)),
+     ['Someone on Tokkenly', 'A bank account', 'A crypto wallet'].every((g) => ways.includes(g)),
      ways.join(' | '))
   ok('and whose bank account it is is a question inside the bank way',
      await p.evaluate(async () => {
@@ -310,7 +321,7 @@ console.log('AND THE ONE THAT CHANGES CURRENCY SAYS SO')
   // into the bank on another, which is what makes it a conversion rather than
   // one entry pretending to be denominated twice.
   ok('as a conversion: two postings, one in each currency',
-     bk.posts.some((t) => /Took \$120\.00 from your wallet/.test(t)) &&
+     bk.posts.some((t) => /Took \$120\.00 from your USD[CT]/.test(t)) &&
      bk.posts.some((t) => /^₦[\d,]+ queued for GTBank$/.test(t)),
      bk.posts.slice(0, 2).join(' | '))
   // And in two stages. The dollars have gone; the naira are in our payout
@@ -361,7 +372,11 @@ console.log('BOTH WAYS IN ARE NAMED WHERE SOMEBODY WOULD LOOK FOR THEM')
   ok('and the address it went to is the one the way lives at',
      (await p.evaluate(() => location.hash)) === '#/addmoney/base',
      await p.evaluate(() => location.hash))
-  ok('and still leads with the address it is for', /your address/i.test(said))
+  // It used to lead with "Your address", which was true while there was one.
+  // There are six now — two tokens on two networks each — so it leads with
+  // which of them this one is, in the words the PRD asks for (11g.74).
+  ok('and still leads with which address it is', /Receive USDC — Network: Base/i.test(said),
+     said.slice(0, 60))
   // One screen, one name. The trail said "Receive money" over a title reading
   // "Add money" until 11g.50 — two names for a place a person is standing in.
   const named = await p.evaluate(() => ({

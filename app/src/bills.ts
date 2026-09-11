@@ -212,11 +212,14 @@ export function resolveMeter(raw: string): Meter | undefined {
  *  same token and a receipt reopened tomorrow has not changed. */
 export function tokenFor(ref: string): string {
   let h = 0
-  for (let i = 0; i < ref.length; i++) h = (h * 31 + ref.charCodeAt(i)) | 0
+  for (let i = 0; i < ref.length; i++) h = (Math.imul(h, 31) + ref.charCodeAt(i)) | 0
   let out = ''
   for (let i = 0; i < 5; i++) {
-    h = (h * 1103515245 + 12345) | 0
-    out += (Math.abs(h) % 10000).toString().padStart(4, '0') + (i < 4 ? ' ' : '')
+    // `Math.imul` rather than `*`: a 32-bit multiply done in floating point
+    // loses its low bits, so every group here came out even. Nobody would ever
+    // have noticed, which is the argument for fixing it.
+    h = (Math.imul(h, 1103515245) + 12345) | 0
+    out += (((h >>> 8) & 0x7fffff) % 10000).toString().padStart(4, '0') + (i < 4 ? ' ' : '')
   }
   return out
 }

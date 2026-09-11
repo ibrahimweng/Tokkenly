@@ -3,9 +3,11 @@ import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, headLink, kv, callout, amount, directionMark, figureWithEye, spentBar } from '../components/bits'
 import { table } from '../components/table'
-import { state, buyingPower, availableToBorrow, inNaira, inflightNaira, outboundNaira, rateLine, limits, leftThisMonth, verified, money } from '../state'
+import { state, buyingPower, availableToBorrow, alsoIn, inflightNaira, outboundNaira, rateLine, limits, leftThisMonth, verified, money, moneyNaira } from '../state'
 import { usd, naira, when, activityLabel } from '../format'
 import { go, openSheet } from '../router'
+import { purseRow } from '../components/purse'
+import { ASSETS } from '../assets'
 
 function way(label: string, sub: string, ic: string, to: string | null, onClick?: () => void): HTMLElement {
   const b = h('button', { class: 'card', style: { textAlign: 'left', flex: '1' },
@@ -30,10 +32,25 @@ function way(label: string, sub: string, ic: string, to: string | null, onClick?
  *  as borrowing, on its own line, beside a figure that says so. */
 /** The wallet's own figure, travelling rather than jumping when money moves. */
 function cashFigure(): HTMLElement {
+  // Everything you could spend today, whichever of the three it is in. The
+  // three are listed underneath; a headline that named only the dollars would
+  // be a headline that had quietly decided the naira did not count.
+  const spendable = state.cash + state.naira / state.ngnPerUsd
   const el = h('span', { class: 'hero-figure' })
-  if (state.prefs.hideBalances) el.textContent = money(state.cash)
-  else countTo(el, 'wallet.cash', state.cash, (n) => money(n))
+  if (state.prefs.hideBalances) el.textContent = money(spendable)
+  else countTo(el, 'wallet.cash', spendable, (n) => money(n))
   return el
+}
+
+/** The three, as rows. What each one is, where it travels, what it holds, and
+ *  what that is in the other currency — which is the question somebody holding
+ *  two of them is always half-asking. */
+function balances(): HTMLElement {
+  return card(
+    cardHead('What you hold', h('button', { class: 'link', text: 'Add money',
+      on: { click: () => go('/addmoney') } })),
+    h('div', { class: 'sheet-list' }, ...ASSETS.map((a) => purseRow(a.key))),
+    h('span', { class: 'subtle t-caption', text: rateLine() }))
 }
 
 /** What has actually moved through this wallet.
@@ -68,8 +85,14 @@ function moved(): HTMLElement {
 }
 
 function cashHero(): HTMLElement {
+  // What the bar is made of. Naira is one of the parts now rather than a
+  // conversion of another part: it is money this account holds, in a currency
+  // it holds it in, and drawing it as a slice of the dollars would be drawing
+  // the same money twice.
+  const nairaUsd = state.naira / state.ngnPerUsd
   const parts = [
-    { label: 'Cash', value: state.cash, cls: 'a', hint: 'Ready to spend or send' },
+    { label: 'Dollars', value: state.cash, cls: 'a', hint: 'USDC and USDT, ready to spend or send' },
+    { label: 'Naira', value: nairaUsd, cls: 'c', hint: moneyNaira(state.naira) + ', for bills and payouts' },
     { label: 'Lent out', value: state.lent, cls: 'b', hint: 'Paying ' + state.rates.lend + '% a year' },
   ]
   const total = parts.reduce((t, p) => t + p.value, 0)
@@ -77,11 +100,11 @@ function cashHero(): HTMLElement {
   return h('section', { class: 'card hero-cash' },
     h('div', { class: 'hero-top' },
       h('div', { class: 'stack-8' },
-        h('span', { class: 't-caps subtle', text: 'Cash you can spend' }),
+        h('span', { class: 't-caps subtle', text: 'Money you can spend' }),
         figureWithEye(cashFigure()),
-        inNaira(state.cash)
+        alsoIn(state.cash + nairaUsd)
           ? h('span', { class: 'stack-8' },
-              h('span', { class: 'muted', text: inNaira(state.cash)! }),
+              h('span', { class: 'muted', text: alsoIn(state.cash + nairaUsd)! }),
               // The rate, its time and what it is: the one number here that a
               // person cannot check for themselves, so it says where it came
               // from rather than appearing as a fact of nature.
@@ -108,7 +131,8 @@ function cashHero(): HTMLElement {
             h('small', { text: p.hint }))))),
 
     h('span', { class: 'subtle t-caption',
-      text: `${money(total)} in total across your wallet and what you have lent. Borrowing is credit, not balance, so it is not in this figure.` })
+      text: `${money(total)} in total across your three balances and what you have lent. `
+        + 'Borrowing is credit, not balance, so it is not in this figure.' })
   )
 }
 
@@ -164,6 +188,7 @@ export function walletScreen(): HTMLElement {
     cashHero(),
     h('div', { class: 'row' },
       h('div', { class: 'stack col-main' },
+        balances(),
         // Two doors: money in and money out. Receive was a third, and it was
         // the same question as Add money asked twice — how does money get into
         // this wallet. It is a way inside the one door now.
@@ -177,7 +202,7 @@ export function walletScreen(): HTMLElement {
         // that skipped the question left Add money answering it two different
         // ways depending on which control you pressed.
         h('div', { class: 'row equal' },
-          way('Add money', 'Bank transfer, Base or a card', icon.receive(), '/addmoney'),
+          way('Add money', 'A bank, a stablecoin or a card', icon.receive(), '/addmoney'),
           way('Send', 'To a person, a wallet or a bank', icon.send(), '/send')),
         card(
           cardHead('Still settling', headLink('All activity', '/activity')),

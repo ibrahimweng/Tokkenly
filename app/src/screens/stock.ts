@@ -4,7 +4,7 @@ import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, kv, callout, bucketBar, showBucketBar } from '../components/bits'
 import { CATALOGUE, find, markGap, deviation, tradable, type Instrument, pathOf } from '../catalogue'
 import { barChart, sparkline, type Range } from '../components/chart'
-import { state, actions, holding, inBucket, money, assetOn, MASK } from '../state'
+import { state, actions, holding, inBucket, money, assetOn, MASK, priced} from '../state'
 import { usd, pct, signed, shares, shares as fmtShares } from '../format'
 import { go } from '../router'
 import { pageable, beside as besideOf } from '../components/pager'
@@ -141,7 +141,7 @@ function buyBar(c: Instrument): HTMLElement | null {
   return h('div', { class: 'buy-bar' },
     h('span', { class: 'two-line grow' },
       h('span', { class: 't-body-strong', text: c.name }),
-      h('small', { text: usd(c.price) + ' each' })),
+      h('small', { text: priced(c.price) + ' each' })),
     h('button', { class: 'btn btn-primary btn-sm', text: 'Buy ' + c.ticker,
       on: { click: () => go(pathOf(c) + '/invest') } }))
 }
@@ -163,7 +163,7 @@ function markLine(c: Instrument): HTMLElement {
   return h('span', { class: 'mark-line' },
     h('span', { class: (g.over ? 'warn' : 'pos') + ' t-body-strong', text: g.pct }),
     h('span', { class: 'muted t-caption',
-      text: `${g.word} ${usd(c.mark)}, the real ${c.name} price` }))
+      text: `${g.word} ${priced(c.mark)}, the real ${c.name} price` }))
 }
 
 /** Four windows in a row. One percentage cannot tell a fresh move from a
@@ -289,7 +289,7 @@ export function stockScreen(ticker: string): HTMLElement {
           h('div', { class: 'card-head' },
             h('div', { class: 'stack-8' },
               h('span', { class: 't-caps subtle', text: 'Token price' }),
-              h('span', { class: 't-display-xl', text: usd(c.price) }),
+              h('span', { class: 't-display-xl', text: priced(c.price) }),
               markLine(c)),
             // Hard right of the figure. Following and the bucket are both
             // "come back to this", and the price is the thing you would be
@@ -318,8 +318,8 @@ export function stockScreen(ticker: string): HTMLElement {
           // button on this screen, and a grey row would leave that unsaid.
           kv('Trading', h('span', { class: c.launch ? 'pos t-body-strong' : 'warn t-body-strong',
             text: c.launch ? 'Open for trading' : 'Not open yet' })),
-          kv('Reference price', usd(c.mark) + ' · Chainlink'),
-          kv('Venue price', usd(c.price) + ' · ' + (deviation(c) >= 0 ? '+' : '−') + pct(Math.abs(deviation(c)), 2)),
+          kv('Reference price', priced(c.mark) + ' · Chainlink'),
+          kv('Venue price', priced(c.price) + ' · ' + (deviation(c) >= 0 ? '+' : '−') + pct(Math.abs(deviation(c)), 2)),
           kv('Checked', c.chainlinkAge + ' seconds ago'),
           c.actions.length
             ? foldRows(c)
@@ -331,8 +331,8 @@ export function stockScreen(ticker: string): HTMLElement {
           kv('Market value', c.cap),
           kv('Price to earnings', String(c.pe)),
           kv('Dividend', pct(c.dividend, 2) + ' a year'),
-          kv('Year low', usd(c.yearLow)),
-          kv('Year high', usd(c.yearHigh))
+          kv('Year low', priced(c.yearLow)),
+          kv('Year high', priced(c.yearHigh))
         ),
         card(
           cardHead('News'),

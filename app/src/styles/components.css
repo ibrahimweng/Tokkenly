@@ -148,7 +148,7 @@
    written on the handle, not a dashboard. */
 .prod-standing { display: flex; flex-direction: column; gap: 4px; padding-bottom: 4px; }
 .prod-figure { font-size: 28px; line-height: 34px; font-weight: 600; letter-spacing: -0.02em; }
-.prod-figure.warn { color: var(--warn); }
+.prod-figure.warn { color: var(--warning); }
 
 /* The card does not answer to the pointer. Only the button does.
    It used to step its whole surface, on the argument that the card is one
@@ -423,6 +423,62 @@
 .sheet .amount-box { padding: 4px 16px; }
 .sheet .amount-box input { font-size: 30px; line-height: 40px; width: 180px; }
 .amount-note { color: var(--muted); font-size: 12px; }
+
+/* ---------- which balance, and which network ----------
+   One row of pills, each carrying a name and the fact you are choosing on:
+   what that balance holds, or what that network costs and how long it takes.
+   A row of bare names is a row of names, and the choice it is asking about is
+   not between names.
+
+   Equal columns rather than content width, because these are alternatives and
+   a row where one option is twice the width of another has already argued for
+   one of them. */
+.pay-block { width: 100%; }
+.pay-row { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; }
+.pay-pill {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+  min-height: 52px; padding: 8px 12px; border-radius: var(--r-panel);
+  background: var(--control); color: var(--ink); text-align: left;
+  min-width: 0;
+}
+.pay-pill small { color: var(--muted); font-size: 12px; line-height: 16px; }
+.pay-pill .t-body-strong { font-size: 13px; line-height: 18px; }
+.pay-pill > * { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (hover: hover) { .pay-pill:hover { background: var(--control-pressed); } }
+/* Chosen, and marked the way every other choice in the product is marked: the
+   chip's own fill. A border would have been a line, and rule 13 says there are
+   no lines — which was the right answer here anyway, because only one of the
+   three is ever filled and one filled pill among three is not three primary
+   buttons. */
+.pay-pill[aria-pressed='true'] { background: var(--inverse); color: var(--on-inverse); }
+.pay-pill[aria-pressed='true'] small { color: var(--on-inverse); opacity: 0.72; }
+@media (hover: hover) { .pay-pill[aria-pressed='true']:hover { background: var(--inverse-hover); } }
+/* A balance that cannot cover what was typed. Still pressable — pressing it is
+   how somebody finds out what it would take — and it says which it is. */
+.pay-pill.short small { color: var(--warning); }
+
+/* The same control in a dialog, where 743 pixels is the whole budget and the
+   picker is the third thing asking for room. The pills go to one line — the
+   name and what it holds side by side — and the row loses its caption, because
+   three balances under an amount box do not need to be told they are what pays.
+   Same compression the amount box itself takes two rules up. */
+.sheet .pay-block { gap: 0; }
+.sheet .pay-block > .t-caps { display: none; }
+.sheet .pay-pill {
+  flex-direction: row; align-items: baseline; justify-content: space-between;
+  gap: 6px; min-height: 44px; padding: 6px 10px;
+}
+.sheet .pay-pill small { font-size: 11px; }
+/* The name keeps its width and the figure takes what is left. The other way
+   round put an ellipsis through "USDC" while leaving room for cents nobody
+   reads at this size. */
+.sheet .pay-pill .t-body-strong { flex: none; }
+.sheet .pay-pill small { flex: 1 1 auto; text-align: right; }
+/* And the label above the row a composer's lede draws, for the same reason:
+   an avatar, a name and a Change is not a thing anybody needs captioned. */
+.sheet .compose-label { display: none; }
+
+
 .ruler { width: 100%; height: 72px; position: relative; cursor: ew-resize; user-select: none; }
 .ruler canvas { width: 100%; height: 100%; display: block; }
 /* What the ruler is for, under the ruler. Called `.hint` until the help button

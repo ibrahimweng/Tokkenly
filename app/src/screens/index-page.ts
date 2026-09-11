@@ -6,7 +6,7 @@ import { table } from '../components/table'
 import { barChart, type Range } from '../components/chart'
 import { INDEXES, findIndex, listedIn, type Index, type Member } from '../indices'
 import { find, tradable, pathOf } from '../catalogue'
-import { state, actions, inBucket, assetOn } from '../state'
+import { state, actions, inBucket, assetOn, priced} from '../state'
 import { usd, pct } from '../format'
 import { go } from '../router'
 import { pagerRow, pageable, beside, type Stop } from '../components/pager'
@@ -148,7 +148,7 @@ function wholeThing(ix: Index): HTMLElement {
     h('span', { class: 'muted',
       text: `One holding instead of ${ix.count}. ${c.name} tracks this index, and `
         + `Tokkenly lists it as ${c.ticker}.` }),
-    kv('Price', usd(c.price)),
+    kv('Price', priced(c.price)),
     kv('Today', h('span', { class: c.dayPct >= 0 ? 'pos t-body-strong' : 'warn t-body-strong',
       text: (c.dayPct >= 0 ? '+' : '−') + pct(Math.abs(c.dayPct)) })),
     kv('Holds', String(c.holds ?? ix.count) + ' companies'),

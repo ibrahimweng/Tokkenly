@@ -7,8 +7,8 @@ import { card, cardHead, headLink, kv, amount, directionMark, figureWithEye } fr
 import { table } from '../components/table'
 import { pathOf } from '../catalogue'
 import {
-  state, holdingsValue, availableToBorrow, buyingPower, verified, LIMITS, money, MASK, inNaira,
-  bucketTotal, bucketCost,
+  state, holdingsValue, worth, availableToBorrow, buyingPower, verified, LIMITS, money, MASK,
+  alsoIn, bucketTotal, bucketCost,
 } from '../state'
 import { usd, naira, signed, when, pct, shares, greeting, activityLabel } from '../format'
 import { go, openSheet } from '../router'
@@ -156,7 +156,7 @@ function chart(): HTMLElement {
     ranges: RANGES,
     initial: '1Y',
     title: 'Portfolio over time',
-    endValue: state.cash + state.lent + holdingsValue(),
+    endValue: worth(),
     shape: 'area',
   }))
 }
@@ -178,7 +178,7 @@ function detailed(): HTMLElement {
   // used to show holdings alone under no label at all, so switching Simple to
   // Detailed appeared to delete the cash and the lent balance — $16,229.18
   // became $12,509.18 with nothing to explain it.
-  const value = state.cash + state.lent + holdingsValue()
+  const value = worth()
   const move = dayMove()
   const all = gainOver('ALL', value)
   const positions = card(
@@ -231,7 +231,7 @@ function detailed(): HTMLElement {
           h('span', { class: 'muted', text: standing() }),
           h('span', { class: 't-caps subtle', text: 'Total portfolio' }),
           figureWithEye(moneyFigure('t-display-xl', 'home.total', value)),
-          inNaira(value) ? h('span', { class: 'muted t-caption', text: inNaira(value)! }) : null,
+          alsoIn(value) ? h('span', { class: 'muted t-caption', text: alsoIn(value)! }) : null,
           h('span', {},
             h('span', { class: (move.amount >= 0 ? 'pos' : 'warn') + ' t-body-strong',
               text: `${move.amount >= 0 ? '+' : ''}${money(move.amount)} (${move.amount >= 0 ? '+' : ''}${pct(move.pct)})` }),
@@ -242,7 +242,7 @@ function detailed(): HTMLElement {
         // wallet's, the same argument that took Send and Receive off this
         // screen. The slot is the door to the place instead, so this row is
         // three ways into the product rather than two doors and an errand.
-        quickAction('Wallet', 'Your cash, in and out', icon.wallet(), '/transfer'),
+        quickAction('Wallet', 'Three balances, in and out', icon.wallet(), '/transfer'),
         quickAction('Borrow', 'Against your shares', icon.download(), '/grow/borrow'),
         // The fourth errand, and the only one that is not about the portfolio:
         // airtime, data and a meter, paid out of the same dollars.
@@ -337,7 +337,7 @@ function gateway(): HTMLElement {
   // one line of reassurance, the portfolio carries the number and the two
   // things you would do with it. The search and the bell are the app's own
   // and stay beside the toggle.
-  const total = state.cash + state.lent + holdingsValue()
+  const total = worth()
   const move = dayMove()
   return shell(
     'home',
@@ -363,7 +363,7 @@ function gateway(): HTMLElement {
         h('span', { class: 'muted', text: standing() }),
         h('span', { class: 't-caps subtle', text: 'Total portfolio' }),
         figureWithEye(moneyFigure('t-figure', 'home.total', total)),
-        inNaira(total) ? h('span', { class: 'muted t-caption', text: inNaira(total)! }) : null,
+        alsoIn(total) ? h('span', { class: 'muted t-caption', text: alsoIn(total)! }) : null,
         h('span', { class: 'delta' },
           h('span', { class: (move.amount >= 0 ? 'pos' : 'warn') + ' t-body-strong',
             text: `${move.amount >= 0 ? '+' : ''}${money(move.amount)} (${move.amount >= 0 ? '+' : ''}${pct(move.pct)})` }),
@@ -383,7 +383,7 @@ function gateway(): HTMLElement {
       // open. A door labelled "Convert money" that lands on a screen headed
       // "Withdraw to your bank" is the promise in rule 49 half kept.
       tile({ art: NOTES(), ic: icon.wallet, to: '/transfer', title: 'Wallet', cta: 'Move money',
-        sub: 'Your dollars, and the naira going in and out.',
+        sub: 'USDC, USDT and naira, and what goes in and out.',
         reads: whereItIs(state.cash, total, 'in cash'),
         at: level(state.cash, total) }),
       tile({ art: PURSE(), ic: icon.grow, to: '/grow', title: 'Borrow & Lend', cta: 'See your limit',
@@ -395,7 +395,7 @@ function gateway(): HTMLElement {
       // which is the same question one step further on, and the only reading
       // this door could honestly carry.
       tile({ art: SIGNAL(), ic: icon.spend, to: '/spend', title: 'Spend', cta: 'Pay a bill',
-        sub: 'Airtime, data and light, straight out of your dollars.',
+        sub: 'Airtime, data and light, out of whichever balance you choose.',
         reads: billsSay(), at: level(billsOut(), paidOut()) })),
     // On a tablet held upright these two sit beside each other: 746 pixels is
     // two readable columns and one very wide one, and the feed is the thing
@@ -424,7 +424,7 @@ function gateway(): HTMLElement {
 function dayMove(): { amount: number; pct: number } {
   const now = holdingsValue()
   const before = state.holdings.reduce((t, p) => t + (p.shares * p.price) / (1 + p.dayPct / 100), 0)
-  const total = state.cash + state.lent + now
+  const total = state.cash + state.naira / state.ngnPerUsd + state.lent + now
   const amount = now - before
   return { amount, pct: total - amount ? (amount / (total - amount)) * 100 : 0 }
 }

@@ -3,7 +3,7 @@ import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, kv, emptyState, fieldError } from '../components/bits'
 import { find, aboutTheAmount } from '../catalogue'
-import { state, actions, bucketTotal, bucketShortfall, bucketRefusals, bucketCost, tradeFee } from '../state'
+import { state, actions, bucketTotal, bucketShortfall, bucketRefusals, bucketCost, tradeFee, priced} from '../state'
 import { usd, shares as fmtShares } from '../format'
 import { go, openSheet } from '../router'
 
@@ -53,7 +53,7 @@ export function bucketScreen(): HTMLElement {
         ? bad.bad[0].title + (aboutTheAmount(bad.bad[0])
             ? '. Try a smaller amount.'
             : '. Take it out to pay for the rest.')
-        : `${usd(c.price)} each · ${fmtShares(b.dollars / c.price)} shares`
+        : `${priced(c.price)} each · ${fmtShares(b.dollars / c.price)} shares`
     }
     redraw.push(say)
     field.addEventListener('change', () => {

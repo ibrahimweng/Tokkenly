@@ -69,8 +69,18 @@ export interface Account {
 
 const FIXED: Account[] = [
   // yours
-  { id: 'wallet', name: 'Your wallet', currency: 'USD', book: 'yours',
-    what: 'Dollars you hold, as USDC on Base' },
+  // One purse per asset. Two of them are dollars and they are still two
+  // accounts: USDC and USDT are different instruments with different issuers,
+  // and a product that could not tell you which of the two you held would be a
+  // product that had lost track of one of them. The third is naira, which is
+  // not a token at all — it is money in a bank rail, and it is here because
+  // somebody paid for airtime out of it.
+  { id: 'wallet.usdc', name: 'Your USDC', currency: 'USD', book: 'yours',
+    what: 'Dollars you hold, issued by Circle' },
+  { id: 'wallet.usdt', name: 'Your USDT', currency: 'USD', book: 'yours',
+    what: 'Dollars you hold, issued by Tether' },
+  { id: 'wallet.ngn', name: 'Your naira', currency: 'NGN', book: 'yours',
+    what: 'Naira you hold, in your Tokkenly account' },
   { id: 'lent', name: 'Your lending', currency: 'USD', book: 'yours',
     what: 'Dollars you have lent into the pool' },
   { id: 'loan', name: 'Borrowed', currency: 'USD', book: 'yours',
@@ -104,8 +114,16 @@ const FIXED: Account[] = [
     what: 'What the pool pays lenders, and what borrowers pay it' },
 
   // theirs
-  { id: 'chain', name: 'Base network', currency: 'USD', book: 'theirs',
-    what: 'Wallets outside Tokkenly' },
+  // One per network, not one for "the chain". Where money went is the fact a
+  // person checks a record for, and "outside Tokkenly" does not answer it —
+  // a payment on TRON and a payment on Ethereum cost different money, take
+  // different time, and go wrong in different ways.
+  { id: 'chain.base', name: 'Base network', currency: 'USD', book: 'theirs',
+    what: 'Wallets outside Tokkenly, on Base' },
+  { id: 'chain.tron', name: 'TRON network', currency: 'USD', book: 'theirs',
+    what: 'Wallets outside Tokkenly, on TRON' },
+  { id: 'chain.ethereum', name: 'Ethereum network', currency: 'USD', book: 'theirs',
+    what: 'Wallets outside Tokkenly, on Ethereum' },
   { id: 'market', name: 'The market', currency: 'USD', book: 'theirs',
     what: 'Where a tokenised share is bought and sold' },
   // Airtime, data and a meter are all naira paid to somebody who is not us,
@@ -123,6 +141,12 @@ const FIXED: Account[] = [
   { id: 'opening.ngn', name: 'Before this record', currency: 'NGN', book: 'theirs',
     what: 'What the account already held when the ledger starts' },
 ]
+
+/** One of the balances the app calls "your money". Asked rather than compared
+ *  against a name, because there are three of them now and every reader that
+ *  spelled out `'wallet'` was a reader that would silently stop seeing two
+ *  thirds of somebody's money. */
+export const isPurse = (id: string): boolean => id.startsWith('wallet.')
 
 const made = new Map<string, Account>()
 for (const a of FIXED) made.set(a.id, a)
@@ -236,7 +260,7 @@ export function paidOf(kind: string): number {
   let n = 0
   for (const p of book) {
     if (p.kind !== kind) continue
-    for (const e of p.entries) if (e.account === 'wallet') n += e.amount
+    for (const e of p.entries) if (isPurse(e.account)) n += e.amount
   }
   return Math.round(n * 1e6) / 1e6
 }
@@ -333,7 +357,7 @@ export function basis(ticker: Currency): { cost: number; shares: number; each: n
       // "Apple before this record" is an opening position, and is priced at
       // the assumed cost rather than at whatever else is in the same movement.
       const opened = p.entries.some((e) => e.account === 'open:' + ticker)
-      const money = opened ? undefined : p.entries.find((e) => e.account === 'wallet')
+      const money = opened ? undefined : p.entries.find((e) => isPurse(e.account))
       cost += money ? -money.amount : leg.amount * (openingCost.get(ticker) ?? 0)
     } else {
       const out = Math.min(-leg.amount, shares)

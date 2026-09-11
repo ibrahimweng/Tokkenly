@@ -6,8 +6,8 @@ import { table } from '../components/table'
 import { sparkline, type Range } from '../components/chart'
 import { pagerRow, pageable, beside, type Stop } from '../components/pager'
 import { CATALOGUE, CATEGORIES, PICKS, find, tradable, discount, catSlug, catOf, inCategory, type Instrument, pathOf } from '../catalogue'
-import { state, actions, inBucket, assetOn } from '../state'
-import { usd, pct } from '../format'
+import { state, actions, inBucket, assetOn, priced} from '../state'
+import { pct } from '../format'
 import { go } from '../router'
 import { toast } from '../components/sheet'
 import { celebrate } from '../confetti'
@@ -117,7 +117,7 @@ function listTable(rows: Instrument[], extra?: (c: Instrument) => Node): HTMLEle
         // list you scan into a wall you read. It is on the company's own page,
         // one tap from here.
         h('small', { class: 'desk-only', text: c.plain })),
-      h('span', { text: usd(c.price) }),
+      h('span', { text: priced(c.price) }),
       h('span', { class: c.dayPct >= 0 ? 'pos' : 'warn',
         text: (c.dayPct >= 0 ? '+' : '−') + pct(Math.abs(c.dayPct)) }),
       sparkline(spark(c), c.price, c.ticker.charCodeAt(0)),
@@ -162,7 +162,7 @@ function starters(): (Node | null)[] {
             h('small', { text: p.line })),
           sparkline(spark(c), c.price, c.ticker.charCodeAt(0)),
           h('span', { class: 'two-line right' },
-            h('span', { class: 't-body-strong', text: usd(c.price) }),
+            h('span', { class: 't-body-strong', text: priced(c.price) }),
             h('small', { class: c.dayPct >= 0 ? 'pos' : 'warn',
               text: (c.dayPct >= 0 ? '+' : '−') + pct(Math.abs(c.dayPct)) })),
           bucketCell(c))
@@ -265,7 +265,7 @@ function movers(): (Node | null)[] {
           h('small', { text: widest.plain })),
         h('span', { class: (widest.dayPct >= 0 ? 'pos' : 'warn') + ' t-display',
           text: (widest.dayPct >= 0 ? '+' : '−') + pct(Math.abs(widest.dayPct)) })),
-      kv('Price now', usd(widest.price)),
+      kv('Price now', priced(widest.price)),
       kv('Against the real share', pct(Math.abs(discount(widest)), 2)
         + (discount(widest) >= 0 ? ' below' : ' above'))),
     gainers.length

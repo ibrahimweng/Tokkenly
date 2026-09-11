@@ -114,9 +114,12 @@ ok('the picker search filters', n === 1, `${n} row(s)`)
 
 console.log('ERROR')
 await go('/send/base', 390)
-await page.locator('input[placeholder="Paste a Base address"]').fill('0x12')
-await page.locator('.btn-secondary', { hasText: 'Continue' }).click()
-await page.waitForTimeout(120)
+// The placeholder is the example address for whichever network is set, since
+// 11g.74 — there is no one "Base address" field any more. The field itself is
+// the only one on this panel.
+const addrField = page.locator('.set-panel .field input, .card .field input').first()
+await addrField.fill('0x12')
+await page.waitForTimeout(200)
 const err = await page.evaluate(() => {
   const f = document.querySelector('.field.error')
   // The visible one. There is more than one field on this screen now — the
@@ -126,8 +129,8 @@ const err = await page.evaluate(() => {
   return { ringed: !!f, message: m ? m.textContent.trim() : null }
 })
 ok('a bad address is marked where it was typed', err.ringed && !!err.message, JSON.stringify(err))
-await page.locator('input[placeholder="Paste a Base address"]').fill('0x22b1A7c04fa0')
-await page.waitForTimeout(100)
+await addrField.fill('0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984')
+await page.waitForTimeout(200)
 const cleared = await page.locator('.field.error').count()
 ok('and the error clears as you fix it', cleared === 0, `${cleared} ringed`)
 

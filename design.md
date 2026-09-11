@@ -8465,6 +8465,129 @@ and the replay posts both halves of each.
      and can never be demonstrated. Where a flow changes the unit, it brings its
      own refusal with it.
 
+### 11g.74 Three balances, three networks, and one setting that moves both
+
+Until now "your money" was one number and one word: dollars, on Base. That is a
+simplification a product can afford while every screen only asks how much. It
+stops being affordable the moment somebody is *paid* — because what lands is a
+particular token on a particular chain, and both of those are facts a person is
+responsible for getting right. USDT sent to a USDC address on the wrong network
+is gone, and no amount of clear typography afterwards undoes it.
+
+So the wallet holds three things and names them: **USDC** on Base or Ethereum,
+**USDT** on TRON or Ethereum, and **naira**, which is not a token at all — it is
+money in a bank rail, which is why it has no network and arrives by transfer
+rather than by address.
+
+**Two of the three are dollars and they are still two accounts.** Different
+issuers, different chains, different things that go wrong. The ledger counts
+both in USD and the trial balance still comes to nothing, which is the point: a
+product that could not tell you which of two dollars you held would be a product
+that had lost track of one of them. `wallet` became `wallet.usdc`,
+`wallet.usdt`, `wallet.ngn`; `chain` became `chain.base`, `chain.tron`,
+`chain.ethereum`, because "outside Tokkenly" does not answer where money went
+and a payment on TRON and a payment on Ethereum cost different money.
+
+**The naira balance contradicted something this record already said.** Spend was
+built one batch earlier on the argument that nothing is held in naira — that
+every bill converts on the way out, so the dollars are always the money. That
+was true of the product as written and it was the wrong thing to be true:
+somebody paid in naira, or who converted a month of bills in one go at a rate
+they liked, was being told the product had no way to hold what they had. The
+argument is rewritten rather than left standing beside its own contradiction.
+
+Which makes a bill two movements rather than one, and they are genuinely
+different:
+
+    from naira          one posting. The naira you hold are the naira the
+                        network takes. No desk, no rate, nothing quoted.
+    from a stablecoin   a conversion: two postings joined by the rate on the
+                        screen, one in each currency.
+
+Every screen follows that. Paid from naira, the composer prints no rate, the
+review says "Converted — Nothing", and there is no ninety-second hold on a
+payout because there is nothing to hold: a rate on those screens would be a
+number nobody was quoted.
+
+**The wrong network is refused where it is typed.** `wrongNetwork()` checks a
+pasted address against the network it will actually be sent on, and the refusal
+says what would happen rather than that something is invalid — "That is a TRON
+address, and this is set to send on Base. Sent as it is, the money would not
+arrive and could not be recovered." Base against Ethereum it cannot catch and
+does not pretend to: they share a shape, so the screen states which one it is
+sending on, beside the field, and the standing warning stands down whenever a
+specific one is showing.
+
+The receive screen answers the PRD's line — "Receive USDT — Network: TRON" — by
+deriving the address from both choices rather than showing it beside them. There
+is no arrangement of that screen in which the address and the network named
+above it can disagree, because the address is a function of the network, and so
+is the code you scan.
+
+**One setting decides what you are quoted in and what a payment takes.** Not
+two: somebody whose money is in naira wants prices in naira, and somebody
+holding USDC does not want a second figure under every price. It is set in
+Account, and a composer can override it for one payment without moving it —
+which is the whole rule, stated twice from either side: a composer is not the
+place to change a setting, and a setting is not the place to decide one payment.
+
+The line between them is what is quoted and what is recorded:
+
+175a. **A price is quoted in what you count in; a record states what actually
+moved.** Every price on Invest follows the setting, down to the year range and
+the starter picks. Every receipt, every review of a trade and every row of the
+activity feed stays in the currency of the movement, because a dollar trade
+restated in naira at this morning's rate is not a record of that trade.
+
+**What it cost on a phone.** The picker is a third control in a dialog that fits
+in 743 pixels with nothing to spare (item 61). It was paid for out of three
+places, each stated rather than quietly taken: the pills lose their caption and
+go to one line inside a sheet, the composer's lede loses its caption, and the
+summary folds to one row instead of three. All of it is on the review, which is
+the commit. The airtime composer measures 738 in 738.
+
+The Add money dialogs cost more, because a row of balances and a row of networks
+is 88 pixels in a dialog whose ceiling is 82% of the screen. Three trims, in the
+compact form only: the receive panel drops its QR code — 121 pixels for a thing
+somebody else scans off your screen, where what you actually do in a dialog is
+copy the address under it; the naira account's explanation goes to its short
+form; and the history of what came in this way goes from two rows to one. None
+of them is a term of anything: the page they belong to is one press away and
+carries all three in full.
+
+**And the chosen pill is filled, not outlined.** The first version drew a border
+on it, on the argument that three filled pills in a row would read as three
+primary buttons. `lines.mjs` caught it against rule 13 within the hour, and the
+rule was right twice over — only one of the three is ever filled, so the
+objection was wrong as well as against the rule. It takes the chip's own
+treatment, which is what every other choice in the product already uses.
+
+**Two arithmetic bugs found on the way**, both of the kind that look like
+formatting mistakes. `Math.imul` was missing from the address generator: a
+32-bit multiply done in floating point loses its low bits above 2^53, so every
+character drawn from `h % 16` came out zero and every deposit address read
+`0x0000…0000`. The same construction in `tokenFor` made every group of an
+electricity token even. Nobody would ever have noticed the second one, which is
+the argument for fixing it.
+
+176. **Two balances in one account is one balance.** The moment a product can
+     hold two of anything that looks alike — two dollar tokens, two issuers, two
+     chains — the arithmetic that adds them up is a decision to stop being able
+     to answer "which one". Separate accounts, and let the screens add them.
+
+177. **A refusal should say what would happen, not that something is invalid.**
+     An address can be perfectly valid and still be the wrong one to send to.
+     "Invalid address" is about the string; "that is a TRON address and this is
+     set to send on Base" is about the money, and only the second one stops
+     anybody.
+
+178. **Where a control is answered decides what it can change.** A choice made
+     on a page navigates, because a page's answer has to survive into the dialog
+     that commits it. A choice made inside a composer does not, because a route
+     change rebuilds the tree and takes the half-typed amount with it. Which is
+     also why an override in a composer never writes back to the default: the
+     two are different kinds of answer and always were.
+
 ### 11g.49 Still open
 
 - Buying and selling is the one page in the file that was hand-built rather

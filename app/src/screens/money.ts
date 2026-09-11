@@ -1,13 +1,13 @@
 import { h } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader, eyebrow } from '../components/shell'
-import { card, cardHead, kv, callout, providerNote, emptyState, fieldError, amount } from '../components/bits'
+import { card, cardHead, kv, callout, callout as calloutEl, providerNote, emptyState, fieldError, amount } from '../components/bits'
 import { table } from '../components/table'
 import { searchField, searchNote } from '../components/search'
 import { rank, onlyNear } from '../match'
 import { composerScreen } from '../components/composer'
 import {
-  state, movementCeiling, ceilingLabel, holding, cardFee, resolveAccount, switchOn, WALLET,
+  state, movementCeiling, ceilingLabel, holding, cardFee, resolveAccount, switchOn,
   type Destination,
 } from '../state'
 
@@ -19,6 +19,11 @@ import { usd, naira, when, shares, activityLabel } from '../format'
 import { openSheet, current, go, closeSheet } from '../router'
 
 import { isMobile, isSplit } from '../responsive'
+import { payRow, netRow, assetLine } from '../components/purse'
+import {
+  DOLLARS, assetOf, netsFor, netOf, defaultNet, wrongNetwork, shortAddress, addressFor,
+  type Asset,
+} from '../assets'
 import { toast } from '../components/sheet'
 
 /** Names only. Cash goes to anybody, so the Tokkenly flag on a person is
@@ -189,8 +194,12 @@ const WAYS: { key: Way; label: string; ic: () => string; sub: () => string }[] =
     sub: () => 'Dollars, in about a minute' },
   { key: 'bank', label: 'A bank account', ic: icon.convert,
     sub: () => (switchOn('payout.ngn') ? 'Dollars out, naira in' : 'Paused') },
-  { key: 'base', label: 'USDC on Base', ic: icon.wallet,
-    sub: () => 'Dollars on the network' },
+  // Not "USDC on Base" any more. Which token and which chain is the question
+  // this way asks; a door that has already answered it is a door that has
+  // decided for somebody, and deciding for somebody about a network is how
+  // money goes missing.
+  { key: 'base', label: 'A crypto wallet', ic: icon.wallet,
+    sub: () => 'USDC or USDT, on the network you pick' },
 ]
 
 const wayOf = (d: Destination): Way =>
@@ -307,43 +316,90 @@ function bankWay(): (Node | null)[] {
   ]
 }
 
-/** A Base address, checked for shape before it is used. */
-function baseWay(): (Node | null)[] {
-  const address = h('input', { placeholder: 'Paste a Base address' })
+/** An address, on a network, for one of two tokens.
+ *
+ *  Three answers, and the order matters: the token decides which networks
+ *  exist, the network decides what an address looks like, and only then can a
+ *  paste be checked. Checked against the network it will actually be sent on,
+ *  which is the whole point — an address can be perfectly valid and still be
+ *  the wrong one to send to, and those are different sentences.
+ *
+ *  TRON is the one this catches. A TRON address next to a Base setting is the
+ *  common mistake in this market, because TRON is where USDT moves and Base is
+ *  where this product does, and the two shapes do not resemble each other at
+ *  all. Base against Ethereum it cannot catch and does not pretend to: they
+ *  share a shape, so the screen says which one it is sending on and says it
+ *  where the address is typed rather than in a callout underneath. */
+function walletWay(): (Node | null)[] {
+  const q = current().query
+  let asset: Asset = (DOLLARS.includes(q.get('a') as Asset) ? q.get('a') : 'usdc') as Asset
+  let net = netOf(q.get('net') ?? '')?.key ?? defaultNet(asset)!.key
+
+  const address = h('input', { placeholder: netOf(net)!.example })
   const field = h('label', { class: 'field' }, address)
-  const err = fieldError(
-    h('span', { html: icon.alert() }), h('span', { text: 'Paste a full Base address' }))
+  const err = fieldError(h('span', { html: icon.alert() }), h('span', { text: '' }))
   err.hidden = true
-  const submit = () => {
-    const v = address.value.trim()
-    // The mistake is shown where it was made, not in a toast that has gone by.
-    const bad = v.length < 8
-    field.classList.toggle('error', bad)
-    err.hidden = !bad
-    if (bad) { address.focus(); return }
-    go('/send/base?to=' + encodeURIComponent(v.slice(0, 6) + '…' + v.slice(-4)))
+  const go2 = h('button', { class: 'btn btn-secondary', text: 'Continue' })
+  // The standing rule, until there is a specific instance of it. Both at once
+  // is the same warning twice, and the one attached to what somebody actually
+  // typed is the one that is about them.
+  const standing = callout('The address has to be on the network above. Sent on the wrong '
+    + 'one, it does not arrive and cannot be recovered.', 'warning')
+
+  const nets = h('div')
+  const paintNets = (): void => {
+    // Changing the token changes which networks exist, so the row is rebuilt
+    // rather than re-labelled — and a network the new token does not carry
+    // cannot survive the change.
+    if (!netsFor(asset).some((n) => n.key === net)) net = defaultNet(asset)!.key
+    nets.replaceChildren(netRow({ asset, get: () => net, set: (n) => { net = n; check() } })!)
+    address.setAttribute('placeholder', netOf(net)!.example)
   }
-  address.addEventListener('input', () => { field.classList.remove('error'); err.hidden = true })
+  const check = (): void => {
+    const v = address.value.trim()
+    const why = wrongNetwork(net, v)
+    field.classList.toggle('error', !!why)
+    err.hidden = !why
+    if (why) err.lastElementChild!.textContent = why
+    standing.hidden = !!why
+    go2.toggleAttribute('disabled', !v || !!why)
+  }
+  const submit = (): void => {
+    const v = address.value.trim()
+    if (!v || wrongNetwork(net, v)) { address.focus(); return }
+    go(`/send/base?a=${asset}&net=${net}&to=${encodeURIComponent(v)}`)
+  }
+  address.addEventListener('input', check)
   address.addEventListener('keydown', (e) => {
     if ((e as KeyboardEvent).key === 'Enter') { e.preventDefault(); submit() }
   })
+  go2.addEventListener('click', submit)
+  paintNets()
+  check()
+
   return [
     card(
-      cardHead('Where is it going'),
-      field,
-      err,
-      h('button', { class: 'btn btn-secondary', text: 'Continue', on: { click: submit } }),
-      callout('Base network only. Anything else sent here is lost.', 'warning')),
+      cardHead('Which token', h('span', { class: 'muted', text: 'Cash ' + usd(state.cash) })),
+      payRow({
+        assets: DOLLARS, get: () => asset, label: 'Sending',
+        set: (a) => { asset = a; paintNets(); check() },
+      }),
+      nets,
+      h('div', { class: 'stack-8' },
+        h('span', { class: 't-caps subtle', text: 'To this address' }),
+        field, err),
+      go2,
+      standing),
     card(
       cardHead('What this way is'),
-      kv('Network', 'Base, and only Base'),
-      kv('Fee', 'No fee'),
+      kv('Fee', netOf(net)!.fee ? usd(netOf(net)!.fee, false) + ' network fee' : 'No fee'),
+      kv('Arrives', netOf(net)!.takes),
       kv('Final', 'A sent transaction cannot be recalled')),
   ]
 }
 
 const wayPanel = (w: Way): (Node | null)[] =>
-  w === 'bank' ? bankWay() : w === 'base' ? baseWay() : peopleWay()
+  w === 'bank' ? bankWay() : w === 'base' ? walletWay() : peopleWay()
 
 /** The rail beside a panel, or the panel under a header. One shape, so the
  *  screen does not have to be written three times. */
@@ -431,9 +487,33 @@ export function sendScreen(sub?: string, forced?: Destination): HTMLElement {
   if (!to) return sendPicker(w)
 
   const bank = to.rail === 'bank'
+  const chain = to.rail === 'chain'
   const rate = state.ngnPerUsd
   const split = isSplit()
+  const q = current().query
   const steps = [{ label: wayLabel(w), to: '/send/' + w }, { label: to.name }]
+
+  /* Which balance pays.
+   *
+   *  Defaulted to the preference and changed for this payment only, which is
+   *  the whole rule: a composer is not the place to change a setting, and a
+   *  setting is not the place to make a decision about one payment.
+   *
+   *  Naira is offered on the bank rail and nowhere else. Naira out to a
+   *  Nigerian account is the one payment where holding naira means something —
+   *  no rate, no desk, nothing quoted — and naira cannot travel on a chain or
+   *  reach another Tokkenly account's dollar balance, so offering it there
+   *  would be offering something that cannot happen. */
+  const offered: Asset[] = bank && switchOn('payout.ngn') ? ['usdc', 'usdt', 'ngn'] : DOLLARS
+  // The address wins over the preference. A chain send arrives here having
+  // already been told which token, on the screen that checked the address
+  // against its network — ignoring that and falling back to the default is how
+  // a review comes to say USDC over an address that was checked as USDT.
+  const named = q.get('a') as Asset | null
+  let asset: Asset = named && offered.includes(named)
+    ? named
+    : offered.includes(state.prefs.payWith) ? state.prefs.payWith : 'usdc'
+  const net = chain ? (netOf(q.get('net') ?? '')?.key ?? defaultNet(asset)!.key) : undefined
 
   const spec = {
     place: 'wallet' as const,
@@ -446,22 +526,25 @@ export function sendScreen(sub?: string, forced?: Destination): HTMLElement {
     // change it: a Change that opens what the next column already shows is a
     // second way to one place.
     lede: () => h('div', { class: 'stack-8' },
-      h('span', { class: 't-caps subtle', text: 'To' }),
+      h('span', { class: 't-caps subtle compose-label', text: 'To' }),
       h(split ? 'div' : 'button', {
         class: 'sheet-row', style: { background: 'var(--control)' },
         on: split ? {} : { click: () => go('/send/' + w) },
       },
         bank
           ? h('span', { class: 'mark', html: icon.convert() })
-          : h('span', { class: 'avatar', text: initials(to.name) }),
+          : chain
+            ? h('span', { class: 'mark', html: icon.wallet() })
+            : h('span', { class: 'avatar', text: initials(to.name) }),
         h('span', { class: 'two-line grow' },
-          h('span', { class: 't-body-strong', text: to.name }),
+          h('span', { class: 't-body-strong',
+            text: chain ? shortAddress(to.name) : to.name }),
           // Your own account is already named by the row above it, so the
           // second line masks the number the way the rest of the product
           // does. Somebody else's shows the whole thing, because that is the
           // digits you are checking.
           h('small', { text: !bank
-            ? (to.rail === 'chain' ? 'Base address' : lastPaid(to.name))
+            ? (chain ? assetLine(asset, net) + ' address' : lastPaid(to.name))
             : to.bankId
               ? '•••• ' + (to.number ?? '').slice(-4) + ' · ' + state.person.name
               : to.bank + ' · ' + to.number })),
@@ -470,6 +553,12 @@ export function sendScreen(sub?: string, forced?: Destination): HTMLElement {
     eyebrow: ['Cash available', usd(state.cash)] as [string, string],
     cardLabel: 'How much',
     cardRight: 'Cash ' + usd(state.cash),
+    pay: {
+      assets: offered,
+      get: () => asset,
+      set: (a: Asset) => { asset = a },
+      needs: () => 0,
+    },
     initial: Math.min(bank ? 300 : 120, state.cash),
     max: Math.min(state.cash, movementCeiling()),
     maxLabel: ceilingLabel2(state.cash),
@@ -492,23 +581,34 @@ export function sendScreen(sub?: string, forced?: Destination): HTMLElement {
     // No 'To' row: the lede above already names them, and the same fact twice
     // in one dialog reads as a mistake.
     summary: (v: number): [string, string, string?][] => bank
-      ? [
-          ['You send', usd(v)],
-          ['Rate', '1 dollar = ' + naira(rate)],
-          ['Fee', 'No fee'],
-          ['They get', naira(v * rate)],
-          ['Arrives', 'Usually within a minute'],
-        ]
+      ? (asset === 'ngn'
+          ? [
+              // Naira out of naira. No rate on the screen because no rate was
+              // struck: the naira you hold are the naira that arrive, and a
+              // rate line here would be a number nobody was quoted.
+              ['They get', naira(v * rate)],
+              ['Converted', 'Nothing. Naira out of naira'],
+              ['Fee', 'No fee'],
+              ['Arrives', 'Usually within a minute'],
+            ]
+          : [
+              ['Rate', '1 dollar = ' + naira(rate)],
+              ['Fee', 'No fee'],
+              ['They get', naira(v * rate)],
+              ['Arrives', 'Usually within a minute'],
+            ])
       : [
-          ['Fee', 'No fee'],
-          ['Arrives', 'In about a minute'],
-          ['Network', to.rail === 'chain' ? 'Base' : 'Inside Tokkenly'],
+          ['Fee', chain && netOf(net!)!.fee
+            ? usd(netOf(net!)!.fee, false) + ' network fee' : 'No fee'],
+          ['Arrives', chain ? netOf(net!)!.takes : 'In about a minute'],
+          ['Network', chain ? netOf(net!)!.name : 'Inside Tokkenly'],
         ],
     callout: bank
       ? 'You get a firm rate on the next screen. It is held for ninety seconds.'
       : 'We move money every day, holidays included.',
     action: (v: number) => 'Send ' + usd(v),
-    onAction: (v: number) => openSheet('send-review', { v: String(v), ...railParams(to) }),
+    onAction: (v: number) => openSheet('send-review',
+      { v: String(v), a: asset, ...(net ? { net } : {}), ...railParams(to) }),
   }
 
   // Wide: the ways stay in the rail and the amount fills the panel, so the
@@ -811,10 +911,33 @@ export const addVia = (): Via =>
 /** Where to send the naira. A dedicated account, permanently yours, which is
  *  why there is no reference to quote: money reaching it can only be yours.
  *  The number is the thing being copied, so the button is on the number. */
-function virtualAccount(): HTMLElement {
+/** Where the money ends up, chosen before it arrives.
+ *
+ *  Naira coming in used to become dollars because there was nowhere else for
+ *  it to go. There is now, and it is a real choice with a real consequence:
+ *  landing in naira converts nothing, so there is no rate, no spread and
+ *  nothing to quote. It navigates rather than holding local state, because
+ *  this is a page and the answer has to survive into the dialog that commits
+ *  it — a choice a review cannot read is a choice that was not made. */
+export function landingIn(tab: AddTab): HTMLElement {
+  return payRow({
+    assets: ['usdc', 'usdt', 'ngn'],
+    label: 'Landing in',
+    get: () => landingAsset(),
+    set: (a) => go(`/addmoney/${tab}?into=${a}`),
+  })
+}
+
+export const landingAsset = (): Asset => {
+  const want = current().query.get('into') as Asset | null
+  return want && assetOf(want) ? want : state.prefs.payWith
+}
+
+function virtualAccount(full = true): HTMLElement {
   const v = state.va
   return card(
     cardHead('Send your naira here'),
+    landingIn('bank'),
     kv('Bank', v.bank),
     h('div', { class: 'kv' },
       h('span', { class: 't-caps subtle', text: 'Account number' }),
@@ -830,7 +953,19 @@ function virtualAccount(): HTMLElement {
         h('span', { class: 't-body-strong', text: v.number }),
         h('span', { class: 'muted', html: icon.copy() }))),
     kv('Account name', v.name),
-    callout('This account is yours and never changes.'))
+    // The long form on the page and the short one in the dialog, which has 692
+    // pixels for everything (item 61) and three of them are now a row of
+    // balances. Nothing is dropped that is a term — this is an explanation,
+    // and the page it belongs to is one press away.
+    callout(landingAsset() === 'ngn'
+      ? (full
+          ? 'This account is yours and never changes. Naira landing here stays naira: '
+            + 'nothing is converted and no rate is struck.'
+          : 'Yours, and it never changes. Naira landing here stays naira.')
+      : (full
+          ? 'This account is yours and never changes. What lands is converted at the '
+            + 'rate on the day it arrives.'
+          : 'Yours, and it never changes. Converted at the rate on the day it lands.')))
 }
 
 /* ---------------------------------------------------------------------------
@@ -854,7 +989,7 @@ function virtualAccount(): HTMLElement {
 
 export type AddTab = 'bank' | 'base' | 'card'
 
-const ADD_TABS: [AddTab, string][] = [['bank', 'Bank transfer'], ['base', 'Base'], ['card', 'Card']]
+const ADD_TABS: [AddTab, string][] = [['bank', 'Bank transfer'], ['base', 'Stablecoin'], ['card', 'Card']]
 
 export const addTab = (sub?: string): AddTab => {
   // The way is a path segment now, the same as Send's. `?tab=` is still read
@@ -878,8 +1013,8 @@ export const addTab = (sub?: string): AddTab => {
 const IN_WAYS: { key: AddTab; label: string; ic: () => string; sub: () => string }[] = [
   { key: 'bank', label: 'Bank transfer', ic: icon.convert,
     sub: () => 'Naira from any Nigerian bank' },
-  { key: 'base', label: 'USDC on Base', ic: icon.wallet,
-    sub: () => 'Dollars from any Base wallet' },
+  { key: 'base', label: 'A crypto wallet', ic: icon.wallet,
+    sub: () => 'USDC or USDT, on the network you pick' },
   { key: 'card', label: 'Debit card', ic: icon.card,
     sub: () => (switchOn('fund.card') ? 'Naira on a card, ' + state.fees.card + '% fee' : 'Paused') },
 ]
@@ -979,33 +1114,79 @@ export function addTabRow(now: AddTab): HTMLElement {
 /** Your Base address, and the code for it. Lifted out of the Receive screen
  *  whole: the address, the block pattern, the copy, and the one line that
  *  costs real money to get wrong. */
+/** Where to send a stablecoin so that it arrives.
+ *
+ *  The PRD's line is that the asset and the network must always be obvious —
+ *  "Receive USDT, Network: TRON" — and the reason is the one this whole file
+ *  keeps running into: an address is only an address on one network, and money
+ *  sent to it on another is gone. So the address is derived from both answers
+ *  rather than shown beside them. There is no arrangement of this screen in
+ *  which the address on it and the network named above it can disagree,
+ *  because the address is a function of the network.
+ *
+ *  The heading says both, in that order, in the words the PRD asks for. */
 function basePanel(full = true): HTMLElement {
-  const address = WALLET
-  const short = address.slice(0, 12) + '\u2026' + address.slice(-4)
+  const q = current().query
+  let asset: Asset = (DOLLARS.includes(q.get('a') as Asset) ? q.get('a') : 'usdc') as Asset
+  let net = netOf(q.get('net') ?? '')?.key ?? defaultNet(asset)!.key
+
+  const head = h('h3', { class: 't-caps subtle' })
+  const nets = h('div')
   const qr = h('div', { class: 'qr', ariaLabel: 'A code that resolves to your address' })
-  let seed = 42
-  for (let i = 0; i < 121; i++) {
-    seed = (seed * 1103515245 + 12345) % 2147483648
-    qr.appendChild(h('span', { class: seed % 100 > 45 ? 'on' : '' }))
+  const shown = h('span', { class: 't-body-strong' })
+  const warn = calloutEl('', 'warning')
+
+  const paint = (): void => {
+    if (!netsFor(asset).some((n) => n.key === net)) net = defaultNet(asset)!.key
+    const address = addressFor(asset, net)
+    const a = assetOf(asset)!
+    const n = netOf(net)!
+    head.textContent = `Receive ${a.name} — Network: ${n.name}`
+    shown.textContent = shortAddress(address)
+    shown.setAttribute('title', address)
+    // Its own code per address, so scanning one and reading the other cannot
+    // send money to two different places.
+    qr.replaceChildren()
+    let seed = 0
+    for (let i = 0; i < address.length; i++) seed = (seed * 31 + address.charCodeAt(i)) | 0
+    for (let i = 0; i < 121; i++) {
+      seed = (seed * 1103515245 + 12345) % 2147483648
+      qr.appendChild(h('span', { class: Math.abs(seed) % 100 > 45 ? 'on' : '' }))
+    }
+    warn.replaceChildren(
+      h('span', { html: icon.alert() }),
+      h('span', { text: full
+        ? `${a.name} on ${n.name} only. Anything else sent to this address `
+          + 'does not arrive and cannot be recovered.'
+        : `${a.name} on ${n.name} only. Anything else is lost.` }))
+    nets.replaceChildren(netRow({ asset, get: () => net, set: (v) => { net = v; paint() },
+      label: 'On this network' })!)
   }
   const copy = () => {
-    navigator.clipboard?.writeText(address).catch(() => undefined)
+    navigator.clipboard?.writeText(addressFor(asset, net)).catch(() => undefined)
     toast('Address copied', 'success')
   }
+  paint()
+
   return card(
-    cardHead('Your address', h('span', { class: 'muted', text: 'Base' })),
-    h('div', { class: 'stack-12', style: { alignItems: 'center' } },
-      qr,
-      full ? h('span', { class: 'muted', text: 'Scan this to pay ' + state.person.name }) : null),
+    h('div', { class: 'card-head' }, head),
+    payRow({ assets: DOLLARS, get: () => asset, label: 'Receiving', says: 'what',
+      set: (a) => { asset = a; paint() } }),
+    nets,
+    // The code, on the page and not in the dialog. A QR is 121 pixels for a
+    // thing somebody else scans off your screen — worth the room on a page and
+    // not worth it in a 692-pixel dialog, where what you actually do is copy
+    // the address that is right under it.
+    full
+      ? h('div', { class: 'stack-12', style: { alignItems: 'center' } },
+          qr, h('span', { class: 'muted', text: 'Scan this to pay ' + state.person.name }))
+      : null,
     h('div', { class: 'field', style: { justifyContent: 'space-between' } },
-      h('span', { class: 't-body-strong', text: short }),
+      shown,
       h('button', { class: 'icon-btn', html: icon.copy(), ariaLabel: 'Copy the address',
         on: { click: copy } })),
-    // The field carries a copy button of its own, so the wide one is the
-    // page's. In a dialog it is 56 pixels saying what the icon beside the
-    // address already said.
     full ? h('button', { class: 'btn btn-primary', text: 'Copy address', on: { click: copy } }) : null,
-    callout('Base network only. Anything else is lost.', 'warning'))
+    warn)
 }
 
 /** The one tab that has to ask. A card is pulled, so a figure has to exist
@@ -1031,7 +1212,7 @@ function cardPanel(): HTMLElement {
         kv('Fee when it is back', state.fees.card + '% of what you pay')),
       h('button', { class: 'btn btn-primary', text: 'Add money by transfer',
         on: { click: () => go('/addmoney/bank') } }),
-      h('button', { class: 'btn btn-secondary', text: 'Add USDC on Base',
+      h('button', { class: 'btn btn-secondary', text: 'Add a stablecoin',
         on: { click: () => go('/addmoney/base') } }))
   }
   let value = 200
@@ -1039,7 +1220,7 @@ function cardPanel(): HTMLElement {
   const pay = h('span', { class: 't-display-xl', text: naira(owed(value)) })
   const split = h('span', { class: 'muted' })
   const btn = h('button', { class: 'btn btn-primary', text: 'Pay ' + naira(owed(value)),
-    on: { click: () => openSheet('card-review', { v: String(value) }) } })
+    on: { click: () => openSheet('card-review', { v: String(value), into: landingAsset() }) } })
   const paint = () => {
     pay.textContent = naira(owed(value))
     split.textContent = `${naira(value * rate)} for the dollars, ${naira(cardFee(Math.round(value * rate)))} card fee.`
@@ -1058,6 +1239,7 @@ function cardPanel(): HTMLElement {
   return card(
     cardHead('How many dollars', h('span', { class: 'muted', text: 'Minimum ' + usd(10, false) })),
     h('div', { class: 'amount-box' }, input),
+    landingIn('card'),
     h('div', { class: 'stack-8' },
       h('span', { class: 't-caps subtle', text: 'You pay' }),
       pay, split),
@@ -1082,12 +1264,15 @@ function cardPanel(): HTMLElement {
  *  dialog exists to hand over, and it would not fit under item 61's ceiling. */
 function alreadyPaid(): HTMLElement {
   const rate = state.ngnPerUsd
+  const into = landingAsset()
   let value = 200
   const note = h('span', { class: 'muted' })
   const btn = h('button', { class: 'btn btn-primary', text: 'I have sent it',
-    on: { click: () => openSheet('transfer-review', { v: String(value) }) } })
+    on: { click: () => openSheet('transfer-review', { v: String(value), into }) } })
   const paint = () => {
-    note.textContent = `${naira(value * rate)} at ${naira(rate)} to the dollar.`
+    note.textContent = into === 'ngn'
+      ? `${naira(value * rate)}, landing in your naira balance. Nothing is converted.`
+      : `${naira(value * rate)} at ${naira(rate)} to the dollar.`
     btn.toggleAttribute('disabled', value < 10 || value > movementCeiling())
   }
   const input = h('input', {
@@ -1116,13 +1301,17 @@ function alreadyPaid(): HTMLElement {
  *  the panel, so this handed the page a chip row it destructured straight back
  *  off again — two way-pickers in one file, one of them never seen. */
 export function addPanels(tab: AddTab, full = true): HTMLElement[] {
-  const panel = tab === 'base' ? basePanel(full) : tab === 'card' ? cardPanel() : virtualAccount()
+  const panel = tab === 'base' ? basePanel(full) : tab === 'card' ? cardPanel() : virtualAccount(full)
   if (!full) {
     // One card, not three. A dialog that stacks a details card, a provider
     // note and a history card spends 112 pixels on padding and gaps before it
     // has said anything, and item 61's ceiling is 692 on a phone. What has
     // arrived goes inside the details card; the provider note is the page's.
-    for (const el of arrivedRows(tab, 2)) panel.appendChild(el)
+    // One row, not two. The dialog's budget is 82% of the screen (item 61) and
+    // a row of balances now has to fit inside it; what came in this way last
+    // month is the least load-bearing thing in here, and "All payments" is on
+    // the head of it.
+    for (const el of arrivedRows(tab, 1)) panel.appendChild(el)
     return [addTabRow(tab), panel]
   }
   return [

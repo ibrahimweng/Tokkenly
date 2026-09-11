@@ -6,7 +6,8 @@ import { table } from '../components/table'
 import { amount } from '../components/bits'
 import { find, discount, refusals, priceImpact, minReceived, GUARDS } from '../catalogue'
 import { stockScreen } from './stock'
-import { state, holding, nairaAside, tradeFee, maxInvestable, movementCeiling, ceilingLabel, switchOn, assetOn } from '../state'
+import { state, holding, nairaAside, tradeFee, maxInvestable, movementCeiling, ceilingLabel, switchOn, assetOn, priced, payAsset } from '../state'
+import { DOLLARS, type Asset } from '../assets'
 import { usd, pct, signed, shares as fmtShares, when } from '../format'
 import { go, openSheet } from '../router'
 
@@ -37,6 +38,11 @@ function orders(ticker?: string): HTMLElement {
 export function investScreen(ticker: string): HTMLElement {
   const c = find(ticker)
   if (!c) return shell('market', pageHeader('Not found'))
+  // Which dollars buy it. Naira is not offered: a share is priced and settled
+  // in dollars, and a pill you cannot press is worse than a pill that is not
+  // there. Somebody whose default is naira gets the stablecoin they hold most
+  // of, and can say otherwise here.
+  let asset: Asset = payAsset()
   return composerScreen({
     place: 'market',
     base: () => stockScreen(ticker),
@@ -99,7 +105,9 @@ export function investScreen(ticker: string): HTMLElement {
       : 'You are buying part of a share. Its value can fall as well as rise, and you can get back less than you put in.',
     risky: true,
     action: (v) => `Buy ${usd(v)} of ${c.name}`,
-    onAction: (v) => openSheet('invest-review', { v: String(v), t: c.ticker }),
+    pay: { assets: DOLLARS, get: () => asset, set: (a: Asset) => { asset = a },
+           needs: () => 0 },
+    onAction: (v) => openSheet('invest-review', { v: String(v), t: c.ticker, a: asset }),
     right: (v) => {
       const held = holding(c.ticker)
       const now = held?.shares ?? 0
@@ -109,17 +117,17 @@ export function investScreen(ticker: string): HTMLElement {
       // you what your existing shares would do and said nothing about the ones
       // you were in the middle of buying.
       const after = now + v / c.price
-      const worth = (mult: number) => usd(after * c.price * mult)
+      const worth = (mult: number) => priced(after * c.price * mult)
       return card(
         cardHead('What you are buying',
           h('button', { class: 'link', text: 'Change stock', on: { click: () => go('/invest') } })),
         h('span', { class: 't-title', text: c.name }),
         h('span', { class: 'muted', text: `${c.ticker} · listed in the United States` }),
-        h('span', { class: 't-display-xl', text: usd(c.price) }),
+        h('span', { class: 't-display-xl', text: priced(c.price) }),
         h('span', { class: c.dayPct >= 0 ? 'pos' : 'muted', text: (c.dayPct >= 0 ? '+' : '') + pct(c.dayPct) + ' today' }),
         h('div', { class: 'stack-12' },
-          kv('Year low', usd(c.yearLow)),
-          kv('Year high', usd(c.yearHigh)),
+          kv('Year low', priced(c.yearLow)),
+          kv('Year high', priced(c.yearHigh)),
           kv('Dividend', pct(c.dividend, 2) + ' a year'),
           kv('You hold', now ? fmtShares(now) + ' shares' : 'None yet'),
           kv('After this order', fmtShares(after) + ' shares')),
@@ -141,6 +149,8 @@ export function sellScreen(ticker: string): HTMLElement {
   const held = c ? holding(c.ticker) : undefined
   if (!c || !held) return shell('market', pageHeader('Nothing to sell'))
   const maxValue = held.shares * c.price
+  // And which one the proceeds land in.
+  let asset: Asset = payAsset()
   return composerScreen({
     place: 'market',
     base: () => stockScreen(ticker),
@@ -177,13 +187,15 @@ export function sellScreen(ticker: string): HTMLElement {
     callout: 'Selling part of a holding is fine. Whatever you keep carries on tracking the price.',
     risky: true,
     action: (v) => `Sell ${usd(v)} of ${c.name}`,
-    onAction: (v) => openSheet('sell-review', { v: String(v), t: c.ticker }),
+    pay: { assets: DOLLARS, get: () => asset, set: (a: Asset) => { asset = a },
+           label: 'Landing in' },
+    onAction: (v) => openSheet('sell-review', { v: String(v), t: c.ticker, a: asset }),
     right: (v) =>
       card(
         cardHead('What you are selling'),
         h('span', { class: 't-title', text: c.name }),
         h('span', { class: 't-display-xl', text: usd(maxValue) }),
-        h('span', { class: 'muted', text: `${fmtShares(held.shares)} shares at ${usd(c.price)} each` }),
+        h('span', { class: 'muted', text: `${fmtShares(held.shares)} shares at ${priced(c.price)} each` }),
         h('div', { class: 'stack-12' },
           kv('Selling', fmtShares(v / c.price) + ' ' + c.ticker),
           kv('Left after', fmtShares(Math.max(0, held.shares - v / c.price)) + ' ' + c.ticker),

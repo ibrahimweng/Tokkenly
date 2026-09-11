@@ -6,7 +6,8 @@ import {
   state, actions, owed, monthlyCost, monthlyInterest, holding, bucketTotal, bucketRefusals,
   tradeFee, cardFee, weakPin, ratePassword, LIMITS, type Activity, txHash, onChain, supportRef,
   switchOn, assetOn,
-  requestQuote, quoteLive, settlement, grossOf, billOutcome, type Quote, type Destination,
+  requestQuote, quoteLive, settlement, grossOf, billOutcome, payAsset,
+  type Quote, type Destination,
 } from './state'
 import { pinPad } from './components/pinpad'
 import {
@@ -20,6 +21,8 @@ import { isMobile } from './responsive'
 import { QA } from './screens/settings'
 import { peopleRows, addPanels, addTab, sendWays, addWays } from './screens/money'
 import { billFrom } from './screens/spend'
+import { assetOf, netOf, shortAddress, DOLLARS, type Asset } from './assets'
+import { assetLine } from './components/purse'
 import { search } from './destinations'
 import * as ledger from './ledger'
 import { BEHIND_MORE } from './components/shell'
@@ -56,6 +59,13 @@ function destFrom(r: Route): Destination {
 }
 
 const num = (r: Route, k: string, d = 0): number => Number(r.query.get(k) ?? d) || d
+
+/** Which balance a dialog was opened against, read off its own address so a
+ *  refresh cannot quietly move the payment onto a different one. */
+const assetFrom = (r: Route): Asset => {
+  const a = r.query.get('a') as Asset | null
+  return a && DOLLARS.includes(a) ? a : payAsset()
+}
 const str = (r: Route, k: string, d = ''): string => r.query.get(k) ?? d
 
 /** A review sheet: what is about to happen, in four rows, then one button
@@ -648,6 +658,11 @@ export const SHEETS: Record<string, Builder> = {
         ...(a.bill
           ? [[a.type === 'Electricity' ? 'Supplier' : 'Network', a.who] as [string, string]]
           : []),
+        // Which balance moved, and on what. Folded rather than above the line:
+        // it is the answer to "why does my USDT not add up" and to nothing
+        // else, which is exactly the kind of fact the fold is for.
+        ...(a.purse ? [['Paid with', assetOf(a.purse)!.name] as [string, string]] : []),
+        ...(a.net ? [['Network', netOf(a.net)!.name] as [string, string]] : []),
         ...(a.asset ? [['Price each', usd(a.asset.price)] as [string, string]]
           : c ? [
             [a.type === 'Sold' ? 'Sale' : 'Investment', usd(grossOf(a))] as [string, string],
@@ -1040,23 +1055,59 @@ export const SHEETS: Record<string, Builder> = {
   'send-review': (r) => {
     const v = num(r, 'v')
     const to = destFrom(r)
+    // Which balance is leaving, and on what. Read off the address so the
+    // dialog is rebuildable from it — a review that lost its asset on a
+    // refresh would be a review of a different payment.
+    const asset = (DOLLARS.includes(str(r, 'a') as Asset) || str(r, 'a') === 'ngn'
+      ? str(r, 'a') : 'usdc') as Asset
+    const net = netOf(str(r, 'net'))
     if (to.rail !== 'bank') {
       return review({
         title: 'Review',
         figureLabel: 'You are sending', figureValue: usd(v), amount: v,
         rows: [
-          ['To', to.name],
+          ['To', to.rail === 'chain' ? shortAddress(to.name) : to.name],
+          ['Paying with', assetOf(asset)!.name],
+          ...(net ? [['Network', net.name] as [string, string]] : []),
           ['They receive', usd(v)],
-          ['Fee', 'No fee'],
-          ['Arrives', 'In about a minute'],
+          ['Fee', net && net.fee ? usd(net.fee, false) + ' network fee' : 'No fee'],
+          ['Arrives', net ? net.takes : 'In about a minute'],
         ],
-        note: to.rail === 'chain'
-          ? 'We cannot check an address. Send a small amount first if you are not sure.'
+        note: net
+          // Not "we cannot check an address" any more: the network was checked
+          // where it was typed. What is left uncheckable is who is on the
+          // other end of it, and that is what this sentence should say.
+          ? `${assetLine(asset, net.key)}. We cannot tell whose wallet this is — `
+            + 'send a small amount first if you are not sure.'
           : 'Once sent, this cannot be taken back.',
         action: 'Send ' + usd(v),
         onConfirm: () => {
-          const a = actions.sendMoney(to, v)
+          const a = actions.sendMoney(to, v, state.ngnPerUsd, asset, net?.key)
           replaceSheet('send-done', { ref: a.ref })
+        },
+      })
+    }
+    // Naira out of naira is not a conversion, so there is no rate to hold and
+    // no clock to run: the figure on the screen is the figure that leaves.
+    if (asset === 'ngn') {
+      const ngn = Math.round(v * state.ngnPerUsd)
+      return review({
+        title: 'Review',
+        figureLabel: 'You are sending', figureValue: naira(ngn),
+        amount: v,
+        rows: [
+          ['To', to.name],
+          ['Account', (to.bank ?? '') + (to.number ? ' · ' + to.number : '')],
+          ['Paying with', 'Your naira'],
+          ['They get', naira(ngn)],
+          ['Converted', 'Nothing'],
+          ['Fee', 'No fee'],
+        ],
+        note: 'Naira out of naira, so there is no rate and nothing to hold.',
+        action: 'Send ' + naira(ngn),
+        onConfirm: () => {
+          const a = actions.sendMoney(to, ngn, state.ngnPerUsd, 'ngn')
+          replaceSheet('send-done', { ref: a.ref, rate: String(state.ngnPerUsd) })
         },
       })
     }
@@ -1069,14 +1120,14 @@ export const SHEETS: Record<string, Builder> = {
         rows: (q) => [
           ['To', to.name],
           ['Account', (to.bank ?? '') + (to.number ? ' · ' + to.number : '')],
+          ['Paying with', assetOf(asset)!.name],
           ['Rate', '1 dollar = ' + naira(q.rate)],
           ['Fee', 'No fee'],
           ['They get', naira(v * q.rate)],
-          ['Arrives', 'Usually within a minute'],
         ],
         action: () => 'Send ' + usd(v),
         onConfirm: (q) => {
-          const a = actions.sendMoney(to, v, q.rate)
+          const a = actions.sendMoney(to, v, q.rate, asset)
           replaceSheet('send-done', { ref: a.ref, rate: String(q.rate) })
         },
       },
@@ -1127,12 +1178,15 @@ export const SHEETS: Record<string, Builder> = {
     }
     const rate = state.ngnPerUsd
     const dollars = Math.round((b.naira / rate) * 100) / 100
+    const fromNaira = b.asset === 'ngn'
     return review({
       title: 'Review',
       figureLabel: b.what, figureValue: naira(b.naira),
       // Not the naira: the ceiling and the PIN are about what leaves the
-      // wallet, and what leaves the wallet is dollars.
-      amount: dollars,
+      // wallet, and what leaves the wallet is dollars — unless it is naira,
+      // in which case the dollar figure is an equivalent and the PIN should
+      // not be asked against a number nobody moved.
+      amount: fromNaira ? 0 : dollars,
       rows: [
         [b.way === 'electricity' ? 'Meter' : 'Number', b.target],
         // The name off the register, restated at the commit. It is the reason
@@ -1144,8 +1198,14 @@ export const SHEETS: Record<string, Builder> = {
           ? [['Kind', b.kind === 'prepaid' ? 'Prepaid · a token' : 'Postpaid · off the bill'] as [string, string]]
           : []),
         [b.way === 'electricity' ? 'Supplier' : 'Network', b.who],
-        ['Costs you', usd(dollars)],
-        ['Rate', '1 dollar = ' + naira(rate)],
+        ['Paying with', assetOf(b.asset)!.name],
+        // Naira out of naira converts nothing, so there is no cost in another
+        // currency and no rate. Printing one would be printing a number that
+        // had no part in the payment.
+        ...(fromNaira
+          ? [['Converted', 'Nothing'] as [string, string]]
+          : [['Costs you', usd(dollars)] as [string, string],
+             ['Rate', '1 dollar = ' + naira(rate)] as [string, string]]),
         ['Fee', 'No fee'],
       ],
       note: b.way === 'electricity'
@@ -1164,7 +1224,7 @@ export const SHEETS: Record<string, Builder> = {
           note: b.note ?? (b.holder
             ? `${b.kind === 'prepaid' ? 'Prepaid' : 'Postpaid'} · ${b.holder}`
             : undefined),
-          prepaid: b.kind === 'prepaid',
+          prepaid: b.kind === 'prepaid', asset: b.asset,
         }, rate)
         replaceSheet('spend-done', { ref: a.ref })
       },
@@ -1184,7 +1244,8 @@ export const SHEETS: Record<string, Builder> = {
     const rows: [string, string][] = [
       [a.type === 'Electricity' ? 'Meter' : 'Number', b.target],
       ['Paid', naira(b.naira)],
-      ['Cost you', usd(Math.abs(a.amount))],
+      [a.purse === 'ngn' ? 'Came out of' : 'Cost you',
+       a.purse === 'ngn' ? 'Your naira' : usd(Math.abs(a.amount))],
     ]
     // "Electricity bought" is not what a postpaid payment did: nothing was
     // bought, something was paid down. Airtime and data were bought.
@@ -1254,6 +1315,7 @@ export const SHEETS: Record<string, Builder> = {
   'card-review': (r) => {
     const v = num(r, 'v')
     const c = state.cards[0]
+    const into = (assetOf(str(r, 'into')) ? str(r, 'into') : state.prefs.payWith) as Asset
     return review({
       title: 'Review',
       figureLabel: 'You are adding', figureValue: usd(v), amount: v,
@@ -1266,13 +1328,14 @@ export const SHEETS: Record<string, Builder> = {
             ['You pay', naira(ngn + cardFee(ngn))],
             ['Rate', '1 dollar = ' + naira(q.rate)],
             ['Fee', naira(cardFee(ngn)) + ' · ' + state.fees.card + '% card fee'],
-            ['You receive', usd(v)],
+            ['You receive', into === 'ngn' ? naira(ngn) : usd(v)],
+            ['Landing in', assetOf(into)!.name],
             ['Card', c.brand + ' •••• ' + c.last4],
           ]
         },
         action: (q) => 'Pay ' + naira(Math.round(v * q.rate) + cardFee(Math.round(v * q.rate))),
         onConfirm: (q) => {
-          const a = actions.startAddMoney(v, { kind: 'card', id: c.id }, q.rate)
+          const a = actions.startAddMoney(v, { kind: 'card', id: c.id }, q.rate, into)
           // The charge is authorised; the naira has not reached us yet. A card
           // takes seconds, so the wait is short — but it is a real wait with a
           // real posting behind it, not a spinner over an answer we already had.
@@ -1291,6 +1354,7 @@ export const SHEETS: Record<string, Builder> = {
   'transfer-review': (r) => {
     const v = num(r, 'v')
     const va = state.va
+    const into = (assetOf(str(r, 'into')) ? str(r, 'into') : state.prefs.payWith) as Asset
     const ngn = Math.round(v * state.ngnPerUsd)
     const copy = h('button', {
       class: 'copy va-number', title: 'Copy the account number',
@@ -1311,16 +1375,30 @@ export const SHEETS: Record<string, Builder> = {
       panel(
         ['Bank', va.bank],
         ['Account name', va.name],
-        ['Rate', '1 dollar = ' + naira(state.ngnPerUsd) + ', today'],
-        ['Fee', 'No fee'],
-        ['You will get', 'About ' + usd(v)],
+        ['Landing in', assetOf(into)!.name],
+        ...(into === 'ngn'
+          ? [['Converted', 'Nothing'] as [string, string],
+             ['Fee', 'No fee'] as [string, string],
+             ['You will get', naira(ngn)] as [string, string]]
+          : [['Rate', '1 dollar = ' + naira(state.ngnPerUsd) + ', today'] as [string, string],
+             ['Fee', 'No fee'] as [string, string],
+             ['You will get', 'About ' + usd(v)] as [string, string]]),
       ),
-      calloutEl('You get the rate on the day it lands, so the dollars may differ by a few cents.'),
+      calloutEl(into === 'ngn'
+        // Nothing is converted, so there is nothing for a rate to change. The
+        // sentence about the rate moving would have been a caveat about a
+        // number that is not in this transaction.
+        ? 'Naira in, naira kept. Nothing is converted.'
+        // One line, because the dialog is eight pixels over its ceiling with
+        // two. What the second line said — that the dollars may differ — the
+        // panel above already says with the word "About".
+        : 'You get the rate on the day it lands.'),
       h('button', {
         class: 'btn btn-primary', text: 'I have sent it',
         on: {
           click: () => {
-            const a = actions.startAddMoney(v, { kind: 'transfer', id: state.banks[0]?.id })
+            const a = actions.startAddMoney(v, { kind: 'transfer', id: state.banks[0]?.id },
+                                            state.ngnPerUsd, into)
             setTimeout(() => actions.landAddMoney(a.ref), TRANSFER_MS)
             replaceSheet('add-waiting', { ref: a.ref })
           },
@@ -1465,7 +1543,7 @@ export const SHEETS: Record<string, Builder> = {
         : 'Its value can fall as well as rise, and you can get back less than you put in. Sell any part of it whenever you want.',
       action: `Buy ${usd(v)} of ${c.name}`,
       onConfirm: () => {
-        const { activity, shares } = actions.buy(c.ticker, v)
+        const { activity, shares } = actions.buy(c.ticker, v, assetFrom(r))
         replaceSheet('invest-done', { ref: activity.ref, t: c.ticker, got: fmtShares(shares) })
       },
     })
@@ -1508,7 +1586,7 @@ export const SHEETS: Record<string, Builder> = {
       amount: v,
       action: `Sell ${usd(v)} of ${c.name}`,
       onConfirm: () => {
-        const { activity, shares } = actions.sell(c.ticker, v)
+        const { activity, shares } = actions.sell(c.ticker, v, assetFrom(r))
         replaceSheet('sell-done', { ref: activity.ref, t: c.ticker, sold: fmtShares(shares) })
       },
     })
@@ -1581,7 +1659,7 @@ export const SHEETS: Record<string, Builder> = {
       note: 'Your shares stay yours and keep earning. We only sell if they fall to that level.',
       action: 'Borrow ' + usd(v),
       onConfirm: () => {
-        const a = actions.borrow(v)
+        const a = actions.borrow(v, assetFrom(r))
         replaceSheet('borrow-done', { ref: a.ref })
       },
     })
@@ -1608,7 +1686,7 @@ export const SHEETS: Record<string, Builder> = {
       note: 'Repaying frees the same amount up to borrow again whenever you want.',
       action: 'Repay ' + usd(v),
       onConfirm: () => {
-        const a = actions.repay(v)
+        const a = actions.repay(v, assetFrom(r))
         replaceSheet('repay-done', { ref: a.ref })
       },
     })
@@ -1636,7 +1714,7 @@ export const SHEETS: Record<string, Builder> = {
       note: 'The rate moves with the market. It can go up as well as down.',
       action: 'Move ' + usd(v) + ' in',
       onConfirm: () => {
-        const a = actions.lend(v)
+        const a = actions.lend(v, assetFrom(r))
         replaceSheet('earn-done', { ref: a.ref })
       },
     })
@@ -1663,7 +1741,7 @@ export const SHEETS: Record<string, Builder> = {
       note: 'Interest already paid stays in your wallet. Only what you leave in keeps earning.',
       action: 'Take out ' + usd(v),
       onConfirm: () => {
-        const a = actions.takeBack(v)
+        const a = actions.takeBack(v, assetFrom(r))
         replaceSheet('takeout-done', { ref: a.ref })
       },
     })

@@ -58,8 +58,16 @@ console.log('THE BOOKS OPEN BALANCED')
   await at('/transfer')
   const cash = money(await settled(p, '.hero-figure'))
   const b1 = await books()
-  ok('the wallet on Transfer is the wallet in the ledger',
-     money(b1.balances['Your wallet']) === cash, `${cash} vs ${b1.balances['Your wallet']}`)
+  // Three purses since 11g.74, so the headline on the Wallet is the sum of
+  // them rather than one account — and the naira one has to be brought into
+  // dollars to be added at all, which is the only place in the product that
+  // figure is converted.
+  const purses = money(b1.balances['Your USDC']) + money(b1.balances['Your USDT'])
+    + money(b1.balances['Your naira']) / 1500
+  ok('the three purses on the Wallet are the three in the ledger',
+     Math.abs(purses - cash) < 0.02,
+     `${cash} vs ${b1.balances['Your USDC']} + ${b1.balances['Your USDT']} `
+     + `+ ${b1.balances['Your naira']}`)
   // Borrow & Lend lost its hero in 11g.43 — the page is two cards and the
   // questions. What was lent out is the headline figure on the lending
   // position page now.
