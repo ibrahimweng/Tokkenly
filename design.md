@@ -8876,12 +8876,18 @@ The phone dialog comes to 532 against item 61's ceiling of 692.
   further than "it can drift" — the file is a photograph of a version that no
   longer ships, which is the exact failure 11g.70 was built to end. Re-running
   the converter over the nine flows is the fix and nobody has asked for it.
-- The Figma file key is not written down anywhere in this repository. Every
-  Figma batch ran in-session and the key went with the session, which is the
+- The Figma file is `QMT7FjrIjJVDDGNjPY5Clu` — "Tokkenly — every screen,
+  desktop and mobile". Written down here because it had not been: every Figma
+  batch ran in-session and the key went with the session, which is the
   mechanical reason nothing has been watching that file drift (11g.70's own
-  open item). The next push to Figma records the key here. The redline that was
-  going to go through Figma came back as words instead (11g.77), so the file is
-  now four batches behind rather than three.
+  open item). It was recovered out of the session transcript rather than out of
+  anything in this repository, which is the same fault stated twice.
+- Reading that file now returns two pages, `Design system` and `Icons`. The nine
+  flows of screens that R1 to R9 built are not in it. Either they were built
+  somewhere else or they are gone, and this record cannot tell which — nothing
+  here ever wrote down where they went. Worth settling before any further push,
+  because "the file is four batches behind" assumes the file still holds the
+  screens to be behind with.
 - The ramp `--part-1/2/3` (11g.75) has one consumer, the wallet's bar. It is
   written as a palette idea rather than a wallet one on the argument that parts
   of a total are a thing and not a screen, and that argument is only proved the
