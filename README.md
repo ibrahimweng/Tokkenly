@@ -6,6 +6,7 @@ bank.
 
 ```
 app/         the product: Vite + TypeScript, no framework
+site/        the marketing site: one static page, no build
 design.md    the design record: every screen, every figure, 51 rules
 CLAUDE.md    project memory
 vercel.json  deployment
