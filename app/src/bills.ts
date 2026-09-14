@@ -284,7 +284,7 @@ export interface Biller {
 export const BILLERS: Biller[] = [
   /* ------------------------------------------------------------------ tv -- */
   { key: 'dstv', kind: 'tv', name: 'DStv', idLabel: 'Smartcard number',
-    example: '1234567890', digits: 10, packs: [
+    example: '70•• ••• •••', digits: 10, packs: [
       { key: 'dstv-padi', name: 'Padi', lasts: 'a month', price: 4400 },
       { key: 'dstv-yanga', name: 'Yanga', lasts: 'a month', price: 6000 },
       { key: 'dstv-confam', name: 'Confam', lasts: 'a month', price: 11000 },
@@ -293,7 +293,7 @@ export const BILLERS: Biller[] = [
       { key: 'dstv-premium', name: 'Premium', lasts: 'a month', price: 44500 },
     ] },
   { key: 'gotv', kind: 'tv', name: 'GOtv', idLabel: 'IUC number',
-    example: '2012345678', digits: 10, packs: [
+    example: '20•• ••• •••', digits: 10, packs: [
       { key: 'gotv-smallie', name: 'Smallie', lasts: 'a month', price: 1900 },
       { key: 'gotv-jinja', name: 'Jinja', lasts: 'a month', price: 3900 },
       { key: 'gotv-jolli', name: 'Jolli', lasts: 'a month', price: 5800 },
@@ -301,7 +301,7 @@ export const BILLERS: Biller[] = [
       { key: 'gotv-supa', name: 'Supa', lasts: 'a month', price: 11400 },
     ] },
   { key: 'startimes', kind: 'tv', name: 'StarTimes', idLabel: 'Smartcard number',
-    example: '01234567', digits: 8, packs: [
+    example: '0••• ••••', digits: 8, packs: [
       { key: 'st-nova', name: 'Nova', lasts: 'a month', price: 1900 },
       { key: 'st-basic', name: 'Basic', lasts: 'a month', price: 3700 },
       { key: 'st-smart', name: 'Smart', lasts: 'a month', price: 5100 },
@@ -317,21 +317,21 @@ export const BILLERS: Biller[] = [
 
   /* ------------------------------------------------------------ internet -- */
   { key: 'smile', kind: 'internet', name: 'Smile', idLabel: 'Account number',
-    example: '123456789', digits: 9, packs: [
+    example: '•'.repeat(9), digits: 9, packs: [
       { key: 'sml-5', name: '5GB', lasts: '30 days', price: 4500 },
       { key: 'sml-10', name: '10GB', lasts: '30 days', price: 7000 },
       { key: 'sml-20', name: '20GB', lasts: '30 days', price: 12000 },
       { key: 'sml-30', name: '30GB', lasts: '30 days', price: 16000 },
     ] },
   { key: 'spectranet', kind: 'internet', name: 'Spectranet', idLabel: 'Customer ID',
-    example: '1234567890', digits: 10, packs: [
+    example: '•'.repeat(10), digits: 10, packs: [
       { key: 'spec-10', name: '10GB', lasts: '30 days', price: 5000 },
       { key: 'spec-20', name: '20GB', lasts: '30 days', price: 9500 },
       { key: 'spec-40', name: '40GB', lasts: '30 days', price: 16000 },
       { key: 'spec-80', name: '80GB', lasts: '30 days', price: 25000 },
     ] },
   { key: 'ipnx', kind: 'internet', name: 'ipNX', idLabel: 'Account number',
-    example: '123456', digits: 6, packs: [
+    example: '••••••', digits: 6, packs: [
       { key: 'ipnx-basic', name: 'Home Basic', lasts: 'a month', price: 17000 },
       { key: 'ipnx-plus', name: 'Home Plus', lasts: 'a month', price: 28000 },
       { key: 'ipnx-max', name: 'Home Max', lasts: 'a month', price: 60000 },
@@ -354,7 +354,7 @@ export const BILLERS: Biller[] = [
   { key: 'betking', kind: 'betting', name: 'BetKing', idLabel: 'User ID',
     example: 'yourname', digits: 4, text: true, most: 500000 },
   { key: '1xbet', kind: 'betting', name: '1xBet', idLabel: 'Account ID',
-    example: '123456789', digits: 9, most: 500000 },
+    example: '•'.repeat(9), digits: 9, most: 500000 },
 ]
 
 export const billerOf = (key: string): Biller | undefined =>
