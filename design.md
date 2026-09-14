@@ -8851,6 +8851,89 @@ The phone dialog comes to 532 against item 61's ceiling of 692.
      keyboard has none. The test is not whether the hover is nice; it is
      whether the same fact has a second path that a thumb can take.
 
+### 11g.78 The rail's foot, and the other things a person in Nigeria pays for
+
+**A thing that holds something else up cannot be a thing you can delete.** The
+account row sat at the bottom of the rail because the promo above it carried
+`margin-top: auto` — so putting the advert away took the push away with it and
+the row rode up under the last nav item. The pin belongs to a group now: the
+promo and the account row are one foot, and the foot does the pushing. The row
+is 20px off the bottom whether there is an advert above it or not, at 600 tall
+and at 1600.
+
+The nav takes the scroll rather than the rail, so a laptop at 600 pushes nothing
+off the bottom: the places scroll, the account row holds. `min-height: 0` is
+what lets a flex child shrink below its own content at all, and without it the
+whole column just grows and the foot leaves the screen.
+
+**And Spend stopped being three errands.**
+
+Airtime, data and a meter were never the three errands — they were the three
+easiest. The PRD says "other everyday bills" and stops. What is underneath is
+the TV that goes off on the 1st, the office wifi, the betting wallet, the exam
+PIN a parent buys in February, and the Netflix charge that is the reason
+somebody keeps a card at another bank.
+
+Three shapes cover all of it, which is why this is one panel and not five:
+
+    an account somebody else keeps    a smartcard, a router, a betting ID
+    a code you are buying             an exam PIN
+    a subscription a card pays        Netflix, Spotify, YouTube
+
+**One screen, because a press is the thing being spent.** Electricity asks
+three screens — pick a disco, type a meter, choose an amount — which is five
+presses from Home to the confirm button and four of them navigation. The new
+ways ask one: the provider as chips with the commonest already chosen, the
+number under it, the package under that. Picking the bouquet *is* the pay
+button, so the panel has no Continue on it.
+
+    a bill you have paid before   Spend, the saved row, Pay        3
+    a new TV or internet bill     Spend, the category, the package  3
+    a betting wallet              Spend, the category, Continue, Pay 4
+
+And the place leads with **Things you pay** rather than with the list of what
+could be paid, because a bill is nearly always a repeat and the shorter road
+should be the one on top. Eight ways is a list rather than a rail, so they are
+a grid underneath it — four across, two on a phone.
+
+**The wide screen stopped forwarding to airtime.** It did that because a rail
+beside an empty panel looks broken. A grid is not a rail: it fills its own
+width, so `/spend` can now be `/spend` instead of an address that says one
+thing while the screen shows another.
+
+**Subscriptions are the one group here that is not a bill,** and the screen says
+so. Netflix is not on any Nigerian biller rail — it charges a card, on its own
+schedule. So that panel does not pay anything; it sets up a standing
+arrangement against the Tokkenly card, and it names the card it is waiting for
+rather than being drawn as though it works. Designing it now was the call; every
+other screen in Spend has a live API a backend can call this week, and this one
+has a dependency instead. Saying which is which is the whole point of drawing
+it.
+
+**Prices are indicative and the code says so.** Bouquet prices move; a product
+that hard-codes them is wrong by the end of the quarter, so the registry carries
+plausible figures and a note that the live list is fetched from the biller on
+open.
+
+Two things the build found. The package buttons closed over the number that was
+in the *address* when the panel was drawn, so pressing a bouquet after typing a
+smartcard opened a review of nothing — the number somebody had just typed had
+never reached the dialog. And the review called DStv a "Network", which is
+airtime's word: `whoLabel` gives each way the noun its trade uses — supplier,
+provider, bookmaker, exam body, service — which is rule 37 applied to the party
+on the other side of the payment.
+
+186. **A thing that holds something else up cannot be a thing you can delete.**
+     If a layout depends on an element's margin, and that element is dismissible,
+     the layout is one press from being wrong. Put the property on something
+     nobody can remove.
+
+187. **A press is the thing being spent.** Every screen between somebody and the
+     thing they came to do is a screen they did not want. Where a picker can be
+     chips on the screen that already exists rather than a screen of its own, it
+     is chips — and where the list of things you can buy is short and priced,
+     picking one is the pay button.
+
 ### 11g.49 Still open
 
 - Buying and selling is the one page in the file that was hand-built rather
@@ -8876,6 +8959,19 @@ The phone dialog comes to 532 against item 61's ceiling of 692.
   further than "it can drift" — the file is a photograph of a version that no
   longer ships, which is the exact failure 11g.70 was built to end. Re-running
   the converter over the nine flows is the fix and nobody has asked for it.
+- Electricity still asks three screens where TV and internet ask one (11g.78).
+  It predates the one-panel shape and was left alone in that batch rather than
+  rewritten under it, so the place now has two anatomies for the same errand —
+  which is the fault 11g.78's own rule 187 names. Folding it in is the next
+  thing, and it deletes code rather than adding it.
+- The outcome for a bill still reads "TV added", which is the airtime sentence
+  wearing a different noun. Each way needs its own: a bouquet is renewed, a
+  router is topped up, an exam PIN comes back as a code the way a prepaid token
+  does. The PIN in particular is built in `bills.ts` and not yet shown to
+  anybody.
+- Betting is in because it was asked for, and it is the one category here a
+  product might decide it does not want. Nothing in the record argues for or
+  against it; it is worth an actual decision rather than an omission.
 - The Figma file is `QMT7FjrIjJVDDGNjPY5Clu` — "Tokkenly — every screen,
   desktop and mobile". Written down here because it had not been: every Figma
   batch ran in-session and the key went with the session, which is the

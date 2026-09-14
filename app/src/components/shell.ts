@@ -131,10 +131,19 @@ export function sidebar(active: Place): HTMLElement {
       h('span', { text: state.cardWaitlist ? 'You are on the list' : 'Join the list' }),
       h('span', { html: icon.chevron() }))
   )
+  // The promo and the account row are one group, pinned to the bottom.
+  //
+  // The push used to live on the promo itself — `margin-top: auto` — which
+  // meant putting the promo away took the push away with it and the account
+  // row rode up to sit under the last nav item. A thing that holds something
+  // else in place cannot be a thing you can delete. The group does the pinning
+  // now, so the row is at the bottom whether there is an advert above it or
+  // not, and the two stay together when there is.
   return h('aside', { class: 'sidebar' },
     h('div', { class: 'brand' }, h('span', { class: 'brand-mark', text: 'T' }),
       h('strong', { text: 'Tokkenly' })),
-    nav, promo, whoami())
+    nav,
+    h('div', { class: 'side-foot' }, promo, whoami()))
 }
 
 function whoami(): HTMLElement {

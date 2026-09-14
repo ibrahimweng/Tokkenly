@@ -223,3 +223,290 @@ export function tokenFor(ref: string): string {
   }
   return out
 }
+
+/* ---------------------------------------------------------------------------
+   The rest of what a person in Nigeria actually pays for.
+
+   Airtime, data and a meter were the three errands 11g.73 built. They are not
+   the three errands; they are the three easiest. The ones underneath — the TV
+   that goes off on the 1st, the office wifi, the exam PIN a parent buys in
+   February — are the same errand with a different noun, and every one of them
+   has a live biller API a backend can call.
+
+   Three shapes cover all of it:
+
+     an account somebody else keeps        a smartcard, a router, a betting ID
+     a code you are buying                 an exam PIN
+     a subscription a card pays            Netflix, Spotify, YouTube
+
+   The first is electricity's shape, which is why electricity joins this list
+   rather than keeping its own. The second is the prepaid token read backwards:
+   money in, a code out, nothing to validate first. The third is not a biller
+   at all and is marked as such.
+
+   Every price here is indicative. A backend fetches the live list from the
+   biller on open — bouquet prices move, and a product that hard-codes them is
+   a product that is wrong by the end of the quarter.
+   --------------------------------------------------------------------------- */
+
+/** What you are paying: a thing somebody else keeps an account of. */
+export type Kind = 'tv' | 'internet' | 'betting'
+
+/** One package on a biller's list. A bouquet, a broadband bundle — the thing
+ *  itself is the product, so it is named and dated rather than priced alone. */
+export interface Pack {
+  key: string
+  name: string
+  /** How long it runs, in the biller's own words. */
+  lasts: string
+  price: number
+}
+
+export interface Biller {
+  key: string
+  kind: Kind
+  name: string
+  /** What the biller calls the number on the card, the router or the account.
+   *  Never "account number": nobody looking at a DStv card sees that phrase. */
+  idLabel: string
+  /** What one looks like, for the placeholder. */
+  example: string
+  /** How long the number runs. Digits only unless `text` says otherwise. */
+  digits: number
+  /** Betting IDs are usernames, not numbers. */
+  text?: boolean
+  /** What can be bought against it. Absent means a free amount instead. */
+  packs?: Pack[]
+  /** And the ceiling on that free amount, where there is one. */
+  most?: number
+}
+
+export const BILLERS: Biller[] = [
+  /* ------------------------------------------------------------------ tv -- */
+  { key: 'dstv', kind: 'tv', name: 'DStv', idLabel: 'Smartcard number',
+    example: '1234567890', digits: 10, packs: [
+      { key: 'dstv-padi', name: 'Padi', lasts: 'a month', price: 4400 },
+      { key: 'dstv-yanga', name: 'Yanga', lasts: 'a month', price: 6000 },
+      { key: 'dstv-confam', name: 'Confam', lasts: 'a month', price: 11000 },
+      { key: 'dstv-compact', name: 'Compact', lasts: 'a month', price: 19000 },
+      { key: 'dstv-compactplus', name: 'Compact Plus', lasts: 'a month', price: 30000 },
+      { key: 'dstv-premium', name: 'Premium', lasts: 'a month', price: 44500 },
+    ] },
+  { key: 'gotv', kind: 'tv', name: 'GOtv', idLabel: 'IUC number',
+    example: '2012345678', digits: 10, packs: [
+      { key: 'gotv-smallie', name: 'Smallie', lasts: 'a month', price: 1900 },
+      { key: 'gotv-jinja', name: 'Jinja', lasts: 'a month', price: 3900 },
+      { key: 'gotv-jolli', name: 'Jolli', lasts: 'a month', price: 5800 },
+      { key: 'gotv-max', name: 'Max', lasts: 'a month', price: 8500 },
+      { key: 'gotv-supa', name: 'Supa', lasts: 'a month', price: 11400 },
+    ] },
+  { key: 'startimes', kind: 'tv', name: 'StarTimes', idLabel: 'Smartcard number',
+    example: '01234567', digits: 8, packs: [
+      { key: 'st-nova', name: 'Nova', lasts: 'a month', price: 1900 },
+      { key: 'st-basic', name: 'Basic', lasts: 'a month', price: 3700 },
+      { key: 'st-smart', name: 'Smart', lasts: 'a month', price: 5100 },
+      { key: 'st-classic', name: 'Classic', lasts: 'a month', price: 5500 },
+      { key: 'st-super', name: 'Super', lasts: 'a month', price: 9000 },
+    ] },
+  { key: 'showmax', kind: 'tv', name: 'Showmax', idLabel: 'Phone number',
+    example: '08012345678', digits: 11, packs: [
+      { key: 'sm-ent', name: 'Entertainment', lasts: 'a month', price: 3500 },
+      { key: 'sm-prem', name: 'Premier League', lasts: 'a month', price: 3200 },
+      { key: 'sm-full', name: 'Entertainment and sport', lasts: 'a month', price: 6500 },
+    ] },
+
+  /* ------------------------------------------------------------ internet -- */
+  { key: 'smile', kind: 'internet', name: 'Smile', idLabel: 'Account number',
+    example: '123456789', digits: 9, packs: [
+      { key: 'sml-5', name: '5GB', lasts: '30 days', price: 4500 },
+      { key: 'sml-10', name: '10GB', lasts: '30 days', price: 7000 },
+      { key: 'sml-20', name: '20GB', lasts: '30 days', price: 12000 },
+      { key: 'sml-30', name: '30GB', lasts: '30 days', price: 16000 },
+    ] },
+  { key: 'spectranet', kind: 'internet', name: 'Spectranet', idLabel: 'Customer ID',
+    example: '1234567890', digits: 10, packs: [
+      { key: 'spec-10', name: '10GB', lasts: '30 days', price: 5000 },
+      { key: 'spec-20', name: '20GB', lasts: '30 days', price: 9500 },
+      { key: 'spec-40', name: '40GB', lasts: '30 days', price: 16000 },
+      { key: 'spec-80', name: '80GB', lasts: '30 days', price: 25000 },
+    ] },
+  { key: 'ipnx', kind: 'internet', name: 'ipNX', idLabel: 'Account number',
+    example: '123456', digits: 6, packs: [
+      { key: 'ipnx-basic', name: 'Home Basic', lasts: 'a month', price: 17000 },
+      { key: 'ipnx-plus', name: 'Home Plus', lasts: 'a month', price: 28000 },
+      { key: 'ipnx-max', name: 'Home Max', lasts: 'a month', price: 60000 },
+    ] },
+  { key: 'tizeti', kind: 'internet', name: 'Tizeti', idLabel: 'Registered phone',
+    example: '08012345678', digits: 11, packs: [
+      { key: 'tz-month', name: 'Unlimited', lasts: 'a month', price: 18000 },
+      { key: 'tz-quarter', name: 'Unlimited', lasts: 'three months', price: 50000 },
+    ] },
+
+  /* ------------------------------------------------------------- betting -- */
+  /* A wallet you are funding rather than a package you are buying, so these
+     take an amount. Named because people do pay them, and a product that
+     quietly refuses one of the things its users actually spend on has made a
+     decision it is not admitting to. */
+  { key: 'bet9ja', kind: 'betting', name: 'Bet9ja', idLabel: 'User ID',
+    example: 'yourname', digits: 4, text: true, most: 500000 },
+  { key: 'sportybet', kind: 'betting', name: 'SportyBet', idLabel: 'Phone number',
+    example: '08012345678', digits: 11, most: 500000 },
+  { key: 'betking', kind: 'betting', name: 'BetKing', idLabel: 'User ID',
+    example: 'yourname', digits: 4, text: true, most: 500000 },
+  { key: '1xbet', kind: 'betting', name: '1xBet', idLabel: 'Account ID',
+    example: '123456789', digits: 9, most: 500000 },
+]
+
+export const billerOf = (key: string): Biller | undefined =>
+  BILLERS.find((b) => b.key === key)
+
+export const billersOf = (kind: Kind): Biller[] =>
+  BILLERS.filter((b) => b.kind === kind)
+
+export const packOf = (key: string): Pack | undefined => {
+  for (const b of BILLERS) {
+    const p = b.packs?.find((x) => x.key === key)
+    if (p) return p
+  }
+  return undefined
+}
+
+/** Whether a number is the right shape for this biller. Shape only: whether
+ *  the account exists is the biller's answer, not ours. */
+export function validAccount(biller: string, raw: string): boolean {
+  const b = billerOf(biller)
+  if (!b) return false
+  if (b.text) return raw.trim().length >= b.digits
+  return raw.replace(/[^0-9]/g, '').length === b.digits
+}
+
+/** The biller's answer: whose account this is.
+ *
+ *  Derived from the number so the same number always resolves to the same
+ *  person, the way `resolveMeter` does — a made-up name that changed on every
+ *  keystroke would teach somebody to ignore the one check that stops them
+ *  paying a stranger's bill. Two in ten do not resolve, because a number that
+ *  is the right length and still not on the register is the case worth
+ *  drawing. */
+export function resolveAccount(biller: string, raw: string): Meter | undefined {
+  if (!validAccount(biller, raw)) return undefined
+  const s = raw.trim().toLowerCase()
+  let h = 0
+  for (let i = 0; i < s.length; i++) h = (Math.imul(h, 31) + s.charCodeAt(i)) | 0
+  const i = Math.abs(h) % 10
+  const name = METER_NAMES[i]
+  if (!name) return undefined
+  return { name, address: METER_ADDRESSES[i] }
+}
+
+/* ------------------------------------------------------------------ exams --
+   A code you are buying. Nothing to validate first — you pay, and a PIN comes
+   back, which is the prepaid token read the other way round. Bought by parents
+   in February and by candidates in May, which is the whole of its seasonality
+   and no reason to leave it out. */
+
+export interface ExamPin {
+  key: string
+  body: string
+  name: string
+  price: number
+  /** What it is for, because "result checker" is not obvious to everybody who
+   *  has been sent to buy one. */
+  what: string
+}
+
+export const EXAMS: ExamPin[] = [
+  { key: 'waec-checker', body: 'WAEC', name: 'Result checker', price: 3500,
+    what: 'One check of one result, on the WAEC portal' },
+  { key: 'waec-reg', body: 'WAEC', name: 'Registration PIN', price: 27000,
+    what: 'Registers one candidate for the next sitting' },
+  { key: 'neco-checker', body: 'NECO', name: 'Result token', price: 1300,
+    what: 'One check of one result, on the NECO portal' },
+  { key: 'jamb-utme', body: 'JAMB', name: 'UTME e-PIN', price: 7700,
+    what: 'Registers one candidate for UTME' },
+  { key: 'jamb-de', body: 'JAMB', name: 'Direct Entry e-PIN', price: 7700,
+    what: 'Registers one candidate for Direct Entry' },
+]
+
+export const examOf = (key: string): ExamPin | undefined =>
+  EXAMS.find((e) => e.key === key)
+
+/** The PIN that comes back. Same construction as a prepaid token and for the
+ *  same reason: derived from the reference, so a receipt reopened next week
+ *  has the same code on it. */
+export function pinFor(ref: string, i = 0): string {
+  let h = 0
+  const s = ref + ':' + i
+  for (let k = 0; k < s.length; k++) h = (Math.imul(h, 131) + s.charCodeAt(k)) | 0
+  let out = ''
+  for (let k = 0; k < 12; k++) {
+    h = (Math.imul(h, 1103515245) + 12345) | 0
+    out += ((h >>> 8) & 0x7fffffff) % 10
+    if (k % 4 === 3 && k < 11) out += ' '
+  }
+  return out
+}
+
+/* ---------------------------------------------------------- subscriptions --
+   The one group here that is not a biller.
+
+   Netflix, Spotify and the rest are not payable through any Nigerian biller
+   API: they bill a card, on their own schedule, in naira. So this is not a
+   payment the product makes — it is a card the product gives them, and the
+   thing being set up is a standing arrangement rather than a transfer.
+
+   Which means every screen in this group depends on the debit card that is on
+   the waitlist in the rail. It is designed here, and it is honest on the
+   screen about what it is waiting for, rather than drawn as though it works. */
+
+export interface SubPlan {
+  key: string
+  name: string
+  price: number
+  what: string
+}
+
+export interface Service {
+  key: string
+  name: string
+  /** What you get, in one line. */
+  what: string
+  plans: SubPlan[]
+}
+
+export const SERVICES: Service[] = [
+  { key: 'netflix', name: 'Netflix', what: 'Films and series', plans: [
+    { key: 'nf-mobile', name: 'Mobile', price: 2200, what: 'One phone or tablet' },
+    { key: 'nf-basic', name: 'Basic', price: 3500, what: 'One screen at a time' },
+    { key: 'nf-standard', name: 'Standard', price: 5600, what: 'Two screens, HD' },
+    { key: 'nf-premium', name: 'Premium', price: 7000, what: 'Four screens, 4K' },
+  ] },
+  { key: 'spotify', name: 'Spotify', what: 'Music and podcasts', plans: [
+    { key: 'sp-ind', name: 'Individual', price: 1300, what: 'One account' },
+    { key: 'sp-duo', name: 'Duo', price: 1700, what: 'Two accounts, one address' },
+    { key: 'sp-fam', name: 'Family', price: 2100, what: 'Six accounts, one address' },
+    { key: 'sp-stu', name: 'Student', price: 650, what: 'One account, verified student' },
+  ] },
+  { key: 'youtube', name: 'YouTube Premium', what: 'No adverts, and downloads', plans: [
+    { key: 'yt-ind', name: 'Individual', price: 1100, what: 'One account' },
+    { key: 'yt-fam', name: 'Family', price: 2200, what: 'Five accounts, one address' },
+  ] },
+  { key: 'apple', name: 'Apple Music', what: 'Music', plans: [
+    { key: 'am-ind', name: 'Individual', price: 1400, what: 'One account' },
+    { key: 'am-fam', name: 'Family', price: 2200, what: 'Six accounts' },
+  ] },
+  { key: 'prime', name: 'Prime Video', what: 'Films and series', plans: [
+    { key: 'pv-month', name: 'Monthly', price: 2300, what: 'Everything on Prime Video' },
+  ] },
+]
+
+export const serviceOf = (key: string): Service | undefined =>
+  SERVICES.find((s) => s.key === key)
+
+export const subPlanOf = (key: string): SubPlan | undefined => {
+  for (const s of SERVICES) {
+    const p = s.plans.find((x) => x.key === key)
+    if (p) return p
+  }
+  return undefined
+}

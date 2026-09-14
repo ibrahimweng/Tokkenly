@@ -33,12 +33,21 @@ log.push('DESKTOP  /spend')
 log.push('  lands on:  ' + at(d))
 log.push('  title:     ' + (await d.locator('.page-header h1').textContent())
        + '   lit place: ' + (await d.locator('.nav-row[aria-current] span:nth-child(2)').textContent()))
-log.push('  ways:      ' + (await d.locator('.ways .set-row .t-body-strong').allTextContents()).join(' / '))
-log.push('  lit way:   ' + (await d.locator('.ways .set-row.on .t-body-strong').textContent()))
+// The index is a grid of eight since 11g.78, not a rail of three, and it no
+// longer forwards to airtime — so there is no lit way here to read, and
+// reaching airtime is a press rather than a redirect.
+const tiles = await d.locator('.pay-tile .t-body-strong').allTextContents()
+log.push('  ways:      ' + tiles.join(' / '))
+log.push('  tiles:     ' + tiles.length + ', address still ' + at(d))
+if (tiles.length !== 8) errs.push('the index lost a way: ' + tiles.length + ' tiles')
+if (at(d) !== '/spend') errs.push('the index forwarded to ' + at(d))
+log.push('  saved:     ' + (await d.locator('.sheet-row .t-body-strong').allTextContents()).join(' / '))
 await d.screenshot({ path: '/tmp/shots/spend-01-rail.png' })
 
 /* ---------------- airtime: a number, then an amount ---------------- */
 
+await d.locator('.pay-tile', { hasText: 'Airtime' }).first().click()
+await d.waitForTimeout(350)
 await d.locator('.set-panel input').fill('08031234567')
 await d.waitForTimeout(120)
 log.push('')

@@ -18,6 +18,18 @@
   display: grid; place-items: center; font-weight: 600; font-size: 13px;
 }
 .nav { display: flex; flex-direction: column; gap: 4px; }
+
+/* What sits at the bottom of the rail, and stays there. `margin-top: auto`
+   used to be on the promo, so putting the advert away un-pinned the account
+   row — the push was a property of a thing you are allowed to delete. It is a
+   property of the group now.
+
+   The nav takes the scroll on a short window rather than the rail, so a laptop
+   at 600 tall pushes nothing off the bottom: the places scroll and the account
+   row holds its place. `min-height: 0` is what lets a flex child shrink below
+   its content at all. */
+.sidebar > .nav { overflow-y: auto; min-height: 0; }
+.side-foot { margin-top: auto; flex: none; display: flex; flex-direction: column; gap: 20px; }
 .nav-row {
   display: flex; align-items: center; gap: 12px;
   padding: 10px 12px; border-radius: 12px;
@@ -54,7 +66,6 @@
 .content:focus-visible { outline: none; }
 
 .promo {
-  margin-top: auto;
   background: var(--sunken);
   border-radius: var(--r-card);
   padding: 20px;
@@ -415,6 +426,20 @@
    fault read the other way, so the row stretches too. */
 .row.tiles { align-items: stretch; }
 .row.tiles > * { flex: 1 1 0; min-width: 0; }
+
+/* The eight things you can pay for. A grid rather than a rail: eight rows is a
+   list somebody reads, four tiles across is a set somebody scans. Two across on
+   a phone, because a tile narrower than its own label is not a tile. */
+.pay-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.pay-tile {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 12px;
+  padding: 16px; border-radius: var(--r-panel); background: var(--control);
+  text-align: left; min-width: 0;
+}
+.pay-tile .two-line { min-width: 0; }
+.pay-tile small { color: var(--muted); }
+@media (max-width: 1180px) { .pay-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 899px) { .pay-grid { grid-template-columns: repeat(2, 1fr); } }
 
 /* ---------- amount composer ---------- */
 .amount-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }

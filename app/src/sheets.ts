@@ -20,7 +20,7 @@ import { type Route, closeSheet, replaceSheet, go } from './router'
 import { isMobile } from './responsive'
 import { QA } from './screens/settings'
 import { peopleRows, addPanels, addTab, sendWays, addWays } from './screens/money'
-import { billFrom } from './screens/spend'
+import { billFrom, whoLabel } from './screens/spend'
 import { parts, partName, partFigure, partUnder, partAlso } from './screens/wallet'
 import { assetOf, netOf, shortAddress, DOLLARS, type Asset } from './assets'
 import { assetLine } from './components/purse'
@@ -1241,7 +1241,7 @@ export const SHEETS: Record<string, Builder> = {
         ...(b.kind
           ? [['Kind', b.kind === 'prepaid' ? 'Prepaid · a token' : 'Postpaid · off the bill'] as [string, string]]
           : []),
-        [b.way === 'electricity' ? 'Supplier' : 'Network', b.who],
+        [whoLabel(b.way), b.who],
         ['Paying with', assetOf(b.asset)!.name],
         // Naira out of naira converts nothing, so there is no cost in another
         // currency and no rate. Printing one would be printing a number that

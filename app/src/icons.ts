@@ -21,6 +21,13 @@ export const icon = {
   phone: () => svg('<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M10.5 18.5h3"/>'),
   signal: () => svg('<path d="M12 19.5h.01"/><path d="M8.8 16.3a4.5 4.5 0 0 1 6.4 0"/><path d="M6 13.5a8.5 8.5 0 0 1 12 0"/><path d="M3.2 10.7a12.5 12.5 0 0 1 17.6 0"/>'),
   bolt: () => svg('<path d="M13.5 2.5 5 13.5h5.5L10 21.5 19 10.5h-5.5z"/>'),
+  /* The rest of what Spend pays for. A screen on a stand, a box with its
+     signal coming off it, a torn ticket, and the triangle everything that
+     plays has agreed on. */
+  tv: () => svg('<rect x="3" y="4.5" width="18" height="12.5" rx="2.5"/><path d="M8.5 21h7M12 17v4"/>'),
+  router: () => svg('<rect x="3" y="13" width="18" height="7" rx="2.5"/><path d="M7 16.5h.01M10.5 16.5h3"/><path d="M8.5 9.2a5 5 0 0 1 7 0M6 6.4a9 9 0 0 1 12 0"/>'),
+  ticket: () => svg('<path d="M4 7.5A1.5 1.5 0 0 1 5.5 6h13A1.5 1.5 0 0 1 20 7.5V10a2 2 0 0 0 0 4v2.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 16.5V14a2 2 0 0 0 0-4z"/><path d="M14 6v2M14 11v2M14 16v2"/>'),
+  play: () => svg('<circle cx="12" cy="12" r="8.5"/><path d="M10.2 8.6 16 12l-5.8 3.4z"/>'),
   arrowIn: () => svg('<path d="M17 7 7 17M7 10v7h7"/>', 16),
   arrowOut: () => svg('<path d="M7 17 17 7M17 14V7h-7"/>', 16),
   chevron: () => svg('<path d="m9 5 7 7-7 7"/>', 16),

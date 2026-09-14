@@ -6,7 +6,7 @@ import {
 } from '../components/bits'
 import { table } from '../components/table'
 import { composerScreen } from '../components/composer'
-import { state, movementCeiling, ceilingLabel, switchOn, type Activity } from '../state'
+import { state, movementCeiling, ceilingLabel, switchOn, payAsset, type Activity } from '../state'
 import { usd, naira, when, activityLabel, NGN } from '../format'
 import { current, go, openSheet } from '../router'
 import { isSplit } from '../responsive'
@@ -15,7 +15,9 @@ import { ASSETS, assetOf, type Asset } from '../assets'
 import {
   NETWORKS, networkOf, guessNetwork, validNumber, digitsOf, prettyNumber,
   plansFor, planOf, DISCOS, discoOf, validMeter, resolveMeter, prettyMeter,
-  type Network, type Plan, type MeterKind,
+  BILLERS, billerOf, billersOf, packOf, validAccount, resolveAccount,
+  EXAMS, examOf, SERVICES, serviceOf, subPlanOf,
+  type Network, type Plan, type MeterKind, type Kind, type Biller,
 } from '../bills'
 
 /* ---------------------------------------------------------------------------
@@ -56,7 +58,8 @@ import {
    keep arrives as naira through Add money; this place spends it.
    --------------------------------------------------------------------------- */
 
-type Way = 'airtime' | 'data' | 'electricity'
+type Way = 'airtime' | 'data' | 'electricity' | 'tv' | 'internet' | 'betting'
+  | 'exam' | 'subscription'
 
 const on = (): boolean => switchOn('spend.bills')
 
@@ -67,9 +70,35 @@ const WAYS: { key: Way; label: string; ic: () => string; sub: () => string }[] =
     sub: () => (on() ? 'Bundles from the four networks' : 'Paused') },
   { key: 'electricity', label: 'Electricity', ic: icon.bolt,
     sub: () => (on() ? 'A prepaid token, or a postpaid bill' : 'Paused') },
+  { key: 'tv', label: 'TV', ic: icon.tv,
+    sub: () => (on() ? 'DStv, GOtv, StarTimes, Showmax' : 'Paused') },
+  { key: 'internet', label: 'Internet', ic: icon.router,
+    sub: () => (on() ? 'Smile, Spectranet, ipNX, Tizeti' : 'Paused') },
+  { key: 'betting', label: 'Betting', ic: icon.ticket,
+    sub: () => (on() ? 'Top up a betting wallet' : 'Paused') },
+  { key: 'exam', label: 'Exam PINs', ic: icon.page,
+    sub: () => (on() ? 'WAEC, NECO and JAMB' : 'Paused') },
+  { key: 'subscription', label: 'Subscriptions', ic: icon.play,
+    sub: () => 'Netflix, Spotify and the rest' },
 ]
 
+/** Which of the ways is a biller with an account to check. One shape, four
+ *  nouns: a meter, a smartcard, a router, a betting ID. */
+const KINDS: Partial<Record<Way, Kind>> = { tv: 'tv', internet: 'internet', betting: 'betting' }
+
 const wayLabel = (w: Way): string => WAYS.find((x) => x.key === w)!.label
+
+/** What the thing taking the money is called, in the words that trade uses.
+ *  A bouquet is not sold by a network and an exam PIN is not sold by a
+ *  supplier — one noun per thing, which is rule 37 applied to the party on the
+ *  other side of the payment. */
+export const whoLabel = (w: Way): string =>
+  w === 'electricity' ? 'Supplier'
+    : w === 'tv' || w === 'internet' ? 'Provider'
+    : w === 'betting' ? 'Bookmaker'
+    : w === 'exam' ? 'Exam body'
+    : w === 'subscription' ? 'Service'
+    : 'Network'
 
 /** What a network takes in one recharge. A real ceiling, and lower than the
  *  account's own on any verified account — so it is stated separately rather
@@ -699,6 +728,217 @@ function meterCompose(disco: string, kind: MeterKind, meter: string): HTMLElemen
 
 /** The rail beside a panel on a wide screen, the panel alone on a phone. One
  *  shape, so the place is not written three times. */
+/* ---------------------------------------------------------------------------
+   One panel per errand, because a press is the thing being spent.
+
+   Electricity asks three screens: pick a disco, type a meter, choose an
+   amount. That is five presses from Home to the confirm button, and four of
+   them are navigation. The errands added here ask one screen: the biller as a
+   row of chips with the commonest already chosen, the number under it, and
+   the thing you are buying under that. Picking the bouquet *is* the pay
+   button, so the panel has no Continue on it at all.
+
+   Which puts a new bill at three presses — Spend, the category, the package —
+   and a bill you have paid before at three as well, through the saved row.
+   --------------------------------------------------------------------------- */
+
+/** The chips that pick who is being paid. The first is chosen when nothing is,
+ *  because a screen that opens with nothing selected has made somebody press
+ *  once to get to where it could have started. */
+function billerChips(w: Way, kind: Kind, picked: string, id: string): HTMLElement {
+  return h('div', { class: 'chip-row' },
+    ...billersOf(kind).map((b) =>
+      h('button', {
+        class: 'chip', text: b.name, ariaPressed: b.key === picked,
+        on: { click: () => go(`/spend/${w}?biller=${b.key}` + (id ? '&id=' + id : '')) },
+      })))
+}
+
+/** The number, and who the biller says it belongs to.
+ *
+ *  The same check the meter has: a name comes back, and it is the one thing
+ *  standing between somebody and paying a stranger's subscription. It is not
+ *  an error while they are still typing — the field goes red only once the
+ *  number is as long as it is going to get. */
+function accountField(b: Biller, id: string,
+                      onOk: (live: string | null) => void): (Node | null)[] {
+  const input = h('input', {
+    type: 'text', inputmode: b.text ? 'text' : 'numeric', placeholder: b.example,
+    ariaLabel: b.idLabel, value: id,
+  })
+  const field = h('label', { class: 'field' }, input)
+  const err = fieldError(h('span', { html: icon.alert() }), h('span', { text: '' }))
+  err.hidden = true
+  const found = h('div', { class: 'stack-8' })
+
+  const paint = (): void => {
+    const raw = b.text ? input.value.trim() : input.value.replace(/[^0-9]/g, '')
+    swap(found)
+    field.classList.remove('error')
+    err.hidden = true
+    onOk(null)
+    if (!raw) return
+    if (!validAccount(b.key, raw)) {
+      if (!b.text && raw.length < b.digits) return
+      if (b.text && raw.length < b.digits) return
+      field.classList.add('error')
+      show(err, true)
+      err.lastElementChild!.textContent = b.text
+        ? `A ${b.name} ${b.idLabel.toLowerCase()} is at least ${b.digits} characters.`
+        : `A ${b.name} ${b.idLabel.toLowerCase()} is ${b.digits} digits.`
+      return
+    }
+    const who = resolveAccount(b.key, raw)
+    if (!who) {
+      field.classList.add('error')
+      show(err, true)
+      err.lastElementChild!.textContent =
+        `${b.name} has no account with that ${b.idLabel.toLowerCase()}.`
+      return
+    }
+    swap(found,
+      h('div', { class: 'set-banner' },
+        h('span', { class: 'mark', html: icon.check() }),
+        h('span', { class: 'two-line grow' },
+          h('span', { class: 't-body-strong', text: who.name }),
+          h('small', { text: b.name + ' · ' + b.idLabel }))))
+    onOk(raw)
+  }
+  input.addEventListener('input', paint)
+  paint()
+  return [
+    h('div', { class: 'stack-8' },
+      h('span', { class: 't-caps subtle', text: b.idLabel }),
+      field, err, found),
+  ]
+}
+
+const idOf = (b: Biller, raw: string): string =>
+  b.text ? raw.trim() : raw.replace(/[^0-9]/g, '')
+
+/** TV and internet: a package is the product, so the package list is the pay
+ *  button. Betting: a wallet is being funded, so it hands over to the amount
+ *  composer the way electricity does. */
+function billPanel(w: Way, kind: Kind): (Node | null)[] {
+  const q = current().query
+  const b = billerOf(q.get('biller') ?? '') ?? billersOf(kind)[0]
+  const id = idOf(b, q.get('id') ?? '')
+  const ok = () => !!resolveAccount(b.key, id)
+
+  const packs = h('div', { class: 'sheet-list' })
+  const goOn = h('button', { class: 'btn btn-primary', text: 'Continue', disabled: !ok() })
+
+  // What is in the field right now, not what was in the address when this was
+  // drawn. The first version read the query, so pressing a bouquet after
+  // typing a smartcard opened a review of nothing: the number somebody had
+  // just typed was not in the route yet and never reached the dialog.
+  let live: string | null = ok() ? id : null
+
+  const paintPacks = (): void => {
+    if (!b.packs) return
+    swap(packs, ...b.packs.map((p) =>
+      h('button', {
+        class: 'sheet-row', disabled: !live,
+        on: { click: () => live && openSheet('spend-review',
+          { way: w, biller: b.key, id: live, pack: p.key, a: payAsset() }) },
+      },
+        h('span', { class: 'mark', html: icon.ticket() }),
+        h('span', { class: 'two-line grow' },
+          h('span', { class: 't-body-strong', text: p.name }),
+          h('small', { text: 'Runs for ' + p.lasts })),
+        h('span', { class: 't-body-strong', text: naira(p.price) }))))
+  }
+
+  const fields = accountField(b, id, (now) => {
+    live = now
+    paintPacks()
+    goOn.toggleAttribute('disabled', !now)
+  })
+  goOn.addEventListener('click', () => {
+    if (live) go(`/spend/${w}?biller=${b.key}&id=${live}&amount=1`)
+  })
+
+  return [
+    card(
+      cardHead(wayLabel(w)),
+      h('div', { class: 'stack-8' },
+        h('span', { class: 't-caps subtle', text: 'Who are you paying' }),
+        billerChips(w, kind, b.key, id)),
+      ...fields,
+      b.packs
+        ? h('div', { class: 'stack-8' },
+            h('span', { class: 't-caps subtle', text: 'What you are buying' }), packs)
+        : goOn),
+    card(
+      cardHead('Before you pay'),
+      kv('Checked', 'The name comes back from ' + b.name),
+      kv('Fee', 'No fee'),
+      kv('Paid with', assetOf(payAsset())!.name),
+      kv('Wrong number', 'It cannot be recalled')),
+  ]
+}
+
+/** Exam PINs. Nothing to validate — you are buying a code, so the list is the
+ *  whole screen and picking a row is buying it. */
+function examPanel(): (Node | null)[] {
+  return [
+    card(
+      cardHead('Exam PINs'),
+      h('span', { class: 'muted',
+        text: 'The PIN comes back on the next screen and stays on the receipt.' }),
+      h('div', { class: 'sheet-list' },
+        ...EXAMS.map((e) =>
+          h('button', { class: 'sheet-row',
+            on: { click: () => openSheet('spend-review',
+              { way: 'exam', exam: e.key, a: payAsset() }) } },
+            h('span', { class: 'mark', html: icon.page() }),
+            h('span', { class: 'two-line grow' },
+              h('span', { class: 't-body-strong', text: e.body + ' · ' + e.name }),
+              h('small', { text: e.what })),
+            h('span', { class: 't-body-strong', text: naira(e.price) }))))),
+  ]
+}
+
+/** Subscriptions, which are not bills.
+ *
+ *  Netflix and the rest are not on any Nigerian biller rail: they charge a
+ *  card, on their own schedule. So this screen does not pay anything — it sets
+ *  up a standing arrangement against the Tokkenly card, and it says so, because
+ *  the card is on a waitlist and drawing this as though it works would be the
+ *  one kind of screen this record keeps refusing to draw. */
+function subPanel(): (Node | null)[] {
+  const q = current().query
+  const svc = serviceOf(q.get('svc') ?? '') ?? SERVICES[0]
+  const ready = state.cardWaitlist
+  return [
+    card(
+      cardHead('Subscriptions'),
+      h('div', { class: 'stack-8' },
+        h('span', { class: 't-caps subtle', text: 'What are you subscribing to' }),
+        h('div', { class: 'chip-row' },
+          ...SERVICES.map((x) =>
+            h('button', { class: 'chip', text: x.name, ariaPressed: x.key === svc.key,
+              on: { click: () => go('/spend/subscription?svc=' + x.key) } })))),
+      h('div', { class: 'stack-8' },
+        h('span', { class: 't-caps subtle', text: svc.what }),
+        h('div', { class: 'sheet-list' },
+          ...svc.plans.map((pl) =>
+            h('button', { class: 'sheet-row',
+              on: { click: () => openSheet('spend-review',
+                { way: 'subscription', svc: svc.key, plan: pl.key, a: payAsset() }) } },
+              h('span', { class: 'mark', html: icon.play() }),
+              h('span', { class: 'two-line grow' },
+                h('span', { class: 't-body-strong', text: pl.name }),
+                h('small', { text: pl.what })),
+              h('span', { class: 't-body-strong', text: naira(pl.price) + ' a month' }))))),
+      callout(ready
+        ? 'Your card is on the list. Subscriptions start the day it arrives, and '
+          + 'nothing is charged before then.'
+        : `${svc.name} charges a card rather than a wallet, so this needs the Tokkenly `
+          + 'card. Join the list and your subscriptions start the day it arrives.')),
+  ]
+}
+
 function spendShell(w: Way, steps: { label: string; to?: string }[],
                     body: (Node | null)[]): HTMLElement {
   const head = pageHeader('Spend', eyebrow('Cash available', usd(state.cash)),
@@ -713,6 +953,10 @@ function spendShell(w: Way, steps: { label: string; to?: string }[],
 function wayPanel(w: Way): (Node | null)[] {
   if (!on()) return [pausedPanel(w)]
   if (w === 'electricity') return discoPanel()
+  if (w === 'exam') return examPanel()
+  if (w === 'subscription') return subPanel()
+  const kind = KINDS[w]
+  if (kind) return billPanel(w, kind)
   return numberPanel(w)
 }
 
@@ -720,25 +964,83 @@ function spendPicker(w: Way): HTMLElement {
   return spendShell(w, [{ label: wayLabel(w) }], wayPanel(w))
 }
 
+/** The things you already pay, each one press from paying again.
+ *
+ *  A bill is nearly always a repeat: the same meter, the same smartcard, the
+ *  same number, the same month. So the place leads with what has been paid
+ *  before rather than with the list of what could be — which turns the common
+ *  errand from three presses into two and needs nothing typed at all. */
+function savedPayees(): { label: string; sub: string; ic: () => string; to: string; key: string }[] {
+  const out: { label: string; sub: string; ic: () => string; to: string; key: string }[] = []
+  for (const a of BILLS()) {
+    const b = a.bill!
+    // What it is *and* who takes it. Keyed on both, because the same phone
+    // number gets airtime and data from the same network, and two rows reading
+    // "Airtel · 0802 431 9087" are two rows nobody can tell apart.
+    const key = a.type + ':' + b.target
+    if (out.some((x) => x.key === key)) continue
+    if (out.length >= 4) break
+    const biller = BILLERS.find((x) => x.name === a.who)
+    const digits = b.target.replace(/[^0-9]/g, '')
+    let to = ''
+    let ic = icon.spend
+    if (biller) {
+      to = `/spend/${biller.kind}?biller=${biller.key}&id=${encodeURIComponent(b.target.trim())}`
+      ic = biller.kind === 'tv' ? icon.tv : biller.kind === 'internet' ? icon.router : icon.ticket
+    } else if (a.type === 'Electricity') {
+      const d = DISCOS.find((x) => x.name === a.who)
+      if (d) { to = `/spend/electricity?disco=${d.key}&meter=${digits}`; ic = icon.bolt }
+    } else if (a.type === 'Airtime' || a.type === 'Data') {
+      to = `/spend/${a.type.toLowerCase()}?to=${digits}`
+      ic = a.type === 'Airtime' ? icon.phone : icon.signal
+    }
+    if (!to) continue
+    out.push({ key, label: `${a.type} · ${a.who}`,
+               sub: b.target + ' · last paid ' + when(a.at), ic, to })
+  }
+  return out
+}
+
 /** The place, with nothing chosen yet.
  *
- *  On a wide screen the first way fills the panel, because a column of rows
- *  beside nothing is a screen that looks broken — and the address says so,
- *  because a screen showing one thing under an address that names another is
- *  the fault rule 144 exists to stop. On a phone the three ways are the whole
- *  screen, which is what a place looks like at that width. */
+ *  Eight ways is a list rather than a rail, so they are a grid: four across on
+ *  a wide screen, two on a phone, each one a press away from its own one-screen
+ *  panel. Above them is what you already pay, because that is the shorter road
+ *  to the same place and a screen should offer the short one first.
+ *
+ *  The wide screen no longer forwards to airtime. It did that because a rail
+ *  beside an empty panel looks broken — but a grid is not a rail, it fills its
+ *  own width, and forwarding meant the address said one thing while the screen
+ *  showed another every time somebody pressed Spend. */
 function spendIndex(): HTMLElement {
-  if (isSplit()) {
-    queueMicrotask(() => go('/spend/airtime', true))
-    return spendPicker('airtime')
-  }
+  const saved = savedPayees()
   return shell('spend',
     pageHeader('Spend', eyebrow('Cash available', usd(state.cash))),
     on() ? null : card(
       cardHead('Bills', h('span', { class: 'pill warn', text: 'Paused' })),
       h('span', { class: 'muted',
         text: 'Paying bills is off right now. Everything else in your wallet still works.' })),
-    card(cardHead('What would you like to pay for'), spendRail()),
+    saved.length
+      ? card(
+          cardHead('Things you pay'),
+          h('div', { class: 'sheet-list' },
+            ...saved.map((x) =>
+              h('button', { class: 'sheet-row', on: { click: () => go(x.to) } },
+                h('span', { class: 'mark', html: x.ic() }),
+                h('span', { class: 'two-line grow' },
+                  h('span', { class: 't-body-strong', text: x.label }),
+                  h('small', { text: x.sub })),
+                h('span', { class: 'muted', html: icon.chevron() })))))
+      : null,
+    card(
+      cardHead(saved.length ? 'Something else' : 'What would you like to pay for'),
+      h('div', { class: 'pay-grid' },
+        ...WAYS.map((w) =>
+          h('button', { class: 'pay-tile', on: { click: () => go('/spend/' + w.key) } },
+            h('span', { class: 'mark', html: w.ic() }),
+            h('span', { class: 'two-line' },
+              h('span', { class: 't-body-strong', text: w.label }),
+              h('small', { text: w.sub() })))))),
     pastBills())
 }
 
@@ -746,7 +1048,11 @@ export function spendScreen(sub?: string): HTMLElement {
   const q = current().query
   const w = WAYS.find((x) => x.key === sub)?.key
   if (!w) return spendIndex()
+  // Subscriptions do not run on the biller rail, so the switch that pauses
+  // bills has nothing to say about them.
+  if (w === 'subscription') return spendPicker(w)
   if (!on()) return spendShell(w, [{ label: wayLabel(w) }], [pausedPanel(w)])
+  if (w === 'exam' || KINDS[w]) return spendPicker(w)
 
   if (w === 'electricity') {
     const disco = q.get('disco') ?? ''
@@ -816,6 +1122,39 @@ export function billFrom(q: URLSearchParams): BillOrder | null {
     const net = networkOf(q.get('net') ?? '') ?? guessNetwork(to) ?? NETWORKS[0]
     return { way, what: 'Data', who: net.name, target: prettyNumber(to),
              naira: p.price, note: `${p.size} for ${p.lasts}`, asset }
+  }
+  // The four added in 11g.78. Each rebuilds from the address alone, because a
+  // review that cannot be rebuilt from the route is a review that loses its
+  // subject on a refresh — and it is the only copy of what is about to be paid.
+  if (way === 'tv' || way === 'internet' || way === 'betting') {
+    const b = billerOf(q.get('biller') ?? '')
+    if (!b) return null
+    const id = b.text ? (q.get('id') ?? '').trim() : (q.get('id') ?? '').replace(/[^0-9]/g, '')
+    const who = resolveAccount(b.key, id)
+    if (!who) return null
+    const what = way === 'tv' ? 'TV' : way === 'internet' ? 'Internet' : 'Betting'
+    if (b.packs) {
+      const pack = packOf(q.get('pack') ?? '')
+      if (!pack || !b.packs.some((x) => x.key === pack.key)) return null
+      return { way, what, who: b.name, target: id, naira: pack.price,
+               note: `${pack.name} for ${pack.lasts}`, holder: who.name, asset }
+    }
+    const v = Number(q.get('v') ?? 0)
+    if (!(v > 0)) return null
+    return { way, what, who: b.name, target: id, naira: v, holder: who.name, asset }
+  }
+  if (way === 'exam') {
+    const e = examOf(q.get('exam') ?? '')
+    if (!e) return null
+    return { way, what: 'Exam PIN', who: e.body, target: e.name, naira: e.price,
+             note: e.what, asset }
+  }
+  if (way === 'subscription') {
+    const svc = serviceOf(q.get('svc') ?? '')
+    const pl = subPlanOf(q.get('plan') ?? '')
+    if (!svc || !pl || !svc.plans.some((x) => x.key === pl.key)) return null
+    return { way, what: 'Subscription', who: svc.name, target: pl.name, naira: pl.price,
+             note: pl.what + ' · every month', asset }
   }
   if (way === 'electricity') {
     const d = discoOf(q.get('disco') ?? '')
