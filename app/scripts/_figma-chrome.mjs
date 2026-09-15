@@ -100,17 +100,21 @@ for (const id of colour.variableIds) {
 
 const PARTS = {}
 const missing = []
-const take = (node, name) => {
-  const short = name.replace(/^(art\\/|icon\\/|Icon=)/, '')
-  if (!PARTS[short]) PARTS[short] = node
-  const low = short.toLowerCase()
-  if (!PARTS[low]) PARTS[low] = node
-}
+const take = (name, node) => { if (!PARTS[name]) PARTS[name] = node }
 for (const pg of figma.root.children) {
   if (pg.name !== 'Design system' && pg.name !== 'Icons') continue
   for (const c of pg.children) {
-    if (c.type === 'COMPONENT') take(c, c.name)
-    else if (c.type === 'COMPONENT_SET') for (const v of c.children) if (v.type === 'COMPONENT') take(v, v.name)
+    // The exporter emits a bare name: INVEST for a drawing, card for an
+    // icon. Only the two prefixes that ARE a namespace come off. A
+    // variant's own name does not: Mark has a variant called Icon=Card,
+    // and stripping that to card let a 32px badge win the name of the
+    // 18px icon — which is how the nav rail's advert ended up with a 1px
+    // column of text down it reading "Card contents". A variant is
+    // addressed through its set.
+    if (c.type === 'COMPONENT') take(c.name.replace(/^(art\\/|icon\\/)/, ''), c)
+    else if (c.type === 'COMPONENT_SET') {
+      for (const v of c.children) if (v.type === 'COMPONENT') take(c.name + ' / ' + v.name, v)
+    }
   }
 }
 

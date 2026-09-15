@@ -36,6 +36,36 @@ const build = (n, parent) => {
     if (n.o !== undefined) node.opacity = n.o
     return node
   }
+  // A box that carries its own text — the brand mark, a chip, the Ctrl K key,
+  // the avatar, the count on the bell — is a frame with a text node in it, not
+  // a text node. Reading the text first threw away the fill and the radius, so
+  // the pills lost their pills and the letters sat loose on the canvas.
+  if (n.t !== undefined && (n.f || n.r)) {
+    const box = figma.createFrame()
+    box.name = n.n || 'box'
+    box.clipsContent = false
+    parent.appendChild(box)
+    box.x = n.b[0]; box.y = n.b[1]
+    box.resize(Math.max(1, n.b[2]), Math.max(1, n.b[3]))
+    if (n.f) {
+      let paint = { type: 'SOLID', color: rgb(n.f) }
+      if (n.fa !== undefined) paint.opacity = n.fa
+      if (n.v && byName[n.v]) paint = figma.variables.setBoundVariableForPaint(paint, 'color', byName[n.v])
+      box.fills = [paint]
+    } else box.fills = []
+    if (n.r) box.cornerRadius = n.r
+    if (n.o !== undefined) box.opacity = n.o
+    // The run inside it, in the box's own coordinates, centred the way the
+    // box centres it. Everything a chip is doing is one line in a pill.
+    const inner = build({ ...n, f: undefined, v: undefined, r: undefined, o: undefined,
+                          b: [n.b[0], n.b[1], n.b[2], n.b[3]] }, box)
+    if (inner) {
+      inner.x = n.ta === 'center' ? (n.b[2] - inner.width) / 2
+        : (n.ta === 'right' || n.ta === 'end') ? n.b[2] - inner.width : 0
+      inner.y = (n.b[3] - inner.height) / 2
+    }
+    return box
+  }
   if (n.t !== undefined) {
     const t = figma.createText()
     t.fontName = { family: 'Geist', style: styleFor(n.wt) }

@@ -9370,3 +9370,67 @@ between a design file made of components and a design file made of copies.
   the product drifting from the snapshot; it cannot catch Figma drifting from
   it, because a Playwright suite cannot call the MCP. Re-reading the file is a
   person's job and is written down as one.
+
+### 11g.81 — the converter widened to the whole product, and four things it found
+
+Batch T was meant to be "rebuild the nine flow pages". Reading the product
+properly to do that turned up six defects, four of them real, and the batch is
+mostly a record of those.
+
+**The map was wrong before it was used.** The flow map written in 11g.80 had
+fifty screens and one address the product does not have (`/spend/light`; it is
+`/spend/electricity`). It is now built from `destinations.ts` — the table the
+product itself navigates by — and every one of the eighty-six addresses was
+walked and checked before it went in. Both widths, 1440 and 390, because that
+is what the file has always carried and a phone layout is not a smaller copy
+of a desktop one.
+
+**Two bugs in the product, found by reading it.**
+
+The nav rail said "current page" twice on `/bucket`. The bucket is a row of its
+own and it is reached through Invest, so both rows carried `aria-current`: two
+highlights, and a screen reader announcing the current page twice. The row you
+are standing on is the one that says so.
+
+The phone's bar said nothing at all on Spend. Three of the seven places have no
+tab, and the list of which ones was written when there were six places. Spend
+arrived as the seventh, went behind More like the other two, and was never
+added — so for a whole batch one of the product's own places had no "you are
+here" on a phone. It is derived from `TABS` now. A list that has to be kept in
+step with another list is a list that will fall out of step with it.
+
+**Three defects in the Figma file.**
+
+Eight icons the product draws were not in it at all — the Spend set from 11g.74
+and 11g.75. They went into the product and nothing said the file was now short
+of them.
+
+The generic `Card` component carried a text slot reading "Card contents", 300px
+wide and invisible where it sat. The converter's component lookup lower-cased
+names, so `Card` won the name `card` over `icon/card`, and every screen in the
+file got a 1px column of letters drawn down the middle of the nav rail's
+advert. Two fixes: the slot is gone, and a variant's own name is no longer
+treated as a component name.
+
+`icon/card` was still the arrow that 11g.79 replaced in the code. Names
+agreeing is not the same as drawings agreeing, so all fifty-two icons are now
+re-imported from `icons.ts` rather than trusted.
+
+**What the file holds now.** Thirteen chrome components — eight rails, five tab
+bars, differing only in which row is lit — so the rail is one thing to edit
+rather than eighty-six. The eleven drawings. Fifty-two icons. The pages are
+renumbered: Spend became a place two batches ago and belongs with the customer
+flows, so it is 07 and Activity, Account and the staff console each move down
+one; the marketing page is 11, out of the product's own numbers.
+
+**`figma.mjs` grew a parts check.** It fails if the product draws an icon the
+file does not have, and if the file holds one the product stopped drawing. It
+was proved in both directions before being trusted. It does not check that the
+drawings agree — that is the gap `icon/card` fell through, and re-importing
+from source rather than checking is the answer to it.
+
+**Not done, and it is the bulk of it.** The 172 screen frames themselves. The
+pages are cleared and the converter is verified against Home at both widths,
+but the remaining build is about 125 `use_figma` calls, each carrying a whole
+screen's tree. That is a transport problem, not a design one, and the exports
+in `figma/flows/` plus `_figma-build.mjs` are all that is needed to finish it.
