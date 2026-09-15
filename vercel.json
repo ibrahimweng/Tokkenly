@@ -1,29 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "_comment": [
-    "BRANCH-SPECIFIC. On main this file builds the app in app/. On the site",
-    "branch it serves the marketing page in site/ instead, because Vercel's",
-    "Root Directory picker only lists folders that exist on the default",
-    "branch — and site/ is not on main, so it cannot be selected there.",
-    "Pointing the repository root at site/ is the way round that.",
-    "If this branch is ever merged into main, DO NOT bring this file with it:",
-    "keep main's version, which builds the app, and give the site its own",
-    "Vercel project with Root Directory set to site."
-  ],
   "framework": null,
-  "installCommand": "echo 'the site has no dependencies'",
-  "buildCommand": "echo 'the site has no build step'",
-  "outputDirectory": "site",
-  "cleanUrls": true,
-  "trailingSlash": false,
-  "headers": [
-    {
-      "source": "/fonts/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
-    },
-    {
-      "source": "/img/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
-    }
-  ]
+  "installCommand": "cd app && PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci",
+  "buildCommand": "cd app && npm run build",
+  "outputDirectory": "app/dist",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }

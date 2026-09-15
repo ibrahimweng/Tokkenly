@@ -61,13 +61,30 @@ rendered text and fails if a line has gone missing or been tidied.
 
 ## Deploying
 
-This directory is deployed on its own, separately from the app at the
-repository root. On Vercel, create a project from this repository and set
-**Root Directory** to `site`. Framework preset is *Other*; there is no build
-command and no install step. `site/vercel.json` carries the rest.
+The app and the site both live on `main` and both deploy from it, to two
+addresses, without either one replacing the other. One repository, two Vercel
+projects, each pointed at a different folder:
 
-The repository root still builds the product app, so the two deploy from the
-same repository without touching each other.
+| Vercel project | Root Directory | Reads | Serves |
+|---|---|---|---|
+| the app | repository root | `vercel.json` | `cd app && npm run build` → `app/dist` |
+| the site | `site` | `site/vercel.json` | this folder, as it stands |
+
+Adding the second project is the whole job: **Add New → Project**, import the
+same repository, set **Root Directory** to `site`, framework preset *Other*, no
+build command and no install command. The existing project is not touched and
+does not need to know this one exists.
+
+Two directories cannot collide, so nothing here is a compromise. The root
+`vercel.json` goes on building the app and is none of this folder's business;
+`site/vercel.json` covers the site and is read only when Root Directory is
+`site`.
+
+One ordering detail, because it is the thing that actually catches people:
+Vercel's Root Directory picker only lists folders that exist **on the
+repository's default branch**. Until `site/` is merged to `main`, `site` is
+simply absent from that list and cannot be chosen. Merge first, then create the
+project.
 
 ## Why the product list is drawn rather than photographed
 
@@ -92,18 +109,10 @@ policy — are inert rather than broken. `Sign up` and `Get Started` point at th
 Getting started section; swap the `href` for the real app URL when there is
 one.
 
-## The root `vercel.json` on this branch
+## The root `vercel.json` is main's
 
-The copy of `vercel.json` at the repository root is **different on this branch
-than on `main`**. On `main` it builds the app in `app/`. Here it serves `site/`.
-
-That is a workaround, not a preference. Vercel's Root Directory picker only
-lists folders that exist on the repository's default branch, and `site/` is not
-on `main` — so `site` cannot be chosen there. Pointing the repository root at
-`site/` is the way round it, and lets a project with Root Directory left at the
-repository root deploy this page.
-
-**If this branch is ever merged into `main`, keep `main`'s version of that
-file.** Bringing this one along would stop the app deploying. The long-term
-answer is a second Vercel project with Root Directory set to `site`, which
-becomes available the moment `site/` exists on `main`.
+Earlier in this branch's life that file was rewritten to serve `site/`, because
+`site/` was not on `main` and so could not be selected as a Root Directory at
+all. That was a workaround for a branch that had not landed yet, and it has
+been reverted: the file here is byte-for-byte `main`'s and goes on building the
+app. There is nothing to be careful about when merging.
