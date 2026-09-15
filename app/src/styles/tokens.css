@@ -75,39 +75,21 @@
   --beam-core-o: 0.44;
   --beam-halo-o: 0.42;
 
-  --dot-dim: #65656c;
-  --dot-mid: #a6a6ad;
-  --dot-lit: #dcdce0;
-
-  /* The dot fields, which are a different job. Four rungs, all grey.
-     They carried three palettes — the text greys for the gateways, green for
-     lending, amber for borrowing, and a purple accent cell — and the top rung
-     climbed to #dcdce0, which is text white. A picture behind a sentence,
-     painted in three hues and reaching full contrast, competes with the
-     sentence: the fields read as noise rather than as ground.
-     So: one grey, and it lives in the lower half of the range. The field still
-     says what it says, because what it says is how much of it is awake, and
-     that survives losing the hue. */
-  --field-sleep: #202024;
-  --field-dim: #2e2e34;
-  --field-mid: #43434b;
-  --field-lit: #5e5e67;
-  /* And how far behind the words it sits. Two values because the rungs above
-     are tuned against a near-black card and the light theme's are not — the
-     old single 0.34 was set in dark and left the light fields as ghosts. */
+  /* Seven rungs stood here — three for the dots and four for the fields. Both
+     were the palette of a picture made of several hundred circles, and that
+     picture is gone (11g.79). The drawings that replaced it are `currentColor`
+     and take their colour from whatever holds them, so they need no rungs at
+     all. Deleted in 11g.80, which is when anything noticed: nothing had used
+     them for a batch, and nothing was watching. */
+  /* How far behind the words the drawing sits. Two values because the light
+     theme is not the dark one inverted — the old single 0.34 was set in dark
+     and left the light drawings as ghosts. */
   --art-veil: 0.9;
   /* What the drawings fill their faces with, so a near face hides a far one.
      It is an indirection rather than a colour: every ground in the product is
      one of two rungs, and a card sets it to its own (below), so a drawing is
      always filled with exactly what it is lying on, in either theme. */
   --art-ground: var(--canvas);
-  /* A rung below the field's own three, for the part of a field the account has
-     not woken. It has to be a rung nothing else uses, because a cell that is
-     asleep has to look asleep whatever tone it was composed in — dimming each
-     tone by one step left the change invisible wherever the composition was
-     already dim, which is most of the top of every field. It is now
-     --field-sleep, above. */
-
   /* A gridline is a landmark, not a mark. It sits one step off the card so it
      reads as behind the bars rather than among them. */
   --grid: #26262b;
@@ -229,21 +211,10 @@
   --scrim: rgba(28, 28, 26, 0.34);
 
   --grid: #e5e5df;
-  --dot-dim: #b8b8b2;
-  --dot-mid: #8a8a84;
-  --dot-lit: #33333a;
 
-  /* The field rungs, running the other way as everything does on paper: the
-     sleeping rung is the pale one and the lit rung is the dark one. Grey, and
-     kept off the black end — a field is ground, and ground at full contrast is
-     a foreground. */
-  --field-sleep: #eaeae5;
-  --field-dim: #d2d2cc;
-  --field-mid: #adada6;
-  --field-lit: #86867e;
   /* Not the dark theme's value. The old single 0.34 was chosen against a
      near-black card and left the light fields as ghosts; at full strength the
-     same rungs on white read heavier than their dark twins, because dark grey
+     same drawing on white reads heavier than its dark twin, because dark grey
      on white is a bigger step than mid grey on black. Matched by eye, which is
      the only way to match two things that are not the same measurement. */
   --art-veil: 0.7;

@@ -71,13 +71,23 @@ const open = await p.evaluate(() => ({
   shutMarks: document.querySelectorAll('.table tbody .shut').length,
 }))
 ok('pressing it is an address, so the list can be linked to', /open=1/.test(open.where), open.where)
-ok('and it leaves the four you can buy', open.rows.length === 4, open.rows.join(' '))
-ok('every one of which is in the launch set',
-   open.shutMarks === 0 && ['AAPLc', 'NVDAc', 'METAc', 'GOOGLc'].every((t) => open.rows.includes(t)),
+// Not a count. This read "leaves the four you can buy" and broke the day the
+// launch set grew from four to seven (11g.80) — which is a suite asserting a
+// seed rather than a rule. The rule is that pressing the filter leaves only
+// what can be bought: every row a member of the launch set, none of them
+// carrying the mark that says otherwise, and nothing outside it left standing.
+ok('and it leaves only what you can buy',
+   open.rows.length > 0 && open.shutMarks === 0
+     && ['AAPLc', 'NVDAc', 'GOOGLc'].every((t) => open.rows.includes(t)),
    open.rows.join(' ') + `, ${open.shutMarks} still marked`)
+ok('and nothing outside the launch set survives it',
+   !open.rows.includes('MSFTc') && !open.rows.includes('TSLAc'), open.rows.join(' '))
 // A category with nothing buyable in it is the case where "try another
-// ticker" would be the wrong thing to say.
-await at('/invest?cat=ETFs&open=1')
+// ticker" would be the wrong thing to say. Health, not ETFs: both funds joined
+// the launch set in 11g.80 and the ETF category stopped being the empty one,
+// which is the right reason for this line to have moved and the wrong reason
+// for the check to disappear. Health holds one company and it is not for sale.
+await at('/invest?cat=Health&open=1')
 const none = await p.evaluate(() => ({
   said: document.body.innerText,
   action: [...document.querySelectorAll('.btn')].map((e) => e.textContent.trim()),

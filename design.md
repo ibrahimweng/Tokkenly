@@ -9041,6 +9041,133 @@ those two should always come in.
      them side by side are two styles. Give the drawing its own dimensions and
      let the layout put air around it.
 
+### 11g.80 The seven flagged fixes, and a design file that can be rebuilt
+
+Seven things were written down as wrong and left standing, some for three
+batches. Looking at each one before touching it was worth doing: one of the
+seven had already been fixed and the record had not noticed, and two were
+smaller than they read.
+
+**The trail on the three composers.** 11g.70 found `Invest › Buy` where it
+should have read `Invest › Apple › Buy`, and 11g.67's fix had not reached the
+composers. It reaches them now and has for some time — the company step is
+there on all three. What was left is smaller and was hiding behind the larger
+fault: Buy ends in *Buy*, Sell ends in *Sell*, and Send ended in *Send Apple*,
+which is the company twice in one trail. The composer's title is *Send* now,
+like its two siblings, and the crumb follows it.
+
+**`icon.card` was `icon.buy` with the numbers moved.** `M7 17 17 7M17 13V7h-6`
+is a diagonal and an arrowhead, and it was the badge on *Debit card coming
+soon*, the mark on *Payment methods* and the mark on *Add money · Debit card*.
+It is a card now: a rounded rectangle, a magnetic stripe, and a chip. The chip
+is what tells it from `wallet`, which is also a rounded rectangle with a line
+across it — two glyphs that differ by one detail need that detail to be the
+one somebody already knows.
+
+**The bucket's count had the colours and none of the geometry.** `.bucket-btn
+.dot` set a background and an ink and stopped. Everything that makes a count a
+count — the absolute position, the pill radius, the min-width, the sixteen-pixel
+line — lives under `.bell .dot`, and the bucket's dot is not a bell's. It is a
+badge now, with the bell's anatomy, because they are the two icon buttons in
+the header that carry a number.
+
+**The launch set grew from four to seven.** *Where people start* has a card
+headed "And everything else you can buy today" and it was rendering nothing:
+four companies in the launch set, three of them the picks, the fourth suspended
+by legal. The screen was correct and empty, which is the worst way for a screen
+to be wrong, because nothing looks broken. Amazon and the two funds joined the
+set — the copy on the Invest door says *"Apple, Nvidia or a whole market
+fund"*, and a whole market fund somebody cannot buy makes that sentence a
+lie — and six companies stay outside it, which is what keeps *Not open yet* a
+real state rather than a formality.
+
+Two suites were asserting the seed rather than the rule and had to be told the
+difference. `etf.mjs` read "it leaves the four you can buy"; what it means is
+that pressing the filter leaves only what can be bought, which is a rule and
+survives the set changing. And its empty-category case was ETFs, which stopped
+being empty the moment the funds became buyable; Health holds one company and
+that company is not for sale.
+
+**The add-money dialog had no door, and is deleted.** It was registered at
+`?sheet=add-money`, covered by `sheets.mjs`, and nothing in the product opened
+it. 11g.61 had already settled the question the other way: Add money has to ask
+which of three ways before it can answer, and both doors on the wallet are
+addresses. A dialog that asks that question and then offers a link to the page
+that asks it again is the question twice, and keeping the two in step was work
+nobody was doing. Deleted rather than given a caller.
+
+**"No Tokkenly accou…"** The share-send list puts the people without an account
+in their own card, headed *Not on Tokkenly yet*, each row carrying a pill
+reading *Cash only* and a second line reading *No Tokkenly account*, above a
+sentence explaining that shares can only go to a verified account. The same
+fact four times, and at 390 the second of them truncated three words in. The
+card's heading is the marker — that is what grouping is for — so the pill went
+with the sentence, and the row's second line is what it is on every other
+person row in the product: when you last paid them.
+
+**Nothing was watching the variables, so they drifted, and then something
+worse.** The file is a build rather than a photograph (11g.70), which is its
+whole point and its whole risk. Four batches of product changes never reached
+it. And when somebody finally looked, seven of its colour variables were the
+palette of a picture the product had stopped drawing a batch earlier — the
+three dot rungs and the four field rungs, still in `tokens.css` too, used by
+nothing in either place.
+
+So: `figma/tokens.json` is what the file holds, read out of it rather than
+typed, and `scripts/figma.mjs` compares it to `tokens.css` on every sweep. It
+fails three ways — a variable the file has that the product does not or has at
+a different value in either theme, a colour the product has that the file does
+not, and a text style whose size, line height, weight or tracking has moved.
+The first thing it found was a bug in itself: `\.t-display\b` matches
+`.t-display-xl`, because a word boundary sits between a letter and a hyphen,
+so it was reading the wrong rule and reporting the wrong drift. Which is the
+correct number of bugs for a drift checker to find in its own reader.
+
+What it cannot catch is the snapshot going stale, because nothing in a
+Playwright suite can call Figma. Refreshing it is a person re-reading the
+file's collections, which is one manual step rather than none.
+
+**And the converter is in the repo this time.** The nine pages of screens the
+file held are gone — it returns `Design system` and `Icons` and nothing else,
+and nothing in the record says where they went. Rebuilding them was only
+possible by writing the converter again, because the first one was ad-hoc
+scripts that were never checked in. That is the actual root cause of everything
+above: an export nobody can re-run is an export that happens once.
+
+`scripts/_figma-read.mjs` walks the DOM of a route and emits a tree — every box
+with its geometry, radius and fill, every run of text with its own size, weight
+and colour, auto-layout inferred from `display: flex`, and every fill that
+matches a token named so the builder binds a variable rather than paints a hex.
+`scripts/_figma-build.mjs` turns one of those trees into the script that builds
+it. Both are checked in, and the flow list is data at the top of the reader.
+
+One product change fell out of it. Inlining an icon's paths costs about a
+thousand characters and there are forty-four icons; on one Home screen the SVG
+was 43,855 of 79,862 characters, which is more than half a payload that has to
+fit in a 50,000-character argument. So every icon carries `data-ic` and every
+drawing carries `data-art`, and the builder places an instance of the component
+that is already in the file. It is one attribute, and it is the difference
+between a design file made of components and a design file made of copies.
+
+191. **An export nobody can re-run is an export that happens once.** A
+     converter written as a throwaway makes the first sync cheap and every
+     sync after it impossible, which looks like discipline failing and is
+     actually tooling missing. If two things have to be kept in step, the thing
+     that steps them belongs in the repo.
+
+192. **A check that asserts the seed asserts nothing.** `etf.mjs` read "it
+     leaves the four you can buy" and four was a fact about the fixture, not
+     about the product. The rule was "it leaves only what you can buy", which
+     is true at four, at seven and at five hundred. A suite that breaks when
+     the data changes and passes when the behaviour does is pointed the wrong
+     way round.
+
+193. **Say it once and group the rest.** Four statements of the same fact — a
+     card heading, a pill, a row's second line and a sentence underneath —
+     is not emphasis, it is three of them taking room from something that had
+     something else to say. The heading of a group is the marker for every row
+     in it.
+
 ### 11g.49 Still open
 
 - Buying and selling is the one page in the file that was hand-built rather
@@ -9048,13 +9175,6 @@ those two should always come in.
   composers and outcomes and hold no table, so nothing is wrong today; it is a
   seam, not a defect, and the page will drift from the other eight the first
   time the converter changes again.
-- Three findings from 11g.70 are flagged and not fixed, because they are
-  product changes raised in the middle of a design batch: the trail that drops
-  the company on Buy, Sell and Send shares; `icon.card` drawing an arrow in the
-  three places that talk about a card; and `.bucket-btn .dot` missing every rule
-  that makes it a pill. The first is a routing decision — whether the composer's
-  parent is the company or the grouping you came through — and the other two are
-  a path and a selector.
 - The share-send trail reads `Invest › Send Apple` rather than
   `Invest › Disney › Send Disney`, so the repetition noted earlier is gone; what
   replaced it is the missing company step above.
@@ -9062,14 +9182,10 @@ those two should always come in.
   keeps the twenty-nine variables in step with `tokens.css` except somebody
   re-running the export, and no suite watches it. It has now drifted: Spend
   (11g.73), the three balances and the networks (11g.74), the merged wallet
-  card and the motion pass (11g.75), and now every picture in the product
-  (11g.79) exist only in the product. Four batches is further than "it can
-  drift" — the file is a photograph of a version that no longer ships, which is
-  the exact failure 11g.70 was built to end. Re-running the converter over the
-  nine flows is the fix and nobody has asked for it. It is also now worse than
-  drift: the file has lost the nine pages of screens it was built to hold and
-  returns only `Design system` and `Icons`, and nothing in the record says
-  where they went.
+  card and the motion pass (11g.75), and every picture in the product (11g.79)
+  reached it only in 11g.80, which also built the converter that can put them
+  there. The variables and the type scale are watched now; the screens are not,
+  because there are no screens.
 - Electricity still asks three screens where TV and internet ask one (11g.78).
   It predates the one-panel shape and was left alone in that batch rather than
   rewritten under it, so the place now has two anatomies for the same errand —
@@ -9230,10 +9346,6 @@ those two should always come in.
   Disney`, because the registry's label and the screen's title both name it.
   It predates 11g.67 — Apple read the same way — and it is either a shorter
   title or a shorter crumb, which is a decision about words rather than a bug.
-- Where people start renders no table. `tradable` is four companies, three of
-  them are the picks and the fourth is paused, so "everything else you can buy
-  today" has nothing to hold and the card does not appear at all. The screen is
-  correct and thin, and it fills itself the day the launch set grows.
 - There was a sixth empty-state drawing, for money on its way between two
   places, and nothing in the product draws it: the settling section does not
   appear at all when there is nothing settling, so the empty case has no
@@ -9250,7 +9362,11 @@ those two should always come in.
   at once, in both themes, against a Vite dev server on 4180. It is the only
   way to see the set as a set rather than one card at a time, and it is not
   wired to anything: `all.sh` runs it and it reports nothing.
-- The add-money dialog has no door. It is registered, reachable at
-  `?sheet=add-money`, and covered by `sheets.mjs`, and nothing in the product
-  opens it. It is either a dialog wanting a caller or a dialog wanting
-  deleting.
+- The nine pages of screens are still not back in Figma. 11g.80 wrote the
+  converter that rebuilds them and checked it in; running it over all nine
+  flows is the job it was written for and is not finished. Until it is, the
+  file is a design system with no screens in it.
+- `figma/tokens.json` can go stale and nothing will say so. `figma.mjs` catches
+  the product drifting from the snapshot; it cannot catch Figma drifting from
+  it, because a Playwright suite cannot call the MCP. Re-reading the file is a
+  person's job and is written down as one.

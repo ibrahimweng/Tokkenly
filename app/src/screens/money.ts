@@ -675,7 +675,19 @@ function shareSide(c: Instrument): HTMLElement {
       h('span', { class: 'avatar', text: initials(n) }),
       h('span', { class: 'two-line grow' },
         h('span', { class: 't-body-strong', text: n }),
-        h('small', { text: onTokkenly(n) ? lastPaid(n) : 'No Tokkenly account' })),
+        // On a row that can receive, when you last paid them. On one that
+        // cannot, nothing.
+        //
+        // It used to say "No Tokkenly account" there, under a card headed "Not
+        // on Tokkenly yet", beside a pill reading "Cash only", above a sentence
+        // saying it a fourth time — and at 390 the second of those four
+        // truncated to "No Tokkenly accou…", which is the fact zero times and a
+        // row three words short of any use. Dropping the pill instead was the
+        // wrong half: the pill is the only marker on the row itself, and
+        // `shares.mjs` is right that a row which cannot receive has to say so
+        // without the reader going up to the heading. So the pill stays, the
+        // line goes, and the row has the width for a name and a state.
+        onTokkenly(n) ? h('small', { text: lastPaid(n) }) : null),
       onTokkenly(n) ? null : h('span', { class: 'pill warn', text: 'Cash only' }),
       h('span', { class: 'muted', html: icon.chevron() }))
   const names = byRecent(state.people.map((p) => p.name))
@@ -715,7 +727,7 @@ function cannotSend(c: Instrument, to: string): HTMLElement {
     callout('Nothing has left your holding. You still hold every share you did a moment ago.'))
   left.classList.add('col-compose')
   return shell('market',
-    pageHeader('Send ' + c.name),
+    pageHeader('Send'),
     isMobile()
       ? left
       : h('div', { class: 'row' }, left, h('div', { class: 'stack grow' }, shareSide(c))))
@@ -724,7 +736,7 @@ function cannotSend(c: Instrument, to: string): HTMLElement {
 /** Who gets them, on a phone, where there is no column to put the list in. */
 function whoGetsSharesScreen(c: Instrument): HTMLElement {
   return shell('market',
-    pageHeader('Send ' + c.name,
+    pageHeader('Send',
       eyebrow('You hold', shares(holding(c.ticker)?.shares ?? 0) + ' shares')),
     shareSide(c))
 }
@@ -735,7 +747,7 @@ export function sendSharesScreen(ticker: string): HTMLElement {
   const held = holding(c.ticker)
   if (!held || held.shares <= 0) {
     return shell('market',
-      pageHeader('Send ' + c.name),
+      pageHeader('Send'),
       emptyState('You do not hold any ' + c.ticker,
         'You can only send shares you own. Buy some first, then they can go to anybody with a Tokkenly account.',
         { label: 'Buy ' + c.ticker, onClick: () => go(pathOf(c) + '/invest') }, 'holdings'))
@@ -784,7 +796,7 @@ export function sendSharesScreen(ticker: string): HTMLElement {
           h('span', { class: 't-body-strong', text: to }),
           h('small', { text: 'Verified Tokkenly account' })),
         side ? null : h('span', { class: 'link quiet', text: 'Change' }))),
-    title: 'Send ' + c.name,
+    title: 'Send',
     eyebrow: ['You hold', shares(held.shares) + ' shares'],
     // "How much", not "How many": the field takes dollars, like every other
     // composer in the product, and the summary underneath does the converting

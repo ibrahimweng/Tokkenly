@@ -19,7 +19,7 @@ import { usd, naira, pct, shares as fmtShares, longWhen, when, isDrawdown } from
 import { type Route, closeSheet, replaceSheet, go } from './router'
 import { isMobile } from './responsive'
 import { QA } from './screens/settings'
-import { peopleRows, addPanels, addTab, sendWays, addWays } from './screens/money'
+import { peopleRows, sendWays, addWays } from './screens/money'
 import { billFrom, whoLabel } from './screens/spend'
 import { parts, partName, partFigure, partUnder, partAlso } from './screens/wallet'
 import { assetOf, netOf, shortAddress, DOLLARS, type Asset } from './assets'
@@ -1008,13 +1008,14 @@ export const SHEETS: Record<string, Builder> = {
         on: { click: () => { toast('Opening a draft to ' + state.person.email); closeSheet() } },
       })),
 
-  /** Adding money, in place. The three ways in are three tabs, and the tab is
-   *  in the address, so this dialog and the page behind it are the same thing
-   *  at two sizes rather than two things that have to be kept in step. */
-  'add-money': () => sheet('Add money',
-    ...addPanels(addTab(), false),
-    h('button', { class: 'link quiet', text: 'Open the full page',
-      on: { click: () => go('/addmoney/' + addTab()) } })),
+  /* `add-money` was here: the three ways in as a dialog, with a link to the
+     full page under them. Nothing in the product opened it. 11g.61 had already
+     settled the question the other way — Add money has to ask which of three
+     ways before it can answer, and a dialog that asks a question and then
+     offers a page that asks the same one is the question twice. Both doors on
+     the wallet are addresses now, so this was a second implementation of a
+     screen, kept in step by hand, reachable only by typing `?sheet=add-money`
+     into the bar. Deleted rather than given a caller (11g.80). */
 
   /** Everything the wallet's card stopped saying.
    *

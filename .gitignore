@@ -4,3 +4,7 @@ shots/
 *.log
 .DS_Store
 app/undefined/
+
+# Flow exports from scripts/_figma-read.mjs. Regenerated on demand and large;
+# the converter is the thing worth keeping, not its output.
+app/figma/flows/

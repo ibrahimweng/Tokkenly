@@ -2401,7 +2401,18 @@ th.right .th-sort { flex-direction: row-reverse; }
   background: var(--inverse); color: var(--on-inverse);
   font-size: 11px; font-weight: 600; line-height: 20px; text-align: center; flex: none;
 }
-.bucket-btn .dot { background: var(--inverse); color: var(--on-inverse); }
+/* The count on the bucket. It had the two colours and none of the geometry —
+   no size, no radius, no line-height, no position — so it rendered as a word
+   of inverse-coloured text sitting after the glyph rather than as a badge on
+   it. Same anatomy as the bell's, which is the other icon button in the header
+   that carries a number. */
+.bucket-btn { position: relative; }
+.bucket-btn .dot {
+  position: absolute; top: 2px; right: 2px; min-width: 16px; height: 16px;
+  padding: 0 4px; border-radius: 999px;
+  background: var(--inverse); color: var(--on-inverse);
+  font-size: 10px; font-weight: 600; line-height: 16px; text-align: center;
+}
 
 .bucket-row {
   display: flex; align-items: center; gap: 16px;

@@ -35,8 +35,10 @@ const ROUTES = [
   // Add money, a tab at a time. The Base tab is the tall one — a code, an
   // address, a warning and what has already arrived — and it is the one that
   // decides how much of any of that the dialog can hold.
-  ['/transfer?sheet=add-money', 'add-money, bank'],
-  ['/transfer?sheet=add-money&tab=base', 'add-money, Base'],
+  // `add-money` was two rows here. It is not a dialog any more (11g.80): it
+  // had no caller, and 11g.61 had already settled that Add money asks which of
+  // three ways before it answers, which is a page. The three ways are covered
+  // at /addmoney/bank, /addmoney/base and /addmoney/card by `inflow.mjs`.
   ['/send?to=Tunde%20Bakare&sheet=send-review&v=120', 'send-review'],
   // The same review, on the rail that changes currency. It holds a rate and
   // states one, which the other two do not, so it is a different dialog in

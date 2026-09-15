@@ -1,0 +1,27 @@
+{
+  "_": "Every component on the Design system page, by the name the exporter emits (data-ic / data-art) and the id the builder places by. Read out of the file by _figma-parts, never typed. The eight art/* entries are the dot fields and are stale — 11g.79 replaced them and 11g.80 has to rebuild them as the eleven drawings.",
+  "icons": {
+    "info": "112:114", "send": "112:120", "receive": "112:220", "lock": "112:133",
+    "wallet": "112:146", "convert": "112:152", "bought": "112:159", "bell": "112:166",
+    "account": "112:173", "card": "112:179", "mail": "112:186", "key": "112:193",
+    "grid": "112:202", "check": "112:208", "download": "112:214", "alert": "112:227",
+    "grow": "112:233", "face": "112:240", "coin": "112:247", "sold": "112:254",
+    "market": "112:261", "home": "112:267", "theme": "112:274", "eye": "112:281",
+    "bucket": "112:288"
+  },
+  "stale": {
+    "art/piece": "58:61", "art/notes": "59:57", "art/purse": "60:57",
+    "art/piece-right": "70:57", "art/notes-right": "70:62", "art/purse-right": "70:67",
+    "art/coins": "71:57", "art/wallet": "100:10936"
+  },
+  "parts": {
+    "Button": "13:23", "Card": "14:2", "KV row": "14:7", "Callout": "14:10",
+    "Chip": "14:13", "Feed row": "16:2", "Trail": "16:9", "Page header": "16:15",
+    "Pager strip": "16:23", "Page bar": "16:30", "Empty state": "16:36",
+    "Top bar": "17:7", "Bottom bar": "17:13", "Search field": "17:28",
+    "Amount box": "17:31", "Standing bar": "17:35", "Nav rail": "22:7",
+    "Company strip cell": "22:33", "Timeframe pill": "22:38", "Tag": "22:40",
+    "Chart block": "22:42", "Close": "32:7", "Dialog": "32:10", "Sheet": "32:17",
+    "Set row": "114:212"
+  }
+}

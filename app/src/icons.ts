@@ -5,6 +5,20 @@ const svg = (d: string, size = 20): string =>
     stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
     aria-hidden="true">${d}</svg>`
 
+/** Every icon, tagged with its own name.
+ *
+ *  `data-ic` exists for one reader: the exporter that rebuilds the design file
+ *  (11g.80). Forty-four icons are components in Figma already, and a converter
+ *  that cannot tell which icon it is looking at has to inline the paths — which
+ *  is both a photograph of a component and, at forty-four of them a screen, most
+ *  of the payload. Costs one attribute and makes the design file a build. */
+function tag(): void {
+  for (const [name, make] of Object.entries(icon)) {
+    (icon as Record<string, () => string>)[name] = () =>
+      make().replace('<svg class="ic"', `<svg class="ic" data-ic="${name}"`)
+  }
+}
+
 export const icon = {
   home: () => svg('<path d="M4 10.5 12 4l8 6.5V20a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/>'),
   wallet: () => svg('<rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 11h18"/>'),
@@ -64,7 +78,12 @@ export const icon = {
   sold: () => svg('<rect x="3" y="4" width="18" height="16" rx="3"/><path d="m7 9 3.5 4 2.5-2.5L17 15"/>', 18),
   coin: () => svg('<circle cx="12" cy="12" r="8"/><path d="M12 7.5v9M9.8 9.8h4a1.7 1.7 0 0 1 0 3.4h-3.6a1.7 1.7 0 0 0 0 3.4h4"/>', 18),
   repay: () => svg('<path d="M12 19V8M8 12l4-4 4 4M5 5h14"/>', 18),
-  card: () => svg('<path d="M7 17 17 7M17 13V7h-6"/>', 18),
+  /* A card, not an arrow. This was `M7 17 17 7M17 13V7h-6` — the same diagonal
+     and arrowhead as `buy` with the numbers moved, on the three places in the
+     product that talk about a debit card. The chip is what tells it apart from
+     `wallet`, which is also a rounded rectangle with a line across it. */
+  card: () => svg('<rect x="2.5" y="5" width="19" height="14" rx="2.5"/>'
+    + '<path d="M2.5 9.5h19"/><rect x="5.5" y="12.5" width="4.5" height="3.5" rx="1"/>', 18),
   lock: () => svg('<rect x="5" y="10" width="14" height="10" rx="2.5"/><path d="M8.5 10V7.5a3.5 3.5 0 0 1 7 0V10"/>', 18),
   face: () => svg('<path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M9 10h.01M15 10h.01M9 14.5s1.2 1 3 1 3-1 3-1"/>', 18),
   /* Light and dark, as the half-filled circle every product uses for it. */
@@ -82,3 +101,5 @@ export const icon = {
    *  person would mistake for navigation inside the app. */
   external: () => svg('<path d="M14 5h5v5"/><path d="M19 5 10 14"/><path d="M18 13v5.5A1.5 1.5 0 0 1 16.5 20h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H11"/>', 18),
 }
+
+tag()

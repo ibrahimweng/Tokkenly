@@ -236,6 +236,139 @@ export function mark(d0: number, d1: number, sd: number, z: number,
               { dash: o.dash, opacity: o.opacity ?? 0.5 })
 }
 
+/** Hatching on a near face: a few short parallel strokes at the face's own
+ *  angle. It is the oldest mark in technical drawing and it does two things at
+ *  once here — says which side of the object is the near one, and gives the
+ *  eye something to read at the size these are drawn. */
+export function hatch(o: { x: number; y: number; z: number; w: number; h: number;
+                           side: 'front' | 'right'; n?: number; opacity?: number }): SVGGElement {
+  const g = el<SVGGElement>('g', {})
+  const n = o.n ?? 5
+  const op = o.opacity ?? 0.28
+  for (let i = 1; i <= n; i++) {
+    const t = (i / (n + 1)) * o.w
+    // Each stroke runs from a point along the top edge down to the bottom
+    // edge, offset along it, which is what makes hatching read as a slope
+    // across a face rather than as a row of verticals.
+    const a = o.side === 'front' ? iso(o.x + t, o.y, o.z + o.h) : iso(o.x, o.y + t, o.z + o.h)
+    const b = o.side === 'front'
+      ? iso(o.x + t - Math.min(0.5, o.h * 0.8), o.y, o.z)
+      : iso(o.x, o.y + t - Math.min(0.5, o.h * 0.8), o.z)
+    g.appendChild(line(`M${at(a)}L${at(b)}`, { opacity: op }))
+  }
+  return g
+}
+
+/** A pin standing between two plates, at a corner. An exploded stack that is
+ *  only plates is a stack of plates; one with the things that join them drawn
+ *  as well is an object taken apart. */
+export function pin(x: number, y: number, z: number, h: number, r = 0.22): SVGGElement {
+  const g = el<SVGGElement>('g', {})
+  const [cx, cy] = iso(x, y, z)
+  const rx = r * K * 2
+  const n = (v: number) => v.toFixed(2)
+  g.appendChild(line(
+    `M${n(cx - rx)} ${n(cy)}A${n(rx)} ${n(r)} 0 0 0 ${n(cx + rx)} ${n(cy)}` +
+    `L${n(cx + rx)} ${n(cy - h)}A${n(rx)} ${n(r)} 0 0 1 ${n(cx - rx)} ${n(cy - h)}Z`,
+    { opacity: 0.6, fill: GROUND }))
+  const e = el<SVGEllipseElement>('ellipse', {
+    cx: n(cx), cy: n(cy - h), rx: n(rx), ry: n(r),
+    stroke: 'currentColor', 'stroke-width': '1.1',
+    'vector-effect': 'non-scaling-stroke', opacity: '0.7',
+  })
+  e.style.fill = GROUND
+  g.appendChild(e)
+  return g
+}
+
+/** The outline a floating part would leave on the surface below it. Dashed,
+ *  because it is not a thing — it is where a thing goes. */
+export function footprint(o: { x: number; y: number; z: number; w: number; d: number }): SVGPathElement {
+  const { x, y, z, w, d } = o
+  const c = Math.min(0.9, w / 4, d / 4)
+  return line(poly([
+    iso(x + c, y, z), iso(x + w - c, y, z),
+    iso(x + w, y + c, z), iso(x + w, y + d - c, z),
+    iso(x + w - c, y + d, z), iso(x + c, y + d, z),
+    iso(x, y + d - c, z), iso(x, y + c, z),
+  ]), { dash: '2 4', opacity: 0.3 })
+}
+
+/** A leader: a short line off a part, ending in a dot. What a diagram uses to
+ *  point at something without labelling it. */
+export function leader(x: number, y: number, z: number, dx: number, dy: number): SVGGElement {
+  const g = el<SVGGElement>('g', {})
+  const [ax, ay] = iso(x, y, z)
+  const bx = ax + dx, by = ay + dy
+  g.appendChild(line(`M${ax.toFixed(2)} ${ay.toFixed(2)}L${bx.toFixed(2)} ${by.toFixed(2)}`,
+                     { opacity: 0.4 }))
+  const dot = el<SVGCircleElement>('circle', {
+    cx: bx.toFixed(2), cy: by.toFixed(2), r: '0.9',
+    stroke: 'currentColor', 'stroke-width': '1.1',
+    'vector-effect': 'non-scaling-stroke', opacity: '0.4',
+  })
+  dot.style.fill = 'none'
+  g.appendChild(dot)
+  return g
+}
+
+/** A cut in a top face — a slot, a window, a recess. The feature that says a
+ *  plate was machined rather than drawn as a rectangle.
+ *
+ *  A top face is a diamond, not a rectangle: a point at (d, s) is on it only
+ *  while |d| + |s| is inside the half-width. Forget that and the slot runs out
+ *  past the plate's edge and hangs in the air, which is how the first version
+ *  of this drew three of them. `fits` is the caller's half-width; pass it and
+ *  the ends are pulled in to stay on the plate. */
+export function slot(d0: number, d1: number, sd: number, z: number,
+                     wide = 0.55, fits = Infinity): SVGPathElement {
+  if (fits !== Infinity) {
+    const room = Math.max(0.3, fits - Math.abs(sd) - wide)
+    d0 = Math.max(d0, -room); d1 = Math.min(d1, room)
+  }
+  const f = (dd: number, ss: number): P => iso(dd + ss, ss - dd, z)
+  const pts: P[] = [
+    f(d0, sd - wide), f(d1, sd - wide), f(d1, sd + wide), f(d0, sd + wide),
+  ]
+  return line(poly(pts), { opacity: 0.45 })
+}
+
+/** A fixing on a face: a small circle with a cross in it. Four of them round a
+ *  plate and the plate is a part. */
+export function screw(d: number, sd: number, z: number, r = 0.28): SVGGElement {
+  const g = el<SVGGElement>('g', {})
+  const [cx, cy] = iso(d + sd, sd - d, z)
+  const e = el<SVGEllipseElement>('ellipse', {
+    cx: cx.toFixed(2), cy: cy.toFixed(2),
+    rx: (r * K * 2).toFixed(2), ry: r.toFixed(2),
+    fill: 'none', stroke: 'currentColor', 'stroke-width': '1.1',
+    'vector-effect': 'non-scaling-stroke', opacity: '0.5',
+  })
+  g.appendChild(e)
+  g.appendChild(line(
+    `M${(cx - r * K * 1.4).toFixed(2)} ${(cy + r * 0.7).toFixed(2)}` +
+    `L${(cx + r * K * 1.4).toFixed(2)} ${(cy - r * 0.7).toFixed(2)}`, { opacity: 0.5 }))
+  return g
+}
+
+/** A dimension line: a run with a tick at each end, set off to one side. It is
+ *  the mark that says a drawing is measuring something rather than picturing
+ *  it, and one per picture is enough to say so. */
+export function dim(a: P, b: P, tick = 1.4): SVGGElement {
+  const g = el<SVGGElement>('g', {})
+  const o = { opacity: 0.35 }
+  g.appendChild(line(`M${at(a)}L${at(b)}`, o))
+  const dx = b[0] - a[0], dy = b[1] - a[1]
+  const len = Math.hypot(dx, dy) || 1
+  const nx = (-dy / len) * (tick / 2), ny = (dx / len) * (tick / 2)
+  for (const [px, py] of [a, b]) {
+    g.appendChild(line(
+      `M${(px - nx).toFixed(2)} ${(py - ny).toFixed(2)}` +
+      `L${(px + nx).toFixed(2)} ${(py + ny).toFixed(2)}`, o))
+  }
+  return g
+}
+
 /** The dashed line that says two things are the same thing at two heights.
  *  Every exploded drawing in the reference has them and they are the reason
  *  the stack reads as one object rather than as several. */
@@ -259,7 +392,7 @@ export interface Drawn {
  *  `aria-hidden`, always: every one of these sits beside words that already
  *  say the thing, and a screen reader announcing "image" over a decoration is
  *  a screen reader reading out the wallpaper. */
-export function draw(d: Drawn): SVGSVGElement {
+export function draw(d: Drawn, name = ''): SVGSVGElement {
   const svg = el<SVGSVGElement>('svg', {
     viewBox: d.box.join(' '),
     width: '100%',
@@ -268,6 +401,10 @@ export function draw(d: Drawn): SVGSVGElement {
     'aria-hidden': 'true',
     focusable: 'false',
   })
+  // Its own name, for the exporter that rebuilds the design file: eleven
+  // drawings are eleven components there, and a converter that cannot name
+  // the one in front of it has to inline three thousand characters of path.
+  if (name) svg.setAttribute('data-art', name)
   const g = el<SVGGElement>('g', {})
   d.body(g)
   svg.appendChild(g)
