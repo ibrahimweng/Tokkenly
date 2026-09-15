@@ -159,7 +159,7 @@ ol, ul { margin: 0; padding: 0; list-style: none; }
 .wrap-narrow { max-width: 880px; }
 
 /* ---------------------------------------------------------------- type -- */
-h1 { font-size: clamp(46px, 8.2vw, 104px); line-height: 0.98; letter-spacing: -0.048em; }
+h1 { font-size: clamp(40px, 5.4vw, 76px); line-height: 1.06; letter-spacing: -0.04em; }
 h2 { font-size: clamp(34px, 5.4vw, 68px); line-height: 1.02; letter-spacing: -0.042em; }
 h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.022em; }
 
@@ -357,9 +357,17 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
   mask-image: radial-gradient(60% 50% at 50% 12%, #000, transparent 72%);
 }
 
-.hero-text { max-width: 940px; margin: 0 auto; text-align: center; }
-.hero-text .lead { max-width: 640px; margin: 28px auto 0; }
-.hero-text .cta-row { justify-content: center; }
+/* Text left, product right — the shape the consumer page uses. */
+.hero-in {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.82fr);
+  gap: clamp(32px, 4.5vw, 72px); align-items: center;
+}
+.hero-text { max-width: none; text-align: left; }
+.hero-text .lead { max-width: 46ch; margin: 30px 0 0; }
+/* A tall panel with a wide screenshot at the bottom of it is mostly empty
+   colour, which is the fault the photograph slots had. The phone fills it. */
+.hero-in .hero-stage { margin-top: 0; aspect-ratio: 4 / 5; padding-inline: clamp(24px, 3vw, 48px); }
+.hero-in .hero-stage .shot-phone { width: min(300px, 78%); }
 
 /* The headline's last phrase in mint, so the first thing read carries the
    brand colour rather than describing it. */
@@ -398,6 +406,59 @@ h1 .accent { color: var(--mint); }
 
 .statement { max-width: 860px; margin: 0 auto; text-align: center; display: grid; gap: 22px; }
 .statement h2 { margin-block: 6px 8px; }
+
+/* ------------------------------------------------------- highlighter -- */
+/* The consumer page sets its headline in solid bars — each line on its own
+   block of colour, one line in a different one. It is the loudest thing on
+   that page and it costs nothing but CSS: no photograph, no illustration. */
+.hl { display: grid; justify-items: start; gap: 0.12em; }
+.hl-line {
+  display: inline-block;
+  padding: 0.1em 0.3em 0.16em;
+  border-radius: 14px;
+  background: var(--deep); color: var(--on-deep);
+}
+.hl-accent { background: var(--mint); color: var(--deep); }
+
+/* ------------------------------------------------------------ ticker -- */
+/* Both pages run a strip of bullet-separated words across the page, tilted a
+   few degrees. Onboard fills it with credentials; this one is filled with the
+   seven product names, which are already in the copy. Decorative repetition,
+   so it is hidden from a screen reader — the same words are in the nav, the
+   product grid and the footer. */
+/* The tilt is what makes the strip read as a sticker rather than a rule, and
+   a rotated box is wider than the one it came from — 29px wider at 1440. The
+   clip has to happen on a parent that is NOT rotated, because overflow on the
+   rotated element clips its children and not its own bounding box. A plain
+   wrapper rather than overflow on the body: hiding overflow on the body makes
+   the body the scrolling box and takes scroll-padding-top out of play. */
+.ticker-clip { overflow: hidden; }
+.ticker {
+  position: relative; z-index: 2;
+  margin-block: clamp(-28px, -2vw, -16px) 0;
+  padding-block: 15px;
+  background: var(--deep); color: var(--mint);
+  transform: rotate(-1.6deg) scale(1.04);
+}
+.ticker-track {
+  display: flex; align-items: center; gap: 28px; width: max-content;
+  animation: tick 38s linear infinite;
+  font-size: 14px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+}
+.ticker-track span { white-space: nowrap; }
+.ticker-track i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; }
+@keyframes tick { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* ------------------------------------------------------- split heads -- */
+/* The questions sit beside their heading rather than under it, on both pages.
+   It halves the vertical run of the section and gives the accordion the width
+   it wants. */
+.split-head {
+  display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.25fr);
+  gap: clamp(32px, 5vw, 80px); align-items: start;
+}
+.split-head .head { margin: 0; text-align: left; max-width: none; }
+.split-head .faq { margin-top: 0; }
 
 /* -------------------------------------------------------------- stage -- */
 /* A screen on a block of colour.
@@ -488,7 +549,13 @@ h1 .accent { color: var(--mint); }
 /* The product list. Onboard numbers its capabilities 01–06; so does this.
    Each card carries a differently tinted chip, which is where most of the
    page's colour lives — six small blocks rather than one big one. */
-.numbered { margin-top: clamp(48px, 5.5vw, 76px); }
+.numbered {
+  margin-top: clamp(48px, 5.5vw, 76px);
+  /* Not a uniform 3x2. The business page runs its 01-06 at mixed widths, and
+     a wide card at each end of the slab stops the six reading as a table. */
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.numbered .ncard:first-child, .numbered .ncard:last-child { grid-column: span 2; }
 /* The product list is the page's dark block.
  *
  *  This is the shape Onboard's own numbered run is built on: a light ground,
@@ -676,6 +743,9 @@ details[open] .plus::after { transform: translateY(-50%) rotate(0deg); opacity: 
 
 /* ------------------------------------------------------------ responsive */
 @media (max-width: 1040px) {
+  .hero-in { grid-template-columns: minmax(0, 1fr); gap: 44px; }
+  .hero-in .hero-stage { aspect-ratio: 5 / 4; }
+  .split-head { grid-template-columns: minmax(0, 1fr); gap: 36px; }
   .nav-links { display: none; }
   .burger { display: grid; }
   .split { grid-template-columns: minmax(0, 1fr); gap: 48px; }

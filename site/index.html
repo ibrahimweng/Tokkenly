@@ -82,10 +82,11 @@
 
       <!-- -------------------------------------------------------- hero -- -->
       <section class="hero">
-        <div class="wrap">
+        <div class="wrap hero-in">
           <div class="hero-text">
-            <h1 class="hero-intro" style="--hero-d: 0s">
-              Invest close to home. <span class="accent">And beyond.</span>
+            <h1 class="hl hero-intro" style="--hero-d: 0s">
+              <span class="hl-line">Invest close to home.</span>
+              <span class="hl-line hl-accent">And beyond.</span>
             </h1>
             <p class="lead hero-intro" style="--hero-d: 0.1s">
               Access local and US markets through tokenized stocks with Tokkenly. Invest for
@@ -99,11 +100,11 @@
           </div>
 
           <div class="stage stage-mint hero-stage hero-intro" style="--hero-d: 0.3s">
-            <figure class="shot shot-wide">
+            <figure class="shot shot-phone">
               <img
-                src="./img/home.webp"
-                width="2040"
-                height="1275"
+                src="./img/p-home.webp"
+                width="780"
+                height="1600"
                 alt="The Tokkenly home screen, showing a total portfolio figure with Invest, Wallet, Borrow &amp; Lend and Spend alongside recent activity."
                 fetchpriority="high"
               />
@@ -111,6 +112,20 @@
           </div>
         </div>
       </section>
+
+      <!-- ------------------------------------------------------ ticker -- -->
+      <div class="ticker-clip" aria-hidden="true">
+        <div class="ticker">
+          <div class="ticker-track">
+          <span>Tokenized Stocks</span><i></i><span>Receive</span><i></i><span>Send</span><i></i
+          ><span>Pay bills</span><i></i><span>Earn</span><i></i><span>Borrow</span><i></i
+          ><span>Convert</span><i></i
+          ><span>Tokenized Stocks</span><i></i><span>Receive</span><i></i><span>Send</span><i></i
+          ><span>Pay bills</span><i></i><span>Earn</span><i></i><span>Borrow</span><i></i
+            ><span>Convert</span><i></i>
+          </div>
+        </div>
+      </div>
 
       <!-- --------------------------------------------- tokenized stocks -- -->
       <section class="band" id="tokenized-stocks">
@@ -486,13 +501,14 @@
 
       <!-- ---------------------------------------------------------- faq -- -->
       <section class="band" id="faq">
-        <div class="wrap wrap-narrow">
-          <div class="head reveal">
-            <p class="eyebrow">Frequently asked questions</p>
-            <h2>A few things you might be wondering.</h2>
-          </div>
+        <div class="wrap">
+          <div class="split-head">
+            <div class="head reveal">
+              <p class="eyebrow">Frequently asked questions</p>
+              <h2>A few things you might be wondering.</h2>
+            </div>
 
-          <div class="faq reveal">
+            <div class="faq reveal">
             <details>
               <summary>What is Tokkenly?<span class="plus" aria-hidden="true"></span></summary>
               <div class="answer">
@@ -546,7 +562,8 @@
               <div class="answer">
                 <p>Visit Help for guidance on your account, transactions, and Tokkenly products.</p>
               </div>
-            </details>
+              </details>
+            </div>
           </div>
         </div>
       </section>
