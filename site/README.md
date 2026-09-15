@@ -80,6 +80,16 @@ Two directories cannot collide, so nothing here is a compromise. The root
 `site/vercel.json` covers the site and is read only when Root Directory is
 `site`.
 
+`site/vercel.json` names an install command and a build command even though
+there is nothing to install and nothing to build, and both are `echo`. That is
+deliberate. A key left out of `vercel.json` is not a key set to nothing — it
+falls through to whatever the Vercel project has saved in its dashboard, and a
+project made from this repository can easily be holding the app's
+`cd app && npm ci` there. Run that from inside `site/`, where there is no
+`app/`, and the deploy fails on `cd: app: No such file or directory`. Saying
+both explicitly closes the door, so the folder deploys the same way whatever
+the dashboard happens to remember.
+
 One ordering detail, because it is the thing that actually catches people:
 Vercel's Root Directory picker only lists folders that exist **on the
 repository's default branch**. Until `site/` is merged to `main`, `site` is
