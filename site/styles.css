@@ -650,6 +650,10 @@ h1 .accent { color: var(--mint); }
 .ncard:nth-child(3n + 2) .ic { background: rgba(249, 209, 0, 0.14); color: #f9d100; }
 .ncard:nth-child(3n + 3) .ic { background: rgba(248, 81, 19, 0.14); color: #ff8a5c; }
 
+/* The wrap caps at 1200, so a card is no wider at 1920 than at 1440. Left
+   on the global clamp the heading keeps growing past that and wraps on a
+   card that never grew with it, so it stops where the card stops. */
+.ncard h3 { font-size: clamp(19px, 1.5vw, 21.6px); }
 .ncard p:not(.num) { color: var(--on-deep-muted); font-size: 16px; }
 .ncard .link-arrow { margin-top: 8px; color: var(--mint); }
 
@@ -821,6 +825,10 @@ details[open] .plus::after { transform: translateY(-50%) rotate(0deg); opacity: 
 
 /* ------------------------------------------------------------ responsive */
 @media (max-width: 1040px) {
+  /* The six product cards go two-up here rather than at 880. Below this
+     width a quarter-column is too narrow for a heading to sit on one
+     line, which is the whole point of the headings. */
+  .numbered { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .hero-in { grid-template-columns: minmax(0, 1fr); gap: 44px; }
   .hero-in .hero-stage { aspect-ratio: 5 / 4; }
   .split-head { grid-template-columns: minmax(0, 1fr); gap: 36px; }
@@ -854,6 +862,10 @@ details[open] .plus::after { transform: translateY(-50%) rotate(0deg); opacity: 
   :root { --gutter: 20px; --nav-h: 64px; }
   body { font-size: 16px; }
   .grid-3 { grid-template-columns: minmax(0, 1fr); }
+  /* The wide cards span two columns. Left on in a single-column stack that
+     span invents a second track, collapsing the first to 0 and rendering
+     cards 02-05 at 58px. On a phone every card is just a card. */
+  .numbered .ncard:first-child, .numbered .ncard:last-child { grid-column: auto; }
   .cards .card { max-width: 480px; margin-inline: auto; width: 100%; }
   /* Three phones do not fit across a phone. Two columns, and the third wraps
      under the pair rather than shrinking all of them to a thumbnail. */
