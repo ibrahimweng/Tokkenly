@@ -49,7 +49,14 @@
   color-scheme: light;
 
   /* surface */
-  --canvas: #f6f8f6;
+  /* The ground is the palette's cream, not its mint-white. surface/canvas at
+     #F6F8F6 is correct and cool and quiet; the brief is for loud and happy,
+     and warmth is most of what separates the two. Cream is an approved brand
+     value — what moves here is the ratio it is used at, which is the axis the
+     Figma page itself says is the variable one. #F6F8F6 keeps its job as the
+     ground inside a light card. */
+  --canvas: #fdf6dc;
+  --paper: #f6f8f6;
   --surface: #ffffff;
   --sunken: #eff2f0;
   --deep: #053329;          /* surface/inverse — the dark bands */
@@ -73,7 +80,7 @@
   /* tint — the quiet bands and the chips behind icons */
   --tint-mint: #e6f7f1;
   --tint-peach: #fdeae2;
-  --tint-cream: #fdf6dc;
+  --tint-cream: #fdf6dc;   /* now the page ground; bands use peach and mint */
   --tint-brand: #e8f0ed;
 
   /* line work. A border on this page is ink at low alpha rather than a grey,
@@ -84,9 +91,9 @@
 
   /* Shadows are green too. A neutral black shadow under a card on a mint-white
      page reads as dirt; the same shadow mixed toward the ink reads as shade. */
-  --shadow-sm: 0 2px 8px rgba(5, 51, 41, 0.05);
-  --shadow: 0 10px 30px rgba(5, 51, 41, 0.08), 0 2px 8px rgba(5, 51, 41, 0.04);
-  --shadow-lg: 0 30px 70px rgba(5, 51, 41, 0.14), 0 8px 20px rgba(5, 51, 41, 0.06);
+  --shadow-sm: 0 1px 3px rgba(5, 51, 41, 0.06);
+  --shadow: 0 6px 18px rgba(5, 51, 41, 0.07);
+  --shadow-lg: 0 18px 44px rgba(5, 51, 41, 0.13);
 
   /* motion, measured from the reference */
   --ease: cubic-bezier(0.16, 0.84, 0.44, 1);
@@ -131,7 +138,7 @@ body {
 
 img { max-width: 100%; display: block; }
 a { color: inherit; text-decoration: none; }
-h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.03em; }
+h1, h2, h3 { margin: 0; font-weight: 700; letter-spacing: -0.03em; }
 p { margin: 0; }
 ol, ul { margin: 0; padding: 0; list-style: none; }
 
@@ -152,8 +159,8 @@ ol, ul { margin: 0; padding: 0; list-style: none; }
 .wrap-narrow { max-width: 880px; }
 
 /* ---------------------------------------------------------------- type -- */
-h1 { font-size: clamp(42px, 7vw, 84px); line-height: 1.02; letter-spacing: -0.042em; }
-h2 { font-size: clamp(32px, 4.8vw, 58px); line-height: 1.06; letter-spacing: -0.035em; }
+h1 { font-size: clamp(46px, 8.2vw, 104px); line-height: 0.98; letter-spacing: -0.048em; }
+h2 { font-size: clamp(34px, 5.4vw, 68px); line-height: 1.02; letter-spacing: -0.042em; }
 h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.022em; }
 
 .lead { font-size: clamp(16.5px, 1.4vw, 20px); line-height: 1.6; color: var(--muted); }
@@ -228,7 +235,7 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 /* ----------------------------------------------------------------- nav -- */
 .nav {
   position: fixed; inset: 0 0 auto 0; z-index: 50;
-  background: rgba(246, 248, 246, 0.72);
+  background: rgba(253, 246, 220, 0.72);
   backdrop-filter: saturate(180%) blur(16px);
   -webkit-backdrop-filter: saturate(180%) blur(16px);
   border-bottom: 1px solid transparent;
@@ -236,7 +243,7 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 }
 .nav[data-scrolled='true'] {
   border-bottom-color: var(--line-soft);
-  background: rgba(246, 248, 246, 0.93);
+  background: rgba(253, 246, 220, 0.94);
 }
 .nav-in {
   max-width: var(--wrap); margin: 0 auto; padding-inline: var(--gutter);
@@ -337,9 +344,9 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
   content: ''; position: absolute; inset: -10% -20% auto -20%; height: 130%;
   z-index: -1; pointer-events: none;
   background:
-    radial-gradient(48% 40% at 62% 6%, rgba(43, 189, 155, 0.26), transparent 68%),
-    radial-gradient(42% 36% at 12% 22%, rgba(249, 209, 0, 0.14), transparent 70%),
-    radial-gradient(38% 34% at 88% 42%, rgba(213, 165, 120, 0.16), transparent 72%);
+    radial-gradient(52% 44% at 66% 2%, rgba(43, 189, 155, 0.42), transparent 66%),
+    radial-gradient(44% 38% at 8% 16%, rgba(248, 81, 19, 0.12), transparent 70%),
+    radial-gradient(40% 36% at 92% 46%, rgba(213, 165, 120, 0.26), transparent 72%);
 }
 /* The product's own motif: a field of dots, faded out as it falls. */
 .hero::after {
@@ -363,7 +370,10 @@ h1 .accent { color: var(--mint); }
 /* -------------------------------------------------------------- bands -- */
 .band { padding-block: var(--section-y); position: relative; }
 
-.band-cream { background: var(--tint-cream); }
+/* Gifting was on cream. Cream is the page now, so it takes peach — the
+   warmest of the remaining tints, and the section this palette's warmth
+   belongs to. */
+.band-cream { background: var(--tint-peach); }
 .band-mint-tint { background: var(--tint-mint); }
 .band-brand { background: var(--tint-brand); }
 
@@ -388,6 +398,80 @@ h1 .accent { color: var(--mint); }
 
 .statement { max-width: 860px; margin: 0 auto; text-align: center; display: grid; gap: 22px; }
 .statement h2 { margin-block: 6px 8px; }
+
+/* ----------------------------------------------------------- portrait -- */
+/* A person, on a block of brand colour.
+ *
+ *  This is the shape the reference gets most of its warmth from: a cut-out
+ *  portrait sitting on a saturated panel, with product UI small beside it
+ *  rather than filling the frame. A landing page for a consumer money app is
+ *  about the people using it; the screens are evidence, not the subject.
+ *
+ *  Until a photograph is licensed these are colour panels with a label, which
+ *  is a deliberate-looking thing rather than a broken one. Drop a file into
+ *  img/people/ and set --photo on the figure; nothing else has to change. */
+.portrait {
+  position: relative; margin: 0; overflow: hidden;
+  aspect-ratio: 4 / 5;
+  border-radius: var(--r-xl);
+  background: var(--slot, var(--mint));
+  display: grid; place-items: center;
+  isolation: isolate;
+}
+.portrait::before {
+  content: ''; position: absolute; inset: 0; z-index: 0;
+  background-image: radial-gradient(circle, rgba(5, 51, 41, 0.16) 1px, transparent 1px);
+  background-size: 20px 20px;
+  -webkit-mask-image: radial-gradient(72% 72% at 50% 46%, transparent 34%, #000);
+  mask-image: radial-gradient(72% 72% at 50% 46%, transparent 34%, #000);
+}
+.portrait img {
+  position: absolute; inset: 0; z-index: 2;
+  width: 100%; height: 100%; object-fit: cover;
+}
+.portrait-note {
+  position: relative; z-index: 1;
+  max-width: 24ch; margin: 0 20px; padding: 16px 20px; text-align: center;
+  background: var(--surface); border-radius: var(--r-md);
+  box-shadow: var(--shadow);
+  font-size: 13.5px; line-height: 1.45; font-weight: 500; color: var(--muted);
+}
+.portrait-note b {
+  display: block; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink); margin-bottom: 5px;
+}
+.portrait-sand { --slot: var(--sand); }
+.portrait-peach { --slot: #f7b79a; }
+.portrait-deep { --slot: var(--deep); }
+.portrait-deep .portrait-note { color: rgba(255, 255, 255, 0.6); }
+.portrait-deep::before { background-image: radial-gradient(circle, rgba(255,255,255,0.14) 1px, transparent 1px); }
+
+/* Gifting: the portrait is the panel, the product overlaps its corner. */
+.portrait-wrap { position: relative; }
+/* The inset phone sits over the panel's lower left, so the brief moves to the
+   top right rather than being half-hidden behind it. */
+.portrait-wrap .portrait-note {
+  align-self: start; justify-self: end;
+  margin: 9% 7% 0 0;
+}
+.portrait-wrap .portrait-inset {
+  position: absolute; z-index: 3;
+  left: -5%; bottom: -6%;
+  width: min(44%, 190px); margin: 0;
+  border-radius: 24px; border-color: var(--line);
+  box-shadow: var(--shadow-lg);
+}
+
+/* The person leads; the product sits in front of them, smaller. */
+.showcase {
+  position: relative;
+  margin-top: clamp(56px, 6.5vw, 92px);
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.62fr);
+  gap: clamp(28px, 4vw, 64px); align-items: center;
+  max-width: 1020px; margin-inline: auto;
+}
+.showcase .portrait { max-height: 620px; }
+.showcase .shot-phone { width: 100%; max-width: 330px; margin: 0 auto; }
 
 /* -------------------------------------------------------------- shots -- */
 .shot {
@@ -630,6 +714,14 @@ details[open] .plus::after { transform: translateY(-50%) rotate(0deg); opacity: 
   .band-round { margin-inline: 16px; }
 }
 
+@media (max-width: 880px) {
+  .showcase { grid-template-columns: minmax(0, 1fr); justify-items: center; gap: 28px; }
+  .showcase .portrait { width: min(420px, 100%); }
+  .showcase .shot-phone { margin-inline: auto; }
+  .portrait-wrap { max-width: 420px; margin-inline: auto; }
+  .portrait-wrap .portrait-inset { left: 0; bottom: -4%; width: min(40%, 150px); }
+}
+
 @media (max-width: 640px) {
   :root { --gutter: 20px; --nav-h: 64px; }
   body { font-size: 16px; }
@@ -649,12 +741,7 @@ details[open] .plus::after { transform: translateY(-50%) rotate(0deg); opacity: 
   .faq summary { padding: 20px; gap: 16px; }
   .answer { padding: 0 20px 22px; }
 
-  /* The hero picture becomes the phone it is showing. */
-  .hero-shot {
-    aspect-ratio: 390 / 800; width: min(290px, 100%); margin-inline: auto;
-    border-radius: 34px; border-color: var(--line);
-  }
-  .hero-shot img { height: 100%; object-fit: cover; object-position: top center; }
+
 }
 
 @media (prefers-reduced-motion: reduce) {

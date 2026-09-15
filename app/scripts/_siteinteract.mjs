@@ -49,9 +49,17 @@ const btn = await p.locator('.nav-end .btn').boundingBox()
 t(`bar button stays small (w=${Math.round(btn.width)})`, btn.width < 140)
 await p.locator('#mobile-menu a[href="#faq"]').click()
 t('choosing closes the menu', await p.locator('#mobile-menu').isHidden())
-// The hero picture is the phone one at this width.
-const heroSrc = await p.locator('.hero-shot img').evaluate((i) => i.currentSrc)
-t(`hero uses the phone picture (${heroSrc.split('/').pop()})`, /p-home/.test(heroSrc))
+/* The hero leads with a person and carries the product beside them. There is
+   no art-directed <picture> swap any more — the phone screenshot is the phone
+   screenshot at every width — so what is worth asserting is that both halves
+   are present, and that they stack rather than squeeze at this one. */
+t('hero has a photograph slot', await p.locator('.showcase .portrait').isVisible())
+const heroSrc = await p.locator('.showcase .shot-phone img').evaluate((i) => i.currentSrc)
+t(`hero carries the product too (${heroSrc.split('/').pop()})`, /p-home/.test(heroSrc))
+const slot = await p.locator('.showcase .portrait').boundingBox()
+const ph = await p.locator('.showcase .shot-phone').boundingBox()
+t(`showcase stacks at 390 (slot y=${Math.round(slot.y)}, phone y=${Math.round(ph.y)})`,
+  ph.y > slot.y + slot.height - 4)
 await p.close()
 
 console.log('PASS (' + pass.length + ')\n  ' + pass.join('\n  '))

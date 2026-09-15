@@ -98,20 +98,25 @@
             </div>
           </div>
 
-          <figure class="shot shot-wide hero-shot hero-intro" style="--hero-d: 0.3s">
-            <picture>
-              <!-- A 1360-wide desktop screen scaled into a 300px column is a
-                   picture of nothing, so the phone gets the phone. -->
-              <source media="(max-width: 640px)" srcset="./img/p-home.webp" />
+          <div class="showcase hero-intro" style="--hero-d: 0.3s">
+            <!-- PHOTOGRAPH SLOT. Put a file at img/people/hero.jpg and replace
+                 the <p> below with:
+                   <img src="./img/people/hero.jpg" alt="..." />
+                 Shot 4:5, subject slightly left of centre. -->
+            <figure class="portrait">
+              <p class="portrait-note"><b>Photograph</b>Someone using Tokkenly. 4:5, img/people/hero.jpg</p>
+            </figure>
+
+            <figure class="shot shot-phone">
               <img
-                src="./img/home.webp"
-                width="2040"
-                height="1275"
-                alt="The Tokkenly home screen, showing a total portfolio figure with Invest, Wallet, and Borrow &amp; Lend alongside recent activity."
+                src="./img/p-home.webp"
+                width="780"
+                height="1600"
+                alt="The Tokkenly home screen on a phone, showing a total portfolio figure with Invest, Wallet and Spend."
                 fetchpriority="high"
               />
-            </picture>
-          </figure>
+            </figure>
+          </div>
         </div>
       </section>
 
@@ -222,15 +227,21 @@
               </div>
             </div>
 
-            <figure class="shot shot-phone reveal">
-              <img
-                src="./img/p-gift.webp"
-                width="780"
-                height="1600"
-                loading="lazy"
-                alt="Sending a tokenized stock to someone else from the Tokkenly app on a phone."
-              />
-            </figure>
+            <div class="portrait-wrap reveal">
+              <!-- PHOTOGRAPH SLOT — img/people/gifting.jpg, 4:5. -->
+              <figure class="portrait portrait-sand">
+                <p class="portrait-note"><b>Photograph</b>Two people, a gift between them. 4:5, img/people/gifting.jpg</p>
+              </figure>
+              <figure class="shot shot-phone portrait-inset">
+                <img
+                  src="./img/p-gift.webp"
+                  width="780"
+                  height="1600"
+                  loading="lazy"
+                  alt="Sending a tokenized stock to someone else from the Tokkenly app on a phone."
+                />
+              </figure>
+            </div>
           </div>
         </div>
       </section>
