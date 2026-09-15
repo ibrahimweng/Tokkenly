@@ -30,6 +30,7 @@ import { readFileSync } from 'node:fs'
 const snap = JSON.parse(readFileSync(new URL('../figma/tokens.json', import.meta.url), 'utf8'))
 const css = readFileSync(new URL('../src/styles/tokens.css', import.meta.url), 'utf8')
 const comp = readFileSync(new URL('../src/styles/components.css', import.meta.url), 'utf8')
+const parts = JSON.parse(readFileSync(new URL('../figma/parts.json', import.meta.url), 'utf8'))
 
 let fails = 0
 const ok = (label, pass, detail = '') => {
@@ -127,6 +128,26 @@ console.log('\nTYPE  eight styles, and the rules that draw them')
   ok(`all ${Object.keys(snap.textStyles).length} agree`, off.length === 0, off.slice(0, 6).join(' | '))
   ok('and the family the file uses is the family the product loads',
      new RegExp(`--font:\\s*'${snap.family}'`).test(css), snap.family)
+}
+
+console.log('\nPARTS  every drawn thing the product uses, and whether the file has it')
+{
+  // The icons are the one part of the design system the product adds to
+  // casually: a new screen wants a new glyph and gets one, and nothing says
+  // the file is now short of it. Batch P drew airtime, data and electricity;
+  // eight icons went into the product and none into Figma, and the flows were
+  // rebuilt two batches later with dashed boxes where the icons should be.
+  // This is the check that would have said so at the time.
+  const src = readFileSync(new URL('../src/icons.ts', import.meta.url), 'utf8')
+  const body = src.slice(src.indexOf('export const icon'))
+  const inCode = [...body.matchAll(/^  ([A-Za-z][\w]*):/gm)].map((m) => m[1])
+  const inFigma = new Set(parts.icons)
+  const short = inCode.filter((n) => !inFigma.has(n))
+  const spare = parts.icons.filter((n) => !inCode.includes(n))
+  ok(`all ${inCode.length} icons the product draws are in the file`,
+     short.length === 0, short.join(' '))
+  ok('and the file holds none the product stopped drawing',
+     spare.length === 0, spare.join(' '))
 }
 
 console.log('\nSNAPSHOT  when the file was last read')

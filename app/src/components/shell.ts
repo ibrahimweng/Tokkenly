@@ -90,10 +90,15 @@ export function bell(): HTMLElement {
 
 export function sidebar(active: Place): HTMLElement {
   const nav = h('nav', { class: 'nav' })
+  // The bucket is a row of its own, and it is reached through Invest, so on
+  // /bucket both rows used to say "current page" — two highlights, and a
+  // screen reader announcing the current page twice. The row you are standing
+  // on is the one that says so.
+  const onBucket = current().path === '/bucket'
   for (const p of PLACES) {
     if (p.id === 'account') nav.appendChild(h('div', { class: 'nav-gap' }))
     const row = link(p.to, 'nav-row', h('span', { html: p.ic() }), h('span', { text: p.label }))
-    if (p.id === active) row.setAttribute('aria-current', 'page')
+    if (p.id === active && !onBucket) row.setAttribute('aria-current', 'page')
     nav.appendChild(row)
   }
   // The bucket sits with the places rather than in a page header, so it is on
@@ -257,18 +262,24 @@ function rail(active: Place): HTMLElement {
     h('div', { class: 'rail-pref' },
       h('span', { class: 't-caps subtle', text: 'Home view' }), viewToggle()))
 
-  // Two of the six places have no tab on a phone, so on Activity and on
-  // Account the capsule lit nothing at all and the bar read as "you are
+  // Three of the seven places have no tab on a phone, so on Spend, Activity
+  // and Account the capsule lit nothing at all and the bar read as "you are
   // nowhere" — which is what a missing back button feels like on a screen you
   // reached through a menu. There is no step above a top-level place to go
   // back to; what was missing is the thing a tab does, which is say you are
   // here. The button says it.
   //
+  // Derived from TABS rather than listed. It was a list of two, written when
+  // there were six places; Spend arrived as the seventh, went behind More
+  // like the other two, and was not added — so for a whole batch the phone
+  // said nothing at all on one of its own places. A list that has to be kept
+  // in step with another list is a list that will fall out of step with it.
+  //
   // It was already known here and only ever said to a screen reader, and said
   // wrongly: `aria-expanded` was true on Activity, which claims the menu is
   // open when it is shut. Expanded is about the panel; current is about the
   // place; they are different facts and now they are different attributes.
-  const behind = active === 'history' || active === 'account'
+  const behind = !TABS.some((t) => t.id === active)
   const more = h('button', {
     class: 'rail-more' + (behind && !open ? ' is-here' : ''),
     html: open ? icon.close() : icon.grid(),

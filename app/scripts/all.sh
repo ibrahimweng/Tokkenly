@@ -6,7 +6,7 @@ for f in scripts/*.mjs; do
   # something a sweep does not start. The five `_site*` scripts are the
   # marketing site's and need its own server, so in an app sweep they crash —
   # which is how a real crash goes unnoticed.
-  case "$b" in seen|_probe|_shot|_ba|_site*|_figma-*) continue;; esac
+  case "$b" in seen|_probe*|_shot|_ba|_site*|_figma-*) continue;; esac
   out=$(node "$f" 2>&1); code=$?
   n=$(printf '%s\n' "$out" | grep -c '^ *FAIL')
   # A suite that dies reports no failures at all, which read as green for one

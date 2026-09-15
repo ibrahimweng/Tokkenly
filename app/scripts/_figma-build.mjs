@@ -2,17 +2,35 @@
  *
  * `use_figma` takes a code string, so this writes one. The tree goes in as a
  * compact literal and a short recursive builder walks it: a frame per box, a
- * text node per run, auto-layout wherever the CSS was flex, and a bound
- * variable wherever the fill matches a token.
+ * text node per run, a component instance wherever the DOM named a part, and a
+ * bound variable wherever the fill matches a token.
  *
- * Usage: node scripts/_figma-build.mjs <flow-file> <screen-index>  > /tmp/x.js
+ * Two things the 50,000-character argument forces, both handled here rather
+ * than by asking less of the design:
+ *
+ *   - Several screens go in one call, comma-separated, when they fit.
+ *   - One screen that does not fit goes in slices. The first call makes the
+ *     frame and its first few top-level children; each later one finds the
+ *     frame by name and appends the next few. The result is identical — the
+ *     same children, in the same order, at the same coordinates — so this is a
+ *     transport limit handled in transport, and not a change to the drawing.
+ *
+ * Usage: node scripts/_figma-build.mjs <flow-file> <indices> [parts] [n] [i]
+ *        node scripts/_figma-build.mjs 02-home.json 0,1,2
+ *        node scripts/_figma-build.mjs 03-....json 7 "" 3 0
  */
 import { readFileSync } from 'node:fs'
 
-const [file, which, partsFile] = process.argv.slice(2)
-const PARTS = partsFile ? readFileSync(partsFile, 'utf8').trim() : '{}'
+/* The node builder, shared with _figma-chrome.mjs so the furniture and the
+   screens around it are built by one piece of code. */
+const NODE = readFileSync(new URL('./_figma-node.js', import.meta.url), 'utf8')
+
+const [file, which, partsFile, nParts = '1', part = '0'] = process.argv.slice(2)
 const doc = JSON.parse(readFileSync(new URL('../figma/flows/' + file, import.meta.url), 'utf8'))
-const screen = doc.screens[Number(which)]
+const indices = String(which).split(',').map((s) => Number(s.trim()))
+for (const i of indices) {
+  if (!doc.screens[i]) { console.error('no screen ' + i + ' in ' + file); process.exit(1) }
+}
 
 /* Compact: one-letter keys, no nulls, no empty strings. The tree is going into
    a 50,000-character argument, so every repeated key name costs. */
@@ -35,15 +53,60 @@ const pack = (n) => {
   }
   if (n.svg) o.g = n.svg
   if (n.part) o.p = n.part
-  if (n.kids) o.k = n.kids.map(pack).filter(Boolean)
+  // A part's children live in the component, not here. Packing them anyway put
+  // the whole nav rail into the payload of every screen that only needed to
+  // say which rail it was.
+  if (n.kids && !n.part) o.k = n.kids.map(pack).filter(Boolean)
   return o
 }
-const tree = pack(screen.tree)
+
+const N = Number(nParts)
+const P = Number(part)
+
+/* Where to cut a screen that will not fit in one call.
+ *
+ * Not at the top-level children: a screen is a shell holding a column holding
+ * a stack, so the root usually has one child and slicing it slices nothing.
+ * The cut belongs at the first node that actually holds a list of things —
+ * the deepest node still carrying most of the payload and more than a handful
+ * of children. */
+const weigh = (n) => JSON.stringify(n).length
+function splitAt(root) {
+  let best = root
+  const walk = (n) => {
+    const kids = n.k ?? []
+    if (kids.length >= 4) {
+      const mine = weigh(n)
+      if (mine >= weigh(root) * 0.6) best = n
+    }
+    for (const k of kids) walk(k)
+  }
+  walk(root)
+  return best
+}
+
+const screens = indices.map((i) => {
+  const sc = doc.screens[i]
+  let t = pack(sc.tree)
+  if (N > 1) {
+    const cut = splitAt(t)
+    const kids = cut.k ?? []
+    const per = Math.ceil(kids.length / N)
+    const slice = kids.slice(P * per, (P + 1) * per)
+    // Every ancestor above the cut is emitted in every slice; the builder finds
+    // the frame it already made rather than making a second one.
+    const rebuild = (n) => (n === cut
+      ? { ...n, k: slice }
+      : { ...n, k: (n.k ?? []).map(rebuild) })
+    t = rebuild(t)
+  }
+  return { name: sc.name, t }
+})
 
 const code = `
 const PAGE = ${JSON.stringify(doc.flow)}
-const NAME = ${JSON.stringify(screen.name)}
-const T = ${JSON.stringify(tree)}
+const PART = ${P}
+const SCREENS = ${JSON.stringify(screens)}
 
 const rgb = (h) => ({
   r: parseInt(h.slice(1, 3), 16) / 255,
@@ -61,14 +124,30 @@ for (const id of colour.variableIds) {
 }
 
 // Every component in the file, by name, so a named part becomes an instance.
+// Read off children rather than findAllWithCriteria, which would need the page
+// loaded and so a page switch — and a script gets one of those, which is spent
+// on the page being built. Components sit at the top level of both library
+// pages; a variant set holds its variants one level down.
+//
+// Three naming conventions live in this file: the drawings are art/NAME, the
+// icons icon/name, and the older Mark variants Icon=Name. The exporter emits
+// the bare name for all three, so all three prefixes come off, and the bare
+// name is keyed in lower case as well — Icon=Home and icon/home are the same
+// icon under two conventions, and a rail full of dashed placeholders is what
+// disagreeing about that looks like.
 const PARTS = {}
 const missing = []
+const take = (node, name) => {
+  const short = name.replace(/^(art\\/|icon\\/|Icon=)/, '')
+  if (!PARTS[short]) PARTS[short] = node
+  const low = short.toLowerCase()
+  if (!PARTS[low]) PARTS[low] = node
+}
 for (const pg of figma.root.children) {
   if (pg.name !== 'Design system' && pg.name !== 'Icons') continue
-  await figma.setCurrentPageAsync(pg)
-  for (const c of pg.findAllWithCriteria({ types: ['COMPONENT'] })) {
-    const short = c.name.replace(/^art\//, '').replace(/^Icon=/, '')
-    if (!PARTS[short]) PARTS[short] = c
+  for (const c of pg.children) {
+    if (c.type === 'COMPONENT') take(c, c.name)
+    else if (c.type === 'COMPONENT_SET') for (const v of c.children) if (v.type === 'COMPONENT') take(v, v.name)
   }
 }
 
@@ -81,98 +160,34 @@ let page = figma.root.children.find((p) => p.name === PAGE)
 if (!page) { page = figma.createPage(); page.name = PAGE }
 await figma.setCurrentPageAsync(page)
 
-// One frame per screen, laid out left to right in the order they are built.
-const existing = page.children.find((c) => c.name === NAME)
-if (existing) existing.remove()
-const right = page.children.reduce((m, c) => Math.max(m, c.x + c.width), 0)
+${NODE}
 
-const build = (n, parent) => {
-  // A named part is a component in this file. Place an instance rather than a
-  // copy, so editing the component edits every screen that uses it.
-  if (n.p) {
-    const comp = PARTS[n.p]
-    let node
-    if (comp) { node = comp.createInstance() }
-    else {
-      node = figma.createFrame()
-      node.fills = []
-      node.strokes = [{ type: 'SOLID', color: { r: 0.6, g: 0.6, b: 0.65 } }]
-      node.dashPattern = [3, 3]
-      missing.push(n.p)
-    }
-    node.name = n.p
-    parent.appendChild(node)
-    node.x = n.b[0]; node.y = n.b[1]
-    try { node.resize(Math.max(1, n.b[2]), Math.max(1, n.b[3])) } catch {}
-    if (n.o !== undefined) node.opacity = n.o
-    return node
+const out = []
+for (const S of SCREENS) {
+  const T = S.t
+  // One frame per screen, laid out left to right in the order they are built.
+  // On slice 0 the frame is made fresh; on every later slice it is found and
+  // appended to, so a screen too big for one call is still one frame.
+  let frame = page.children.find((c) => c.name === S.name)
+  if (PART === 0 && frame) { frame.remove(); frame = null }
+  if (PART > 0 && !frame) throw new Error('slice ' + PART + ' of ' + S.name + ' but no frame')
+  if (!frame) {
+    const right = page.children.reduce((m, c) => Math.max(m, c.x + c.width), 0)
+    frame = figma.createFrame()
+    frame.name = S.name
+    frame.resize(T.b[2], T.b[3])
+    frame.x = right + 120
+    frame.y = 0
+    frame.clipsContent = true
+    frame.fills = [figma.variables.setBoundVariableForPaint(
+      { type: 'SOLID', color: rgb(T.f || '#0a0a0c') }, 'color', byName['ground/canvas'])]
+    page.appendChild(frame)
   }
-  if (n.g) {
-    const node = figma.createNodeFromSvg(n.g)
-    node.name = n.n || 'art'
-    parent.appendChild(node)
-    node.x = n.b[0]; node.y = n.b[1]
-    try { node.resize(Math.max(1, n.b[2]), Math.max(1, n.b[3])) } catch {}
-    if (n.o !== undefined) node.opacity = n.o
-    return node
-  }
-  if (n.t !== undefined) {
-    const t = figma.createText()
-    t.fontName = { family: 'Geist', style: styleFor(n.wt) }
-    t.characters = n.t
-    t.fontSize = n.s
-    t.lineHeight = { unit: 'PIXELS', value: n.lh }
-    if (n.ls) t.letterSpacing = { unit: 'PIXELS', value: n.ls }
-    t.fills = [{ type: 'SOLID', color: rgb(n.c) }]
-    t.textAutoResize = 'HEIGHT'
-    t.name = n.t.slice(0, 40)
-    parent.appendChild(t)
-    t.x = n.b[0]; t.y = n.b[1]
-    try { t.resize(Math.max(1, n.b[2]), Math.max(1, n.b[3])) } catch {}
-    if (n.ta === 'center') t.textAlignHorizontal = 'CENTER'
-    if (n.ta === 'right' || n.ta === 'end') t.textAlignHorizontal = 'RIGHT'
-    if (n.o !== undefined) t.opacity = n.o
-    return t
-  }
-  const f = figma.createFrame()
-  f.name = n.n || 'box'
-  f.clipsContent = false
-  parent.appendChild(f)
-  f.x = n.b[0]; f.y = n.b[1]
-  f.resize(Math.max(1, n.b[2]), Math.max(1, n.b[3]))
-  if (n.f) {
-    let paint = { type: 'SOLID', color: rgb(n.f) }
-    if (n.fa !== undefined) paint.opacity = n.fa
-    if (n.v && byName[n.v]) {
-      paint = figma.variables.setBoundVariableForPaint(paint, 'color', byName[n.v])
-    }
-    f.fills = [paint]
-  } else {
-    f.fills = []
-  }
-  if (n.r) f.cornerRadius = n.r
-  if (n.o !== undefined) f.opacity = n.o
-  for (const k of n.k || []) {
-    const c = build(k, f)
-    // Children came out of the DOM in page coordinates; make them the frame's.
-    if (c) { c.x = c.x - n.b[0]; c.y = c.y - n.b[1] }
-  }
-  return f
+  for (const k of T.k || []) build(k, frame)
+  out.push({ frame: frame.name, id: frame.id, children: frame.children.length })
 }
 
-const frame = figma.createFrame()
-frame.name = NAME
-frame.resize(T.b[2], T.b[3])
-frame.x = right + 120
-frame.y = 0
-frame.clipsContent = true
-frame.fills = [figma.variables.setBoundVariableForPaint(
-  { type: 'SOLID', color: rgb(T.f || '#0a0a0c') }, 'color', byName['ground/canvas'])]
-page.appendChild(frame)
-for (const k of T.k || []) build(k, frame)
-
-return { page: page.name, frame: frame.name, id: frame.id,
-         children: frame.children.length,
+return { page: page.name, slice: PART, built: out,
          missingParts: [...new Set(missing)] }
 `
 process.stdout.write(code)

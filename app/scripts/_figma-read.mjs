@@ -15,83 +15,131 @@
    Writes: figma/flows/<flow>.json
 */
 import { chromium } from 'playwright'
-import { seen } from './seen.mjs'
+import { seen, fresh, locked } from './seen.mjs'
 import { mkdirSync, writeFileSync, readFileSync } from 'node:fs'
 
 const B = 'http://localhost:4173/#'
 const OUT = new URL('../figma/flows/', import.meta.url)
 
-/* The nine flows, and the screens in each. Names are what the page in Figma is
-   called and what the frame in it is called, so a person reading the file sees
-   the same words the product uses. */
+/* The product, flow by flow, screen by screen, at the two widths the file has
+   always carried. The list is not invented: every address in it comes off
+   `destinations.ts` — the table the product itself navigates by — and every
+   one was walked before it was written down, so a page in Figma cannot name a
+   screen the app does not have. The nine customer flows are 01–09; the staff
+   console is 10, because it is not this person's account.
+
+   Names are what the page in Figma is called and what the frame in it is
+   called, so somebody reading the file sees the same words the product uses. */
+const AT = [1440, 390]
+const S = (name, route, opts = {}) => AT.map((w) => [name + ' \u00b7 ' + w, route, w, opts])
+const FRESH = { fresh: true }
+
 export const FLOWS = {
-  'R1 Getting in': [
-    ['Welcome · what this is', '/welcome/0', 1440, { fresh: true }],
-    ['Welcome · what you hold', '/welcome/1', 1440, { fresh: true }],
-    ['Welcome · when you can sell', '/welcome/2', 1440, { fresh: true }],
-    ['Welcome · pick one', '/welcome/3', 1440, { fresh: true }],
-    ['Sign in', '/signin', 1440, { fresh: true }],
+  '01 \u00b7 Getting in': [
+    ...S('Welcome \u00b7 Own a piece', '/welcome/0', FRESH),
+    ...S('Welcome \u00b7 Naira in', '/welcome/1', FRESH),
+    ...S('Welcome \u00b7 Never closes', '/welcome/2', FRESH),
+    ...S('Welcome \u00b7 Pick one', '/welcome/3', FRESH),
+    ...S('Sign up', '/signup', FRESH),
+    ...S('Sign in', '/signin', FRESH),
+    ...S('Sign in \u00b7 Forgotten', '/signin?sheet=forgot', FRESH),
+    ...S('Lock', '/', { locked: true, security: { appLock: true } }),
+    ...S('Verify \u00b7 What we need', '/verify/what'),
+    ...S('Verify \u00b7 Your number', '/verify/number'),
+    ...S('Verify \u00b7 Your details', '/verify/details'),
+    ...S('Verify \u00b7 Done', '/verify/done'),
   ],
-  'R2 Home': [
-    ['Home · simple', '/', 1440, { prefs: { homeView: 'simple' } }],
-    ['Home · detailed', '/', 1440, { prefs: { homeView: 'detailed' } }],
-    ['Home · phone', '/', 390],
+  '02 \u00b7 Home': [
+    ...S('Home \u00b7 Simple', '/', { prefs: { homeView: 'simple' } }),
+    ...S('Home \u00b7 Detailed', '/', { prefs: { homeView: 'detailed' } }),
+    ...S('Home \u00b7 Put this away', '/', { prefs: { homeView: 'simple', putAway: ['verify', 'money', 'first'] } }),
   ],
-  'R3 Browsing the market': [
-    ['Invest', '/invest', 1440],
-    ['Invest · phone', '/invest', 390],
-    ['Company · Apple', '/invest/aapl', 1440],
-    ['Company · a fund', '/invest/voo', 1440],
-    ['Where people start', '/invest/list/starters', 1440],
-    ['Your watchlist', '/invest/list/watchlist', 1440],
-    ['Moving today', '/invest/list/movers', 1440],
-    ['An index', '/invest/index/sp500', 1440],
-    ['The bucket', '/bucket', 1440],
+  '03 \u00b7 Browsing the market': [
+    ...S('Invest', '/invest'),
+    ...S('Popular', '/invest/list/popular'),
+    ...S('ETFs', '/invest/list/etfs'),
+    ...S('Technology', '/invest/list/technology'),
+    ...S('Steady', '/invest/list/steady'),
+    ...S('Consumer', '/invest/list/consumer'),
+    ...S('Health', '/invest/list/health'),
+    ...S('Everything listed', '/invest/list/everything'),
+    ...S('Where people start', '/invest/list/starters'),
+    ...S('Your watchlist', '/invest/list/watchlist'),
+    ...S('Moving today', '/invest/list/movers'),
+    ...S('S&P 500', '/invest/index/sp500'),
+    ...S('Nasdaq-100', '/invest/index/nasdaq'),
+    ...S('Dow Jones', '/invest/index/dow'),
   ],
-  'R4 Buying and selling': [
-    ['Buy', '/invest/aapl/invest', 1440],
-    ['Sell', '/invest/aapl/sell', 1440],
-    ['Send shares · who', '/invest/aapl/send', 1440],
-    ['Buy · phone', '/invest/aapl/invest', 390],
+  '04 \u00b7 Buying and selling': [
+    ...S('Apple', '/invest/aapl'),
+    ...S('A fund', '/invest/voo'),
+    ...S('Buy', '/invest/aapl/invest'),
+    ...S('Sell', '/invest/aapl/sell'),
+    ...S('Send shares', '/invest/aapl/send'),
+    ...S('Your bucket', '/bucket'),
   ],
-  'R5 Money in and out': [
-    ['Wallet', '/wallet', 1440],
-    ['Wallet · phone', '/wallet', 390],
-    ['Add money · bank', '/addmoney/bank', 1440],
-    ['Add money · Base', '/addmoney/base', 1440],
-    ['Add money · card', '/addmoney/card', 1440],
-    ['Send', '/send', 1440],
-    ['Send · to a Tokkenly account', '/send/tokkenly', 1440],
-    ['Send · to a bank', '/send/bank', 1440],
-    ['The statement', '/statement', 1440],
+  '05 \u00b7 Money in and out': [
+    ...S('Wallet', '/wallet'),
+    ...S('Your banks', '/wallet?sheet=banks'),
+    ...S('Add money', '/addmoney'),
+    ...S('Add money \u00b7 Bank transfer', '/addmoney/bank'),
+    ...S('Add money \u00b7 USDC on Base', '/addmoney/base'),
+    ...S('Add money \u00b7 Debit card', '/addmoney/card'),
+    ...S('Send money', '/send'),
+    ...S('Send \u00b7 Someone on Tokkenly', '/send/tokkenly'),
+    ...S('Send \u00b7 A bank account', '/send/bank'),
+    ...S('Send \u00b7 USDC on Base', '/send/base'),
   ],
-  'R6 Borrow and Lend': [
-    ['Borrow & Lend', '/grow', 1440],
-    ['Borrow & Lend · phone', '/grow', 390],
-    ['Lending', '/grow/lend', 1440],
-    ['Borrowing', '/grow/borrow', 1440],
-    ['Lend cash', '/grow/earn', 1440],
+  '06 \u00b7 Borrow & Lend': [
+    ...S('Borrow & Lend', '/grow'),
+    ...S('Lending', '/grow/lending'),
+    ...S('Borrowing', '/grow/borrowing'),
+    ...S('Lend', '/grow/earn'),
+    ...S('Take out', '/grow/takeout'),
+    ...S('Borrow', '/grow/borrow'),
+    ...S('Repay', '/grow/repay'),
   ],
-  'R7 Spending': [
-    ['Spend', '/spend', 1440],
-    ['Spend · phone', '/spend', 390],
-    ['Airtime', '/spend/airtime', 1440],
-    ['Electricity', '/spend/light', 1440],
+  '07 \u00b7 Spending': [
+    ...S('Spend', '/spend'),
+    ...S('Airtime', '/spend/airtime'),
+    ...S('Data', '/spend/data'),
+    ...S('Electricity', '/spend/electricity'),
   ],
-  'R8 Activity and records': [
-    ['Activity', '/activity', 1440],
-    ['Activity · phone', '/activity', 390],
-    ['Alerts', '/activity?filter=alerts', 1440],
+  '08 \u00b7 Activity and records': [
+    ...S('Activity', '/activity'),
+    ...S('Activity \u00b7 Payments', '/activity?filter=payments'),
+    ...S('Activity \u00b7 Trades', '/activity?filter=trades'),
+    ...S('Activity \u00b7 Borrowing and lending', '/activity?filter=grow'),
+    ...S('Activity \u00b7 Notifications', '/activity?filter=alerts'),
+    ...S('Activity \u00b7 Export', '/activity?sheet=export'),
+    ...S('Statement', '/statement'),
   ],
-  'R9 Account and settings': [
-    ['Account', '/account', 1440],
-    ['Preferences', '/account/preferences', 1440],
-    ['Security', '/account/security', 1440],
-    ['Payment methods', '/account/payments', 1440],
-    ['Your wallet', '/account/wallet', 1440],
-    ['Support', '/account/support', 1440],
-    ['Risk and disclosures', '/disclosures', 1440],
-    ['Everything', '/all', 1440],
+  '09 \u00b7 Account and settings': [
+    ...S('Account', '/account'),
+    ...S('Personal details', '/account/details'),
+    ...S('Preferences', '/account/preferences'),
+    ...S('Notifications', '/account/notifications'),
+    ...S('Security', '/account/security'),
+    ...S('Security \u00b7 Change your PIN', '/account/security?sheet=pin'),
+    ...S('Security \u00b7 Change your password', '/account/security?sheet=password'),
+    ...S('Payment methods', '/account/payments'),
+    ...S('Payment methods \u00b7 Your cards', '/account/payments?sheet=cards'),
+    ...S('Your wallet', '/account/wallet'),
+    ...S('Your wallet \u00b7 Recovery phrase', '/account/wallet?sheet=phrase'),
+    ...S('Verification', '/account/verification'),
+    ...S('Support', '/account/support'),
+    ...S('Support \u00b7 Email us', '/account/support?sheet=contact'),
+    ...S('Risk and legal', '/account/legal'),
+    ...S('Risk and disclosures', '/disclosures'),
+    ...S('Everything', '/all'),
+  ],
+  '10 \u00b7 Operations': [
+    ...S('Operations', '/admin'),
+    ...S('Provider status', '/admin/status'),
+    ...S('Feature switches', '/admin/switches'),
+    ...S('Reconciliation', '/admin/breaks'),
+    ...S('Audit history', '/admin/audit'),
+    ...S('Launch readiness', '/admin/launch'),
   ],
 }
 
@@ -100,6 +148,13 @@ export const FLOWS = {
 const snap = JSON.parse(readFileSync(new URL('../figma/tokens.json', import.meta.url), 'utf8'))
 const BY_HEX = {}
 for (const [fig, v] of Object.entries(snap.colour.vars)) BY_HEX[v.Dark.toLowerCase()] = fig
+
+/* Numbers in generated SVG come out of arithmetic, so a sparkline's forty
+   points carry eighteen significant digits each — 3,293 characters for a
+   picture 40 pixels wide, and thirteen of those on a company page is most of a
+   payload that has to fit in a 50,000-character argument. Two decimal places
+   is past the resolution of anything on screen. */
+const tidy = (svg) => svg.replace(/-?\d+\.\d{3,}/g, (m) => String(Math.round(Number(m) * 100) / 100))
 
 /* Read one screen. Runs inside the page. */
 const WALK = `(() => {
@@ -143,13 +198,42 @@ const WALK = `(() => {
       }
     }
 
+    // The chrome is the same furniture on every screen: the rail is 7,573 of
+    // Home's 28,116 characters, and it is that on all eighty-six. A design
+    // file holding eighty-six copies of one rail is eighty-six places to
+    // change it, which is the opposite of what the file is for. Named here,
+    // built once on the Design system page, instanced everywhere. The name
+    // carries what actually differs — which row you are on — because a rail
+    // that shows Home lit on the Wallet screen would be a lie.
+    if (el.classList.contains('sidebar') || el.classList.contains('railbar')) {
+      const on = el.querySelector('[aria-current="page"]')
+      // The phone's More button is an icon, so it has no text to take a name
+      // from — but it is the thing that says you are here on the three places
+      // that have no tab. Its label is the fact; the name is the short form.
+      const where = !on ? 'Nowhere'
+        : (on.innerText || '').trim().split('\\n')[0]
+          || (on.classList.contains('rail-more') ? 'More' : 'Unnamed')
+      node.part = (el.classList.contains('sidebar') ? 'Nav rail' : 'Tab bar') + ' \u00b7 ' + where
+      node.chrome = true
+    }
+
     // An svg that knows its own name is a component in Figma: record the name
-    // and let the builder place an instance. One that does not — a chart, a
-    // sparkline, a ruler, all of them generated per screen — goes in whole.
+    // and let the builder place an instance.
+    //
+    // A sparkline does not know its name and does not need to: it is forty
+    // points of arithmetic, drawn thirteen times on a company page, and a
+    // design file holding thirteen copies of a generated polyline is thirteen
+    // copies of the same decision. One component, thirteen instances — which
+    // is both what a design file is for and what makes a company page fit in
+    // a 50,000-character argument. The tone rides on the parent's up or down
+    // class, so the instance is told which way it went.
     if (el.tagName.toLowerCase() === 'svg') {
       const named = el.getAttribute('data-art') || el.getAttribute('data-ic')
+      const spark = el.parentElement && el.parentElement.classList.contains('spark')
       if (named) node.part = named
-      else node.svg = el.outerHTML.length < 24000 ? el.outerHTML : null
+      else if (spark) {
+        node.part = el.parentElement.classList.contains('down') ? 'Sparkline down' : 'Sparkline up'
+      } else node.svg = el.outerHTML.length < 40000 ? el.outerHTML : null
       return node
     }
 
@@ -194,14 +278,19 @@ for (const [name, route, width, opts = {}] of FLOWS[flow]) {
   const c = await b.newContext({ viewport: { width, height: width < 500 ? 844 : 1000 } })
   const p = await c.newPage()
   await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
-  if (opts.fresh) {
-    await p.addInitScript(`try { localStorage.removeItem('tokkenly.prefs.v1'); sessionStorage.setItem('tokkenly.unlocked','1') } catch {}`)
-  } else {
-    await seen(p, opts.prefs ?? {})
-  }
+  if (opts.fresh) await fresh(p)
+  // The lock is a screen in its own right, and the only way to get it is a
+  // cold tab: seeded unlocked, every other screen would paint over it.
+  else if (opts.locked) await locked(p, opts.security ?? {})
+  else await seen(p, opts.prefs ?? {}, opts.security ?? {})
   await p.goto(B + route, { waitUntil: 'networkidle' })
   await p.waitForTimeout(700)
   const got = await p.evaluate(WALK)
+  const trim = (n) => {
+    if (n.svg) n.svg = tidy(n.svg)
+    for (const k of n.kids ?? []) trim(k)
+  }
+  trim(got.tree)
   screens.push({ name, route, width, ...got })
   console.log(`  ${name.padEnd(34)} ${got.w}x${got.h}`)
   await c.close()
