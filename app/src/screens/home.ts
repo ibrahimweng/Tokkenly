@@ -1,7 +1,7 @@
 import { h, link, countTo } from '../ui'
 import { icon } from '../icons'
 import { barChart, type Range } from '../components/chart'
-import { objectArt, stir, level, PIECE, NOTES, PURSE, SIGNAL, type ObjectField } from '../components/art'
+import { INVEST, WALLET, GROW, SPEND, type Art } from '../components/drawings'
 import { shell, pageHeader, bell, jumpOpen, viewToggle } from '../components/shell'
 import { card, cardHead, headLink, kv, amount, directionMark, figureWithEye } from '../components/bits'
 import { table } from '../components/table'
@@ -281,14 +281,8 @@ function whereItIs(part: number, whole: number, what: string): string {
    The other three read a balance against the portfolio. There is no balance
    here: naira bought for a bill leave the same minute they arrive, which is
    the whole argument for the place existing. So it reads the flow instead —
-   what has gone on bills, against everything that has gone out at all. */
-const billsOut = (): number =>
-  state.activity.filter((a) => a.bill).reduce((t, a) => t + Math.abs(a.amount), 0)
-
-const paidOut = (): number =>
-  state.activity.filter((a) => a.kind === 'payment' && a.amount < 0)
-    .reduce((t, a) => t + Math.abs(a.amount), 0)
-
+   what has gone on bills, in the words under the door. The two sums that fed
+   the picture's level went with the picture (11g.79). */
 function billsSay(): string {
   const n = state.activity.filter((a) => a.bill).reduce((t, a) => t + a.bill!.naira, 0)
   if (!n) return 'Nothing paid for yet'
@@ -301,8 +295,8 @@ function billsSay(): string {
  *  the gradient, because buying a share is the thing this screen is for. */
 function gateway(): HTMLElement {
   const tile = (
-    opts: { title: string; sub: string; cta: string; to: string; art: ObjectField
-            ic: () => string; lead?: boolean; reads: string; at: number },
+    opts: { title: string; sub: string; cta: string; to: string; art: Art
+            ic: () => string; lead?: boolean; reads: string },
   ) => {
     const a = link(opts.to, 'card gate' + (opts.lead ? ' gate-lead' : ''))
     a.style.textDecoration = 'none'
@@ -325,12 +319,12 @@ function gateway(): HTMLElement {
       h('span', { class: 'ic', html: icon.chevron() })))
     // Every door's object sits in the bottom right, away from the words, which
     // start at the left and end well before it.
-    const art = objectArt(opts.art, opts.at, 'right')
-    a.appendChild(h('div', { class: 'gate-art' }, art))
-    // And the whole card is the surface the pointer is felt on, not only the
-    // strip the picture occupies: passing over the title already stirs the
-    // field under it.
-    stir(a, art)
+    //
+    // It no longer reacts to the pointer. The dots used to part around it,
+    // which was the most interesting thing on the screen and had nothing to do
+    // with what the screen was for — and it cost a mousemove handler and a
+    // few hundred transforms per card to say nothing at all.
+    a.appendChild(h('div', { class: 'gate-art' }, opts.art()))
     return a
   }
   // Two rows, the way D01c has them: the greeting carries the name and the
@@ -374,14 +368,12 @@ function gateway(): HTMLElement {
           h('span', { class: 'muted', text: 'today' })))),
     // The three fields answer to the three places money can be, so together
     // they are one reading of the portfolio spread across three doors: what is
-    // in shares, what is cash, and what is lent out. The composition
-    // Figma drew is the full field, and the account decides how much of it is
-    // awake. Nothing moves and nothing is resized — the picture is the picture.
+    // in shares, what is cash, and what is lent out. The reading is in the
+    // line under each door; the drawing beside it is a drawing (11g.79).
     h('div', { class: 'gates' },
-      tile({ lead: true, art: PIECE(), ic: icon.market, to: '/invest', title: 'Invest', cta: 'Buy shares',
+      tile({ lead: true, art: INVEST, ic: icon.market, to: '/invest', title: 'Invest', cta: 'Buy shares',
         sub: 'Own a piece of Apple, Nvidia or a whole market fund. From $1.',
-        reads: whereItIs(holdingsValue(), total, 'in shares'),
-        at: level(holdingsValue(), total) }),
+        reads: whereItIs(holdingsValue(), total, 'in shares') }),
       // The Wallet door, on the phone only.
       //
       // Everywhere else the rail is on screen with Wallet lit in it, so the
@@ -392,22 +384,20 @@ function gateway(): HTMLElement {
       // doors are the screen, so a big target for the place money moves
       // through earns its third of the row.
       phone
-        ? tile({ art: NOTES(), ic: icon.wallet, to: '/transfer', title: 'Wallet', cta: 'Move money',
+        ? tile({ art: WALLET, ic: icon.wallet, to: '/transfer', title: 'Wallet', cta: 'Move money',
             sub: 'USDC, USDT and naira, and what goes in and out.',
-            reads: whereItIs(state.cash, total, 'in cash'),
-            at: level(state.cash, total) })
+            reads: whereItIs(state.cash, total, 'in cash') })
         : null,
-      tile({ art: PURSE(), ic: icon.grow, to: '/grow', title: 'Borrow & Lend', cta: 'See your limit',
+      tile({ art: GROW, ic: icon.grow, to: '/grow', title: 'Borrow & Lend', cta: 'See your limit',
         sub: 'Borrow against your shares without selling them.',
-        reads: whereItIs(state.lent, total, 'lent out'),
-        at: level(state.lent, total) }),
+        reads: whereItIs(state.lent, total, 'lent out') }),
       // The fourth door does not answer "where is my money", because spending
       // is not a place money sits. It answers "what has left, and on what" —
       // which is the same question one step further on, and the only reading
       // this door could honestly carry.
-      tile({ art: SIGNAL(), ic: icon.spend, to: '/spend', title: 'Spend', cta: 'Pay a bill',
+      tile({ art: SPEND, ic: icon.spend, to: '/spend', title: 'Spend', cta: 'Pay a bill',
         sub: 'Airtime, data and light, out of whichever balance you choose.',
-        reads: billsSay(), at: level(billsOut(), paidOut()) })),
+        reads: billsSay() })),
     // On a tablet held upright these two sit beside each other: 746 pixels is
     // two readable columns and one very wide one, and the feed is the thing
     // that suffers most from being stretched. One column everywhere else, so

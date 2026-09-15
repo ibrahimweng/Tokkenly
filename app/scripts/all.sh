@@ -1,7 +1,10 @@
 cd /home/user/Tokkenly/app
 for f in scripts/*.mjs; do
   b=$(basename "$f" .mjs)
-  case "$b" in seen|_probe|_shot) continue;; esac
+  # `seen` is a helper, not a suite. `_ba` is the before-and-after harness: it
+  # needs the previous commit built and served on 4174, which is a thing you
+  # set up on purpose rather than a thing a sweep should assume.
+  case "$b" in seen|_probe|_shot|_ba) continue;; esac
   out=$(node "$f" 2>&1); code=$?
   n=$(printf '%s\n' "$out" | grep -c '^ *FAIL')
   # A suite that dies reports no failures at all, which read as green for one

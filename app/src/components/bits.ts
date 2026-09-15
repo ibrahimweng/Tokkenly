@@ -1,3 +1,4 @@
+import { EMPTY } from './drawings'
 import { h, link } from '../ui'
 import { icon } from '../icons'
 import { signed, isDrawdown, usd } from '../format'
@@ -96,15 +97,20 @@ export function callout(text: string, kind: 'brand' | 'warning' = 'brand'): HTML
 }
 
 /** Nothing to show, and a reason why. Figma 02 Components, Empty state.
- *  A list that renders as blank space reads as a bug; this reads as an answer. */
+ *  A list that renders as blank space reads as a bug; this reads as an answer.
+ *
+ *  The fourth argument was an icon in a grey circle — the same 18px glyph the
+ *  rows above it use, at the same size, saying nothing the heading did not.
+ *  It is a drawing now: the object the screen is missing, in the one line
+ *  weight, quiet enough not to become the screen's subject (11g.79). */
 export function emptyState(
   title: string,
   body: string,
   action?: { label: string; onClick: () => void },
-  glyph: 'search' | 'history' | 'alert' = 'search',
+  drawn: keyof typeof EMPTY = 'search',
 ): HTMLElement {
   return h('div', { class: 'empty' },
-    h('span', { class: 'mark', html: icon[glyph]() }),
+    h('div', { class: 'empty-art' }, (EMPTY[drawn] ?? EMPTY.search)()),
     // h2, not h3. An empty state sits inside a card on most screens, where it
     // would follow the card's own heading, and stands alone under the page
     // title on the bucket, where an h3 skipped a level. A sibling h2 is right

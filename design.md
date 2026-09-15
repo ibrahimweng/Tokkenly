@@ -8934,6 +8934,113 @@ on the other side of the payment.
      is chips — and where the list of things you can buy is short and priced,
      picking one is the pay button.
 
+### 11g.79 One set of drawings, and nothing clever behind them
+
+The pictures in this product were a field of dots. Several hundred circles per
+card, arranged into the silhouette of an object — a stack of coins, a wallet, a
+slice of a pie — and lit in three greys according to how much of the account's
+money was in the thing the card was about. They also moved: the dots parted
+around the pointer, further under it and less further off, and went home when
+it left.
+
+It was two ideas in one place and neither of them worked at the size the cards
+actually draw. A few hundred dots at 196 pixels is a texture, not an object;
+a texture that is also a gauge is a gauge nobody can take a reading off; and
+an effect that needs several hundred separately-positioned elements to exist
+is an effect built out of the material rather than out of the idea. The brief
+was five reference images — exploded isometric line drawings, one hairline
+weight, monochrome, parts held apart with the air between them showing — and
+two instructions: lose the hover, and draw the whole product, not three cards.
+
+**The kit.** `components/iso.ts` is the vocabulary and holds three rules.
+
+*One weight.* Every line in every drawing is 1.1 pixels on screen whatever the
+drawing is scaled to. `vector-effect: non-scaling-stroke` does that; without it
+the same object at 240 and at 96 is two weights and reads as two styles.
+
+*One colour.* `currentColor`, everywhere. Which is why there is one copy of
+each drawing rather than a dark one and a light one, and why a caller quiets a
+drawing by setting `color` rather than by editing it.
+
+*One projection.* 2:1 dimetric — x right and down, y left and down, z straight
+up. The whole set shares a horizon, so two drawings side by side are two
+objects on one table rather than two pictures.
+
+On top of that: `slab` (a chamfered plate, top and the two faces you can see),
+`disc` (a coin: the near half of the wall and the top face), `guide` (the
+dashed line that says two things are the same thing at two heights) and `face`
+(a point on a top face, in the face's own two directions rather than in x and
+y, so a mark laid on a plate lies down with it instead of floating in front of
+it).
+
+**The thing that made them read.** The first version was correct in every
+number above and still unreadable, because nothing was filled: a coin behind a
+coin showed through the coin in front, four coins became one cylinder with
+lines in it, and the edge of the plate underneath ran straight across
+everything standing on it. Every face is now filled with `--art-ground`, which
+a card sets to its own background, so near things hide far things. That single
+change is the difference between an exploded diagram and a pile of wire.
+
+It is an indirection rather than a colour, for two reasons: a drawing then
+fills with whatever it is lying on in either theme with no second copy, and the
+door's hover can move the ground with the card. A drawing filled with the
+resting colour on a hovered card is a hole punched in the card.
+
+**Eleven objects.** Four doors (Invest: plates with one lifted clear; Wallet:
+three balances fanned over a base; Borrow & Lend: a balance; Spend: a meter on
+a plate), the two cards on Borrow & Lend (Lend: cash going onto a pile; Borrow:
+the pile of *plates* still standing with cash coming off it), and one for each
+of the six empty states. Plates are shares everywhere in the set and discs are
+cash, which is the whole of why Borrow is a stack of plates: drawn with coins
+on both sides it was the same picture as Lend with the parts moved, and two
+cards side by side cannot afford that.
+
+**The gauge is gone, deliberately.** Every door already prints the fact in
+words under its sentence — *77% of your money in shares*, *8% of your money
+lent out*, *₦19,500 on bills so far* — and that sentence is where anybody who
+wanted the number was reading it. So the drawings say nothing about the
+account, and `live.mjs` changed from reading the field to reading the words:
+the sentence has to be right, has to differ per door, has to rise when money
+moves and fall when it is sold — and every path in every drawing has to be
+byte-for-byte the same before and after, because a decoration that changes with
+the data is the gauge again.
+
+**The hover is gone too.** The doors now take the answer every other clickable
+card in the product takes: the surface goes up a rung. `hover.mjs` lost the
+block that measured how far the dots travelled and gained one that checks the
+door answers at all, that not one line of the drawing moves while it does, and
+that the ground it fills with is the card it is on.
+
+**Sizes.** The art used to be a band that something filled and was clipped by —
+442 pixels on a product card, 320 on the intro, a mask fading the top of the
+door's so a texture would not end in a hard edge. An object is a size, not a
+share of the box: the boxes are now the object's own, the mask is gone, and the
+product card is 604 tall rather than 792 because it was tall to hold a field.
+
+Two things went wrong on the way and are worth keeping. A balance beam drawn
+along the x axis is a diagonal on screen, and a balance whose beam is a
+diagonal reads as a tipped balance however level it is in the projection — it
+runs along the face direction now, which is horizontal. And the regex that
+removed the old hover rules from the stylesheet took `.gate-words` and
+`.gate-cta` with them, which collapsed every door's text inline; it was found
+by looking at a screenshot and confirmed with `git diff`, which is the order
+those two should always come in.
+
+188. **A picture that is also a measurement is neither.** Decoration carrying
+     data has to be read as data to be worth the wiring, and nobody reads a
+     texture to three significant figures. If the number matters, write the
+     number; then the picture is free to be a picture.
+
+189. **Line art needs a ground.** Unfilled strokes do not stack. The moment two
+     objects overlap, every edge of the far one crosses the near one and the
+     drawing becomes a wireframe of itself. Fill every face with the colour of
+     what it is lying on, and move that colour when the surface moves.
+
+190. **An illustration is a size, not a share of the box.** A band that art
+     fills is a band that will be filled differently at every width, and two of
+     them side by side are two styles. Give the drawing its own dimensions and
+     let the layout put air around it.
+
 ### 11g.49 Still open
 
 - Buying and selling is the one page in the file that was hand-built rather
@@ -8954,11 +9061,15 @@ on the other side of the payment.
 - The Figma file is a build now (11g.70), which means it can drift. Nothing
   keeps the twenty-nine variables in step with `tokens.css` except somebody
   re-running the export, and no suite watches it. It has now drifted: Spend
-  (11g.73), the three balances and the networks (11g.74), and the merged wallet
-  card and the motion pass (11g.75) exist only in the product. Three batches is
-  further than "it can drift" — the file is a photograph of a version that no
-  longer ships, which is the exact failure 11g.70 was built to end. Re-running
-  the converter over the nine flows is the fix and nobody has asked for it.
+  (11g.73), the three balances and the networks (11g.74), the merged wallet
+  card and the motion pass (11g.75), and now every picture in the product
+  (11g.79) exist only in the product. Four batches is further than "it can
+  drift" — the file is a photograph of a version that no longer ships, which is
+  the exact failure 11g.70 was built to end. Re-running the converter over the
+  nine flows is the fix and nobody has asked for it. It is also now worse than
+  drift: the file has lost the nine pages of screens it was built to hold and
+  returns only `Design system` and `Icons`, and nothing in the record says
+  where they went.
 - Electricity still asks three screens where TV and internet ask one (11g.78).
   It predates the one-panel shape and was left alone in that batch rather than
   rewritten under it, so the place now has two anatomies for the same errand —
@@ -9123,6 +9234,22 @@ on the other side of the payment.
   them are the picks and the fourth is paused, so "everything else you can buy
   today" has nothing to hold and the card does not appear at all. The screen is
   correct and thin, and it fills itself the day the launch set grows.
+- There was a sixth empty-state drawing, for money on its way between two
+  places, and nothing in the product draws it: the settling section does not
+  appear at all when there is nothing settling, so the empty case has no
+  screen. It was written before the call sites were counted and deleted after
+  they were, which is the right order to find that out in but the wrong order
+  to do it in.
+- Two of the eleven drawings are thinner than the other nine. `NO_ACTIVITY` is a
+  plate with three dashed rows on it and `NO_HOLDINGS` is a plate with two
+  ghosts above it, and both are one idea where the doors are two. They are
+  correct and they are quiet, which is what an empty state should be — but they
+  are the two to look at again first if the set ever reads as eleven drawings
+  and two placeholders.
+- `scripts/_art.html` and `scripts/_sheet.mjs` render every drawing in the set
+  at once, in both themes, against a Vite dev server on 4180. It is the only
+  way to see the set as a set rather than one card at a time, and it is not
+  wired to anything: `all.sh` runs it and it reports nothing.
 - The add-money dialog has no door. It is registered, reachable at
   `?sheet=add-money`, and covered by `sheets.mjs`, and nothing in the product
   opens it. It is either a dialog wanting a caller or a dialog wanting

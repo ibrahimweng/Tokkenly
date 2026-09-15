@@ -263,7 +263,7 @@ function peopleWay(): (Node | null)[] {
         ? h('div', { class: 'sheet-list' }, ...found.map(row))
         : emptyState('Nobody by that name',
             'Search another name, or pick another way to send.',
-            { label: 'Clear the search', onClick: () => go('/send/tokkenly') })))
+            { label: 'Clear the search', onClick: () => go('/send/tokkenly') }, 'people')))
   }
   paint(term)
 
@@ -738,7 +738,7 @@ export function sendSharesScreen(ticker: string): HTMLElement {
       pageHeader('Send ' + c.name),
       emptyState('You do not hold any ' + c.ticker,
         'You can only send shares you own. Buy some first, then they can go to anybody with a Tokkenly account.',
-        { label: 'Buy ' + c.ticker, onClick: () => go(pathOf(c) + '/invest') }))
+        { label: 'Buy ' + c.ticker, onClick: () => go(pathOf(c) + '/invest') }, 'holdings'))
   }
 
   const r = current()

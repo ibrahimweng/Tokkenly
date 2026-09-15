@@ -317,7 +317,7 @@ function categoryScreen(cat: string): HTMLElement {
           ? listTable(rows)
           : emptyState('Nothing in this one yet',
               'No company on Tokkenly carries this category.',
-              { label: 'Go to Invest', onClick: () => go('/invest') }, 'search'))),
+              { label: 'Go to Invest', onClick: () => go('/invest') }, 'activity'))),
     bucketBar())
   const { prev, next } = beside(CAT_STOPS, catSlug(cat))
   pageable(page, { prev: prev.to, next: next.to, alive: '.pager' })

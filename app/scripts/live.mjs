@@ -291,51 +291,54 @@ console.log('WIDTH  the middle is drawn in a 1200 column, whatever the monitor')
   }
 }
 
-console.log('THE DOT FIELDS  decoration that has been given something to say')
+console.log('WHAT THE DOORS SAY  the reading, now that it is only words')
 {
+  /* This block used to read a gauge. The art on a door was several hundred
+     circles and the share of them lit was the share of your money in that
+     thing — a picture that was also a measurement, at a size where nobody
+     could take the measurement off it. The art is a line drawing now and says
+     nothing about the account (11g.79), so the reading it was carrying is
+     entirely in the sentence under each door, where it always also was.
+
+     Which makes the check stricter rather than looser: the sentence has to be
+     right, has to be different per door, and has to move when money moves —
+     and the drawing has to be the same drawing whatever the account holds,
+     because a decoration that changes with the data is the gauge again. */
   const p = await b.newPage({ viewport: { width: 1440, height: 1000 } })
   await seen(p, { homeView: 'simple' })
   p.on('pageerror', (e) => errs.push(String(e)))
   await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   const read = async () => {
     await p.goto(B + '/', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(600)
-    return p.evaluate(() => [...document.querySelectorAll('.gate')].map((g) => {
-      // Matched on the rung, not on the token's full name. This read
-      // `dot-sleep`, the token was renamed to `field-sleep` (11g.59), and
-      // every cell counted as awake — so the count became the number of
-      // circles in the composition, which never changes, and the gauge check
-      // below passed on three numbers that could not move. Rule 146.
-      let awake = 0, asleep = 0
-      for (const c of g.querySelectorAll('circle')) {
-        if (/-sleep\)/.test(c.getAttribute('fill') ?? '')) asleep += 1
-        else awake += 1
-      }
-      return { says: g.querySelector('.gate-reads')?.textContent ?? '', awake, asleep }
-    }))
+    return p.evaluate(() => [...document.querySelectorAll('.gate')].map((g) => ({
+      says: g.querySelector('.gate-reads')?.textContent ?? '',
+      // Every number in every path of the drawing, in order. If one line of it
+      // is keyed to the account, this string moves when the account does.
+      drawn: [...g.querySelectorAll('.gate-art svg path, .gate-art svg ellipse')]
+        .map((n) => n.getAttribute('d') || `${n.getAttribute('cx')},${n.getAttribute('cy')},${n.getAttribute('rx')}`)
+        .join('|'),
+    })))
   }
   const before = await read()
   // Three above the phone, not four: Wallet lost its door when the rail is on
-  // screen with Wallet lit in it (11g.75), and the field it carried went with
-  // it. The phone still has all four and does not draw their fields at all.
-  ok('all three doors carry a field', before.length === 3)
-  // And that this can see the rung it is counting. A reader that finds no
-  // sleeping cell is a reader that will report every field as full and never
-  // fail, whatever the account does.
-  ok('and the reader can tell an asleep cell from an awake one',
-     before.every((g) => g.asleep > 0), before.map((g) => g.awake + ' awake, ' + g.asleep + ' asleep').join(' | '))
+  // screen with Wallet lit in it (11g.75). The phone has all four and draws no
+  // picture on any of them.
+  ok('all three doors carry a reading', before.length === 3)
+  ok('and each carries a drawing', before.every((g) => g.drawn.length > 200),
+     before.map((g) => g.drawn.length).join(' '))
   // Two slices of one portfolio, one door each, so neither can be the same
-  // picture on an account with its money in more than one place. Spend is the
-  // third and is not a slice of it: spending is not a place money sits, so its
-  // field reads the flow — what has gone on bills — and it is checked for
-  // saying something rather than for saying a percentage.
+  // sentence on an account with its money in more than one place. Spend is the
+  // third and is not a slice of it: spending is not a place money sits, so it
+  // reads the flow — what has gone on bills — and is checked for saying
+  // something rather than for saying a percentage.
   ok('the first two say which slice they are keyed to',
      before.slice(0, 2).every((g) => /% of your money (in|lent)/.test(g.says)),
      before.map((g) => g.says).join(' | '))
   ok('and the third says what has gone out', /bills/.test(before[2].says), before[2].says)
-  ok('no two are at the same level',
-     new Set(before.map((g) => g.awake)).size === 3, before.map((g) => g.awake + '/' + (g.awake + g.asleep)).join(' '))
-  // A gauge that does not move is a picture. $1,000 out of cash and lent out
-  // has to show up on the two doors it is about, and not on the third.
+  ok('no two say the same thing',
+     new Set(before.map((g) => g.says)).size === 3, before.map((g) => g.says).join(' | '))
+  // A reading that does not move is a picture. $1,000 out of cash and lent out
+  // has to show up on the door it is about, and not on the other.
   await p.goto(B + '/grow/earn', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(500)
   const amt = p.locator('.amount-box input')
   await amt.fill('1000'); await amt.dispatchEvent('input'); await p.waitForTimeout(250)
@@ -343,38 +346,40 @@ console.log('THE DOT FIELDS  decoration that has been given something to say')
   await p.locator('.scrim .btn-primary').first().click(); await p.waitForTimeout(1000)
   await p.keyboard.press('Escape'); await p.waitForTimeout(300)
   const after = await read()
-  ok('moving money wakes the field it is about',
-     after[1].awake > before[1].awake,
-     before.map((g, i) => `${g.awake}\u2192${after[i].awake}`).join(' '))
-  ok('and leaves the one it is not about alone', after[0].awake === before[0].awake)
-  ok('the words follow the field', after[1].says !== before[1].says,
+  ok('moving money moves the reading it is about', after[1].says !== before[1].says,
      `${before[1].says} \u2192 ${after[1].says}`)
-  // And a field has to be able to empty as well as fill. Lending moves cash
-  // into what is lent and both are money you have, so the share of the
-  // portfolio in shares does not move — selling is what takes it down. Without
-  // this the suite would pass on a gauge wired to fill and never drain, which
-  // is a picture with an animation on it.
+  ok('and leaves the one it is not about alone', after[0].says === before[0].says)
+  // And the drawing does not budge. This is the whole of the decision the art
+  // was rebuilt on: it is an illustration, not an instrument.
+  ok('and not one line of any drawing moves with it',
+     after.every((g, i) => g.drawn === before[i].drawn),
+     after.map((g, i) => (g.drawn === before[i].drawn ? 'held' : 'MOVED')).join(' '))
+  // A reading has to be able to fall as well as rise. Lending moves cash into
+  // what is lent and both are money you have, so the share in shares does not
+  // move — selling is what takes it down. Without this the suite would pass on
+  // a number wired to climb and never fall.
   await p.goto(B + '/invest/aapl/sell', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(500)
   const sale = p.locator('.amount-box input')
   // Under `confirmOver`, because a sale over it asks for a PIN and this suite
-  // is about the field rather than about the keypad.
+  // is about the reading rather than about the keypad.
   await sale.fill('450'); await sale.dispatchEvent('input'); await p.waitForTimeout(250)
   await p.locator('.btn-primary').first().click(); await p.waitForTimeout(500)
   await p.locator('.scrim .btn-primary').first().click(); await p.waitForTimeout(1200)
   await p.keyboard.press('Escape'); await p.waitForTimeout(300)
   const sold = await read()
-  ok('and selling quiets the field about shares', sold[0].awake < after[0].awake,
-     `${after[0].awake} \u2192 ${sold[0].awake}`)
-  ok('and its words follow it down', sold[0].says !== after[0].says,
+  ok('and selling takes the reading about shares down', sold[0].says !== after[0].says,
      `${after[0].says} \u2192 ${sold[0].says}`)
-  // No account, no reading: the intro shows the field exactly as it is drawn.
+  ok('with the drawings still held',
+     sold.every((g, i) => g.drawn === after[i].drawn),
+     sold.map((g, i) => (g.drawn === after[i].drawn ? 'held' : 'MOVED')).join(' '))
+  // No account, no reading — and the intro draws the same three objects it
+  // draws for somebody with money in all of them.
   const w = await b.newPage({ viewport: { width: 1440, height: 900 } })
   await w.addInitScript(`try { localStorage.removeItem('tokkenly.prefs.v1'); sessionStorage.setItem('tokkenly.unlocked','1') } catch {}`)
   await w.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   await w.goto(B + '/welcome/0', { waitUntil: 'domcontentloaded' }); await w.waitForTimeout(600)
-  ok('the intro shows the field as composed, with nothing asleep in it',
-     (await w.evaluate(() => [...document.querySelectorAll('.welcome-art circle')]
-       .filter((c) => /dot-sleep/.test(c.getAttribute('fill') ?? '')).length)) === 0)
+  ok('the intro draws its objects too',
+     (await w.evaluate(() => document.querySelectorAll('.welcome-art svg path').length)) > 6)
   await w.close()
   await p.close()
 }

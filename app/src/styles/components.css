@@ -129,19 +129,24 @@
 .card.prod .stack-8 + .stack-12 { padding-top: 16px; }
 .card.prod .stack-12 + .spacer { min-height: 16px; }
 /* Under the button, against the card's own edge. Nothing comes between the
-   words and the button they belong to: the field used to sit between the
-   figures and the action on the borrowing card, which put a picture in the
-   middle of a sentence and made the button read as belonging to the art
-   rather than to the offer above it. */
-/* At a third, the same as the doors and for the same reason: the field was
-   drawn at full ink and became the subject of the card. On these two it was
-   worse than on the doors, because the ramps put colour in it — a green field
-   and an amber one, at full strength, under a title and a figure that are the
-   things somebody is actually here to read. */
-.prod-art { height: 442px; overflow: hidden; flex: none; margin-top: 24px; opacity: var(--art-veil); }
-.prod-art svg { display: block; width: 100%; height: 100%; }
-/* Taller, so the composition does not run out before the card does. */
-.card.prod { min-height: 792px; }
+   words and the button they belong to: the picture used to sit between the
+   figures and the action on the borrowing card, which put it in the middle of
+   a sentence and an action, and made the button read as belonging to the art
+   rather than to the offer above it.
+
+   Veiled, the same as the doors and for the same reason: art at full ink
+   becomes the subject of the card, and the title and the figure are what
+   somebody is here to read.
+
+   442 was the height of a field that bled to the card's edges. A drawing is an
+   object on a card rather than a surface of it, so the band is the size of the
+   object plus air, and the card is shorter by the difference. */
+.prod-art {
+  height: 268px; flex: none; margin-top: 12px;
+  display: grid; place-items: center; opacity: var(--art-veil);
+}
+.prod-art svg { display: block; width: 240px; height: 240px; }
+.card.prod { min-height: 604px; }
 
 /* The name of the thing, at the size a name gets. It used to be the eyebrow —
    eleven pixels of caps, the quietest type on the card, carrying the one word
@@ -178,10 +183,11 @@
   .card.prod { min-height: 0; }
   /* 280 made each card 578 tall, so Borrow started at 782 on an 844 phone —
      one card a screen, and the second one only findable by scrolling past a
-     picture. The desktop keeps its 442 exactly as it was asked for; down here
-     the band is what the object needs to still read as an object at 350 wide,
-     which is less than half of it. Both cards are on the first screen now. */
-  .prod-art { height: 160px; }
+     picture. Down here the drawing is what it needs to be to still read as an
+     object at 350 wide, which is under two thirds of the desktop's. Both cards
+     are on the first screen. */
+  .prod-art { height: 168px; }
+  .prod-art svg { width: 152px; height: 152px; }
   .prod-title { font-size: 24px; line-height: 30px; }
   .prod-figure { font-size: 24px; line-height: 30px; }
 }
@@ -242,6 +248,9 @@
 /* ---------- cards ---------- */
 .card {
   background: var(--sunken);
+  /* Anything drawn inside a card is lying on the card, so that is what its
+     faces are filled with. See --art-ground in tokens. */
+  --art-ground: var(--sunken);
   border-radius: var(--r-card);
   padding: 20px;
   display: flex; flex-direction: column; gap: 16px;
@@ -1624,7 +1633,11 @@
   display: flex; flex-direction: column; align-items: center; gap: 12px;
   padding: 32px 24px; text-align: center;
 }
-.empty .mark { width: 48px; height: 48px; background: var(--control); }
+/* The drawing an empty state leads with. Big enough to be a picture rather
+   than an icon, quiet enough that the sentence under it is still the thing
+   being read — it is the answer's illustration, not the answer. */
+.empty-art { width: 124px; height: 96px; color: var(--muted); opacity: 0.8; }
+.empty-art svg { display: block; width: 100%; height: 100%; }
 .empty h2 { margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; }
 .empty p { margin: 0; color: var(--muted); font-size: 12px; line-height: 16px; max-width: 32ch; }
 .empty .btn { width: auto; height: 40px; padding: 0 18px; margin-top: 4px; }
@@ -1851,9 +1864,8 @@ th.right .th-sort { flex-direction: row-reverse; }
   position: relative; overflow: hidden;
   flex: 0 1 288px; min-width: 0;
   /* 368, not 300. The words take the top 170 of this box whatever its height,
-     and a field that is a picture rather than a texture needs the rest to be
-     clear of them: at 300 the object either sat under the call to action or
-     was too small to read as an object at all. */
+     and the drawing needs the rest to be clear of them: at 300 the object
+     either sat under the call to action or was too small to read as one. */
   height: 368px; padding: 28px; gap: 16px; border-radius: 20px;
   background: var(--sunken);
   align-items: flex-start;
@@ -1864,17 +1876,19 @@ th.right .th-sort { flex-direction: row-reverse; }
    already lit, and the hover on top of that was a flat grey that painted over
    the green and made the wide tile look like it had gone out.
 
-   The gradient is the hover now, on all three. At rest the doors are the same
-   flat card; the one under the pointer washes green up from its bottom edge,
-   under the dots. Buy Stocks keeps its emphasis by being wider and by being
-   the one with a button on it. */
+   The gradient went, then the field that replaced it went too (11g.79). All
+   three doors are the same flat card and the one under the pointer goes up a
+   rung, which is what every other clickable card in the product does. Buy
+   shares keeps its emphasis by being wider and by being the one with a button
+   on it. */
 .gate-lead { flex: 0 1 400px; }
 
-/* There was a green gradient here, washing up from the bottom edge on hover.
-   It is gone. A light coming on is not a thing responding — it was the same
-   wash whatever the pointer did, and it put colour under a title that is
-   supposed to be the loudest thing on the card. What answers now is the field
-   itself: the dots move out of the pointer's way. See `stir` in art.ts. */
+/* There was a green gradient here, washing up from the bottom edge on hover,
+   and after it a field of dots that parted around the pointer. Both are gone
+   (11g.79). The wash put colour under a title that is supposed to be the
+   loudest thing on the card; the parting dots were the most interesting thing
+   on the screen and had nothing to do with what the screen was for. What is
+   left is a drawing that holds still. */
 .gate-words { display: flex; flex-direction: column; gap: 8px; position: relative; z-index: 1; }
 .gate-words .muted { font-size: 14px; line-height: 20px; }
 
@@ -1885,9 +1899,11 @@ th.right .th-sort { flex-direction: row-reverse; }
   display: inline-flex; align-items: center; gap: 8px;
   font-size: 14px; font-weight: 600; color: var(--ink);
 }
-/* What the field behind it is keyed to, in words. With the description rather
-   than at the foot of the tile, because the foot of the tile is where the
-   field is and a caption over its own subject reads as neither. */
+
+/* Where your money is, in words. It sits with the description rather than at
+   the foot of the tile, because the foot of the tile is where the drawing is
+   and a line of grey type under a picture reads as that picture's caption.
+   Since 11g.79 this is the whole of the reading — the drawing carries none. */
 .gate-reads { color: var(--subtle); margin-top: 4px; }
 .gate-cta .ic { display: inline-flex; }
 .gate-cta .ic svg { width: 12px; height: 12px; }
@@ -1904,34 +1920,32 @@ th.right .th-sort { flex-direction: row-reverse; }
 /* The phone's door is a glyph and a word (see the media query below).
    Desktop draws the picture instead, so it does not also draw the glyph. */
 .gate-ic { display: none; }
+/* The picture sits at the foot of the tile, at a size rather than a share of
+   one, so every door's drawing is the same size as every other door's. The
+   field it replaced was a bleed — it filled the box and was clipped by it, and
+   was faded into the card at the top by a mask because a texture with a hard
+   edge reads as a torn edge. A line drawing has edges anyway, so it gets room
+   instead of a fade: the box is inset from the bottom and stops short of the
+   words, and nothing needs dissolving. */
 .gate-art {
-  position: absolute; left: 0; right: 0; bottom: 0; height: 196px;
-  overflow: hidden; pointer-events: none;
+  position: absolute; left: 0; right: 0; bottom: 14px; height: 174px;
+  display: grid; place-items: center;
+  pointer-events: none;
   /* How far behind the words it sits. It was a flat third, chosen against a
      near-black card and then applied to a near-white one, where a third of a
-     pale grey is a ghost. The rungs themselves do the quieting now — one grey
-     ramp, kept off both ends of the range — so this is a veil rather than a
-     dimmer, and it has a value per theme. */
+     pale grey is a ghost. It has a value per theme. */
   opacity: var(--art-veil);
-  /* And it dissolves into the card before it reaches the words. The words
-     already sit above it in the stacking order, which stops them being
-     covered and does nothing at all for reading grey text over a field of
-     dots. The field is made of dissolving edges anyway, so one more is the
-     material behaving as it does everywhere else. */
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 20%);
-  mask-image: linear-gradient(to bottom, transparent 0, #000 20%);
 }
-/* Under the pointer a dot goes where it is put, with no transition on it: a
-   thousand transforms restarting a thousand transitions every frame is the
-   whole cost of this effect, and the pointer is already moving continuously,
-   so there is nothing for an eased follow to smooth. What does need easing is
-   the way home. `.stir-home` is set for the length of one return and the class
-   goes off again, so the transition exists for 220ms and not for the rest of
-   the time the field is being pushed around. It is put on whichever box holds
-   a stirred field, so a new surface taking the effect is a call to `stir` and
-   nothing here. */
-@media (prefers-reduced-motion: no-preference) {
-  .stir-home circle { transition: transform 220ms var(--ease); }
+.gate-art svg { display: block; width: 174px; height: 174px; }
+
+/* The doors' hover used to be the field parting around the pointer — an effect
+   that only existed because the art was made of several hundred separate
+   circles. The art is one drawing now, and the door takes the house answer
+   that every other clickable card in the product takes. The ground the drawing
+   fills with moves with it, or the faces stay the unhovered colour and the
+   drawing reads as a hole punched in the card. */
+@media (hover: hover) {
+  .gate:hover { background: var(--sunken-hover); --art-ground: var(--sunken-hover); }
 }
 
 @media (max-width: 899px) {
@@ -2196,12 +2210,18 @@ th.right .th-sort { flex-direction: row-reverse; }
 }
 .welcome-text { margin: 0; color: var(--muted); font-size: 16px; line-height: 24px; max-width: 46ch; }
 
-/* Bottom-right, behind the words, clipped by the screen the way the tiles
-   clip theirs. */
+/* Bottom-right, behind the words. It used to be a band — right:0, left:40%,
+   320 tall — because what sat in it was a field that filled whatever it was
+   given and was clipped by the edges. An object is a size, not a share of the
+   screen, so this is now the object's box and the screen's own padding is the
+   air around it. */
 .welcome-art {
-  position: absolute; right: 0; bottom: 0; left: 40%; height: 320px;
-  overflow: hidden; pointer-events: none; opacity: 0.9;
+  position: absolute; right: 56px; bottom: 40px;
+  width: 300px; height: 300px;
+  display: grid; place-items: center;
+  pointer-events: none; opacity: 0.9;
 }
+.welcome-art svg { display: block; width: 100%; height: 100%; }
 
 .welcome-foot {
   position: relative; z-index: 1;
@@ -2255,7 +2275,7 @@ th.right .th-sort { flex-direction: row-reverse; }
   .welcome { padding: 20px 20px 216px; }
   .welcome-title { font-size: 34px; line-height: 40px; }
   .welcome-text { font-size: 15px; line-height: 22px; }
-  .welcome-art { left: 0; height: 196px; }
+  .welcome-art { right: 20px; bottom: 24px; width: 176px; height: 176px; }
   .welcome-foot { flex-direction: column-reverse; align-items: stretch; gap: 20px; margin-top: 24px; }
   .welcome-actions .btn { flex: 1 1 0; }
   .welcome-dots { justify-content: center; }

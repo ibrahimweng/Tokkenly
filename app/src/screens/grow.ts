@@ -11,7 +11,7 @@ import {
 import { DOLLARS, type Asset } from '../assets'
 import { usd, pct, signed, when } from '../format'
 import { go, openSheet } from '../router'
-import { objectArt, stir, level, COINS, WALLET, type ObjectField } from '../components/art'
+import { LEND, BORROW, type Art } from '../components/drawings'
 import { hint, type Hint } from '../components/hint'
 
 /* ---------------- the hub ---------------- */
@@ -65,7 +65,7 @@ function productCard(opts: {
   title: string
   /** One sentence, saying what you get. Not what it is called again. */
   say: string
-  art: ObjectField; at: number
+  art: Art
   rows: [string, string | Node, Hint?][]
   /** The one figure this card is about, sitting directly above its button.
    *  Label, value, and a tone when the value is money you owe. */
@@ -78,13 +78,12 @@ function productCard(opts: {
    *  did not see it because it had never read a product card. */
   cta: string; ctaTo: string
 }): HTMLElement {
-  // Anchored to the bottom on both, which is the dense end of the composition
-  // and the end the account wakes first — so the lit mass sits against the
-  // card's own bottom edge and the empty end of the field faces the button.
-  // Four across: the band is about 494 wide and the field is 24 columns, so
-  // one copy of it put 20 pixels between dot centres and a 17px ball in each.
-  const art = objectArt(opts.art, opts.at)
-  const band = h('div', { class: 'prod-art' }, art)
+  // The drawing sits at the foot of the card, at its own size rather than
+  // filling a band. What was here was a field of dots sized to whatever it was
+  // given, anchored bottom so the lit end of it faced the button; there is no
+  // lit end any more (11g.79) and an object needs air around it more than it
+  // needs an edge to bleed off.
+  const band = h('div', { class: 'prod-art' }, opts.art())
   // No second link in the corner. "Repay" and "Take it back" were two more
   // decisions on a card whose job is one, and both are the first thing on the
   // page the button already leads to.
@@ -117,20 +116,15 @@ function productCard(opts: {
   // which put a picture in the middle of a sentence and an action: the button
   // read as belonging to the art rather than to the offer above it.
   //
-  // So the field goes under the button on both, against the card's own bottom
-  // edge, and the order is the same on both: the name, the sentence, the
-  // figures, your position, the button. It was the field at the top of one
-  // card and the bottom of the other, which is a nicer idea and costs 128
-  // pixels: it started the lending card's title level with the borrowing
-  // card's figures and left the two buttons at different heights. The mirror
-  // is the field itself — flipped, and in the other colour — not which end of
-  // the card it sits at.
+  // So the drawing goes under the button on both, and the order is the same on
+  // both: the name, the sentence, the figures, your position, the button. It
+  // was the picture at the top of one card and the bottom of the other, which
+  // is a nicer idea and costs 128 pixels: it started the lending card's title
+  // level with the borrowing card's figures and left the two buttons at
+  // different heights. What distinguishes the pair is the two drawings — a
+  // pile of cash against a pile of shares — not which end of the card they
+  // sit at.
   c.append(words, figures, h('div', { class: 'spacer' }), standing, action, band)
-  // The same answer the three doors on Home give (11g.51): the field parts
-  // around the pointer wherever it is on the card. Reach and push are in the
-  // field's own units, so the picture behaves the same way here as it does
-  // there even though this one is drawn a fifth larger.
-  stir(c, art)
   return c
 }
 
@@ -164,10 +158,7 @@ export function growScreen(): HTMLElement {
       productCard({
         key: 'lend', title: 'Lend',
         say: `Earn ${pct(state.rates.lend)} a year on cash you are not using.`,
-        // How much of the money you could spend is out working. Not the whole
-        // portfolio: shares are not money you chose to lend or not to.
-        art: COINS(),
-        at: level(state.lent, state.lent + state.cash),
+        art: LEND,
         rows: [
           ['Interest so far', h('span', { class: 'pos t-body-strong',
             text: state.prefs.hideBalances ? MASK : signed(state.interestPaid) })],
@@ -182,10 +173,7 @@ export function growScreen(): HTMLElement {
       productCard({
         key: 'borrow', title: 'Borrow',
         say: 'Get cash without selling your shares.',
-        // How much of the limit is drawn, which is the one number a borrower
-        // is actually watching.
-        art: WALLET(),
-        at: level(owed(), Math.max(state.borrowLimit, 1)),
+        art: BORROW,
         rows: [
           ['You can borrow', money(availableToBorrow())],
           ['Against', money(holdingsValue()) + ' in shares', {

@@ -232,7 +232,7 @@ export function marketScreen(): HTMLElement {
           : openOnly && !t.trim()
             ? emptyState('Nothing here is open for trading yet',
                 `Everything in ${cat} is waiting on its contract and eligibility checks. You can still look at any of it.`,
-                { label: 'Show everything', onClick: () => setQuery('open', '') })
+                { label: 'Show everything', onClick: () => setQuery('open', '') }, 'holdings')
             : emptyState('Nothing matches that',
                 openOnly
                   ? 'Nothing open for trading matches that. Try another company, or show everything.'

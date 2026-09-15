@@ -1,6 +1,6 @@
 import { h } from '../ui'
 import { icon } from '../icons'
-import { objectArt, PIECE, NOTES, PURSE } from '../components/art'
+import { INVEST, WALLET, LEND } from '../components/drawings'
 import { PICKS, find, tradable, type Instrument } from '../catalogue'
 import { state, actions } from '../state'
 import { usd, shares as fmtShares } from '../format'
@@ -40,7 +40,7 @@ const STEPS: Step[] = [
     eyebrow: 'What this is',
     title: 'Own a piece of Apple,\nfrom one dollar',
     body: 'One Apple share costs over $200. You do not need a whole one. Put in $1 and you own $1 of Apple.',
-    art: () => objectArt(PIECE()),
+    art: INVEST,
     lead: true,
     // What screen one used to say here was "You have $2,480.00 ready to
     // spend." — an account balance, quoted to the cent, to somebody who has
@@ -58,13 +58,17 @@ const STEPS: Step[] = [
     eyebrow: 'What you hold',
     title: 'Naira in,\ndollars held',
     body: 'Send naira from your bank and it becomes dollars. Your money stays in dollars while the naira moves. Take it out to your bank any time.',
-    art: () => objectArt(NOTES()),
+    art: WALLET,
   },
   {
     eyebrow: 'When you can sell',
     title: 'The market\nnever closes',
     body: 'Buy and sell at any hour, any day. Sell on a Sunday night if you want. The cash is in your wallet a minute later.',
-    art: () => objectArt(PURSE()),
+    // Cash arriving on a pile, not the balance from the Borrow & Lend door.
+    // This step is about selling and being paid for it; a scale weighing two
+    // sides against each other is a picture of a screen this person has not
+    // been shown and will not meet for some time.
+    art: LEND,
   },
   {
     eyebrow: 'How to start',

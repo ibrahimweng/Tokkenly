@@ -129,50 +129,58 @@ const rmState = await rp.$eval('a.card.tile', (e) => {
 })
 console.log('reduced motion:', JSON.stringify(rmState))
 
-/* The three doors on Home answer with the field rather than with a colour.
-   There was a green gradient here; it was a light coming on — the same wash
-   wherever the pointer was — and it is gone. What replaced it is the only
-   hover in the product that is not a surface change, so it is the only one
-   this suite cannot measure with `look`, and it gets its own reading:
-
-   under the pointer the dots go somewhere, further off they go a little way,
-   off the card they are all home again, and none of it happens for somebody
-   who asked for no motion. */
+/* The three doors on Home used to answer with the field: several hundred
+   circles that parted around the pointer. The field is gone (11g.79) and so is
+   the effect, which was only ever possible because the picture was made of
+   several hundred separately-positioned things. What a door answers with now
+   is what every other clickable card in the product answers with — the surface
+   goes up a rung — so the three readings here are: the door does answer, the
+   drawing does not move while it answers, and the drawing's own ground moves
+   with the card so it does not read as a hole punched in it. */
 {
-  const shifted = (pg) => pg.evaluate(() => {
-    const cs = [...document.querySelectorAll('.gate-art circle, .prod-art circle')]
-      .map((c) => c.style.transform)
-      .filter(Boolean)
-      .map((t) => { const m = t.match(/translate\(([-\d.]+)px, ([-\d.]+)px\)/); return m ? Math.hypot(+m[1], +m[2]) : 0 })
-    return { n: cs.length, most: cs.length ? Math.max(...cs) : 0 }
-  })
+  const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
+  console.log('\nTHE DOORS ANSWER, AND THE DRAWING HOLDS STILL')
   // Its own page: the one this suite has been using is seeded on Detailed,
   // and the doors are Simple's.
   const door = await b.newPage({ viewport: { width: 1440, height: 1000 } })
   await noFonts(door); await seen(door)
   door.on('pageerror', (e) => errors.push(String(e)))
   await door.goto(B + '/', { waitUntil: 'networkidle' }); await door.waitForTimeout(250)
+
+  // What the drawing looks like with the pointer away, down to the numbers in
+  // every path: if any of it moves on hover, this string changes.
+  const shape = (pg) => pg.evaluate(() =>
+    [...document.querySelectorAll('.gate-art svg path, .gate-art svg ellipse')]
+      .map((n) => n.getAttribute('d') || `${n.getAttribute('cx')},${n.getAttribute('cy')}`)
+      .join('|'))
+  const surface = (pg) => pg.evaluate(() =>
+    getComputedStyle(document.querySelector('.gate')).backgroundColor)
+
   await door.mouse.move(0, 0); await door.waitForTimeout(300)
-  const rest = await shifted(door)
+  const restShape = await shape(door)
+  const restBg = await surface(door)
   const box = await door.locator('.gate').first().boundingBox()
-  await door.mouse.move(box.x + box.width * 0.75, box.y + box.height * 0.85); await door.waitForTimeout(260)
-  const under = await shifted(door)
-  await door.mouse.move(box.x + 40, box.y + 40); await door.waitForTimeout(260)
-  const far = await shifted(door)
-  await door.mouse.move(0, 0); await door.waitForTimeout(500)
-  const gone = await shifted(door)
-  // In field units, not pixels — the field is cropped, and one pixel is about
-  // 2.7 of them on a 196-tall door.
-  console.log('\ndoor field  rest', JSON.stringify(rest), ' under the pointer', JSON.stringify(under))
-  console.log('door field  from the title', JSON.stringify(far), ' after leaving', JSON.stringify(gone))
-  const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
-  ok('the field is still at rest until a pointer arrives', rest.n === 0, `${rest.n} moved`)
-  ok('the pointer opens a hole in it', under.n > 100 && under.most > 40,
-     `${under.n} dots, furthest ${under.most.toFixed(0)}`)
-  ok('and it is felt from the words too, more gently',
-     far.n > 0 && far.most > 4 && far.most < under.most,
-     `${far.n} dots, furthest ${far.most.toFixed(0)}`)
-  ok('and every dot goes home when the pointer leaves', gone.n === 0, `${gone.n} still out`)
+  await door.mouse.move(box.x + box.width * 0.5, box.y + box.height * 0.5)
+  await door.waitForTimeout(320)
+  const overShape = await shape(door)
+  const overBg = await surface(door)
+  const ground = await door.evaluate(() => {
+    const g = getComputedStyle(document.querySelector('.gate')).getPropertyValue('--art-ground')
+    const bg = getComputedStyle(document.querySelector('.gate')).backgroundColor
+    // Resolve the token the same way a fill does, by painting with it.
+    const d = document.createElement('div')
+    d.style.background = g.trim(); document.querySelector('.gate').appendChild(d)
+    const out = getComputedStyle(d).backgroundColor
+    d.remove()
+    return { out, bg }
+  })
+  console.log('door  at rest', restBg, ' hovered', overBg)
+  ok('the drawing is there at all', restShape.length > 200, `${restShape.length} chars of path`)
+  ok('a door still answers the pointer', restBg !== overBg, `${restBg} to ${overBg}`)
+  ok('and not one line of the drawing moves while it does',
+     restShape === overShape, restShape === overShape ? '' : 'the drawing shifted')
+  ok('and the ground it is filled with is the card it is on',
+     ground.out === ground.bg, `${ground.out} vs ${ground.bg}`)
   // The green is gone, and nothing put another colour in its place.
   const wash = await door.evaluate(() => {
     const s = getComputedStyle(document.querySelector('.gate'), '::before')
@@ -180,38 +188,6 @@ console.log('reduced motion:', JSON.stringify(rmState))
   })
   ok('and no gradient came back to do the job instead', !wash)
   await door.close()
-
-  /* And the two product cards on Borrow & Lend take the same effect. The
-     point of this pair of readings is the one thing that is hard to see by
-     looking: the field there is drawn a fifth larger than the doors', and the
-     dots have to move the same distance *in the field's own units* — the same
-     number of their own spacings — or it is a different effect on a bigger
-     picture rather than the same one. */
-  const prod = await b.newPage({ viewport: { width: 1440, height: 1400 } })
-  await noFonts(prod); await seen(prod)
-  prod.on('pageerror', (e) => errors.push(String(e)))
-  await prod.goto(B + '/grow', { waitUntil: 'networkidle' }); await prod.waitForTimeout(300)
-  const pbox = await prod.locator('.card.prod').first().boundingBox()
-  await prod.mouse.move(pbox.x + pbox.width * 0.35, pbox.y + pbox.height * 0.85); await prod.waitForTimeout(300)
-  const pUnder = await shifted(prod)
-  await prod.mouse.move(0, 0); await prod.waitForTimeout(500)
-  const pGone = await shifted(prod)
-  console.log('prod field  under the pointer', JSON.stringify(pUnder), ' after leaving', JSON.stringify(pGone))
-  ok('the product cards part around the pointer too', pUnder.n > 100 && pUnder.most > 40,
-     `${pUnder.n} dots, furthest ${pUnder.most.toFixed(0)}`)
-  ok('and by the same distance in the field\u2019s own units as a door',
-     Math.abs(pUnder.most - under.most) < 6, `door ${under.most.toFixed(0)}, card ${pUnder.most.toFixed(0)}`)
-  ok('and every dot on them goes home as well', pGone.n === 0, `${pGone.n} still out`)
-  await prod.close()
-
-  const still = await rm.newPage(); await noFonts(still)
-  await seen(still); await still.goto(B + '/', { waitUntil: 'networkidle' }); await still.waitForTimeout(200)
-  const sbox = await still.locator('.gate').first().boundingBox()
-  await still.mouse.move(sbox.x + sbox.width * 0.75, sbox.y + sbox.height * 0.85); await still.waitForTimeout(300)
-  const asked = await still.evaluate(() =>
-    [...document.querySelectorAll('.gate .gate-art circle')].filter((c) => c.style.transform).length)
-  ok('and nothing moves at all for somebody who asked for no motion', asked === 0, `${asked} moved`)
-  await still.close()
 }
 
 const faint = rows.filter((r) => !r.note && r.step < 2 && !r.underline && !r.fg && !r.moves && !r.lifts)
@@ -224,8 +200,10 @@ console.log('page errors:', errors.length ? errors : 'none')
    for borrowing, and a purple cell inside the first — with a top rung at text
    white and one flat opacity chosen against a near-black card. Behind a
    heading and a sentence you are meant to read, that is a second foreground.
-   One grey ramp now, kept off both ends of the range, veiled per theme. */
-console.log('\nTHE FIELDS ARE GROUND, NOT FOREGROUND')
+   The drawings that replaced them have no palette at all: every stroke is
+   `currentColor` and the holder sets the colour, so this now reads what the
+   holder is set to rather than what several hundred cells were painted. */
+console.log('\nTHE DRAWINGS ARE GROUND, NOT FOREGROUND')
 const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
 for (const theme of ['dark', 'light']) {
   const fp = await b.newPage({ viewport: { width: 1440, height: 1000 } })
@@ -234,32 +212,30 @@ for (const theme of ['dark', 'light']) {
   for (const r of ['/', '/grow']) {
     await fp.goto(B + r, { waitUntil: 'domcontentloaded' }); await fp.waitForTimeout(800)
     const m = await fp.evaluate(() => {
-      const fills = new Set()
-      for (const c of document.querySelectorAll('.gate-art circle, .prod-art circle')) {
-        const f = getComputedStyle(c).fill
-        if (f && f !== 'none') fills.add(f)
+      const strokes = new Set()
+      let paths = 0
+      for (const n of document.querySelectorAll('.gate-art svg *, .prod-art svg *')) {
+        const s2 = getComputedStyle(n).stroke
+        if (s2 && s2 !== 'none') { strokes.add(s2); paths++ }
       }
       const holder = document.querySelector('.gate-art, .prod-art')
-      return { fills: [...fills], veil: holder ? Number(getComputedStyle(holder).opacity) : null }
+      return {
+        strokes: [...strokes], paths,
+        veil: holder ? Number(getComputedStyle(holder).opacity) : null,
+      }
     })
     const rgb = (c) => c.match(/[\d.]+/g).slice(0, 3).map(Number)
     // A hue, not the house neutral. Every grey in this product is slightly
-    // cool — --ink is #dcdce0 and --muted is #a6a6ad — so a field painted to
+    // cool — --ink is #dcdce0 and --muted is #a6a6ad — so a drawing painted to
     // match them carries the same few points of blue. What this is looking for
     // is the green, the amber and the purple, which are a hundred points wide.
-    const coloured = m.fills.filter((f) => {
+    const coloured = m.strokes.filter((f) => {
       const [r2, g, b2] = rgb(f)
       return Math.max(r2, g, b2) - Math.min(r2, g, b2) > 14
     })
-    ok(`${theme} ${r}: every dot is grey`, m.fills.length > 0 && coloured.length === 0,
-       coloured.length ? coloured.join(' ') : m.fills.length + ' tones')
-    // Neither end of the range: a field at text white competes with the text,
-    // and a field at the card's own colour is not there.
-    const ends = m.fills.filter((f) => {
-      const [r2] = rgb(f)
-      return theme === 'dark' ? r2 > 140 : r2 < 100
-    })
-    ok(`  and none of them reaches full contrast`, ends.length === 0, ends.join(' '))
+    ok(`${theme} ${r}: the whole drawing is one grey`,
+       m.paths > 8 && m.strokes.length === 1 && coloured.length === 0,
+       `${m.paths} strokes, ${m.strokes.length} tone(s)${coloured.length ? ' ' + coloured.join(' ') : ''}`)
     ok(`  and the veil is the theme's own`, m.veil !== null && m.veil !== 0.34,
        'opacity ' + m.veil)
   }

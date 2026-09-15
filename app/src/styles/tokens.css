@@ -96,6 +96,11 @@
      are tuned against a near-black card and the light theme's are not — the
      old single 0.34 was set in dark and left the light fields as ghosts. */
   --art-veil: 0.9;
+  /* What the drawings fill their faces with, so a near face hides a far one.
+     It is an indirection rather than a colour: every ground in the product is
+     one of two rungs, and a card sets it to its own (below), so a drawing is
+     always filled with exactly what it is lying on, in either theme. */
+  --art-ground: var(--canvas);
   /* A rung below the field's own three, for the part of a field the account has
      not woken. It has to be a rung nothing else uses, because a cell that is
      asleep has to look asleep whatever tone it was composed in — dimming each

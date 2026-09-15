@@ -522,7 +522,7 @@ function qaCard(list: readonly (readonly [string, string])[], term: string): HTM
             h('span', { class: 'muted set-chev', html: icon.chevron() })))
       : [emptyState('Nothing matches that',
           'No answer here covers it. A person will.',
-          { label: 'Email us', onClick: () => openSheet('contact') })]))
+          { label: 'Email us', onClick: () => openSheet('contact') }, 'search')]))
 }
 
 function supportBody(): (Node | null)[] {

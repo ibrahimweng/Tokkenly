@@ -283,9 +283,9 @@ export function historyScreen(): HTMLElement {
         : t.trim() || active !== 'all'
           ? emptyState('Nothing matches that',
               'Try a different name, reference or amount.',
-              { label: 'Clear the search', onClick: () => go('/activity') })
+              { label: 'Clear the search', onClick: () => go('/activity') }, 'search')
           : emptyState('Nothing here yet',
-              'Money you move and anything we tell you shows up here.', undefined, 'history'))
+              'Money you move and anything we tell you shows up here.', undefined, 'activity'))
   }
 
   const search = h('div', { class: 'grow' }, searchField({
