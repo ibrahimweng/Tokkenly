@@ -185,6 +185,57 @@ export function disc(x: number, y: number, z: number, r: number,
   return g
 }
 
+/** The inner outline of a top face — a second edge a little way inside the
+ *  first. Every plate in the reference has one: it is what makes a slab read
+ *  as a machined part rather than as a rectangle, and it costs one path. */
+export function inset(o: Slab & { by?: number } = {}): SVGPathElement {
+  const { x = 0, y = 0, z = 0, w = 6, d = 6, h = 0.7, by = 0.55 } = o
+  const c = Math.min(0.9, (w - by * 2) / 4, (d - by * 2) / 4)
+  const X = x + by, Y = y + by, W = w - by * 2, D = d - by * 2
+  return line(poly([
+    iso(X + c, Y, z + h), iso(X + W - c, Y, z + h),
+    iso(X + W, Y + c, z + h), iso(X + W, Y + D - c, z + h),
+    iso(X + W - c, Y + D, z + h), iso(X + c, Y + D, z + h),
+    iso(X, Y + D - c, z + h), iso(X, Y + c, z + h),
+  ]), { opacity: 0.35 })
+}
+
+/** The four corner guides that hold an exploded stack together. One dashed
+ *  vertical at each corner of a plate, running from the bottom of the stack to
+ *  the top of it — which is the drawing saying "these are the same object,
+ *  pulled apart" rather than "here are some plates". */
+export function corners(o: { x: number; y: number; w: number; d: number;
+                             z0: number; z1: number; in?: number }): SVGGElement {
+  const g = el<SVGGElement>('g', {})
+  const k = o.in ?? 0.35
+  for (const [cx, cy] of [
+    [o.x + k, o.y + k], [o.x + o.w - k, o.y + k],
+    [o.x + o.w - k, o.y + o.d - k], [o.x + k, o.y + o.d - k],
+  ]) g.appendChild(guide(cx, cy, o.z0, o.z1))
+  return g
+}
+
+/** The concentric ring on a coin's face. */
+export function ring(x: number, y: number, z: number, r: number,
+                     opacity = 0.4): SVGEllipseElement {
+  const [cx, cy] = iso(x, y, z)
+  return el<SVGEllipseElement>('ellipse', {
+    cx: cx.toFixed(2), cy: cy.toFixed(2),
+    rx: (r * K * 2).toFixed(2), ry: r.toFixed(2),
+    fill: 'none', stroke: 'currentColor', 'stroke-width': '1.1',
+    'vector-effect': 'non-scaling-stroke', opacity: String(opacity),
+  })
+}
+
+/** A short flat stroke lying on a top face, in the face's own directions. The
+ *  rows on a list, the ticks on a scale, the lines on a bill. */
+export function mark(d0: number, d1: number, sd: number, z: number,
+                     o: { dash?: string; opacity?: number } = {}): SVGPathElement {
+  const at2 = (d: number): P => iso(d + sd, sd - d, z)
+  return line(`M${at(at2(d0))}L${at(at2(d1))}`,
+              { dash: o.dash, opacity: o.opacity ?? 0.5 })
+}
+
 /** The dashed line that says two things are the same thing at two heights.
  *  Every exploded drawing in the reference has them and they are the reason
  *  the stack reads as one object rather than as several. */
