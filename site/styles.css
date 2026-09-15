@@ -187,8 +187,16 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 .btn:active { transform: translateY(1px); }
 .btn-sm { height: 44px; padding: 0 22px; font-size: 15px; }
 
-.btn-dark { background: var(--deep); color: var(--on-deep); box-shadow: var(--shadow-sm); }
-.btn-dark:hover { background: #07463a; box-shadow: var(--shadow); }
+/* The primary button is mint, not ink. Onboard's is acid lime and it is the
+   loudest thing on every screen of that site; mint is this palette's
+   equivalent and it was being spent on a dot. Deep green on mint is 6:1. */
+.btn-dark { background: var(--mint); color: var(--deep); box-shadow: var(--shadow-sm); }
+.btn-dark:hover { background: #35cfab; box-shadow: var(--shadow); }
+/* Except where the ground is already mint — there it inverts. */
+.band-mint-tint .btn-dark, .closing .btn-dark {
+  background: var(--deep); color: var(--on-deep);
+}
+.band-mint-tint .btn-dark:hover, .closing .btn-dark:hover { background: #07463a; }
 
 .btn-ghost { background: transparent; color: var(--ink); border-color: var(--line); }
 .btn-ghost:hover { background: var(--surface); border-color: transparent; box-shadow: var(--shadow-sm); }
@@ -420,38 +428,44 @@ h1 .accent { color: var(--mint); }
    Each card carries a differently tinted chip, which is where most of the
    page's colour lives — six small blocks rather than one big one. */
 .numbered { margin-top: clamp(48px, 5.5vw, 76px); }
+/* The product list is the page's dark block.
+ *
+ *  This is the shape Onboard's own numbered run is built on: a light ground,
+ *  a slab of near-black cards across the middle of it, and one loud accent
+ *  doing the pointing. White cards on a mint-white page have almost no edge —
+ *  six of them read as a table. Six deep green ones read as a thing. Same
+ *  palette, same copy, same numbers: only the ground is inverted. */
 .ncard {
   position: relative; display: grid; gap: 13px; align-content: start;
-  padding: clamp(26px, 2.6vw, 34px);
-  background: var(--surface); border: 1px solid var(--line-soft);
-  border-radius: var(--r-lg); box-shadow: var(--shadow-sm);
+  padding: clamp(28px, 2.8vw, 36px);
+  background: var(--deep); color: var(--on-deep);
+  border: 1px solid transparent;
+  border-radius: var(--r-lg); box-shadow: var(--shadow);
   transition: box-shadow var(--t-base) var(--ease-out), transform var(--t-base) var(--ease-out);
 }
-.ncard:hover { box-shadow: var(--shadow-lg); transform: translateY(-4px); }
+.ncard:hover { box-shadow: var(--shadow-lg); transform: translateY(-5px); }
 .ncard .num {
-  position: absolute; top: clamp(26px, 2.6vw, 34px); right: clamp(26px, 2.6vw, 34px);
-  font-size: 13px; font-weight: 600; letter-spacing: 0.1em; color: var(--placeholder);
+  position: absolute; top: clamp(28px, 2.8vw, 36px); right: clamp(28px, 2.8vw, 36px);
+  font-size: 13px; font-weight: 600; letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.36);
 }
 .ncard .ic {
   width: 52px; height: 52px; display: grid; place-items: center;
   border-radius: var(--r-sm); margin-bottom: 4px;
-  background: var(--tint-brand); color: var(--positive);
+  background: rgba(255, 255, 255, 0.08); color: var(--mint);
 }
 .ncard .ic svg {
   width: 24px; height: 24px; fill: none; stroke: currentColor;
   stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
 }
-/* Six chips, cycling the approved tints. The ink on each is the deep green,
-   which clears 4.5 on every one of them. */
-.ncard:nth-child(6n + 1) .ic { background: var(--tint-mint); color: var(--positive); }
-.ncard:nth-child(6n + 2) .ic { background: var(--tint-cream); color: #8a6a00; }
-.ncard:nth-child(6n + 3) .ic { background: var(--tint-peach); color: #c2410c; }
-.ncard:nth-child(6n + 4) .ic { background: var(--tint-brand); color: var(--ink); }
-.ncard:nth-child(6n + 5) .ic { background: var(--tint-mint); color: var(--positive); }
-.ncard:nth-child(6n + 6) .ic { background: var(--tint-cream); color: #8a6a00; }
+/* The chips still cycle, but as tinted glass on the dark rather than as six
+   pastel blocks: the fills are the brand's own three at low alpha, and the
+   icon keeps the full colour. Each icon clears 4.5:1 on the card. */
+.ncard:nth-child(3n + 2) .ic { background: rgba(249, 209, 0, 0.14); color: #f9d100; }
+.ncard:nth-child(3n + 3) .ic { background: rgba(248, 81, 19, 0.14); color: #ff8a5c; }
 
-.ncard p:not(.num) { color: var(--muted); font-size: 16px; }
-.ncard .link-arrow { margin-top: 8px; }
+.ncard p:not(.num) { color: var(--on-deep-muted); font-size: 16px; }
+.ncard .link-arrow { margin-top: 8px; color: var(--mint); }
 
 /* -------------------------------------------------------------- split -- */
 .split {
