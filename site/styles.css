@@ -55,8 +55,9 @@
      value — what moves here is the ratio it is used at, which is the axis the
      Figma page itself says is the variable one. #F6F8F6 keeps its job as the
      ground inside a light card. */
-  --canvas: #fdf6dc;
+  --canvas: #ffffff;
   --paper: #f6f8f6;
+  --cream: #fdf6dc;
   --surface: #ffffff;
   --sunken: #eff2f0;
   --deep: #053329;          /* surface/inverse — the dark bands */
@@ -235,7 +236,7 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 /* ----------------------------------------------------------------- nav -- */
 .nav {
   position: fixed; inset: 0 0 auto 0; z-index: 50;
-  background: rgba(253, 246, 220, 0.72);
+  background: rgba(255, 255, 255, 0.72);
   backdrop-filter: saturate(180%) blur(16px);
   -webkit-backdrop-filter: saturate(180%) blur(16px);
   border-bottom: 1px solid transparent;
@@ -243,7 +244,7 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 }
 .nav[data-scrolled='true'] {
   border-bottom-color: var(--line-soft);
-  background: rgba(253, 246, 220, 0.94);
+  background: rgba(255, 255, 255, 0.94);
 }
 .nav-in {
   max-width: var(--wrap); margin: 0 auto; padding-inline: var(--gutter);
@@ -344,9 +345,9 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
   content: ''; position: absolute; inset: -10% -20% auto -20%; height: 130%;
   z-index: -1; pointer-events: none;
   background:
-    radial-gradient(52% 44% at 66% 2%, rgba(43, 189, 155, 0.42), transparent 66%),
-    radial-gradient(44% 38% at 8% 16%, rgba(248, 81, 19, 0.12), transparent 70%),
-    radial-gradient(40% 36% at 92% 46%, rgba(213, 165, 120, 0.26), transparent 72%);
+    radial-gradient(54% 46% at 70% 0%, rgba(43, 189, 155, 0.24), transparent 68%),
+    radial-gradient(46% 40% at 6% 12%, rgba(249, 209, 0, 0.16), transparent 72%),
+    radial-gradient(42% 38% at 94% 48%, rgba(213, 165, 120, 0.16), transparent 74%);
 }
 /* The product's own motif: a field of dots, faded out as it falls. */
 .hero::after {
@@ -378,20 +379,26 @@ h1 .accent { color: var(--mint); }
 /* -------------------------------------------------------------- bands -- */
 .band { padding-block: var(--section-y); position: relative; }
 
-/* Gifting was on cream. Cream is the page now, so it takes peach — the
-   warmest of the remaining tints, and the section this palette's warmth
-   belongs to. */
-.band-cream { background: var(--tint-peach); }
-.band-mint-tint { background: var(--tint-mint); }
-.band-brand { background: var(--tint-brand); }
+/* Every section ground is white. Colour arrives as blocks sitting on it —
+   the panels behind the screens, the product cards, the two inset slabs —
+   rather than as a wash behind a whole section. */
+.band-cream, .band-mint-tint, .band-brand { background: transparent; }
 
 /* The two loud ones. */
-.band-deep { background: var(--deep); color: var(--on-deep); }
+.band-deep { background: transparent; color: var(--ink); }
+.band-deep > .wrap { max-width: calc(var(--wrap) + 2 * var(--gutter)); }
+.band-deep .statement {
+  background: var(--deep); color: var(--on-deep);
+  border-radius: var(--r-xl);
+  padding: clamp(56px, 7vw, 104px) clamp(28px, 5vw, 80px);
+  max-width: none;
+}
+.band-deep .statement > * { max-width: 62ch; margin-inline: auto; }
 .band-deep .lead, .band-deep p { color: var(--on-deep-muted); }
 .band-deep .eyebrow { color: var(--on-deep-muted); }
 .band-deep .eyebrow::before { background: var(--mint); }
 
-.band-mint { background: var(--mint); color: var(--deep); }
+.band-mint { background: transparent; color: var(--deep); }
 .band-mint .lead, .band-mint p { color: rgba(5, 51, 41, 0.76); }
 .band-mint .eyebrow { color: rgba(5, 51, 41, 0.72); }
 .band-mint .eyebrow::before { background: var(--deep); }
@@ -595,6 +602,22 @@ h1 .accent { color: var(--mint); }
 .ncard p:not(.num) { color: var(--on-deep-muted); font-size: 16px; }
 .ncard .link-arrow { margin-top: 8px; color: var(--mint); }
 
+/* Each card ends in the screen it is talking about, rising out of the bottom
+   edge. The reference does this with its dark cards, and it is the difference
+   between a card that describes a product and a card that shows one. */
+.ncard { overflow: hidden; padding-bottom: 0; }
+.ncard-shot {
+  margin: 10px 0 0;
+  height: clamp(150px, 17vw, 210px);
+  border-radius: 18px 18px 0 0;
+  overflow: hidden;
+  box-shadow: 0 -10px 34px rgba(0, 0, 0, 0.28);
+}
+.ncard-shot img {
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: top center;
+}
+
 /* -------------------------------------------------------------- split -- */
 .split {
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr);
@@ -670,23 +693,27 @@ details[open] .plus::after { transform: translateY(-50%) rotate(0deg); opacity: 
 .answer p { color: var(--muted); font-size: 16.5px; }
 
 /* ------------------------------------------------------------ closing -- */
-.closing {
-  margin-block: var(--section-y) 0;
-  padding-block: clamp(84px, 9vw, 136px);
-  background: var(--mint); color: var(--deep);
+.closing { padding-block: var(--section-y); background: transparent; }
+.closing > .wrap { max-width: calc(var(--wrap) + 2 * var(--gutter)); }
+.closing-in {
   position: relative; overflow: hidden;
+  background: var(--mint); color: var(--deep);
+  border-radius: var(--r-xl);
+  padding: clamp(64px, 8vw, 116px) clamp(28px, 5vw, 64px);
+  max-width: none;
 }
 /* The dot field again, in the ink, so the loudest block on the page still has
    the product's texture in it. */
-.closing::after {
+.closing-in::after {
   content: ''; position: absolute; inset: 0; pointer-events: none;
   background-image: radial-gradient(circle, rgba(5, 51, 41, 0.14) 1px, transparent 1px);
   background-size: 22px 22px;
   -webkit-mask-image: radial-gradient(70% 70% at 50% 50%, transparent 30%, #000);
   mask-image: radial-gradient(70% 70% at 50% 50%, transparent 30%, #000);
 }
-.closing-in { max-width: 780px; margin: 0 auto; text-align: center; }
-.closing .lead { margin-top: 22px; color: rgba(5, 51, 41, 0.76); }
+.closing-in { text-align: center; }
+.closing-in > * { position: relative; z-index: 1; }
+.closing .lead { margin-top: 22px; color: rgba(5, 51, 41, 0.78); }
 
 /* --------------------------------------------------------------- foot -- */
 .foot {

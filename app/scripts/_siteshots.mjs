@@ -81,6 +81,12 @@ for (const [hash, name] of [
   ['/signup', 'p-signup'],
   ['/addmoney/bank', 'p-addmoney'],  // naira in by bank transfer
   ['/invest', 'p-invest'],
+  /* One per product card. /grow/earn and /grow/borrow are composers and open
+     a sheet, so the two screens that SHOW what you have lent and what you owe
+     stand in for them. */
+  ['/spend', 'p-bills'],
+  ['/grow/lending', 'p-earn'],
+  ['/grow/borrowing', 'p-borrow'],
 ]) done.push(await shot(phone, hash, name))
 
 console.log(done.join('\n'))
