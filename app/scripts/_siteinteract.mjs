@@ -49,17 +49,18 @@ const btn = await p.locator('.nav-end .btn').boundingBox()
 t(`bar button stays small (w=${Math.round(btn.width)})`, btn.width < 140)
 await p.locator('#mobile-menu a[href="#faq"]').click()
 t('choosing closes the menu', await p.locator('#mobile-menu').isHidden())
-/* The hero leads with a person and carries the product beside them. There is
-   no art-directed <picture> swap any more — the phone screenshot is the phone
-   screenshot at every width — so what is worth asserting is that both halves
-   are present, and that they stack rather than squeeze at this one. */
-t('hero has a photograph slot', await p.locator('.showcase .portrait').isVisible())
-const heroSrc = await p.locator('.showcase .shot-phone img').evaluate((i) => i.currentSrc)
-t(`hero carries the product too (${heroSrc.split('/').pop()})`, /p-home/.test(heroSrc))
-const slot = await p.locator('.showcase .portrait').boundingBox()
-const ph = await p.locator('.showcase .shot-phone').boundingBox()
-t(`showcase stacks at 390 (slot y=${Math.round(slot.y)}, phone y=${Math.round(ph.y)})`,
-  ph.y > slot.y + slot.height - 4)
+/* The hero is one wide panel of brand colour with the product on it. The
+   photograph slots are gone: an empty colour block is worse than the
+   screenshot it replaced. What is worth asserting is that the panel and the
+   screen inside it are both there, and that the panel keeps a real width at
+   390 rather than collapsing. */
+t('hero has a colour panel', await p.locator('.hero-stage').isVisible())
+const heroSrc = await p.locator('.hero-stage .shot img').evaluate((i) => i.currentSrc)
+t(`panel carries the product (${heroSrc.split('/').pop()})`, /home\.webp/.test(heroSrc))
+const st = await p.locator('.hero-stage').boundingBox()
+t(`panel holds its width at 390 (w=${Math.round(st.width)})`, st.width > 300 && st.width <= 390)
+const staged = await p.locator('.stage').count()
+t(`every screen sits on colour (${staged} panels)`, staged >= 8)
 await p.close()
 
 console.log('PASS (' + pass.length + ')\n  ' + pass.join('\n  '))

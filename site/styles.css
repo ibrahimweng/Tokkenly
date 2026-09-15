@@ -399,79 +399,56 @@ h1 .accent { color: var(--mint); }
 .statement { max-width: 860px; margin: 0 auto; text-align: center; display: grid; gap: 22px; }
 .statement h2 { margin-block: 6px 8px; }
 
-/* ----------------------------------------------------------- portrait -- */
-/* A person, on a block of brand colour.
+/* -------------------------------------------------------------- stage -- */
+/* A screen on a block of colour.
  *
- *  This is the shape the reference gets most of its warmth from: a cut-out
- *  portrait sitting on a saturated panel, with product UI small beside it
- *  rather than filling the frame. A landing page for a consumer money app is
- *  about the people using it; the screens are evidence, not the subject.
+ *  This is the device the reference's consumer page is built on: every phone
+ *  sits on a saturated panel — lime, purple, yellow — and bleeds off the
+ *  bottom of it, rather than floating on the page in a drop shadow. It is
+ *  what makes that page read as colourful when most of it is cream and text.
  *
- *  Until a photograph is licensed these are colour panels with a label, which
- *  is a deliberate-looking thing rather than a broken one. Drop a file into
- *  img/people/ and set --photo on the figure; nothing else has to change. */
-.portrait {
-  position: relative; margin: 0; overflow: hidden;
-  aspect-ratio: 4 / 5;
+ *  It also solves the problem the empty photograph panels created: the colour
+ *  is carried by something that is actually there. These use screenshots of
+ *  the real product, which this repository has, rather than photographs,
+ *  which it does not.
+ */
+.stage {
+  position: relative; overflow: hidden;
   border-radius: var(--r-xl);
-  background: var(--slot, var(--mint));
-  display: grid; place-items: center;
+  background: var(--stage, var(--mint));
+  padding: clamp(26px, 3.2vw, 46px) clamp(18px, 2.2vw, 32px) 0;
+  display: grid; justify-items: center; align-items: end;
   isolation: isolate;
 }
-.portrait::before {
+.stage::before {
   content: ''; position: absolute; inset: 0; z-index: 0;
-  background-image: radial-gradient(circle, rgba(5, 51, 41, 0.16) 1px, transparent 1px);
+  background-image: radial-gradient(circle, rgba(5, 51, 41, 0.14) 1px, transparent 1px);
   background-size: 20px 20px;
-  -webkit-mask-image: radial-gradient(72% 72% at 50% 46%, transparent 34%, #000);
-  mask-image: radial-gradient(72% 72% at 50% 46%, transparent 34%, #000);
+  -webkit-mask-image: linear-gradient(to bottom, #000, transparent 62%);
+  mask-image: linear-gradient(to bottom, #000, transparent 62%);
 }
-.portrait img {
-  position: absolute; inset: 0; z-index: 2;
-  width: 100%; height: 100%; object-fit: cover;
-}
-.portrait-note {
+/* The screen bleeds off the bottom edge, which is what stops the panel
+   reading as a frame with a picture politely inside it. */
+.stage .shot {
   position: relative; z-index: 1;
-  max-width: 24ch; margin: 0 20px; padding: 16px 20px; text-align: center;
-  background: var(--surface); border-radius: var(--r-md);
-  box-shadow: var(--shadow);
-  font-size: 13.5px; line-height: 1.45; font-weight: 500; color: var(--muted);
-}
-.portrait-note b {
-  display: block; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
-  color: var(--ink); margin-bottom: 5px;
-}
-.portrait-sand { --slot: var(--sand); }
-.portrait-peach { --slot: #f7b79a; }
-.portrait-deep { --slot: var(--deep); }
-.portrait-deep .portrait-note { color: rgba(255, 255, 255, 0.6); }
-.portrait-deep::before { background-image: radial-gradient(circle, rgba(255,255,255,0.14) 1px, transparent 1px); }
-
-/* Gifting: the portrait is the panel, the product overlaps its corner. */
-.portrait-wrap { position: relative; }
-/* The inset phone sits over the panel's lower left, so the brief moves to the
-   top right rather than being half-hidden behind it. */
-.portrait-wrap .portrait-note {
-  align-self: start; justify-self: end;
-  margin: 9% 7% 0 0;
-}
-.portrait-wrap .portrait-inset {
-  position: absolute; z-index: 3;
-  left: -5%; bottom: -6%;
-  width: min(44%, 190px); margin: 0;
-  border-radius: 24px; border-color: var(--line);
-  box-shadow: var(--shadow-lg);
+  margin-bottom: clamp(-72px, -5vw, -36px);
+  box-shadow: 0 -8px 40px rgba(5, 51, 41, 0.18);
 }
 
-/* The person leads; the product sits in front of them, smaller. */
-.showcase {
-  position: relative;
-  margin-top: clamp(56px, 6.5vw, 92px);
-  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.62fr);
-  gap: clamp(28px, 4vw, 64px); align-items: center;
-  max-width: 1020px; margin-inline: auto;
+.stage-mint   { --stage: var(--mint); }
+.stage-yellow { --stage: #f9d100; }
+.stage-sand   { --stage: var(--sand); }
+.stage-peach  { --stage: #f7b79a; }
+.stage-deep   { --stage: var(--deep); }
+.stage-deep::before { background-image: radial-gradient(circle, rgba(255,255,255,0.16) 1px, transparent 1px); }
+
+/* The hero: one wide panel with the whole product on it. */
+.hero-stage {
+  margin-top: clamp(52px, 6vw, 88px);
+  aspect-ratio: 16 / 9;
+  padding-inline: clamp(24px, 5vw, 90px);
 }
-.showcase .portrait { max-height: 620px; }
-.showcase .shot-phone { width: 100%; max-width: 330px; margin: 0 auto; }
+.hero-stage .shot-wide { width: 100%; }
 
 /* -------------------------------------------------------------- shots -- */
 .shot {
@@ -573,7 +550,7 @@ h1 .accent { color: var(--mint); }
   gap: clamp(20px, 3vw, 46px);
   margin-top: clamp(52px, 6vw, 82px);
 }
-.phone-row .shot-phone:nth-child(2) { transform: translateY(-26px); }
+.phone-row > :nth-child(2) { transform: translateY(-30px); }
 
 /* -------------------------------------------------------------- steps -- */
 .steps {
@@ -582,7 +559,7 @@ h1 .accent { color: var(--mint); }
   margin-top: clamp(48px, 5.5vw, 76px);
 }
 .step { display: grid; gap: 11px; align-content: start; text-align: center; }
-.step .shot { margin-bottom: 24px; }
+.step .stage { margin-bottom: 24px; }
 .step .num {
   width: 38px; height: 38px; margin-inline: auto; display: grid; place-items: center;
   border-radius: var(--r-pill); background: var(--mint); color: var(--deep);
@@ -710,16 +687,13 @@ details[open] .plus::after { transform: translateY(-50%) rotate(0deg); opacity: 
   .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .steps { grid-template-columns: minmax(0, 1fr); max-width: 420px; margin-inline: auto; }
   .phone-row { gap: 20px; }
-  .phone-row .shot-phone:nth-child(2) { transform: none; }
+  .phone-row > :nth-child(2) { transform: none; }
   .band-round { margin-inline: 16px; }
 }
 
 @media (max-width: 880px) {
-  .showcase { grid-template-columns: minmax(0, 1fr); justify-items: center; gap: 28px; }
-  .showcase .portrait { width: min(420px, 100%); }
-  .showcase .shot-phone { margin-inline: auto; }
-  .portrait-wrap { max-width: 420px; margin-inline: auto; }
-  .portrait-wrap .portrait-inset { left: 0; bottom: -4%; width: min(40%, 150px); }
+  .hero-stage { aspect-ratio: 4 / 3; }
+  .stage-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 640px) {
@@ -730,8 +704,8 @@ details[open] .plus::after { transform: translateY(-50%) rotate(0deg); opacity: 
   /* Three phones do not fit across a phone. Two columns, and the third wraps
      under the pair rather than shrinking all of them to a thumbnail. */
   .phone-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .phone-row .shot-phone { width: 100%; }
-  .phone-row .shot-phone:last-child { grid-column: 1 / -1; width: min(260px, 100%); }
+  .phone-row .stage { width: 100%; }
+  .phone-row > :last-child { grid-column: 1 / -1; max-width: 300px; margin-inline: auto; }
   .foot-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .cta-row { gap: 12px; }
   .cta-row .btn { height: 54px; width: 100%; }

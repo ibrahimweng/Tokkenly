@@ -98,21 +98,13 @@
             </div>
           </div>
 
-          <div class="showcase hero-intro" style="--hero-d: 0.3s">
-            <!-- PHOTOGRAPH SLOT. Put a file at img/people/hero.jpg and replace
-                 the <p> below with:
-                   <img src="./img/people/hero.jpg" alt="..." />
-                 Shot 4:5, subject slightly left of centre. -->
-            <figure class="portrait">
-              <p class="portrait-note"><b>Photograph</b>Someone using Tokkenly. 4:5, img/people/hero.jpg</p>
-            </figure>
-
-            <figure class="shot shot-phone">
+          <div class="stage stage-mint hero-stage hero-intro" style="--hero-d: 0.3s">
+            <figure class="shot shot-wide">
               <img
-                src="./img/p-home.webp"
-                width="780"
-                height="1600"
-                alt="The Tokkenly home screen on a phone, showing a total portfolio figure with Invest, Wallet and Spend."
+                src="./img/home.webp"
+                width="2040"
+                height="1275"
+                alt="The Tokkenly home screen, showing a total portfolio figure with Invest, Wallet, Borrow &amp; Lend and Spend alongside recent activity."
                 fetchpriority="high"
               />
             </figure>
@@ -227,12 +219,8 @@
               </div>
             </div>
 
-            <div class="portrait-wrap reveal">
-              <!-- PHOTOGRAPH SLOT — img/people/gifting.jpg, 4:5. -->
-              <figure class="portrait portrait-sand">
-                <p class="portrait-note"><b>Photograph</b>Two people, a gift between them. 4:5, img/people/gifting.jpg</p>
-              </figure>
-              <figure class="shot shot-phone portrait-inset">
+            <div class="stage stage-sand reveal">
+              <figure class="shot shot-phone">
                 <img
                   src="./img/p-gift.webp"
                   width="780"
@@ -391,7 +379,8 @@
           </div>
 
           <div class="phone-row">
-            <figure class="shot shot-phone reveal">
+            <div class="stage stage-mint reveal">
+              <figure class="shot shot-phone">
               <img
                 src="./img/p-receive.webp"
                 width="780"
@@ -400,7 +389,9 @@
                 alt="Receiving money in Tokkenly on a phone."
               />
             </figure>
-            <figure class="shot shot-phone reveal">
+            </div>
+            <div class="stage stage-yellow reveal">
+              <figure class="shot shot-phone">
               <img
                 src="./img/p-wallet.webp"
                 width="780"
@@ -409,7 +400,9 @@
                 alt="The Tokkenly wallet on a phone, showing dollars alongside what they are worth in naira."
               />
             </figure>
-            <figure class="shot shot-phone reveal">
+            </div>
+            <div class="stage stage-peach reveal">
+              <figure class="shot shot-phone">
               <img
                 src="./img/p-send.webp"
                 width="780"
@@ -418,6 +411,7 @@
                 alt="Sending money to someone from Tokkenly on a phone."
               />
             </figure>
+            </div>
           </div>
         </div>
       </section>
@@ -432,7 +426,8 @@
 
           <ol class="steps">
             <li class="step reveal">
-              <figure class="shot shot-phone">
+              <div class="stage stage-deep">
+                <figure class="shot shot-phone">
                 <img
                   src="./img/p-signup.webp"
                   width="780"
@@ -441,12 +436,14 @@
                   alt="The Tokkenly sign-up screen on a phone."
                 />
               </figure>
+              </div>
               <p class="num">1</p>
               <h3>Create your account</h3>
               <p>Sign up for Tokkenly and complete the required account checks.</p>
             </li>
             <li class="step reveal">
-              <figure class="shot shot-phone">
+              <div class="stage stage-mint">
+                <figure class="shot shot-phone">
                 <img
                   src="./img/p-addmoney.webp"
                   width="780"
@@ -455,12 +452,14 @@
                   alt="Adding money to a Tokkenly account on a phone."
                 />
               </figure>
+              </div>
               <p class="num">2</p>
               <h3>Add money</h3>
               <p>Fund your account using an available method.</p>
             </li>
             <li class="step reveal">
-              <figure class="shot shot-phone">
+              <div class="stage stage-sand">
+                <figure class="shot shot-phone">
                 <img
                   src="./img/p-invest.webp"
                   width="780"
@@ -469,6 +468,7 @@
                   alt="Browsing the tokenized stocks available in Tokkenly on a phone."
                 />
               </figure>
+              </div>
               <p class="num">3</p>
               <h3>Explore tokenized stocks</h3>
               <p>
