@@ -69,14 +69,59 @@
   })
 
   /* ------------------------------------------------------------ reveal -- */
+  var io = null
   var items = document.querySelectorAll('.reveal')
+
+  /* Put an element in its final position immediately, with no transition.
+   *
+   *  This exists because a reveal and an anchor jump fight each other. Half
+   *  the anchor targets on this page — every product card — are themselves
+   *  `.reveal`, so at the moment the browser works out where to scroll they
+   *  are still translated 50px down. It scrolls to that position, honouring
+   *  scroll-padding-top against it, and then the reveal runs and lifts the
+   *  element 50px — landing it under the fixed bar, 42px from the top of a
+   *  73px bar. Settling the target before the jump is measured means the
+   *  browser measures the place the element is actually going to be. */
+  function settle(el) {
+    var list = []
+    if (el.classList.contains('reveal')) list.push(el)
+    var up = el.closest('.reveal')
+    if (up && list.indexOf(up) < 0) list.push(up)
+    Array.prototype.push.apply(list, el.querySelectorAll('.reveal'))
+
+    var pending = list.filter(function (t) { return !t.classList.contains('in') })
+    if (!pending.length) return
+    pending.forEach(function (t) {
+      t.style.transition = 'none'
+      t.classList.add('in')
+      if (io) io.unobserve(t)
+    })
+    void el.getBoundingClientRect()          // force the layout before restoring
+    pending.forEach(function (t) { t.style.transition = '' })
+  }
+
+  function settleHash(hash) {
+    if (!hash || hash === '#') return
+    var el = null
+    try { el = document.querySelector(hash) } catch (e) { return }
+    if (el) settle(el)
+  }
+
+  /* Every same-page link, including the ones inside the two menus. Capture,
+     so this runs before the menus' own handlers close anything. */
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest && e.target.closest('a[href^="#"]')
+    if (!a || a.hasAttribute('data-soon')) return
+    settleHash(a.getAttribute('href'))
+  }, true)
+
   if (!('IntersectionObserver' in window) ||
       matchMedia('(prefers-reduced-motion: reduce)').matches) {
     items.forEach(function (el) { el.classList.add('in') })
     return
   }
 
-  var io = new IntersectionObserver(function (entries) {
+  io = new IntersectionObserver(function (entries) {
     entries.forEach(function (entry) {
       if (!entry.isIntersecting) return
       entry.target.classList.add('in')
@@ -85,8 +130,15 @@
   }, { rootMargin: '0px 0px -8% 0px', threshold: 0.06 })
 
   items.forEach(function (el, i) {
-    /* Cards in the same row arrive one after another rather than all at once. */
-    el.style.transitionDelay = (i % 3) * 70 + 'ms'
+    /* Cards in the same row arrive one after another rather than all at once.
+       120ms against a 1s travel: far enough apart to read as a sequence, close
+       enough that the last one is not still arriving after the eye has moved
+       on. The hero does not come through here — it animates on load, from CSS,
+       because it is already in view when the page opens. */
+    el.style.transitionDelay = (i % 3) * 120 + 'ms'
     io.observe(el)
   })
+
+  /* A page opened straight onto an anchor has the same problem. */
+  settleHash(location.hash)
 })()

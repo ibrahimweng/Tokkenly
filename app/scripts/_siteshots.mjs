@@ -36,11 +36,22 @@ async function make(width, height) {
   return p
 }
 
+const scrimmed = []
+
 async function shot(p, hash, name, clip) {
   await p.goto(base + hash, { waitUntil: 'networkidle' })
   await p.waitForTimeout(700)     // the balances count up; let them land
+  /* A route that opens a sheet photographs as a modal over a dimmed screen,
+     which on the site reads as a dirty screenshot rather than as the product.
+     The app moves routes around — /send and /addmoney became choosers — so
+     this is checked every run rather than trusted. */
+  const scrim = await p.evaluate(() => {
+    const s = document.querySelector('.scrim')
+    return !!s && getComputedStyle(s).display !== 'none'
+  })
+  if (scrim) scrimmed.push(`${name} (${hash})`)
   await p.screenshot({ path: `${out}/${name}.png`, ...(clip ? { clip } : {}) })
-  return name
+  return name + (scrim ? '   <-- SCRIM' : '')
 }
 
 const desktop = await make(1360, 850)
@@ -56,20 +67,28 @@ done.push(await shot(desktop, '/invest/aapl', 'stock', column))
 done.push(await shot(desktop, '/transfer', 'wallet', column))
 /* The phones. p-home is the hero again at phone width: a 1360-wide desktop
    screen scaled into a 300px column is a picture of nothing. */
+/* Every one of these is a route that renders a whole screen. The bare
+   /send and /addmoney are choosers now: they open a sheet over a dimmed
+   wallet, and a scrim in a marketing picture reads as a dirty screenshot,
+   so each one is taken at the leaf it leads to instead. Re-probe with a
+   `.scrim` check before adding a route here. */
 for (const [hash, name] of [
   ['/', 'p-home'],
   ['/invest/aapl/send', 'p-gift'],
-  ['/receive', 'p-receive'],
-  /* The wallet, not /withdraw. /withdraw resolves into Send with a sheet
-     already open, so the picture came out as a modal over a dimmed screen —
-     and the wallet says the same thing better anyway: dollars and the naira
-     they are worth, on one card. */
-  ['/transfer', 'p-wallet'],
-  ['/send', 'p-send'],
+  ['/addmoney/base', 'p-receive'],   // the Base address and its QR
+  ['/transfer', 'p-wallet'],         // dollars, and the naira they are worth
+  ['/send/tokkenly', 'p-send'],      // sending to a person
   ['/signup', 'p-signup'],
-  ['/addmoney', 'p-addmoney'],
+  ['/addmoney/bank', 'p-addmoney'],  // naira in by bank transfer
   ['/invest', 'p-invest'],
 ]) done.push(await shot(phone, hash, name))
 
 console.log(done.join('\n'))
 await browser.close()
+
+if (scrimmed.length) {
+  console.error('\nThese routes opened a sheet instead of showing a whole screen:')
+  for (const r of scrimmed) console.error('  ' + r)
+  console.error('Point them at the leaf route the chooser leads to, and re-run.')
+  process.exit(1)
+}

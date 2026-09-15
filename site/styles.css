@@ -1,16 +1,25 @@
 /* =========================================================================
    Tokkenly — marketing site.
 
-   Two rules run this file. The colour is the product's own light theme, taken
-   from app/src/styles/tokens.css rather than picked again here, so the site
-   and the app are the same object seen from two sides. The type is the
-   product's own face, Geist, and nothing else: one sans-serif family, two
-   weights, no serif anywhere.
+   COLOUR comes from the Colour page of the Tokkenly Mobile App Figma file,
+   light values, not from the app's tokens.css — the two disagree and the
+   Figma page is the newer, warmer one. Its own rule governs the ratio:
+   roughly 70 per cent surface, 20 per cent deep green ink, 10 per cent
+   accent, and sand is never a full background.
 
-   The layout is Onboard's: a centred hero over one large picture of the real
-   thing, sections that alternate between a full-width statement and a row of
-   cards, a numbered grid for the product list, and an accordion for the
-   questions. Generous whitespace, and every picture is a screenshot.
+   The single biggest thing that makes this page feel alive rather than
+   drafted is that the ink is #053329, a deep green, and not black. Every
+   heading, every paragraph, every border is a green with the light knocked
+   out of it, so the whole page sits in one warm family instead of reading as
+   grey text on grey paper.
+
+   TYPE is Geist and nothing else: one sans-serif family, two weights.
+
+   MOTION is measured from Onboard rather than guessed: travel of 50px over
+   1s on a scroll reveal, 100px over 1.4s on the hero with a per-element
+   stagger, both on cubic-bezier(0.16, 0.84, 0.44, 1). The previous version
+   moved 18px in 620ms, which is short enough and quick enough that nothing
+   appears to move at all.
    ========================================================================= */
 
 @font-face {
@@ -39,56 +48,73 @@
 :root {
   color-scheme: light;
 
-  /* Straight from the product's light theme. */
-  --canvas: #f4f4f1;
+  /* surface */
+  --canvas: #f6f8f6;
   --surface: #ffffff;
-  --sunken-hover: #f1f1ee;
-  --control: #e9e9e4;
-  --control-pressed: #dcdcd5;
-  --inverse: #1a1a1e;
-  --inverse-hover: #2c2c33;
-  --sand: #6e4f35;
-  --sand-hover: #5c4029;
+  --sunken: #eff2f0;
+  --deep: #053329;          /* surface/inverse — the dark bands */
+  --mint: #2bbd9b;          /* surface/accent — once per section, not more */
+  --sand: #d5a578;          /* accent only. Never a background. */
 
-  --ink: #17171a;
-  --muted: #55555e;
-  --subtle: #6c6c76;
-  --on-inverse: #f7f7f5;
+  /* ink */
+  --ink: #053329;           /* 13.3:1 on canvas */
+  --muted: #55746e;         /* 4.85:1 — labels, captions, body support */
+  --placeholder: #8ea39f;   /* 2.9:1 — disabled and placeholder ONLY */
+  --on-deep: #ffffff;
+  --on-deep-muted: #a9c4bb; /* 7.5:1 on deep green */
 
-  --accent: #0b5140;
-  --positive: #0f7d55;
-  --grid: #e5e5df;
-  --tint-brand: #e4efea;
+  /* state */
+  --focus: #105c4c;
+  --positive: #0f7a5f;
+  --fill-mint: #2bbd9b;
+  --fill-orange: #f85113;
+  --fill-yellow: #f9d100;
 
-  --shadow-hover: 0 6px 20px rgba(24, 24, 20, 0.14);
-  --shadow-float: 0 10px 30px rgba(24, 24, 20, 0.18);
+  /* tint — the quiet bands and the chips behind icons */
+  --tint-mint: #e6f7f1;
+  --tint-peach: #fdeae2;
+  --tint-cream: #fdf6dc;
+  --tint-brand: #e8f0ed;
 
-  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --t-fast: 110ms;
-  --t-base: 160ms;
+  /* line work. A border on this page is ink at low alpha rather than a grey,
+     so it belongs to the same green family as everything else. */
+  --line: rgba(5, 51, 41, 0.1);
+  --line-soft: rgba(5, 51, 41, 0.06);
+  --line-deep: rgba(255, 255, 255, 0.14);
 
-  --r-card: 20px;
-  --r-panel: 16px;
+  /* Shadows are green too. A neutral black shadow under a card on a mint-white
+     page reads as dirt; the same shadow mixed toward the ink reads as shade. */
+  --shadow-sm: 0 2px 8px rgba(5, 51, 41, 0.05);
+  --shadow: 0 10px 30px rgba(5, 51, 41, 0.08), 0 2px 8px rgba(5, 51, 41, 0.04);
+  --shadow-lg: 0 30px 70px rgba(5, 51, 41, 0.14), 0 8px 20px rgba(5, 51, 41, 0.06);
+
+  /* motion, measured from the reference */
+  --ease: cubic-bezier(0.16, 0.84, 0.44, 1);
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --t-fast: 140ms;
+  --t-base: 220ms;
+
+  --r-sm: 12px;
+  --r-md: 18px;
+  --r-lg: 26px;
+  --r-xl: 34px;
   --r-pill: 999px;
 
-  --nav-h: 68px;
+  --nav-h: 72px;
   --wrap: 1200px;
   --gutter: 24px;
-  --section-y: clamp(72px, 9vw, 136px);
+  --section-y: clamp(84px, 10vw, 160px);
 
   --font: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
     'Helvetica Neue', Arial, sans-serif;
 }
 
 /* --------------------------------------------------------------- base -- */
-*,
-*::before,
-*::after { box-sizing: border-box; }
+*, *::before, *::after { box-sizing: border-box; }
 
 html {
   scroll-behavior: smooth;
-  /* Anchors land below the fixed bar rather than under it. */
-  scroll-padding-top: calc(var(--nav-h) + 16px);
+  scroll-padding-top: calc(var(--nav-h) + 20px);
   -webkit-text-size-adjust: 100%;
 }
 
@@ -99,599 +125,485 @@ body {
   font-family: var(--font);
   font-size: 17px;
   line-height: 1.6;
-  font-weight: 400;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
 img { max-width: 100%; display: block; }
-
 a { color: inherit; text-decoration: none; }
-
 h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.03em; }
 p { margin: 0; }
 ol, ul { margin: 0; padding: 0; list-style: none; }
 
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-  border-radius: 6px;
-}
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 8px; }
 
 .skip {
-  position: absolute;
-  left: -9999px;
-  top: 8px;
-  z-index: 100;
-  background: var(--inverse);
-  color: var(--on-inverse);
-  padding: 10px 16px;
-  border-radius: var(--r-pill);
+  position: absolute; left: -9999px; top: 8px; z-index: 100;
+  background: var(--deep); color: var(--on-deep);
+  padding: 10px 18px; border-radius: var(--r-pill);
 }
 .skip:focus { left: 16px; }
 
 .wrap {
-  width: 100%;
-  max-width: var(--wrap);
-  margin: 0 auto;
+  width: 100%; max-width: var(--wrap); margin: 0 auto;
   padding-inline: var(--gutter);
+  position: relative; z-index: 1;
 }
-.wrap-narrow { max-width: 860px; }
+.wrap-narrow { max-width: 880px; }
 
 /* ---------------------------------------------------------------- type -- */
-h1 {
-  font-size: clamp(40px, 6.4vw, 74px);
-  line-height: 1.04;
-  letter-spacing: -0.038em;
-}
+h1 { font-size: clamp(42px, 7vw, 84px); line-height: 1.02; letter-spacing: -0.042em; }
+h2 { font-size: clamp(32px, 4.8vw, 58px); line-height: 1.06; letter-spacing: -0.035em; }
+h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.022em; }
 
-h2 {
-  font-size: clamp(30px, 4.2vw, 50px);
-  line-height: 1.1;
-  letter-spacing: -0.032em;
-}
+.lead { font-size: clamp(16.5px, 1.4vw, 20px); line-height: 1.6; color: var(--muted); }
 
-h3 {
-  font-size: clamp(19px, 1.5vw, 21px);
-  line-height: 1.32;
-  letter-spacing: -0.02em;
-}
-
-.lead {
-  font-size: clamp(16px, 1.35vw, 19px);
-  line-height: 1.62;
+/* The eyebrow sits on --muted, not on --placeholder: the Figma page marks that
+   rung disabled-and-placeholder-only at 2.9:1, and an eyebrow is read. */
+.eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 12px; line-height: 16px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
   color: var(--muted);
 }
-
-.eyebrow {
-  font-size: 12px;
-  line-height: 16px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--subtle);
+/* A mint dot in front of every section label. One small piece of colour,
+   repeated, is what ties a long page together. */
+.eyebrow::before {
+  content: ''; width: 7px; height: 7px; flex: none;
+  border-radius: 50%; background: var(--mint);
 }
 
 /* ------------------------------------------------------------ controls -- */
 .btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: 52px;
-  padding: 0 26px;
-  border: 1px solid transparent;
-  border-radius: var(--r-pill);
-  font: inherit;
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background var(--t-base) var(--ease), border-color var(--t-base) var(--ease),
-    color var(--t-base) var(--ease), transform var(--t-fast) var(--ease);
+  display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+  height: 56px; padding: 0 30px;
+  border: 1px solid transparent; border-radius: var(--r-pill);
+  font: inherit; font-size: 16.5px; font-weight: 600; letter-spacing: -0.01em;
+  cursor: pointer; white-space: nowrap;
+  transition: background var(--t-base) var(--ease-out),
+    border-color var(--t-base) var(--ease-out), color var(--t-base) var(--ease-out),
+    transform var(--t-fast) var(--ease-out), box-shadow var(--t-base) var(--ease-out);
 }
 .btn:active { transform: translateY(1px); }
+.btn-sm { height: 44px; padding: 0 22px; font-size: 15px; }
 
-.btn-sm { height: 42px; padding: 0 20px; font-size: 15px; }
+.btn-dark { background: var(--deep); color: var(--on-deep); box-shadow: var(--shadow-sm); }
+.btn-dark:hover { background: #07463a; box-shadow: var(--shadow); }
 
-.btn-dark { background: var(--inverse); color: var(--on-inverse); }
-.btn-dark:hover { background: var(--inverse-hover); }
+.btn-ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.btn-ghost:hover { background: var(--surface); border-color: transparent; box-shadow: var(--shadow-sm); }
 
-.btn-ghost {
-  background: transparent;
-  color: var(--ink);
-  border-color: var(--grid);
-}
-.btn-ghost:hover { background: var(--control); border-color: var(--control-pressed); }
-
-.btn-sand { background: var(--on-inverse); color: var(--sand); }
-.btn-sand:hover { background: #fff; }
+/* On the mint band the filled button goes deep green; on the deep band it
+   goes mint. Either way the loudest thing in the section is a brand colour. */
+.btn-onmint { background: var(--deep); color: var(--on-deep); }
+.btn-onmint:hover { background: #07463a; }
+.btn-ondeep { background: var(--mint); color: var(--deep); }
+.btn-ondeep:hover { background: #3fd0ad; }
 
 .link-arrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--accent);
-  letter-spacing: -0.01em;
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 16px; font-weight: 600; color: var(--positive); letter-spacing: -0.01em;
 }
 .link-arrow svg {
-  width: 16px;
-  height: 16px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.7;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  transition: transform var(--t-base) var(--ease);
+  width: 16px; height: 16px; fill: none; stroke: currentColor;
+  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+  transition: transform var(--t-base) var(--ease-out);
 }
-.link-arrow:hover svg { transform: translateX(3px); }
+.link-arrow:hover svg { transform: translateX(4px); }
 
 .cta-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 14px 22px;
-  margin-top: 34px;
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: 14px 24px; margin-top: 38px;
 }
 .cta-row.centred { justify-content: center; }
 
 /* ----------------------------------------------------------------- nav -- */
 .nav {
-  position: fixed;
-  inset: 0 0 auto 0;
-  z-index: 50;
-  background: rgba(244, 244, 241, 0.82);
-  backdrop-filter: saturate(180%) blur(14px);
-  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  position: fixed; inset: 0 0 auto 0; z-index: 50;
+  background: rgba(246, 248, 246, 0.72);
+  backdrop-filter: saturate(180%) blur(16px);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
   border-bottom: 1px solid transparent;
-  transition: border-color var(--t-base) var(--ease), background var(--t-base) var(--ease);
+  transition: border-color var(--t-base) var(--ease-out), background var(--t-base) var(--ease-out);
 }
 .nav[data-scrolled='true'] {
-  border-bottom-color: var(--grid);
-  background: rgba(244, 244, 241, 0.94);
+  border-bottom-color: var(--line-soft);
+  background: rgba(246, 248, 246, 0.93);
 }
-
 .nav-in {
-  max-width: var(--wrap);
-  margin: 0 auto;
-  padding-inline: var(--gutter);
-  height: var(--nav-h);
-  display: flex;
-  align-items: center;
-  gap: 24px;
+  max-width: var(--wrap); margin: 0 auto; padding-inline: var(--gutter);
+  height: var(--nav-h); display: flex; align-items: center; gap: 24px;
 }
 
-.brand { display: inline-flex; align-items: center; gap: 10px; }
+.brand { display: inline-flex; align-items: center; gap: 11px; }
 .brand-mark {
-  width: 30px;
-  height: 30px;
-  flex: none;
-  display: grid;
-  place-items: center;
-  border-radius: 9px;
-  background: var(--inverse);
-  color: var(--on-inverse);
-  font-size: 16px;
-  font-weight: 600;
+  width: 32px; height: 32px; flex: none; display: grid; place-items: center;
+  border-radius: 10px; background: var(--deep); color: var(--mint);
+  font-size: 17px; font-weight: 600;
 }
-.brand-word { font-size: 19px; font-weight: 600; letter-spacing: -0.02em; }
+.brand-word { font-size: 20px; font-weight: 600; letter-spacing: -0.025em; }
 
-.nav-links {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-inline: auto;
+.nav-links { display: flex; align-items: center; gap: 4px; margin-inline: auto; }
+.nav-links > a, .drop-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 40px; padding: 0 15px; border: 0; border-radius: var(--r-pill);
+  background: transparent; font: inherit; font-size: 15.5px; font-weight: 500;
+  color: var(--muted); cursor: pointer;
+  transition: color var(--t-base) var(--ease-out), background var(--t-base) var(--ease-out);
 }
-.nav-links > a,
-.drop-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  height: 38px;
-  padding: 0 14px;
-  border: 0;
-  border-radius: var(--r-pill);
-  background: transparent;
-  font: inherit;
-  font-size: 15.5px;
-  font-weight: 500;
-  color: var(--muted);
-  cursor: pointer;
-  transition: color var(--t-base) var(--ease), background var(--t-base) var(--ease);
+.nav-links > a:hover, .drop-btn:hover, .drop-btn[aria-expanded='true'] {
+  color: var(--ink); background: var(--tint-brand);
 }
-.nav-links > a:hover,
-.drop-btn:hover,
-.drop-btn[aria-expanded='true'] { color: var(--ink); background: var(--control); }
 
 .chev {
-  width: 14px;
-  height: 14px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.7;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  transition: transform var(--t-base) var(--ease);
+  width: 14px; height: 14px; fill: none; stroke: currentColor;
+  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+  transition: transform var(--t-base) var(--ease-out);
 }
 .drop-btn[aria-expanded='true'] .chev { transform: rotate(180deg); }
 
 .drop { position: relative; }
 .drop-menu {
-  position: absolute;
-  top: calc(100% + 10px);
-  left: 0;
-  min-width: 232px;
-  padding: 8px;
-  background: var(--surface);
-  border: 1px solid var(--grid);
-  border-radius: var(--r-panel);
-  box-shadow: var(--shadow-float);
-  display: grid;
-  gap: 2px;
+  position: absolute; top: calc(100% + 10px); left: 0; min-width: 244px; padding: 9px;
+  background: var(--surface); border: 1px solid var(--line-soft);
+  border-radius: var(--r-md); box-shadow: var(--shadow-lg);
+  display: grid; gap: 2px;
 }
 .drop-menu[hidden] { display: none; }
 .drop-menu a {
-  padding: 9px 12px;
-  border-radius: 10px;
-  font-size: 15.5px;
-  font-weight: 500;
-  color: var(--muted);
-  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+  padding: 10px 13px; border-radius: 11px;
+  font-size: 15.5px; font-weight: 500; color: var(--muted);
+  transition: background var(--t-fast) var(--ease-out), color var(--t-fast) var(--ease-out);
 }
-.drop-menu a:hover { background: var(--sunken-hover); color: var(--ink); }
+.drop-menu a:hover { background: var(--tint-mint); color: var(--ink); }
 
 .nav-end { display: flex; align-items: center; gap: 10px; margin-left: auto; }
 .nav-links + .nav-end { margin-left: 0; }
 
 .burger {
-  display: none;
-  width: 42px;
-  height: 42px;
-  padding: 0;
-  border: 1px solid var(--grid);
-  border-radius: var(--r-pill);
-  background: transparent;
-  cursor: pointer;
-  place-content: center;
-  gap: 5px;
+  display: none; width: 44px; height: 44px; padding: 0;
+  border: 1px solid var(--line); border-radius: var(--r-pill);
+  background: transparent; cursor: pointer; place-content: center; gap: 5px;
 }
 .burger span {
-  display: block;
-  width: 16px;
-  height: 1.6px;
-  margin-inline: auto;
-  border-radius: 2px;
-  background: var(--ink);
-  transition: transform var(--t-base) var(--ease), opacity var(--t-base) var(--ease);
+  display: block; width: 16px; height: 1.8px; margin-inline: auto;
+  border-radius: 2px; background: var(--ink);
+  transition: transform var(--t-base) var(--ease-out), opacity var(--t-base) var(--ease-out);
 }
-.burger[aria-expanded='true'] span:first-child { transform: translateY(3.3px) rotate(45deg); }
-.burger[aria-expanded='true'] span:last-child { transform: translateY(-3.3px) rotate(-45deg); }
+.burger[aria-expanded='true'] span:first-child { transform: translateY(3.4px) rotate(45deg); }
+.burger[aria-expanded='true'] span:last-child { transform: translateY(-3.4px) rotate(-45deg); }
 
 .mobile-menu {
-  display: grid;
-  gap: 2px;
-  padding: 8px var(--gutter) 24px;
-  border-top: 1px solid var(--grid);
-  background: var(--canvas);
-  max-height: calc(100dvh - var(--nav-h));
-  overflow-y: auto;
+  display: grid; gap: 2px; padding: 10px var(--gutter) 28px;
+  border-top: 1px solid var(--line-soft); background: var(--canvas);
+  max-height: calc(100dvh - var(--nav-h)); overflow-y: auto;
 }
 .mobile-menu[hidden] { display: none; }
-.mobile-menu a {
-  padding: 11px 4px;
-  font-size: 17px;
-  font-weight: 500;
-  color: var(--muted);
-}
+.mobile-menu a { padding: 12px 4px; font-size: 17px; font-weight: 500; color: var(--muted); }
 .mobile-menu a:hover { color: var(--ink); }
 .mm-head {
-  margin-top: 14px;
-  padding: 4px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--subtle);
+  margin-top: 16px; padding: 4px; font-size: 12px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
 }
-.mm-cta { margin-top: 18px; width: 100%; color: var(--on-inverse); }
-.mm-cta:hover { color: var(--on-inverse); }
+.mm-cta { margin-top: 20px; width: 100%; color: var(--on-deep); }
+.mm-cta:hover { color: var(--on-deep); }
 
 /* ---------------------------------------------------------------- hero -- */
 .hero {
-  padding-top: calc(var(--nav-h) + clamp(56px, 8vw, 104px));
+  position: relative;
+  padding-top: calc(var(--nav-h) + clamp(60px, 9vw, 120px));
   padding-bottom: var(--section-y);
+  isolation: isolate;
+  /* The washes below are inset -20% each side so the light falls off before
+     the edge rather than stopping at it. Clipped here rather than with
+     overflow-x on the body: hiding overflow on the body makes the body the
+     scrolling box, which silently takes scroll-padding-top out of the
+     equation and lands every anchor underneath the fixed bar. */
+  overflow: hidden;
 }
-.hero-text {
-  max-width: 900px;
-  margin: 0 auto;
-  text-align: center;
+/* Two soft washes behind the fold — mint from the top, cream from the left —
+   so the page opens on colour rather than on paper. They are large, very low
+   in alpha, and blurred to nothing at the edges: the effect should read as
+   light in the room, not as a shape someone drew. */
+.hero::before {
+  content: ''; position: absolute; inset: -10% -20% auto -20%; height: 130%;
+  z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(48% 40% at 62% 6%, rgba(43, 189, 155, 0.26), transparent 68%),
+    radial-gradient(42% 36% at 12% 22%, rgba(249, 209, 0, 0.14), transparent 70%),
+    radial-gradient(38% 34% at 88% 42%, rgba(213, 165, 120, 0.16), transparent 72%);
 }
-.hero-text .lead {
-  max-width: 660px;
-  margin: 26px auto 0;
+/* The product's own motif: a field of dots, faded out as it falls. */
+.hero::after {
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background-image: radial-gradient(circle, rgba(5, 51, 41, 0.1) 1px, transparent 1px);
+  background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(60% 50% at 50% 12%, #000, transparent 72%);
+  mask-image: radial-gradient(60% 50% at 50% 12%, #000, transparent 72%);
 }
+
+.hero-text { max-width: 940px; margin: 0 auto; text-align: center; }
+.hero-text .lead { max-width: 640px; margin: 28px auto 0; }
 .hero-text .cta-row { justify-content: center; }
-/* The space above the hero picture is set with the picture, below .shot's
-   `margin: 0` — setting it here would be overwritten by that shorthand. */
+
+/* The headline's last phrase in mint, so the first thing read carries the
+   brand colour rather than describing it. */
+h1 .accent { color: var(--mint); }
+
+.hero-shot { margin-top: clamp(56px, 6.5vw, 92px); }
 
 /* -------------------------------------------------------------- bands -- */
-.band { padding-block: var(--section-y); }
-.band.tinted {
-  background: var(--tint-brand);
-  border-block: 1px solid rgba(11, 81, 64, 0.08);
-}
+.band { padding-block: var(--section-y); position: relative; }
 
-.head {
-  max-width: 760px;
-  margin: 0 auto;
-  text-align: center;
-}
-.head h2 { margin-top: 14px; }
-.head .lead { margin-top: 20px; }
+.band-cream { background: var(--tint-cream); }
+.band-mint-tint { background: var(--tint-mint); }
+.band-brand { background: var(--tint-brand); }
 
-.statement {
-  max-width: 820px;
-  margin: 0 auto;
-  text-align: center;
-  display: grid;
-  gap: 20px;
-}
-.statement h2 { margin-block: 4px 6px; }
+/* The two loud ones. */
+.band-deep { background: var(--deep); color: var(--on-deep); }
+.band-deep .lead, .band-deep p { color: var(--on-deep-muted); }
+.band-deep .eyebrow { color: var(--on-deep-muted); }
+.band-deep .eyebrow::before { background: var(--mint); }
+
+.band-mint { background: var(--mint); color: var(--deep); }
+.band-mint .lead, .band-mint p { color: rgba(5, 51, 41, 0.76); }
+.band-mint .eyebrow { color: rgba(5, 51, 41, 0.72); }
+.band-mint .eyebrow::before { background: var(--deep); }
+
+/* A curved lip where a coloured band meets the page, so the colour arrives
+   as a shape rather than as a ruled line across the screen. */
+.band-round { border-radius: var(--r-xl); margin-inline: var(--gutter); }
+
+.head { max-width: 780px; margin: 0 auto; text-align: center; }
+.head h2 { margin-top: 16px; }
+.head .lead { margin-top: 22px; }
+
+.statement { max-width: 860px; margin: 0 auto; text-align: center; display: grid; gap: 22px; }
+.statement h2 { margin-block: 6px 8px; }
 
 /* -------------------------------------------------------------- shots -- */
 .shot {
-  margin: 0;
-  border-radius: var(--r-card);
-  overflow: hidden;
-  background: var(--canvas);
-  border: 1px solid var(--grid);
-  box-shadow: var(--shadow-hover);
+  margin: 0; border-radius: var(--r-lg); overflow: hidden;
+  background: var(--surface); border: 1px solid var(--line-soft);
+  box-shadow: var(--shadow);
 }
 .shot img { width: 100%; height: auto; }
-
 .shot-wide { aspect-ratio: 1360 / 850; }
 .shot-wide img { height: 100%; object-fit: cover; object-position: top left; }
 
 .hero-shot {
-  margin-top: clamp(52px, 6vw, 84px);
-  border-radius: clamp(var(--r-card), 2vw, 28px);
-  box-shadow: var(--shadow-float);
+  border-radius: clamp(var(--r-lg), 2.4vw, 38px);
+  box-shadow: var(--shadow-lg);
+  border-color: transparent;
 }
 
 .shot-phone {
-  width: min(300px, 100%);
-  margin-inline: auto;
-  border-radius: 30px;
-  border-color: var(--control-pressed);
-  box-shadow: var(--shadow-float);
+  width: min(300px, 100%); margin-inline: auto;
+  border-radius: 34px; border-color: var(--line);
+  box-shadow: var(--shadow-lg);
   aspect-ratio: 390 / 800;
 }
 .shot-phone img { height: 100%; object-fit: cover; object-position: top center; }
 
-/* -------------------------------------------------------------- grids -- */
+/* -------------------------------------------------------------- cards -- */
 .grid-3 {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: clamp(20px, 2.4vw, 32px);
 }
-.cards { margin-top: clamp(44px, 5vw, 68px); }
+.cards { margin-top: clamp(48px, 5.5vw, 76px); }
 
-.card { display: grid; gap: 14px; align-content: start; }
-.card .shot { margin-bottom: 6px; }
+.card { display: grid; gap: 15px; align-content: start; }
+.card .shot { margin-bottom: 8px; }
 .card p { color: var(--muted); font-size: 16px; }
 
-/* The product list. Onboard numbers its capabilities 01–06; so does this. */
-.numbered { margin-top: clamp(44px, 5vw, 68px); }
+/* The product list. Onboard numbers its capabilities 01–06; so does this.
+   Each card carries a differently tinted chip, which is where most of the
+   page's colour lives — six small blocks rather than one big one. */
+.numbered { margin-top: clamp(48px, 5.5vw, 76px); }
 .ncard {
-  display: grid;
-  gap: 12px;
-  align-content: start;
-  padding: clamp(24px, 2.4vw, 32px);
-  background: var(--surface);
-  border: 1px solid var(--grid);
-  border-radius: var(--r-card);
-  transition: box-shadow var(--t-base) var(--ease), transform var(--t-base) var(--ease);
+  position: relative; display: grid; gap: 13px; align-content: start;
+  padding: clamp(26px, 2.6vw, 34px);
+  background: var(--surface); border: 1px solid var(--line-soft);
+  border-radius: var(--r-lg); box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--t-base) var(--ease-out), transform var(--t-base) var(--ease-out);
 }
-.ncard:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+.ncard:hover { box-shadow: var(--shadow-lg); transform: translateY(-4px); }
 .ncard .num {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  color: var(--subtle);
+  position: absolute; top: clamp(26px, 2.6vw, 34px); right: clamp(26px, 2.6vw, 34px);
+  font-size: 13px; font-weight: 600; letter-spacing: 0.1em; color: var(--placeholder);
 }
 .ncard .ic {
-  width: 42px;
-  height: 42px;
-  display: grid;
-  place-items: center;
-  border-radius: 12px;
-  background: var(--tint-brand);
-  color: var(--accent);
-  margin-bottom: 2px;
+  width: 52px; height: 52px; display: grid; place-items: center;
+  border-radius: var(--r-sm); margin-bottom: 4px;
+  background: var(--tint-brand); color: var(--positive);
 }
 .ncard .ic svg {
-  width: 21px;
-  height: 21px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.6;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+  width: 24px; height: 24px; fill: none; stroke: currentColor;
+  stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
 }
+/* Six chips, cycling the approved tints. The ink on each is the deep green,
+   which clears 4.5 on every one of them. */
+.ncard:nth-child(6n + 1) .ic { background: var(--tint-mint); color: var(--positive); }
+.ncard:nth-child(6n + 2) .ic { background: var(--tint-cream); color: #8a6a00; }
+.ncard:nth-child(6n + 3) .ic { background: var(--tint-peach); color: #c2410c; }
+.ncard:nth-child(6n + 4) .ic { background: var(--tint-brand); color: var(--ink); }
+.ncard:nth-child(6n + 5) .ic { background: var(--tint-mint); color: var(--positive); }
+.ncard:nth-child(6n + 6) .ic { background: var(--tint-cream); color: #8a6a00; }
+
 .ncard p:not(.num) { color: var(--muted); font-size: 16px; }
-.ncard .link-arrow { margin-top: 6px; }
+.ncard .link-arrow { margin-top: 8px; }
 
 /* -------------------------------------------------------------- split -- */
 .split {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 0.78fr);
-  gap: clamp(40px, 6vw, 88px);
-  align-items: center;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr);
+  gap: clamp(40px, 6vw, 92px); align-items: center;
 }
-.split-text h2 { margin-top: 14px; }
-.split-text > .lead { margin-top: 20px; }
-.points { display: grid; gap: 26px; margin-top: clamp(32px, 3.4vw, 44px); }
-.point { display: grid; gap: 8px; }
+.split-text h2 { margin-top: 16px; }
+.split-text > .lead { margin-top: 22px; }
+.points { display: grid; gap: 28px; margin-top: clamp(34px, 3.6vw, 46px); }
+.point { display: grid; gap: 9px; padding-left: 22px; position: relative; }
+/* A short sand rule beside each point. Sand as an accent, never a ground. */
+.point::before {
+  content: ''; position: absolute; left: 0; top: 6px; bottom: 6px;
+  width: 3px; border-radius: 2px; background: var(--sand);
+}
 .point p { color: var(--muted); font-size: 16px; }
 
 /* --------------------------------------------------------- phone row -- */
 .phone-row {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(20px, 3vw, 44px);
-  margin-top: clamp(48px, 5.5vw, 76px);
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(20px, 3vw, 46px);
+  margin-top: clamp(52px, 6vw, 82px);
 }
-/* The middle phone sits a little proud of the other two, the way a set of
-   three reads better when it has a centre. */
-.phone-row .shot-phone:nth-child(2) { transform: translateY(-22px); }
+.phone-row .shot-phone:nth-child(2) { transform: translateY(-26px); }
 
 /* -------------------------------------------------------------- steps -- */
 .steps {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(28px, 3.4vw, 48px);
-  margin-top: clamp(44px, 5vw, 68px);
-  counter-reset: step;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(30px, 3.6vw, 52px);
+  margin-top: clamp(48px, 5.5vw, 76px);
 }
-.step { display: grid; gap: 10px; align-content: start; text-align: center; }
-.step .shot { margin-bottom: 20px; }
+.step { display: grid; gap: 11px; align-content: start; text-align: center; }
+.step .shot { margin-bottom: 24px; }
 .step .num {
-  width: 34px;
-  height: 34px;
-  margin-inline: auto;
-  display: grid;
-  place-items: center;
-  border-radius: var(--r-pill);
-  background: var(--inverse);
-  color: var(--on-inverse);
-  font-size: 15px;
-  font-weight: 600;
+  width: 38px; height: 38px; margin-inline: auto; display: grid; place-items: center;
+  border-radius: var(--r-pill); background: var(--mint); color: var(--deep);
+  font-size: 16px; font-weight: 600;
 }
 .step p:not(.num) { color: var(--muted); font-size: 16px; }
 
 /* ---------------------------------------------------------------- faq -- */
-.faq { margin-top: clamp(40px, 4.5vw, 60px); border-top: 1px solid var(--grid); }
-
-.faq details { border-bottom: 1px solid var(--grid); }
-
+.faq { margin-top: clamp(44px, 5vw, 64px); display: grid; gap: 12px; }
+.faq details {
+  background: var(--surface); border: 1px solid var(--line-soft);
+  border-radius: var(--r-md); box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--t-base) var(--ease-out);
+}
+.faq details[open] { box-shadow: var(--shadow); }
 .faq summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 24px 4px;
-  cursor: pointer;
-  list-style: none;
-  font-size: clamp(17px, 1.5vw, 19px);
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  transition: color var(--t-base) var(--ease);
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  padding: 24px 26px; cursor: pointer; list-style: none;
+  font-size: clamp(17px, 1.5vw, 19px); font-weight: 600; letter-spacing: -0.022em;
+  transition: color var(--t-base) var(--ease-out);
 }
 .faq summary::-webkit-details-marker { display: none; }
-.faq summary:hover { color: var(--accent); }
+.faq summary:hover { color: var(--positive); }
 
-/* A plus that becomes a minus. Two bars, one of which turns. */
 .plus {
-  position: relative;
-  flex: none;
-  width: 18px;
-  height: 18px;
+  position: relative; flex: none; width: 30px; height: 30px;
+  border-radius: 50%; background: var(--tint-mint);
+  transition: background var(--t-base) var(--ease-out), transform var(--t-base) var(--ease-out);
 }
-.plus::before,
-.plus::after {
-  content: '';
-  position: absolute;
-  inset: 50% 0 auto 0;
-  height: 1.7px;
-  border-radius: 2px;
-  background: currentColor;
+details[open] .plus { background: var(--mint); transform: rotate(180deg); }
+.plus::before, .plus::after {
+  content: ''; position: absolute; inset: 50% 9px auto 9px; height: 1.9px;
+  border-radius: 2px; background: var(--deep);
   transform: translateY(-50%);
-  transition: transform var(--t-base) var(--ease), opacity var(--t-base) var(--ease);
+  transition: transform var(--t-base) var(--ease-out), opacity var(--t-base) var(--ease-out);
 }
 .plus::after { transform: translateY(-50%) rotate(90deg); }
 details[open] .plus::after { transform: translateY(-50%) rotate(0deg); opacity: 0; }
 
-.answer {
-  padding: 0 4px 26px;
-  max-width: 68ch;
-}
+.answer { padding: 0 26px 26px; max-width: 70ch; }
 .answer p { color: var(--muted); font-size: 16.5px; }
 
 /* ------------------------------------------------------------ closing -- */
-/* --sand is the product's own hero surface, so the last thing on the page is
-   still a Tokkenly colour rather than a marketing one. */
 .closing {
   margin-block: var(--section-y) 0;
-  padding-block: clamp(72px, 8.5vw, 124px);
-  background: var(--sand);
-  color: var(--on-inverse);
+  padding-block: clamp(84px, 9vw, 136px);
+  background: var(--mint); color: var(--deep);
+  position: relative; overflow: hidden;
 }
-.closing-in { max-width: 740px; margin: 0 auto; text-align: center; }
-.closing .lead { margin-top: 20px; color: rgba(247, 247, 245, 0.84); }
+/* The dot field again, in the ink, so the loudest block on the page still has
+   the product's texture in it. */
+.closing::after {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background-image: radial-gradient(circle, rgba(5, 51, 41, 0.14) 1px, transparent 1px);
+  background-size: 22px 22px;
+  -webkit-mask-image: radial-gradient(70% 70% at 50% 50%, transparent 30%, #000);
+  mask-image: radial-gradient(70% 70% at 50% 50%, transparent 30%, #000);
+}
+.closing-in { max-width: 780px; margin: 0 auto; text-align: center; }
+.closing .lead { margin-top: 22px; color: rgba(5, 51, 41, 0.76); }
 
 /* --------------------------------------------------------------- foot -- */
 .foot {
-  padding-block: clamp(56px, 6vw, 84px) 40px;
-  background: var(--surface);
-  border-top: 1px solid var(--grid);
+  padding-block: clamp(60px, 6.5vw, 92px) 42px;
+  background: var(--deep); color: var(--on-deep);
 }
+.foot .brand-mark { background: var(--mint); color: var(--deep); }
 .foot-top {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 2.1fr);
-  gap: clamp(40px, 5vw, 72px);
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2.1fr);
+  gap: clamp(40px, 5vw, 76px);
 }
-.foot-brand p {
-  margin-top: 14px;
-  color: var(--muted);
-  font-size: 16px;
-  max-width: 26ch;
-}
+.foot-brand p { margin-top: 16px; color: var(--on-deep-muted); font-size: 16px; max-width: 26ch; }
 
-.foot-cols {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 32px 24px;
-}
-.foot-col { display: grid; gap: 10px; align-content: start; }
+.foot-cols { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 34px 24px; }
+.foot-col { display: grid; gap: 11px; align-content: start; }
 .foot-head {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--subtle);
-  margin-bottom: 2px;
+  font-size: 12px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--mint); margin-bottom: 3px;
 }
 .foot-col a {
-  font-size: 15.5px;
-  color: var(--muted);
-  transition: color var(--t-fast) var(--ease);
+  font-size: 15.5px; color: var(--on-deep-muted);
+  transition: color var(--t-fast) var(--ease-out);
 }
-.foot-col a:hover { color: var(--ink); }
+.foot-col a:hover { color: var(--on-deep); }
 
 .risk {
-  margin-top: clamp(48px, 5vw, 72px);
-  padding-top: 26px;
-  border-top: 1px solid var(--grid);
-  color: var(--subtle);
-  font-size: 14px;
+  margin-top: clamp(50px, 5vw, 76px); padding-top: 28px;
+  border-top: 1px solid var(--line-deep);
+  color: var(--on-deep-muted); font-size: 14px;
 }
 
-/* ------------------------------------------------------------- reveal -- */
+/* ------------------------------------------------------------- motion -- */
+/* Onboard's numbers: 50px over 1s on a reveal. The old 18px over 620ms was
+   below the threshold at which anything reads as arriving. */
 .reveal {
   opacity: 0;
-  transform: translateY(18px);
-  transition: opacity 620ms var(--ease), transform 620ms var(--ease);
+  transform: translateY(50px);
+  transition: opacity 1s var(--ease), transform 1s var(--ease);
+  will-change: opacity, transform;
 }
 .reveal.in { opacity: 1; transform: none; }
+
+/* The hero animates on load rather than on scroll, because it is already in
+   view: 100px over 1.4s, staggered down the six elements. */
+@keyframes heroIntro {
+  from { opacity: 0; transform: translateY(100px); }
+  to { opacity: 1; transform: none; }
+}
+.hero-intro {
+  animation: heroIntro 1.4s var(--ease) both;
+  animation-delay: var(--hero-d, 0s);
+  will-change: opacity, transform;
+}
 
 /* ------------------------------------------------------------ responsive */
 @media (max-width: 1040px) {
   .nav-links { display: none; }
   .burger { display: grid; }
-  .split { grid-template-columns: minmax(0, 1fr); gap: 44px; }
+  .split { grid-template-columns: minmax(0, 1fr); gap: 48px; }
   .split-text { order: 1; }
   .foot-top { grid-template-columns: minmax(0, 1fr); }
 }
@@ -701,10 +613,11 @@ details[open] .plus::after { transform: translateY(-50%) rotate(0deg); opacity: 
   .steps { grid-template-columns: minmax(0, 1fr); max-width: 420px; margin-inline: auto; }
   .phone-row { gap: 20px; }
   .phone-row .shot-phone:nth-child(2) { transform: none; }
+  .band-round { margin-inline: 16px; }
 }
 
 @media (max-width: 640px) {
-  :root { --gutter: 20px; --nav-h: 62px; }
+  :root { --gutter: 20px; --nav-h: 64px; }
   body { font-size: 16px; }
   .grid-3 { grid-template-columns: minmax(0, 1fr); }
   .cards .card { max-width: 480px; margin-inline: auto; width: 100%; }
@@ -714,22 +627,18 @@ details[open] .plus::after { transform: translateY(-50%) rotate(0deg); opacity: 
   .phone-row .shot-phone { width: 100%; }
   .phone-row .shot-phone:last-child { grid-column: 1 / -1; width: min(260px, 100%); }
   .foot-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  /* The calls to action go full width. The one in the bar does not — it has a
-     burger beside it and a logo opposite, and a button that fills the row
-     pushes both off the screen. */
   .cta-row { gap: 12px; }
-  .cta-row .btn { height: 50px; width: 100%; }
+  .cta-row .btn { height: 54px; width: 100%; }
   .cta-row .link-arrow { margin-inline: auto; }
-  .hero-text .cta-row,
-  .cta-row.centred { flex-direction: column; align-items: stretch; }
+  .hero-text .cta-row, .cta-row.centred { flex-direction: column; align-items: stretch; }
+  .band-round { margin-inline: 12px; border-radius: var(--r-lg); }
+  .faq summary { padding: 20px; gap: 16px; }
+  .answer { padding: 0 20px 22px; }
 
   /* The hero picture becomes the phone it is showing. */
   .hero-shot {
-    aspect-ratio: 390 / 800;
-    width: min(290px, 100%);
-    margin-inline: auto;
-    border-radius: 30px;
-    border-color: var(--control-pressed);
+    aspect-ratio: 390 / 800; width: min(290px, 100%); margin-inline: auto;
+    border-radius: 34px; border-color: var(--line);
   }
   .hero-shot img { height: 100%; object-fit: cover; object-position: top center; }
 }
@@ -741,4 +650,5 @@ details[open] .plus::after { transform: translateY(-50%) rotate(0deg); opacity: 
     transition-duration: 0.01ms !important;
   }
   .reveal { opacity: 1; transform: none; }
+  .hero-intro { animation: none; opacity: 1; transform: none; }
 }
