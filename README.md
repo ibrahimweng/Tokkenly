@@ -6,6 +6,7 @@ bank.
 
 ```
 app/         the product: Vite + TypeScript, no framework
+site/        the marketing site: one static page, no build
 design.md    the design record: every screen, every figure, 51 rules
 CLAUDE.md    project memory
 vercel.json  deployment
@@ -32,6 +33,12 @@ works and the repository carries the config for both:
 |---|---|---|
 | repository root (default) | `vercel.json` | `cd app && npm run build` → `app/dist` |
 | `app` | `app/vercel.json` | Vite detected → `dist` |
+
+The marketing site in `site/` is a **second Vercel project** on this same
+repository, with Root Directory set to `site` — no build command, no install,
+the folder served as it stands. Two projects, two addresses, one branch, and
+neither replaces the other: they are different directories and cannot collide.
+See `site/README.md`.
 
 Two details that matter. Both install commands set
 `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1`, because Playwright is a dev dependency

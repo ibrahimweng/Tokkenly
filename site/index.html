@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tokkenly — Invest close to home. And beyond.</title>
+    <meta
+      name="description"
+      content="Access local and US markets through tokenized stocks with Tokkenly. Invest for yourself, gift an investment to someone else, and keep your everyday money close, with naira and stablecoins in the same app."
+    />
+    <link rel="icon" href="./favicon.svg" />
+    <meta property="og:title" content="Tokkenly — Invest close to home. And beyond." />
+    <meta
+      property="og:description"
+      content="Tokenized stocks, alongside the tools to receive, send, pay bills, earn, borrow, and convert."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="./img/home.webp" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preload" href="./fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <!-- ------------------------------------------------------------ nav -- -->
+    <header class="nav" id="nav">
+      <div class="nav-in">
+        <a class="brand" href="#top" aria-label="Tokkenly, home">
+          <span class="brand-mark" aria-hidden="true">T</span>
+          <span class="brand-word">Tokkenly</span>
+        </a>
+
+        <nav class="nav-links" aria-label="Primary">
+          <div class="drop">
+            <button class="drop-btn" type="button" aria-expanded="false" aria-controls="products-menu">
+              Products
+              <svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" /></svg>
+            </button>
+            <div class="drop-menu" id="products-menu" hidden>
+              <a href="#tokenized-stocks"><span>Tokenized Stocks</span></a>
+              <a href="#product-receive"><span>Receive</span></a>
+              <a href="#product-send"><span>Send</span></a>
+              <a href="#product-pay-bills"><span>Pay bills</span></a>
+              <a href="#product-earn"><span>Earn</span></a>
+              <a href="#product-borrow"><span>Borrow</span></a>
+              <a href="#product-convert"><span>Convert</span></a>
+            </div>
+          </div>
+          <a href="#why">About us</a>
+          <a href="#" data-soon>Blog</a>
+          <a href="#faq">Help</a>
+        </nav>
+
+        <div class="nav-end">
+          <a class="btn btn-dark btn-sm" href="#get-started">Sign up</a>
+          <button class="burger" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Menu">
+            <span></span><span></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="mobile-menu" id="mobile-menu" hidden>
+        <p class="mm-head">Products</p>
+        <a href="#tokenized-stocks">Tokenized Stocks</a>
+        <a href="#product-receive">Receive</a>
+        <a href="#product-send">Send</a>
+        <a href="#product-pay-bills">Pay bills</a>
+        <a href="#product-earn">Earn</a>
+        <a href="#product-borrow">Borrow</a>
+        <a href="#product-convert">Convert</a>
+        <p class="mm-head">Company</p>
+        <a href="#why">About us</a>
+        <a href="#" data-soon>Blog</a>
+        <a href="#faq">Help</a>
+        <a class="btn btn-dark mm-cta" href="#get-started">Sign up</a>
+      </div>
+    </header>
+
+    <main id="main">
+      <span id="top"></span>
+
+      <!-- -------------------------------------------------------- hero -- -->
+      <section class="hero">
+        <div class="wrap">
+          <div class="hero-text reveal">
+            <h1>Invest close to home. And beyond.</h1>
+            <p class="lead">
+              Access local and US markets through tokenized stocks with Tokkenly. Invest for
+              yourself, gift an investment to someone else, and keep your everyday money close, with
+              naira and stablecoins in the same app.
+            </p>
+            <div class="cta-row">
+              <a class="btn btn-dark" href="#get-started">Get Started</a>
+              <a class="btn btn-ghost" href="#tokenized-stocks">Explore</a>
+            </div>
+          </div>
+
+          <figure class="shot shot-wide hero-shot reveal">
+            <picture>
+              <!-- A 1360-wide desktop screen scaled into a 300px column is a
+                   picture of nothing, so the phone gets the phone. -->
+              <source media="(max-width: 640px)" srcset="./img/p-home.webp" />
+              <img
+                src="./img/home.webp"
+                width="2040"
+                height="1275"
+                alt="The Tokkenly home screen, showing a total portfolio figure with Invest, Wallet, and Borrow &amp; Lend alongside recent activity."
+                fetchpriority="high"
+              />
+            </picture>
+          </figure>
+        </div>
+      </section>
+
+      <!-- --------------------------------------------- tokenized stocks -- -->
+      <section class="band" id="tokenized-stocks">
+        <div class="wrap">
+          <div class="head reveal">
+            <p class="eyebrow">Tokenized Stocks</p>
+            <h2>Companies you know. Markets to explore.</h2>
+            <p class="lead">
+              Explore tokenized stocks linked to companies listed in Nigeria and the US, all through
+              one app.
+            </p>
+          </div>
+
+          <div class="grid-3 cards">
+            <article class="card reveal">
+              <figure class="shot shot-wide">
+                <img
+                  src="./img/invest.webp"
+                  width="2040"
+                  height="1275"
+                  loading="lazy"
+                  alt="The Invest screen, listing tokenized stocks available to browse."
+                />
+              </figure>
+              <h3>Discover your next investment</h3>
+              <p>Explore available tokenized stocks linked to companies in local and US markets.</p>
+            </article>
+
+            <article class="card reveal">
+              <figure class="shot shot-wide">
+                <img
+                  src="./img/stock.webp"
+                  width="2040"
+                  height="1275"
+                  loading="lazy"
+                  alt="A single tokenized stock, with its price history and product details."
+                />
+              </figure>
+              <h3>Invest with understanding</h3>
+              <p>
+                Get to know the product behind each tokenized stock, including its terms and risks,
+                before you invest.
+              </p>
+            </article>
+
+            <article class="card reveal">
+              <figure class="shot shot-wide">
+                <img
+                  src="./img/wallet.webp"
+                  width="2040"
+                  height="1275"
+                  loading="lazy"
+                  alt="The Wallet screen, showing dollars and naira in one place."
+                />
+              </figure>
+              <h3>Keep the rest of your money close</h3>
+              <p>
+                Bring investing together with naira, stablecoins, and the tools you use to move
+                money every day.
+              </p>
+            </article>
+          </div>
+
+          <div class="cta-row centred reveal">
+            <a class="btn btn-dark" href="#get-started">Sign up</a>
+            <a class="link-arrow" href="#tokenized-stocks">
+              Explore Tokenized Stocks
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ------------------------------------------ gifting and rewards -- -->
+      <section class="band" id="gifting">
+        <div class="wrap">
+          <div class="split">
+            <div class="split-text reveal">
+              <p class="eyebrow">Gifting and Rewards</p>
+              <h2>Give more than a gift. Give a start.</h2>
+              <p class="lead">
+                Celebrate someone you love or thank the people who support your business with
+                tokenized stocks. Turn gifts and rewards into a starting point for investing.
+              </p>
+
+              <div class="points">
+                <div class="point">
+                  <h3>For friends, family, and future milestones</h3>
+                  <p>
+                    Gift an investment for a birthday, graduation, or just because. Set a future
+                    unlock date to mark a milestone and give someone something to look forward to.
+                  </p>
+                </div>
+                <div class="point">
+                  <h3>Turn loyalty into investment</h3>
+                  <p>
+                    Reward customers with tokenized stocks through referrals, cashback, and loyalty
+                    programs. Make every reward an opportunity to begin or build an investment
+                    portfolio.
+                  </p>
+                </div>
+              </div>
+
+              <div class="cta-row">
+                <a class="btn btn-dark" href="#get-started">Explore Gifting and Rewards</a>
+              </div>
+            </div>
+
+            <figure class="shot shot-phone reveal">
+              <img
+                src="./img/p-gift.webp"
+                width="780"
+                height="1600"
+                loading="lazy"
+                alt="Sending a tokenized stock to someone else from the Tokkenly app on a phone."
+              />
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <!-- ------------------------------------------------- why tokkenly -- -->
+      <section class="band tinted" id="why">
+        <div class="wrap">
+          <div class="statement reveal">
+            <p class="eyebrow">Why Tokkenly</p>
+            <h2>Come for tokenized stocks. Stay for everything else.</h2>
+            <p class="lead">
+              Your investments are part of a bigger picture. Getting paid. Supporting family. Paying
+              bills. Planning your next move.
+            </p>
+            <p class="lead">
+              Tokkenly gives tokenized stocks a home alongside your everyday money. Invest, then get
+              on with life, with the tools to receive, send, pay, earn, borrow, and convert close at
+              hand.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ----------------------------------------------------- products -- -->
+      <section class="band" id="products">
+        <div class="wrap">
+          <div class="head reveal">
+            <p class="eyebrow">Products</p>
+            <h2>Your money, free to do more.</h2>
+            <p class="lead">Beyond your investments, take care of everyday money in the same app.</p>
+          </div>
+
+          <div class="grid-3 numbered">
+            <article class="ncard reveal" id="product-receive">
+              <p class="num">01</p>
+              <span class="ic" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 4v10m0 0l-4-4m4 4l4-4M4 17v2a1 1 0 001 1h14a1 1 0 001-1v-2" /></svg>
+              </span>
+              <h3>Receive: Make room for money coming in.</h3>
+              <p>
+                Get paid or receive money from people who matter to you. Keep it in Tokkenly, ready
+                for your next move.
+              </p>
+              <a class="link-arrow" href="#money-movement">
+                Explore Receive
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg>
+              </a>
+            </article>
+
+            <article class="ncard reveal" id="product-send">
+              <p class="num">02</p>
+              <span class="ic" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 20V10m0 0l-4 4m4-4l4 4M4 7V5a1 1 0 011-1h14a1 1 0 011 1v2" /></svg>
+              </span>
+              <h3>Send: For the people and plans that matter.</h3>
+              <p>
+                Support someone at home, settle up with a friend, or move money where you need it.
+                Send from the same app you use for the rest of your money.
+              </p>
+              <a class="link-arrow" href="#money-movement">
+                Explore Send
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg>
+              </a>
+            </article>
+
+            <article class="ncard reveal" id="product-pay-bills">
+              <p class="num">03</p>
+              <span class="ic" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6" /></svg>
+              </span>
+              <h3>Pay bills: Life keeps moving. Keep it connected.</h3>
+              <p>
+                Take care of your everyday bills with Tokkenly. A little less life admin. A little
+                more time for everything else.
+              </p>
+              <a class="link-arrow" href="#money-movement">
+                Explore Pay bills
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg>
+              </a>
+            </article>
+
+            <article class="ncard reveal" id="product-earn">
+              <p class="num">04</p>
+              <span class="ic" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 18V9m5 9V5m5 13v-6m5 6V8" /></svg>
+              </span>
+              <h3>Earn: Give your spare money something to do.</h3>
+              <p>
+                Put your stablecoins to work with earning opportunities in Tokkenly. Choose how much
+                to commit and review the terms before you begin.
+              </p>
+              <a class="link-arrow" href="#money-movement">
+                Explore Earn
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg>
+              </a>
+            </article>
+
+            <article class="ncard reveal" id="product-borrow">
+              <p class="num">05</p>
+              <span class="ic" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M3 12h18M7 8l-4 4 4 4M17 8l4 4-4 4" /></svg>
+              </span>
+              <h3>Borrow: A little room for your next move.</h3>
+              <p>
+                Explore borrowing options when you need extra flexibility. Review the terms and
+                repayment requirements, and choose what fits your plans.
+              </p>
+              <a class="link-arrow" href="#money-movement">
+                Explore Borrow
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg>
+              </a>
+            </article>
+
+            <article class="ncard reveal" id="product-convert">
+              <p class="num">06</p>
+              <span class="ic" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 8h13m0 0l-3.5-3.5M17 8l-3.5 3.5M20 16H7m0 0l3.5-3.5M7 16l3.5 3.5" /></svg>
+              </span>
+              <h3>Convert: Naira or stablecoins. Move between them.</h3>
+              <p>
+                Convert between naira and stablecoins as your needs change. Money for everyday life.
+                Money for what’s next.
+              </p>
+              <a class="link-arrow" href="#money-movement">
+                Explore Convert
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg>
+              </a>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ----------------------------------------------- money movement -- -->
+      <section class="band" id="money-movement">
+        <div class="wrap">
+          <div class="head reveal">
+            <p class="eyebrow">Money movement</p>
+            <h2>From getting paid to making plans.</h2>
+            <p class="lead">
+              Receive money. Convert between naira and stablecoins. Send to someone you care about
+              or withdraw to your bank account. Keep your next step close, wherever your money needs
+              to go.
+            </p>
+            <div class="cta-row centred">
+              <a class="btn btn-dark" href="#get-started">Sign up</a>
+            </div>
+          </div>
+
+          <div class="phone-row">
+            <figure class="shot shot-phone reveal">
+              <img
+                src="./img/p-receive.webp"
+                width="780"
+                height="1600"
+                loading="lazy"
+                alt="Receiving money in Tokkenly on a phone."
+              />
+            </figure>
+            <figure class="shot shot-phone reveal">
+              <img
+                src="./img/p-wallet.webp"
+                width="780"
+                height="1600"
+                loading="lazy"
+                alt="The Tokkenly wallet on a phone, showing dollars alongside what they are worth in naira."
+              />
+            </figure>
+            <figure class="shot shot-phone reveal">
+              <img
+                src="./img/p-send.webp"
+                width="780"
+                height="1600"
+                loading="lazy"
+                alt="Sending money to someone from Tokkenly on a phone."
+              />
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------------------------------------------- getting started -- -->
+      <section class="band" id="get-started">
+        <div class="wrap">
+          <div class="head reveal">
+            <p class="eyebrow">Getting started</p>
+            <h2>From curious to invested.</h2>
+          </div>
+
+          <ol class="steps">
+            <li class="step reveal">
+              <figure class="shot shot-phone">
+                <img
+                  src="./img/p-signup.webp"
+                  width="780"
+                  height="1600"
+                  loading="lazy"
+                  alt="The Tokkenly sign-up screen on a phone."
+                />
+              </figure>
+              <p class="num">1</p>
+              <h3>Create your account</h3>
+              <p>Sign up for Tokkenly and complete the required account checks.</p>
+            </li>
+            <li class="step reveal">
+              <figure class="shot shot-phone">
+                <img
+                  src="./img/p-addmoney.webp"
+                  width="780"
+                  height="1600"
+                  loading="lazy"
+                  alt="Adding money to a Tokkenly account on a phone."
+                />
+              </figure>
+              <p class="num">2</p>
+              <h3>Add money</h3>
+              <p>Fund your account using an available method.</p>
+            </li>
+            <li class="step reveal">
+              <figure class="shot shot-phone">
+                <img
+                  src="./img/p-invest.webp"
+                  width="780"
+                  height="1600"
+                  loading="lazy"
+                  alt="Browsing the tokenized stocks available in Tokkenly on a phone."
+                />
+              </figure>
+              <p class="num">3</p>
+              <h3>Explore tokenized stocks</h3>
+              <p>
+                Browse available tokenized stocks, review the product details, and choose your next
+                investment.
+              </p>
+            </li>
+          </ol>
+
+          <div class="cta-row centred reveal">
+            <a class="btn btn-dark" href="#get-started">Sign up</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------------------------------------------------------- faq -- -->
+      <section class="band" id="faq">
+        <div class="wrap wrap-narrow">
+          <div class="head reveal">
+            <p class="eyebrow">Frequently asked questions</p>
+            <h2>A few things you might be wondering.</h2>
+          </div>
+
+          <div class="faq reveal">
+            <details>
+              <summary>What is Tokkenly?<span class="plus" aria-hidden="true"></span></summary>
+              <div class="answer">
+                <p>
+                  Tokkenly is a money app that gives you access to local and US markets through
+                  tokenized stocks. Invest, share tokenized stocks through gifts and rewards, and
+                  manage everyday money with tools to receive, send, pay bills, earn, borrow, and
+                  convert between naira and stablecoins.
+                </p>
+              </div>
+            </details>
+            <details>
+              <summary>Which currencies can I use?<span class="plus" aria-hidden="true"></span></summary>
+              <div class="answer">
+                <p>
+                  Tokkenly supports naira and stablecoins. You can convert between them to suit how
+                  you want to use your money.
+                </p>
+              </div>
+            </details>
+            <details>
+              <summary>Can I withdraw to my bank account?<span class="plus" aria-hidden="true"></span></summary>
+              <div class="answer">
+                <p>
+                  Yes. Tokkenly lets you withdraw naira to your bank account. You can also convert
+                  stablecoins to naira before withdrawing.
+                </p>
+              </div>
+            </details>
+            <details>
+              <summary>Is Tokkenly only for investing?<span class="plus" aria-hidden="true"></span></summary>
+              <div class="answer">
+                <p>
+                  Tokenized stocks are our main product, but Tokkenly goes further. You can also
+                  receive and send money, pay bills, earn, borrow, and convert between naira and
+                  stablecoins.
+                </p>
+              </div>
+            </details>
+            <details>
+              <summary>How do I get started?<span class="plus" aria-hidden="true"></span></summary>
+              <div class="answer">
+                <p>
+                  Select Sign up, create your account, and complete the required checks. Add money,
+                  then explore available tokenized stocks and review their terms before investing.
+                </p>
+              </div>
+            </details>
+            <details>
+              <summary>Where can I get help?<span class="plus" aria-hidden="true"></span></summary>
+              <div class="answer">
+                <p>Visit Help for guidance on your account, transactions, and Tokkenly products.</p>
+              </div>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <!-- ----------------------------------------------- closing call to -- -->
+      <section class="closing">
+        <div class="wrap">
+          <div class="closing-in reveal">
+            <h2>Make room for your next investment.</h2>
+            <p class="lead">
+              Explore tokenized stocks with Tokkenly and bring the rest of your money along.
+            </p>
+            <div class="cta-row centred">
+              <a class="btn btn-sand" href="#get-started">Sign up</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- --------------------------------------------------------- footer -- -->
+    <footer class="foot">
+      <div class="wrap">
+        <div class="foot-top">
+          <div class="foot-brand">
+            <a class="brand" href="#top" aria-label="Tokkenly, home">
+              <span class="brand-mark" aria-hidden="true">T</span>
+              <span class="brand-word">Tokkenly</span>
+            </a>
+            <p>Your money, free to do more.</p>
+          </div>
+
+          <nav class="foot-cols" aria-label="Footer">
+            <div class="foot-col">
+              <p class="foot-head">Products</p>
+              <a href="#tokenized-stocks">Tokenized Stocks</a>
+              <a href="#product-receive">Receive</a>
+              <a href="#product-send">Send</a>
+              <a href="#product-pay-bills">Pay bills</a>
+              <a href="#product-earn">Earn</a>
+              <a href="#product-borrow">Borrow</a>
+              <a href="#product-convert">Convert</a>
+            </div>
+            <div class="foot-col">
+              <p class="foot-head">Company</p>
+              <a href="#why">About us</a>
+              <a href="#" data-soon>Blog</a>
+            </div>
+            <div class="foot-col">
+              <p class="foot-head">Support</p>
+              <a href="#faq">Help</a>
+            </div>
+            <div class="foot-col">
+              <p class="foot-head">Legal</p>
+              <a href="#" data-soon>Terms of service</a>
+              <a href="#" data-soon>Privacy policy</a>
+            </div>
+          </nav>
+        </div>
+
+        <p class="risk">Investments and earning products involve risk. Returns are not guaranteed.</p>
+      </div>
+    </footer>
+
+    <script src="./site.js"></script>
+  </body>
+</html>
