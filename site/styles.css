@@ -423,14 +423,17 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 .globe:active { cursor: grabbing; }
 .globe:focus-visible { outline: 2px solid var(--mint); outline-offset: 12px; border-radius: 50%; }
 
-/* The render carries its own pink backdrop — the dot mesh means it cannot be
-   cut out without eating the sphere — so the rectangle is faded into the wash
-   instead. The mask is wide enough that the fade lands outside the sphere. */
+/* The source PNG is a clean cut-out, so the sphere sits on the wash with
+   nothing behind it and needs no mask.
+
+   The frame crops it: a 77.1 x 75.0 per cent window on the source, centred,
+   which is how the sphere fills its box rather than floating in the empty
+   margin the render has around it. Contain plus that scale puts it at the
+   same size, and no clip is needed because everything outside the window is
+   transparent anyway. */
 .globe-img {
   position: absolute; inset: 0; width: 100%; height: 100%;
-  object-fit: contain; z-index: 2;
-  -webkit-mask-image: radial-gradient(closest-side, #000 72%, transparent 99%);
-  mask-image: radial-gradient(closest-side, #000 72%, transparent 99%);
+  object-fit: contain; transform: scale(1.333); z-index: 2;
 }
 
 /* Cards are placed by JS: left/top in per cent of this box, plus a scale and
@@ -464,14 +467,14 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 .sticker-gun   { left:  3.750%; top: min(551px, 28.698vw); width: 18.385%; }
 /* image 24 is FIT inside a 511 square, so the box is square and the art
    letterboxes inside it. Its own backdrop is faded out at the edges. */
+/* FIT inside a 511 square in the frame, so contain in a square box here.
+   Figma reports a rotated node's axis-aligned bounds, which for a 511 square
+   turned 14 degrees is 620 — so its top-left is 54 up and left of the box's
+   own corner. Using the reported figure directly puts the sticker 54px out. */
 .sticker-notes {
-  left: 80.469%; top: min(789px, 41.094vw); width: 26.615%;
+  left: 83.307%; top: min(843px, 43.932vw); width: 26.615%;
   aspect-ratio: 1; object-fit: contain;
   transform: rotate(14.05deg);
-  /* The art letterboxes to roughly 60% of the square, so the fade is sized to
-     the art rather than to the box — a mask cut to the box would eat it. */
-  -webkit-mask-image: radial-gradient(36% 56% at 50% 50%, #000 72%, transparent 100%);
-  mask-image: radial-gradient(36% 56% at 50% 50%, #000 72%, transparent 100%);
 }
 
 /* ---------------------------------------------------- tokenized stocks -- */
@@ -519,11 +522,12 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 }
 
 .ts-slot { display: block; width: 100%; flex: 1 1 auto; min-height: 0; object-fit: contain; }
-/* The notes run past the card on two sides; the card's own clip cuts them.
-   The export carries the rotation already, so none is applied here. */
+/* image 23 in the frame: a 643 square at the card's own -75,124, turned 4.77.
+   The source is a cut-out, so the card's clip is the only thing trimming it. */
 .ts-bleed {
-  position: absolute; left: -8%; top: 30%; width: 158%; height: auto;
-  pointer-events: none; z-index: 1;
+  position: absolute; left: -15.5%; top: 20.6%; width: 132.6%;
+  aspect-ratio: 1; object-fit: contain;
+  transform: rotate(4.77deg); pointer-events: none; z-index: 1;
 }
 
 /* ------------------------------------------------- gifting and rewards -- */
@@ -649,14 +653,18 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 .pr-narrow .pr-link { margin-top: 0; }
 .pr-arrow { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 
-/* The stickers sit on the card's own green, so the export keeps its baked
-   backdrop — matting it would eat the naira sign, which is the same green. */
-/* The exports carry their own rotation and their own padding, so these are
-   placed to land the art where the frame lands it rather than derived from
-   the node box — the two do not agree once a rotated node is exported. */
-.pr-sticker { position: absolute; pointer-events: none; height: auto; }
-.pr-sticker-notes { left: 2%; top: 13%; width: 108%; }
-.pr-sticker-conv { left: -6%; top: 44%; width: 112%; }
+/* Both are cut-outs, so each sits on the frame's own box for that node and is
+   turned by the frame's own angle. */
+.pr-sticker { position: absolute; pointer-events: none; object-fit: contain; }
+.pr-sticker-notes {
+  left: -10%; top: 22.6%; width: 108.6%; aspect-ratio: 1;
+  transform: rotate(14.05deg);
+}
+.pr-sticker-conv {
+  left: -9.4%; top: 51.1%; width: 108.8%; aspect-ratio: 544 / 276;
+  object-fit: cover;
+  transform: rotate(4.53deg);
+}
 
 /* ---- the pop-ups ------------------------------------------------------ */
 .popup {
