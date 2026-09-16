@@ -89,6 +89,13 @@ export const FLOWS = {
     ...S('Send \u00b7 Someone on Tokkenly', '/send/tokkenly'),
     ...S('Send \u00b7 A bank account', '/send/bank'),
     ...S('Send \u00b7 USDC on Base', '/send/base'),
+    // Three of the six pairs, which is the three the palette lists by name.
+    // The other three are the same screen with the pair the other way round,
+    // and a design file holding one screen six times is a file nobody can find
+    // anything in. One that crosses currencies each way, and one that does not.
+    ...S('Convert \u00b7 USDC to naira', '/convert/usdc/ngn'),
+    ...S('Convert \u00b7 Naira to USDC', '/convert/ngn/usdc'),
+    ...S('Convert \u00b7 USDT to USDC', '/convert/usdt/usdc'),
   ],
   '06 \u00b7 Borrow & Lend': [
     ...S('Borrow & Lend', '/grow'),

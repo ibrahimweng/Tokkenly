@@ -9579,6 +9579,21 @@ pair and the screen was also naming itself. Two things both thinking it is
 their job to say where you are is the same fault as two lists that have to be
 kept in step, and it has the same fix: one of them stops.
 
-**What is now behind.** The Figma file holds 172 frames exported before any of
-this existed, so page 05 is a flow the product no longer has. Re-exporting is
-one run of the reader and a rebuild of that page; it has not been done here.
+**The Figma file, caught up.** Flows 05, 08 and 09 were re-exported and their
+pages rebuilt: six new Convert frames, and nine screens that changed without
+being about Convert at all — the four that carry the doors row, the six
+Activity screens whose filter row gained a Conversions chip, and the two
+`Everything` frames that index the product. Twelve build calls, every one
+returning no missing parts, and a verify pass on each page: 26, 14 and 34
+frames, nothing missing, nothing extra, no unresolved components. The file now
+holds 178 frames.
+
+Two things the mirror still does not carry, neither of them new and both worth
+saying once. A composer's amount box comes through empty, because the reader
+walks the DOM and an `<input>` has no text node to read; every composer in the
+file has looked like that since 11g.62. And the naira sign drops out, because
+Figma's Geist has no ₦ — so a rate reads "1 dollar = 1,500" there and
+"1 dollar = ₦1,500" in the product. Neither is a drift between the design
+and the build; both are the export losing something on the way across. They are
+most visible on the Convert screens because naira is half of what those screens
+are about.
