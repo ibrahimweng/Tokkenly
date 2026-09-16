@@ -77,35 +77,63 @@
       <span id="top"></span>
 
       <!-- -------------------------------------------------------- hero -- -->
-      <section class="hero">
+      <!-- The wash is its own layer inside a clipped .hero so the gradient
+           stops dead at the section edge and never leaks into the band below.
+           The globe and its orbit sit on a 1920-wide coordinate stage: every
+           position below is the Figma x/y over 1920, so the composition holds
+           its shape at any desktop width. -->
+      <section class="hero" id="hero">
+        <div class="hero-wash" aria-hidden="true"></div>
+
         <div class="wrap hero-in">
-          <div class="hero-text">
-            <h1 class="hl hero-intro" style="--hero-d: 0s">
-              <span class="hl-line">Invest close to home.</span>
-              <span class="hl-line hl-accent">And beyond.</span>
-            </h1>
-            <p class="lead hero-intro" style="--hero-d: 0.1s">
-              Access local and US markets through tokenized stocks with Tokkenly. Invest for
-              yourself, gift an investment to someone else, and keep your everyday money close, with
-              naira and stablecoins in the same app.
-            </p>
-            <div class="cta-row hero-intro" style="--hero-d: 0.2s">
-              <a class="btn btn-dark" href="#get-started">Get Started</a>
-              <a class="btn btn-ghost" href="#tokenized-stocks">Explore</a>
+          <h1 class="hero-hl hero-intro" style="--hero-d: 0s">
+            <span>Invest close to home.</span>
+            <span>And beyond.</span>
+          </h1>
+          <p class="lead hero-lead hero-intro" style="--hero-d: 0.1s">
+            Access local and US markets through tokenized stocks with Tokkenly. Invest for
+            yourself, gift an investment to someone else, and keep your everyday money close, with
+            naira and stablecoins in the same app.
+          </p>
+          <div class="cta-row hero-cta hero-intro" style="--hero-d: 0.2s">
+            <a class="btn btn-ink" href="#get-started">Sign up on Tokkenly</a>
+            <a class="btn btn-white" href="#tokenized-stocks">Explore</a>
+          </div>
+        </div>
+
+        <div class="hero-stage hero-intro" style="--hero-d: 0.3s">
+          <div
+            class="globe"
+            id="globe"
+            role="img"
+            aria-label="A globe with portraits of Tokkenly customers orbiting it. Drag to spin."
+            tabindex="0"
+          >
+            <img
+              class="globe-img"
+              src="./img/hero/globe.webp"
+              width="873"
+              height="849"
+              alt=""
+              fetchpriority="high"
+            />
+            <div class="orbit" id="orbit" aria-hidden="true">
+              <img class="orbit-card" src="./img/hero/orbit-1.webp" width="213" height="256" alt="" data-a="147.8" data-w="213" />
+              <img class="orbit-card" src="./img/hero/orbit-4.webp" width="169" height="256" alt="" data-a="119.2" data-w="169" />
+              <img class="orbit-card" src="./img/hero/orbit-6.webp" width="213" height="256" alt="" data-a="92.1"  data-w="213" />
+              <img class="orbit-card" src="./img/hero/orbit-3.webp" width="213" height="256" alt="" data-a="51.7"  data-w="213" />
+              <img class="orbit-card" src="./img/hero/orbit-2.webp" width="213" height="256" alt="" data-a="316.1" data-w="213" />
+              <img class="orbit-card" src="./img/hero/orbit-5.webp" width="169" height="256" alt="" data-a="5.6"   data-w="169" />
             </div>
           </div>
+        </div>
 
-          <div class="stage stage-mint hero-stage hero-intro" style="--hero-d: 0.3s">
-            <figure class="shot shot-phone">
-              <img
-                src="./img/p-home.webp"
-                width="780"
-                height="1600"
-                alt="The Tokkenly home screen, showing a total portfolio figure with Invest, Wallet, Borrow &amp; Lend and Spend alongside recent activity."
-                fetchpriority="high"
-              />
-            </figure>
-          </div>
+        <!-- Stickers hold their Figma position on the 1920 grid. Each carries
+             its own visibility class so the crowded ones drop out on phones. -->
+        <div class="stickers" aria-hidden="true">
+          <img class="sticker sticker-coin" src="./img/hero/coin.webp" width="101" height="107" alt="" />
+          <img class="sticker sticker-gun sticker-md" src="./img/hero/gun.webp" width="353" height="453" alt="" />
+          <img class="sticker sticker-notes sticker-md" src="./img/hero/notes.webp" width="511" height="511" alt="" />
         </div>
       </section>
 

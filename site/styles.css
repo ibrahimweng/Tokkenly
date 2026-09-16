@@ -206,6 +206,13 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 }
 .band-mint-tint .btn-dark:hover, .closing .btn-dark:hover { background: #07463a; }
 
+/* The hero pair, straight off the Figma frame: near-black pill on ink-light
+   text, and a plain white pill beside it. */
+.btn-ink { background: #1e1818; color: #eaeae9; }
+.btn-ink:hover { background: #2c2424; }
+.btn-white { background: #fff; color: var(--deep); box-shadow: var(--shadow-sm); }
+.btn-white:hover { background: #fff; box-shadow: var(--shadow); }
+
 .btn-ghost { background: transparent; color: var(--ink); border-color: var(--line); }
 .btn-ghost:hover { background: var(--surface); border-color: transparent; box-shadow: var(--shadow-sm); }
 
@@ -325,56 +332,121 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 .mm-cta:hover { color: var(--on-deep); }
 
 /* ---------------------------------------------------------------- hero -- */
+/* Figma frame: 1920 x 1465, under a 72px nav. Every ratio below is that
+   design's number over 1920, so the composition keeps its proportions as the
+   viewport narrows rather than being re-guessed per breakpoint.
+
+   padding-top 192, headline 96/106%, gap 30, lead 800 wide, gap 30, CTA 56
+   => 192 + 424 text + 849 stage = 1465. */
 .hero {
   position: relative;
-  padding-top: calc(var(--nav-h) + clamp(60px, 9vw, 120px));
-  padding-bottom: var(--section-y);
+  padding-top: calc(var(--nav-h) + min(192px, 10vw));
+  padding-bottom: 0;
   isolation: isolate;
-  /* The washes below are inset -20% each side so the light falls off before
-     the edge rather than stopping at it. Clipped here rather than with
-     overflow-x on the body: hiding overflow on the body makes the body the
-     scrolling box, which silently takes scroll-padding-top out of the
-     equation and lands every anchor underneath the fixed bar. */
+  /* The one job here: the wash is a child of this box and this box clips, so
+     the gradient ends exactly at the section edge. Nothing bleeds into the
+     band underneath. */
   overflow: hidden;
 }
-/* Two soft washes behind the fold — mint from the top, cream from the left —
-   so the page opens on colour rather than on paper. They are large, very low
-   in alpha, and blurred to nothing at the edges: the effect should read as
-   light in the room, not as a shape someone drew. */
-.hero::before {
-  content: ''; position: absolute; inset: -10% -20% auto -20%; height: 130%;
-  z-index: -1; pointer-events: none;
-  background:
-    radial-gradient(54% 46% at 70% 0%, rgba(43, 189, 155, 0.24), transparent 68%),
-    radial-gradient(46% 40% at 6% 12%, rgba(249, 209, 0, 0.16), transparent 72%),
-    radial-gradient(42% 38% at 94% 48%, rgba(213, 165, 120, 0.16), transparent 74%);
-}
-/* The product's own motif: a field of dots, faded out as it falls. */
-.hero::after {
-  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-  background-image: radial-gradient(circle, rgba(5, 51, 41, 0.1) 1px, transparent 1px);
-  background-size: 22px 22px;
-  -webkit-mask-image: radial-gradient(60% 50% at 50% 12%, #000, transparent 72%);
-  mask-image: radial-gradient(60% 50% at 50% 12%, #000, transparent 72%);
+
+/* The Figma fill is a radial: #c7e1ff at .205, #f8c8ff at .585, page grey at
+   1. Those three stops are kept verbatim; only the ellipse is expressed in
+   CSS terms. */
+.hero-wash {
+  position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(118% 92% at 50% -2%,
+    #c7e1ff 0%, #c7e1ff 20.5%, #f8c8ff 58.5%, #eaeae9 100%);
 }
 
-/* Text left, product right — the shape the consumer page uses. */
-.hero-in {
-  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.82fr);
-  gap: clamp(32px, 4.5vw, 72px); align-items: center;
+.hero-in { display: grid; justify-items: center; text-align: center; }
+
+.hero-hl {
+  display: grid; gap: 8px;
+  font-size: clamp(38px, 5vw, 96px);
+  line-height: 1.06; letter-spacing: -0.04em;
+  color: var(--ink); margin: 0;
 }
-.hero-text { max-width: none; text-align: left; }
-.hero-text .lead { max-width: 46ch; margin: 30px 0 0; }
-/* A tall panel with a wide screenshot at the bottom of it is mostly empty
-   colour, which is the fault the photograph slots had. The phone fills it. */
-.hero-in .hero-stage { margin-top: 0; aspect-ratio: 4 / 5; padding-inline: clamp(24px, 3vw, 48px); }
-.hero-in .hero-stage .shot-phone { width: min(300px, 78%); }
+.hero-lead {
+  max-width: min(800px, 100%);
+  margin: min(30px, 1.6vw) 0 0;
+  font-size: clamp(16.5px, 1.05vw, 20px);
+}
+.hero-cta { margin-top: min(30px, 1.6vw); justify-content: center; }
 
-/* The headline's last phrase in mint, so the first thing read carries the
-   brand colour rather than describing it. */
-h1 .accent { color: var(--mint); }
+/* ---- the globe stage -------------------------------------------------- */
+/* 849 of the hero's 1465 rows, full bleed. The globe itself is 873 wide at
+   x=539 on the 1920 grid; the orbit shares its box so JS can work in one
+   coordinate space. */
+.hero-stage {
+  position: relative; width: 100%;
+  aspect-ratio: 1920 / 849;
+  margin-top: 0;
+}
+/* The ring's shape lives here rather than in the script, so the phone
+   breakpoint can pull it in without the script knowing what a phone is. */
+.globe {
+  position: absolute;
+  left: 28.073%; width: 45.469%;
+  top: 0; aspect-ratio: 873 / 849;
+  touch-action: pan-y;
+  cursor: grab;
+  --rx: 53.8;   /* ellipse radii, per cent of this box */
+  --ry: 25.3;
+  --card: 1;    /* card size against the Figma original */
+}
+.globe:active { cursor: grabbing; }
+.globe:focus-visible { outline: 2px solid var(--mint); outline-offset: 12px; border-radius: 50%; }
 
-.hero-shot { margin-top: clamp(56px, 6.5vw, 92px); }
+/* The render carries its own pink backdrop — the dot mesh means it cannot be
+   cut out without eating the sphere — so the rectangle is faded into the wash
+   instead. The mask is wide enough that the fade lands outside the sphere. */
+.globe-img {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: contain; z-index: 2;
+  -webkit-mask-image: radial-gradient(closest-side, #000 72%, transparent 99%);
+  mask-image: radial-gradient(closest-side, #000 72%, transparent 99%);
+}
+
+/* Cards are placed by JS: left/top in per cent of this box, plus a scale and
+   a z-index that puts the far half of the ring behind the globe. */
+.orbit { position: absolute; inset: 0; }
+.orbit-card {
+  position: absolute; top: 0; left: 0;
+  /* The width/height attributes are there to reserve the box before the
+     image lands. The script sets width; without this the attribute height
+     survives and the cards stretch the moment the ring is scaled down. */
+  height: auto;
+  border-radius: 14px; display: block;
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+
+/* ---- stickers --------------------------------------------------------- */
+/* A 1920-wide stage pinned to the top of the hero and centred, so left and
+   width are the Figma x/w straight over 1920 and stay put past 1920 too.
+   Tops are the Figma y plus the 72 the nav occupies, written as a vw that
+   caps at its own pixel value — the same scaling rule the rest of the hero
+   uses, so a sticker never drifts away from the thing it sits beside. */
+.stickers {
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 1920px; height: 100%;
+  z-index: 3; pointer-events: none;
+}
+.sticker { position: absolute; display: block; }
+
+.sticker-coin  { left: 81.302%; top: min(163px,  8.490vw); width:  5.260%; }
+.sticker-gun   { left:  3.750%; top: min(551px, 28.698vw); width: 18.385%; }
+/* image 24 is FIT inside a 511 square, so the box is square and the art
+   letterboxes inside it. Its own backdrop is faded out at the edges. */
+.sticker-notes {
+  left: 80.469%; top: min(789px, 41.094vw); width: 26.615%;
+  aspect-ratio: 1; object-fit: contain;
+  transform: rotate(14.05deg);
+  /* The art letterboxes to roughly 60% of the square, so the fade is sized to
+     the art rather than to the box — a mask cut to the box would eat it. */
+  -webkit-mask-image: radial-gradient(36% 56% at 50% 50%, #000 72%, transparent 100%);
+  mask-image: radial-gradient(36% 56% at 50% 50%, #000 72%, transparent 100%);
+}
 
 /* -------------------------------------------------------------- bands -- */
 .band { padding-block: var(--section-y); position: relative; }
@@ -561,13 +633,7 @@ h1 .accent { color: var(--mint); }
 .stage-deep   { --stage: var(--deep); }
 .stage-deep::before { background-image: radial-gradient(circle, rgba(255,255,255,0.16) 1px, transparent 1px); }
 
-/* The hero: one wide panel with the whole product on it. */
-.hero-stage {
-  margin-top: clamp(52px, 6vw, 88px);
-  aspect-ratio: 16 / 9;
-  padding-inline: clamp(24px, 5vw, 90px);
-}
-.hero-stage .shot-wide { width: 100%; }
+/* (The hero's own stage is the globe; see the hero block above.) */
 
 /* -------------------------------------------------------------- shots -- */
 .shot {
@@ -844,8 +910,13 @@ details[open] .plus::after { transform: translateY(-50%) rotate(0deg); opacity: 
 
 /* ------------------------------------------------------------ responsive */
 @media (max-width: 1040px) {
-  .hero-in { grid-template-columns: minmax(0, 1fr); gap: 44px; }
-  .hero-in .hero-stage { aspect-ratio: 5 / 4; }
+  /* The two big stickers are placed against a 1920 composition — the gun
+     beside the lead, the notes beside the globe. Once the copy starts
+     wrapping they land on top of the words instead of beside them, so they
+     come out here and the coin, which sits in clear air, stays. */
+  .sticker-md { display: none; }
+  .sticker-coin { top: min(120px, 14vw); }
+
   .split-head { grid-template-columns: minmax(0, 1fr); gap: 36px; }
   .band-deep .statement { grid-template-columns: minmax(0, 1fr); gap: 44px; }
   .hub { grid-template-columns: minmax(0, 1fr); justify-items: center; gap: 22px; }
@@ -877,6 +948,18 @@ details[open] .plus::after { transform: translateY(-50%) rotate(0deg); opacity: 
   :root { --gutter: 20px; --nav-h: 64px; }
   body { font-size: 16px; }
   .grid-3 { grid-template-columns: minmax(0, 1fr); }
+
+  /* At 45% of a phone the globe is a thumbnail and the orbit is unreadable.
+     It takes most of the width instead, and the stage is re-proportioned to
+     the sphere rather than to the 1920 band it came from. The coin goes too:
+     nothing is left with enough clear air to sit in. */
+  .hero-stage { aspect-ratio: 390 / 330; }
+  /* A ring at the desktop radius is wider than the phone, so the outer cards
+     hang off both edges. Pulled in and scaled down, all six stay on screen. */
+  .globe { left: 10%; width: 80%; --rx: 44; --ry: 21; --card: 0.78; }
+  .stickers { display: none; }
+  .hero-cta { flex-direction: column; align-items: stretch; width: 100%; }
+  .hero-cta .btn { width: 100%; }
   /* A span left on in a single-column stack invents a second track and
      collapses the first to 0. On a phone every card is just a card, and the
      wide ones put their screens under the words instead of beside them. */
