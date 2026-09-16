@@ -251,17 +251,33 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 .cta-row.centred { justify-content: center; }
 
 /* ----------------------------------------------------------------- nav -- */
+/* The bar is clear over the hero and arrives as a solid one by the time the
+   hero has gone. It is driven by two numbers the script writes as the page
+   scrolls, not by a class that flips: --nav-blur leads and --nav-solid
+   follows, so the glass appears first and the white fills in behind it. A
+   two-state toggle would snap; this is the same move the design describes.
+
+   The blur is only painted once --nav-blur is off zero. backdrop-filter at
+   0px still promotes the bar to its own layer and makes the hero repaint on
+   every frame behind it, which is a real cost for no visible effect. */
 .nav {
   position: fixed; inset: 0 0 auto 0; z-index: 50;
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: saturate(180%) blur(16px);
-  -webkit-backdrop-filter: saturate(180%) blur(16px);
-  border-bottom: 1px solid transparent;
-  transition: border-color var(--t-base) var(--ease-out), background var(--t-base) var(--ease-out);
+  --nav-solid: 0;
+  --nav-blur: 0;
+  background: rgba(234, 234, 233, calc(var(--nav-solid) * 0.92));
+  border-bottom: 1px solid rgba(5, 51, 41, calc(var(--nav-solid) * 0.08));
 }
-.nav[data-scrolled='true'] {
-  border-bottom-color: var(--line-soft);
-  background: rgba(255, 255, 255, 0.94);
+.nav[data-glass='true'] {
+  backdrop-filter: saturate(175%) blur(calc(var(--nav-blur) * 18px));
+  -webkit-backdrop-filter: saturate(175%) blur(calc(var(--nav-blur) * 18px));
+}
+/* Over the hero the links sit on a pink wash and the ink has to carry; once
+   the bar is solid they go back to the page's muted green. */
+.nav .brand-word, .nav .nav-links > a, .nav .drop-btn {
+  color: color-mix(in srgb, var(--ink) calc(100% - var(--nav-solid) * 55%), var(--muted));
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav { --nav-solid: 1; --nav-blur: 1; }
 }
 .nav-in {
   max-width: var(--wrap); margin: 0 auto; padding-inline: var(--gutter);
@@ -484,7 +500,14 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 /* stops and direction read off the Figma fill, not eyeballed */
 .ts-card-grad { background: linear-gradient(to bottom, #2bbd9b 0%, #fec4ff 45.7%, #c4e2ff 100%); }
 
-.ts-copy { padding: min(12px, 0.625vw) min(20px, 1.042vw) 0; display: grid; gap: min(15px, 0.78vw); }
+/* The copy has to sit above the bleed. The notes on card three are painted
+   over the card, and without this they cover the paragraph entirely — which
+   is exactly what had gone missing from that card. */
+.ts-copy {
+  position: relative; z-index: 2;
+  padding: min(12px, 0.625vw) min(20px, 1.042vw) 0;
+  display: grid; gap: min(15px, 0.78vw);
+}
 .ts-copy-end { padding-top: min(12px, 0.625vw); padding-bottom: min(12px, 0.625vw); gap: 0; }
 .ts-copy h3 {
   font-size: clamp(21px, 1.875vw, 36px); line-height: 1.3; letter-spacing: -0.022em;
@@ -499,8 +522,8 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 /* The notes run past the card on two sides; the card's own clip cuts them.
    The export carries the rotation already, so none is applied here. */
 .ts-bleed {
-  position: absolute; left: -8%; top: 22%; width: 158%; height: auto;
-  pointer-events: none;
+  position: absolute; left: -8%; top: 30%; width: 158%; height: auto;
+  pointer-events: none; z-index: 1;
 }
 
 /* ------------------------------------------------- gifting and rewards -- */
@@ -568,36 +591,6 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 /* This section's eyebrow is near-black rather than the page's muted green. */
 .eyebrow-ink { color: #433b37; }
 .eyebrow-ink::before { background: #1e1818; }
-
-/* ------------------------------------------------------- built on base -- */
-.base-slab {
-  background: var(--deep); border-radius: min(34px, 1.771vw);
-  padding: min(96px, 5vw) min(88px, 4.584vw);
-  display: grid; gap: min(72px, 3.75vw);
-}
-.base-head { display: grid; gap: 20px; max-width: 1020px; }
-.base-head h2 { color: #fff; }
-.base-lead {
-  max-width: 900px;
-  font-size: clamp(16.5px, 1.05vw, 20px); line-height: 1.6; letter-spacing: -0.005em;
-  color: rgba(255, 255, 255, 0.72);
-}
-.eyebrow-mint { color: var(--mint); }
-
-.base-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: min(40px, 2.084vw); }
-.base-fact { display: grid; gap: 18px; align-content: start; }
-.base-big {
-  font-size: clamp(30px, 2.396vw, 46px); font-weight: 700;
-  line-height: 1; letter-spacing: -0.03em; color: var(--mint);
-}
-/* The hairline is a border on the paragraph rather than its own element, so
-   it cannot drift out of step with the 18 gap either side of it. */
-.base-fact p:last-child {
-  border-top: 1px solid rgba(255, 255, 255, 0.22);
-  padding-top: 18px;
-  font-size: clamp(14.5px, 0.886vw, 17px); line-height: 1.52; letter-spacing: -0.002em;
-  color: rgba(255, 255, 255, 0.66);
-}
 
 /* ------------------------------------------------------------ products -- */
 .band-products { background: var(--deep); }
@@ -1148,6 +1141,21 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 }
 .foot-brand p { margin-top: 16px; color: var(--deep); font-size: 16px; max-width: 26ch; }
 
+.socials { display: flex; gap: 10px; margin-top: 22px; }
+.socials a {
+  width: 38px; height: 38px; display: grid; place-items: center;
+  border-radius: 50%; color: var(--deep);
+  border: 1px solid rgba(5, 51, 41, 0.14);
+  transition: background var(--t-base) var(--ease-out),
+              color var(--t-base) var(--ease-out),
+              border-color var(--t-base) var(--ease-out),
+              transform var(--t-base) var(--ease-out);
+}
+.socials a:hover { background: var(--deep); color: var(--mint); border-color: var(--deep); transform: translateY(-2px); }
+.socials svg { width: 17px; height: 17px; fill: currentColor; }
+/* Instagram is drawn rather than filled, so it needs the opposite treatment. */
+.socials .ic-stroke { fill: none; stroke: currentColor; stroke-width: 1.7; }
+
 .foot-cols { display: grid; grid-auto-flow: column; gap: min(24px, 1.25vw); justify-content: end; }
 .foot-col { display: grid; gap: 11px; align-content: start; }
 .foot-col-products { min-width: 300px; }
@@ -1173,6 +1181,125 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
   color: #d4d4d0; user-select: none;
 }
 .risk { color: var(--deep); font-size: 14px; letter-spacing: -0.005em; }
+
+/* -------------------------------------------------------- product page -- */
+/* The landing hero without its globe: same wash, same type, shorter, because
+   the job here is the product rather than the pitch. */
+.hero-product { padding-bottom: min(96px, 5vw); }
+.hero-product .hero-in { justify-items: center; }
+.hero-product .eyebrow { margin-inline: auto; }
+.hero-product-hl { margin-top: 18px; font-size: clamp(36px, 4.2vw, 80px); }
+.hero-product .hero-lead { max-width: 680px; }
+
+.prod-shot {
+  width: 100%; max-width: 1520px; margin: min(72px, 3.75vw) auto 0;
+  padding-inline: var(--gutter);
+}
+.prod-shot .shot-phone { width: min(360px, 78%); }
+.prod-shot .shot-wide { width: 100%; }
+
+.prod-points {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: min(32px, 1.667vw); margin-top: min(64px, 3.334vw);
+}
+.prod-point {
+  background: #d1cbc2; border-radius: min(26px, 1.354vw);
+  padding: min(40px, 2.084vw) min(32px, 1.667vw);
+  display: grid; gap: 14px; align-content: start;
+}
+.prod-num { font-size: 13px; font-weight: 600; letter-spacing: 0.08em; color: #7a6f64; }
+.prod-point h3 { font-size: clamp(19px, 1.25vw, 24px); line-height: 1.25; color: #1e1818; }
+.prod-point p { font-size: clamp(14.5px, 0.834vw, 16px); line-height: 1.6; color: #443b37; }
+
+/* Said once, plainly, on the two products that carry real risk. */
+.band-risk { padding-block: 0; }
+.prod-risk {
+  max-width: 900px; margin-inline: auto; text-align: center;
+  padding: min(32px, 1.667vw) min(40px, 2.084vw);
+  border: 1px dashed rgba(5, 51, 41, 0.28); border-radius: min(20px, 1.042vw);
+  font-size: clamp(14.5px, 0.886vw, 17px); line-height: 1.6; color: var(--muted);
+}
+.prod-risk strong { color: var(--ink); }
+
+.prod-more {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: min(32px, 1.667vw); margin-top: min(48px, 2.5vw);
+}
+.prod-card {
+  background: var(--deep); color: #fff; border-radius: min(26px, 1.354vw);
+  padding: min(36px, 1.875vw);
+  display: grid; gap: 12px; align-content: start;
+  transition: transform 420ms var(--ease-out), box-shadow 420ms var(--ease-out);
+}
+.prod-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
+.prod-card h3 { font-size: clamp(19px, 1.25vw, 24px); }
+.prod-card p { color: var(--on-deep-muted); font-size: clamp(14.5px, 0.834vw, 16px); line-height: 1.6; }
+.prod-card .pr-link { margin-top: 8px; }
+
+/* ---- the products menu ------------------------------------------------- */
+/* It used to be a list of five words. Each row now says what the product is
+   for, which is the difference between a menu and a signpost. */
+.drop-menu {
+  display: grid; grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 2px; padding: 10px; min-width: 560px;
+}
+.drop-menu a { display: grid; gap: 3px; padding: 12px 14px; border-radius: 12px; }
+.dm-name { font-size: 15px; font-weight: 600; color: var(--ink); }
+.dm-say { font-size: 13px; line-height: 1.45; color: var(--muted); }
+.drop-menu a[aria-current='page'] { background: var(--tint-brand); }
+
+@media (max-width: 1040px) {
+  .prod-points, .prod-more { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .prod-points, .prod-more { grid-template-columns: minmax(0, 1fr); }
+  .drop-menu { grid-template-columns: minmax(0, 1fr); min-width: 0; }
+}
+
+/* ------------------------------------------------------- hover states -- */
+/* Hover is CSS, never script: it has to work whether or not GSAP loaded, and
+   a transform plus a shadow is cheaper than anything a library would do. */
+.ts-card, .pr-card, .gs-step, .gift-stage, .why-stage {
+  transition: transform 420ms var(--ease-out), box-shadow 420ms var(--ease-out);
+}
+.ts-card:hover, .pr-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
+.gs-step:hover .gs-shot { transform: translateY(-8px); box-shadow: var(--shadow-lg); }
+.gs-shot { transition: transform 420ms var(--ease-out), box-shadow 420ms var(--ease-out); }
+
+/* The props inside a card drift a little further than the card does, so the
+   card reads as having depth rather than as a single flat plate.
+
+   --drift is the scroll-linked offset the script writes; --lift and --pop are
+   the hover. Composing all three here rather than having the script own the
+   transform means the two never fight over the same property. */
+.ts-slot, .ts-bleed, .pr-sticker {
+  --drift: 0px; --lift: 0px; --pop: 1;
+  transform: translateY(calc(var(--drift) + var(--lift))) scale(var(--pop));
+  transition: transform 620ms var(--ease-out);
+}
+.ts-card:hover .ts-slot { --lift: -10px; --pop: 1.03; }
+.ts-card:hover .ts-bleed { --lift: -14px; --pop: 1.04; }
+.pr-card:hover .pr-sticker { --lift: -12px; --pop: 1.04; }
+
+/* A ledger row is the one thing in the pop-up that looks clickable. */
+.pop-row { border-radius: 6px; transition: background 200ms var(--ease-out); }
+.pop-ledger:hover .pop-row { opacity: 0.72; }
+.pop-ledger .pop-row:hover { opacity: 1; background: rgba(5, 51, 41, 0.05); }
+.pop-btn { transition: transform 260ms var(--ease-out), background 260ms var(--ease-out); }
+.pr-card:hover .pop-btn { transform: translateY(-2px); background: #053329; }
+
+.pr-link .pr-arrow, .link-arrow svg { transition: transform 300ms var(--ease-out); }
+.pr-link:hover .pr-arrow { transform: translateX(4px); }
+.faq summary { transition: color 200ms var(--ease-out); }
+.faq details:hover summary { color: var(--deep); }
+.faq details { transition: border-color 260ms var(--ease-out), background 260ms var(--ease-out); }
+.faq details:hover { border-color: rgba(5, 51, 41, 0.18); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ts-card, .pr-card, .gs-shot, .ts-slot, .ts-bleed, .pr-sticker, .pop-btn { transition: none; }
+  .ts-card:hover, .pr-card:hover, .gs-step:hover .gs-shot { transform: none; }
+  .ts-slot, .ts-bleed, .pr-sticker { transform: none; }
+}
 
 /* ------------------------------------------------------------- motion -- */
 /* Onboard's numbers: 50px over 1s on a reveal. The old 18px over 620ms was
@@ -1268,8 +1395,6 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
   .hero-cta .btn { width: 100%; }
 
   .ts-cards { grid-template-columns: minmax(0, 1fr); }
-  .base-facts { grid-template-columns: minmax(0, 1fr); gap: 28px; }
-  .base-slab { padding: 40px 24px; }
   .foot-cols { grid-auto-flow: row; }
   .foot-split { grid-auto-flow: row; gap: 11px; }
   .foot-col-products { min-width: 0; }
