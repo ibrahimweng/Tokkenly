@@ -8,16 +8,38 @@
   var nav = document.getElementById('nav')
 
   /* -------------------------------------------------- the bar on scroll -- */
+  /* The bar is clear over the hero and solid once the hero has passed. Two
+     numbers rather than one: the glass leads and the white follows, so the
+     order the design asks for — transparent, then blur, then white — is what
+     actually happens rather than both arriving together.
+     
+     The ramps overlap on purpose. Blur is fully in by 62% of the hero and
+     white only starts at 38%, so there is a stretch where the bar is real
+     glass over moving colour, which is the part worth having. */
+  var hero = document.querySelector('.hero')
   var ticking = false
+
+  function ease(t) { return t * t * (3 - 2 * t) }          // smoothstep
+  function span(v, a, b) { return Math.min(Math.max((v - a) / (b - a), 0), 1) }
+
   function onScroll() {
     if (ticking) return
     ticking = true
     requestAnimationFrame(function () {
-      nav.setAttribute('data-scrolled', window.scrollY > 8 ? 'true' : 'false')
       ticking = false
+      var run = hero ? hero.offsetHeight - nav.offsetHeight : 320
+      var p = span(window.scrollY, 0, Math.max(run, 1))
+      var blur = ease(span(p, 0, 0.62))
+      var solid = ease(span(p, 0.38, 1))
+      nav.style.setProperty('--nav-blur', blur.toFixed(4))
+      nav.style.setProperty('--nav-solid', solid.toFixed(4))
+      /* Only paint the backdrop filter once there is something to blur. */
+      nav.setAttribute('data-glass', blur > 0.01 ? 'true' : 'false')
+      nav.setAttribute('data-scrolled', window.scrollY > 8 ? 'true' : 'false')
     })
   }
   addEventListener('scroll', onScroll, { passive: true })
+  addEventListener('resize', onScroll, { passive: true })
   onScroll()
 
   /* ------------------------------------------------------ Products menu -- */
