@@ -20,6 +20,11 @@ const FILTERS: { id: string; label: string; kinds: ActivityKind[] | null }[] = [
   { id: 'payments', label: 'Payments', kinds: ['payment'] },
   { id: 'trades', label: 'Trades', kinds: ['trade'] },
   { id: 'grow', label: 'Borrow & Lend', kinds: ['grow'] },
+  // Its own row rather than a corner of Payments. Nobody was paid: a
+  // conversion moves your money between two balances that are both yours, and
+  // somebody looking for "where did my naira go" is asking a different
+  // question from "who did I pay".
+  { id: 'converted', label: 'Conversions', kinds: ['convert'] },
 ]
 
 /* ---------------------------------------------------------------------------
@@ -64,6 +69,7 @@ type Nature =
   | 'bought' | 'sold' | 'shares-out'
   | 'added' | 'received' | 'sent' | 'withdrew' | 'bill'
   | 'borrowed' | 'repaid' | 'lent' | 'tookback' | 'interest'
+  | 'converted'
   | 'security' | 'notice'
 
 const NATURE: Record<Nature, { ic: () => string; tag: string }> = {
@@ -84,6 +90,7 @@ const NATURE: Record<Nature, { ic: () => string; tag: string }> = {
   lent: { ic: icon.grow, tag: 'Lent' },
   tookback: { ic: icon.repay, tag: 'Taken back' },
   interest: { ic: icon.coin, tag: 'Interest' },
+  converted: { ic: icon.convert, tag: 'Converted' },
   security: { ic: icon.lock, tag: 'Security' },
   notice: { ic: icon.bell, tag: 'Notice' },
 }
@@ -92,6 +99,7 @@ const NATURE: Record<Nature, { ic: () => string; tag: string }> = {
  *  asserted at the call site, so two rows that are the same kind of event
  *  cannot be tagged differently. */
 function natureOf(a: Activity): Nature {
+  if (a.kind === 'convert') return 'converted'
   if (a.kind === 'trade') {
     if (a.type === 'Sent') return 'shares-out'
     return a.amount < 0 ? 'bought' : 'sold'

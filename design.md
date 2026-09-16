@@ -9501,3 +9501,84 @@ to be internal.
 with the code after today, and the parts check compares names rather than
 drawings — the gap `icon/card` fell through in 11g.81 is still open, and
 re-importing from source is still the only thing standing in for it.
+
+### 11g.83 — Convert, and the movement that crosses no boundary
+
+The product has been converting currency since the day it could pay a Nigerian
+bank. It has never let anybody ask for it. Naira became dollars because you
+added money; dollars became naira because you paid somebody. Both are
+conversions with an errand attached, and neither of them is the errand.
+
+What that left was ₦145,000 in a balance you could spend on airtime and
+nothing else. The way out was to pay it to your own bank account and add it
+back: two movements, two waits, and a Nigerian bank standing in the middle of
+a journey that never needed to leave the building.
+
+**Six ordered pairs, and both halves in the address.** Three balances make six
+directions, and `/convert/usdc/ngn` names one of them. The last time a way
+through this product kept half its state out of the address — Withdraw, which
+was Send with the destination already answered — the trail could not say where
+you were and a refresh landed you somewhere else. Half a pair, or a pair of one
+thing, normalises and replaces rather than refusing, so an old link costs
+nobody a step backwards.
+
+**The desk was already there.** `desk.ngn` and `desk.usd` are described in the
+ledger as "one side of every conversion" and "the other side", so a conversion
+uses them rather than inventing a route. Out of your purse and onto the desk;
+a moment later, off the desk and into your other purse. That gap is what the
+pending row on the wallet reads to say where the money actually is, and it is
+the honest answer: it has left one balance and not reached the other, and in
+between it is at a named place.
+
+**One for one, and not as a convenience.** Two stablecoins convert at parity
+because `cash` is `usdc + usdt` summed into a single dollar figure — on the
+wallet, on Home, in buying power and in every ceiling derived from it. Any
+other rate would make that sum wrong in all four places. This is not a
+simplification the screen chose; it is a fact the rest of the product already
+asserts, and the day it stops being true is the day that sum has to go.
+
+**It does not answer to the limit, and the rule said so before it was
+written.** `movementCeiling` catches "anything that crosses the boundary of the
+account" and exempts, by name, "moving your own money between your own buckets
+— lent out, taken back". A conversion is exactly that: your naira becomes your
+dollars, both were yours before, both are yours after, and you are worth the
+same at the end. So `countAgainstLimit` is not called, and the ceiling the
+screen enforces is what you hold. An account that could not turn its own naira
+into its own dollars because it had already sent $800 to a landlord would have
+confused a safety rail with a lock.
+
+**Nothing here can go unanswered.** `landAddMoney` and `landPayout` both carry
+a magic value for the transfer that never lands, because both have a bank at
+the other end that can go quiet. A conversion has nobody at the other end, so
+`landConvert` lands whatever the amount is. The refusals it does have — more
+than you hold, nothing typed, the same purse on both sides — all happen before
+any money moves, which is the right place for a refusal that is about
+arithmetic rather than about somebody else's silence.
+
+**A row with two figures and no direction.** `amount` is signed and a
+conversion has no sign to give it: an in-arrow would say somebody paid you, an
+out-arrow would say you paid somebody, and on this row neither happened. So the
+pair lives in its own field, each side in its own unit, and the receipt is its
+own document rather than a branch inside the one built for movements that have
+a counterparty. Every line of that one would have needed an exception, which is
+how a receipt ends up printing "+$500.00" about money nobody sent you.
+
+**The doors, and an argument reversed with its own arithmetic.** The comment in
+`wallet.ts` held that the doors belong in the column rather than across the
+page, and its reason was width: two doors across 1,008px are 496px each holding
+one line, and a door twice the width of the list beneath it reads as the page's
+subject rather than as a way out of it. Three doors are 325px each. That is
+narrower than the column they used to lead and about the width of the card
+beside them, so the reason has gone — and what is left is that the wallet's
+three errands are the same size as each other, which a full-width row of three
+says and a row of three tucked into two thirds of the page does not.
+
+**One thing the build found.** The trail read "Wallet › Convert › Convert ›
+USDC to Naira", because the registry knows `/convert` is the parent of every
+pair and the screen was also naming itself. Two things both thinking it is
+their job to say where you are is the same fault as two lists that have to be
+kept in step, and it has the same fix: one of them stops.
+
+**What is now behind.** The Figma file holds 172 frames exported before any of
+this existed, so page 05 is a flow the product no longer has. Re-exporting is
+one run of the reader and a rebuild of that page; it has not been done here.

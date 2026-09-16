@@ -8,7 +8,7 @@ import * as ledger from './ledger'
 import { tokenFor } from './bills'
 import { purseFor, assetOf, defaultNet, type Asset } from './assets'
 
-export type ActivityKind = 'payment' | 'trade' | 'grow'
+export type ActivityKind = 'payment' | 'trade' | 'grow' | 'convert'
 
 export interface Activity {
   ref: string
@@ -45,6 +45,14 @@ export interface Activity {
    *  change, but the network's name and the meter's owner are facts about the
    *  day it was paid. */
   bill?: { target: string; naira: number; token?: string }
+  /** What a conversion turned into what. A conversion is the one movement with
+   *  two figures and no direction: nothing came in, nothing went out, and you
+   *  are worth exactly what you were a moment ago. `amount` can only hold one
+   *  of the two and would have to pick a sign it does not have, so the pair
+   *  lives here — each side in its own unit, dollars for a stablecoin and
+   *  whole naira for naira, because a rate applied twice is a rate applied
+   *  once too often. */
+  swap?: { from: Asset; to: Asset; gave: number; got: number }
   /** Which of the three balances this moved — out on a payment, in on a
    *  deposit. Recorded rather than assumed: "$45 to Tunde" does not say
    *  whether the USDC or the USDT went, and somebody looking at two dollar
@@ -740,6 +748,16 @@ function legsFor(a: Activity): Legs | null {
  *  the whole point of tracking it as two stages is that the second one is not
  *  instant. */
 const PAYOUT_MS = 3400
+/** How long the two legs of a conversion are apart. Shorter than a payout,
+ *  because a payout waits on a bank and this waits on us.
+ *
+ *  It was 1,600ms, which was wrong for a reason that is not visible in this
+ *  file: the outcome sheet reveals itself over 980ms — tick, figure, panel,
+ *  buttons, each on its own delay — so a 1,600ms window left "On its way"
+ *  fully legible for about half a second before it became "Converted". The
+ *  stage was there and nobody could read it. A number that has to clear an
+ *  animation elsewhere is a number that has to know about it. */
+const CONVERT_MS = 2800
 
 /** Where the account actually stands, which the replay has to arrive at.
  *
@@ -1501,6 +1519,7 @@ function record(a: Omit<Activity, 'ref' | 'at' | 'settled'> & Partial<Activity>)
     rail: a.rail,
     asset: a.asset,
     bill: a.bill,
+    swap: a.swap,
     // Which balance moved, and on what. Dropped here once already, in the
     // same way `rail` was: a field the callers were carefully setting and the
     // record was quietly throwing away, so a payment made in this session
@@ -1967,6 +1986,108 @@ export const actions = {
     changed()
   },
 
+
+  /* ----------------------------------------------------------- converting --
+     Turning one thing you hold into another thing you hold.
+
+     Every other movement in this product has a direction, because there is
+     somebody at the other end: a payee, a bank, the market. A conversion has
+     nobody at the other end. Your naira becomes your dollars; both were yours
+     before and both are yours after, and you are worth the same at the end of
+     it as you were at the start.
+
+     Three consequences follow from that one fact, and each of them is a rule
+     somewhere else in this file rather than a special case here:
+
+       It does not answer to the limit. `movementCeiling` catches "anything
+       that crosses the boundary of the account" and exempts "moving your own
+       money between your own buckets". This is that, exactly, so
+       `countAgainstLimit` is not called — and the ceiling the screen enforces
+       is what you hold, not what you are allowed to move.
+
+       It cannot be refused by somebody else. A payment can go unanswered
+       because a bank can go quiet; there is no second institution here. The
+       refusals a conversion has — more than you hold, nothing typed, the same
+       purse on both sides — all happen before any money moves, which is the
+       right place for a refusal that is about arithmetic rather than about
+       another party's silence.
+
+       It goes through the desk. `desk.ngn` and `desk.usd` are described in the
+       ledger as "one side of every conversion" and "the other side", and this
+       is a conversion, so it uses them rather than inventing a route. That
+       also gives the money a named place to be while the two legs are apart,
+       which is what the pending row on the wallet reads to say where it is.
+
+     Two stablecoins convert one for one. That is not a simplification: `cash`
+     is `usdc + usdt` summed into a single dollar figure, on the wallet, on
+     Home and in buying power. Any other rate would make that sum a lie in
+     every one of those places, so the day USDC and USDT stop being worth the
+     same to this product is the day that sum has to stop existing. */
+  convert(from: Asset, to: Asset, dollars: number,
+          rate = state.ngnPerUsd): Activity | null {
+    if (from === to || !(dollars > 0)) return null
+    const naira_ = Math.round(dollars * rate)
+    // What actually leaves, in the unit the thing is held in. Checked against
+    // the ledger rather than against what the screen believed, because the
+    // screen was drawn before the button was pressed.
+    const gave = from === 'ngn' ? naira_ : dollars
+    const got = to === 'ngn' ? naira_ : dollars
+    if (ledger.balanceOf(purseFor(from)) + 1e-6 < gave) return null
+
+    const name = (a: Asset) => assetOf(a)!.name
+    const fig = (a: Asset, n: number) => (a === 'ngn' ? naira(n) : usd(n))
+    const a = record({
+      kind: 'convert', who: `${name(from)} to ${name(to)}`, type: 'Converted',
+      // Positive, and not a direction. The row that draws it reads `swap` and
+      // shows both figures; `amount` is here so that one conversion of $500 is
+      // the same size as another, which is what a list sorts and totals by.
+      amount: dollars,
+      note: from === 'ngn' || to === 'ngn' ? `At ${naira(rate)} to the dollar` : 'One for one',
+      swap: { from, to, gave, got },
+      // Where it lands, the same field Add money sets for the same reason.
+      purse: to,
+      settled: false,
+    })
+    // Leg one: out of your purse and onto the desk. It is the desk's money for
+    // as long as the two legs are apart, which is the only honest thing to say
+    // about money that has left one balance and not reached the other.
+    const pair = from === 'ngn' || to === 'ngn' ? a.ref : undefined
+    ledger.post({
+      ref: a.ref, at: a.at, pair, rate: pair ? rate : undefined,
+      what: `${fig(from, gave)} went to the currency desk`,
+      entries: [{ account: purseFor(from), amount: -gave },
+                { account: from === 'ngn' ? 'desk.ngn' : 'desk.usd', amount: gave }],
+    })
+    setTimeout(() => actions.landConvert(a.ref, rate), CONVERT_MS)
+    changed()
+    return a
+  },
+
+  /** Leg two: the desk pays out the other currency, and the second balance
+   *  moves. Nothing here can decline — see above — so this lands whatever the
+   *  amount is, unlike `landAddMoney` and `landPayout`, which both have a
+   *  counterparty that can go quiet and a magic value that says so. */
+  landConvert(ref: string, rate = state.ngnPerUsd): void {
+    const a = state.activity.find((x) => x.ref === ref)
+    if (!a || a.settled || !a.swap) return
+    const { to, got } = a.swap
+    const pair = a.swap.from === 'ngn' || to === 'ngn' ? ref : undefined
+    const fig = to === 'ngn' ? naira(got) : usd(got)
+    ledger.post({
+      ref, at: new Date().toISOString(), pair, rate: pair ? rate : undefined,
+      what: `${fig} reached your ${assetOf(to)!.name} balance`,
+      entries: [{ account: to === 'ngn' ? 'desk.ngn' : 'desk.usd', amount: -got },
+                { account: purseFor(to), amount: got }],
+    })
+    a.settled = true
+    state.notifications.unshift({
+      id: 'n-' + ref, kind: 'money',
+      title: `${fig} is in your ${assetOf(to)!.name} balance`,
+      body: a.note ?? '',
+      at: new Date().toISOString(), read: false, ref, emailed: 'always',
+    })
+    changed()
+  },
 
   /** Buying something you do not already hold opens the position. It used to
    *  take the money and add the shares only `if (h)`, so a first purchase —

@@ -119,7 +119,7 @@ function quickAction(label: string, sub: string, ic: string, to: string): HTMLEl
 
 function activityRows(limit: number) {
   return state.activity.slice(0, limit).map((a) => [
-    h('span', { class: 'who' }, directionMark(a.amount),
+    h('span', { class: 'who' }, directionMark(a.amount, !!a.swap),
       h('span', { class: 'two-line' },
         h('span', { class: 't-body-strong', text: activityLabel(a) }),
         h('small', { text: a.ref + ' · ' + when(a.at) }))),

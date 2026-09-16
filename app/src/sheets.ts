@@ -20,6 +20,8 @@ import { type Route, closeSheet, replaceSheet, go } from './router'
 import { isMobile } from './responsive'
 import { QA } from './screens/settings'
 import { peopleRows, sendWays, addWays } from './screens/money'
+import { convertWays, crossesCurrency, figureOf, gets, costs, isAsset,
+         defaultPair } from './screens/convert'
 import { billFrom, whoLabel } from './screens/spend'
 import { parts, partName, partFigure, partUnder, partAlso } from './screens/wallet'
 import { assetOf, netOf, shortAddress, DOLLARS, type Asset } from './assets'
@@ -441,6 +443,7 @@ export const SHEETS: Record<string, Builder> = {
    *  rather than on a page with nothing under its title. */
   'send-ways': () => sheet('Where is it going?', sendWays()),
   'add-ways': () => sheet('How are you adding it?', addWays()),
+  'convert-ways': () => sheet('What are you converting?', convertWays()),
 
   /** The rest of the rail. Four places are tabs; these five are behind More. */
   /** Jump to anything: a place, an action, a person you pay, something you
@@ -577,6 +580,35 @@ export const SHEETS: Record<string, Builder> = {
   receipt: (r) => {
     const a = state.activity.find((x) => x.ref === str(r, 'ref'))
     if (!a) return sheet('Receipt', h('p', { class: 'muted', text: 'That reference is not in your history.' }))
+    // A conversion gets its own receipt rather than a branch inside the one
+    // below. The document underneath is built around a movement that has a
+    // direction and a counterparty, and this has neither — every line in it
+    // would have needed an exception, which is how a receipt ends up saying
+    // "+$500.00" about money nobody sent you.
+    if (a.swap) {
+      const s = a.swap
+      const side = (k: Asset, n: number) => (k === 'ngn' ? naira(n) : usd(n))
+      const fx = ledger.conversion(a.ref)
+      return sheet(
+        'Receipt',
+        figure('Converted', side(s.to, s.got), '',
+          a.settled
+            ? 'Settled · both balances have moved'
+            : `At the currency desk · the ${assetOf(s.to)!.name} has not reached your balance yet`),
+        panel(
+          ['You converted', `${side(s.from, s.gave)} of ${assetOf(s.from)!.name}`],
+          ['You received', `${side(s.to, s.got)} of ${assetOf(s.to)!.name}`],
+          // Off the ledger's paired postings, not multiplied out here: a
+          // record written at ₦1,494 a fortnight ago must not reprint itself
+          // at this morning's rate.
+          ...(fx ? [['Rate', `${naira(fx.rate)} to the dollar`] as [string, string]]
+                 : [['Rate', 'One for one · both are dollars'] as [string, string]]),
+          ['Reference', a.ref],
+        ),
+        h('p', { class: 'muted t-caption', style: { margin: '0' },
+          text: 'Nothing left your account. Both balances are yours, and you are '
+              + 'worth the same as you were before it.' }))
+    }
     const inbound = a.amount >= 0
     // A trade's receipt is about a company, so it says which one, what it is
     // worth now, what shape it has been in, and what you hold of it. The old
@@ -1177,6 +1209,95 @@ export const SHEETS: Record<string, Builder> = {
         },
       },
     })
+  },
+  /* ----- convert -----
+     One review for six pairs, because they are one movement: a balance of
+     yours goes down and another balance of yours goes up. What differs is
+     whether a rate stands between them, and that is the only thing this
+     branches on. A pair that crosses currencies gets the firm ninety-second
+     quote the rest of the product uses; a pair that does not gets no clock,
+     because there is no rate to expire. */
+  'convert-review': (r) => {
+    const v = num(r, 'v')
+    const [dFrom, dTo] = defaultPair()
+    // Off the address, so the dialog is rebuildable from it. A review that
+    // lost half its pair on a refresh would be a review of a different
+    // conversion, which is the fault the whole address shape is here to stop.
+    const fromRaw = str(r, 'from')
+    const toRaw = str(r, 'to')
+    const from = (isAsset(fromRaw) ? fromRaw : dFrom) as Asset
+    const to = (isAsset(toRaw) && toRaw !== from ? toRaw : from === dFrom ? dTo : 'usdc') as Asset
+    const fromName = assetOf(from)!.name
+    const toName = assetOf(to)!.name
+
+    if (!crossesCurrency(from, to)) {
+      return review({
+        title: 'Review',
+        figureLabel: 'You are converting', figureValue: usd(v),
+        rows: [
+          ['Out of', fromName],
+          ['Into', toName],
+          ['Rate', 'One for one · both are dollars'],
+          ['You get', usd(v) + ' of ' + toName],
+          ['Fee', 'No fee'],
+        ],
+        // No `amount`: the "ask again above" preference is about money leaving
+        // the account, and none is. Deliberately omitted rather than forgotten.
+        note: 'Nothing leaves your account. Both balances are yours before and after.',
+        action: 'Convert ' + usd(v),
+        onConfirm: () => {
+          const a = actions.convert(from, to, v, state.ngnPerUsd)
+          if (a) replaceSheet('convert-done', { ref: a.ref })
+        },
+      })
+    }
+    return review({
+      title: 'Review',
+      figureLabel: 'You are converting',
+      figureValue: figureOf(from, costs(from, v, state.ngnPerUsd)),
+      rows: [], action: '', onConfirm: () => {},
+      note: '',
+      hold: {
+        rows: (q) => [
+          ['Out of', fromName],
+          ['Into', toName],
+          ['Rate', '1 dollar = ' + naira(q.rate)],
+          ['You give', figureOf(from, costs(from, v, q.rate))],
+          ['You get', figureOf(to, gets(to, v, q.rate))],
+          ['Fee', 'No fee'],
+        ],
+        action: (q) => 'Convert ' + figureOf(from, costs(from, v, q.rate)),
+        onConfirm: (q) => {
+          const a = actions.convert(from, to, v, q.rate)
+          if (a) replaceSheet('convert-done', { ref: a.ref })
+        },
+      },
+    })
+  },
+  'convert-done': (r) => {
+    const a = state.activity.find((x) => x.ref === str(r, 'ref'))
+    if (!a || !a.swap) return sheet('Converted', h('p', { class: 'muted', text: 'That conversion is not in your history.' }))
+    const s = a.swap
+    const gave = figureOf(s.from, s.gave)
+    const got = figureOf(s.to, s.got)
+    const toName = assetOf(s.to)!.name
+    // The two legs are apart for a moment and this is the end of the first
+    // one, so the sheet says which. Claiming the second before it happens is
+    // the fault every other two-stage outcome in this product was rewritten
+    // to stop.
+    if (!a.settled) {
+      return outcome('On its way',
+        `${gave} has left your ${assetOf(s.from)!.name}. ${got} reaches your ${toName} in a moment.`,
+        [['Stage', 'At the currency desk'],
+         ['Next', `${got} into your ${toName}`],
+         ...(a.note ? [['Rate', a.note] as [string, string]] : []),
+         ['Reference', a.ref]],
+        { label: 'Done', onClick: closeSheet },
+        { label: 'See the record', onClick: () => replaceSheet('receipt', { ref: a.ref }) },
+        { celebrate: false })
+    }
+    return done('Converted', `${gave} is now ${got}.`, a,
+                [['Fee', 'None'], ...(a.note ? [['Rate', a.note] as [string, string]] : [])])
   },
   'send-done': (r) => {
     const a = state.activity.find((x) => x.ref === str(r, 'ref'))!

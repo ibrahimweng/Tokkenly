@@ -25,6 +25,7 @@ import { statementScreen } from './screens/statement'
 import { adminScreen } from './screens/admin'
 import { signInScreen, signUpScreen } from './screens/auth'
 import { sendScreen, receiveScreen, addMoneyScreen, withdrawScreen, sendSharesScreen } from './screens/money'
+import { convertScreen, convertEntryScreen } from './screens/convert'
 import { spendScreen } from './screens/spend'
 import { indexScreen } from './screens/index-page'
 import { listScreen } from './screens/lists'
@@ -52,12 +53,17 @@ const FLAT: Record<string, () => HTMLElement> = {
   activity: historyScreen,
   wallet: walletScreen,
   history: historyScreen,
-  // Withdraw and Convert were one errand each and both were Send with the
-  // destination already answered. They still resolve, to the bank rail: an
-  // address somebody bookmarked should not break because the product learned
-  // to count the errand properly.
+  // Withdraw was one errand and it was Send with the destination already
+  // answered. It still resolves, to the bank rail: an address somebody
+  // bookmarked should not break because the product learned to count the
+  // errand properly.
+  //
+  // Convert used to resolve here too, on the same argument — and it was the
+  // wrong argument, because converting is not sending. Paying naira to a bank
+  // converts on the way past; it also empties the balance and involves
+  // somebody else's account, neither of which is what the word means. It is a
+  // place of its own now, and it nests, so it is not in this table.
   withdraw: withdrawScreen,
-  convert: withdrawScreen,
   receive: receiveScreen,
   bucket: bucketScreen,
   disclosures: disclosuresScreen,
@@ -101,6 +107,10 @@ function screenFor(r: Route): HTMLElement {
   // have already paid for.
   if (a === 'spend') return spendScreen(b)
   if (a === 'addmoney') return addMoneyScreen(b)
+  // Convert is a pair, and both halves are in the address: /convert/usdc/ngn.
+  // Half a pair, or a pair of one thing, resolves to the nearest sensible
+  // whole one rather than refusing — the screen normalises and replaces.
+  if (a === 'convert') return b ? convertScreen(b, c) : convertEntryScreen()
   if (a === 'account') return accountScreen(b)
   if (a === 'security') return accountScreen('security')
   if (a === 'support') return accountScreen('support')

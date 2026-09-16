@@ -198,8 +198,13 @@ export function figureWithEye(figure: HTMLElement): HTMLElement {
   return h('div', { class: 'figure-eye' }, figure, privacyToggle())
 }
 
-export function directionMark(n: number): HTMLElement {
-  return h('span', { class: 'mark', html: n >= 0 ? icon.arrowIn() : icon.arrowOut() })
+export function directionMark(n: number, both = false): HTMLElement {
+  // `both` is a conversion: money that went out of one balance and into
+  // another, neither of them anybody else's. An in-arrow would say somebody
+  // paid you and an out-arrow would say you paid somebody, and on this one
+  // row the honest answer is that neither happened.
+  return h('span', { class: 'mark',
+    html: both ? icon.convert() : n >= 0 ? icon.arrowIn() : icon.arrowOut() })
 }
 
 /** How much of a fixed allowance is gone. Not `meter`: that one auto-scales

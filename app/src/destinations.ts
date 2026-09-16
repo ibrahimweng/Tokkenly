@@ -115,8 +115,23 @@ export const DESTINATIONS: Destination[] = [
     hint: 'Dollars out, naira in' },
   { label: 'USDC on Base', to: '/send/base', place: 'wallet', kind: 'screen',
     also: 'chain crypto wallet address 0x onchain network', hint: 'Dollars on the network' },
-  // Still listed, because it is what people search for. It resolves into Send
-  // with the destination already answered rather than to a screen of its own.
+
+  // Convert is a door of its own now rather than a word that resolved into
+  // Send. It used to be listed only as a synonym on two other rows, which is
+  // what a search entry looks like when the thing it names does not exist.
+  { label: 'Convert', to: '/convert', place: 'wallet', kind: 'action', primary: true,
+    also: 'swap exchange change naira dollars usdc usdt stablecoin rate fx turn into',
+    hint: 'Naira to dollars, or back' },
+  // The six pairs are six addresses, and the three anybody actually asks for
+  // by name are listed. The other three are the same screen with the pair the
+  // other way round, and a palette that offered all six would be a palette
+  // listing one screen six times.
+  { label: 'Naira to USDC', to: '/convert/ngn/usdc', place: 'wallet', kind: 'screen',
+    also: 'convert swap buy dollars out of naira stablecoin', hint: 'Out of your naira balance' },
+  { label: 'USDC to naira', to: '/convert/usdc/ngn', place: 'wallet', kind: 'screen',
+    also: 'convert swap sell dollars into naira spend', hint: 'Into your naira balance' },
+  { label: 'USDT to USDC', to: '/convert/usdt/usdc', place: 'wallet', kind: 'screen',
+    also: 'convert swap stablecoin tether circle one for one', hint: 'One for one, both are dollars' },
 
   { label: 'Your banks', to: '/transfer?sheet=banks', place: 'wallet', kind: 'screen', primary: true, also: 'account number gtbank kuda payout' },
   { label: 'Your naira account', to: '/account/payments', place: 'wallet', kind: 'screen', primary: true,

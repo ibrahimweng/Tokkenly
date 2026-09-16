@@ -49,6 +49,13 @@ function cashFigure(): HTMLElement {
  *  been charged twice, on the way out the bank has not confirmed. */
 function stage(a: Activity): string {
   const c = ledger.conversion(a.ref)
+  // A conversion has no bank in it, so neither sentence below is true of it.
+  // What is true is where the money is: on the desk, between two balances that
+  // are both yours, which is exactly what the reader wants to know.
+  if (a.swap) {
+    const to = assetOf(a.swap.to)!.name
+    return `At the currency desk · the ${to} has not reached your balance yet`
+  }
   const inbound = a.amount > 0
   if (inbound) {
     return settlement(a.amount) === 'pending'
@@ -87,7 +94,7 @@ function moved(): HTMLElement {
           [{ key: 'who', label: 'Who' }, { key: 'when', label: 'When', optional: true },
            { key: 'ref', label: 'Reference', optional: true }, { key: 'amt', label: 'Amount', align: 'right' }],
           rows.map((a) => [
-            h('span', { class: 'who' }, directionMark(a.amount),
+            h('span', { class: 'who' }, directionMark(a.amount, !!a.swap),
               h('span', { class: 'two-line' },
                 h('span', { class: 't-body-strong', text: activityLabel(a) }),
                 a.settled ? null : h('small', { class: 'inroute', text: stage(a) }))),
@@ -286,28 +293,35 @@ export function walletScreen(): HTMLElement {
     // from wrapping onto separate lines — which they did, once the column came
     // in to the 1008 the file draws.
     cashHero(),
+    // Three doors: money in, money out, and money that changes shape without
+    // going anywhere. Receive was a fourth once, and it was the same question
+    // as Add money asked twice — how does money get into this wallet. It is a
+    // way inside that door now.
+    //
+    // All three are addresses. Add money opened a dialog in place, on the
+    // argument that handing over an account number needs no screen change —
+    // true of the account number, and not true of the question in front of it.
+    // There are three ways in, and 11g.61 made the doors ask which one before
+    // answering: on a phone that ask is a sheet over this screen, and on a
+    // wide one it is the rail beside the panel. A door that skipped the
+    // question left Add money answering it two different ways depending on
+    // which control you pressed.
+    //
+    // They span the page now, and the argument that kept them in the column
+    // was about width rather than about position: two doors across 1008px are
+    // 496px each, holding one line, and a door twice the width of the list it
+    // sits above reads as the page's subject rather than as a way out of it.
+    // Three doors are 325px each. That is narrower than the column they used
+    // to lead and about the width of the card beside it, so the reason has
+    // gone — and what is left is that the wallet's three errands are the same
+    // size as each other, which is a thing a full-width row of three says and
+    // a row of three tucked into two thirds of the page does not.
+    h('div', { class: 'row equal' },
+      way('Add money', 'A bank, a stablecoin or a card', icon.receive(), '/addmoney'),
+      way('Send', 'To a person, a wallet or a bank', icon.send(), '/send'),
+      way('Convert', 'Naira to dollars, or back', icon.convert(), '/convert')),
     h('div', { class: 'row' },
       h('div', { class: 'stack col-main' },
-        // Two doors: money in and money out. Receive was a third, and it was
-        // the same question as Add money asked twice — how does money get into
-        // this wallet. It is a way inside the one door now.
-        //
-        // Both doors are addresses. Add money opened a dialog in place, on the
-        // argument that handing over an account number needs no screen change
-        // — true of the account number, and not true of the question in front
-        // of it. There are three ways in, and 11g.61 made both doors ask which
-        // one before answering: on a phone that ask is a sheet over this
-        // screen, and on a wide one it is the rail beside the panel. A door
-        // that skipped the question left Add money answering it two different
-        // ways depending on which control you pressed.
-        //
-        // They lead the column rather than spanning the page. Full width they
-        // were two 660px cards holding one line each, and a door twice the
-        // width of the list it sits above reads as the page's subject rather
-        // than as a way out of it. The column is the width of what they act on.
-        h('div', { class: 'row equal' },
-          way('Add money', 'A bank, a stablecoin or a card', icon.receive(), '/addmoney'),
-          way('Send', 'To a person, a wallet or a bank', icon.send(), '/send')),
         moved()),
       h('div', { class: 'stack col-side' },
         // Beside the limits, because both are about what you may spend rather

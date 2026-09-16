@@ -1,3 +1,4 @@
+import { assetOf } from './assets'
 export const usd = (n: number, cents = true): string =>
   '$' + n.toLocaleString('en-US', {
     minimumFractionDigits: cents ? 2 : 0,
@@ -116,8 +117,23 @@ export function parseAmount(raw: string): number {
  *  what; a list has one line, so a borrowing or lending entry names which. */
 export function activityLabel(
   a: { kind: string; type: string; who: string; asset?: { ticker: string }
-       bill?: { target: string } },
+       bill?: { target: string }
+       swap?: { from: string; to: string; gave: number; got: number } },
 ): string {
+  // A conversion is the one row with two figures and no direction. "Converted
+  // Naira to USDC" names the errand and leaves out the only part anybody is
+  // scanning for, which is how much of one became how much of the other.
+  if (a.swap) {
+    const side = (k: string, n: number) => (k === 'ngn' ? naira(n) : usd(n))
+    const { from, to, gave, got } = a.swap
+    // Two stablecoins are the same figure twice, and "Converted $50.00 to
+    // $50.00" is a row that looks like a bug. When only one figure is worth
+    // printing, the names carry the rest.
+    if (from !== 'ngn' && to !== 'ngn') {
+      return `${a.type} ${usd(gave)}, ${assetOf(from)?.name ?? from} to ${assetOf(to)?.name ?? to}`
+    }
+    return `${a.type} ${side(from, gave)} to ${side(to, got)}`
+  }
   // A share that changed hands names the share. "Sent Tunde Bakare" is what a
   // cash payment says, and the two are not the same event.
   if (a.asset) return `${a.type} ${a.asset.ticker} ${a.type === 'Sent' ? 'to' : 'from'} ${a.who}`
