@@ -1141,6 +1141,21 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 }
 .foot-brand p { margin-top: 16px; color: var(--deep); font-size: 16px; max-width: 26ch; }
 
+.socials { display: flex; gap: 10px; margin-top: 22px; }
+.socials a {
+  width: 38px; height: 38px; display: grid; place-items: center;
+  border-radius: 50%; color: var(--deep);
+  border: 1px solid rgba(5, 51, 41, 0.14);
+  transition: background var(--t-base) var(--ease-out),
+              color var(--t-base) var(--ease-out),
+              border-color var(--t-base) var(--ease-out),
+              transform var(--t-base) var(--ease-out);
+}
+.socials a:hover { background: var(--deep); color: var(--mint); border-color: var(--deep); transform: translateY(-2px); }
+.socials svg { width: 17px; height: 17px; fill: currentColor; }
+/* Instagram is drawn rather than filled, so it needs the opposite treatment. */
+.socials .ic-stroke { fill: none; stroke: currentColor; stroke-width: 1.7; }
+
 .foot-cols { display: grid; grid-auto-flow: column; gap: min(24px, 1.25vw); justify-content: end; }
 .foot-col { display: grid; gap: 11px; align-content: start; }
 .foot-col-products { min-width: 300px; }
@@ -1166,6 +1181,51 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
   color: #d4d4d0; user-select: none;
 }
 .risk { color: var(--deep); font-size: 14px; letter-spacing: -0.005em; }
+
+/* ------------------------------------------------------- hover states -- */
+/* Hover is CSS, never script: it has to work whether or not GSAP loaded, and
+   a transform plus a shadow is cheaper than anything a library would do. */
+.ts-card, .pr-card, .gs-step, .gift-stage, .why-stage {
+  transition: transform 420ms var(--ease-out), box-shadow 420ms var(--ease-out);
+}
+.ts-card:hover, .pr-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
+.gs-step:hover .gs-shot { transform: translateY(-8px); box-shadow: var(--shadow-lg); }
+.gs-shot { transition: transform 420ms var(--ease-out), box-shadow 420ms var(--ease-out); }
+
+/* The props inside a card drift a little further than the card does, so the
+   card reads as having depth rather than as a single flat plate.
+
+   --drift is the scroll-linked offset the script writes; --lift and --pop are
+   the hover. Composing all three here rather than having the script own the
+   transform means the two never fight over the same property. */
+.ts-slot, .ts-bleed, .pr-sticker {
+  --drift: 0px; --lift: 0px; --pop: 1;
+  transform: translateY(calc(var(--drift) + var(--lift))) scale(var(--pop));
+  transition: transform 620ms var(--ease-out);
+}
+.ts-card:hover .ts-slot { --lift: -10px; --pop: 1.03; }
+.ts-card:hover .ts-bleed { --lift: -14px; --pop: 1.04; }
+.pr-card:hover .pr-sticker { --lift: -12px; --pop: 1.04; }
+
+/* A ledger row is the one thing in the pop-up that looks clickable. */
+.pop-row { border-radius: 6px; transition: background 200ms var(--ease-out); }
+.pop-ledger:hover .pop-row { opacity: 0.72; }
+.pop-ledger .pop-row:hover { opacity: 1; background: rgba(5, 51, 41, 0.05); }
+.pop-btn { transition: transform 260ms var(--ease-out), background 260ms var(--ease-out); }
+.pr-card:hover .pop-btn { transform: translateY(-2px); background: #053329; }
+
+.pr-link .pr-arrow, .link-arrow svg { transition: transform 300ms var(--ease-out); }
+.pr-link:hover .pr-arrow { transform: translateX(4px); }
+.faq summary { transition: color 200ms var(--ease-out); }
+.faq details:hover summary { color: var(--deep); }
+.faq details { transition: border-color 260ms var(--ease-out), background 260ms var(--ease-out); }
+.faq details:hover { border-color: rgba(5, 51, 41, 0.18); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ts-card, .pr-card, .gs-shot, .ts-slot, .ts-bleed, .pr-sticker, .pop-btn { transition: none; }
+  .ts-card:hover, .pr-card:hover, .gs-step:hover .gs-shot { transform: none; }
+  .ts-slot, .ts-bleed, .pr-sticker { transform: none; }
+}
 
 /* ------------------------------------------------------------- motion -- */
 /* Onboard's numbers: 50px over 1s on a reveal. The old 18px over 620ms was
