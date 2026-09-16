@@ -609,11 +609,12 @@ h1 .accent { color: var(--mint); }
    page's colour lives — six small blocks rather than one big one. */
 .numbered {
   margin-top: clamp(48px, 5.5vw, 76px);
-  /* Not a uniform 3x2. The business page runs its 01-06 at mixed widths, and
-     a wide card at each end of the slab stops the six reading as a table. */
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  /* Four cards, not a uniform grid of six. The two that carry a pair of
+     screens run the full width; the two single-screen ones share the row
+     between them, which keeps the mixed rhythm without the table. */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
-.numbered .ncard:first-child, .numbered .ncard:last-child { grid-column: span 2; }
+.numbered .ncard-wide { grid-column: 1 / -1; }
 /* The product list is the page's dark block.
  *
  *  This is the shape Onboard's own numbered run is built on: a light ground,
@@ -672,6 +673,24 @@ h1 .accent { color: var(--mint); }
   width: 100%; height: 100%;
   object-fit: cover; object-position: top center;
 }
+
+/* A product with two sides gets one card and both screens. The text sits
+   beside them rather than above, so the pair reads as one product rather
+   than as two cards that happen to be adjacent. */
+.ncard-wide {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr);
+  column-gap: clamp(28px, 3.2vw, 56px);
+  align-items: end;
+}
+.ncard-wide .ncard-body {
+  display: grid; gap: 13px; align-content: start;
+  padding-bottom: clamp(28px, 2.8vw, 36px);
+}
+.ncard-wide .ncard-shots {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(12px, 1.4vw, 20px); align-items: end;
+}
+.ncard-wide .ncard-shot { height: clamp(190px, 21vw, 290px); }
 
 /* -------------------------------------------------------------- split -- */
 .split {
@@ -825,10 +844,6 @@ details[open] .plus::after { transform: translateY(-50%) rotate(0deg); opacity: 
 
 /* ------------------------------------------------------------ responsive */
 @media (max-width: 1040px) {
-  /* The six product cards go two-up here rather than at 880. Below this
-     width a quarter-column is too narrow for a heading to sit on one
-     line, which is the whole point of the headings. */
-  .numbered { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .hero-in { grid-template-columns: minmax(0, 1fr); gap: 44px; }
   .hero-in .hero-stage { aspect-ratio: 5 / 4; }
   .split-head { grid-template-columns: minmax(0, 1fr); gap: 36px; }
@@ -862,10 +877,11 @@ details[open] .plus::after { transform: translateY(-50%) rotate(0deg); opacity: 
   :root { --gutter: 20px; --nav-h: 64px; }
   body { font-size: 16px; }
   .grid-3 { grid-template-columns: minmax(0, 1fr); }
-  /* The wide cards span two columns. Left on in a single-column stack that
-     span invents a second track, collapsing the first to 0 and rendering
-     cards 02-05 at 58px. On a phone every card is just a card. */
-  .numbered .ncard:first-child, .numbered .ncard:last-child { grid-column: auto; }
+  /* A span left on in a single-column stack invents a second track and
+     collapses the first to 0. On a phone every card is just a card, and the
+     wide ones put their screens under the words instead of beside them. */
+  .numbered .ncard-wide { grid-column: auto; grid-template-columns: minmax(0, 1fr); row-gap: 24px; }
+  .ncard-wide .ncard-body { padding-bottom: 0; }
   .cards .card { max-width: 480px; margin-inline: auto; width: 100%; }
   /* Three phones do not fit across a phone. Two columns, and the third wraps
      under the pair rather than shrinking all of them to a thumbnail. */

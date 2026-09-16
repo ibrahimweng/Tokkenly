@@ -19,11 +19,11 @@ t('outside click closes menu', await p.locator('#products-menu').isHidden())
 
 // A menu item goes to its product card, and the card is not under the bar.
 await p.locator('.drop-btn').click()
-await p.locator('#products-menu a[href="#product-earn"]').click()
+await p.locator('#products-menu a[href="#product-borrow-earn"]').click()
 await p.waitForTimeout(900)
-const earnTop = await p.locator('#product-earn').evaluate((e) => e.getBoundingClientRect().top)
+const cardTop = await p.locator('#product-borrow-earn').evaluate((e) => e.getBoundingClientRect().top)
 const navH = await p.locator('.nav').evaluate((e) => e.getBoundingClientRect().height)
-t(`anchor clears the bar (top=${Math.round(earnTop)} navH=${Math.round(navH)})`, earnTop >= navH - 1)
+t(`anchor clears the bar (top=${Math.round(cardTop)} navH=${Math.round(navH)})`, cardTop >= navH - 1)
 t('menu closed after choosing', await p.locator('#products-menu').isHidden())
 
 const d = p.locator('.faq details').first()

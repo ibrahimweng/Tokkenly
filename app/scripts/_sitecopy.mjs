@@ -35,12 +35,16 @@ const norm = (s) => s
  *  from the document, and they are listed here rather than dropped, so the
  *  deviation stays visible and everything else is still checked as written. */
 const REWRITTEN = new Map([
-  ['Receive: Make room for money coming in.', 'Receive money from anyone'],
-  ['Send: For the people and plans that matter.', 'Send money home'],
+  ['Receive: Make room for money coming in.', 'Receive and send money'],
+  ['Send: For the people and plans that matter.', 'Receive and send money'],
   ['Pay bills: Life keeps moving. Keep it connected.', 'Pay your bills'],
-  ['Earn: Give your spare money something to do.', 'Earn on idle money'],
-  ['Borrow: A little room for your next move.', 'Borrow, then repay'],
+  ['Earn: Give your spare money something to do.', 'Borrow and earn'],
+  ['Borrow: A little room for your next move.', 'Borrow and earn'],
   ['Convert: Naira or stablecoins. Move between them.', 'Convert Naira to USD'],
+  /* Receive and Send are one card now, and so are Borrow and Earn, so two of
+     the document's six link labels are carried by the merged card's link. */
+  ['Explore Send', 'Explore Receive and Send'],
+  ['Explore Earn', 'Explore Borrow and Earn'],
 ])
 
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })

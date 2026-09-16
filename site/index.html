@@ -39,12 +39,10 @@
             </button>
             <div class="drop-menu" id="products-menu" hidden>
               <a href="#tokenized-stocks"><span>Tokenized Stocks</span></a>
-              <a href="#product-receive"><span>Receive</span></a>
-              <a href="#product-send"><span>Send</span></a>
+              <a href="#product-receive-send"><span>Receive and Send</span></a>
               <a href="#product-pay-bills"><span>Pay bills</span></a>
-              <a href="#product-earn"><span>Earn</span></a>
-              <a href="#product-borrow"><span>Borrow</span></a>
               <a href="#product-convert"><span>Convert</span></a>
+              <a href="#product-borrow-earn"><span>Borrow and Earn</span></a>
             </div>
           </div>
           <a href="#why">About us</a>
@@ -63,12 +61,10 @@
       <div class="mobile-menu" id="mobile-menu" hidden>
         <p class="mm-head">Products</p>
         <a href="#tokenized-stocks">Tokenized Stocks</a>
-        <a href="#product-receive">Receive</a>
-        <a href="#product-send">Send</a>
+        <a href="#product-receive-send">Receive and Send</a>
         <a href="#product-pay-bills">Pay bills</a>
-        <a href="#product-earn">Earn</a>
-        <a href="#product-borrow">Borrow</a>
         <a href="#product-convert">Convert</a>
+        <a href="#product-borrow-earn">Borrow and Earn</a>
         <p class="mm-head">Company</p>
         <a href="#why">About us</a>
         <a href="#" data-soon>Blog</a>
@@ -117,12 +113,8 @@
       <div class="ticker-clip" aria-hidden="true">
         <div class="ticker">
           <div class="ticker-track">
-          <span>Tokenized Stocks</span><i></i><span>Receive</span><i></i><span>Send</span><i></i
-          ><span>Pay bills</span><i></i><span>Earn</span><i></i><span>Borrow</span><i></i
-          ><span>Convert</span><i></i
-          ><span>Tokenized Stocks</span><i></i><span>Receive</span><i></i><span>Send</span><i></i
-          ><span>Pay bills</span><i></i><span>Earn</span><i></i><span>Borrow</span><i></i
-            ><span>Convert</span><i></i>
+            <span>Tokenized Stocks</span><i></i><span>Receive and Send</span><i></i><span>Pay bills</span><i></i><span>Convert</span><i></i><span>Borrow and Earn</span><i></i>
+            <span>Tokenized Stocks</span><i></i><span>Receive and Send</span><i></i><span>Pay bills</span><i></i><span>Convert</span><i></i><span>Borrow and Earn</span><i></i>
           </div>
         </div>
       </div>
@@ -274,12 +266,10 @@
             <div class="hub" aria-hidden="true">
               <ul class="hub-list">
                 <li>Tokenized Stocks</li>
-                <li>Receive</li>
-                <li>Send</li>
+                <li>Receive and Send</li>
                 <li>Pay bills</li>
-                <li>Earn</li>
-                <li>Borrow</li>
                 <li>Convert</li>
+                <li>Borrow and Earn</li>
               </ul>
               <div class="hub-wire"><span class="hub-spine"></span></div>
               <div class="hub-core">
@@ -301,48 +291,44 @@
           </div>
 
           <div class="grid-3 numbered">
-            <article class="ncard reveal" id="product-receive">
+            <!-- Receiving and sending are one movement in two directions, so they
+                 are one card carrying both screens rather than two cards making
+                 half of the same argument each. Borrowing and earning are the two
+                 sides of the same product, and pair the same way. -->
+            <article class="ncard ncard-wide reveal" id="product-receive-send">
               <p class="num">01</p>
-              <span class="ic" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M12 4v10m0 0l-4-4m4 4l4-4M4 17v2a1 1 0 001 1h14a1 1 0 001-1v-2" /></svg>
-              </span>
-              <h3>Receive money from anyone</h3>
-              <p>
-                Get paid or receive money from people who matter to you. Keep it in Tokkenly, ready
-                for your next move.
-              </p>
-              <a class="link-arrow" href="#money-movement">
-                Explore Receive
-                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg>
-              </a>
+              <div class="ncard-body">
+                <span class="ic" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M8 4v11m0 0l-3.5-3.5M8 15l3.5-3.5M16 20V9m0 0l-3.5 3.5M16 9l3.5 3.5" /></svg>
+                </span>
+                <h3>Receive and send money</h3>
+                <p>
+                  Get paid or receive money from people who matter to you. Keep it in Tokkenly, ready
+                  for your next move.
+                </p>
+                <p>
+                  Support someone at home, settle up with a friend, or move money where you need it.
+                  Send from the same app you use for the rest of your money.
+                </p>
+                <a class="link-arrow" href="#money-movement">
+                  Explore Receive and Send
+                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg>
+                </a>
+              </div>
+              <div class="ncard-shots">
               <figure class="ncard-shot">
                 <img src="./img/p-receive.webp" width="780" height="1600" loading="lazy"
                   alt="Receiving money into Tokkenly on a phone." />
               </figure>
-            </article>
-
-            <article class="ncard reveal" id="product-send">
-              <p class="num">02</p>
-              <span class="ic" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M12 20V10m0 0l-4 4m4-4l4 4M4 7V5a1 1 0 011-1h14a1 1 0 011 1v2" /></svg>
-              </span>
-              <h3>Send money home</h3>
-              <p>
-                Support someone at home, settle up with a friend, or move money where you need it.
-                Send from the same app you use for the rest of your money.
-              </p>
-              <a class="link-arrow" href="#money-movement">
-                Explore Send
-                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg>
-              </a>
               <figure class="ncard-shot">
                 <img src="./img/p-send.webp" width="780" height="1600" loading="lazy"
                   alt="Sending money to someone on Tokkenly, on a phone." />
               </figure>
+              </div>
             </article>
 
             <article class="ncard reveal" id="product-pay-bills">
-              <p class="num">03</p>
+              <p class="num">02</p>
               <span class="ic" aria-hidden="true">
                 <svg viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6" /></svg>
               </span>
@@ -357,59 +343,19 @@
               </a>
               <figure class="ncard-shot">
                 <img src="./img/p-bills.webp" width="780" height="1600" loading="lazy"
-                  alt="Paying airtime, data and electricity bills in Tokkenly." />
-              </figure>
-            </article>
-
-            <article class="ncard reveal" id="product-earn">
-              <p class="num">04</p>
-              <span class="ic" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M4 18V9m5 9V5m5 13v-6m5 6V8" /></svg>
-              </span>
-              <h3>Earn on idle money</h3>
-              <p>
-                Put your stablecoins to work with earning opportunities in Tokkenly. Choose how much
-                to commit and review the terms before you begin.
-              </p>
-              <a class="link-arrow" href="#money-movement">
-                Explore Earn
-                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg>
-              </a>
-              <figure class="ncard-shot">
-                <img src="./img/p-earn.webp" width="780" height="1600" loading="lazy"
-                  alt="What you have lent and what it has paid, in Tokkenly." />
-              </figure>
-            </article>
-
-            <article class="ncard reveal" id="product-borrow">
-              <p class="num">05</p>
-              <span class="ic" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M3 12h18M7 8l-4 4 4 4M17 8l4 4-4 4" /></svg>
-              </span>
-              <h3>Borrow, then repay</h3>
-              <p>
-                Explore borrowing options when you need extra flexibility. Review the terms and
-                repayment requirements, and choose what fits your plans.
-              </p>
-              <a class="link-arrow" href="#money-movement">
-                Explore Borrow
-                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg>
-              </a>
-              <figure class="ncard-shot">
-                <img src="./img/p-borrow.webp" width="780" height="1600" loading="lazy"
-                  alt="What you owe and what backs it, in Tokkenly." />
+                  alt="Paying everyday bills in Tokkenly on a phone." />
               </figure>
             </article>
 
             <article class="ncard reveal" id="product-convert">
-              <p class="num">06</p>
+              <p class="num">03</p>
               <span class="ic" aria-hidden="true">
                 <svg viewBox="0 0 24 24"><path d="M4 8h13m0 0l-3.5-3.5M17 8l-3.5 3.5M20 16H7m0 0l3.5-3.5M7 16l3.5 3.5" /></svg>
               </span>
               <h3>Convert Naira to USD</h3>
               <p>
                 Convert between naira and stablecoins as your needs change. Money for everyday life.
-                Money for what’s next.
+                Money for what&rsquo;s next.
               </p>
               <a class="link-arrow" href="#money-movement">
                 Explore Convert
@@ -417,8 +363,40 @@
               </a>
               <figure class="ncard-shot">
                 <img src="./img/p-wallet.webp" width="780" height="1600" loading="lazy"
-                  alt="Dollars and the naira they are worth, side by side." />
+                  alt="The Tokkenly wallet on a phone, showing dollars alongside what they are worth in naira." />
               </figure>
+            </article>
+
+            <article class="ncard ncard-wide reveal" id="product-borrow-earn">
+              <p class="num">04</p>
+              <div class="ncard-body">
+                <span class="ic" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M12 4v16M4 8h16M7 8l-3 6a3 3 0 006 0zM17 8l-3 6a3 3 0 006 0z" /></svg>
+                </span>
+                <h3>Borrow and earn</h3>
+                <p>
+                  Put your stablecoins to work with earning opportunities in Tokkenly. Choose how much
+                  to commit and review the terms before you begin.
+                </p>
+                <p>
+                  Explore borrowing options when you need extra flexibility. Review the terms and
+                  repayment requirements, and choose what fits your plans.
+                </p>
+                <a class="link-arrow" href="#money-movement">
+                  Explore Borrow and Earn
+                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg>
+                </a>
+              </div>
+              <div class="ncard-shots">
+              <figure class="ncard-shot">
+                <img src="./img/p-earn.webp" width="780" height="1600" loading="lazy"
+                  alt="The lending screen in Tokkenly on a phone, showing an amount lent out." />
+              </figure>
+              <figure class="ncard-shot">
+                <img src="./img/p-borrow.webp" width="780" height="1600" loading="lazy"
+                  alt="The borrowing screen in Tokkenly on a phone, showing an amount owed." />
+              </figure>
+              </div>
             </article>
           </div>
         </div>
@@ -647,12 +625,10 @@
             <div class="foot-col">
               <p class="foot-head">Products</p>
               <a href="#tokenized-stocks">Tokenized Stocks</a>
-              <a href="#product-receive">Receive</a>
-              <a href="#product-send">Send</a>
+              <a href="#product-receive-send">Receive and Send</a>
               <a href="#product-pay-bills">Pay bills</a>
-              <a href="#product-earn">Earn</a>
-              <a href="#product-borrow">Borrow</a>
               <a href="#product-convert">Convert</a>
+              <a href="#product-borrow-earn">Borrow and Earn</a>
             </div>
             <div class="foot-col">
               <p class="foot-head">Company</p>
