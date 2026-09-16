@@ -79,7 +79,8 @@
   "Close": "32:7",
   "Dialog": "32:10",
   "Sheet": "32:17",
-  "Set row": "114:212"
+  "Set row": "114:212",
+  "Sparkline up": "202:364"
  },
  "art": [
   "BORROW",

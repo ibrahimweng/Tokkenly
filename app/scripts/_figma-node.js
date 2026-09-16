@@ -6,7 +6,11 @@
    The scaffold that embeds this declares: PARTS (components by name), missing
    (names with no component, collected), byName (colour variables), styleFor
    and rgb. It is emitted into a use_figma script, not imported. */
-const build = (n, parent) => {
+/* `ox`/`oy` are the parent's origin on the page. Everything in the tree is
+   measured from the page, but a frame's x is measured from its parent, so a
+   slice looking for a frame an earlier slice made has to compare the two in
+   one space or it will never find anything below the second level. */
+const build = (n, parent, ox = 0, oy = 0) => {
   // A named part is a component in this file. Place an instance rather than a
   // copy, so editing the component edits every screen that uses it.
   if (n.p) {
@@ -58,7 +62,7 @@ const build = (n, parent) => {
     // The run inside it, in the box's own coordinates, centred the way the
     // box centres it. Everything a chip is doing is one line in a pill.
     const inner = build({ ...n, f: undefined, v: undefined, r: undefined, o: undefined,
-                          b: [n.b[0], n.b[1], n.b[2], n.b[3]] }, box)
+                          b: [n.b[0], n.b[1], n.b[2], n.b[3]] }, box, n.b[0], n.b[1])
     if (inner) {
       inner.x = n.ta === 'center' ? (n.b[2] - inner.width) / 2
         : (n.ta === 'right' || n.ta === 'end') ? n.b[2] - inner.width : 0
@@ -104,10 +108,25 @@ const build = (n, parent) => {
   // Reuse a frame this part's ancestors already made, so a screen built in
   // slices ends up as one tree rather than one tree per slice.
   const name = n.n || 'box'
+  // Same name, same place, same width. The y has to be in it: every row of a
+  // table is a frame called tr at the same x and the same width, and matching
+  // without it folded every row a later slice appended into the first row the
+  // first slice drew.
   let f = parent.children.find((c) => c.type === 'FRAME' && c.name === name
-    && Math.round(c.x) === Math.round(n.b[0] - (parent.type === 'FRAME' ? 0 : 0))
+    && Math.round(c.x) === Math.round(n.b[0] - ox)
+    && Math.round(c.y) === Math.round(n.b[1] - oy)
     && Math.round(c.width) === Math.max(1, n.b[2]))
-  if (f) { for (const k of n.k || []) build(k, f); return null }
+  if (f) {
+    for (const k of n.k || []) {
+      const c = build(k, f, n.b[0], n.b[1])
+      // The same move the branch below makes: a child arrives in page
+      // coordinates and the frame it is going into is not at the origin.
+      // Without it every row a later slice appended sat a screen away from
+      // the rows slice 0 had already drawn.
+      if (c) { c.x = c.x - n.b[0]; c.y = c.y - n.b[1] }
+    }
+    return null
+  }
   f = figma.createFrame()
   f.name = name
   f.clipsContent = false
@@ -127,7 +146,7 @@ const build = (n, parent) => {
   if (n.r) f.cornerRadius = n.r
   if (n.o !== undefined) f.opacity = n.o
   for (const k of n.k || []) {
-    const c = build(k, f)
+    const c = build(k, f, n.b[0], n.b[1])
     // Children came out of the DOM in page coordinates; make them the frame's.
     if (c) { c.x = c.x - n.b[0]; c.y = c.y - n.b[1] }
   }

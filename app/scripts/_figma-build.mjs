@@ -63,42 +63,69 @@ const pack = (n) => {
 const N = Number(nParts)
 const P = Number(part)
 
-/* Where to cut a screen that will not fit in one call.
+/* Cut a screen that will not fit in one call into slices that do.
  *
- * Not at the top-level children: a screen is a shell holding a column holding
- * a stack, so the root usually has one child and slicing it slices nothing.
- * The cut belongs at the first node that actually holds a list of things —
- * the deepest node still carrying most of the payload and more than a handful
- * of children. */
+ * The rule used to be: find the one node carrying most of the payload and
+ * split its children. On an index page that is a chart card beside a
+ * thirty-two row table it found nothing. The table is 56% of the screen, just
+ * under the threshold the rule asked for, so the cut fell back to the root —
+ * whose single child cannot be split — and slice 0 came out holding the whole
+ * screen while the rest came out empty.
+ *
+ * This asks a simpler question. Walk for the biggest subtrees that already
+ * fit, in the order they are drawn, and fill a slice until the next one would
+ * not. Ancestors are carried in every slice that needs them, because the
+ * builder finds the frame it already made rather than making a second one —
+ * but a branch with nothing in this slice is dropped, since carrying it anyway
+ * is what put the chart card in the payload of every slice of a page that is
+ * mostly one table. */
+const BUDGET = Number(process.env.SLICE_BUDGET || 21000)
 const weigh = (n) => JSON.stringify(n).length
-function splitAt(root) {
-  let best = root
+
+/* The largest subtrees that fit, in drawing order. A node too big to fit is
+   replaced by its children; one with no children to give goes in over budget,
+   because a single node is the smallest thing this can emit. */
+function chunks(root) {
+  const out = []
   const walk = (n) => {
-    const kids = n.k ?? []
-    if (kids.length >= 4) {
-      const mine = weigh(n)
-      if (mine >= weigh(root) * 0.6) best = n
-    }
-    for (const k of kids) walk(k)
+    if (weigh(n) <= BUDGET || !(n.k ?? []).length) { out.push(n); return }
+    for (const k of n.k) walk(k)
   }
   walk(root)
-  return best
+  return out
+}
+
+/* Fill each slice in order until the next chunk would not fit. Order matters:
+   a screen built out of order would have its rows in the wrong places. */
+function bins(root) {
+  const out = []
+  let cur = []
+  let w = 0
+  for (const c of chunks(root)) {
+    const cw = weigh(c)
+    if (cur.length && w + cw > BUDGET) { out.push(cur); cur = []; w = 0 }
+    cur.push(c)
+    w += cw
+  }
+  if (cur.length) out.push(cur)
+  return out
+}
+
+/* This slice's tree: the chunks it owns, and only the ancestors above them. */
+function prune(n, keep) {
+  if (keep.has(n)) return n
+  const kids = (n.k ?? []).map((k) => prune(k, keep)).filter(Boolean)
+  return kids.length ? { ...n, k: kids } : null
 }
 
 const screens = indices.map((i) => {
   const sc = doc.screens[i]
   let t = pack(sc.tree)
   if (N > 1) {
-    const cut = splitAt(t)
-    const kids = cut.k ?? []
-    const per = Math.ceil(kids.length / N)
-    const slice = kids.slice(P * per, (P + 1) * per)
-    // Every ancestor above the cut is emitted in every slice; the builder finds
-    // the frame it already made rather than making a second one.
-    const rebuild = (n) => (n === cut
-      ? { ...n, k: slice }
-      : { ...n, k: (n.k ?? []).map(rebuild) })
-    t = rebuild(t)
+    const parts = bins(t)
+    process.stderr.write('slices=' + parts.length + '\n')
+    if (P >= parts.length) { console.error('slice ' + P + ' of ' + parts.length); process.exit(1) }
+    t = prune(t, new Set(parts[P])) ?? { ...t, k: [] }
   }
   return { name: sc.name, t }
 })
