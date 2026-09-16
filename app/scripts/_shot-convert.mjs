@@ -22,6 +22,23 @@ const SIZES = [
   { w: 390, h: 844, tag: '390' },
 ]
 
+/* Both halves or nothing.
+ *
+ *  This lives in scripts/, so all.sh runs it with everything else — and a
+ *  normal sweep starts one preview, not two. Crashing there would be a capture
+ *  script reporting a failure of the product, which is a lie with a stack
+ *  trace on it. No before to compare against is not a failure, it is nothing
+ *  to do, so say which port is missing and stand down. */
+const up = async (u) => {
+  try { return (await fetch(u, { method: 'HEAD' })).ok } catch { return false }
+}
+for (const [name, base] of [['after', AFTER], ['before', BEFORE]]) {
+  if (await up(base.replace(/#$/, ''))) continue
+  console.log(`no ${name} build on ${base.replace(/\/#$/, '')} — nothing to compare, skipping.`)
+  console.log('Serve it with: npx vite preview --port 4174 --strictPort (from a worktree)')
+  process.exit(0)
+}
+
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 const shots = []
 

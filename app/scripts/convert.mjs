@@ -170,6 +170,79 @@ for (const [f, t] of [['usdc', 'usdt'], ['usdt', 'ngn'], ['ngn', 'usdt']]) {
   ok(`${f} to ${t} is a screen with a button`, h1 === 'Convert' && has > 0, `${h1} / ${has}`)
 }
 
+/* ---- the card ----
+   Two rows that are one amount. The pair reads off the two fields now, so the
+   two fields are what this checks: that they disagree in unit and agree in
+   value, that either end solves the other, and that the ruler and the rail
+   that used to be here are gone rather than merely hidden. */
+await at('/convert/usdc/ngn')
+const shape = await p.evaluate(() => ({
+  rows: document.querySelectorAll('.swap-row').length,
+  fields: [...document.querySelectorAll('.swap-amount input')].map((i) => i.value),
+  tokens: [...document.querySelectorAll('.swap-token')].map((t) => t.innerText.trim()),
+  balances: [...document.querySelectorAll('.swap-bal')].map((b) => b.innerText.replace(/\n/g, ' ')),
+  flip: !!document.querySelector('.swap-flip'),
+  ruler: !!document.querySelector('.ruler'),
+  rail: !!document.querySelector('.set-split'),
+  maxes: document.querySelectorAll('.swap-max').length,
+}))
+ok('the card is two rows and a flip', shape.rows === 2 && shape.flip, JSON.stringify(shape.rows))
+ok('each field counts in its own unit',
+   shape.fields[0]?.startsWith('$') && shape.fields[1]?.startsWith('\u20a6'),
+   shape.fields.join(' / '))
+ok('each row names its token', shape.tokens.join(',') === 'USDC,Naira', shape.tokens.join(' / '))
+ok('each row carries its balance', shape.balances.length === 2
+   && shape.balances[0].includes('$') && shape.balances[1].includes('\u20a6'),
+   shape.balances.join(' | '))
+ok('only the paying row offers Max', shape.maxes === 1, String(shape.maxes))
+ok('the ruler is gone', !shape.ruler)
+ok('the rail is gone', !shape.rail)
+
+const top = p.locator('.swap-amount input').first()
+const bot = p.locator('.swap-amount input').nth(1)
+const both = () => p.$$eval('.swap-amount input', (n) => n.map((i) => i.value))
+
+await top.fill('250'); await top.dispatchEvent('input'); await p.waitForTimeout(200)
+ok('typing the top solves the bottom', (await both())[1] === '\u20a6375,000', (await both()).join(' / '))
+await bot.fill('75000'); await bot.dispatchEvent('input'); await p.waitForTimeout(200)
+ok('typing the bottom solves the top', (await both())[0] === '$50.00', (await both()).join(' / '))
+// The ceiling is whatever the paying row says it is. Read it rather than
+// writing it down: this suite spends USDC six times before it gets here, so a
+// hardcoded $1,680.00 tests only that nothing above ran.
+const ceiling = () => p.$eval('.swap-bal .muted', (e) => e.textContent.trim())
+
+// Asking the receiving end for more than the paying end can cover settles at
+// what it can, rather than showing a pair that is not a rate.
+await bot.fill('9000000'); await bot.dispatchEvent('input'); await p.waitForTimeout(200)
+ok('the bottom cannot ask past the ceiling', (await both())[0] === (await ceiling()),
+   (await both())[0] + ' vs ' + (await ceiling()))
+
+await at('/convert/usdc/ngn')
+await p.locator('.swap-max').click(); await p.waitForTimeout(200)
+ok('Max fills the paying row', (await both())[0] === (await ceiling()),
+   (await both())[0] + ' vs ' + (await ceiling()))
+
+/* ---- the flip ---- */
+await at('/convert/usdc/ngn')
+await top.fill('50'); await top.dispatchEvent('input'); await p.waitForTimeout(200)
+await p.locator('.swap-flip').click(); await p.waitForTimeout(600)
+ok('the flip turns the address over',
+   (await p.evaluate(() => location.hash)) === '#/convert/ngn/usdc',
+   await p.evaluate(() => location.hash))
+ok('and the amount survives the turn', (await both())[0] === '\u20a675,000', (await both()).join(' / '))
+
+/* ---- the token pickers ---- */
+await at('/convert/usdc/ngn')
+await p.locator('.swap-token').nth(1).click(); await p.waitForTimeout(500)
+ok('the receiving token opens a picker that says so',
+   (await p.$eval('.sheet h2', (e) => e.textContent).catch(() => '')) === 'Convert into what?')
+await p.locator('.sheet .set-row').first().click(); await p.waitForTimeout(600)
+// USDC is already the paying side, so asking to receive it is asking to turn
+// the pair over — not to convert a thing into itself.
+ok('picking the other side\u2019s token flips instead of pairing a thing with itself',
+   (await p.evaluate(() => location.hash)) === '#/convert/ngn/usdc',
+   await p.evaluate(() => location.hash))
+
 /* ---- the books ---- */
 const sums = await trial()
 ok('both trial balances still come to nothing', sums.length > 0 && sums.every((s) => !s.off),
@@ -205,10 +278,25 @@ await ph.waitForTimeout(500)
 const phoneDoors = await ph.$$eval('.way .t-title', (n) => n.map((x) => x.textContent))
 ok('the phone has the three doors too', phoneDoors.join(',') === 'Add money,Send,Convert',
    phoneDoors.join(' / '))
+// It used to come up as a sheet over the wallet, because the screen behind it
+// was a rail and an empty panel. It is a card now, and a card is a page at
+// every width.
 await ph.goto(B + '/convert', { waitUntil: 'domcontentloaded' })
 await ph.waitForTimeout(700)
-const sheetOpen = await ph.evaluate(() => !!document.querySelector('.sheet'))
-ok('/convert on a phone asks from the bottom', sheetOpen)
+const phoneCard = await ph.evaluate(() => ({
+  sheet: !!document.querySelector('.sheet'),
+  rows: document.querySelectorAll('.swap-row').length,
+  hash: location.hash,
+}))
+ok('/convert on a phone is the card, not a sheet', !phoneCard.sheet && phoneCard.rows === 2,
+   JSON.stringify(phoneCard))
+ok('and it has landed on a whole pair', /#\/convert\/\w+\/\w+/.test(phoneCard.hash), phoneCard.hash)
+const phoneFits = await ph.evaluate(() => {
+  const btn = [...document.querySelectorAll('.btn-primary')]
+    .find((b) => /^Convert/.test(b.textContent ?? ''))
+  return btn ? Math.round(btn.getBoundingClientRect().bottom) : -1
+})
+ok('the button is above the fold on a phone', phoneFits > 0 && phoneFits <= 844, String(phoneFits))
 
 console.log(errs.length ? 'ERRORS ' + errs.slice(0, 4).join(' | ') : 'no page errors')
 console.log(bad ? `${bad} FAILED` : 'all passed')

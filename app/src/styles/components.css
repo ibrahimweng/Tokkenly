@@ -3138,3 +3138,66 @@ th.right .th-sort { flex-direction: row-reverse; }
      the height, and giving it the height would space the trail out. */
   .crumb-sep { align-self: center; }
 }
+
+/* ---------- the swap card ----------
+   Two rows that are one amount, and a control between them that turns the
+   pair over. The rows are panels rather than cards so the seam between them
+   reads as a join and not as two unrelated things stacked; the flip sits on
+   that seam, overlapping both, because it belongs to neither.
+
+   No ruler here. Item 19 counted the ways to enter an amount and stopped at
+   two; this screen has the field and the chips, and the ruler was the third. */
+/* A conversion is a small question, and a card stretched across 1,008px of
+   content column would be a small question shouted. Capped and centred, so it
+   is the same object at every width rather than a different one. */
+.swap-page { max-width: 460px; width: 100%; margin-inline: auto; }
+.swap { display: flex; flex-direction: column; gap: 4px; position: relative; }
+.swap-row {
+  background: var(--control); border-radius: var(--r-panel);
+  padding: 14px 16px; display: flex; flex-direction: column; gap: 10px;
+}
+.swap-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.swap-bal { display: inline-flex; align-items: baseline; gap: 8px; font-size: 12px; }
+.swap-bal .muted { font-size: 12px; }
+.swap-max { font-size: 12px; }
+.swap-field { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.swap-amount { flex: 1; min-width: 0; }
+.swap-amount input {
+  width: 100%; font-size: 30px; line-height: 40px; font-weight: 600;
+  letter-spacing: -0.02em; background: transparent; border: 0; color: var(--ink);
+}
+.swap-amount input:focus { outline: none; }
+.swap-amount input:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; border-radius: 8px; }
+/* The token, as a pill rather than a select: it opens the same three-way
+   dialog the Wallet's Convert door opens, so it should look like the thing
+   that opens a dialog. */
+.swap-token {
+  flex: none; gap: 8px; padding-inline: 12px 10px; height: 44px; border-radius: 22px;
+  /* A control sitting on a control needs to be lighter than the thing it sits
+     on, or it reads as a label. The rows are --control, so this is --surface. */
+  background: var(--surface); color: var(--ink); font-size: 14px;
+}
+.swap-token:hover { background: var(--sunken); }
+.swap-token .dot { width: 10px; height: 10px; flex: none; }
+.swap-token .ic { display: inline-flex; opacity: 0.55; }
+/* It opens a dialog under itself, so it points the way the dialog comes from.
+   The product has one chevron and it points right; this is that chevron,
+   turned, rather than a second one to keep in step with the first. */
+.swap-token .ic svg { width: 14px; height: 14px; transform: rotate(90deg); }
+
+/* The rail is a zero-height strip the button hangs in, so the two panels stay
+   4px apart and the button does not push them around when it appears. */
+.swap-flip-rail { height: 0; display: flex; justify-content: center; position: relative; z-index: 1; }
+.swap-flip {
+  margin-top: -22px; width: 44px; height: 44px; border-radius: 22px;
+  background: var(--sunken); border: 4px solid var(--surface);
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.swap-flip:hover { background: var(--control); }
+.swap-quick { justify-content: center; margin-top: 4px; }
+.swap-detail { margin-top: 4px; }
+
+@media (max-width: 899px) {
+  .swap-amount input { font-size: 26px; line-height: 34px; }
+  .swap-token { height: 40px; }
+}

@@ -443,7 +443,9 @@ export const SHEETS: Record<string, Builder> = {
    *  rather than on a page with nothing under its title. */
   'send-ways': () => sheet('Where is it going?', sendWays()),
   'add-ways': () => sheet('How are you adding it?', addWays()),
-  'convert-ways': () => sheet('What are you converting?', convertWays()),
+  'convert-ways': (r) => sheet(str(r, 'side') === 'to' ? 'Convert into what?'
+                                                       : 'Convert out of what?',
+                               convertWays(str(r, 'side'), str(r, 'from'), str(r, 'to'))),
 
   /** The rest of the rail. Four places are tabs; these five are behind More. */
   /** Jump to anything: a place, an action, a person you pay, something you

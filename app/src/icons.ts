@@ -70,6 +70,10 @@ export const icon = {
      down arrow was already spoken for by Add money. */
   qr: () => svg('<rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><path d="M14 14h2.5M14 14v2.5M20 14v2.5M17 20h3M14 20h.01"/>', 18),
   convert: () => svg('<path d="M4 8h13l-3-3M20 16H7l3 3"/>', 18),
+  /* The same idea stood on its end. Convert's two balances are stacked, not
+     side by side, so the control that turns them over points the way they
+     would actually travel. */
+  flip: () => svg('<path d="M8 4v13l-3-3M16 20V7l3 3"/>', 18),
   buy: () => svg('<path d="M6 18 18 6M10 6h8v8"/>', 18),
   /* The natures an activity row can have, one glyph each. A feed that mixes a
      share purchase, a salary, a loan and a sign-in needs the left edge to say

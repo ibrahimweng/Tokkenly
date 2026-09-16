@@ -9597,3 +9597,55 @@ Figma's Geist has no ₦ — so a rate reads "1 dollar = 1,500" there and
 and the build; both are the export losing something on the way across. They are
 most visible on the Convert screens because naira is half of what those screens
 are about.
+
+### 11g.84 — Convert as a swap card, and an exception to item 19
+
+Shown a swap widget and asked why Convert did not look like one. The honest
+answer is that it was built out of the parts the rest of the product is built
+out of, and those parts encode an assumption that does not hold here.
+
+Every other way of moving money in this product is a composer: a rail of what
+you hold on the left, a panel on the right asking how much, a ruler under the
+field. That shape follows a question — *how much of this* — and it is the right
+shape whenever the answer is one number about one thing. Converting is not that
+question. Converting is *this, for that*, and the two halves are equals. Every
+product that does it draws two rows and a control between them, from the board
+in a bureau de change window to 1inch, and they all draw it that way because
+the thing itself is symmetrical.
+
+So the screen is a card now: two rows, a flip on the seam between them, the
+rate, and the button. Gone: the rail, the ruler, and the summary rows that read
+back "You give" and "You get" — the two fields say those things themselves, and
+saying them twice was most of why the screen felt long. The balances came off
+the rail and went under the tokens they belong to, which is the only place they
+were ever read; the paying row's doubles as Max.
+
+**The exception.** Item 19 said every composer in this product counts in
+dollars, and convert.ts carried a comment saying a field that changed currency
+under somebody's hand would be "a fourth way to enter an amount on a product
+that decided there were two." The card breaks that, deliberately: the naira row
+counts in naira and the dollar row counts in dollars.
+
+The rule is still right and the exception is still an exception. What item 19
+was protecting against is four controls that each set the same number in a
+different idiom. That is not what this is. ₦25,000 and $16.67 are not two
+amounts; they are one amount wearing the two faces it is passing between, and a
+person converting naira thinks in naira on the way in and dollars on the way
+out. Forcing both into dollars meant typing 16.67 to convert ₦25,000, which is
+not a number anybody has in their head. Dollars remain the truth underneath —
+`actions.convert` takes dollars, the ledger posts dollars, and the pivot in
+swap.ts is dollars. Naira is a face.
+
+The narrow route changed with it. `/convert` used to open the three balances as
+a sheet over the wallet, because the screen behind them was a rail and an empty
+panel and looked broken. It is four rows and a button now, which is a page at
+390 as much as at 1440, and the button lands 720px down a 844px screen.
+
+**One thing the build found.** The first version redrew only the receiving
+field on every keystroke, on the theory that the paying field is the one being
+typed into. That is true exactly half the time. Typing into the receiving end
+left the card showing $100.00 next to ₦75,000 — not a rate anybody has been
+offered, and not a rate at all. The fix was to stop passing a flag saying which
+field to leave alone and let each field decline the write while it holds the
+caret: one rule, in one place, instead of a decision every caller had to get
+right.
