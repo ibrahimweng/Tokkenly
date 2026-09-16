@@ -19,11 +19,11 @@ t('outside click closes menu', await p.locator('#products-menu').isHidden())
 
 // A menu item goes to its product card, and the card is not under the bar.
 await p.locator('.drop-btn').click()
-await p.locator('#products-menu a[href="#product-earn"]').click()
+await p.locator('#products-menu a[href="#product-borrow-earn"]').click()
 await p.waitForTimeout(900)
-const earnTop = await p.locator('#product-earn').evaluate((e) => e.getBoundingClientRect().top)
+const cardTop = await p.locator('#product-borrow-earn').evaluate((e) => e.getBoundingClientRect().top)
 const navH = await p.locator('.nav').evaluate((e) => e.getBoundingClientRect().height)
-t(`anchor clears the bar (top=${Math.round(earnTop)} navH=${Math.round(navH)})`, earnTop >= navH - 1)
+t(`anchor clears the bar (top=${Math.round(cardTop)} navH=${Math.round(navH)})`, cardTop >= navH - 1)
 t('menu closed after choosing', await p.locator('#products-menu').isHidden())
 
 const d = p.locator('.faq details').first()
@@ -49,9 +49,18 @@ const btn = await p.locator('.nav-end .btn').boundingBox()
 t(`bar button stays small (w=${Math.round(btn.width)})`, btn.width < 140)
 await p.locator('#mobile-menu a[href="#faq"]').click()
 t('choosing closes the menu', await p.locator('#mobile-menu').isHidden())
-// The hero picture is the phone one at this width.
-const heroSrc = await p.locator('.hero-shot img').evaluate((i) => i.currentSrc)
-t(`hero uses the phone picture (${heroSrc.split('/').pop()})`, /p-home/.test(heroSrc))
+/* The hero is one wide panel of brand colour with the product on it. The
+   photograph slots are gone: an empty colour block is worse than the
+   screenshot it replaced. What is worth asserting is that the panel and the
+   screen inside it are both there, and that the panel keeps a real width at
+   390 rather than collapsing. */
+t('hero has a colour panel', await p.locator('.hero-stage').isVisible())
+const heroSrc = await p.locator('.hero-stage .shot img').evaluate((i) => i.currentSrc)
+t(`panel carries the product (${heroSrc.split('/').pop()})`, /home\.webp/.test(heroSrc))
+const st = await p.locator('.hero-stage').boundingBox()
+t(`panel holds its width at 390 (w=${Math.round(st.width)})`, st.width > 300 && st.width <= 390)
+const staged = await p.locator('.stage').count()
+t(`every screen sits on colour (${staged} panels)`, staged >= 8)
 await p.close()
 
 console.log('PASS (' + pass.length + ')\n  ' + pass.join('\n  '))

@@ -36,12 +36,27 @@ async function run(label, width, height) {
     document.querySelectorAll('img').forEach((im) => {
       if (!im.complete || im.naturalWidth === 0) broken.push(im.getAttribute('src'))
     })
+    /* An element wider than the viewport only matters if it can actually make
+       the page scroll sideways. getBoundingClientRect reports the geometry of
+       a rotated or oversized box whether or not an ancestor clips it, so the
+       tilted ticker — which is clipped by a wrapper and cannot scroll anything
+       — was being reported alongside real faults. Anything inside a clipping
+       ancestor is skipped; documentElement.scrollWidth above is the real test
+       and stays as it is. */
+    const clipped = (el) => {
+      for (let n = el.parentElement; n && n !== document.body; n = n.parentElement) {
+        const ox = getComputedStyle(n).overflowX
+        if (ox === 'hidden' || ox === 'clip' || ox === 'auto' || ox === 'scroll') return true
+      }
+      return false
+    }
     const bad = []
     document.querySelectorAll('body *').forEach((el) => {
       if (el.classList.contains('skip')) return
       const r = el.getBoundingClientRect()
       if (r.width === 0) return
       if (r.right > w + 1 || r.left < -1) {
+        if (clipped(el)) return
         bad.push(`${el.tagName.toLowerCase()}.${(el.className || '').toString().split(' ')[0]} L${Math.round(r.left)} R${Math.round(r.right)}`)
       }
     })

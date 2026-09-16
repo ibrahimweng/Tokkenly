@@ -1,16 +1,25 @@
 /* =========================================================================
    Tokkenly — marketing site.
 
-   Two rules run this file. The colour is the product's own light theme, taken
-   from app/src/styles/tokens.css rather than picked again here, so the site
-   and the app are the same object seen from two sides. The type is the
-   product's own face, Geist, and nothing else: one sans-serif family, two
-   weights, no serif anywhere.
+   COLOUR comes from the Colour page of the Tokkenly Mobile App Figma file,
+   light values, not from the app's tokens.css — the two disagree and the
+   Figma page is the newer, warmer one. Its own rule governs the ratio:
+   roughly 70 per cent surface, 20 per cent deep green ink, 10 per cent
+   accent, and sand is never a full background.
 
-   The layout is Onboard's: a centred hero over one large picture of the real
-   thing, sections that alternate between a full-width statement and a row of
-   cards, a numbered grid for the product list, and an accordion for the
-   questions. Generous whitespace, and every picture is a screenshot.
+   The single biggest thing that makes this page feel alive rather than
+   drafted is that the ink is #053329, a deep green, and not black. Every
+   heading, every paragraph, every border is a green with the light knocked
+   out of it, so the whole page sits in one warm family instead of reading as
+   grey text on grey paper.
+
+   TYPE is Geist and nothing else: one sans-serif family, two weights.
+
+   MOTION is measured from Onboard rather than guessed: travel of 50px over
+   1s on a scroll reveal, 100px over 1.4s on the hero with a per-element
+   stagger, both on cubic-bezier(0.16, 0.84, 0.44, 1). The previous version
+   moved 18px in 620ms, which is short enough and quick enough that nothing
+   appears to move at all.
    ========================================================================= */
 
 @font-face {
@@ -39,56 +48,86 @@
 :root {
   color-scheme: light;
 
-  /* Straight from the product's light theme. */
-  --canvas: #f4f4f1;
+  /* surface */
+  /* The ground is the palette's cream, not its mint-white. surface/canvas at
+     #F6F8F6 is correct and cool and quiet; the brief is for loud and happy,
+     and warmth is most of what separates the two. Cream is an approved brand
+     value — what moves here is the ratio it is used at, which is the axis the
+     Figma page itself says is the variable one. #F6F8F6 keeps its job as the
+     ground inside a light card. */
+  /* The Figma page ground is #eaeae9, not white. Every section but the hero
+     sits on it, so it belongs on the body rather than on each band. */
+  --canvas: #eaeae9;
+  --paper: #f6f8f6;
+  --cream: #fdf6dc;
   --surface: #ffffff;
-  --sunken-hover: #f1f1ee;
-  --control: #e9e9e4;
-  --control-pressed: #dcdcd5;
-  --inverse: #1a1a1e;
-  --inverse-hover: #2c2c33;
-  --sand: #6e4f35;
-  --sand-hover: #5c4029;
+  --sunken: #eff2f0;
+  --deep: #053329;          /* surface/inverse — the dark bands */
+  --mint: #2bbd9b;          /* surface/accent — once per section, not more */
+  --sand: #d5a578;          /* accent only. Never a background. */
 
-  --ink: #17171a;
-  --muted: #55555e;
-  --subtle: #6c6c76;
-  --on-inverse: #f7f7f5;
+  /* ink */
+  --ink: #053329;           /* 13.3:1 on canvas */
+  --muted: #55746e;         /* 4.85:1 — labels, captions, body support */
+  --placeholder: #8ea39f;   /* 2.9:1 — disabled and placeholder ONLY */
+  --on-deep: #ffffff;
+  --on-deep-muted: #a9c4bb; /* 7.5:1 on deep green */
 
-  --accent: #0b5140;
-  --positive: #0f7d55;
-  --grid: #e5e5df;
-  --tint-brand: #e4efea;
+  /* state */
+  --focus: #105c4c;
+  --positive: #0f7a5f;
+  --fill-mint: #2bbd9b;
+  --fill-orange: #f85113;
+  --fill-yellow: #f9d100;
 
-  --shadow-hover: 0 6px 20px rgba(24, 24, 20, 0.14);
-  --shadow-float: 0 10px 30px rgba(24, 24, 20, 0.18);
+  /* tint — the quiet bands and the chips behind icons */
+  --tint-mint: #e6f7f1;
+  --tint-peach: #fdeae2;
+  --tint-cream: #fdf6dc;   /* now the page ground; bands use peach and mint */
+  --tint-brand: #e8f0ed;
 
-  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --t-fast: 110ms;
-  --t-base: 160ms;
+  /* line work. A border on this page is ink at low alpha rather than a grey,
+     so it belongs to the same green family as everything else. */
+  --line: rgba(5, 51, 41, 0.1);
+  --line-soft: rgba(5, 51, 41, 0.06);
+  --line-deep: rgba(255, 255, 255, 0.14);
 
-  --r-card: 20px;
-  --r-panel: 16px;
+  /* Shadows are green too. A neutral black shadow under a card on a mint-white
+     page reads as dirt; the same shadow mixed toward the ink reads as shade. */
+  --shadow-sm: 0 1px 3px rgba(5, 51, 41, 0.06);
+  --shadow: 0 6px 18px rgba(5, 51, 41, 0.07);
+  --shadow-lg: 0 18px 44px rgba(5, 51, 41, 0.13);
+
+  /* motion, measured from the reference */
+  --ease: cubic-bezier(0.16, 0.84, 0.44, 1);
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --t-fast: 140ms;
+  --t-base: 220ms;
+
+  --r-sm: 12px;
+  --r-md: 18px;
+  --r-lg: 26px;
+  --r-xl: 34px;
   --r-pill: 999px;
 
-  --nav-h: 68px;
-  --wrap: 1200px;
-  --gutter: 24px;
-  --section-y: clamp(72px, 9vw, 136px);
+  --nav-h: 72px;
+  /* The Figma frame is 1920 with 200 gutters, so the content column is 1520.
+     Both are expressed against that width so the column narrows in step with
+     the type rather than snapping at a breakpoint. */
+  --wrap: 1920px;
+  --gutter: max(24px, min(200px, 10.417vw));
+  --section-y: min(144px, 7.5vw);
 
   --font: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
     'Helvetica Neue', Arial, sans-serif;
 }
 
 /* --------------------------------------------------------------- base -- */
-*,
-*::before,
-*::after { box-sizing: border-box; }
+*, *::before, *::after { box-sizing: border-box; }
 
 html {
   scroll-behavior: smooth;
-  /* Anchors land below the fixed bar rather than under it. */
-  scroll-padding-top: calc(var(--nav-h) + 16px);
+  scroll-padding-top: calc(var(--nav-h) + 20px);
   -webkit-text-size-adjust: 100%;
 }
 
@@ -99,599 +138,1101 @@ body {
   font-family: var(--font);
   font-size: 17px;
   line-height: 1.6;
-  font-weight: 400;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
 img { max-width: 100%; display: block; }
-
 a { color: inherit; text-decoration: none; }
-
-h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.03em; }
+h1, h2, h3 { margin: 0; font-weight: 700; letter-spacing: -0.03em; }
 p { margin: 0; }
 ol, ul { margin: 0; padding: 0; list-style: none; }
 
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-  border-radius: 6px;
-}
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 8px; }
 
 .skip {
-  position: absolute;
-  left: -9999px;
-  top: 8px;
-  z-index: 100;
-  background: var(--inverse);
-  color: var(--on-inverse);
-  padding: 10px 16px;
-  border-radius: var(--r-pill);
+  position: absolute; left: -9999px; top: 8px; z-index: 100;
+  background: var(--deep); color: var(--on-deep);
+  padding: 10px 18px; border-radius: var(--r-pill);
 }
 .skip:focus { left: 16px; }
 
 .wrap {
-  width: 100%;
-  max-width: var(--wrap);
-  margin: 0 auto;
+  width: 100%; max-width: var(--wrap); margin: 0 auto;
   padding-inline: var(--gutter);
+  position: relative; z-index: 1;
 }
-.wrap-narrow { max-width: 860px; }
+.wrap-narrow { max-width: 880px; }
 
 /* ---------------------------------------------------------------- type -- */
-h1 {
-  font-size: clamp(40px, 6.4vw, 74px);
-  line-height: 1.04;
-  letter-spacing: -0.038em;
-}
+h1 { font-size: clamp(40px, 5.4vw, 76px); line-height: 1.06; letter-spacing: -0.04em; }
+h2 { font-size: clamp(34px, 5.4vw, 68px); line-height: 1.02; letter-spacing: -0.042em; }
+h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.022em; }
 
-h2 {
-  font-size: clamp(30px, 4.2vw, 50px);
-  line-height: 1.1;
-  letter-spacing: -0.032em;
-}
+.lead { font-size: clamp(16.5px, 1.4vw, 20px); line-height: 1.6; color: var(--muted); }
 
-h3 {
-  font-size: clamp(19px, 1.5vw, 21px);
-  line-height: 1.32;
-  letter-spacing: -0.02em;
-}
-
-.lead {
-  font-size: clamp(16px, 1.35vw, 19px);
-  line-height: 1.62;
+/* The eyebrow sits on --muted, not on --placeholder: the Figma page marks that
+   rung disabled-and-placeholder-only at 2.9:1, and an eyebrow is read. */
+.eyebrow {
+  /* Block-level, not inline-flex: as an inline box it sits in a line box that
+     carries the parent's 1.6 leading, which pushed every section head 7px
+     down from where the frame puts it. */
+  display: flex; width: fit-content; align-items: center; gap: 8px;
+  font-size: 12px; line-height: 16px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
   color: var(--muted);
 }
-
-.eyebrow {
-  font-size: 12px;
-  line-height: 16px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--subtle);
+/* A mint dot in front of every section label. One small piece of colour,
+   repeated, is what ties a long page together. */
+.eyebrow::before {
+  content: ''; width: 7px; height: 7px; flex: none;
+  border-radius: 50%; background: var(--mint);
 }
 
 /* ------------------------------------------------------------ controls -- */
 .btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: 52px;
-  padding: 0 26px;
-  border: 1px solid transparent;
-  border-radius: var(--r-pill);
-  font: inherit;
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background var(--t-base) var(--ease), border-color var(--t-base) var(--ease),
-    color var(--t-base) var(--ease), transform var(--t-fast) var(--ease);
+  display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+  height: 56px; padding: 0 30px;
+  border: 1px solid transparent; border-radius: var(--r-pill);
+  font: inherit; font-size: 16.5px; font-weight: 600; letter-spacing: -0.01em;
+  cursor: pointer; white-space: nowrap;
+  transition: background var(--t-base) var(--ease-out),
+    border-color var(--t-base) var(--ease-out), color var(--t-base) var(--ease-out),
+    transform var(--t-fast) var(--ease-out), box-shadow var(--t-base) var(--ease-out);
 }
 .btn:active { transform: translateY(1px); }
+.btn-sm { height: 44px; padding: 0 22px; font-size: 15px; }
 
-.btn-sm { height: 42px; padding: 0 20px; font-size: 15px; }
-
-.btn-dark { background: var(--inverse); color: var(--on-inverse); }
-.btn-dark:hover { background: var(--inverse-hover); }
-
-.btn-ghost {
-  background: transparent;
-  color: var(--ink);
-  border-color: var(--grid);
+/* The primary button is mint, not ink. Onboard's is acid lime and it is the
+   loudest thing on every screen of that site; mint is this palette's
+   equivalent and it was being spent on a dot. Deep green on mint is 6:1. */
+.btn-dark { background: var(--mint); color: var(--deep); box-shadow: var(--shadow-sm); }
+.btn-dark:hover { background: #35cfab; box-shadow: var(--shadow); }
+/* Except where the ground is already mint — there it inverts. */
+.band-mint-tint .btn-dark, .closing .btn-dark {
+  background: var(--deep); color: var(--on-deep);
 }
-.btn-ghost:hover { background: var(--control); border-color: var(--control-pressed); }
+.band-mint-tint .btn-dark:hover, .closing .btn-dark:hover { background: #07463a; }
 
-.btn-sand { background: var(--on-inverse); color: var(--sand); }
-.btn-sand:hover { background: #fff; }
+/* The hero pair, straight off the Figma frame: near-black pill on ink-light
+   text, and a plain white pill beside it. */
+.btn-mint { background: var(--mint); color: var(--deep); }
+.btn-mint:hover { background: #35cfab; }
+.btn-ink { background: #1e1818; color: #eaeae9; }
+.btn-ink:hover { background: #2c2424; }
+.btn-white { background: #fff; color: var(--deep); box-shadow: var(--shadow-sm); }
+.btn-white:hover { background: #fff; box-shadow: var(--shadow); }
+
+.btn-ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.btn-ghost:hover { background: var(--surface); border-color: transparent; box-shadow: var(--shadow-sm); }
+
+/* On the mint band the filled button goes deep green; on the deep band it
+   goes mint. Either way the loudest thing in the section is a brand colour. */
+.btn-onmint { background: var(--deep); color: var(--on-deep); }
+.btn-onmint:hover { background: #07463a; }
+.btn-ondeep { background: var(--mint); color: var(--deep); }
+.btn-ondeep:hover { background: #3fd0ad; }
 
 .link-arrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--accent);
-  letter-spacing: -0.01em;
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 16px; font-weight: 600; color: var(--positive); letter-spacing: -0.01em;
 }
 .link-arrow svg {
-  width: 16px;
-  height: 16px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.7;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  transition: transform var(--t-base) var(--ease);
+  width: 16px; height: 16px; fill: none; stroke: currentColor;
+  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+  transition: transform var(--t-base) var(--ease-out);
 }
-.link-arrow:hover svg { transform: translateX(3px); }
+.link-arrow:hover svg { transform: translateX(4px); }
 
 .cta-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 14px 22px;
-  margin-top: 34px;
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: 14px 24px; margin-top: 38px;
 }
 .cta-row.centred { justify-content: center; }
 
 /* ----------------------------------------------------------------- nav -- */
 .nav {
-  position: fixed;
-  inset: 0 0 auto 0;
-  z-index: 50;
-  background: rgba(244, 244, 241, 0.82);
-  backdrop-filter: saturate(180%) blur(14px);
-  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  position: fixed; inset: 0 0 auto 0; z-index: 50;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: saturate(180%) blur(16px);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
   border-bottom: 1px solid transparent;
-  transition: border-color var(--t-base) var(--ease), background var(--t-base) var(--ease);
+  transition: border-color var(--t-base) var(--ease-out), background var(--t-base) var(--ease-out);
 }
 .nav[data-scrolled='true'] {
-  border-bottom-color: var(--grid);
-  background: rgba(244, 244, 241, 0.94);
+  border-bottom-color: var(--line-soft);
+  background: rgba(255, 255, 255, 0.94);
 }
-
 .nav-in {
-  max-width: var(--wrap);
-  margin: 0 auto;
-  padding-inline: var(--gutter);
-  height: var(--nav-h);
-  display: flex;
-  align-items: center;
-  gap: 24px;
+  max-width: var(--wrap); margin: 0 auto; padding-inline: var(--gutter);
+  height: var(--nav-h); display: flex; align-items: center; gap: 24px;
 }
 
-.brand { display: inline-flex; align-items: center; gap: 10px; }
+.brand { display: inline-flex; align-items: center; gap: 11px; }
 .brand-mark {
-  width: 30px;
-  height: 30px;
-  flex: none;
-  display: grid;
-  place-items: center;
-  border-radius: 9px;
-  background: var(--inverse);
-  color: var(--on-inverse);
-  font-size: 16px;
-  font-weight: 600;
+  width: 32px; height: 32px; flex: none; display: grid; place-items: center;
+  border-radius: 10px; background: var(--deep); color: var(--mint);
+  font-size: 17px; font-weight: 600;
 }
-.brand-word { font-size: 19px; font-weight: 600; letter-spacing: -0.02em; }
+.brand-word { font-size: 20px; font-weight: 600; letter-spacing: -0.025em; }
 
-.nav-links {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-inline: auto;
+.nav-links { display: flex; align-items: center; gap: 4px; margin-inline: auto; }
+.nav-links > a, .drop-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 40px; padding: 0 15px; border: 0; border-radius: var(--r-pill);
+  background: transparent; font: inherit; font-size: 15.5px; font-weight: 500;
+  color: var(--muted); cursor: pointer;
+  transition: color var(--t-base) var(--ease-out), background var(--t-base) var(--ease-out);
 }
-.nav-links > a,
-.drop-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  height: 38px;
-  padding: 0 14px;
-  border: 0;
-  border-radius: var(--r-pill);
-  background: transparent;
-  font: inherit;
-  font-size: 15.5px;
-  font-weight: 500;
-  color: var(--muted);
-  cursor: pointer;
-  transition: color var(--t-base) var(--ease), background var(--t-base) var(--ease);
+.nav-links > a:hover, .drop-btn:hover, .drop-btn[aria-expanded='true'] {
+  color: var(--ink); background: var(--tint-brand);
 }
-.nav-links > a:hover,
-.drop-btn:hover,
-.drop-btn[aria-expanded='true'] { color: var(--ink); background: var(--control); }
 
 .chev {
-  width: 14px;
-  height: 14px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.7;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  transition: transform var(--t-base) var(--ease);
+  width: 14px; height: 14px; fill: none; stroke: currentColor;
+  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+  transition: transform var(--t-base) var(--ease-out);
 }
 .drop-btn[aria-expanded='true'] .chev { transform: rotate(180deg); }
 
 .drop { position: relative; }
 .drop-menu {
-  position: absolute;
-  top: calc(100% + 10px);
-  left: 0;
-  min-width: 232px;
-  padding: 8px;
-  background: var(--surface);
-  border: 1px solid var(--grid);
-  border-radius: var(--r-panel);
-  box-shadow: var(--shadow-float);
-  display: grid;
-  gap: 2px;
+  position: absolute; top: calc(100% + 10px); left: 0; min-width: 244px; padding: 9px;
+  background: var(--surface); border: 1px solid var(--line-soft);
+  border-radius: var(--r-md); box-shadow: var(--shadow-lg);
+  display: grid; gap: 2px;
 }
 .drop-menu[hidden] { display: none; }
 .drop-menu a {
-  padding: 9px 12px;
-  border-radius: 10px;
-  font-size: 15.5px;
-  font-weight: 500;
-  color: var(--muted);
-  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+  padding: 10px 13px; border-radius: 11px;
+  font-size: 15.5px; font-weight: 500; color: var(--muted);
+  transition: background var(--t-fast) var(--ease-out), color var(--t-fast) var(--ease-out);
 }
-.drop-menu a:hover { background: var(--sunken-hover); color: var(--ink); }
+.drop-menu a:hover { background: var(--tint-mint); color: var(--ink); }
 
 .nav-end { display: flex; align-items: center; gap: 10px; margin-left: auto; }
 .nav-links + .nav-end { margin-left: 0; }
 
 .burger {
-  display: none;
-  width: 42px;
-  height: 42px;
-  padding: 0;
-  border: 1px solid var(--grid);
-  border-radius: var(--r-pill);
-  background: transparent;
-  cursor: pointer;
-  place-content: center;
-  gap: 5px;
+  display: none; width: 44px; height: 44px; padding: 0;
+  border: 1px solid var(--line); border-radius: var(--r-pill);
+  background: transparent; cursor: pointer; place-content: center; gap: 5px;
 }
 .burger span {
-  display: block;
-  width: 16px;
-  height: 1.6px;
-  margin-inline: auto;
-  border-radius: 2px;
-  background: var(--ink);
-  transition: transform var(--t-base) var(--ease), opacity var(--t-base) var(--ease);
+  display: block; width: 16px; height: 1.8px; margin-inline: auto;
+  border-radius: 2px; background: var(--ink);
+  transition: transform var(--t-base) var(--ease-out), opacity var(--t-base) var(--ease-out);
 }
-.burger[aria-expanded='true'] span:first-child { transform: translateY(3.3px) rotate(45deg); }
-.burger[aria-expanded='true'] span:last-child { transform: translateY(-3.3px) rotate(-45deg); }
+.burger[aria-expanded='true'] span:first-child { transform: translateY(3.4px) rotate(45deg); }
+.burger[aria-expanded='true'] span:last-child { transform: translateY(-3.4px) rotate(-45deg); }
 
 .mobile-menu {
-  display: grid;
-  gap: 2px;
-  padding: 8px var(--gutter) 24px;
-  border-top: 1px solid var(--grid);
-  background: var(--canvas);
-  max-height: calc(100dvh - var(--nav-h));
-  overflow-y: auto;
+  display: grid; gap: 2px; padding: 10px var(--gutter) 28px;
+  border-top: 1px solid var(--line-soft); background: var(--canvas);
+  max-height: calc(100dvh - var(--nav-h)); overflow-y: auto;
 }
 .mobile-menu[hidden] { display: none; }
-.mobile-menu a {
-  padding: 11px 4px;
-  font-size: 17px;
-  font-weight: 500;
-  color: var(--muted);
-}
+.mobile-menu a { padding: 12px 4px; font-size: 17px; font-weight: 500; color: var(--muted); }
 .mobile-menu a:hover { color: var(--ink); }
 .mm-head {
-  margin-top: 14px;
-  padding: 4px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--subtle);
+  margin-top: 16px; padding: 4px; font-size: 12px; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
 }
-.mm-cta { margin-top: 18px; width: 100%; color: var(--on-inverse); }
-.mm-cta:hover { color: var(--on-inverse); }
+.mm-cta { margin-top: 20px; width: 100%; color: var(--on-deep); }
+.mm-cta:hover { color: var(--on-deep); }
 
 /* ---------------------------------------------------------------- hero -- */
+/* Figma frame: 1920 x 1465, under a 72px nav. Every ratio below is that
+   design's number over 1920, so the composition keeps its proportions as the
+   viewport narrows rather than being re-guessed per breakpoint.
+
+   padding-top 192, headline 96/106%, gap 30, lead 800 wide, gap 30, CTA 56
+   => 192 + 424 text + 849 stage = 1465. */
 .hero {
-  padding-top: calc(var(--nav-h) + clamp(56px, 8vw, 104px));
-  padding-bottom: var(--section-y);
+  position: relative;
+  padding-top: calc(var(--nav-h) + min(192px, 10vw));
+  padding-bottom: 0;
+  isolation: isolate;
+  /* The one job here: the wash is a child of this box and this box clips, so
+     the gradient ends exactly at the section edge. Nothing bleeds into the
+     band underneath. */
+  overflow: hidden;
 }
-.hero-text {
+
+/* The Figma fill is a radial: #c7e1ff at .205, #f8c8ff at .585, page grey at
+   1. Those three stops are kept verbatim; only the ellipse is expressed in
+   CSS terms. */
+.hero-wash {
+  position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(118% 92% at 50% -2%,
+    #c7e1ff 0%, #c7e1ff 20.5%, #f8c8ff 58.5%, #eaeae9 100%);
+}
+
+.hero-in { display: grid; justify-items: center; text-align: center; }
+
+.hero-hl {
+  display: grid; gap: 8px;
+  font-size: clamp(38px, 5vw, 96px);
+  line-height: 1.06; letter-spacing: -0.04em;
+  color: var(--ink); margin: 0;
+}
+.hero-lead {
+  max-width: min(800px, 100%);
+  margin: min(30px, 1.6vw) 0 0;
+  font-size: clamp(16.5px, 1.05vw, 20px);
+}
+.hero-cta { margin-top: min(30px, 1.6vw); justify-content: center; }
+
+/* ---- the globe stage -------------------------------------------------- */
+/* 849 of the hero's 1465 rows, full bleed. The globe itself is 873 wide at
+   x=539 on the 1920 grid; the orbit shares its box so JS can work in one
+   coordinate space. */
+.hero-stage {
+  position: relative; width: 100%;
+  aspect-ratio: 1920 / 849;
+  margin-top: 0;
+}
+/* The ring's shape lives here rather than in the script, so the phone
+   breakpoint can pull it in without the script knowing what a phone is. */
+.globe {
+  position: absolute;
+  left: 28.073%; width: 45.469%;
+  top: 0; aspect-ratio: 873 / 849;
+  touch-action: pan-y;
+  cursor: grab;
+  --rx: 53.8;   /* ellipse radii, per cent of this box */
+  --ry: 25.3;
+  --card: 1;    /* card size against the Figma original */
+}
+.globe:active { cursor: grabbing; }
+.globe:focus-visible { outline: 2px solid var(--mint); outline-offset: 12px; border-radius: 50%; }
+
+/* The render carries its own pink backdrop — the dot mesh means it cannot be
+   cut out without eating the sphere — so the rectangle is faded into the wash
+   instead. The mask is wide enough that the fade lands outside the sphere. */
+.globe-img {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: contain; z-index: 2;
+  -webkit-mask-image: radial-gradient(closest-side, #000 72%, transparent 99%);
+  mask-image: radial-gradient(closest-side, #000 72%, transparent 99%);
+}
+
+/* Cards are placed by JS: left/top in per cent of this box, plus a scale and
+   a z-index that puts the far half of the ring behind the globe. */
+.orbit { position: absolute; inset: 0; }
+.orbit-card {
+  position: absolute; top: 0; left: 0;
+  /* The width/height attributes are there to reserve the box before the
+     image lands. The script sets width; without this the attribute height
+     survives and the cards stretch the moment the ring is scaled down. */
+  height: auto;
+  border-radius: 14px; display: block;
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+
+/* ---- stickers --------------------------------------------------------- */
+/* A 1920-wide stage pinned to the top of the hero and centred, so left and
+   width are the Figma x/w straight over 1920 and stay put past 1920 too.
+   Tops are the Figma y plus the 72 the nav occupies, written as a vw that
+   caps at its own pixel value — the same scaling rule the rest of the hero
+   uses, so a sticker never drifts away from the thing it sits beside. */
+.stickers {
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 1920px; height: 100%;
+  z-index: 3; pointer-events: none;
+}
+.sticker { position: absolute; display: block; }
+
+.sticker-coin  { left: 81.302%; top: min(163px,  8.490vw); width:  5.260%; }
+.sticker-gun   { left:  3.750%; top: min(551px, 28.698vw); width: 18.385%; }
+/* image 24 is FIT inside a 511 square, so the box is square and the art
+   letterboxes inside it. Its own backdrop is faded out at the edges. */
+.sticker-notes {
+  left: 80.469%; top: min(789px, 41.094vw); width: 26.615%;
+  aspect-ratio: 1; object-fit: contain;
+  transform: rotate(14.05deg);
+  /* The art letterboxes to roughly 60% of the square, so the fade is sized to
+     the art rather than to the box — a mask cut to the box would eat it. */
+  -webkit-mask-image: radial-gradient(36% 56% at 50% 50%, #000 72%, transparent 100%);
+  mask-image: radial-gradient(36% 56% at 50% 50%, #000 72%, transparent 100%);
+}
+
+/* ---------------------------------------------------- tokenized stocks -- */
+/* Figma: section padding 24, gap 64, head 780 centred, three 485x600 cards on
+   a 1520 column with 32 between them. The card is a flex column so the image
+   slot takes whatever the copy leaves — which is what keeps the two cards
+   whose copy sits at opposite ends the same height. */
+/* .band sets its own padding and is declared later, so this needs the extra
+   class to win rather than relying on source order. */
+.band.band-ts { padding-block: min(24px, 1.25vw); }
+.band-ts .head { max-width: 780px; margin-inline: auto; }
+
+.ts-cards {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: min(32px, 1.667vw);
+  margin-top: min(64px, 3.334vw);
+}
+.ts-card {
+  position: relative; overflow: hidden;
+  aspect-ratio: 485 / 600;
+  border-radius: min(26px, 1.354vw);
+  padding: min(12px, 0.625vw);
+  display: flex; flex-direction: column; gap: min(15px, 0.78vw);
+}
+.ts-card-stone { background: #d1cbc2; }
+/* stops and direction read off the Figma fill, not eyeballed */
+.ts-card-grad { background: linear-gradient(to bottom, #2bbd9b 0%, #fec4ff 45.7%, #c4e2ff 100%); }
+
+.ts-copy { padding: min(12px, 0.625vw) min(20px, 1.042vw) 0; display: grid; gap: min(15px, 0.78vw); }
+.ts-copy-end { padding-top: min(12px, 0.625vw); padding-bottom: min(12px, 0.625vw); gap: 0; }
+.ts-copy h3 {
+  font-size: clamp(21px, 1.875vw, 36px); line-height: 1.3; letter-spacing: -0.022em;
+  color: #1e1818; margin: 0;
+}
+.ts-copy p {
+  font-size: clamp(14.5px, 0.834vw, 16px); line-height: 1.6; letter-spacing: -0.005em;
+  color: #443b37; margin: 0;
+}
+
+.ts-slot { display: block; width: 100%; flex: 1 1 auto; min-height: 0; object-fit: contain; }
+/* The notes run past the card on two sides; the card's own clip cuts them.
+   The export carries the rotation already, so none is applied here. */
+.ts-bleed {
+  position: absolute; left: -8%; top: 22%; width: 158%; height: auto;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------- gifting and rewards -- */
+/* 688 of copy against a 768 stage, 64 between, on the 1520 column. */
+.gift-in {
+  display: grid; grid-template-columns: 688fr 768fr;
+  gap: min(64px, 3.334vw); align-items: start;
+}
+/* Two blocks 48 apart, exactly as the frame nests them: the head is its own
+   16-gap pair, the body is the points and the button. Flattening these into
+   one stack puts a 48 gap where the frame has 16. */
+.gift-text { display: grid; gap: min(48px, 2.5vw); align-content: start; }
+.gift-head { display: grid; gap: 16px; }
+.gift-body { display: grid; gap: min(48px, 2.5vw); justify-items: start; }
+.gift-lead { max-width: 518px; }
+
+.points { display: grid; gap: 28px; width: 400px; max-width: 100%; padding-bottom: 24px; }
+/* The rule is a grid column, not a pseudo-element pinned with absolute
+   positioning, so its height is the copy's height with nothing to tune. The
+   copy is one child so it cannot fall into the 3px column. */
+.point { display: grid; grid-template-columns: 3px minmax(0, 1fr); gap: 19px; }
+.point::before { content: ''; background: var(--sand); border-radius: 2px; }
+.point-copy { min-width: 0; }
+.point h3 {
+  font-size: clamp(18px, 1.146vw, 22px); line-height: 1.3; letter-spacing: -0.022em;
+  color: var(--ink); margin: 0 0 9px;
+}
+.point p { font-size: clamp(14.5px, 0.834vw, 16px); line-height: 1.6; color: var(--muted); }
+.gift-cta { justify-self: start; }
+
+.gift-stage {
+  width: 100%; height: auto; display: block;
+  border-radius: min(34px, 1.771vw);
+}
+
+/* --------------------------------------------------------- why tokkenly -- */
+/* 597 + 64 + 800 is 1461 against a 1520 column, so the two do not divide the
+   row between them — the frame leaves 59 spare on the right. Percentages of
+   1520 with the pair packed left reproduce that; fr units would eat the slack. */
+.why-in {
+  display: grid; grid-template-columns: 39.276% 52.632%;
+  gap: 4.211%; justify-content: start; align-items: stretch;
+}
+.why-stage {
+  align-self: start; width: 100%; height: auto;
+  aspect-ratio: 597 / 712; object-fit: cover;
+  border-radius: min(22px, 1.146vw);
+}
+.why-in { position: relative; }
+/* Figma puts it at x 1142 y 3786 on the page: 61.97% across the 1520 column,
+   190 below the top of the row. */
+.why-coin {
+  position: absolute; left: 61.97%; top: min(176px, 9.167vw);
+  width: 18.026%; height: auto; z-index: 2; pointer-events: none;
+}
+.why-text { display: grid; gap: min(48px, 2.5vw); align-content: space-between; }
+.why-head { display: grid; gap: 20px; }
+.why-head h2 { color: #1e1818; }
+.why-body { display: grid; gap: 24px; justify-items: start; }
+.why-paras { display: grid; gap: 24px; }
+.why-paras p {
+  font-size: clamp(16.5px, 1.05vw, 20px); line-height: 1.6; letter-spacing: -0.005em;
+  color: #433b37;
+}
+/* This section's eyebrow is near-black rather than the page's muted green. */
+.eyebrow-ink { color: #433b37; }
+.eyebrow-ink::before { background: #1e1818; }
+
+/* ------------------------------------------------------- built on base -- */
+.base-slab {
+  background: var(--deep); border-radius: min(34px, 1.771vw);
+  padding: min(96px, 5vw) min(88px, 4.584vw);
+  display: grid; gap: min(72px, 3.75vw);
+}
+.base-head { display: grid; gap: 20px; max-width: 1020px; }
+.base-head h2 { color: #fff; }
+.base-lead {
   max-width: 900px;
-  margin: 0 auto;
-  text-align: center;
+  font-size: clamp(16.5px, 1.05vw, 20px); line-height: 1.6; letter-spacing: -0.005em;
+  color: rgba(255, 255, 255, 0.72);
 }
-.hero-text .lead {
-  max-width: 660px;
-  margin: 26px auto 0;
+.eyebrow-mint { color: var(--mint); }
+
+.base-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: min(40px, 2.084vw); }
+.base-fact { display: grid; gap: 18px; align-content: start; }
+.base-big {
+  font-size: clamp(30px, 2.396vw, 46px); font-weight: 700;
+  line-height: 1; letter-spacing: -0.03em; color: var(--mint);
 }
-.hero-text .cta-row { justify-content: center; }
-/* The space above the hero picture is set with the picture, below .shot's
-   `margin: 0` — setting it here would be overwritten by that shorthand. */
+/* The hairline is a border on the paragraph rather than its own element, so
+   it cannot drift out of step with the 18 gap either side of it. */
+.base-fact p:last-child {
+  border-top: 1px solid rgba(255, 255, 255, 0.22);
+  padding-top: 18px;
+  font-size: clamp(14.5px, 0.886vw, 17px); line-height: 1.52; letter-spacing: -0.002em;
+  color: rgba(255, 255, 255, 0.66);
+}
+
+/* ------------------------------------------------------------ products -- */
+.band-products { background: var(--deep); }
+.head-ondeep h2, .head-ondeep .lead { color: #eaeae9; }
+
+/* 988 + 32 + 500 is exactly 1520, so fr units divide each row correctly. The
+   two rows are separate grids because the wide card swaps sides between
+   them — one grid with two columns cannot do that without reordering. */
+.pr-grid { display: grid; gap: min(32px, 1.667vw); margin-top: min(48px, 2.5vw); }
+.pr-row { display: grid; gap: min(32px, 1.667vw); }
+.pr-row-a { grid-template-columns: 988fr 500fr; }
+.pr-row-b { grid-template-columns: 500fr 988fr; }
+
+.pr-card {
+  position: relative; overflow: hidden;
+  background: #00221a; border-radius: min(26px, 1.354vw);
+  aspect-ratio: 988 / 456;
+}
+.pr-narrow { aspect-ratio: 500 / 456; }
+.pr-wide {
+  display: grid; grid-template-columns: minmax(0, 421fr) minmax(0, 485fr);
+  gap: min(46px, 2.396vw);
+  padding: min(36px, 1.875vw) 0 0 min(36px, 1.875vw);
+}
+.pr-narrow { padding: min(36px, 1.875vw) min(36px, 1.875vw) 0; }
+
+.pr-body { display: flex; flex-direction: column; justify-content: space-between; padding-bottom: min(36px, 1.875vw); }
+.pr-top { display: grid; gap: 13px; align-content: start; }
+.pr-title { display: flex; align-items: center; gap: 13px; }
+.pr-title h3 {
+  font-size: clamp(17px, 1.125vw, 21.6px); line-height: 1.3; letter-spacing: -0.022em; color: #fff;
+}
+.pr-chip {
+  flex: none; width: min(52px, 2.709vw); height: min(52px, 2.709vw);
+  border-radius: min(12px, 0.625vw);
+  display: grid; place-items: center;
+  background: rgba(255, 255, 255, 0.08);
+}
+.pr-chip-yellow { background: rgba(249, 209, 0, 0.14); }
+.pr-chip-orange { background: rgba(248, 81, 19, 0.14); }
+.pr-chip svg { width: 60%; height: 60%; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.pr-chip-mint svg { stroke: var(--mint); }
+.pr-chip-yellow svg { stroke: #f9d100; }
+.pr-chip-orange svg { stroke: #ff8a5c; }
+
+.pr-paras { display: grid; gap: 13px; }
+.pr-card p {
+  font-size: clamp(14px, 0.834vw, 16px); line-height: 1.6; letter-spacing: -0.005em;
+  color: var(--on-deep-muted);
+}
+.pr-link {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: clamp(14px, 0.834vw, 16px); font-weight: 600; line-height: 1.6;
+  color: var(--mint);
+}
+.pr-narrow .pr-link { margin-top: 0; }
+.pr-arrow { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+/* The stickers sit on the card's own green, so the export keeps its baked
+   backdrop — matting it would eat the naira sign, which is the same green. */
+/* The exports carry their own rotation and their own padding, so these are
+   placed to land the art where the frame lands it rather than derived from
+   the node box — the two do not agree once a rotated node is exported. */
+.pr-sticker { position: absolute; pointer-events: none; height: auto; }
+.pr-sticker-notes { left: 2%; top: 13%; width: 108%; }
+.pr-sticker-conv { left: -6%; top: 44%; width: 112%; }
+
+/* ---- the pop-ups ------------------------------------------------------ */
+.popup {
+  background: #fff; border-radius: min(20px, 1.042vw) min(20px, 1.042vw) 0 0;
+  padding: min(32px, 1.667vw);
+  display: grid; gap: min(20px, 1.042vw); align-content: space-between;
+  color: #1e1818;
+}
+.pop-head { display: grid; gap: 6px; }
+.pop-k {
+  font-size: clamp(9.5px, 0.573vw, 11px); font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase; color: #6c7d78;
+}
+.pop-amount { font-size: clamp(26px, 2.084vw, 40px); font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; }
+.pop-ledger {
+  background: #f0efec; border-radius: min(14px, 0.73vw);
+  padding: min(18px, 0.938vw); display: grid; gap: min(14px, 0.73vw);
+}
+.pop-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: min(14px, 0.73vw); }
+.pop-row { display: grid; gap: 3px; }
+.pop-v { font-size: clamp(11.5px, 0.73vw, 14px); font-weight: 600; }
+.pop-note { font-size: clamp(10.5px, 0.678vw, 13px); line-height: 1.5; color: #6c7d78; }
+.pop-btn {
+  background: #1e1818; color: #fff; border-radius: 999px;
+  text-align: center; padding: min(15px, 0.782vw) 0;
+  font-size: clamp(11.5px, 0.73vw, 14px); font-weight: 600;
+}
+
+/* ----------------------------------------------------- getting started -- */
+.gs-wrap { position: relative; }
+.gs-head { max-width: 780px; }
+.gs-head h2 { margin-top: 22px; }
+.gs-head .lead { margin-top: 22px; }
+
+.gs-steps {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: min(32px, 1.667vw); margin-top: min(48px, 2.5vw);
+  align-items: start;
+}
+.gs-step { display: grid; gap: min(24px, 1.25vw); justify-items: center; }
+.gs-shot { width: 100%; height: auto; border-radius: min(32px, 1.667vw); }
+.gs-copy { display: grid; gap: 10px; justify-items: center; text-align: center; }
+.gs-num {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--mint); color: var(--deep);
+  display: grid; place-items: center;
+  font-size: 16px; font-weight: 600; line-height: 1;
+}
+.gs-copy h3 { font-size: clamp(19px, 1.354vw, 26px); line-height: 1.25; letter-spacing: -0.03em; }
+.gs-copy p { font-size: clamp(14.5px, 0.834vw, 16px); line-height: 1.6; color: var(--muted); max-width: 42ch; }
+.gs-cta { display: grid; justify-items: center; margin-top: min(82px, 4.271vw); }
+
+/* image 32 again, this time over the head rather than the hero. */
+.gs-gun {
+  position: absolute; left: 3.42%; top: 19px;
+  width: 23.22%; height: auto; z-index: 2; pointer-events: none;
+}
+
+/* ----------------------------------------------------------------- faq -- */
+/* 656 + 64 + 800 is exactly 1520, so fr units divide this row correctly. */
+.faq-in { display: grid; grid-template-columns: 656fr 800fr; gap: min(64px, 3.334vw); align-items: start; }
+.faq-head { max-width: none; margin: 0; text-align: left; }
+.faq-head .eyebrow { margin-inline: 0; }
+.faq { display: grid; gap: 12px; }
+.faq details {
+  border: 1px solid #e5ebe8; border-radius: min(18px, 0.938vw);
+  padding: min(24px, 1.25vw) min(26px, 1.354vw);
+}
+.faq summary {
+  list-style: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  font-size: clamp(16px, 0.99vw, 19px); font-weight: 700; line-height: 1.3;
+  letter-spacing: -0.022em; color: #1e1818;
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq .plus {
+  flex: none; width: 30px; height: 30px; border-radius: 50%;
+  background: #1e1818; position: relative;
+}
+.faq .plus::before, .faq .plus::after {
+  content: ''; position: absolute; inset: 50% auto auto 50%;
+  width: 11px; height: 1.6px; background: #fff; transform: translate(-50%, -50%);
+}
+.faq .plus::after { transform: translate(-50%, -50%) rotate(90deg); }
+.faq details[open] .plus::after { transform: translate(-50%, -50%) rotate(0deg); }
+.faq .answer { padding-top: 14px; }
+.faq .answer p { font-size: clamp(14.5px, 0.834vw, 16px); line-height: 1.6; color: var(--muted); }
+
+/* ------------------------------------------------- closing call to action */
+.closing {
+  /* The frame's section is a fixed 1024 with the 532 slab centred in it, not
+     a slab with 144 of padding either side. */
+  padding-block: var(--section-y);
+  min-height: min(1024px, 53.334vw);
+  display: grid; align-content: center;
+}
+.closing-slab {
+  position: relative; overflow: hidden;
+  border-radius: min(34px, 1.771vw);
+  aspect-ratio: 1520 / 532;
+  display: grid; place-items: center;
+  /* The frame's linear runs almost exactly top to bottom, starting above the
+     box; the top stop below is the colour at the point the box begins. */
+  background: linear-gradient(to bottom, #e7c9e0 0%, #d4cec6 100%);
+}
+.closing-in {
+  position: relative; z-index: 2;
+  display: grid; justify-items: center; gap: min(22px, 1.146vw); text-align: center;
+  padding-inline: min(64px, 3.334vw);
+}
+.closing-in h2 { max-width: 760px; color: var(--deep); }
+.closing-lead {
+  max-width: 640px;
+  font-size: clamp(16.5px, 1.05vw, 20px); line-height: 1.6; letter-spacing: -0.005em;
+  color: #1f473d;
+}
+.btn-deep { background: var(--deep); color: #fff; }
+.btn-deep:hover { background: #07463a; }
+
+/* Placed as shares of the 1520 slab, so they hold their corners as it narrows. */
+.cta-prop { position: absolute; height: auto; pointer-events: none; }
+.cta-coin  { left: 1.18%;  top: -1.5%;  width: 18.03%; }
+.cta-pen   { left: 23.75%; top: 53.76%; width: 19.87%; transform: rotate(180deg); }
+.cta-notes { left: 53.75%; top: 30.64%; width: 39.01%; }
 
 /* -------------------------------------------------------------- bands -- */
-.band { padding-block: var(--section-y); }
-.band.tinted {
-  background: var(--tint-brand);
-  border-block: 1px solid rgba(11, 81, 64, 0.08);
+.band { padding-block: var(--section-y); position: relative; }
+
+/* Every section ground is white. Colour arrives as blocks sitting on it —
+   the panels behind the screens, the product cards, the two inset slabs —
+   rather than as a wash behind a whole section. */
+.band-cream, .band-mint-tint, .band-brand { background: transparent; }
+
+/* The two loud ones. */
+.band-deep { background: transparent; color: var(--ink); }
+.band-deep > .wrap { max-width: calc(var(--wrap) + 2 * var(--gutter)); }
+.band-deep .statement {
+  background: var(--deep); color: var(--on-deep);
+  border-radius: var(--r-xl);
+  padding: clamp(56px, 7vw, 104px) clamp(28px, 5vw, 80px);
+  max-width: none;
+}
+.band-deep .statement {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.82fr);
+  gap: clamp(40px, 5vw, 76px); align-items: center; text-align: left;
+}
+.statement-text { display: grid; gap: 20px; }
+.statement-text h2 { margin-block: 4px 4px; }
+
+/* ---------------------------------------------------------------- hub -- */
+/* Seven things, one home — the paragraph beside it in a picture. A column of
+   products, a spine gathering them, and the mark they all arrive at. */
+.hub {
+  display: grid; grid-template-columns: minmax(0, 1fr) 56px auto;
+  align-items: center;
+}
+.hub-list { display: grid; gap: 9px; }
+.hub-list li {
+  position: relative;
+  padding: 10px 17px;
+  border-radius: var(--r-pill);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 14px; font-weight: 600; color: var(--on-deep);
+  white-space: nowrap;
+}
+/* the stub out of each pill */
+.hub-list li::after {
+  content: ''; position: absolute; left: 100%; top: 50%;
+  width: 28px; height: 1px; background: rgba(43, 189, 155, 0.5);
+}
+.hub-wire { position: relative; align-self: stretch; }
+/* the spine runs between the first and last pill's centres: with seven pills
+   at 41px and six 9px gaps that is 6 per cent in from either end */
+.hub-spine {
+  position: absolute; left: 28px; top: 6%; bottom: 6%;
+  width: 1px; background: rgba(43, 189, 155, 0.5);
+}
+.hub-wire::after {
+  content: ''; position: absolute; left: 28px; top: 50%;
+  width: 28px; height: 1px; background: var(--mint);
+}
+.hub-core {
+  display: grid; justify-items: center; gap: 11px;
+  padding: 22px 20px; border-radius: 26px;
+  background: var(--mint); color: var(--deep);
+  box-shadow: 0 0 0 10px rgba(43, 189, 155, 0.13);
+}
+.hub-mark {
+  width: 46px; height: 46px; display: grid; place-items: center;
+  border-radius: 14px; background: var(--deep); color: var(--mint);
+  font-size: 23px; font-weight: 700;
+}
+.hub-name { font-size: 14px; font-weight: 700; letter-spacing: -0.02em; }
+.band-deep .lead, .band-deep p { color: var(--on-deep-muted); }
+.band-deep .eyebrow { color: var(--on-deep-muted); }
+.band-deep .eyebrow::before { background: var(--mint); }
+
+.band-mint { background: transparent; color: var(--deep); }
+.band-mint .lead, .band-mint p { color: rgba(5, 51, 41, 0.76); }
+.band-mint .eyebrow { color: rgba(5, 51, 41, 0.72); }
+.band-mint .eyebrow::before { background: var(--deep); }
+
+/* A curved lip where a coloured band meets the page, so the colour arrives
+   as a shape rather than as a ruled line across the screen. */
+.band-round { border-radius: var(--r-xl); margin-inline: var(--gutter); }
+
+.head { max-width: 780px; margin: 0 auto; text-align: center; }
+.head .eyebrow { margin-inline: auto; }
+.head h2 { margin-top: 16px; }
+.head .lead { margin-top: 16px; }
+
+.statement { max-width: 860px; margin: 0 auto; text-align: center; display: grid; gap: 22px; }
+.statement h2 { margin-block: 6px 8px; }
+
+/* ------------------------------------------------------- highlighter -- */
+/* The consumer page sets its headline in solid bars — each line on its own
+   block of colour, one line in a different one. It is the loudest thing on
+   that page and it costs nothing but CSS: no photograph, no illustration. */
+.hl { display: grid; justify-items: start; gap: 0.12em; }
+.hl-line {
+  display: inline-block;
+  padding: 0.1em 0.3em 0.16em;
+  border-radius: 14px;
+  background: var(--deep); color: var(--on-deep);
+}
+.hl-accent { background: var(--mint); color: var(--deep); }
+
+/* ------------------------------------------------------------ ticker -- */
+/* Both pages run a strip of bullet-separated words across the page, tilted a
+   few degrees. Onboard fills it with credentials; this one is filled with the
+   seven product names, which are already in the copy. Decorative repetition,
+   so it is hidden from a screen reader — the same words are in the nav, the
+   product grid and the footer. */
+/* The tilt is what makes the strip read as a sticker rather than a rule, and
+   a rotated box is wider than the one it came from — 29px wider at 1440. The
+   clip has to happen on a parent that is NOT rotated, because overflow on the
+   rotated element clips its children and not its own bounding box. A plain
+   wrapper rather than overflow on the body: hiding overflow on the body makes
+   the body the scrolling box and takes scroll-padding-top out of play. */
+.ticker-clip { overflow: hidden; }
+.ticker {
+  position: relative; z-index: 2;
+  margin-block: clamp(-28px, -2vw, -16px) 0;
+  padding-block: 15px;
+  background: var(--deep); color: var(--mint);
+  transform: rotate(-1.6deg) scale(1.04);
+}
+.ticker-track {
+  display: flex; align-items: center; gap: 28px; width: max-content;
+  animation: tick 38s linear infinite;
+  font-size: 14px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+}
+.ticker-track span { white-space: nowrap; }
+.ticker-track i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; }
+@keyframes tick { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* ------------------------------------------------------- split heads -- */
+/* The questions sit beside their heading rather than under it, on both pages.
+   It halves the vertical run of the section and gives the accordion the width
+   it wants. */
+.split-head {
+  display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.25fr);
+  gap: clamp(32px, 5vw, 80px); align-items: start;
+}
+.split-head .head { margin: 0; text-align: left; max-width: none; }
+.split-head .faq { margin-top: 0; }
+
+/* -------------------------------------------------------------- stage -- */
+/* A screen on a block of colour.
+ *
+ *  This is the device the reference's consumer page is built on: every phone
+ *  sits on a saturated panel — lime, purple, yellow — and bleeds off the
+ *  bottom of it, rather than floating on the page in a drop shadow. It is
+ *  what makes that page read as colourful when most of it is cream and text.
+ *
+ *  It also solves the problem the empty photograph panels created: the colour
+ *  is carried by something that is actually there. These use screenshots of
+ *  the real product, which this repository has, rather than photographs,
+ *  which it does not.
+ */
+.stage {
+  position: relative; overflow: hidden;
+  border-radius: var(--r-xl);
+  background: var(--stage, var(--mint));
+  padding: clamp(26px, 3.2vw, 46px) clamp(18px, 2.2vw, 32px) 0;
+  display: grid; justify-items: center; align-items: end;
+  isolation: isolate;
+}
+.stage::before {
+  content: ''; position: absolute; inset: 0; z-index: 0;
+  background-image: radial-gradient(circle, rgba(5, 51, 41, 0.14) 1px, transparent 1px);
+  background-size: 20px 20px;
+  -webkit-mask-image: linear-gradient(to bottom, #000, transparent 62%);
+  mask-image: linear-gradient(to bottom, #000, transparent 62%);
+}
+/* The screen bleeds off the bottom edge, which is what stops the panel
+   reading as a frame with a picture politely inside it. */
+.stage .shot {
+  position: relative; z-index: 1;
+  margin-bottom: clamp(-72px, -5vw, -36px);
+  box-shadow: 0 -8px 40px rgba(5, 51, 41, 0.18);
 }
 
-.head {
-  max-width: 760px;
-  margin: 0 auto;
-  text-align: center;
-}
-.head h2 { margin-top: 14px; }
-.head .lead { margin-top: 20px; }
+.stage-mint   { --stage: var(--mint); }
+.stage-yellow { --stage: #f9d100; }
+.stage-sand   { --stage: var(--sand); }
+.stage-peach  { --stage: #f7b79a; }
+.stage-deep   { --stage: var(--deep); }
+.stage-deep::before { background-image: radial-gradient(circle, rgba(255,255,255,0.16) 1px, transparent 1px); }
 
-.statement {
-  max-width: 820px;
-  margin: 0 auto;
-  text-align: center;
-  display: grid;
-  gap: 20px;
-}
-.statement h2 { margin-block: 4px 6px; }
+/* (The hero's own stage is the globe; see the hero block above.) */
 
 /* -------------------------------------------------------------- shots -- */
 .shot {
-  margin: 0;
-  border-radius: var(--r-card);
-  overflow: hidden;
-  background: var(--canvas);
-  border: 1px solid var(--grid);
-  box-shadow: var(--shadow-hover);
+  margin: 0; border-radius: var(--r-lg); overflow: hidden;
+  background: var(--surface); border: 1px solid var(--line-soft);
+  box-shadow: var(--shadow);
 }
 .shot img { width: 100%; height: auto; }
-
 .shot-wide { aspect-ratio: 1360 / 850; }
 .shot-wide img { height: 100%; object-fit: cover; object-position: top left; }
 
 .hero-shot {
-  margin-top: clamp(52px, 6vw, 84px);
-  border-radius: clamp(var(--r-card), 2vw, 28px);
-  box-shadow: var(--shadow-float);
+  border-radius: clamp(var(--r-lg), 2.4vw, 38px);
+  box-shadow: var(--shadow-lg);
+  border-color: transparent;
 }
 
 .shot-phone {
-  width: min(300px, 100%);
-  margin-inline: auto;
-  border-radius: 30px;
-  border-color: var(--control-pressed);
-  box-shadow: var(--shadow-float);
+  width: min(300px, 100%); margin-inline: auto;
+  border-radius: 34px; border-color: var(--line);
+  box-shadow: var(--shadow-lg);
   aspect-ratio: 390 / 800;
 }
 .shot-phone img { height: 100%; object-fit: cover; object-position: top center; }
 
-/* -------------------------------------------------------------- grids -- */
+/* -------------------------------------------------------------- cards -- */
 .grid-3 {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: clamp(20px, 2.4vw, 32px);
 }
-.cards { margin-top: clamp(44px, 5vw, 68px); }
+.cards { margin-top: clamp(48px, 5.5vw, 76px); }
 
-.card { display: grid; gap: 14px; align-content: start; }
-.card .shot { margin-bottom: 6px; }
+.card { display: grid; gap: 15px; align-content: start; }
+.card .shot { margin-bottom: 8px; }
 .card p { color: var(--muted); font-size: 16px; }
 
-/* The product list. Onboard numbers its capabilities 01–06; so does this. */
-.numbered { margin-top: clamp(44px, 5vw, 68px); }
-.ncard {
-  display: grid;
-  gap: 12px;
-  align-content: start;
-  padding: clamp(24px, 2.4vw, 32px);
-  background: var(--surface);
-  border: 1px solid var(--grid);
-  border-radius: var(--r-card);
-  transition: box-shadow var(--t-base) var(--ease), transform var(--t-base) var(--ease);
+/* The product list. Onboard numbers its capabilities 01–06; so does this.
+   Each card carries a differently tinted chip, which is where most of the
+   page's colour lives — six small blocks rather than one big one. */
+.numbered {
+  margin-top: clamp(48px, 5.5vw, 76px);
+  /* Four cards, not a uniform grid of six. The two that carry a pair of
+     screens run the full width; the two single-screen ones share the row
+     between them, which keeps the mixed rhythm without the table. */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
-.ncard:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+.numbered .ncard-wide { grid-column: 1 / -1; }
+/* The product list is the page's dark block.
+ *
+ *  This is the shape Onboard's own numbered run is built on: a light ground,
+ *  a slab of near-black cards across the middle of it, and one loud accent
+ *  doing the pointing. White cards on a mint-white page have almost no edge —
+ *  six of them read as a table. Six deep green ones read as a thing. Same
+ *  palette, same copy, same numbers: only the ground is inverted. */
+.ncard {
+  position: relative; display: grid; gap: 13px; align-content: start;
+  padding: clamp(28px, 2.8vw, 36px);
+  background: var(--deep); color: var(--on-deep);
+  border: 1px solid transparent;
+  border-radius: var(--r-lg); box-shadow: var(--shadow);
+  transition: box-shadow var(--t-base) var(--ease-out), transform var(--t-base) var(--ease-out);
+}
+.ncard:hover { box-shadow: var(--shadow-lg); transform: translateY(-5px); }
 .ncard .num {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  color: var(--subtle);
+  position: absolute; top: clamp(28px, 2.8vw, 36px); right: clamp(28px, 2.8vw, 36px);
+  font-size: 13px; font-weight: 600; letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.36);
 }
 .ncard .ic {
-  width: 42px;
-  height: 42px;
-  display: grid;
-  place-items: center;
-  border-radius: 12px;
-  background: var(--tint-brand);
-  color: var(--accent);
-  margin-bottom: 2px;
+  width: 52px; height: 52px; display: grid; place-items: center;
+  border-radius: var(--r-sm); margin-bottom: 4px;
+  background: rgba(255, 255, 255, 0.08); color: var(--mint);
 }
 .ncard .ic svg {
-  width: 21px;
-  height: 21px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.6;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+  width: 24px; height: 24px; fill: none; stroke: currentColor;
+  stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
 }
-.ncard p:not(.num) { color: var(--muted); font-size: 16px; }
-.ncard .link-arrow { margin-top: 6px; }
+/* The chips still cycle, but as tinted glass on the dark rather than as six
+   pastel blocks: the fills are the brand's own three at low alpha, and the
+   icon keeps the full colour. Each icon clears 4.5:1 on the card. */
+.ncard:nth-child(3n + 2) .ic { background: rgba(249, 209, 0, 0.14); color: #f9d100; }
+.ncard:nth-child(3n + 3) .ic { background: rgba(248, 81, 19, 0.14); color: #ff8a5c; }
+
+/* The wrap caps at 1200, so a card is no wider at 1920 than at 1440. Left
+   on the global clamp the heading keeps growing past that and wraps on a
+   card that never grew with it, so it stops where the card stops. */
+.ncard h3 { font-size: clamp(19px, 1.5vw, 21.6px); }
+.ncard p:not(.num) { color: var(--on-deep-muted); font-size: 16px; }
+.ncard .link-arrow { margin-top: 8px; color: var(--mint); }
+
+/* Each card ends in the screen it is talking about, rising out of the bottom
+   edge. The reference does this with its dark cards, and it is the difference
+   between a card that describes a product and a card that shows one. */
+.ncard { overflow: hidden; padding-bottom: 0; }
+.ncard-shot {
+  margin: 10px 0 0;
+  height: clamp(150px, 17vw, 210px);
+  border-radius: 18px 18px 0 0;
+  overflow: hidden;
+  box-shadow: 0 -10px 34px rgba(0, 0, 0, 0.28);
+}
+.ncard-shot img {
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: top center;
+}
+
+/* A product with two sides gets one card and both screens. The text sits
+   beside them rather than above, so the pair reads as one product rather
+   than as two cards that happen to be adjacent. */
+.ncard-wide {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr);
+  column-gap: clamp(28px, 3.2vw, 56px);
+  align-items: end;
+}
+.ncard-wide .ncard-body {
+  display: grid; gap: 13px; align-content: start;
+  padding-bottom: clamp(28px, 2.8vw, 36px);
+}
+.ncard-wide .ncard-shots {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(12px, 1.4vw, 20px); align-items: end;
+}
+.ncard-wide .ncard-shot { height: clamp(190px, 21vw, 290px); }
 
 /* -------------------------------------------------------------- split -- */
 .split {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 0.78fr);
-  gap: clamp(40px, 6vw, 88px);
-  align-items: center;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr);
+  gap: clamp(40px, 6vw, 92px); align-items: center;
 }
-.split-text h2 { margin-top: 14px; }
-.split-text > .lead { margin-top: 20px; }
-.points { display: grid; gap: 26px; margin-top: clamp(32px, 3.4vw, 44px); }
-.point { display: grid; gap: 8px; }
-.point p { color: var(--muted); font-size: 16px; }
+.split-text h2 { margin-top: 16px; }
+.split-text > .lead { margin-top: 22px; }
+/* (.points and .point are defined with the gifting section above.) */
 
 /* --------------------------------------------------------- phone row -- */
 .phone-row {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(20px, 3vw, 44px);
-  margin-top: clamp(48px, 5.5vw, 76px);
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(20px, 3vw, 46px);
+  margin-top: clamp(52px, 6vw, 82px);
 }
-/* The middle phone sits a little proud of the other two, the way a set of
-   three reads better when it has a centre. */
-.phone-row .shot-phone:nth-child(2) { transform: translateY(-22px); }
+.phone-row > :nth-child(2) { transform: translateY(-30px); }
 
 /* -------------------------------------------------------------- steps -- */
 .steps {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(28px, 3.4vw, 48px);
-  margin-top: clamp(44px, 5vw, 68px);
-  counter-reset: step;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(30px, 3.6vw, 52px);
+  margin-top: clamp(48px, 5.5vw, 76px);
 }
-.step { display: grid; gap: 10px; align-content: start; text-align: center; }
-.step .shot { margin-bottom: 20px; }
+.step { display: grid; gap: 11px; align-content: start; text-align: center; }
+.step .stage { margin-bottom: 24px; }
 .step .num {
-  width: 34px;
-  height: 34px;
-  margin-inline: auto;
-  display: grid;
-  place-items: center;
-  border-radius: var(--r-pill);
-  background: var(--inverse);
-  color: var(--on-inverse);
-  font-size: 15px;
-  font-weight: 600;
+  width: 38px; height: 38px; margin-inline: auto; display: grid; place-items: center;
+  border-radius: var(--r-pill); background: var(--mint); color: var(--deep);
+  font-size: 16px; font-weight: 600;
 }
 .step p:not(.num) { color: var(--muted); font-size: 16px; }
 
-/* ---------------------------------------------------------------- faq -- */
-.faq { margin-top: clamp(40px, 4.5vw, 60px); border-top: 1px solid var(--grid); }
+/* (.faq, .plus, .answer and .closing are defined with their sections above.) */
 
-.faq details { border-bottom: 1px solid var(--grid); }
-
-.faq summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  padding: 24px 4px;
-  cursor: pointer;
-  list-style: none;
-  font-size: clamp(17px, 1.5vw, 19px);
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  transition: color var(--t-base) var(--ease);
-}
-.faq summary::-webkit-details-marker { display: none; }
-.faq summary:hover { color: var(--accent); }
-
-/* A plus that becomes a minus. Two bars, one of which turns. */
-.plus {
-  position: relative;
-  flex: none;
-  width: 18px;
-  height: 18px;
-}
-.plus::before,
-.plus::after {
-  content: '';
-  position: absolute;
-  inset: 50% 0 auto 0;
-  height: 1.7px;
-  border-radius: 2px;
-  background: currentColor;
-  transform: translateY(-50%);
-  transition: transform var(--t-base) var(--ease), opacity var(--t-base) var(--ease);
-}
-.plus::after { transform: translateY(-50%) rotate(90deg); }
-details[open] .plus::after { transform: translateY(-50%) rotate(0deg); opacity: 0; }
-
-.answer {
-  padding: 0 4px 26px;
-  max-width: 68ch;
-}
-.answer p { color: var(--muted); font-size: 16.5px; }
-
-/* ------------------------------------------------------------ closing -- */
-/* --sand is the product's own hero surface, so the last thing on the page is
-   still a Tokkenly colour rather than a marketing one. */
-.closing {
-  margin-block: var(--section-y) 0;
-  padding-block: clamp(72px, 8.5vw, 124px);
-  background: var(--sand);
-  color: var(--on-inverse);
-}
-.closing-in { max-width: 740px; margin: 0 auto; text-align: center; }
-.closing .lead { margin-top: 20px; color: rgba(247, 247, 245, 0.84); }
-
-/* --------------------------------------------------------------- foot -- */
+/* --------------------------------------------------------------- footer -- */
+/* The footer sits on the page ground, not on a dark band: its own fill is
+   switched off in the frame and the ink is the deep green. */
 .foot {
-  padding-block: clamp(56px, 6vw, 84px) 40px;
-  background: var(--surface);
-  border-top: 1px solid var(--grid);
+  padding-block: min(92px, 4.792vw) 42px;
+  background: transparent; color: var(--deep);
 }
+.foot .brand-mark { background: var(--mint); color: var(--deep); }
 .foot-top {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 2.1fr);
-  gap: clamp(40px, 5vw, 72px);
+  display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  gap: min(76px, 3.959vw); align-items: start;
 }
-.foot-brand p {
-  margin-top: 14px;
-  color: var(--muted);
-  font-size: 16px;
-  max-width: 26ch;
-}
+.foot-brand p { margin-top: 16px; color: var(--deep); font-size: 16px; max-width: 26ch; }
 
-.foot-cols {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 32px 24px;
-}
-.foot-col { display: grid; gap: 10px; align-content: start; }
+.foot-cols { display: grid; grid-auto-flow: column; gap: min(24px, 1.25vw); justify-content: end; }
+.foot-col { display: grid; gap: 11px; align-content: start; }
+.foot-col-products { min-width: 300px; }
+.foot-split { display: grid; grid-auto-flow: column; gap: min(48px, 2.5vw); justify-content: start; }
+.foot-split > div { display: grid; gap: 11px; align-content: start; }
 .foot-head {
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--subtle);
-  margin-bottom: 2px;
+  font-size: 12px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--mint);
 }
 .foot-col a {
-  font-size: 15.5px;
-  color: var(--muted);
-  transition: color var(--t-fast) var(--ease);
+  font-size: 15.5px; line-height: 20px; color: var(--deep);
+  transition: opacity var(--t-fast) var(--ease-out);
 }
-.foot-col a:hover { color: var(--ink); }
+.foot-col a:hover { opacity: 0.66; }
 
-.risk {
-  margin-top: clamp(48px, 5vw, 72px);
-  padding-top: 26px;
-  border-top: 1px solid var(--grid);
-  color: var(--subtle);
-  font-size: 14px;
+.foot-end { display: grid; justify-items: center; gap: min(48px, 2.5vw); margin-top: min(72px, 3.75vw); }
+/* 318px against the 1920 frame. Set against the viewport so it fills the page
+   the way it does in the frame rather than overflowing the moment the window
+   is anything else. */
+.foot-word {
+  font-size: min(318px, 16.57vw); font-weight: 600;
+  letter-spacing: -0.025em; line-height: 0.71;
+  color: #d4d4d0; user-select: none;
 }
+.risk { color: var(--deep); font-size: 14px; letter-spacing: -0.005em; }
 
-/* ------------------------------------------------------------- reveal -- */
+/* ------------------------------------------------------------- motion -- */
+/* Onboard's numbers: 50px over 1s on a reveal. The old 18px over 620ms was
+   below the threshold at which anything reads as arriving. */
 .reveal {
   opacity: 0;
-  transform: translateY(18px);
-  transition: opacity 620ms var(--ease), transform 620ms var(--ease);
+  transform: translateY(50px);
+  transition: opacity 1s var(--ease), transform 1s var(--ease);
+  will-change: opacity, transform;
 }
 .reveal.in { opacity: 1; transform: none; }
 
+/* The hero animates on load rather than on scroll, because it is already in
+   view: 100px over 1.4s, staggered down the six elements. */
+@keyframes heroIntro {
+  from { opacity: 0; transform: translateY(100px); }
+  to { opacity: 1; transform: none; }
+}
+.hero-intro {
+  animation: heroIntro 1.4s var(--ease) both;
+  animation-delay: var(--hero-d, 0s);
+  will-change: opacity, transform;
+}
+
 /* ------------------------------------------------------------ responsive */
 @media (max-width: 1040px) {
+  /* The two big stickers are placed against a 1920 composition — the gun
+     beside the lead, the notes beside the globe. Once the copy starts
+     wrapping they land on top of the words instead of beside them, so they
+     come out here and the coin, which sits in clear air, stays. */
+  .sticker-md { display: none; }
+  .sticker-coin { top: min(120px, 14vw); }
+
+  /* Every two-column section on the 1520 grid becomes one column here. The
+     aspect ratios go with them: a 485x600 card at a third of a phone is a
+     stamp, and a 988x456 card cannot hold a pop-up beside its copy. */
+  .ts-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .gift-in, .why-in, .faq-in { grid-template-columns: minmax(0, 1fr); gap: 44px; }
+  .why-stage { aspect-ratio: 16 / 10; }
+  .why-coin { display: none; }
+  .pr-row-a, .pr-row-b { grid-template-columns: minmax(0, 1fr); }
+  .pr-card, .pr-narrow { aspect-ratio: auto; }
+  .pr-wide { grid-template-columns: minmax(0, 1fr); padding-right: min(36px, 1.875vw); }
+  .pr-wide .popup { border-radius: min(20px, 1.042vw) min(20px, 1.042vw) 0 0; }
+  .pr-narrow { padding-bottom: 240px; }
+  .gs-steps { grid-template-columns: minmax(0, 1fr); gap: 56px; }
+  .gs-gun { display: none; }
+  .foot-top { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+  .foot-cols { justify-content: start; gap: 40px; }
+
+  .split-head { grid-template-columns: minmax(0, 1fr); gap: 36px; }
+  .band-deep .statement { grid-template-columns: minmax(0, 1fr); gap: 44px; }
+  .hub { grid-template-columns: minmax(0, 1fr); justify-items: center; gap: 22px; }
+  .hub-list { order: 2; justify-items: center; }
+  .hub-list li::after { display: none; }
+  .hub-wire { display: none; }
+  .hub-core { order: 1; }
   .nav-links { display: none; }
   .burger { display: grid; }
-  .split { grid-template-columns: minmax(0, 1fr); gap: 44px; }
+  .split { grid-template-columns: minmax(0, 1fr); gap: 48px; }
   .split-text { order: 1; }
   .foot-top { grid-template-columns: minmax(0, 1fr); }
 }
@@ -700,38 +1241,64 @@ details[open] .plus::after { transform: translateY(-50%) rotate(0deg); opacity: 
   .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .steps { grid-template-columns: minmax(0, 1fr); max-width: 420px; margin-inline: auto; }
   .phone-row { gap: 20px; }
-  .phone-row .shot-phone:nth-child(2) { transform: none; }
+  .phone-row > :nth-child(2) { transform: none; }
+  .band-round { margin-inline: 16px; }
+}
+
+@media (max-width: 880px) {
+  .hero-stage { aspect-ratio: 4 / 3; }
+  .stage-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 640px) {
-  :root { --gutter: 20px; --nav-h: 62px; }
+  :root { --gutter: 20px; --nav-h: 64px; }
   body { font-size: 16px; }
   .grid-3 { grid-template-columns: minmax(0, 1fr); }
+
+  /* At 45% of a phone the globe is a thumbnail and the orbit is unreadable.
+     It takes most of the width instead, and the stage is re-proportioned to
+     the sphere rather than to the 1920 band it came from. The coin goes too:
+     nothing is left with enough clear air to sit in. */
+  .hero-stage { aspect-ratio: 390 / 330; }
+  /* A ring at the desktop radius is wider than the phone, so the outer cards
+     hang off both edges. Pulled in and scaled down, all six stay on screen. */
+  .globe { left: 10%; width: 80%; --rx: 44; --ry: 21; --card: 0.78; }
+  .stickers { display: none; }
+  .hero-cta { flex-direction: column; align-items: stretch; width: 100%; }
+  .hero-cta .btn { width: 100%; }
+
+  .ts-cards { grid-template-columns: minmax(0, 1fr); }
+  .base-facts { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .base-slab { padding: 40px 24px; }
+  .foot-cols { grid-auto-flow: row; }
+  .foot-split { grid-auto-flow: row; gap: 11px; }
+  .foot-col-products { min-width: 0; }
+  /* 318px of wordmark on a phone is a horizontal scrollbar. */
+  .foot-word { font-size: 21vw; }
+  .closing { min-height: 0; }
+  .closing-slab { aspect-ratio: auto; padding-block: 56px; }
+  .cta-prop { opacity: 0.55; }
+  /* A span left on in a single-column stack invents a second track and
+     collapses the first to 0. On a phone every card is just a card, and the
+     wide ones put their screens under the words instead of beside them. */
+  .numbered .ncard-wide { grid-column: auto; grid-template-columns: minmax(0, 1fr); row-gap: 24px; }
+  .ncard-wide .ncard-body { padding-bottom: 0; }
   .cards .card { max-width: 480px; margin-inline: auto; width: 100%; }
   /* Three phones do not fit across a phone. Two columns, and the third wraps
      under the pair rather than shrinking all of them to a thumbnail. */
   .phone-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .phone-row .shot-phone { width: 100%; }
-  .phone-row .shot-phone:last-child { grid-column: 1 / -1; width: min(260px, 100%); }
+  .phone-row .stage { width: 100%; }
+  .phone-row > :last-child { grid-column: 1 / -1; max-width: 300px; margin-inline: auto; }
   .foot-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  /* The calls to action go full width. The one in the bar does not — it has a
-     burger beside it and a logo opposite, and a button that fills the row
-     pushes both off the screen. */
   .cta-row { gap: 12px; }
-  .cta-row .btn { height: 50px; width: 100%; }
+  .cta-row .btn { height: 54px; width: 100%; }
   .cta-row .link-arrow { margin-inline: auto; }
-  .hero-text .cta-row,
-  .cta-row.centred { flex-direction: column; align-items: stretch; }
+  .hero-text .cta-row, .cta-row.centred { flex-direction: column; align-items: stretch; }
+  .band-round { margin-inline: 12px; border-radius: var(--r-lg); }
+  .faq summary { padding: 20px; gap: 16px; }
+  .answer { padding: 0 20px 22px; }
 
-  /* The hero picture becomes the phone it is showing. */
-  .hero-shot {
-    aspect-ratio: 390 / 800;
-    width: min(290px, 100%);
-    margin-inline: auto;
-    border-radius: 30px;
-    border-color: var(--control-pressed);
-  }
-  .hero-shot img { height: 100%; object-fit: cover; object-position: top center; }
+
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -741,4 +1308,5 @@ details[open] .plus::after { transform: translateY(-50%) rotate(0deg); opacity: 
     transition-duration: 0.01ms !important;
   }
   .reveal { opacity: 1; transform: none; }
+  .hero-intro { animation: none; opacity: 1; transform: none; }
 }
