@@ -9434,3 +9434,53 @@ pages are cleared and the converter is verified against Home at both widths,
 but the remaining build is about 125 `use_figma` calls, each carrying a whole
 screen's tree. That is a transport problem, not a design one, and the exports
 in `figma/flows/` plus `_figma-build.mjs` are all that is needed to finish it.
+
+### 11g.82 — the 172 screens, and the limit that was not the one on the label
+
+The last batch ended by calling the remaining work a transport problem. It was,
+and the transport turned out to be narrower than the number written on it.
+
+**The cap is not 50,000.** The write tool takes a 50,000-character argument, so
+the first plan sized batches against that. The batches kept arriving short. The
+real limit is `cat`, which stops at roughly 28KB, so a screen emitted into a
+file and read back could be silently truncated long before the tool would have
+refused it. Everything is sized to 26,000 characters now, with the two screens
+that sit near the boundary sliced rather than trusted. A limit you can see is
+not always the one that binds.
+
+**Guessing the size was the other half of it.** `JSON.stringify(tree).length`
+over-counts what the converter actually emits, badly enough that batches planned
+from it ran at half the capacity they could have. Each screen is measured by
+emitting it and counting the bytes. With real numbers, a first-fit-decreasing
+pack gets close to the floor: the 34 screens of Account and settings, 318,448
+characters in total, went in 17 calls against a theoretical 13, and the 12
+screens of Operations went in six pairs, which is the minimum the cap allows.
+
+**What is in the file.** 172 frames across ten pages, every screen at 1440 and
+at 390, laid out desktop above phone in flow order. Every page was checked
+against its own export afterwards, for three things: the frame count, any name
+in the flow that has no frame, and any dashed placeholder left where a component
+should be. All ten came back with nothing missing, nothing extra, no empty
+frame, and no placeholder. The parts check from 11g.81 held across all of it —
+not one of the 172 screens asked for a component the file does not have.
+
+**They are pictures, not layouts.** Every frame is absolutely positioned from
+the browser's own boxes. Nothing in the file has auto-layout, so nothing
+reflows: change a word in Figma and the row it sits in will not move to make
+room. That is the honest shape of a converter that reads a rendered page. It
+makes the file good for looking at a screen and bad for rearranging one, and
+anyone who wants the second thing should change the product and re-export
+rather than push frames around here.
+
+**Two things the data showed.** `Your bucket` captured the empty state at both
+widths, because the session the exporter walks has an empty bucket — so the file
+says "Nothing in the bucket yet" on the one screen whose whole point is a filled
+bucket. It needs re-seeding, not redrawing. And the sweep confirmed the address
+rule: every customer-facing address in the file is `ibrahimweng0@gmail.com`, and
+the only other addresses are the staff handles in the audit log, which are meant
+to be internal.
+
+**What still is not closed.** The file is a snapshot. Nothing keeps it in step
+with the code after today, and the parts check compares names rather than
+drawings — the gap `icon/card` fell through in 11g.81 is still open, and
+re-importing from source is still the only thing standing in for it.
