@@ -329,253 +329,153 @@
       </section>
 
       <!-- ----------------------------------------------------- products -- -->
-      <section class="band" id="products">
+      <!-- A deep green section with four #00221a cards on a 1520 column: the
+           wide pair is 988 and the narrow pair 500, alternating sides so the
+           two pop-ups sit on opposite corners. The pop-ups are real markup,
+           not screenshots — they are plain key/value panels and stay crisp
+           and selectable that way. -->
+      <section class="band band-products" id="products">
         <div class="wrap">
-          <div class="head reveal">
+          <div class="head head-ondeep reveal">
             <p class="eyebrow">Products</p>
-            <h2>Your money, free to do more.</h2>
+            <h2>Your money, free<br />to do more.</h2>
             <p class="lead">Beyond your investments, take care of everyday money in the same app.</p>
           </div>
 
-          <div class="grid-3 numbered">
-            <!-- Receiving and sending are one movement in two directions, so they
-                 are one card carrying both screens rather than two cards making
-                 half of the same argument each. Borrowing and earning are the two
-                 sides of the same product, and pair the same way. -->
-            <article class="ncard ncard-wide reveal" id="product-receive-send">
-              <p class="num">01</p>
-              <div class="ncard-body">
-                <span class="ic" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><path d="M8 4v11m0 0l-3.5-3.5M8 15l3.5-3.5M16 20V9m0 0l-3.5 3.5M16 9l3.5 3.5" /></svg>
-                </span>
-                <h3>Receive and send money</h3>
-                <p>
-                  Get paid or receive money from people who matter to you. Keep it in Tokkenly, ready
-                  for your next move.
-                </p>
-                <p>
-                  Support someone at home, settle up with a friend, or move money where you need it.
-                  Send from the same app you use for the rest of your money.
-                </p>
-                <a class="link-arrow" href="#money-movement">
-                  Explore Receive and Send
-                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg>
-                </a>
+          <div class="pr-grid">
+            <div class="pr-row pr-row-a">
+            <article class="pr-card pr-wide reveal" id="product-receive-send">
+              <div class="pr-body">
+                <div class="pr-top">
+                  <div class="pr-title"><span class="pr-chip pr-chip-mint" aria-hidden="true"><svg viewBox="0 0 24 24"><g transform="translate(5,4)"><path d="M 3.5 0 L 3.5 11 M 3.5 11 L 0 7.5 M 3.5 11 L 7 7.5 M 11.5 16 L 11.5 5 M 11.5 5 L 8 8.5 M 11.5 5 L 15 8.5" /></g></svg></span><h3>Receive and send money</h3></div>
+                  <div class="pr-paras">
+                    <p>Get paid or receive money from people who matter to you. Keep it in Tokkenly, ready for your next move.</p>
+                    <p>Support someone at home, settle up with a friend, or move money where you need it. Send from the same app you use for the rest of your money.</p>
+                  </div>
+                </div>
+                <a class="pr-link" href="#get-started">Explore Receive and Send <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></a>
               </div>
-              <div class="ncard-shots">
-              <figure class="ncard-shot">
-                <img src="./img/p-receive.webp" width="780" height="1600" loading="lazy"
-                  alt="Receiving money into Tokkenly on a phone." />
-              </figure>
-              <figure class="ncard-shot">
-                <img src="./img/p-send.webp" width="780" height="1600" loading="lazy"
-                  alt="Sending money to someone on Tokkenly, on a phone." />
-              </figure>
-              </div>
-            </article>
-
-            <article class="ncard reveal" id="product-pay-bills">
-              <p class="num">02</p>
-              <span class="ic" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6" /></svg>
-              </span>
-              <h3>Pay your bills</h3>
-              <p>
-                Take care of your everyday bills with Tokkenly. A little less life admin. A little
-                more time for everything else.
-              </p>
-              <a class="link-arrow" href="#money-movement">
-                Explore Pay bills
-                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg>
-              </a>
-              <figure class="ncard-shot">
-                <img src="./img/p-bills.webp" width="780" height="1600" loading="lazy"
-                  alt="Paying everyday bills in Tokkenly on a phone." />
-              </figure>
-            </article>
-
-            <article class="ncard reveal" id="product-convert">
-              <p class="num">03</p>
-              <span class="ic" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M4 8h13m0 0l-3.5-3.5M17 8l-3.5 3.5M20 16H7m0 0l3.5-3.5M7 16l3.5 3.5" /></svg>
-              </span>
-              <h3>Convert Naira to USD</h3>
-              <p>
-                Convert between naira and stablecoins as your needs change. Money for everyday life.
-                Money for what&rsquo;s next.
-              </p>
-              <a class="link-arrow" href="#money-movement">
-                Explore Convert
-                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg>
-              </a>
-              <figure class="ncard-shot">
-                <img src="./img/p-wallet.webp" width="780" height="1600" loading="lazy"
-                  alt="The Tokkenly wallet on a phone, showing dollars alongside what they are worth in naira." />
-              </figure>
-            </article>
-
-            <article class="ncard ncard-wide reveal" id="product-borrow-earn">
-              <p class="num">04</p>
-              <div class="ncard-body">
-                <span class="ic" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><path d="M12 4v16M4 8h16M7 8l-3 6a3 3 0 006 0zM17 8l-3 6a3 3 0 006 0z" /></svg>
-                </span>
-                <h3>Borrow and earn</h3>
-                <p>
-                  Put your stablecoins to work with earning opportunities in Tokkenly. Choose how much
-                  to commit and review the terms before you begin.
-                </p>
-                <p>
-                  Explore borrowing options when you need extra flexibility. Review the terms and
-                  repayment requirements, and choose what fits your plans.
-                </p>
-                <a class="link-arrow" href="#money-movement">
-                  Explore Borrow and Earn
-                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg>
-                </a>
-              </div>
-              <div class="ncard-shots">
-              <figure class="ncard-shot">
-                <img src="./img/p-earn.webp" width="780" height="1600" loading="lazy"
-                  alt="The lending screen in Tokkenly on a phone, showing an amount lent out." />
-              </figure>
-              <figure class="ncard-shot">
-                <img src="./img/p-borrow.webp" width="780" height="1600" loading="lazy"
-                  alt="The borrowing screen in Tokkenly on a phone, showing an amount owed." />
-              </figure>
-              </div>
-            </article>
+          <div class="popup">
+            <div class="pop-head">
+              <p class="pop-k">You are sending</p>
+              <p class="pop-amount">$120.00</p>
+            </div>
+            <div class="pop-ledger">
+              <div class="pop-pair"><div class="pop-row"><p class="pop-k">To</p><p class="pop-v">Adaeze Okonkwo</p></div><div class="pop-row"><p class="pop-k">Paying with</p><p class="pop-v">USDC</p></div></div>
+              <div class="pop-pair"><div class="pop-row"><p class="pop-k">They receive</p><p class="pop-v">$120.00</p></div><div class="pop-row"><p class="pop-k">Fee</p><p class="pop-v">No fee</p></div></div>
+              <div class="pop-row"><p class="pop-k">Arrives</p><p class="pop-v">In about a minute</p></div>
+            </div>
+            <p class="pop-btn">Send $120.00</p>
           </div>
-        </div>
-      </section>
+            </article>
 
-      <!-- ----------------------------------------------- money movement -- -->
-      <section class="band band-mint-tint band-round" id="money-movement">
-        <div class="wrap">
-          <div class="head reveal">
-            <p class="eyebrow">Money movement</p>
-            <h2>From getting paid to making plans.</h2>
-            <p class="lead">
-              Receive money. Convert between naira and stablecoins. Send to someone you care about
-              or withdraw to your bank account. Keep your next step close, wherever your money needs
-              to go.
-            </p>
-            <div class="cta-row centred">
-              <a class="btn btn-dark" href="#get-started">Sign up</a>
+            <article class="pr-card pr-narrow reveal" id="product-pay-bills">
+              <div class="pr-top">
+                <div class="pr-title"><span class="pr-chip pr-chip-yellow" aria-hidden="true"><svg viewBox="0 0 24 24"><g transform="translate(6,3)"><path d="M 3 5 L 9 5 M 3 9 L 9 9 M 0 0 L 12 0 L 12 18 L 9 16 L 6 18 L 3 16 L 0 18 L 0 0 Z" /></g></svg></span><h3>Pay your bills</h3></div>
+                <p>Take care of your everyday bills with Tokkenly. A little less life admin. A little more time for everything else.</p>
+                <a class="pr-link" href="#get-started">Explore Pay bills <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></a>
+              </div>
+              <img class="pr-sticker pr-sticker-notes" src="./img/pr/notes-purple.webp" width="543" height="543" loading="lazy" alt="" />
+            </article>
+
             </div>
+
+            <div class="pr-row pr-row-b">
+            <article class="pr-card pr-narrow reveal" id="product-convert">
+              <div class="pr-top">
+                <div class="pr-title"><span class="pr-chip pr-chip-orange" aria-hidden="true"><svg viewBox="0 0 24 24"><g transform="translate(4,4)"><path d="M 0 3.5 L 13 3.5 M 13 3.5 L 9.5 0 M 13 3.5 L 9.5 7 M 16 11.5 L 3 11.5 M 3 11.5 L 6.5 8 M 3 11.5 L 6.5 15" /></g></svg></span><h3>Convert Naira to USD</h3></div>
+                <p>Convert between naira and stablecoins as your needs change. Money for everyday life. Money for what’s next.</p>
+                <a class="pr-link" href="#get-started">Explore Convert <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></a>
+              </div>
+              <img class="pr-sticker pr-sticker-conv" src="./img/pr/convert.webp" width="544" height="276" loading="lazy" alt="" />
+            </article>
+
+            <article class="pr-card pr-wide reveal" id="product-borrow-earn">
+              <div class="pr-body">
+                <div class="pr-top">
+                  <div class="pr-title"><span class="pr-chip pr-chip-mint" aria-hidden="true"><svg viewBox="0 0 24 24"><g transform="translate(4,4)"><path d="M 8 0 L 8 16 M 0 4 L 16 4 M 3 4 L 0 10 C 0 10.8 0.32 11.56 0.88 12.12 C 1.44 12.68 2.2 13 3 13 C 3.8 13 4.56 12.68 5.12 12" /></g></svg></span><h3>Borrow and earn</h3></div>
+                  <div class="pr-paras">
+                    <p>Put your stablecoins to work with earning opportunities in Tokkenly. Choose how much to commit and review the terms before you begin.</p>
+                    <p>Explore borrowing options when you need extra flexibility. Review the terms and repayment requirements, and choose what fits your plans.</p>
+                  </div>
+                </div>
+                <a class="pr-link" href="#get-started">Explore Borrow and Earn <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></a>
+              </div>
+          <div class="popup">
+            <div class="pop-head">
+              <p class="pop-k">You are borrowing</p>
+              <p class="pop-amount">$200.00</p>
+            </div>
+            <div class="pop-ledger">
+              <div class="pop-row"><p class="pop-k">Rate</p><p class="pop-v">9.4% a year</p></div>
+              <div class="pop-row"><p class="pop-k">Costs you</p><p class="pop-v">About $1.57 a month</p></div>
+              <div class="pop-row"><p class="pop-k">Repay</p><p class="pop-v">Any time, no fee</p></div>
+              <div class="pop-row"><p class="pop-k">Sold if shares fall below</p><p class="pop-v">$812.00</p></div>
+            </div>
+            <p class="pop-note">Your shares stay yours and keep earning. We only sell if they fall to that level.</p>
+            <p class="pop-btn">Borrow $200.00</p>
           </div>
-
-          <div class="phone-row">
-            <div class="stage stage-mint reveal">
-              <figure class="shot shot-phone">
-              <img
-                src="./img/p-receive.webp"
-                width="780"
-                height="1600"
-                loading="lazy"
-                alt="Receiving money in Tokkenly on a phone."
-              />
-            </figure>
-            </div>
-            <div class="stage stage-yellow reveal">
-              <figure class="shot shot-phone">
-              <img
-                src="./img/p-wallet.webp"
-                width="780"
-                height="1600"
-                loading="lazy"
-                alt="The Tokkenly wallet on a phone, showing dollars alongside what they are worth in naira."
-              />
-            </figure>
-            </div>
-            <div class="stage stage-peach reveal">
-              <figure class="shot shot-phone">
-              <img
-                src="./img/p-send.webp"
-                width="780"
-                height="1600"
-                loading="lazy"
-                alt="Sending money to someone from Tokkenly on a phone."
-              />
-            </figure>
+            </article>
             </div>
           </div>
         </div>
       </section>
 
       <!-- ---------------------------------------------- getting started -- -->
-      <section class="band" id="get-started">
-        <div class="wrap">
-          <div class="head reveal">
+      <!-- Figma folds money movement and getting started into one section:
+           three 485x600 screens on their own gradient stages, each with a
+           numbered caption under it, and one button at the end. The screens
+           are exported — they are whole app views, not panels that could be
+           rebuilt as markup without inventing half of them. -->
+      <section class="band band-gs" id="get-started">
+        <div class="wrap gs-wrap">
+          <img class="gs-gun sticker-md" src="./img/hero/gun.webp" width="353" height="453" loading="lazy" alt="" aria-hidden="true" />
+
+          <div class="head gs-head reveal">
             <p class="eyebrow">Getting started</p>
-            <h2>From curious to invested.</h2>
+            <h2>See something you want to invest in? Start here.</h2>
+            <p class="lead">
+              Receive money. Convert between naira and stablecoins. Send to someone you care about
+              or withdraw to your bank account. Keep your next step close, wherever your money needs
+              to go.
+            </p>
           </div>
 
-          <ol class="steps">
-            <li class="step reveal">
-              <div class="stage stage-deep">
-                <figure class="shot shot-phone">
-                <img
-                  src="./img/p-signup.webp"
-                  width="780"
-                  height="1600"
-                  loading="lazy"
-                  alt="The Tokkenly sign-up screen on a phone."
-                />
-              </figure>
+          <div class="gs-steps">
+            <div class="gs-step reveal">
+              <img class="gs-shot" src="./img/sec/step-1.webp" width="485" height="600" loading="lazy" alt="The Create your account screen, with an invite code, full name and email." />
+              <div class="gs-copy">
+                <p class="gs-num" aria-hidden="true">1</p>
+                <h3>Create your account</h3>
+                <p>Sign up for Tokkenly and complete the required account checks.</p>
               </div>
-              <p class="num">1</p>
-              <h3>Create your account</h3>
-              <p>Sign up for Tokkenly and complete the required account checks.</p>
-            </li>
-            <li class="step reveal">
-              <div class="stage stage-mint">
-                <figure class="shot shot-phone">
-                <img
-                  src="./img/p-addmoney.webp"
-                  width="780"
-                  height="1600"
-                  loading="lazy"
-                  alt="Adding money to a Tokkenly account on a phone."
-                />
-              </figure>
+            </div>
+            <div class="gs-step reveal">
+              <img class="gs-shot" src="./img/sec/step-2.webp" width="485" height="600" loading="lazy" alt="The Wallet screen with a spendable balance and the ways to add money." />
+              <div class="gs-copy">
+                <p class="gs-num" aria-hidden="true">2</p>
+                <h3>Add money</h3>
+                <p>Fund your account using an available method.</p>
               </div>
-              <p class="num">2</p>
-              <h3>Add money</h3>
-              <p>Fund your account using an available method.</p>
-            </li>
-            <li class="step reveal">
-              <div class="stage stage-sand">
-                <figure class="shot shot-phone">
-                <img
-                  src="./img/p-invest.webp"
-                  width="780"
-                  height="1600"
-                  loading="lazy"
-                  alt="Browsing the tokenized stocks available in Tokkenly on a phone."
-                />
-              </figure>
+            </div>
+            <div class="gs-step reveal">
+              <img class="gs-shot" src="./img/sec/step-3.webp" width="485" height="600" loading="lazy" alt="The Invest screen, listing index funds and popular tokenized stocks." />
+              <div class="gs-copy">
+                <p class="gs-num" aria-hidden="true">3</p>
+                <h3>Explore tokenized stocks</h3>
+                <p>Browse available tokenized stocks, review the product details, and choose your next investment.</p>
               </div>
-              <p class="num">3</p>
-              <h3>Explore tokenized stocks</h3>
-              <p>
-                Browse available tokenized stocks, review the product details, and choose your next
-                investment.
-              </p>
-            </li>
-          </ol>
-
-          <div class="cta-row centred reveal">
-            <a class="btn btn-dark" href="#get-started">Sign up</a>
+            </div>
           </div>
+
+          <div class="gs-cta reveal"><a class="btn btn-mint" href="#top">Sign up</a></div>
         </div>
       </section>
 
       <!-- ---------------------------------------------------------- faq -- -->
-      <section class="band" id="faq">
-        <div class="wrap">
-          <div class="split-head">
-            <div class="head reveal">
+      <section class="band band-faq" id="faq">
+        <div class="wrap faq-in">
+            <div class="head faq-head reveal">
               <p class="eyebrow">Frequently asked questions</p>
               <h2>A few things you might be wondering.</h2>
             </div>
@@ -636,20 +536,25 @@
               </div>
               </details>
             </div>
-          </div>
         </div>
       </section>
 
       <!-- ----------------------------------------------- closing call to -- -->
-      <section class="closing">
+      <!-- One 1520x532 slab, radius 34, on a gradient that runs top to bottom.
+           The three props are absolutely placed and the slab clips them. -->
+      <section class="closing" id="closing">
         <div class="wrap">
-          <div class="closing-in reveal">
-            <h2>Make room for your next investment.</h2>
-            <p class="lead">
-              Explore tokenized stocks with Tokkenly and bring the rest of your money along.
-            </p>
-            <div class="cta-row centred">
-              <a class="btn btn-onmint" href="#get-started">Sign up</a>
+          <div class="closing-slab reveal">
+            <img class="cta-prop cta-coin" src="./img/cta/coin.webp" width="274" height="290" loading="lazy" alt="" aria-hidden="true" />
+            <img class="cta-prop cta-pen" src="./img/cta/pen.webp" width="302" height="369" loading="lazy" alt="" aria-hidden="true" />
+            <img class="cta-prop cta-notes" src="./img/cta/notes.webp" width="593" height="593" loading="lazy" alt="" aria-hidden="true" />
+
+            <div class="closing-in">
+              <h2>Make your next investment now.</h2>
+              <p class="closing-lead">
+                Explore tokenized stocks with Tokkenly and bring the rest of your money along
+              </p>
+              <a class="btn btn-deep" href="#get-started">Get started</a>
             </div>
           </div>
         </div>
@@ -669,13 +574,21 @@
           </div>
 
           <nav class="foot-cols" aria-label="Footer">
-            <div class="foot-col">
+            <div class="foot-col foot-col-products">
               <p class="foot-head">Products</p>
-              <a href="#tokenized-stocks">Tokenized Stocks</a>
-              <a href="#product-receive-send">Receive and Send</a>
-              <a href="#product-pay-bills">Pay bills</a>
-              <a href="#product-convert">Convert</a>
-              <a href="#product-borrow-earn">Borrow and Earn</a>
+              <div class="foot-split">
+                <div>
+                  <a href="#tokenized-stocks">Tokenized Stocks</a>
+                  <a href="#product-receive-send">Receive</a>
+                  <a href="#product-receive-send">Send</a>
+                  <a href="#product-pay-bills">Pay bills</a>
+                </div>
+                <div>
+                  <a href="#product-borrow-earn">Earn</a>
+                  <a href="#product-borrow-earn">Borrow</a>
+                  <a href="#product-convert">Convert</a>
+                </div>
+              </div>
             </div>
             <div class="foot-col">
               <p class="foot-head">Company</p>
@@ -683,18 +596,20 @@
               <a href="#" data-soon>Blog</a>
             </div>
             <div class="foot-col">
-              <p class="foot-head">Support</p>
-              <a href="#faq">Help</a>
-            </div>
-            <div class="foot-col">
               <p class="foot-head">Legal</p>
               <a href="#" data-soon>Terms of service</a>
               <a href="#" data-soon>Privacy policy</a>
+              <a href="#faq">Help</a>
             </div>
           </nav>
         </div>
 
-        <p class="risk">Investments and earning products involve risk. Returns are not guaranteed.</p>
+        <!-- The wordmark is 318px in the frame: a piece of graphic furniture,
+             not a heading, so it is hidden from a screen reader. -->
+        <div class="foot-end">
+          <p class="foot-word" aria-hidden="true">Tokkenly</p>
+          <p class="risk">Investments and earning products involve risk. Returns are not guaranteed.</p>
+        </div>
       </div>
     </footer>
 

@@ -599,6 +599,196 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
   color: rgba(255, 255, 255, 0.66);
 }
 
+/* ------------------------------------------------------------ products -- */
+.band-products { background: var(--deep); }
+.head-ondeep h2, .head-ondeep .lead { color: #eaeae9; }
+
+/* 988 + 32 + 500 is exactly 1520, so fr units divide each row correctly. The
+   two rows are separate grids because the wide card swaps sides between
+   them — one grid with two columns cannot do that without reordering. */
+.pr-grid { display: grid; gap: min(32px, 1.667vw); margin-top: min(48px, 2.5vw); }
+.pr-row { display: grid; gap: min(32px, 1.667vw); }
+.pr-row-a { grid-template-columns: 988fr 500fr; }
+.pr-row-b { grid-template-columns: 500fr 988fr; }
+
+.pr-card {
+  position: relative; overflow: hidden;
+  background: #00221a; border-radius: min(26px, 1.354vw);
+  aspect-ratio: 988 / 456;
+}
+.pr-narrow { aspect-ratio: 500 / 456; }
+.pr-wide {
+  display: grid; grid-template-columns: minmax(0, 421fr) minmax(0, 485fr);
+  gap: min(46px, 2.396vw);
+  padding: min(36px, 1.875vw) 0 0 min(36px, 1.875vw);
+}
+.pr-narrow { padding: min(36px, 1.875vw) min(36px, 1.875vw) 0; }
+
+.pr-body { display: flex; flex-direction: column; justify-content: space-between; padding-bottom: min(36px, 1.875vw); }
+.pr-top { display: grid; gap: 13px; align-content: start; }
+.pr-title { display: flex; align-items: center; gap: 13px; }
+.pr-title h3 {
+  font-size: clamp(17px, 1.125vw, 21.6px); line-height: 1.3; letter-spacing: -0.022em; color: #fff;
+}
+.pr-chip {
+  flex: none; width: min(52px, 2.709vw); height: min(52px, 2.709vw);
+  border-radius: min(12px, 0.625vw);
+  display: grid; place-items: center;
+  background: rgba(255, 255, 255, 0.08);
+}
+.pr-chip-yellow { background: rgba(249, 209, 0, 0.14); }
+.pr-chip-orange { background: rgba(248, 81, 19, 0.14); }
+.pr-chip svg { width: 60%; height: 60%; fill: none; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.pr-chip-mint svg { stroke: var(--mint); }
+.pr-chip-yellow svg { stroke: #f9d100; }
+.pr-chip-orange svg { stroke: #ff8a5c; }
+
+.pr-paras { display: grid; gap: 13px; }
+.pr-card p {
+  font-size: clamp(14px, 0.834vw, 16px); line-height: 1.6; letter-spacing: -0.005em;
+  color: var(--on-deep-muted);
+}
+.pr-link {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: clamp(14px, 0.834vw, 16px); font-weight: 600; line-height: 1.6;
+  color: var(--mint);
+}
+.pr-narrow .pr-link { margin-top: 0; }
+.pr-arrow { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+/* The stickers sit on the card's own green, so the export keeps its baked
+   backdrop — matting it would eat the naira sign, which is the same green. */
+/* The exports carry their own rotation and their own padding, so these are
+   placed to land the art where the frame lands it rather than derived from
+   the node box — the two do not agree once a rotated node is exported. */
+.pr-sticker { position: absolute; pointer-events: none; height: auto; }
+.pr-sticker-notes { left: 2%; top: 13%; width: 108%; }
+.pr-sticker-conv { left: -6%; top: 44%; width: 112%; }
+
+/* ---- the pop-ups ------------------------------------------------------ */
+.popup {
+  background: #fff; border-radius: min(20px, 1.042vw) min(20px, 1.042vw) 0 0;
+  padding: min(32px, 1.667vw);
+  display: grid; gap: min(20px, 1.042vw); align-content: space-between;
+  color: #1e1818;
+}
+.pop-head { display: grid; gap: 6px; }
+.pop-k {
+  font-size: clamp(9.5px, 0.573vw, 11px); font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase; color: #6c7d78;
+}
+.pop-amount { font-size: clamp(26px, 2.084vw, 40px); font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; }
+.pop-ledger {
+  background: #f0efec; border-radius: min(14px, 0.73vw);
+  padding: min(18px, 0.938vw); display: grid; gap: min(14px, 0.73vw);
+}
+.pop-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: min(14px, 0.73vw); }
+.pop-row { display: grid; gap: 3px; }
+.pop-v { font-size: clamp(11.5px, 0.73vw, 14px); font-weight: 600; }
+.pop-note { font-size: clamp(10.5px, 0.678vw, 13px); line-height: 1.5; color: #6c7d78; }
+.pop-btn {
+  background: #1e1818; color: #fff; border-radius: 999px;
+  text-align: center; padding: min(15px, 0.782vw) 0;
+  font-size: clamp(11.5px, 0.73vw, 14px); font-weight: 600;
+}
+
+/* ----------------------------------------------------- getting started -- */
+.gs-wrap { position: relative; }
+.gs-head { max-width: 780px; }
+.gs-head h2 { margin-top: 22px; }
+.gs-head .lead { margin-top: 22px; }
+
+.gs-steps {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: min(32px, 1.667vw); margin-top: min(48px, 2.5vw);
+  align-items: start;
+}
+.gs-step { display: grid; gap: min(24px, 1.25vw); justify-items: center; }
+.gs-shot { width: 100%; height: auto; border-radius: min(32px, 1.667vw); }
+.gs-copy { display: grid; gap: 10px; justify-items: center; text-align: center; }
+.gs-num {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--mint); color: var(--deep);
+  display: grid; place-items: center;
+  font-size: 16px; font-weight: 600; line-height: 1;
+}
+.gs-copy h3 { font-size: clamp(19px, 1.354vw, 26px); line-height: 1.25; letter-spacing: -0.03em; }
+.gs-copy p { font-size: clamp(14.5px, 0.834vw, 16px); line-height: 1.6; color: var(--muted); max-width: 42ch; }
+.gs-cta { display: grid; justify-items: center; margin-top: min(82px, 4.271vw); }
+
+/* image 32 again, this time over the head rather than the hero. */
+.gs-gun {
+  position: absolute; left: 3.42%; top: 19px;
+  width: 23.22%; height: auto; z-index: 2; pointer-events: none;
+}
+
+/* ----------------------------------------------------------------- faq -- */
+/* 656 + 64 + 800 is exactly 1520, so fr units divide this row correctly. */
+.faq-in { display: grid; grid-template-columns: 656fr 800fr; gap: min(64px, 3.334vw); align-items: start; }
+.faq-head { max-width: none; margin: 0; text-align: left; }
+.faq-head .eyebrow { margin-inline: 0; }
+.faq { display: grid; gap: 12px; }
+.faq details {
+  border: 1px solid #e5ebe8; border-radius: min(18px, 0.938vw);
+  padding: min(24px, 1.25vw) min(26px, 1.354vw);
+}
+.faq summary {
+  list-style: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  font-size: clamp(16px, 0.99vw, 19px); font-weight: 700; line-height: 1.3;
+  letter-spacing: -0.022em; color: #1e1818;
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq .plus {
+  flex: none; width: 30px; height: 30px; border-radius: 50%;
+  background: #1e1818; position: relative;
+}
+.faq .plus::before, .faq .plus::after {
+  content: ''; position: absolute; inset: 50% auto auto 50%;
+  width: 11px; height: 1.6px; background: #fff; transform: translate(-50%, -50%);
+}
+.faq .plus::after { transform: translate(-50%, -50%) rotate(90deg); }
+.faq details[open] .plus::after { transform: translate(-50%, -50%) rotate(0deg); }
+.faq .answer { padding-top: 14px; }
+.faq .answer p { font-size: clamp(14.5px, 0.834vw, 16px); line-height: 1.6; color: var(--muted); }
+
+/* ------------------------------------------------- closing call to action */
+.closing {
+  /* The frame's section is a fixed 1024 with the 532 slab centred in it, not
+     a slab with 144 of padding either side. */
+  padding-block: var(--section-y);
+  min-height: min(1024px, 53.334vw);
+  display: grid; align-content: center;
+}
+.closing-slab {
+  position: relative; overflow: hidden;
+  border-radius: min(34px, 1.771vw);
+  aspect-ratio: 1520 / 532;
+  display: grid; place-items: center;
+  /* The frame's linear runs almost exactly top to bottom, starting above the
+     box; the top stop below is the colour at the point the box begins. */
+  background: linear-gradient(to bottom, #e7c9e0 0%, #d4cec6 100%);
+}
+.closing-in {
+  position: relative; z-index: 2;
+  display: grid; justify-items: center; gap: min(22px, 1.146vw); text-align: center;
+  padding-inline: min(64px, 3.334vw);
+}
+.closing-in h2 { max-width: 760px; color: var(--deep); }
+.closing-lead {
+  max-width: 640px;
+  font-size: clamp(16.5px, 1.05vw, 20px); line-height: 1.6; letter-spacing: -0.005em;
+  color: #1f473d;
+}
+.btn-deep { background: var(--deep); color: #fff; }
+.btn-deep:hover { background: #07463a; }
+
+/* Placed as shares of the 1520 slab, so they hold their corners as it narrows. */
+.cta-prop { position: absolute; height: auto; pointer-events: none; }
+.cta-coin  { left: 1.18%;  top: -1.5%;  width: 18.03%; }
+.cta-pen   { left: 23.75%; top: 53.76%; width: 19.87%; transform: rotate(180deg); }
+.cta-notes { left: 53.75%; top: 30.64%; width: 39.01%; }
+
 /* -------------------------------------------------------------- bands -- */
 .band { padding-block: var(--section-y); position: relative; }
 
@@ -942,93 +1132,47 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 }
 .step p:not(.num) { color: var(--muted); font-size: 16px; }
 
-/* ---------------------------------------------------------------- faq -- */
-.faq { margin-top: clamp(44px, 5vw, 64px); display: grid; gap: 12px; }
-.faq details {
-  background: var(--surface); border: 1px solid var(--line-soft);
-  border-radius: var(--r-md); box-shadow: var(--shadow-sm);
-  transition: box-shadow var(--t-base) var(--ease-out);
-}
-.faq details[open] { box-shadow: var(--shadow); }
-.faq summary {
-  display: flex; align-items: center; justify-content: space-between; gap: 24px;
-  padding: 24px 26px; cursor: pointer; list-style: none;
-  font-size: clamp(17px, 1.5vw, 19px); font-weight: 600; letter-spacing: -0.022em;
-  transition: color var(--t-base) var(--ease-out);
-}
-.faq summary::-webkit-details-marker { display: none; }
-.faq summary:hover { color: var(--positive); }
+/* (.faq, .plus, .answer and .closing are defined with their sections above.) */
 
-.plus {
-  position: relative; flex: none; width: 30px; height: 30px;
-  border-radius: 50%; background: var(--tint-mint);
-  transition: background var(--t-base) var(--ease-out), transform var(--t-base) var(--ease-out);
-}
-details[open] .plus { background: var(--mint); transform: rotate(180deg); }
-.plus::before, .plus::after {
-  content: ''; position: absolute; inset: 50% 9px auto 9px; height: 1.9px;
-  border-radius: 2px; background: var(--deep);
-  transform: translateY(-50%);
-  transition: transform var(--t-base) var(--ease-out), opacity var(--t-base) var(--ease-out);
-}
-.plus::after { transform: translateY(-50%) rotate(90deg); }
-details[open] .plus::after { transform: translateY(-50%) rotate(0deg); opacity: 0; }
-
-.answer { padding: 0 26px 26px; max-width: 70ch; }
-.answer p { color: var(--muted); font-size: 16.5px; }
-
-/* ------------------------------------------------------------ closing -- */
-.closing { padding-block: var(--section-y); background: transparent; }
-.closing > .wrap { max-width: calc(var(--wrap) + 2 * var(--gutter)); }
-.closing-in {
-  position: relative; overflow: hidden;
-  background: var(--mint); color: var(--deep);
-  border-radius: var(--r-xl);
-  padding: clamp(64px, 8vw, 116px) clamp(28px, 5vw, 64px);
-  max-width: none;
-}
-/* The dot field again, in the ink, so the loudest block on the page still has
-   the product's texture in it. */
-.closing-in::after {
-  content: ''; position: absolute; inset: 0; pointer-events: none;
-  background-image: radial-gradient(circle, rgba(5, 51, 41, 0.14) 1px, transparent 1px);
-  background-size: 22px 22px;
-  -webkit-mask-image: radial-gradient(70% 70% at 50% 50%, transparent 30%, #000);
-  mask-image: radial-gradient(70% 70% at 50% 50%, transparent 30%, #000);
-}
-.closing-in { text-align: center; }
-.closing-in > * { position: relative; z-index: 1; }
-.closing .lead { margin-top: 22px; color: rgba(5, 51, 41, 0.78); }
-
-/* --------------------------------------------------------------- foot -- */
+/* --------------------------------------------------------------- footer -- */
+/* The footer sits on the page ground, not on a dark band: its own fill is
+   switched off in the frame and the ink is the deep green. */
 .foot {
-  padding-block: clamp(60px, 6.5vw, 92px) 42px;
-  background: var(--deep); color: var(--on-deep);
+  padding-block: min(92px, 4.792vw) 42px;
+  background: transparent; color: var(--deep);
 }
 .foot .brand-mark { background: var(--mint); color: var(--deep); }
 .foot-top {
-  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2.1fr);
-  gap: clamp(40px, 5vw, 76px);
+  display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  gap: min(76px, 3.959vw); align-items: start;
 }
-.foot-brand p { margin-top: 16px; color: var(--on-deep-muted); font-size: 16px; max-width: 26ch; }
+.foot-brand p { margin-top: 16px; color: var(--deep); font-size: 16px; max-width: 26ch; }
 
-.foot-cols { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 34px 24px; }
+.foot-cols { display: grid; grid-auto-flow: column; gap: min(24px, 1.25vw); justify-content: end; }
 .foot-col { display: grid; gap: 11px; align-content: start; }
+.foot-col-products { min-width: 300px; }
+.foot-split { display: grid; grid-auto-flow: column; gap: min(48px, 2.5vw); justify-content: start; }
+.foot-split > div { display: grid; gap: 11px; align-content: start; }
 .foot-head {
   font-size: 12px; font-weight: 600; letter-spacing: 0.12em;
-  text-transform: uppercase; color: var(--mint); margin-bottom: 3px;
+  text-transform: uppercase; color: var(--mint);
 }
 .foot-col a {
-  font-size: 15.5px; color: var(--on-deep-muted);
-  transition: color var(--t-fast) var(--ease-out);
+  font-size: 15.5px; line-height: 20px; color: var(--deep);
+  transition: opacity var(--t-fast) var(--ease-out);
 }
-.foot-col a:hover { color: var(--on-deep); }
+.foot-col a:hover { opacity: 0.66; }
 
-.risk {
-  margin-top: clamp(50px, 5vw, 76px); padding-top: 28px;
-  border-top: 1px solid var(--line-deep);
-  color: var(--on-deep-muted); font-size: 14px;
+.foot-end { display: grid; justify-items: center; gap: min(48px, 2.5vw); margin-top: min(72px, 3.75vw); }
+/* 318px against the 1920 frame. Set against the viewport so it fills the page
+   the way it does in the frame rather than overflowing the moment the window
+   is anything else. */
+.foot-word {
+  font-size: min(318px, 16.57vw); font-weight: 600;
+  letter-spacing: -0.025em; line-height: 0.71;
+  color: #d4d4d0; user-select: none;
 }
+.risk { color: var(--deep); font-size: 14px; letter-spacing: -0.005em; }
 
 /* ------------------------------------------------------------- motion -- */
 /* Onboard's numbers: 50px over 1s on a reveal. The old 18px over 620ms was
@@ -1061,6 +1205,23 @@ details[open] .plus::after { transform: translateY(-50%) rotate(0deg); opacity: 
      come out here and the coin, which sits in clear air, stays. */
   .sticker-md { display: none; }
   .sticker-coin { top: min(120px, 14vw); }
+
+  /* Every two-column section on the 1520 grid becomes one column here. The
+     aspect ratios go with them: a 485x600 card at a third of a phone is a
+     stamp, and a 988x456 card cannot hold a pop-up beside its copy. */
+  .ts-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .gift-in, .why-in, .faq-in { grid-template-columns: minmax(0, 1fr); gap: 44px; }
+  .why-stage { aspect-ratio: 16 / 10; }
+  .why-coin { display: none; }
+  .pr-row-a, .pr-row-b { grid-template-columns: minmax(0, 1fr); }
+  .pr-card, .pr-narrow { aspect-ratio: auto; }
+  .pr-wide { grid-template-columns: minmax(0, 1fr); padding-right: min(36px, 1.875vw); }
+  .pr-wide .popup { border-radius: min(20px, 1.042vw) min(20px, 1.042vw) 0 0; }
+  .pr-narrow { padding-bottom: 240px; }
+  .gs-steps { grid-template-columns: minmax(0, 1fr); gap: 56px; }
+  .gs-gun { display: none; }
+  .foot-top { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+  .foot-cols { justify-content: start; gap: 40px; }
 
   .split-head { grid-template-columns: minmax(0, 1fr); gap: 36px; }
   .band-deep .statement { grid-template-columns: minmax(0, 1fr); gap: 44px; }
@@ -1105,6 +1266,18 @@ details[open] .plus::after { transform: translateY(-50%) rotate(0deg); opacity: 
   .stickers { display: none; }
   .hero-cta { flex-direction: column; align-items: stretch; width: 100%; }
   .hero-cta .btn { width: 100%; }
+
+  .ts-cards { grid-template-columns: minmax(0, 1fr); }
+  .base-facts { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .base-slab { padding: 40px 24px; }
+  .foot-cols { grid-auto-flow: row; }
+  .foot-split { grid-auto-flow: row; gap: 11px; }
+  .foot-col-products { min-width: 0; }
+  /* 318px of wordmark on a phone is a horizontal scrollbar. */
+  .foot-word { font-size: 21vw; }
+  .closing { min-height: 0; }
+  .closing-slab { aspect-ratio: auto; padding-block: 56px; }
+  .cta-prop { opacity: 0.55; }
   /* A span left on in a single-column stack invents a second track and
      collapses the first to 0. On a phone every card is just a card, and the
      wide ones put their screens under the words instead of beside them. */
