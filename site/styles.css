@@ -55,7 +55,9 @@
      value — what moves here is the ratio it is used at, which is the axis the
      Figma page itself says is the variable one. #F6F8F6 keeps its job as the
      ground inside a light card. */
-  --canvas: #ffffff;
+  /* The Figma page ground is #eaeae9, not white. Every section but the hero
+     sits on it, so it belongs on the body rather than on each band. */
+  --canvas: #eaeae9;
   --paper: #f6f8f6;
   --cream: #fdf6dc;
   --surface: #ffffff;
@@ -109,9 +111,12 @@
   --r-pill: 999px;
 
   --nav-h: 72px;
-  --wrap: 1200px;
-  --gutter: 24px;
-  --section-y: clamp(84px, 10vw, 160px);
+  /* The Figma frame is 1920 with 200 gutters, so the content column is 1520.
+     Both are expressed against that width so the column narrows in step with
+     the type rather than snapping at a breakpoint. */
+  --wrap: 1920px;
+  --gutter: max(24px, min(200px, 10.417vw));
+  --section-y: min(144px, 7.5vw);
 
   --font: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
     'Helvetica Neue', Arial, sans-serif;
@@ -169,7 +174,10 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 /* The eyebrow sits on --muted, not on --placeholder: the Figma page marks that
    rung disabled-and-placeholder-only at 2.9:1, and an eyebrow is read. */
 .eyebrow {
-  display: inline-flex; align-items: center; gap: 8px;
+  /* Block-level, not inline-flex: as an inline box it sits in a line box that
+     carries the parent's 1.6 leading, which pushed every section head 7px
+     down from where the frame puts it. */
+  display: flex; width: fit-content; align-items: center; gap: 8px;
   font-size: 12px; line-height: 16px; font-weight: 600;
   letter-spacing: 0.12em; text-transform: uppercase;
   color: var(--muted);
@@ -208,6 +216,8 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 
 /* The hero pair, straight off the Figma frame: near-black pill on ink-light
    text, and a plain white pill beside it. */
+.btn-mint { background: var(--mint); color: var(--deep); }
+.btn-mint:hover { background: #35cfab; }
 .btn-ink { background: #1e1818; color: #eaeae9; }
 .btn-ink:hover { background: #2c2424; }
 .btn-white { background: #fff; color: var(--deep); box-shadow: var(--shadow-sm); }
@@ -448,6 +458,147 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
   mask-image: radial-gradient(36% 56% at 50% 50%, #000 72%, transparent 100%);
 }
 
+/* ---------------------------------------------------- tokenized stocks -- */
+/* Figma: section padding 24, gap 64, head 780 centred, three 485x600 cards on
+   a 1520 column with 32 between them. The card is a flex column so the image
+   slot takes whatever the copy leaves — which is what keeps the two cards
+   whose copy sits at opposite ends the same height. */
+/* .band sets its own padding and is declared later, so this needs the extra
+   class to win rather than relying on source order. */
+.band.band-ts { padding-block: min(24px, 1.25vw); }
+.band-ts .head { max-width: 780px; margin-inline: auto; }
+
+.ts-cards {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: min(32px, 1.667vw);
+  margin-top: min(64px, 3.334vw);
+}
+.ts-card {
+  position: relative; overflow: hidden;
+  aspect-ratio: 485 / 600;
+  border-radius: min(26px, 1.354vw);
+  padding: min(12px, 0.625vw);
+  display: flex; flex-direction: column; gap: min(15px, 0.78vw);
+}
+.ts-card-stone { background: #d1cbc2; }
+/* stops and direction read off the Figma fill, not eyeballed */
+.ts-card-grad { background: linear-gradient(to bottom, #2bbd9b 0%, #fec4ff 45.7%, #c4e2ff 100%); }
+
+.ts-copy { padding: min(12px, 0.625vw) min(20px, 1.042vw) 0; display: grid; gap: min(15px, 0.78vw); }
+.ts-copy-end { padding-top: min(12px, 0.625vw); padding-bottom: min(12px, 0.625vw); gap: 0; }
+.ts-copy h3 {
+  font-size: clamp(21px, 1.875vw, 36px); line-height: 1.3; letter-spacing: -0.022em;
+  color: #1e1818; margin: 0;
+}
+.ts-copy p {
+  font-size: clamp(14.5px, 0.834vw, 16px); line-height: 1.6; letter-spacing: -0.005em;
+  color: #443b37; margin: 0;
+}
+
+.ts-slot { display: block; width: 100%; flex: 1 1 auto; min-height: 0; object-fit: contain; }
+/* The notes run past the card on two sides; the card's own clip cuts them.
+   The export carries the rotation already, so none is applied here. */
+.ts-bleed {
+  position: absolute; left: -8%; top: 22%; width: 158%; height: auto;
+  pointer-events: none;
+}
+
+/* ------------------------------------------------- gifting and rewards -- */
+/* 688 of copy against a 768 stage, 64 between, on the 1520 column. */
+.gift-in {
+  display: grid; grid-template-columns: 688fr 768fr;
+  gap: min(64px, 3.334vw); align-items: start;
+}
+/* Two blocks 48 apart, exactly as the frame nests them: the head is its own
+   16-gap pair, the body is the points and the button. Flattening these into
+   one stack puts a 48 gap where the frame has 16. */
+.gift-text { display: grid; gap: min(48px, 2.5vw); align-content: start; }
+.gift-head { display: grid; gap: 16px; }
+.gift-body { display: grid; gap: min(48px, 2.5vw); justify-items: start; }
+.gift-lead { max-width: 518px; }
+
+.points { display: grid; gap: 28px; width: 400px; max-width: 100%; padding-bottom: 24px; }
+/* The rule is a grid column, not a pseudo-element pinned with absolute
+   positioning, so its height is the copy's height with nothing to tune. The
+   copy is one child so it cannot fall into the 3px column. */
+.point { display: grid; grid-template-columns: 3px minmax(0, 1fr); gap: 19px; }
+.point::before { content: ''; background: var(--sand); border-radius: 2px; }
+.point-copy { min-width: 0; }
+.point h3 {
+  font-size: clamp(18px, 1.146vw, 22px); line-height: 1.3; letter-spacing: -0.022em;
+  color: var(--ink); margin: 0 0 9px;
+}
+.point p { font-size: clamp(14.5px, 0.834vw, 16px); line-height: 1.6; color: var(--muted); }
+.gift-cta { justify-self: start; }
+
+.gift-stage {
+  width: 100%; height: auto; display: block;
+  border-radius: min(34px, 1.771vw);
+}
+
+/* --------------------------------------------------------- why tokkenly -- */
+/* 597 + 64 + 800 is 1461 against a 1520 column, so the two do not divide the
+   row between them — the frame leaves 59 spare on the right. Percentages of
+   1520 with the pair packed left reproduce that; fr units would eat the slack. */
+.why-in {
+  display: grid; grid-template-columns: 39.276% 52.632%;
+  gap: 4.211%; justify-content: start; align-items: stretch;
+}
+.why-stage {
+  align-self: start; width: 100%; height: auto;
+  aspect-ratio: 597 / 712; object-fit: cover;
+  border-radius: min(22px, 1.146vw);
+}
+.why-in { position: relative; }
+/* Figma puts it at x 1142 y 3786 on the page: 61.97% across the 1520 column,
+   190 below the top of the row. */
+.why-coin {
+  position: absolute; left: 61.97%; top: min(176px, 9.167vw);
+  width: 18.026%; height: auto; z-index: 2; pointer-events: none;
+}
+.why-text { display: grid; gap: min(48px, 2.5vw); align-content: space-between; }
+.why-head { display: grid; gap: 20px; }
+.why-head h2 { color: #1e1818; }
+.why-body { display: grid; gap: 24px; justify-items: start; }
+.why-paras { display: grid; gap: 24px; }
+.why-paras p {
+  font-size: clamp(16.5px, 1.05vw, 20px); line-height: 1.6; letter-spacing: -0.005em;
+  color: #433b37;
+}
+/* This section's eyebrow is near-black rather than the page's muted green. */
+.eyebrow-ink { color: #433b37; }
+.eyebrow-ink::before { background: #1e1818; }
+
+/* ------------------------------------------------------- built on base -- */
+.base-slab {
+  background: var(--deep); border-radius: min(34px, 1.771vw);
+  padding: min(96px, 5vw) min(88px, 4.584vw);
+  display: grid; gap: min(72px, 3.75vw);
+}
+.base-head { display: grid; gap: 20px; max-width: 1020px; }
+.base-head h2 { color: #fff; }
+.base-lead {
+  max-width: 900px;
+  font-size: clamp(16.5px, 1.05vw, 20px); line-height: 1.6; letter-spacing: -0.005em;
+  color: rgba(255, 255, 255, 0.72);
+}
+.eyebrow-mint { color: var(--mint); }
+
+.base-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: min(40px, 2.084vw); }
+.base-fact { display: grid; gap: 18px; align-content: start; }
+.base-big {
+  font-size: clamp(30px, 2.396vw, 46px); font-weight: 700;
+  line-height: 1; letter-spacing: -0.03em; color: var(--mint);
+}
+/* The hairline is a border on the paragraph rather than its own element, so
+   it cannot drift out of step with the 18 gap either side of it. */
+.base-fact p:last-child {
+  border-top: 1px solid rgba(255, 255, 255, 0.22);
+  padding-top: 18px;
+  font-size: clamp(14.5px, 0.886vw, 17px); line-height: 1.52; letter-spacing: -0.002em;
+  color: rgba(255, 255, 255, 0.66);
+}
+
 /* -------------------------------------------------------------- bands -- */
 .band { padding-block: var(--section-y); position: relative; }
 
@@ -531,8 +682,9 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 .band-round { border-radius: var(--r-xl); margin-inline: var(--gutter); }
 
 .head { max-width: 780px; margin: 0 auto; text-align: center; }
+.head .eyebrow { margin-inline: auto; }
 .head h2 { margin-top: 16px; }
-.head .lead { margin-top: 22px; }
+.head .lead { margin-top: 16px; }
 
 .statement { max-width: 860px; margin: 0 auto; text-align: center; display: grid; gap: 22px; }
 .statement h2 { margin-block: 6px 8px; }
@@ -765,14 +917,7 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 }
 .split-text h2 { margin-top: 16px; }
 .split-text > .lead { margin-top: 22px; }
-.points { display: grid; gap: 28px; margin-top: clamp(34px, 3.6vw, 46px); }
-.point { display: grid; gap: 9px; padding-left: 22px; position: relative; }
-/* A short sand rule beside each point. Sand as an accent, never a ground. */
-.point::before {
-  content: ''; position: absolute; left: 0; top: 6px; bottom: 6px;
-  width: 3px; border-radius: 2px; background: var(--sand);
-}
-.point p { color: var(--muted); font-size: 16px; }
+/* (.points and .point are defined with the gifting section above.) */
 
 /* --------------------------------------------------------- phone row -- */
 .phone-row {

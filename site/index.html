@@ -137,18 +137,13 @@
         </div>
       </section>
 
-      <!-- ------------------------------------------------------ ticker -- -->
-      <div class="ticker-clip" aria-hidden="true">
-        <div class="ticker">
-          <div class="ticker-track">
-            <span>Tokenized Stocks</span><i></i><span>Receive and Send</span><i></i><span>Pay bills</span><i></i><span>Convert</span><i></i><span>Borrow and Earn</span><i></i>
-            <span>Tokenized Stocks</span><i></i><span>Receive and Send</span><i></i><span>Pay bills</span><i></i><span>Convert</span><i></i><span>Borrow and Earn</span><i></i>
-          </div>
-        </div>
-      </div>
-
       <!-- --------------------------------------------- tokenized stocks -- -->
-      <section class="band" id="tokenized-stocks">
+      <!-- Three 485x600 cards on the 1520 column, radius 26, 12 of padding.
+           The stickers inside the first two are not placed one by one: each
+           card's image slot is exported from Figma as a single asset, which is
+           how it is built there, so the composition inside cannot drift. The
+           third card's notes bleed past the card edge and are clipped by it. -->
+      <section class="band band-ts" id="tokenized-stocks">
         <div class="wrap">
           <div class="head reveal">
             <p class="eyebrow">Tokenized Stocks</p>
@@ -159,150 +154,174 @@
             </p>
           </div>
 
-          <div class="grid-3 cards">
-            <article class="card reveal">
-              <figure class="shot shot-wide">
-                <img
-                  src="./img/invest.webp"
-                  width="2040"
-                  height="1275"
-                  loading="lazy"
-                  alt="The Invest screen, listing tokenized stocks available to browse."
-                />
-              </figure>
-              <h3>Discover your next investment</h3>
-              <p>Explore available tokenized stocks linked to companies in local and US markets.</p>
+          <div class="ts-cards">
+            <article class="ts-card ts-card-stone reveal">
+              <div class="ts-copy">
+                <h3>Discover your next investment</h3>
+                <p>Explore available tokenized stocks linked to companies in local and US markets.</p>
+              </div>
+              <img
+                class="ts-slot"
+                src="./img/ts/slot-discover.webp"
+                width="461"
+                height="388"
+                loading="lazy"
+                alt="Tokenized stock coins for Dangote, Apple and Tesla."
+              />
             </article>
 
-            <article class="card reveal">
-              <figure class="shot shot-wide">
-                <img
-                  src="./img/stock.webp"
-                  width="2040"
-                  height="1275"
-                  loading="lazy"
-                  alt="A single tokenized stock, with its price history and product details."
-                />
-              </figure>
-              <h3>Invest with understanding</h3>
-              <p>
-                Get to know the product behind each tokenized stock, including its terms and risks,
-                before you invest.
-              </p>
+            <article class="ts-card ts-card-grad reveal">
+              <img
+                class="ts-slot"
+                src="./img/ts/slot-understand.webp"
+                width="461"
+                height="391"
+                loading="lazy"
+                alt=""
+              />
+              <div class="ts-copy ts-copy-end">
+                <h3>Invest with understanding</h3>
+                <p>Get to know the product behind each tokenized stock, before you invest.</p>
+              </div>
             </article>
 
-            <article class="card reveal">
-              <figure class="shot shot-wide">
-                <img
-                  src="./img/wallet.webp"
-                  width="2040"
-                  height="1275"
-                  loading="lazy"
-                  alt="The Wallet screen, showing dollars and naira in one place."
-                />
-              </figure>
-              <h3>Keep the rest of your money close</h3>
-              <p>
-                Bring investing together with naira, stablecoins, and the tools you use to move
-                money every day.
-              </p>
+            <article class="ts-card ts-card-stone reveal">
+              <div class="ts-copy">
+                <h3>Keep the rest of your money close</h3>
+                <p>
+                  Bring investing together with naira, stablecoins, and the tools you use to move
+                  money every day.
+                </p>
+              </div>
+              <img
+                class="ts-bleed"
+                src="./img/ts/notes-green.webp"
+                width="643"
+                height="643"
+                loading="lazy"
+                alt=""
+              />
             </article>
-          </div>
-
-          <div class="cta-row centred reveal">
-            <a class="btn btn-dark" href="#get-started">Sign up</a>
-            <a class="link-arrow" href="#tokenized-stocks">
-              Explore Tokenized Stocks
-              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg>
-            </a>
           </div>
         </div>
       </section>
 
       <!-- ------------------------------------------ gifting and rewards -- -->
-      <section class="band band-cream band-round" id="gifting">
-        <div class="wrap">
-          <div class="split">
-            <div class="split-text reveal">
-              <p class="eyebrow">Gifting and Rewards</p>
+      <!-- Text 688 wide on the left, a 768x665 stage on the right. The stage
+           is exported whole: the portrait inside it bleeds past the frame in
+           Figma and is clipped by it, which a plain img plus object-fit would
+           not reproduce at every width. -->
+      <section class="band band-gift" id="gifting">
+        <div class="wrap gift-in">
+          <div class="gift-text reveal">
+            <div class="gift-head">
               <h2>Give more than a gift. Give a start.</h2>
-              <p class="lead">
+              <p class="lead gift-lead">
                 Celebrate someone you love or thank the people who support your business with
                 tokenized stocks. Turn gifts and rewards into a starting point for investing.
               </p>
+            </div>
 
-              <div class="points">
-                <div class="point">
+            <div class="gift-body">
+            <div class="points">
+              <div class="point">
+                <div class="point-copy">
                   <h3>For friends, family, and future milestones</h3>
-                  <p>
-                    Gift an investment for a birthday, graduation, or just because. Set a future
-                    unlock date to mark a milestone and give someone something to look forward to.
-                  </p>
-                </div>
-                <div class="point">
-                  <h3>Turn loyalty into investment</h3>
-                  <p>
-                    Reward customers with tokenized stocks through referrals, cashback, and loyalty
-                    programs. Make every reward an opportunity to begin or build an investment
-                    portfolio.
-                  </p>
+                  <p>Gift an investment for any milestone.<br />Choose a future date for them to unlock it.</p>
                 </div>
               </div>
-
-              <div class="cta-row">
-                <a class="btn btn-dark" href="#get-started">Explore Gifting and Rewards</a>
+              <div class="point">
+                <div class="point-copy">
+                  <h3>Turn loyalty into investment</h3>
+                  <p>Reward customers with tokenized stocks.<br />Turn loyalty moments into lasting investments.</p>
+                </div>
               </div>
             </div>
 
-            <div class="stage stage-sand reveal">
-              <figure class="shot shot-phone">
-                <img
-                  src="./img/p-gift.webp"
-                  width="780"
-                  height="1600"
-                  loading="lazy"
-                  alt="Sending a tokenized stock to someone else from the Tokkenly app on a phone."
-                />
-              </figure>
+            <a class="btn btn-mint gift-cta" href="#get-started">Explore Gifting and Rewards</a>
+            </div>
+          </div>
+
+          <img
+            class="gift-stage reveal"
+            src="./img/sec/gift-stage.webp"
+            width="768"
+            height="665"
+            loading="lazy"
+            alt="A woman in a gele and sunglasses, laughing."
+          />
+        </div>
+      </section>
+
+      <!-- ------------------------------------------------- why tokkenly -- -->
+      <!-- A 597x712 mint stage on the left with the portrait bleeding past it,
+           800 of statement on the right. The stage is exported already clipped
+           for the same reason the gifting one is. -->
+      <section class="band band-why" id="why">
+        <div class="wrap why-in">
+          <!-- image 25 sits on the statement column, not inside it. -->
+          <img class="why-coin" src="./img/sec/coin-lg.webp" width="274" height="290" loading="lazy" alt="" aria-hidden="true" />
+          <img
+            class="why-stage reveal"
+            src="./img/sec/why-stage.webp"
+            width="597"
+            height="712"
+            loading="lazy"
+            alt="A man looking at his phone, smiling."
+          />
+
+          <div class="why-text reveal">
+            <div class="why-head">
+              <p class="eyebrow eyebrow-ink">Why Tokkenly</p>
+              <h2>Come for tokenized stocks. Stay for everything else.</h2>
+            </div>
+
+            <div class="why-body">
+              <div class="why-paras">
+                <p>
+                  You want to invest. You also have bills to pay, people to send money to, and
+                  income to receive. That shouldn’t mean a different app for every task.
+                </p>
+                <p>
+                  Built on Base, Tokkenly brings tokenized stocks and everyday money into one app.
+                  Invest across Nigerian and US markets, receive and send, pay bills, earn, borrow,
+                  and convert.
+                </p>
+              </div>
+              <a class="btn btn-mint" href="#products">Explore Gifting and Rewards</a>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- ------------------------------------------------- why tokkenly -- -->
-      <section class="band band-deep band-round" id="why">
+      <!-- --------------------------------------------------- built on base -- -->
+      <!-- The one slab on the page: 1520 wide, radius 34, deep green, with the
+           three facts on hairlines underneath. -->
+      <section class="band band-base" id="built-on-base">
         <div class="wrap">
-          <div class="statement reveal">
-            <div class="statement-text">
-              <p class="eyebrow">Why Tokkenly</p>
-              <h2>Come for tokenized stocks. Stay for everything else.</h2>
-              <p class="lead">
-                Your investments are part of a bigger picture. Getting paid. Supporting family.
-                Paying bills. Planning your next move.
-              </p>
-              <p class="lead">
-                Tokkenly gives tokenized stocks a home alongside your everyday money. Invest, then
-                get on with life, with the tools to receive, send, pay, earn, borrow, and convert
-                close at hand.
+          <div class="base-slab reveal">
+            <div class="base-head">
+              <p class="eyebrow eyebrow-mint">Built on Base</p>
+              <h2>We didn’t build the rails. We built what runs on them.</h2>
+              <p class="base-lead">
+                Base is the Ethereum layer-2 network Coinbase built and runs. Settlement, uptime and
+                security come from infrastructure the whole ecosystem depends on — so our work goes
+                into the part you actually touch.
               </p>
             </div>
 
-            <!-- Seven products, one home. The paragraph beside it says the same
-                 thing in words; this draws it. Decorative repetition, so it is
-                 hidden from a screen reader — every name here is already in the
-                 nav, the product grid and the footer. -->
-            <div class="hub" aria-hidden="true">
-              <ul class="hub-list">
-                <li>Tokenized Stocks</li>
-                <li>Receive and Send</li>
-                <li>Pay bills</li>
-                <li>Convert</li>
-                <li>Borrow and Earn</li>
-              </ul>
-              <div class="hub-wire"><span class="hub-spine"></span></div>
-              <div class="hub-core">
-                <span class="hub-mark">T</span>
-                <span class="hub-name">Tokkenly</span>
+            <div class="base-facts">
+              <div class="base-fact">
+                <p class="base-big">24/7</p>
+                <p>Settlement never closes. Tokenized stocks move when you do, not when a market opens.</p>
+              </div>
+              <div class="base-fact">
+                <p class="base-big">L2</p>
+                <p>Ethereum-grade security at a cost that still works for a small first investment.</p>
+              </div>
+              <div class="base-fact">
+                <p class="base-big">OPEN</p>
+                <p>What is on-chain can be checked by anyone. You are not taking our word for it.</p>
               </div>
             </div>
           </div>
