@@ -168,6 +168,7 @@ const WALK = `(() => {
   }
   const root = document.querySelector('#app') || document.body
   const base = root.getBoundingClientRect()
+  const docH = Math.round(root.scrollHeight)
   const SKIP = new Set(['SCRIPT', 'STYLE', 'BR'])
 
   const walk = (el, depth) => {
@@ -215,6 +216,20 @@ const WALK = `(() => {
           || (on.classList.contains('rail-more') ? 'More' : 'Unnamed')
       node.part = (el.classList.contains('sidebar') ? 'Nav rail' : 'Tab bar') + ' \u00b7 ' + where
       node.chrome = true
+
+      // The phone's bar is position fixed, so the browser measures it against
+      // the viewport while a frame is the whole scrolled page. Taken at face
+      // value it lands wherever 844px of phone happened to end \u2014 a third of
+      // the way down a 2,574px screen, on top of the Spend tiles and across
+      // the middle of the Wallet list. Nobody ever sees it there. It keeps
+      // the gap it was measured with and is pinned to the frame's own bottom
+      // instead.
+      //
+      // The rail is sticky and one viewport tall, so that one viewport is all
+      // there ever is of it, and it is left where it was measured.
+      if (el.classList.contains('railbar')) {
+        node.y = docH - Math.round(window.innerHeight - (r.top + r.height)) - node.h
+      }
     }
 
     // An svg that knows its own name is a component in Figma: record the name

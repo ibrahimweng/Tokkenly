@@ -9472,6 +9472,23 @@ makes the file good for looking at a screen and bad for rearranging one, and
 anyone who wants the second thing should change the product and re-export
 rather than push frames around here.
 
+**The screenshots found the one thing the checks could not.** Every check the
+build ran was structural — is the frame there, is it empty, did a component
+fail to resolve — and all of them passed on a file with 78 broken screens in
+it. The phone's tab bar is `position: fixed`, so the browser measures it
+against the viewport; the frame is the whole scrolled page. The exporter wrote
+down what the browser said, and the bar landed wherever 844px of phone happened
+to end: a third of the way down Spend, on top of the Electricity and TV tiles,
+and straight across the middle of the Wallet list. Nobody has ever seen it
+there. The reader now keeps the gap the bar was measured with — 32px — and
+pins it to the frame's own bottom, and the 78 already in the file were moved to
+match. The desktop rail is left alone on purpose: it is sticky and one viewport
+tall, so one viewport is all there ever is of it.
+
+Worth saying plainly, because it is the lesson and not the bug: the frame count
+was right, the names were right, nothing was missing, nothing was unresolved,
+and the screens were wrong. It took looking at one.
+
 **Two things the data showed.** `Your bucket` captured the empty state at both
 widths, because the session the exporter walks has an empty bucket — so the file
 says "Nothing in the bucket yet" on the one screen whose whole point is a filled
