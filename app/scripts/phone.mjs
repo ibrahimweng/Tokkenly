@@ -159,15 +159,16 @@ console.log('\nEVERY SCREEN, ON A PHONE')
      menu.join(', '))
   await page.keyboard.press('Escape'); await page.waitForTimeout(200)
 
-  // Five filter chips on two rows, a search field and an order row was two
-  // hundred pixels of controls before a single thing that had happened.
+  // Six filter chips on two rows, a search field and an order row was two
+  // hundred pixels of controls before a single thing that had happened. Five
+  // until Convert became a kind of movement with a feed of its own.
   const filter = page.locator('.chip').filter({ hasText: 'All' }).first()
   ok('the filter says which one is on, and how many are unread',
      /All/.test(await filter.textContent() ?? '') && /\d/.test(await filter.textContent() ?? ''),
      await filter.textContent())
   await filter.click(); await page.waitForTimeout(250)
   const opts = await page.locator('.pop-row').allTextContents()
-  ok('and holds all five of them', opts.length === 5, opts.join(', '))
+  ok('and holds all six of them', opts.length === 6, opts.join(', '))
   await page.locator('.pop-row', { hasText: 'Trades' }).click(); await page.waitForTimeout(350)
   ok('and picking one filters the feed',
      (await page.evaluate(() => location.hash)).includes('filter=trades'),

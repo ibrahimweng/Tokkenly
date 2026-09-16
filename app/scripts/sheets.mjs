@@ -180,10 +180,18 @@ console.log('THE OUTCOME  a coin, and only when there is something to celebrate'
   // Seventeen numbers on seventeen periods, none of them a multiple of another.
   // If the frame loop is not running they hold still, and the beam is a static
   // green edge rather than a breath.
+  //
+  // Sampled five times rather than twice. Two reads 1,500ms apart can land on
+  // the same rounded value — seventeen superimposed periods come back past
+  // where they were, and this suite failed once on `1.213 -> 1.213` with the
+  // loop running perfectly well. A test that calls a working product broken
+  // one run in twenty is a test people learn to re-run rather than read.
   const bw = async () => p.evaluate(() =>
     getComputedStyle(document.querySelector('.beam')).getPropertyValue('--bw1').trim())
-  const first = await bw(); await p.waitForTimeout(1500); const second = await bw()
-  ok('and the breath is actually moving', !!first && first !== second, `${first} -> ${second}`)
+  const reads = []
+  for (let i = 0; i < 5; i++) { reads.push(await bw()); if (i < 4) await p.waitForTimeout(400) }
+  ok('and the breath is actually moving',
+     !!reads[0] && new Set(reads).size > 1, reads.join(' -> '))
   ok('and the gradient it replaced is gone',
      (await p.evaluate(() => getComputedStyle(document.querySelector('.sheet-done'), '::before').content)) === 'none')
   ok('the coin is not read out to anybody',
