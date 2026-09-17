@@ -7,11 +7,16 @@
    (399:559), Privacy policy (399:785). Words are drafted here in the voice the
    product pages use, and are the client's to cut.
 
-   Every email address on this site is ibrahimweng0@gmail.com. The Figma frame
-   shows a support@ address; the project's rule is one address, so that is the
-   one that ships. */
+   The site's own address is support@tokkenly.com — a role, not a person. The
+   owner's personal address is where this mail is actually read, but it is not
+   what the page shows: nobody's name belongs in a support address, and an
+   address on a public page outlives whoever is reading it this month.
 
-export const EMAIL = 'ibrahimweng0@gmail.com'
+   Where a form asks a visitor for THEIR address, the placeholder is
+   you@example.com. Where the product invents a person, that person gets their
+   own example.com address. Neither is this one. */
+
+export const EMAIL = 'support@tokkenly.com'
 
 export const PAGES = {
   contact: {

@@ -2,18 +2,26 @@
 
 ## Project email address
 
-The only email address to use in this project is `ibrahimweng0@gmail.com`.
-
-Use it anywhere the project needs an email address. Some examples:
+`ibrahimweng0@gmail.com` is the address mail actually reaches. Use it where a
+machine needs a real mailbox and nobody sees it:
 
 - configuration and environment files
-- contact and support addresses in the app or on the site
-- seed data and test fixtures
-- documentation and README files
 - notification and sender addresses
+- anywhere a deploy, a form or a script has to deliver something
+
+**Never put it on a screen.** Not as a placeholder, not as an example, not as
+seed data, not as the address on a contact page. It carries a person's name,
+and a name does not belong in any of those places. What shows instead:
+
+- the site's or app's own address → `support@tokkenly.com`, a role rather than
+  a person
+- a field asking a visitor for *their* address → `you@example.com`
+- a person the product has invented → their own name at `example.com`, for
+  instance `chinaza.okoro@example.com` — that domain is reserved for this and
+  can never reach a real mailbox
 
 Do not use `founders@pagrin.com` anywhere in this project. It is the address on
-the Claude account. Ignore it and use the address above instead.
+the Claude account. Ignore it.
 
 ## Always send screenshots
 

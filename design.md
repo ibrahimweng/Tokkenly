@@ -10240,3 +10240,46 @@ filter only skipped `#` and `http`. Anything carrying a scheme is somebody
 else's to resolve. And the four new anchors are exactly the sort of link that
 rots without a sound when a section is renamed, which is the reason to have
 them in the check at all.
+
+### 11g.92 — nobody's name on a screen
+
+`ibrahimweng0@gmail.com` had spread through the product as though it were a
+string rather than a person. It was the placeholder in the contact form's
+email field — the box where a visitor types *theirs*, so the form read as one
+already filled in. It was the address on the contact page, and in the "write
+to us" line of both the terms and the privacy policy. It was the email of the
+signed-in demo person, and of all five people in the pilot members table, so
+five invented Nigerians with invented phone numbers and invented join dates
+shared one real inbox. And it was what the landing page's signup mock typed
+into its Email field, letter by letter, for anyone watching the animation.
+
+Twelve places. The instruction that put them there said to use that address
+"anywhere the project needs an email address", which is true of the mailbox
+and false of the screen, and nothing had told the difference.
+
+Three kinds of address, and the difference between them is who is speaking:
+
+- **The site's own** is `support@tokkenly.com`. A role, not a person. Nobody's
+  name belongs in a support address, and an address on a public page outlives
+  whoever happens to be reading it this month.
+- **A field asking a visitor for theirs** is `you@example.com`. It is an
+  instruction about what to type, so it must not look like an answer.
+- **A person the product invented** gets their own name at `example.com` —
+  `chinaza.okoro@example.com`, `adaeze.okonkwo@example.com`. That domain is
+  reserved by IANA for exactly this and can never reach a real mailbox, which
+  is the property demo data wants: those five have street addresses and dates
+  of birth too, and none of those are real either.
+
+The real address stays where mail is actually read and nothing displays it —
+configuration, senders, the form's own delivery.
+
+`CLAUDE.md` said the opposite, in as many words, so it is rewritten. Leaving
+it would have meant the next session putting all twelve back, correctly, by
+following the instruction it was given.
+
+**The guard.** `_siteprod.mjs` greps `site`, `app/src` and `app/scripts` for
+the personal address and for the address on the Claude account, before it
+opens a browser. It names what it is looking for, so it excludes itself by
+filename rather than by splitting the strings up — which would have hidden
+them from the next person reading the file, and the point of this check is
+that the strings are visible.

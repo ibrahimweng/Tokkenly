@@ -157,7 +157,7 @@ ok((await text('signup', '[data-f="code"] .m-val')) === 'TKN-4QX2', 'the code is
 ok(await has('signup', '[data-f="code"]', 'is-done'), 'and marked done')
 ok((await text('signup', '[data-f="name"] .m-val')) === 'Chinaza Okoro', 'the name is in')
 await p.waitForTimeout(1900)
-ok((await text('signup', '[data-f="email"] .m-val')) === 'ibrahimweng0@gmail.com', 'the address is in')
+ok((await text('signup', '[data-f="email"] .m-val')) === 'chinaza.okoro@example.com', 'the address is in')
 ok((await p.$$eval('.gs-mock[data-gs="signup"] .is-caret', (e) => e.length)) <= 1,
   'one caret in the window, at most')
 await p.waitForTimeout(1400)

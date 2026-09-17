@@ -37,10 +37,34 @@ for (const script of ['site/build-products.mjs', 'site/build-pages.mjs']) {
   }
 }
 
+/* The owner's personal address is where mail is read; it is not what anything
+   shows. It carries a name, and a name has no business being a placeholder, a
+   seeded person, or the address on a contact page. It had crept into six demo
+   people, a typed field in the landing page's signup mock and all three
+   company pages before anyone looked. */
+console.log('\n=== nobody\'s name on a screen ===')
+const PERSONAL = ['ibrahimweng0', 'founders@pagrin.com']
+const SEEN = ['site', 'app/src', 'app/scripts']
+let nameOk = true
+for (const needle of PERSONAL) {
+  let hits = ''
+  try {
+    /* This file names what it is looking for, so it would always find itself.
+       Excluded by name rather than by splitting the strings up, which would
+       hide them from the next person reading this. */
+    hits = execFileSync('grep', ['-rIl', '--exclude-dir=node_modules',
+      '--exclude=_siteprod.mjs', needle, ...SEEN], { cwd: REPO, encoding: 'utf8' }).trim()
+  } catch { /* grep exits 1 on no match, which is the good case */ }
+  const files = hits ? hits.split('\n') : []
+  if (files.length) nameOk = false
+  console.log(`${files.length ? '  FAIL' : '  ok  '}  ${needle.padEnd(22)}` +
+    (files.length ? 'on screen in ' + files.join(', ') : 'nowhere it would be seen'))
+}
+
 const SLUGS = ['tokenized-stocks', 'gifting-and-rewards', 'receive', 'send',
                'pay-bills', 'convert', 'earn', 'borrow']
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
-let bad = builderOk ? 0 : 1
+let bad = (builderOk ? 0 : 1) + (nameOk ? 0 : 1)
 const ok = (c, m) => { console.log(`${c ? '  ok  ' : '  FAIL'}  ${m}`); if (!c) bad++ }
 
 for (const w of [1440, 834, 390]) {

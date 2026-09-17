@@ -904,7 +904,9 @@ export const state: State = {
   security: { ...DEFAULT_SECURITY },
   person: {
     name: 'Chinaza Okoro',
-    email: 'ibrahimweng0@gmail.com',
+    /* example.com is reserved for exactly this and can never reach a real
+       mailbox, which is what demo data wants. */
+    email: 'chinaza.okoro@example.com',
     phone: '+234 802 431 9087',
     dob: '14 March 1996',
     address: '12 Awolowo Road, Ikoyi, Lagos',
@@ -1015,15 +1017,15 @@ export const state: State = {
       by: 2.09, state: 'cleared', opened: iso('2026-09-04T16:30') },
   ],
   members: [
-    { id: 'u1', name: 'Chinaza Okoro', email: 'ibrahimweng0@gmail.com', joined: '2 March 2026',
+    { id: 'u1', name: 'Chinaza Okoro', email: 'chinaza.okoro@example.com', joined: '2 March 2026',
       kyc: 'none', eligible: false, funded: 3000, invite: 'TKN-PILOT-0148', state: 'active' },
-    { id: 'u2', name: 'Adaeze Okonkwo', email: 'ibrahimweng0@gmail.com', joined: '18 February 2026',
+    { id: 'u2', name: 'Adaeze Okonkwo', email: 'adaeze.okonkwo@example.com', joined: '18 February 2026',
       kyc: 'verified', eligible: true, funded: 12400, invite: 'TKN-PILOT-0091', state: 'active' },
-    { id: 'u3', name: 'Tunde Bakare', email: 'ibrahimweng0@gmail.com', joined: '3 April 2026',
+    { id: 'u3', name: 'Tunde Bakare', email: 'tunde.bakare@example.com', joined: '3 April 2026',
       kyc: 'verified', eligible: true, funded: 860, invite: 'TKN-PILOT-0203', state: 'active' },
-    { id: 'u4', name: 'Chidi Nwosu', email: 'ibrahimweng0@gmail.com', joined: '29 May 2026',
+    { id: 'u4', name: 'Chidi Nwosu', email: 'chidi.nwosu@example.com', joined: '29 May 2026',
       kyc: 'checking', eligible: false, funded: 0, invite: 'TKN-PILOT-0311', state: 'restricted' },
-    { id: 'u5', name: 'Ngozi Eze', email: 'ibrahimweng0@gmail.com', joined: '11 June 2026',
+    { id: 'u5', name: 'Ngozi Eze', email: 'ngozi.eze@example.com', joined: '11 June 2026',
       kyc: 'verified', eligible: false, funded: 240, invite: 'TKN-PILOT-0356', state: 'restricted' },
   ],
   gates: [
