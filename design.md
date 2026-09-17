@@ -9900,3 +9900,76 @@ whose stroke was inherited by nothing, and now a scale computed from a unit
 that is not there yet. Cleverness in a hand-written stylesheet is a bet that
 every engine agrees about an edge, and there is no build step here to lose
 that bet quietly.
+
+### 11g.89 — eight product pages, and a shape each
+
+**What was there.** Seven product pages, generated from one template: hero,
+three numbered points, three more, a related row, a closing slab. The only
+difference between Convert and Pay bills was the sentences. A reader going
+from one to the next had no reason to believe they had moved.
+
+**What the references do.** Onboard runs hero → old-way/new-way → trust
+credentials → feature grid → industry cases → investors → FAQ. Fluz runs hero
+→ three-column split → a metrics strip → feature sections → a comparison table
+→ security. Revolut the same idea: a product page is not the homepage with
+different words, it is a different spine assembled from a shared kit.
+
+**So the shape is data now.** `copy-products.mjs` gives each product a
+`spine` — an ordered list of section types — and `build-products.mjs` is a kit
+of twelve renderers with no opinion about the order it is called in. Eight
+products, eight orders, no two alike:
+
+    tokenized-stocks   stats → alt → facts → risk → faq → related
+    gifting-and-rewards  two → steps → faq → related
+    receive            grid → alt → facts → related
+    send               steps → facts → quote → related
+    pay-bills          grid → compare → facts → related
+    convert            compare → alt → facts → faq → related
+    earn               risk → alt → facts → faq → related
+    borrow             risk → facts → steps → faq → related
+
+Two products lead with the risk disclosure rather than burying it at the
+bottom, because on Earn and Borrow it is the first thing an honest page says.
+
+**Built from what was already here.** The landing page had a component
+vocabulary nobody had reused: `.stage` and its five colours, `.steps`,
+`.grid-3`, `.ncard`, `.hub`, `.phone-row` — most of it defined and unused,
+left over from earlier iterations. The pages are built from it, so eight
+different shapes are still one site. Only five shapes needed inventing: a
+figure strip, text-beside-a-screen that swaps sides, a definition list of the
+questions asked before committing, a without/with comparison, and a two
+audience split. Each product also takes one of the five stage colours, so no
+two neighbours in the menu look alike.
+
+**Copy** is drafted here, in the voice of the client's revised document, and
+is theirs to cut. It lives in its own file with no HTML in it for exactly that
+reason. Where a page states a fact — a limit, a hold, a fee, a method — the
+fact is the app's: the ninety-second rate hold, the fee stated in money, the
+cap before the identity check, the two legs of a conversion.
+
+**Every button lands somewhere.** Sign up went to `#get-started`, an anchor
+further down the same page. It goes to the app now, through one constant, so
+the real URL is a one-line change when the app is deployed. Explore Gifting
+and Rewards went to the same dead anchor and now goes to the page it names —
+which did not exist. The four product cards went there too, and now go to
+their products. What is left pointing at `#` is the eight things marked
+`data-soon`: Blog, the socials, Terms, Privacy.
+
+**Two the build found.**
+
+*A pattern has to be anchored.* The mobile menu's eight-space list item is a
+substring of the footer's eighteen-space one, so a replacement that looked
+unique matched twice. Patterns carry their leading newline now.
+
+*Scrolling asks; waiting gets.* The capture script scrolled the page to
+trigger its lazy images and screenshotted immediately, so the ones further
+down were photographed as empty boxes — and then it scrolled back to the top
+before waiting, which takes a requested-but-not-started lazy image out of the
+viewport's neighbourhood and gets it deprioritised. Wait first, scroll back
+after.
+
+**The guard.** `_siteprod.mjs` opens all eight at 1440, 834 and 390, checks
+for errors, 404s, sideways scroll and exactly one `h1`, resolves every link on
+every page, and — the one that matters — compares the pages' section shapes
+and fails if any two are the same. If a future edit collapses them back onto
+one template, that is the line that notices.

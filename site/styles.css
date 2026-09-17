@@ -1909,3 +1909,121 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
   .reveal { opacity: 1; transform: none; }
   .hero-intro { animation: none; opacity: 1; transform: none; }
 }
+
+/* ===================================================================== *
+   Product page kit
+   ---------------------------------------------------------------------
+   Eight product pages are built from an ordered list of these, and no two
+   pages list them in the same order. Everything here leans on the section
+   vocabulary the landing page already has — .band, .stage and its five
+   colours, .steps, .grid-3, .faq, .head, .wrap, .reveal — so eight
+   different shapes are still one site. What is below is only the five
+   shapes the landing page had no use for.
+   ===================================================================== */
+
+/* The hero's screen, on the product's own colour. */
+.fx-hero-stage { padding-bottom: 0; }
+.fx-hero-stage img { display: block; width: 100%; height: auto; border-radius: 0; }
+
+/* ---------- figures ---------- */
+.fx-stats {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(20px, 2.6vw, 40px);
+  margin-top: clamp(40px, 4.5vw, 64px);
+}
+.fx-stat { display: grid; gap: 10px; align-content: start; }
+.fx-stat p:last-child { color: var(--muted); }
+.fx-fig {
+  font-size: clamp(44px, 5.2vw, 76px); line-height: 1; font-weight: 600;
+  letter-spacing: -0.03em; color: var(--ink);
+  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+}
+.fx-fig span {
+  font-size: clamp(14px, 1.15vw, 17px); font-weight: 600; letter-spacing: 0;
+  color: var(--muted);
+}
+
+/* ---------- text beside a screen, swapping sides ---------- */
+.fx-alt {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: clamp(28px, 4vw, 72px); align-items: center;
+  margin-top: clamp(40px, 4.5vw, 68px);
+}
+.fx-alt-b .fx-alt-text { order: 2; }
+.fx-alt-text { display: grid; gap: 14px; align-content: center; }
+.fx-alt-text p { color: var(--muted); max-width: 46ch; }
+.fx-alt-stage { padding-bottom: 0; }
+.fx-alt-stage img { display: block; width: 100%; height: auto; }
+
+/* ---------- the questions asked before committing ---------- */
+/* Its own measure rather than .wrap-narrow's. That class caps the width at
+   880 but keeps the page's 150px gutter, so the content box comes out at 580
+   — fine for a column of prose, too tight for a term and its answer side by
+   side, which is what this is. */
+.fx-facts {
+  margin: clamp(32px, 3.6vw, 52px) auto 0; display: grid;
+  width: 100%; max-width: 860px;
+}
+.fx-fact {
+  display: grid; grid-template-columns: minmax(0, 14rem) minmax(0, 1fr);
+  gap: clamp(12px, 2vw, 32px);
+  padding: clamp(18px, 2vw, 26px) 0;
+  border-top: 1px solid var(--sunken);
+}
+.fx-fact:last-child { border-bottom: 1px solid var(--sunken); }
+.fx-fact dt { font-weight: 600; color: var(--ink); }
+.fx-fact dd { margin: 0; color: var(--muted); }
+
+/* ---------- without, and with ---------- */
+.fx-cmp {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(16px, 2vw, 28px);
+  margin-top: clamp(40px, 4.5vw, 64px);
+}
+.fx-col {
+  border-radius: var(--r-xl, 28px); padding: clamp(24px, 3vw, 40px);
+  display: grid; gap: 18px; align-content: start;
+}
+.fx-col-before { background: var(--sunken); color: var(--muted); }
+.fx-col-after { background: var(--deep); color: var(--on-deep); }
+.fx-col-head { font-weight: 600; font-size: clamp(15px, 1.2vw, 18px); }
+.fx-col-before .fx-col-head { color: var(--ink); }
+.fx-col ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 13px; }
+.fx-col li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 12px; align-items: start; }
+.fx-i { width: 18px; height: 18px; margin-top: 2px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.fx-col-after .fx-i { color: var(--mint); }
+.fx-col-before .fx-i { color: var(--placeholder); }
+
+/* ---------- two audiences ---------- */
+.fx-two {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(16px, 2vw, 28px);
+  margin-top: clamp(40px, 4.5vw, 64px);
+}
+.fx-half {
+  background: var(--surface); border-radius: var(--r-xl, 28px);
+  padding: clamp(26px, 3vw, 42px); display: grid; gap: 14px; align-content: start;
+}
+.fx-half p { color: var(--muted); }
+.fx-list { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 12px; }
+.fx-list li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 12px; align-items: start; }
+.fx-list .fx-i { color: var(--mint); }
+
+/* ---------- one sentence, on the deep ground ---------- */
+.fx-quote {
+  font-size: clamp(22px, 2.6vw, 38px); line-height: 1.25; font-weight: 600;
+  letter-spacing: -0.02em; color: var(--on-deep); margin: 0; text-wrap: balance;
+}
+
+@media (max-width: 899px) {
+  .fx-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fx-alt { grid-template-columns: minmax(0, 1fr); }
+  /* On one column the screen goes under its own words, whichever side it
+     was on, or every other row reads as belonging to the row above it. */
+  .fx-alt-b .fx-alt-text { order: 0; }
+  .fx-cmp, .fx-two { grid-template-columns: minmax(0, 1fr); }
+  .fx-fact { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+}
+@media (max-width: 639px) {
+  .fx-stats { grid-template-columns: minmax(0, 1fr); gap: 26px; }
+}

@@ -1,138 +1,41 @@
-/* Seven product pages from one template.
+/* Eight product pages, from a kit of sections rather than one template.
  *
- *  There are no product page designs in Figma — only Landing, Blog, About us,
- *  Terms, Contact and Privacy exist — so these are built in code from one
- *  shape, using the copy that is already in the client's document. When a
- *  design does arrive for any one of them, that page can be written by hand
- *  and dropped out of this list without disturbing the other six.
+ *  The old version of this file had one page shape and filled it with seven
+ *  sets of words. Convert and Pay bills came out the same page, and a reader
+ *  going from one to the next had no reason to believe they had moved.
+ *
+ *  So the shape is data now. copy-products.mjs gives each product a `spine`:
+ *  an ordered list of section types, and no two products have the same one.
+ *  Every section type below is built from the vocabulary the landing page
+ *  already uses — .band, .stage and its five colours, .steps, .grid-3, .faq,
+ *  .head, .reveal — so eight different pages are still one site.
  *
  *  The output is committed. The site has no build step and serving it must
- *  not need one; this script only regenerates the files when the shared
- *  chrome or the copy changes.
+ *  not need one; this script only regenerates the files when the chrome, the
+ *  kit or the copy changes.
  *
  *      node build-products.mjs
  */
 
-import { writeFileSync, mkdirSync, readFileSync } from 'node:fs'
+import { writeFileSync, mkdirSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { PRODUCTS, APP_URL } from './copy-products.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const OUT = resolve(HERE, 'products')
+export { PRODUCTS }
 
-/* The dropdown and the footer both read this, so a product cannot exist in
-   one and not the other. Order is the client's document's order. */
-export const PRODUCTS = [
-  {
-    slug: 'tokenized-stocks',
-    nav: 'Tokenized Stocks',
-    eyebrow: 'Tokenized Stocks',
-    title: 'From Nigeria to Wall Street.',
-    lead:
-      'The companies on your radar can be part of your portfolio. Invest in tokenized stocks linked to companies listed in Nigeria and the US, right from Tokkenly.',
-    shot: 'invest.webp',
-    shotWide: true,
-    shotAlt: 'The Invest screen, listing tokenized stocks available to browse.',
-    points: [
-      ['Two markets. More choice.', 'Find tokenized stocks linked to Nigerian and US companies in one place. Follow your interests across markets.'],
-      ['Know what you’re buying.', 'See what each tokenized stock represents and review its terms and risks. Make your choice with the details in front of you.'],
-      ['Investing meets everyday money.', 'Your portfolio, naira and stablecoins belong in the same conversation. Keep them together with the tools to receive, send and pay.'],
-    ],
-    second: 'stock.webp',
-    secondAlt: 'A single tokenized stock, with its price history and product details.',
-  },
-  {
-    slug: 'receive',
-    nav: 'Receive',
-    eyebrow: 'Receive',
-    title: 'Get paid. Get on with life.',
-    lead: 'Receive payments and transfers into Tokkenly. Put that money towards an investment, a bill, or someone who needs it.',
-    shot: 'p-receive.webp',
-    shotAlt: 'Receiving money into a Tokkenly account on a phone.',
-    points: [
-      ['Money lands where it is already useful.', 'What arrives is in the same app as your portfolio and your bills, so the next step is one tap rather than another transfer.'],
-      ['Naira or stablecoins.', 'Take what you are sent in either, and convert between them when it suits you rather than when it arrives.'],
-      ['Nothing to chase.', 'Every payment shows who sent it, what it cost and when it cleared, kept with the rest of your record.'],
-    ],
-  },
-  {
-    slug: 'send',
-    nav: 'Send',
-    eyebrow: 'Send',
-    title: 'Make someone’s day.',
-    lead: 'Help family out. Pay a friend back. Send money from the same app where you keep and invest it.',
-    shot: 'p-send.webp',
-    shotAlt: 'Sending money to someone from the Tokkenly app on a phone.',
-    points: [
-      ['See the whole cost first.', 'The amount, the fee and what actually arrives are on the screen before you send, not after.'],
-      ['Usually about a minute.', 'Transfers inside Tokkenly settle in the time it takes to put your phone away.'],
-      ['From the money you already hold.', 'Send from naira or from stablecoins without moving anything to another app first.'],
-    ],
-  },
-  {
-    slug: 'pay-bills',
-    nav: 'Pay bills',
-    eyebrow: 'Pay bills',
-    title: 'One less thing on your list.',
-    lead: 'Take care of everyday bills in Tokkenly and get back to your day. Your money is already here. Your bill payments can be too.',
-    shot: 'p-bills.webp',
-    shotAlt: 'Paying a bill from the Tokkenly app on a phone.',
-    points: [
-      ['The bills you actually have.', 'Airtime, data, power and the rest of the monthly list, paid from the balance you keep here.'],
-      ['A record that adds up.', 'Every payment sits in the same history as everything else, so the month is one list rather than five.'],
-      ['No second app for it.', 'Nothing to top up somewhere else and nothing to move first.'],
-    ],
-  },
-  {
-    slug: 'earn',
-    nav: 'Earn',
-    eyebrow: 'Earn',
-    title: 'Put idle stablecoins to work.',
-    lead: 'Explore earning opportunities for the stablecoins you hold. Review the terms, choose an amount, and keep track in Tokkenly.',
-    shot: 'p-earn.webp',
-    shotAlt: 'The earning screen in the Tokkenly app, with the rate and the terms.',
-    points: [
-      ['The terms before the decision.', 'Rate, duration and what you can withdraw are on the screen while you choose the amount, not buried after it.'],
-      ['Commit what you want to.', 'Put a part of what you hold to work and leave the rest where it is.'],
-      ['Follow it without hunting.', 'What you have committed and what it has earned sit with the rest of your money.'],
-    ],
-    risk: true,
-  },
-  {
-    slug: 'borrow',
-    nav: 'Borrow',
-    eyebrow: 'Borrow',
-    title: 'Give yourself some breathing room.',
-    lead: 'When you need extra funds, explore borrowing in Tokkenly. Review the costs and repayment terms before choosing what works for you.',
-    shot: 'p-borrow.webp',
-    shotAlt: 'The borrowing screen in the Tokkenly app, showing the rate and the repayment terms.',
-    points: [
-      ['Your shares stay yours.', 'They keep earning while you borrow. They are only sold if they fall to the level shown to you up front.'],
-      ['The cost in money, not percentages.', 'The rate is there, and so is what it comes to a month, before you agree to anything.'],
-      ['Repay when you can.', 'Any time, no fee, as much or as little as suits the month.'],
-    ],
-    risk: true,
-  },
-  {
-    slug: 'convert',
-    nav: 'Convert',
-    eyebrow: 'Convert',
-    title: 'Change currencies. Keep your plans.',
-    lead: 'Move between naira and stablecoins for the way you want to use your money. Spend, send, or invest from one app.',
-    shot: 'p-wallet.webp',
-    shotAlt: 'The Wallet screen, showing naira and stablecoins side by side.',
-    points: [
-      ['The rate you are getting.', 'Shown before you convert, with what you will hold afterwards, so there is nothing to work out yourself.'],
-      ['Both directions.', 'Naira to stablecoins for what is next, stablecoins to naira for what is now.'],
-      ['Then straight on with it.', 'What you convert is ready to invest, send or spend without another step.'],
-    ],
-  },
-]
+/* Copy is written with the odd entity in it — & and — and ₦ — so escaping
+   wholesale would double them. Only the characters that break markup. */
+const esc = (s) => String(s).replace(/&(?![a-z#][a-z0-9]*;)/gi, '&amp;').replace(/</g, '&lt;')
+const plain = (s) => String(s).replace(/&[a-z#][a-z0-9]*;/gi, ' ').replace(/\s+/g, ' ').trim()
 
-const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+const ARROW = '<svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg>'
+const TICK = '<svg class="fx-i" viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8.5 3.2 3.2L13 5" /></svg>'
+const CROSS = '<svg class="fx-i" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7" /></svg>'
 
-/* --------------------------------------------------------------- chrome -- */
-/* `up` is the path back to the site root: the pages live one folder down. */
+/* ---------------------------------------------------------------- chrome -- */
 const nav = (up, current) => `
     <header class="nav" id="nav">
       <div class="nav-in">
@@ -149,18 +52,18 @@ const nav = (up, current) => `
             </button>
             <div class="drop-menu" id="products-menu" hidden>
 ${PRODUCTS.map((p) => `              <a href="${up}products/${p.slug}.html"${p.slug === current ? ' aria-current="page"' : ''}>
-                <span class="dm-name">${esc(p.nav)}</span>
+                <span class="dm-name">${p.nav}</span>
                 <span class="dm-say">${esc(p.title)}</span>
               </a>`).join('\n')}
             </div>
           </div>
           <a href="${up}index.html#why">About us</a>
-          <a href="${up}index.html#" data-soon>Blog</a>
+          <a href="#" data-soon>Blog</a>
           <a href="${up}index.html#faq">Help</a>
         </nav>
 
         <div class="nav-end">
-          <a class="btn btn-mint btn-sm" href="${up}index.html#get-started">Sign up</a>
+          <a class="btn btn-mint btn-sm" href="${APP_URL}">Sign up</a>
           <button class="burger" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Menu">
             <span></span><span></span>
           </button>
@@ -169,12 +72,12 @@ ${PRODUCTS.map((p) => `              <a href="${up}products/${p.slug}.html"${p.s
 
       <div class="mobile-menu" id="mobile-menu" hidden>
         <p class="mm-head">Products</p>
-${PRODUCTS.map((p) => `        <a href="${up}products/${p.slug}.html">${esc(p.nav)}</a>`).join('\n')}
+${PRODUCTS.map((p) => `        <a href="${up}products/${p.slug}.html">${p.nav}</a>`).join('\n')}
         <p class="mm-head">Company</p>
         <a href="${up}index.html#why">About us</a>
-        <a href="${up}index.html#" data-soon>Blog</a>
+        <a href="#" data-soon>Blog</a>
         <a href="${up}index.html#faq">Help</a>
-        <a class="btn btn-mint mm-cta" href="${up}index.html#get-started">Sign up</a>
+        <a class="btn btn-mint mm-cta" href="${APP_URL}">Sign up</a>
       </div>
     </header>`
 
@@ -200,10 +103,10 @@ const footer = (up) => `
               <p class="foot-head">Products</p>
               <div class="foot-split">
                 <div>
-${PRODUCTS.slice(0, 4).map((p) => `                  <a href="${up}products/${p.slug}.html">${esc(p.nav)}</a>`).join('\n')}
+${PRODUCTS.slice(0, 4).map((p) => `                  <a href="${up}products/${p.slug}.html">${p.nav}</a>`).join('\n')}
                 </div>
                 <div>
-${PRODUCTS.slice(4).map((p) => `                  <a href="${up}products/${p.slug}.html">${esc(p.nav)}</a>`).join('\n')}
+${PRODUCTS.slice(4).map((p) => `                  <a href="${up}products/${p.slug}.html">${p.nav}</a>`).join('\n')}
                 </div>
               </div>
             </div>
@@ -228,21 +131,199 @@ ${PRODUCTS.slice(4).map((p) => `                  <a href="${up}products/${p.slu
       </div>
     </footer>`
 
+/* ------------------------------------------------------------- the kit ----
+   One function per section type. Each takes the product and its own slice of
+   the spine, and returns a <section>. Nothing here knows the order it will be
+   called in, which is why the order can be data. */
+const KIT = {
+  /* Figures, three across. The one section that says how big the thing is
+     before saying what it does. */
+  stats: (p, s, up) => `
+      <section class="band">
+        <div class="wrap">
+          <div class="head reveal"><h2>${esc(s.head)}</h2></div>
+          <div class="fx-stats">
+${s.items.map(([fig, unit, say]) => `            <div class="fx-stat reveal">
+              <p class="fx-fig">${esc(fig)}<span>${esc(unit)}</span></p>
+              <p>${esc(say)}</p>
+            </div>`).join('\n')}
+          </div>
+        </div>
+      </section>`,
+
+  /* Text and a screen, side by side, swapping sides down the page. */
+  alt: (p, s, up) => `
+      <section class="band band-cream">
+        <div class="wrap">
+          <div class="head reveal"><h2>${esc(s.head)}</h2></div>
+${s.rows.map(([h, b, img, alt], i) => `          <div class="fx-alt reveal${i % 2 ? ' fx-alt-b' : ''}">
+            <div class="fx-alt-text">
+              <h3>${esc(h)}</h3>
+              <p>${esc(b)}</p>
+            </div>
+            <div class="stage ${p.stage} fx-alt-stage">
+              <img src="${up}img/${img}" loading="lazy" alt="${esc(alt)}" />
+            </div>
+          </div>`).join('\n')}
+        </div>
+      </section>`,
+
+  /* A table with no table in it: the questions a person asks before they
+     commit, answered in one line each. */
+  facts: (p, s, up) => `
+      <section class="band">
+        <div class="wrap">
+          <div class="head reveal"><h2>${esc(s.head)}</h2></div>
+          <dl class="fx-facts reveal">
+${s.rows.map(([k, v]) => `            <div class="fx-fact">
+              <dt>${esc(k)}</dt>
+              <dd>${esc(v)}</dd>
+            </div>`).join('\n')}
+          </dl>
+        </div>
+      </section>`,
+
+  /* The way it usually goes, and the way it goes here. Onboard's move, and
+     it earns its place on the two products with a genuine before. */
+  compare: (p, s, up) => `
+      <section class="band band-cream">
+        <div class="wrap">
+          <div class="head reveal"><h2>${esc(s.head)}</h2></div>
+          <div class="fx-cmp">
+            <div class="fx-col fx-col-before reveal">
+              <p class="fx-col-head">Without Tokkenly</p>
+              <ul>
+${s.before.map((x) => `                <li>${CROSS}${esc(x)}</li>`).join('\n')}
+              </ul>
+            </div>
+            <div class="fx-col fx-col-after reveal">
+              <p class="fx-col-head">With Tokkenly</p>
+              <ul>
+${s.after.map((x) => `                <li>${TICK}${esc(x)}</li>`).join('\n')}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>`,
+
+  /* Three numbered steps, each on its own coloured slab. */
+  steps: (p, s, up) => `
+      <section class="band">
+        <div class="wrap">
+          <div class="head reveal"><h2>${esc(s.head)}</h2></div>
+          <div class="steps">
+${s.items.map(([h, b, img], i) => `            <article class="step reveal">
+              <div class="stage ${p.stage}">
+                <img src="${up}img/${img}" loading="lazy" alt="" />
+              </div>
+              <p class="num">${i + 1}</p>
+              <h3>${esc(h)}</h3>
+              <p>${esc(b)}</p>
+            </article>`).join('\n')}
+          </div>
+        </div>
+      </section>`,
+
+  /* Three plain cards. No screens: the page has enough of them by now. */
+  grid: (p, s, up) => `
+      <section class="band band-cream">
+        <div class="wrap">
+          <div class="head reveal"><h2>${esc(s.head)}</h2></div>
+          <div class="grid-3 cards">
+${s.items.map(([h, b]) => `            <article class="card reveal">
+              <h3>${esc(h)}</h3>
+              <p>${esc(b)}</p>
+            </article>`).join('\n')}
+          </div>
+        </div>
+      </section>`,
+
+  /* Two audiences, side by side, each with its own list. Gifting has two
+     completely different readers and one column would serve neither. */
+  two: (p, s, up) => `
+      <section class="band">
+        <div class="wrap">
+          <div class="head reveal"><h2>${esc(s.head)}</h2></div>
+          <div class="fx-two">
+${s.cols.map(([h, b, list]) => `            <article class="fx-half reveal">
+              <h3>${esc(h)}</h3>
+              <p>${esc(b)}</p>
+              <ul class="fx-list">
+${list.map((x) => `                <li>${TICK}${esc(x)}</li>`).join('\n')}
+              </ul>
+            </article>`).join('\n')}
+          </div>
+        </div>
+      </section>`,
+
+  /* One sentence, large, on the deep ground. For the thing a page most wants
+     somebody to leave knowing. */
+  quote: (p, s, up) => `
+      <section class="band band-deep">
+        <div class="wrap wrap-narrow">
+          <p class="fx-quote reveal">${esc(s.text)}</p>
+        </div>
+      </section>`,
+
+  /* Said plainly, and said where it cannot be missed. Two products lead with
+     it rather than burying it at the bottom. */
+  risk: (p, s, up) => `
+      <section class="band band-risk">
+        <div class="wrap wrap-narrow">
+          <p class="prod-risk reveal">
+            <strong>Worth saying plainly.</strong> ${p.nav} carries risk. Rates change, what you
+            commit is not a deposit and is not guaranteed, and you can get back less than you put
+            in. The terms are on the screen before you agree to anything &#8212; read them.
+          </p>
+        </div>
+      </section>`,
+
+  faq: (p, s, up) => `
+      <section class="band band-cream">
+        <div class="wrap wrap-narrow">
+          <div class="head reveal"><h2>Questions worth asking.</h2></div>
+          <div class="faq reveal">
+${s.items.map(([q, a]) => `            <details>
+              <summary>${esc(q)}<span class="plus" aria-hidden="true"></span></summary>
+              <div class="answer"><p>${esc(a)}</p></div>
+            </details>`).join('\n')}
+          </div>
+        </div>
+      </section>`,
+
+  related: (p, s, up) => {
+    const i = PRODUCTS.findIndex((x) => x.slug === p.slug)
+    const others = [PRODUCTS[(i + 1) % PRODUCTS.length], PRODUCTS[(i + 2) % PRODUCTS.length], PRODUCTS[(i + 3) % PRODUCTS.length]]
+    return `
+      <section class="band">
+        <div class="wrap">
+          <div class="head reveal"><h2>The rest of it.</h2></div>
+          <div class="prod-more">
+${others.map((o) => `            <a class="prod-card reveal" href="${o.slug}.html">
+              <h3>${o.nav}</h3>
+              <p>${esc(o.title)}</p>
+              <span class="pr-link">Explore ${o.nav} ${ARROW}</span>
+            </a>`).join('\n')}
+          </div>
+        </div>
+      </section>`
+  },
+}
+
 /* ----------------------------------------------------------------- page -- */
 function page(p) {
   const up = '../'
-  const others = PRODUCTS.filter((x) => x.slug !== p.slug).slice(0, 3)
-
+  const desc = plain(p.lead)
   return `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${esc(p.nav)} — Tokkenly</title>
-    <meta name="description" content="${esc(p.lead)}" />
+    <title>${plain(p.nav)} &#8212; Tokkenly</title>
+    <meta name="description" content="${desc}" />
     <link rel="icon" href="${up}favicon.svg" />
-    <meta property="og:title" content="${esc(p.nav)} — Tokkenly" />
-    <meta property="og:description" content="${esc(p.lead)}" />
+    <meta property="og:title" content="${plain(p.nav)} &#8212; Tokkenly" />
+    <meta property="og:description" content="${desc}" />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="preload" href="${up}fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin />
@@ -255,9 +336,9 @@ ${nav(up, p.slug)}
     <main id="main">
       <span id="top"></span>
 
-      <!-- The product hero is the landing hero's wash and type without its
-           globe: the same page, quieter, because the work here is the product
-           rather than the pitch. -->
+      <!-- The product hero: the landing hero's type without its globe, and
+           the product's own colour under the screen. Eight pages, five stage
+           colours, so no two neighbours in the menu look alike. -->
       <section class="hero hero-product">
         <div class="hero-wash" aria-hidden="true"></div>
         <div class="wrap hero-in">
@@ -265,65 +346,20 @@ ${nav(up, p.slug)}
           <h1 class="hero-hl hero-product-hl hero-intro" style="--hero-d: 0.05s"><span>${esc(p.title)}</span></h1>
           <p class="lead hero-lead hero-intro" style="--hero-d: 0.1s">${esc(p.lead)}</p>
           <div class="cta-row hero-cta hero-intro" style="--hero-d: 0.2s">
-            <a class="btn btn-ink" href="${up}index.html#get-started">Sign up on Tokkenly</a>
-            <a class="btn btn-white" href="#how">How it works</a>
+            <a class="btn btn-ink" href="${APP_URL}">Get Started</a>
+            <a class="btn btn-white" href="#more">See how it works</a>
           </div>
         </div>
 
         <div class="prod-shot hero-intro" style="--hero-d: 0.3s">
-          <figure class="shot ${p.shotWide ? 'shot-wide' : 'shot-phone'}">
+          <div class="stage ${p.stage} fx-hero-stage">
             <img src="${up}img/${p.shot}" loading="eager" alt="${esc(p.shotAlt)}" />
-          </figure>
-        </div>
-      </section>
-
-      <section class="band band-ts" id="how">
-        <div class="head reveal">
-          <p class="eyebrow">How it works</p>
-          <h2>What you get with ${esc(p.nav)}.</h2>
-        </div>
-
-        <div class="wrap">
-          <div class="prod-points">
-${p.points.map(([h, b], i) => `            <article class="prod-point reveal">
-              <p class="prod-num">0${i + 1}</p>
-              <h3>${esc(h)}</h3>
-              <p>${esc(b)}</p>
-            </article>`).join('\n')}
           </div>
         </div>
       </section>
-${p.second ? `
-      <section class="band">
-        <div class="wrap">
-          <figure class="shot shot-wide reveal">
-            <img src="${up}img/${p.second}" loading="lazy" alt="${esc(p.secondAlt)}" />
-          </figure>
-        </div>
-      </section>` : ''}
-${p.risk ? `
-      <section class="band band-risk">
-        <div class="wrap">
-          <p class="prod-risk reveal">
-            <strong>Worth saying plainly.</strong> ${esc(p.nav)} carries risk. Rates change, and what you
-            commit is not a deposit and is not guaranteed. The terms are on the screen before you
-            agree to anything — read them.
-          </p>
-        </div>
-      </section>` : ''}
 
-      <section class="band">
-        <div class="wrap">
-          <div class="head reveal"><h2>The rest of it.</h2></div>
-          <div class="prod-more">
-${others.map((o) => `            <a class="prod-card reveal" href="${o.slug}.html">
-              <h3>${esc(o.nav)}</h3>
-              <p>${esc(o.title)}</p>
-              <span class="pr-link">Explore ${esc(o.nav)} <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></span>
-            </a>`).join('\n')}
-          </div>
-        </div>
-      </section>
+      <span id="more"></span>
+${p.spine.map((s) => KIT[s.type](p, s, up)).join('\n')}
 
       <section class="closing">
         <div class="wrap">
@@ -332,11 +368,12 @@ ${others.map((o) => `            <a class="prod-card reveal" href="${o.slug}.htm
             <img class="cta-prop cta-pen" src="${up}img/cta/pen.webp" width="302" height="369" loading="lazy" alt="" aria-hidden="true" />
             <img class="cta-prop cta-notes" src="${up}img/cta/notes.webp" width="593" height="593" loading="lazy" alt="" aria-hidden="true" />
             <div class="closing-in">
-              <h2>Make your next investment now.</h2>
+              <h2>Your money. A wider world.</h2>
               <p class="closing-lead">
-                Explore tokenized stocks with Tokkenly and bring the rest of your money along
+                From Nigerian companies to US names, discover tokenized stocks worth a closer look.
+                Keep your everyday money in the same app.
               </p>
-              <a class="btn btn-deep" href="${up}index.html#get-started">Get started</a>
+              <a class="btn btn-deep" href="${APP_URL}">Get Started</a>
             </div>
           </div>
         </div>
@@ -352,8 +389,7 @@ ${footer(up)}
 
 mkdirSync(OUT, { recursive: true })
 for (const p of PRODUCTS) {
-  const file = resolve(OUT, `${p.slug}.html`)
-  writeFileSync(file, page(p))
-  console.log('wrote products/' + p.slug + '.html')
+  writeFileSync(resolve(OUT, `${p.slug}.html`), page(p))
+  console.log('wrote products/' + p.slug + '.html  ' + p.spine.map((s) => s.type).join(' '))
 }
 console.log(PRODUCTS.length + ' pages')
