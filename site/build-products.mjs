@@ -124,7 +124,7 @@ const artSlot = (names, up) => `<div class="pr-stage" aria-hidden="true">${names
 }).join('')}</div>`
 
 /* ---------------------------------------------------------------- chrome -- */
-const nav = (up, current) => `
+export const nav = (up, current) => `
     <header class="nav" id="nav">
       <div class="nav-in">
         <a class="brand" href="${up}index.html" aria-label="Tokkenly, home">
@@ -147,7 +147,7 @@ ${PRODUCTS.map((p) => `              <a href="${up}products/${p.slug}.html"${p.s
           </div>
           <a href="${up}index.html#why">About us</a>
           <a href="#" data-soon>Blog</a>
-          <a href="${up}index.html#faq">Help</a>
+          <a href="${up}contact.html">Help</a>
         </nav>
 
         <div class="nav-end">
@@ -164,12 +164,12 @@ ${PRODUCTS.map((p) => `        <a href="${up}products/${p.slug}.html">${p.nav}</
         <p class="mm-head">Company</p>
         <a href="${up}index.html#why">About us</a>
         <a href="#" data-soon>Blog</a>
-        <a href="${up}index.html#faq">Help</a>
+        <a href="${up}contact.html">Help</a>
         <a class="btn btn-mint mm-cta" href="${APP_URL}">Sign up</a>
       </div>
     </header>`
 
-const footer = (up) => `
+export const footer = (up) => `
     <footer class="foot">
       <div class="wrap">
         <div class="foot-top">
@@ -205,9 +205,9 @@ ${PRODUCTS.slice(4).map((p) => `                  <a href="${up}products/${p.slu
             </div>
             <div class="foot-col">
               <p class="foot-head">Legal</p>
-              <a href="#" data-soon>Terms of service</a>
-              <a href="#" data-soon>Privacy policy</a>
-              <a href="${up}index.html#faq">Help</a>
+              <a href="${up}terms.html">Terms of service</a>
+              <a href="${up}privacy.html">Privacy policy</a>
+              <a href="${up}contact.html">Help</a>
             </div>
           </nav>
         </div>
@@ -554,9 +554,14 @@ ${footer(up)}
 `
 }
 
-mkdirSync(OUT, { recursive: true })
-for (const p of PRODUCTS) {
-  writeFileSync(resolve(OUT, `${p.slug}.html`), page(p))
-  console.log('wrote products/' + p.slug + '.html  ' + p.spine.map((s) => s.type).join(' '))
+/* build-pages.mjs imports nav and footer from here, so writing on import would
+   rebuild the product pages every time that runs. Only write when this file is
+   the thing being run. */
+if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) {
+  mkdirSync(OUT, { recursive: true })
+  for (const p of PRODUCTS) {
+    writeFileSync(resolve(OUT, `${p.slug}.html`), page(p))
+    console.log('wrote products/' + p.slug + '.html  ' + p.spine.map((s) => s.type).join(' '))
+  }
+  console.log(PRODUCTS.length + ' pages')
 }
-console.log(PRODUCTS.length + ' pages')

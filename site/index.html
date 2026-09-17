@@ -74,7 +74,7 @@
           </div>
           <a href="#why">About us</a>
           <a href="#" data-soon>Blog</a>
-          <a href="#faq">Help</a>
+          <a href="./contact.html">Help</a>
         </nav>
 
         <div class="nav-end">
@@ -98,7 +98,7 @@
         <p class="mm-head">Company</p>
         <a href="#why">About us</a>
         <a href="#" data-soon>Blog</a>
-        <a href="#faq">Help</a>
+        <a href="./contact.html">Help</a>
         <a class="btn btn-dark mm-cta" href="https://app.tokkenly.com">Sign up</a>
       </div>
     </header>
@@ -832,13 +832,21 @@
 
       <!-- ----------------------------------------------- closing call to -- -->
       <!-- One 1520x532 slab, radius 34, on a gradient that runs top to bottom.
-           The three props are absolutely placed and the slab clips them. -->
-      <section class="closing" id="closing">
+           The props are absolutely placed and the slab clips them.
+
+           data-cta names the variant. It picks the gradient and the placement
+           of whichever props this page carries; the page supplies the images
+           and an n-* anchor for each, which is what the narrow widths use.
+           The anchor is not the desktop position — they are deliberately
+           separate, because a tall slab wants a different arrangement.
+           The variants and the markup each one expects are listed in the
+           stylesheet beside their rules. -->
+      <section class="closing" id="closing" data-cta="landing">
         <div class="wrap">
           <div class="closing-slab reveal">
-            <img class="cta-prop cta-coin" src="./img/cta/coin-dangote.webp" width="560" height="593" loading="lazy" alt="" aria-hidden="true" />
-            <img class="cta-prop cta-pen" src="./img/cta/pen.webp" width="302" height="369" loading="lazy" alt="" aria-hidden="true" />
-            <img class="cta-prop cta-notes" src="./img/cta/notes.webp" width="593" height="593" loading="lazy" alt="" aria-hidden="true" />
+            <img class="cta-prop cta-dangote n-tl" src="./img/cta/coin-dangote.webp" width="560" height="593" loading="lazy" alt="" aria-hidden="true" />
+            <img class="cta-prop cta-pen n-bl" src="./img/cta/pen.webp" width="302" height="369" loading="lazy" alt="" aria-hidden="true" />
+            <img class="cta-prop cta-notes n-r" src="./img/cta/notes.webp" width="593" height="593" loading="lazy" alt="" aria-hidden="true" />
 
             <div class="closing-in">
               <h2>Make your next investment now.</h2>
@@ -913,9 +921,9 @@
             </div>
             <div class="foot-col">
               <p class="foot-head">Legal</p>
-              <a href="#" data-soon>Terms of service</a>
-              <a href="#" data-soon>Privacy policy</a>
-              <a href="#faq">Help</a>
+              <a href="./terms.html">Terms of service</a>
+              <a href="./privacy.html">Privacy policy</a>
+              <a href="./contact.html">Help</a>
             </div>
           </nav>
         </div>
