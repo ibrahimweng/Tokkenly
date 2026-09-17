@@ -705,27 +705,27 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 /* ---- the pop-ups ------------------------------------------------------ */
 .popup {
   background: #fff; border-radius: min(20px, 1.042vw) min(20px, 1.042vw) 0 0;
-  padding: min(32px, 1.667vw);
-  display: grid; gap: min(20px, 1.042vw); align-content: space-between;
+  padding: clamp(22px, 1.667vw, 32px);
+  display: grid; gap: clamp(16px, 1.042vw, 20px); align-content: space-between;
   color: #1e1818;
 }
-.pop-head { display: grid; gap: 6px; }
-.pop-k {
+.popup .pop-head { display: grid; gap: 6px; }
+.popup .pop-k {
   font-size: clamp(9.5px, 0.573vw, 11px); font-weight: 600;
   letter-spacing: 0.1em; text-transform: uppercase; color: #6c7d78;
 }
-.pop-amount { font-size: clamp(26px, 2.084vw, 40px); font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; }
-.pop-ledger {
+.popup .pop-amount { font-size: clamp(26px, 2.084vw, 40px); font-weight: 700; color: #1e1818; letter-spacing: -0.03em; line-height: 1.1; }
+.popup .pop-ledger {
   background: #f0efec; border-radius: min(14px, 0.73vw);
-  padding: min(18px, 0.938vw); display: grid; gap: min(14px, 0.73vw);
+  padding: clamp(14px, 0.938vw, 18px); display: grid; gap: clamp(12px, 0.73vw, 14px);
 }
-.pop-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: min(14px, 0.73vw); }
-.pop-row { display: grid; gap: 3px; }
-.pop-v { font-size: clamp(11.5px, 0.73vw, 14px); font-weight: 600; }
-.pop-note { font-size: clamp(10.5px, 0.678vw, 13px); line-height: 1.5; color: #6c7d78; }
-.pop-btn {
+.popup .pop-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(12px, 0.73vw, 14px); }
+.popup .pop-row { display: grid; gap: 3px; }
+.popup .pop-v { font-size: clamp(11.5px, 0.73vw, 14px); font-weight: 600; color: #1e1818; }
+.popup .pop-note { font-size: clamp(10.5px, 0.678vw, 13px); line-height: 1.5; color: #6c7d78; }
+.popup .pop-btn {
   background: #1e1818; color: #fff; border-radius: 999px;
-  text-align: center; padding: min(15px, 0.782vw) 0;
+  text-align: center; padding: clamp(13px, 0.782vw, 15px) 0;
   font-size: clamp(11.5px, 0.73vw, 14px); font-weight: 600;
 }
 
@@ -1387,36 +1387,6 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
  *  the real product, which this repository has, rather than photographs,
  *  which it does not.
  */
-.stage {
-  position: relative; overflow: hidden;
-  border-radius: var(--r-xl);
-  background: var(--stage, var(--mint));
-  padding: clamp(26px, 3.2vw, 46px) clamp(18px, 2.2vw, 32px) 0;
-  display: grid; justify-items: center; align-items: end;
-  isolation: isolate;
-}
-.stage::before {
-  content: ''; position: absolute; inset: 0; z-index: 0;
-  background-image: radial-gradient(circle, rgba(5, 51, 41, 0.14) 1px, transparent 1px);
-  background-size: 20px 20px;
-  -webkit-mask-image: linear-gradient(to bottom, #000, transparent 62%);
-  mask-image: linear-gradient(to bottom, #000, transparent 62%);
-}
-/* The screen bleeds off the bottom edge, which is what stops the panel
-   reading as a frame with a picture politely inside it. */
-.stage .shot {
-  position: relative; z-index: 1;
-  margin-bottom: clamp(-72px, -5vw, -36px);
-  box-shadow: 0 -8px 40px rgba(5, 51, 41, 0.18);
-}
-
-.stage-mint   { --stage: var(--mint); }
-.stage-yellow { --stage: #f9d100; }
-.stage-sand   { --stage: var(--sand); }
-.stage-peach  { --stage: #f7b79a; }
-.stage-deep   { --stage: var(--deep); }
-.stage-deep::before { background-image: radial-gradient(circle, rgba(255,255,255,0.16) 1px, transparent 1px); }
-
 /* (The hero's own stage is the globe; see the hero block above.) */
 
 /* -------------------------------------------------------------- shots -- */
@@ -1559,21 +1529,6 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 }
 .phone-row > :nth-child(2) { transform: translateY(-30px); }
 
-/* -------------------------------------------------------------- steps -- */
-.steps {
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(30px, 3.6vw, 52px);
-  margin-top: clamp(48px, 5.5vw, 76px);
-}
-.step { display: grid; gap: 11px; align-content: start; text-align: center; }
-.step .stage { margin-bottom: 24px; }
-.step .num {
-  width: 38px; height: 38px; margin-inline: auto; display: grid; place-items: center;
-  border-radius: var(--r-pill); background: var(--mint); color: var(--deep);
-  font-size: 16px; font-weight: 600;
-}
-.step p:not(.num) { color: var(--muted); font-size: 16px; }
-
 /* (.faq, .plus, .answer and .closing are defined with their sections above.) */
 
 /* --------------------------------------------------------------- footer -- */
@@ -1634,60 +1589,6 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
    y of Tokkenly hangs into whatever follows. */
 .foot-word + .risk { margin-top: 0.12em; }
 
-/* -------------------------------------------------------- product page -- */
-/* The landing hero without its globe: same wash, same type, shorter, because
-   the job here is the product rather than the pitch. */
-.hero-product { padding-bottom: min(96px, 5vw); }
-.hero-product .hero-in { justify-items: center; }
-.hero-product .eyebrow { margin-inline: auto; }
-.hero-product-hl { margin-top: 18px; font-size: clamp(36px, 4.2vw, 80px); }
-.hero-product .hero-lead { max-width: 680px; }
-
-.prod-shot {
-  width: 100%; max-width: 1520px; margin: min(72px, 3.75vw) auto 0;
-  padding-inline: var(--gutter);
-}
-.prod-shot .shot-phone { width: min(360px, 78%); }
-.prod-shot .shot-wide { width: 100%; }
-
-.prod-points {
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: min(32px, 1.667vw); margin-top: min(64px, 3.334vw);
-}
-.prod-point {
-  background: #d1cbc2; border-radius: min(26px, 1.354vw);
-  padding: min(40px, 2.084vw) min(32px, 1.667vw);
-  display: grid; gap: 14px; align-content: start;
-}
-.prod-num { font-size: 13px; font-weight: 600; letter-spacing: 0.08em; color: #7a6f64; }
-.prod-point h3 { font-size: clamp(19px, 1.25vw, 24px); line-height: 1.25; color: #1e1818; }
-.prod-point p { font-size: clamp(14.5px, 0.834vw, 16px); line-height: 1.6; color: #443b37; }
-
-/* Said once, plainly, on the two products that carry real risk. */
-.band-risk { padding-block: 0; }
-.prod-risk {
-  max-width: 900px; margin-inline: auto; text-align: center;
-  padding: min(32px, 1.667vw) min(40px, 2.084vw);
-  border: 1px dashed rgba(5, 51, 41, 0.28); border-radius: min(20px, 1.042vw);
-  font-size: clamp(14.5px, 0.886vw, 17px); line-height: 1.6; color: var(--muted);
-}
-.prod-risk strong { color: var(--ink); }
-
-.prod-more {
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: min(32px, 1.667vw); margin-top: min(48px, 2.5vw);
-}
-.prod-card {
-  background: var(--deep); color: #fff; border-radius: min(26px, 1.354vw);
-  padding: min(36px, 1.875vw);
-  display: grid; gap: 12px; align-content: start;
-  transition: transform 420ms var(--ease-out), box-shadow 420ms var(--ease-out);
-}
-.prod-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
-.prod-card h3 { font-size: clamp(19px, 1.25vw, 24px); }
-.prod-card p { color: var(--on-deep-muted); font-size: clamp(14.5px, 0.834vw, 16px); line-height: 1.6; }
-.prod-card .pr-link { margin-top: 8px; }
-
 /* ---- the products menu ------------------------------------------------- */
 /* It used to be a list of five words. Each row now says what the product is
    for, which is the difference between a menu and a signpost. */
@@ -1700,11 +1601,7 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 .dm-say { font-size: 13px; line-height: 1.45; color: var(--muted); }
 .drop-menu a[aria-current='page'] { background: var(--tint-brand); }
 
-@media (max-width: 1040px) {
-  .prod-points, .prod-more { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
 @media (max-width: 640px) {
-  .prod-points, .prod-more { grid-template-columns: minmax(0, 1fr); }
   .drop-menu { grid-template-columns: minmax(0, 1fr); min-width: 0; }
 }
 
@@ -1809,9 +1706,21 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
   .pr-card { container-type: inline-size; }
   .pr-sticker-notes { top: auto; bottom: -36.4cqw; }
   .pr-sticker-conv  { top: auto; bottom: -52.72cqw; }
-  .pr-wide { grid-template-columns: minmax(0, 1fr); padding-right: min(36px, 1.875vw); }
-  .pr-wide .popup { border-radius: min(20px, 1.042vw) min(20px, 1.042vw) 0 0; }
+  .pr-wide { grid-template-columns: minmax(0, 1fr); padding-right: 26px; }
+  .pr-wide .popup { border-radius: 20px 20px 0 0; }
   .pr-narrow { padding-bottom: 240px; }
+
+  /* The measurements, given a floor. */
+  .pr-grid, .pr-row { gap: 16px; }
+  .pr-card { border-radius: 22px; }
+  .pr-narrow, .pr-wide { padding: 26px 26px 0; }
+  .pr-narrow { padding-bottom: 240px; }
+  .pr-wide { gap: 26px; }
+  .pr-body { padding-bottom: 26px; }
+  .pr-chip { width: 44px; height: 44px; border-radius: 12px; }
+  .popup { padding: 22px; border-radius: 20px 20px 0 0; }
+  .popup .pop-ledger { border-radius: 14px; padding: 16px; gap: 14px; }
+  .popup .pop-btn { padding: 14px 0; }
   .gs-steps { grid-template-columns: minmax(0, 1fr); gap: 56px; }
   .gs-gun { display: none; }
   .foot-top { grid-template-columns: minmax(0, 1fr); gap: 40px; }
@@ -1914,18 +1823,255 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
    Product page kit
    ---------------------------------------------------------------------
    Eight product pages are built from an ordered list of these, and no two
-   pages list them in the same order. Everything here leans on the section
-   vocabulary the landing page already has — .band, .stage and its five
-   colours, .steps, .grid-3, .faq, .head, .wrap, .reveal — so eight
-   different shapes are still one site. What is below is only the five
-   shapes the landing page had no use for.
+   pages list them in the same order.
+
+   Everything here is the landing page's own vocabulary, reused rather than
+   restated: the deep-green band of #00221a cards with their coloured chips
+   and mint links, the stone-and-gradient trio, the split with its ruled
+   points, the white receipt panel. A person arriving from the landing page
+   should recognise the furniture.
+
+   The one rule that shapes all of it: NO WHOLE PHONES. The first version of
+   these pages put 780x1600 screenshots on coloured slabs — 656px tall beside
+   a paragraph of ninety words, so the picture outweighed the copy four to one
+   and no page fitted a screen. The landing page never does that. It shows a
+   receipt: four rows and a button, about 300 tall, saying more about the
+   product than a photograph of the screen it came from.
+
+   So every piece of interface below is a .pn panel, written in markup. It
+   stays crisp, it stays selectable, it weighs nothing, and it cannot grow
+   taller than the words beside it.
    ===================================================================== */
 
-/* The hero's screen, on the product's own colour. */
-.fx-hero-stage { padding-bottom: 0; }
-.fx-hero-stage img { display: block; width: 100%; height: auto; border-radius: 0; }
+/* ---- the panel --------------------------------------------------------
+   The landing page's .popup, grown up: it gained a list, a swap and a bar
+   because eight products need to show eight different things, and it kept
+   everything else. Same white, same radius, same sunken ledger, same dark
+   pill at the foot. */
+.pn {
+  background: #fff; border-radius: min(22px, 1.146vw);
+  padding: clamp(20px, 1.6vw, 28px);
+  display: grid; gap: clamp(14px, 1vw, 18px); align-content: start;
+  color: #1e1818; text-align: left;
+  box-shadow: 0 18px 44px rgba(5, 51, 41, 0.16);
+}
+/* Every rule below is written `.pn .pn-x` rather than `.pn-x`, and that is
+   not decoration. A panel sits inside a #00221a bento card, and that card
+   says `.pr-card p { color: var(--on-deep-muted) }` — one class and one
+   element, which beats a colour the panel merely inherits. The first build
+   of this had a white receipt with pale mint figures on it, unreadable, for
+   exactly that reason. So the panel states its own colours and states them
+   loudly enough to win. */
+.pn .pn-head { display: grid; gap: 6px; }
+.pn .pn-k {
+  font-size: clamp(9.5px, 0.573vw, 11px); font-weight: 600; line-height: 1.3;
+  letter-spacing: 0.1em; text-transform: uppercase; color: #6c7d78;
+}
+.pn .pn-fig {
+  font-size: clamp(24px, 1.95vw, 36px); font-weight: 700; color: #1e1818;
+  letter-spacing: -0.03em; line-height: 1.1;
+}
+.pn-rows {
+  background: #f0efec; border-radius: min(14px, 0.73vw);
+  padding: clamp(14px, 1vw, 18px); display: grid; gap: clamp(11px, 0.78vw, 14px);
+}
+.pn-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(11px, 0.78vw, 14px); }
+.pn .pn-row { display: grid; gap: 3px; min-width: 0; }
+.pn .pn-v { font-size: clamp(11.5px, 0.73vw, 14px); font-weight: 600; line-height: 1.35; color: #1e1818; overflow-wrap: anywhere; }
+.pn .pn-note { font-size: clamp(10.5px, 0.678vw, 13px); line-height: 1.5; color: #6c7d78; }
+.pn .pn-btn {
+  background: #1e1818; color: #fff; border-radius: 999px;
+  text-align: center; padding: clamp(12px, 0.85vw, 15px) 0;
+  font-size: clamp(11.5px, 0.73vw, 14px); font-weight: 600;
+}
 
-/* ---------- figures ---------- */
+/* A list of things — search results, ways in, where a payment can go. The
+   badge is a letter in a tinted square, which is what the app draws when a
+   thing has no logo. */
+.pn-list { display: grid; gap: 4px; }
+.pn-item {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: clamp(10px, 0.73vw, 14px); align-items: center;
+  padding: clamp(9px, 0.63vw, 12px); border-radius: min(12px, 0.625vw);
+  background: #f0efec;
+}
+.pn .pn-badge {
+  width: clamp(28px, 1.98vw, 36px); height: clamp(28px, 1.98vw, 36px);
+  border-radius: min(10px, 0.52vw); display: grid; place-items: center;
+  background: #dce9e2; color: #08543f;
+  font-size: clamp(11px, 0.73vw, 14px); font-weight: 700; line-height: 1;
+}
+.pn .pn-name { font-size: clamp(11.5px, 0.73vw, 14px); font-weight: 600; color: #1e1818; line-height: 1.3; }
+.pn .pn-sub { font-size: clamp(10px, 0.626vw, 12px); color: #6c7d78; margin-top: 2px; line-height: 1.35; overflow-wrap: anywhere; }
+.pn .pn-val { font-size: clamp(11px, 0.7vw, 13.5px); font-weight: 600; color: #1e1818; text-align: right; white-space: nowrap; }
+.pn .pn-up { color: var(--positive); }
+.pn .pn-down { color: #b4451f; }
+
+/* Two fields and the flip between them. The Convert screen's whole idea in
+   about 150 pixels. */
+.pn-swap { display: grid; gap: 6px; position: relative; }
+.pn-field {
+  background: #f0efec; border-radius: min(14px, 0.73vw);
+  padding: clamp(13px, 0.95vw, 17px);
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: end;
+}
+.pn .pn-big { font-size: clamp(19px, 1.35vw, 26px); font-weight: 700; color: #1e1818; letter-spacing: -0.025em; line-height: 1.15; }
+.pn .pn-unit {
+  font-size: clamp(10.5px, 0.626vw, 12.5px); font-weight: 600; color: #6c7d78;
+  background: #fff; border-radius: 999px; padding: 6px 12px;
+}
+.pn-flip {
+  position: absolute; left: 50%; top: 50%; translate: -50% -50%; z-index: 2;
+  width: clamp(28px, 1.9vw, 34px); height: clamp(28px, 1.9vw, 34px);
+  border-radius: 50%; background: #1e1818; display: grid; place-items: center;
+  border: 3px solid #fff;
+}
+.pn-flip svg { width: 52%; height: 52%; fill: none; stroke: #fff; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* One bar, split by share. For the two products whose point is that money at
+   work and money you can spend are different things. */
+.pn-bar { display: grid; gap: 11px; }
+.pn-track { display: flex; gap: 3px; height: clamp(12px, 0.83vw, 16px); }
+.pn-seg { border-radius: 999px; }
+.pn-seg:first-child { background: var(--mint); }
+.pn-seg:last-child { background: #d5cfc6; }
+.pn-keys { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.pn-key { display: grid; gap: 3px; }
+.pn-dot { display: flex; align-items: center; gap: 7px; }
+.pn-dot::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--mint); flex: none; }
+.pn-key:last-child .pn-dot::before { background: #d5cfc6; }
+
+/* ---- the slab ---------------------------------------------------------
+   The coloured ground a panel stands on, in the product's own colour, with
+   the landing page's dotted wash over it and one 3-D object bleeding out of
+   the bottom corner. Same five colours as before; what has changed is what
+   stands on it. */
+.slab {
+  position: relative; overflow: hidden; isolation: isolate;
+  border-radius: min(34px, 1.771vw);
+  background: var(--stage, var(--mint));
+  padding: clamp(26px, 3vw, 54px) clamp(20px, 2.4vw, 44px);
+  display: grid; place-items: center;
+}
+.slab::before {
+  content: ''; position: absolute; inset: 0; z-index: 0;
+  background-image: radial-gradient(circle, rgba(5, 51, 41, 0.14) 1px, transparent 1px);
+  background-size: 20px 20px;
+  -webkit-mask-image: linear-gradient(to bottom, #000, transparent 74%);
+  mask-image: linear-gradient(to bottom, #000, transparent 74%);
+}
+.slab-prop {
+  position: absolute; left: -13%; bottom: -17%; z-index: 1;
+  width: min(340px, var(--w2, 56%)); height: auto;
+  pointer-events: none; object-fit: contain;
+  transform: rotate(var(--r, -8deg));
+}
+/* The panel is pushed off the slab's centre so the object beside it has
+   somewhere to be. Centred, the panel covered it and what showed was a
+   sliver at the edge that read as a smudge rather than a thing. */
+.slab .pn { position: relative; z-index: 2; width: 100%; max-width: 372px; justify-self: end; }
+
+.stage-mint   { --stage: var(--mint); }
+.stage-yellow { --stage: #f9d100; }
+.stage-sand   { --stage: var(--sand); }
+.stage-peach  { --stage: #f7b79a; }
+.stage-deep   { --stage: var(--deep); }
+.stage-deep::before { background-image: radial-gradient(circle, rgba(255, 255, 255, 0.16) 1px, transparent 1px); }
+
+/* The landing page's closing slab is drawn for one line of headline and one
+   of lead; a product page's own ending keeps to that, and the section around
+   it does not need the 1024 the landing page reserves. */
+.closing-prod { min-height: 0; padding-block: clamp(48px, 5vw, 96px); }
+.closing-prod .closing-in h2 { font-size: clamp(30px, 3.6vw, 58px); }
+
+/* ---- the hero ---------------------------------------------------------
+   Two columns, not one: the landing hero is centred because it has a globe
+   under it, and a product page has a panel instead. Words on one side, the
+   thing itself on the other, and the whole introduction inside one screen. */
+.hero-product { padding-top: calc(var(--nav-h) + min(112px, 6.4vw)); padding-bottom: min(104px, 5.5vw); }
+.ph-in {
+  display: grid; grid-template-columns: minmax(0, 620fr) minmax(0, 560fr);
+  gap: clamp(36px, 4.2vw, 80px); align-items: center;
+  justify-items: stretch; text-align: left;
+}
+.ph-text { display: grid; justify-items: start; align-content: center; min-width: 0; }
+.px-head h2 { font-size: clamp(29px, 3.4vw, 54px); }
+.px-head .lead { margin-top: 14px; }
+.ph-hl {
+  margin: 18px 0 0; font-size: clamp(38px, 4.3vw, 72px);
+  line-height: 1.05; letter-spacing: -0.04em; color: var(--ink);
+}
+.ph-lead { margin-top: 20px; max-width: 34em; }
+.ph-cta { margin-top: min(32px, 1.8vw); }
+
+/* ---- the bento --------------------------------------------------------
+   The landing page's products grid, carrying this product's own facets
+   instead of the other seven products. Same #00221a cards on the same deep
+   band, same 988/500 asymmetry, same chips and mint links — .pr-* is shared
+   verbatim, and only the two things a product page needs are added.
+
+   The narrow card's art slot is pinned to the bottom and clipped by the card,
+   so an object bleeds out of the corner the way the landing page's do. */
+.pr-stage { position: absolute; left: 0; bottom: -8%; width: 100%; aspect-ratio: var(--ar, 461.333 / 388); z-index: 0; }
+.pr-prop {
+  position: absolute; left: var(--l); top: var(--t); width: var(--w);
+  height: auto; pointer-events: none; object-fit: contain;
+  transform: rotate(var(--r, 0deg)) scaleX(var(--fx, 1));
+}
+.pr-narrow .pr-top { position: relative; z-index: 2; }
+/* The bento's head sits left on a product page: it is a section of the page,
+   not the page's own centred pitch. */
+.bx-head { max-width: 760px; margin: 0; text-align: left; }
+.bx-head .eyebrow { margin-inline: 0; }
+.bx-head h2 { margin-top: 16px; font-size: clamp(29px, 3.4vw, 54px); }
+.bx-head .lead { margin-top: 16px; max-width: 56ch; }
+.pr-wide .pn { align-self: end; margin-bottom: 0; border-radius: min(22px, 1.146vw) min(22px, 1.146vw) 0 0; box-shadow: none; }
+
+/* ---- the trio ---------------------------------------------------------
+   The tokenized-stocks cards: two stone, one gradient, the middle one
+   reading bottom-up. .ts-* is shared verbatim; what is added is the art
+   slot's placement table, which the landing page keeps inline. */
+.tx-head { max-width: 760px; margin: 0 auto; text-align: center; }
+.tx-head .eyebrow { margin-inline: auto; }
+.tx-head h2 { margin-top: 16px; font-size: clamp(29px, 3.4vw, 54px); }
+.ts-cards.tx-cards { margin-top: clamp(40px, 4vw, 64px); }
+
+/* ---- the split --------------------------------------------------------
+   The gifting section's shape: a headline big enough to be the point, two
+   ruled points under it, a mint pill, and the product standing on its own
+   colour beside it. .points and .point are shared verbatim. */
+.sp-in {
+  display: grid; grid-template-columns: minmax(0, 688fr) minmax(0, 768fr);
+  gap: clamp(36px, 3.6vw, 64px); align-items: center;
+}
+.sp-in-b .sp-text { order: 2; }
+.sp-text { display: grid; gap: min(40px, 2.2vw); align-content: center; justify-items: start; min-width: 0; }
+.sp-head { display: grid; gap: 16px; }
+.sp-head h2 { font-size: clamp(31px, 3.8vw, 60px); }
+.sp-head .lead { max-width: 44ch; }
+.sp-body { display: grid; gap: min(36px, 2vw); justify-items: start; min-width: 0; }
+.sp-in .points { padding-bottom: 0; }
+
+/* ---- the steps --------------------------------------------------------
+   Three of them, text only. The pictures live in the bento and the split;
+   repeating them here is what made every page the same page. A mint rule
+   over each step is the thread the landing page runs through its sections. */
+.steps {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(22px, 2.4vw, 40px); margin-top: clamp(40px, 4vw, 64px);
+}
+.step {
+  display: grid; gap: 12px; align-content: start; text-align: left;
+  border-top: 2px solid var(--mint); padding-top: clamp(20px, 1.6vw, 28px);
+}
+.step .num {
+  font-size: 12px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--positive);
+}
+.step h3 { color: var(--ink); }
+.step p:not(.num) { color: var(--muted); font-size: clamp(14.5px, 0.9vw, 16px); line-height: 1.6; }
+
+/* ---- figures ---------------------------------------------------------- */
 .fx-stats {
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: clamp(20px, 2.6vw, 40px);
@@ -1943,20 +2089,8 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
   color: var(--muted);
 }
 
-/* ---------- text beside a screen, swapping sides ---------- */
-.fx-alt {
-  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
-  gap: clamp(28px, 4vw, 72px); align-items: center;
-  margin-top: clamp(40px, 4.5vw, 68px);
-}
-.fx-alt-b .fx-alt-text { order: 2; }
-.fx-alt-text { display: grid; gap: 14px; align-content: center; }
-.fx-alt-text p { color: var(--muted); max-width: 46ch; }
-.fx-alt-stage { padding-bottom: 0; }
-.fx-alt-stage img { display: block; width: 100%; height: auto; }
-
-/* ---------- the questions asked before committing ---------- */
-/* Its own measure rather than .wrap-narrow's. That class caps the width at
+/* ---- the questions asked before committing ----------------------------
+   Its own measure rather than .wrap-narrow's. That class caps the width at
    880 but keeps the page's 150px gutter, so the content box comes out at 580
    — fine for a column of prose, too tight for a term and its answer side by
    side, which is what this is. */
@@ -1974,34 +2108,35 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 .fx-fact dt { font-weight: 600; color: var(--ink); }
 .fx-fact dd { margin: 0; color: var(--muted); }
 
-/* ---------- without, and with ---------- */
+/* ---- without, and with ---------------------------------------------- */
 .fx-cmp {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: clamp(16px, 2vw, 28px);
   margin-top: clamp(40px, 4.5vw, 64px);
 }
 .fx-col {
-  border-radius: var(--r-xl, 28px); padding: clamp(24px, 3vw, 40px);
+  border-radius: min(26px, 1.354vw); padding: clamp(24px, 3vw, 40px);
   display: grid; gap: 18px; align-content: start;
 }
-.fx-col-before { background: var(--sunken); color: var(--muted); }
-.fx-col-after { background: var(--deep); color: var(--on-deep); }
+.fx-col-before { background: #d1cbc2; color: #443b37; }
+.fx-col-after { background: #00221a; color: var(--on-deep); }
 .fx-col-head { font-weight: 600; font-size: clamp(15px, 1.2vw, 18px); }
-.fx-col-before .fx-col-head { color: var(--ink); }
+.fx-col-before .fx-col-head { color: #1e1818; }
+.fx-col-after .fx-col-head { color: #fff; }
 .fx-col ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 13px; }
 .fx-col li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 12px; align-items: start; }
 .fx-i { width: 18px; height: 18px; margin-top: 2px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
 .fx-col-after .fx-i { color: var(--mint); }
-.fx-col-before .fx-i { color: var(--placeholder); }
+.fx-col-before .fx-i { color: #8d8175; }
 
-/* ---------- two audiences ---------- */
+/* ---- two audiences --------------------------------------------------- */
 .fx-two {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: clamp(16px, 2vw, 28px);
   margin-top: clamp(40px, 4.5vw, 64px);
 }
 .fx-half {
-  background: var(--surface); border-radius: var(--r-xl, 28px);
+  background: var(--surface); border-radius: min(26px, 1.354vw);
   padding: clamp(26px, 3vw, 42px); display: grid; gap: 14px; align-content: start;
 }
 .fx-half p { color: var(--muted); }
@@ -2009,21 +2144,91 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 .fx-list li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 12px; align-items: start; }
 .fx-list .fx-i { color: var(--mint); }
 
-/* ---------- one sentence, on the deep ground ---------- */
+/* ---- one sentence, on the deep ground -------------------------------- */
+.fx-slab {
+  background: var(--deep); border-radius: min(34px, 1.771vw);
+  padding: clamp(40px, 5vw, 90px) clamp(26px, 4vw, 76px);
+  display: grid; gap: 18px; justify-items: center; text-align: center;
+}
 .fx-quote {
-  font-size: clamp(22px, 2.6vw, 38px); line-height: 1.25; font-weight: 600;
-  letter-spacing: -0.02em; color: var(--on-deep); margin: 0; text-wrap: balance;
+  font-size: clamp(21px, 2.3vw, 36px); line-height: 1.3; font-weight: 600;
+  letter-spacing: -0.02em; color: var(--on-deep); margin: 0;
+  max-width: 20em; text-wrap: balance;
+}
+.fx-quote-k {
+  font-size: 12px; font-weight: 600; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--mint);
 }
 
+/* ---- the rest of it -------------------------------------------------- */
+/* The three other products, as the landing page's own cards rather than as
+   flat tiles: same ground, same chip, same mint link. */
+.prod-more {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: min(32px, 1.667vw); margin-top: min(48px, 2.5vw);
+}
+/* Its own band rather than a full section: two short lines of head and three
+   rows of card do not need the page's whole rhythm around them. */
+.band.band-more { padding-block: clamp(56px, 6vw, 104px); }
+.band-more .bx-head h2 { font-size: clamp(27px, 2.8vw, 44px); }
+.prod-card {
+  position: relative; overflow: hidden;
+  background: #00221a; color: #fff; border-radius: min(26px, 1.354vw);
+  padding: clamp(24px, 1.875vw, 36px);
+  min-height: clamp(180px, 14vw, 220px);
+  display: grid; gap: 14px; align-content: space-between;
+  transition: transform 420ms var(--ease-out), box-shadow 420ms var(--ease-out);
+}
+.prod-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
+.prod-card h3 { font-size: clamp(18px, 1.125vw, 22px); color: #fff; }
+.prod-card p { color: var(--on-deep-muted); font-size: clamp(14px, 0.834vw, 16px); line-height: 1.6; }
+.prod-card .pr-link { margin-top: 4px; }
+
+/* ---- said plainly ----------------------------------------------------- */
+.band-risk { padding-block: 0; }
+.prod-risk {
+  max-width: 900px; margin-inline: auto; text-align: center;
+  padding: min(32px, 1.667vw) min(40px, 2.084vw);
+  border: 1px dashed rgba(5, 51, 41, 0.28); border-radius: min(20px, 1.042vw);
+  font-size: clamp(14.5px, 0.886vw, 17px); line-height: 1.6; color: var(--muted);
+}
+.prod-risk strong { color: var(--ink); }
+
+/* ---- hover ------------------------------------------------------------ */
+.ts-card, .prod-card, .slab { --lift: 0px; --pop: 1; }
+.slab .slab-prop, .pr-stage .pr-prop {
+  transition: transform 520ms var(--ease-out);
+}
+.slab:hover .slab-prop { transform: rotate(var(--r, -8deg)) translateY(-10px) scale(1.03); }
+.pr-card:hover .pr-prop { transform: rotate(var(--r, 0deg)) scaleX(var(--fx, 1)) translateY(-10px); }
+.pn-item { transition: background 200ms var(--ease-out); }
+.pn-list:hover .pn-item { opacity: 0.68; }
+.pn-list .pn-item:hover { opacity: 1; background: #e6e4df; }
+.pr-card:hover .pn-btn { transform: translateY(-2px); background: #053329; }
+
+/* ---- the tiers -------------------------------------------------------- */
+@media (max-width: 1040px) { .prod-more { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
 @media (max-width: 899px) {
+  /* The hero stacks, and the panel goes under the words it belongs to. */
+  .hero-product { padding-top: calc(var(--nav-h) + min(72px, 8vw)); }
+  .ph-in { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+  .sp-in { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+  .sp-in-b .sp-text { order: 0; }
   .fx-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .fx-alt { grid-template-columns: minmax(0, 1fr); }
-  /* On one column the screen goes under its own words, whichever side it
-     was on, or every other row reads as belonging to the row above it. */
-  .fx-alt-b .fx-alt-text { order: 0; }
   .fx-cmp, .fx-two { grid-template-columns: minmax(0, 1fr); }
+  .steps { grid-template-columns: minmax(0, 1fr); gap: 28px; }
   .fx-fact { grid-template-columns: minmax(0, 1fr); gap: 6px; }
 }
+
 @media (max-width: 639px) {
   .fx-stats { grid-template-columns: minmax(0, 1fr); gap: 26px; }
+  .prod-more { grid-template-columns: minmax(0, 1fr); }
+  .slab { padding: 26px 20px 30px; }
+  .slab-prop { width: min(200px, 44%); }
+  .pn-pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* The bento's narrow card leaves a fixed 240 of room for its object below
+     the copy (see the .pr-narrow rule in the tiers above); the art slot has
+     to sit in that room rather than at the card's own bottom. */
+  .pr-narrow .pr-stage { bottom: 0; }
 }

@@ -98,53 +98,82 @@
     <main id="main">
       <span id="top"></span>
 
-      <!-- The product hero: the landing hero's type without its globe, and
-           the product's own colour under the screen. Eight pages, five stage
-           colours, so no two neighbours in the menu look alike. -->
+      <!-- The hero: the landing page's wash and type, but in two columns.
+           The landing hero is centred because it has a globe under it; a
+           product page has one panel of the product instead, and putting it
+           beside the words is what keeps the whole introduction — headline,
+           lead, buttons and the thing itself — inside one screen. -->
       <section class="hero hero-product">
         <div class="hero-wash" aria-hidden="true"></div>
-        <div class="wrap hero-in">
-          <p class="eyebrow hero-intro" style="--hero-d: 0s">Pay bills</p>
-          <h1 class="hero-hl hero-product-hl hero-intro" style="--hero-d: 0.05s"><span>One less thing on your list.</span></h1>
-          <p class="lead hero-lead hero-intro" style="--hero-d: 0.1s">Take care of everyday bills in Tokkenly and get back to your day. Your money is already here. Your bill payments can be too.</p>
-          <div class="cta-row hero-cta hero-intro" style="--hero-d: 0.2s">
-            <a class="btn btn-ink" href="https://app.tokkenly.com">Get Started</a>
-            <a class="btn btn-white" href="#more">See how it works</a>
+        <div class="wrap ph-in">
+          <div class="ph-text">
+            <p class="eyebrow hero-intro" style="--hero-d: 0s">Pay bills</p>
+            <h1 class="ph-hl hero-intro" style="--hero-d: 0.05s">One less thing on your list.</h1>
+            <p class="lead ph-lead hero-intro" style="--hero-d: 0.1s">Take care of everyday bills in Tokkenly and get back to your day. Your money is already here. Your bill payments can be too.</p>
+            <div class="cta-row ph-cta hero-intro" style="--hero-d: 0.2s">
+              <a class="btn btn-ink" href="https://app.tokkenly.com">Get Started</a>
+              <a class="btn btn-white" href="#more">See how it works</a>
+            </div>
           </div>
-        </div>
-
-        <div class="prod-shot hero-intro" style="--hero-d: 0.3s">
-          <div class="stage stage-sand fx-hero-stage">
-            <img src="../img/p-bills.webp" loading="eager" alt="The Spend screen, showing airtime, data and electricity." />
+          <div class="ph-art hero-intro" style="--hero-d: 0.3s">
+            <div class="slab stage-sand">
+            <img class="slab-prop" style="--w2: 58%" src="../img/ts/notes-green.webp" loading="lazy" alt="" aria-hidden="true" />
+            <div class="pn"><div class="pn-head"><p class="pn-k">Ikeja Electric</p><p class="pn-fig">&#8358;5,000</p></div><div class="pn-rows"><div class="pn-pair"><div class="pn-row"><p class="pn-k">Meter</p><p class="pn-v">4512 8890 22</p></div><div class="pn-row"><p class="pn-k">Type</p><p class="pn-v">Prepaid</p></div></div><div class="pn-pair"><div class="pn-row"><p class="pn-k">Paying with</p><p class="pn-v">Naira</p></div><div class="pn-row"><p class="pn-k">Fee</p><p class="pn-v">&#8358;0</p></div></div></div><p class="pn-btn">Pay &#8358;5,000</p></div>
+          </div>
           </div>
         </div>
       </section>
 
       <span id="more"></span>
 
-      <section class="band band-cream">
+      <section id="s-trio" class="band band-ts">
         <div class="wrap">
-          <div class="head reveal"><h2>What you can pay.</h2></div>
-          <div class="grid-3 cards">
-            <article class="card reveal">
-              <h3>Airtime</h3>
-              <p>Any Nigerian network. Your number is remembered so the second time is one tap.</p>
+          <div class="head tx-head reveal">
+            <p class="eyebrow">What you can pay</p>
+            <h2>Airtime, data, and the light bill.</h2>
+          </div>
+          <div class="ts-cards tx-cards">
+            <article class="ts-card ts-card-stone reveal">
+              <div class="ts-copy">
+                <h3>Airtime</h3>
+                <p>Any Nigerian network. Your number is remembered, so the second time is one tap.</p>
+              </div>
+              <div class="ts-slot">
+                <div class="ts-stage" style="--ar: 461.333 / 388">
+                  <img class="ts-prop" style="--l: -6%; --t: 6%; --w: 112%" src="../img/pr/notes-purple.webp" width="700" height="742" loading="lazy" alt="" />
+                </div>
+              </div>
             </article>
-            <article class="card reveal">
-              <h3>Data</h3>
-              <p>Pick the bundle, not the price code. The screen says what you are buying.</p>
+            <article class="ts-card ts-card-grad reveal">
+              <div class="ts-slot">
+                <div class="ts-stage" style="--ar: 461.333 / 388">
+                  <img class="ts-prop" style="--l: 28.13%; --t: 40.355%; --w: 52.795%; --r: -100.9deg; --fx: -1" src="../img/ts/pen.webp" width="700" height="742" loading="lazy" alt="" />
+                  <img class="ts-prop" style="--l: -1.018%; --t: -4.133%; --w: 77.024%" src="../img/ts/pen.webp" width="700" height="742" loading="lazy" alt="" />
+                </div>
+              </div>
+              <div class="ts-copy ts-copy-end">
+                <h3>Data</h3>
+                <p>Pick the bundle, not the price code. The screen says what you are buying.</p>
+              </div>
             </article>
-            <article class="card reveal">
-              <h3>Electricity</h3>
-              <p>Prepaid or postpaid. The token comes back on the receipt, where you can find it again.</p>
+            <article class="ts-card ts-card-stone reveal">
+              <div class="ts-copy">
+                <h3>Electricity</h3>
+                <p>Prepaid or postpaid. The token comes back on the receipt, where you can find it again.</p>
+              </div>
+              <div class="ts-slot">
+                <div class="ts-stage" style="--ar: 461.333 / 388">
+                  <img class="ts-prop" style="--l: -2%; --t: 8%; --w: 104%" src="../img/ts/notes-green.webp" width="700" height="742" loading="lazy" alt="" />
+                </div>
+              </div>
             </article>
           </div>
         </div>
       </section>
 
-      <section class="band band-cream">
+      <section id="s-compare" class="band">
         <div class="wrap">
-          <div class="head reveal"><h2>Why it is here and not somewhere else.</h2></div>
+          <div class="head px-head reveal"><h2>Why it is here and not somewhere else.</h2></div>
           <div class="fx-cmp">
             <div class="fx-col fx-col-before reveal">
               <p class="fx-col-head">Without Tokkenly</p>
@@ -168,9 +197,44 @@
         </div>
       </section>
 
-      <section class="band">
+      <section id="s-bento" class="band band-products">
         <div class="wrap">
-          <div class="head reveal"><h2>Details.</h2></div>
+          <div class="head head-ondeep bx-head reveal">
+            <p class="eyebrow">After you pay</p>
+            <h2>The token does not go missing.</h2>
+            <p class="lead">A receipt you can open again, and a failure that says what happened.</p>
+          </div>
+
+          <div class="pr-grid">
+            <div class="pr-row pr-row-a">
+              <article class="pr-card pr-wide reveal">
+                <div class="pr-body">
+                  <div class="pr-top">
+                    <div class="pr-title"><span class="pr-chip pr-chip-mint" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M 7 5 L 17 5 L 17 20 L 14.5 18 L 12 20 L 9.5 18 L 7 20 Z M 10 9 L 14 9 M 10 13 L 14 13" /></svg></span><h3>The receipt keeps the number.</h3></div>
+                    <div class="pr-paras">
+                      <p>A prepaid token is no use if you cannot find it twenty minutes later. It sits on the receipt, in Activity, where you left it.</p>
+                      <p>So does the meter number, the amount and the date, which is the difference between a payment and a piece of paper you have lost.</p>
+                    </div>
+                  </div>
+
+                </div>
+                <div class="pn"><div class="pn-head"><p class="pn-k">Paid</p><p class="pn-fig">&#8358;5,000</p></div><div class="pn-rows"><div class="pn-row"><p class="pn-k">Token</p><p class="pn-v">8842 1190 5573 2041</p></div><div class="pn-row"><p class="pn-k">Meter</p><p class="pn-v">4512 8890 22</p></div><div class="pn-row"><p class="pn-k">Kept in</p><p class="pn-v">Activity</p></div></div></div>
+              </article>
+              <article class="pr-card pr-narrow reveal">
+                <div class="pr-top">
+                  <div class="pr-title"><span class="pr-chip pr-chip-orange" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M 5 9 L 5 4 M 5 9 L 10 9 M 5 9 A 8 8 0 1 1 5.6 15.5" /></svg></span><h3>A failure is a row, not a silence.</h3></div>
+                  <p>If a payment does not go through the money comes back, and Activity says so.</p>
+                </div>
+                <div class="pr-stage" aria-hidden="true"><img class="pr-prop" style="--l: 2.17%; --t: 19.447%; --w: 74.552%; --r: 3.25deg" src="../img/ts/coins-us.webp" loading="lazy" alt="" /></div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="s-facts" class="band">
+        <div class="wrap">
+          <div class="head px-head reveal"><h2>Details.</h2></div>
           <dl class="fx-facts reveal">
             <div class="fx-fact">
               <dt>What it costs</dt>
@@ -188,22 +252,25 @@
         </div>
       </section>
 
-      <section class="band">
+      <section id="s-related" class="band band-products band-more">
         <div class="wrap">
-          <div class="head reveal"><h2>The rest of it.</h2></div>
+          <div class="head head-ondeep bx-head reveal">
+            <p class="eyebrow">The rest of it</p>
+            <h2>There is more<br />in the app.</h2>
+          </div>
           <div class="prod-more">
             <a class="prod-card reveal" href="convert.html">
-              <h3>Convert</h3>
+              <div class="pr-title"><span class="pr-chip pr-chip-mint" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M 4 8 L 17 8 M 17 8 L 13.5 4.5 M 17 8 L 13.5 11.5 M 20 16 L 7 16 M 7 16 L 10.5 12.5 M 7 16 L 10.5 19.5" /></svg></span><h3>Convert</h3></div>
               <p>Change currencies. Keep your plans.</p>
               <span class="pr-link">Explore Convert <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></span>
             </a>
             <a class="prod-card reveal" href="earn.html">
-              <h3>Earn</h3>
+              <div class="pr-title"><span class="pr-chip pr-chip-yellow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M 12 4 L 12 20 M 4 8 L 20 8 M 7 8 L 4 14 A 3 3 0 0 0 10 14 Z M 17 8 L 14 14 A 3 3 0 0 0 20 14 Z" /></svg></span><h3>Earn</h3></div>
               <p>Put idle stablecoins to work.</p>
               <span class="pr-link">Explore Earn <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></span>
             </a>
             <a class="prod-card reveal" href="borrow.html">
-              <h3>Borrow</h3>
+              <div class="pr-title"><span class="pr-chip pr-chip-orange" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M 12 4 A 8 8 0 1 0 12 20 A 8 8 0 1 0 12 4 M 12 8 L 12 12 L 15 14" /></svg></span><h3>Borrow</h3></div>
               <p>Give yourself some breathing room.</p>
               <span class="pr-link">Explore Borrow <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></span>
             </a>
@@ -211,18 +278,15 @@
         </div>
       </section>
 
-      <section class="closing">
+      <section class="closing closing-prod">
         <div class="wrap">
           <div class="closing-slab reveal">
             <img class="cta-prop cta-coin" src="../img/cta/coin.webp" width="274" height="290" loading="lazy" alt="" aria-hidden="true" />
             <img class="cta-prop cta-pen" src="../img/cta/pen.webp" width="302" height="369" loading="lazy" alt="" aria-hidden="true" />
             <img class="cta-prop cta-notes" src="../img/cta/notes.webp" width="593" height="593" loading="lazy" alt="" aria-hidden="true" />
             <div class="closing-in">
-              <h2>Your money. A wider world.</h2>
-              <p class="closing-lead">
-                From Nigerian companies to US names, discover tokenized stocks worth a closer look.
-                Keep your everyday money in the same app.
-              </p>
+              <h2>Clear the list in one app.</h2>
+              <p class="closing-lead">Airtime, data and electricity, beside the rest of your money.</p>
               <a class="btn btn-deep" href="https://app.tokkenly.com">Get Started</a>
             </div>
           </div>

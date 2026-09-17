@@ -9973,3 +9973,91 @@ for errors, 404s, sideways scroll and exactly one `h1`, resolves every link on
 every page, and — the one that matters — compares the pages' section shapes
 and fails if any two are the same. If a future edit collapses them back onto
 one template, that is the line that notices.
+
+### 11g.90 — the product pages get the landing page's furniture, and no whole phones
+
+The eight pages of 11g.89 had eight different shapes and one bad idea running
+through all of them. Every section that showed the product put a whole
+780×1600 phone screenshot on a coloured slab: 656 pixels tall next to a
+paragraph of ninety words, so the picture outweighed the copy four to one and
+no page fitted a screen. The verdict was fair — *"they are only like a sketch,
+they don't look good"* — and the instruction with it was to take the design
+from the landing page, and to make sure the screens are **not too long and do
+not take up more room than the words beside them**.
+
+**What the landing page actually does.** Read section by section at 1440, it
+has a vocabulary and it never once shows a whole phone:
+
+- a **centred head** — mint dot, caps eyebrow, a two-line display headline, a
+  muted lead;
+- the **trio**: three cards, deliberately uneven, two stone `#d1cbc2` with the
+  words at the top and a 3-D object bleeding out of the bottom, and between
+  them a teal-to-pink gradient card that reads bottom-up;
+- the **bento**: a deep-green band of `#00221a` cards on a 988/500 grid that
+  alternates sides, each with a coloured chip, a mint `Explore X →`, and
+  either a compact white **receipt** or an object bleeding off the edge;
+- the **split**: a huge headline, points on vertical rules, a mint pill, and
+  a picture in a stone card beside it.
+
+The receipt is the answer to the whole complaint. It is four rows and a
+button, about 300 tall, built in markup, and it says more about Send than a
+photograph of the Send screen does. So: **no whole phones on a product page.**
+Every piece of interface is now a `.pn` panel — head, sunken ledger, list,
+swap, bar, note, button — and a panel cannot grow taller than the words it
+stands beside because it only has as many rows as it has facts.
+
+**The kit.** `bento`, `trio`, `split`, `stats`, `facts`, `compare`, `steps`,
+`two`, `quote`, `risk`, `faq`, `related`. `.pr-*`, `.ts-*` and `.points` are
+the landing page's own classes, reused rather than restated. The panels are
+data in `copy-products.mjs`, one block per line, and every figure in them is
+one the app would really show.
+
+Result at 1440: the tallest panel on any of the eight is 399px, the shortest
+269, and every hero now ends inside the first 728 pixels — the headline, the
+lead, the buttons and the product itself in one screen. The pages lost
+between 1,600 and 4,400 pixels of height each.
+
+**Three bugs in the shared component, found by reusing it.**
+
+*The receipt could not be read — on the landing page, at every width.*
+`.pr-card p { color: var(--on-deep-muted) }` is one class and one element.
+`.popup { color: #1e1818 }` is a colour its rows merely inherit, and
+inheritance loses to any rule that matches. So the amount, the names, the
+arrival time and the button label on both wide product cards have been pale
+mint on white since the section was built. It is invisible in a design tool,
+because there the panel is a frame with its own text colour; it only appears
+once the two live in the same cascade. Both panels state their own colours
+now, at a specificity that holds inside a dark card.
+
+*The bento collapses on a phone.* Every measurement in it is
+`min(N px, M vw)`, which has a ceiling and no floor. At 390 the 52px chip
+renders at 10.5, the 36 of card padding at 7.3, the 26 of radius at 5.3. The
+section is drawn on a 1920 grid and nothing had ever told it what to do on a
+phone. Restated with real numbers inside the `1040px` tier the bento already
+changes shape in, so nothing above 1040 moves at all.
+
+*A section that paints nothing.* `.band-deep` sets `color` and no background —
+the landing page's deep sections bring their own fill — so a white sentence
+placed on it was a white sentence on page grey. The quote stands on its own
+deep slab now.
+
+**Two stale suites, fixed rather than skipped.** `_sitecheck.mjs` waited for
+every image on the page to load, including the Why coin, which is
+`display: none` below 1880 and correctly never fetched; it now waits only for
+the images that are drawn. `_siteinteract.mjs` still expected the products
+menu to jump to a card on the landing page and the hero to be a screenshot on
+a colour panel — two rebuilds ago. It follows the menu to the product page
+now, and it guards the three bugs above.
+
+**The guard.** `_siteprod.mjs` gains a `compact` pass: no app screenshot may
+appear on a product page, no panel may exceed 460px, no hero may end past
+1000px at 1440×900, and no panel may be more than half again as tall as the
+copy beside it. Plus two regressions: the receipt's text has to be dark on
+both the landing page and a product page, and the chip has to be at least
+40px at 390.
+
+**Still open.** `_sitecopy.mjs` reports nine pieces of the shared document
+that are not on the landing page — the rewritten hero, "Built on Base", and
+"Get Started" against the page's "Sign up". That gap is a decision already
+taken (new pages only, leave the landing page), not a defect, and the suite is
+the record of it.

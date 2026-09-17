@@ -1,5 +1,5 @@
 import { chromium } from 'playwright'
-const out = '/tmp/claude-0/-home-user-Tokkenly/24b2afd6-56b8-560f-bc91-2e0b3c84dcea/scratchpad'
+const out = process.argv[2] ?? '/tmp'
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
 
 async function run(label, width, height) {
@@ -21,7 +21,12 @@ async function run(label, width, height) {
   // Then give them time to land. A lazy image that has only been asked for is
   // not a lazy image that has arrived, and the first version of this script
   // photographed the gap.
-  await p.waitForFunction(() => [...document.images].every((i) => i.complete && i.naturalWidth > 0), null, { timeout: 20000 })
+  /* Only the images that are actually drawn. The coin in the Why section is
+     display:none below 1880 and its lazy source is never fetched, which is
+     correct and which this used to sit and wait twenty seconds for. */
+  await p.waitForFunction(() => [...document.images]
+    .filter((i) => i.getClientRects().length)
+    .every((i) => i.complete && i.naturalWidth > 0), null, { timeout: 20000 })
   await p.evaluate(() => {
     scrollTo(0, 0)
     document.querySelectorAll('.reveal').forEach((e) => {
@@ -34,6 +39,7 @@ async function run(label, width, height) {
   const report = await p.evaluate((w) => {
     const broken = []
     document.querySelectorAll('img').forEach((im) => {
+      if (!im.getClientRects().length) return
       if (!im.complete || im.naturalWidth === 0) broken.push(im.getAttribute('src'))
     })
     /* An element wider than the viewport only matters if it can actually make

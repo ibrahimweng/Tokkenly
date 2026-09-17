@@ -1,14 +1,23 @@
 /* Eight product pages, from a kit of sections rather than one template.
  *
- *  The old version of this file had one page shape and filled it with seven
+ *  The first version of this file had one page shape and filled it with seven
  *  sets of words. Convert and Pay bills came out the same page, and a reader
- *  going from one to the next had no reason to believe they had moved.
+ *  going from one to the next had no reason to believe they had moved. So the
+ *  shape is data: copy-products.mjs gives each product a `spine`, an ordered
+ *  list of section types, and no two products have the same one.
  *
- *  So the shape is data now. copy-products.mjs gives each product a `spine`:
- *  an ordered list of section types, and no two products have the same one.
- *  Every section type below is built from the vocabulary the landing page
- *  already uses — .band, .stage and its five colours, .steps, .grid-3, .faq,
- *  .head, .reveal — so eight different pages are still one site.
+ *  The second version fixed the shapes and got the furniture wrong. It put a
+ *  whole 780x1600 phone screenshot on a coloured slab beside every paragraph,
+ *  which is not what the landing page does with a screen — it never shows one.
+ *  It shows a receipt: a white panel of four rows and a button, built in
+ *  markup, about 300 tall, sitting in the corner of a dark card. That panel
+ *  says more about a product than a photograph of the screen it came from, and
+ *  it cannot grow taller than the words beside it.
+ *
+ *  So everything below is the landing page's own vocabulary: .pr-* for the
+ *  deep-green bento of #00221a cards, .ts-* for the stone-and-gradient trio,
+ *  .points for the ruled split, .pn for the panel. A person arriving from the
+ *  landing page should recognise the furniture.
  *
  *  The output is committed. The site has no build step and serving it must
  *  not need one; this script only regenerates the files when the chrome, the
@@ -20,20 +29,99 @@
 import { writeFileSync, mkdirSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { PRODUCTS, APP_URL } from './copy-products.mjs'
+import { PRODUCTS, PROPS, APP_URL } from './copy-products.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const OUT = resolve(HERE, 'products')
 export { PRODUCTS }
 
-/* Copy is written with the odd entity in it — & and — and ₦ — so escaping
-   wholesale would double them. Only the characters that break markup. */
+/* Copy is written with the odd entity in it — &amp; and &#8212; and &#8358; —
+   so escaping wholesale would double them. Only the characters that break
+   markup, and only where they are not already an entity. */
 const esc = (s) => String(s).replace(/&(?![a-z#][a-z0-9]*;)/gi, '&amp;').replace(/</g, '&lt;')
 const plain = (s) => String(s).replace(/&[a-z#][a-z0-9]*;/gi, ' ').replace(/\s+/g, ' ').trim()
 
 const ARROW = '<svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg>'
 const TICK = '<svg class="fx-i" viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8.5 3.2 3.2L13 5" /></svg>'
 const CROSS = '<svg class="fx-i" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7" /></svg>'
+
+/* The chip drawings. Same grid, same stroke and same 24-box as the four the
+   landing page draws inline, so a chip on a product page and a chip on the
+   landing page are the same object. */
+const ICONS = {
+  updown: 'M 8.5 4 L 8.5 15 M 8.5 15 L 5 11.5 M 8.5 15 L 12 11.5 M 16.5 20 L 16.5 9 M 16.5 9 L 13 12.5 M 16.5 9 L 20 12.5',
+  down: 'M 12 4 L 12 14 M 12 14 L 8 10 M 12 14 L 16 10 M 5 16 L 5 19 L 19 19 L 19 16',
+  search: 'M 10.5 4 A 6.5 6.5 0 1 0 10.5 17 A 6.5 6.5 0 1 0 10.5 4 M 15.4 15.4 L 20 20',
+  book: 'M 6 4 L 18 4 L 18 20 L 6 20 Z M 9 9 L 15 9 M 9 13 L 15 13 M 9 17 L 13 17',
+  receipt: 'M 7 5 L 17 5 L 17 20 L 14.5 18 L 12 20 L 9.5 18 L 7 20 Z M 10 9 L 14 9 M 10 13 L 14 13',
+  clock: 'M 12 4 A 8 8 0 1 0 12 20 A 8 8 0 1 0 12 4 M 12 8 L 12 12 L 15 14',
+  wallet: 'M 4 8 L 17 8 A 3 3 0 0 1 20 11 L 20 17 A 3 3 0 0 1 17 20 L 7 20 A 3 3 0 0 1 4 17 Z M 4 8 L 4 6.5 L 16 6.5 M 16 14 L 16.01 14',
+  card: 'M 3.5 6 L 20.5 6 A 1.5 1.5 0 0 1 22 7.5 L 22 16.5 A 1.5 1.5 0 0 1 20.5 18 L 3.5 18 A 1.5 1.5 0 0 1 2 16.5 L 2 7.5 A 1.5 1.5 0 0 1 3.5 6 M 2 10 L 22 10 M 5.5 14.5 L 9 14.5',
+  swap: 'M 4 8 L 17 8 M 17 8 L 13.5 4.5 M 17 8 L 13.5 11.5 M 20 16 L 7 16 M 7 16 L 10.5 12.5 M 7 16 L 10.5 19.5',
+  back: 'M 5 9 L 5 4 M 5 9 L 10 9 M 5 9 A 8 8 0 1 1 5.6 15.5',
+  split: 'M 12 4 L 12 20 M 4 8 L 20 8 M 7 8 L 4 14 A 3 3 0 0 0 10 14 Z M 17 8 L 14 14 A 3 3 0 0 0 20 14 Z',
+  gift: 'M 4 10 L 20 10 L 20 20 L 4 20 Z M 4 10 L 4 7 L 20 7 L 20 10 M 12 7 L 12 20 M 12 7 A 2.6 2.6 0 1 0 8.5 7 M 12 7 A 2.6 2.6 0 1 1 15.5 7',
+}
+const chip = (tone, icon) =>
+  `<span class="pr-chip pr-chip-${tone}" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="${ICONS[icon]}" /></svg></span>`
+
+const FLIP = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 2.5v11M5 13.5 2.5 11M5 13.5 7.5 11M11 13.5v-11M11 2.5 8.5 5M11 2.5 13.5 5" /></svg>'
+
+/* --------------------------------------------------------------- panel -- */
+/* Interface, in markup. A list of blocks, in order — see the note at the top
+   of copy-products.mjs for what each one takes. */
+function panel(blocks) {
+  const row = ([k, v]) => `<div class="pn-row"><p class="pn-k">${esc(k)}</p><p class="pn-v">${esc(v)}</p></div>`
+  const parts = blocks.map((b) => {
+    const [kind, a, c] = b
+    if (kind === 'head') return `<div class="pn-head"><p class="pn-k">${esc(a)}</p><p class="pn-fig">${esc(c)}</p></div>`
+    if (kind === 'rows') return `<div class="pn-rows">${a.map(row).join('')}</div>`
+    if (kind === 'pairs') {
+      /* Two at a time, because a pair of short answers side by side is how the
+         landing page's receipt reads and it halves the panel's height. */
+      const out = []
+      for (let i = 0; i < a.length; i += 2) out.push(`<div class="pn-pair">${a.slice(i, i + 2).map(row).join('')}</div>`)
+      return `<div class="pn-rows">${out.join('')}</div>`
+    }
+    if (kind === 'list') return `<div class="pn-list">${a.map(([badge, name, sub, val, tone]) => `
+              <div class="pn-item">
+                <span class="pn-badge" aria-hidden="true">${esc(badge)}</span>
+                <div><p class="pn-name">${esc(name)}</p><p class="pn-sub">${esc(sub)}</p></div>
+                <p class="pn-val${tone === 'up' ? ' pn-up' : tone === 'down' ? ' pn-down' : ''}">${esc(val)}</p>
+              </div>`).join('')}</div>`
+    if (kind === 'swap') return `<div class="pn-swap">${a.map(([k, big, unit]) => `
+              <div class="pn-field">
+                <div><p class="pn-k">${esc(k)}</p><p class="pn-big">${esc(big)}</p></div>
+                <p class="pn-unit">${esc(unit)}</p>
+              </div>`).join('')}<span class="pn-flip" aria-hidden="true">${FLIP}</span></div>`
+    if (kind === 'bar') return `<div class="pn-bar">
+              <div class="pn-track">${a.map(([, , pc]) => `<span class="pn-seg" style="flex: ${pc}"></span>`).join('')}</div>
+              <div class="pn-keys">${a.map(([k, v]) => `<div class="pn-key"><p class="pn-k pn-dot">${esc(k)}</p><p class="pn-v">${esc(v)}</p></div>`).join('')}</div>
+            </div>`
+    if (kind === 'note') return `<p class="pn-note">${esc(a)}</p>`
+    if (kind === 'btn') return `<p class="pn-btn">${esc(a)}</p>`
+    throw new Error('unknown panel block: ' + kind)
+  })
+  return `<div class="pn">${parts.join('')}</div>`
+}
+
+/* A panel standing on the product's own colour, with one object bleeding out
+   of the bottom corner. */
+const slab = (stage, prop, blocks, up) => {
+  const p = PROPS[prop]
+  return `<div class="slab ${stage}">
+            ${p ? `<img class="slab-prop" style="--w2: ${p.w2 || '56%'}${p.r2 ? `; --r: ${p.r2}` : ''}" src="${up}img/${p.src}" loading="lazy" alt="" aria-hidden="true" />` : ''}
+            ${panel(blocks)}
+          </div>`
+}
+
+/* The art slot inside a bento card: pinned to the card's bottom edge and
+   clipped by it, holding one or two of the placed objects. */
+const artSlot = (names, up) => `<div class="pr-stage" aria-hidden="true">${names.split(',').map((n) => {
+  const p = PROPS[n.trim()]
+  if (!p) throw new Error('unknown prop: ' + n)
+  return `<img class="pr-prop" style="--l: ${p.l}; --t: ${p.t}; --w: ${p.w}${p.r ? `; --r: ${p.r}` : ''}${p.fx ? `; --fx: ${p.fx}` : ''}" src="${up}img/${p.src}" loading="lazy" alt="" />`
+}).join('')}</div>`
 
 /* ---------------------------------------------------------------- chrome -- */
 const nav = (up, current) => `
@@ -141,7 +229,7 @@ const KIT = {
   stats: (p, s, up) => `
       <section class="band">
         <div class="wrap">
-          <div class="head reveal"><h2>${esc(s.head)}</h2></div>
+          <div class="head px-head reveal"><h2>${esc(s.head)}</h2></div>
           <div class="fx-stats">
 ${s.items.map(([fig, unit, say]) => `            <div class="fx-stat reveal">
               <p class="fx-fig">${esc(fig)}<span>${esc(unit)}</span></p>
@@ -151,20 +239,103 @@ ${s.items.map(([fig, unit, say]) => `            <div class="fx-stat reveal">
         </div>
       </section>`,
 
-  /* Text and a screen, side by side, swapping sides down the page. */
-  alt: (p, s, up) => `
-      <section class="band band-cream">
+  /* The landing page's product grid, carrying this product's own facets. Wide
+     cards hold a panel, narrow cards hold an object; the rows alternate which
+     side is which, which is the whole trick of that section. */
+  bento: (p, s, up) => `
+      <section class="band band-products">
         <div class="wrap">
-          <div class="head reveal"><h2>${esc(s.head)}</h2></div>
-${s.rows.map(([h, b, img, alt], i) => `          <div class="fx-alt reveal${i % 2 ? ' fx-alt-b' : ''}">
-            <div class="fx-alt-text">
-              <h3>${esc(h)}</h3>
-              <p>${esc(b)}</p>
+          <div class="head head-ondeep bx-head reveal">
+            <p class="eyebrow">${esc(s.eyebrow)}</p>
+            <h2>${s.head}</h2>
+${s.lead ? `            <p class="lead">${esc(s.lead)}</p>` : ''}
+          </div>
+
+          <div class="pr-grid">
+${s.rows.map(([side, ...cards]) => `            <div class="pr-row pr-row-${side}">
+${cards.map((c) => (c.panel ? `              <article class="pr-card pr-wide reveal">
+                <div class="pr-body">
+                  <div class="pr-top">
+                    <div class="pr-title">${chip(c.chip, c.icon)}<h3>${esc(c.h)}</h3></div>
+                    <div class="pr-paras">
+${c.p.map((x) => `                      <p>${esc(x)}</p>`).join('\n')}
+                    </div>
+                  </div>
+${c.link ? `                  <a class="pr-link" href="${c.link[1]}">${esc(c.link[0])} ${ARROW}</a>` : ''}
+                </div>
+                ${panel(c.panel)}
+              </article>` : `              <article class="pr-card pr-narrow reveal">
+                <div class="pr-top">
+                  <div class="pr-title">${chip(c.chip, c.icon)}<h3>${esc(c.h)}</h3></div>
+${c.p.map((x) => `                  <p>${esc(x)}</p>`).join('\n')}
+                </div>
+                ${artSlot(c.prop, up)}
+              </article>`)).join('\n')}
+            </div>`).join('\n')}
+          </div>
+        </div>
+      </section>`,
+
+  /* Three cards, deliberately uneven: two stone with the words at the top, a
+     gradient one between them reading bottom-up. Straight off the landing
+     page's tokenized-stocks row. */
+  trio: (p, s, up) => `
+      <section class="band band-ts">
+        <div class="wrap">
+          <div class="head tx-head reveal">
+            <p class="eyebrow">${esc(s.eyebrow)}</p>
+            <h2>${s.head}</h2>
+          </div>
+          <div class="ts-cards tx-cards">
+${s.cards.map(([h, b, art], i) => {
+  const copy = `              <div class="ts-copy${i === 1 ? ' ts-copy-end' : ''}">
+                <h3>${esc(h)}</h3>
+                <p>${esc(b)}</p>
+              </div>`
+  const slot = `              <div class="ts-slot">
+                <div class="ts-stage" style="--ar: 461.333 / 388">
+${art.split(',').map((n) => {
+  const q = PROPS[n.trim()]
+  if (!q) throw new Error('unknown prop: ' + n)
+  return `                  <img class="ts-prop" style="--l: ${q.l}; --t: ${q.t}; --w: ${q.w}${q.r ? `; --r: ${q.r}` : ''}${q.fx ? `; --fx: ${q.fx}` : ''}" src="${up}img/${q.src}" width="700" height="742" loading="lazy" alt="" />`
+}).join('\n')}
+                </div>
+              </div>`
+  return `            <article class="ts-card ${i === 1 ? 'ts-card-grad' : 'ts-card-stone'} reveal">
+${i === 1 ? slot + '\n' + copy : copy + '\n' + slot}
+            </article>`
+}).join('\n')}
+          </div>
+        </div>
+      </section>`,
+
+  /* The gifting section's shape: a headline big enough to be the point, two
+     ruled points, a mint pill, and the product on its own colour beside it. */
+  split: (p, s, up) => `
+      <section class="band">
+        <div class="wrap sp-in${s.side === 'b' ? ' sp-in-b' : ''}">
+          <div class="sp-text reveal">
+            <div class="sp-head">
+              <p class="eyebrow">${esc(s.eyebrow)}</p>
+              <h2>${s.head}</h2>
+              <p class="lead">${esc(s.lead)}</p>
             </div>
-            <div class="stage ${p.stage} fx-alt-stage">
-              <img src="${up}img/${img}" loading="lazy" alt="${esc(alt)}" />
+            <div class="sp-body">
+              <div class="points">
+${s.points.map(([h, b]) => `                <div class="point">
+                  <div class="point-copy">
+                    <h3>${esc(h)}</h3>
+                    <p>${esc(b)}</p>
+                  </div>
+                </div>`).join('\n')}
+              </div>
+              <a class="btn btn-mint" href="${s.cta[1]}">${esc(s.cta[0])}</a>
             </div>
-          </div>`).join('\n')}
+          </div>
+
+          <div class="reveal">
+            ${slab(s.stage, s.prop, s.panel, up)}
+          </div>
         </div>
       </section>`,
 
@@ -173,7 +344,7 @@ ${s.rows.map(([h, b, img, alt], i) => `          <div class="fx-alt reveal${i % 
   facts: (p, s, up) => `
       <section class="band">
         <div class="wrap">
-          <div class="head reveal"><h2>${esc(s.head)}</h2></div>
+          <div class="head px-head reveal"><h2>${esc(s.head)}</h2></div>
           <dl class="fx-facts reveal">
 ${s.rows.map(([k, v]) => `            <div class="fx-fact">
               <dt>${esc(k)}</dt>
@@ -183,12 +354,13 @@ ${s.rows.map(([k, v]) => `            <div class="fx-fact">
         </div>
       </section>`,
 
-  /* The way it usually goes, and the way it goes here. Onboard's move, and
-     it earns its place on the two products with a genuine before. */
+  /* The way it usually goes, and the way it goes here. Stone against the
+     landing page's card green, so the two columns are the site's own two
+     grounds rather than a grey box and a green one. */
   compare: (p, s, up) => `
-      <section class="band band-cream">
+      <section class="band">
         <div class="wrap">
-          <div class="head reveal"><h2>${esc(s.head)}</h2></div>
+          <div class="head px-head reveal"><h2>${esc(s.head)}</h2></div>
           <div class="fx-cmp">
             <div class="fx-col fx-col-before reveal">
               <p class="fx-col-head">Without Tokkenly</p>
@@ -206,31 +378,16 @@ ${s.after.map((x) => `                <li>${TICK}${esc(x)}</li>`).join('\n')}
         </div>
       </section>`,
 
-  /* Three numbered steps, each on its own coloured slab. */
+  /* Three numbered steps, under a mint rule each. No pictures: the bento and
+     the split carry those, and repeating them here is what made every page
+     read as the same page. */
   steps: (p, s, up) => `
       <section class="band">
         <div class="wrap">
-          <div class="head reveal"><h2>${esc(s.head)}</h2></div>
+          <div class="head px-head reveal"><h2>${esc(s.head)}</h2></div>
           <div class="steps">
-${s.items.map(([h, b, img], i) => `            <article class="step reveal">
-              <div class="stage ${p.stage}">
-                <img src="${up}img/${img}" loading="lazy" alt="" />
-              </div>
-              <p class="num">${i + 1}</p>
-              <h3>${esc(h)}</h3>
-              <p>${esc(b)}</p>
-            </article>`).join('\n')}
-          </div>
-        </div>
-      </section>`,
-
-  /* Three plain cards. No screens: the page has enough of them by now. */
-  grid: (p, s, up) => `
-      <section class="band band-cream">
-        <div class="wrap">
-          <div class="head reveal"><h2>${esc(s.head)}</h2></div>
-          <div class="grid-3 cards">
-${s.items.map(([h, b]) => `            <article class="card reveal">
+${s.items.map(([h, b], i) => `            <article class="step reveal">
+              <p class="num">Step ${i + 1}</p>
               <h3>${esc(h)}</h3>
               <p>${esc(b)}</p>
             </article>`).join('\n')}
@@ -241,9 +398,9 @@ ${s.items.map(([h, b]) => `            <article class="card reveal">
   /* Two audiences, side by side, each with its own list. Gifting has two
      completely different readers and one column would serve neither. */
   two: (p, s, up) => `
-      <section class="band">
+      <section class="band band-cream">
         <div class="wrap">
-          <div class="head reveal"><h2>${esc(s.head)}</h2></div>
+          <div class="head px-head reveal"><h2>${esc(s.head)}</h2></div>
           <div class="fx-two">
 ${s.cols.map(([h, b, list]) => `            <article class="fx-half reveal">
               <h3>${esc(h)}</h3>
@@ -259,9 +416,12 @@ ${list.map((x) => `                <li>${TICK}${esc(x)}</li>`).join('\n')}
   /* One sentence, large, on the deep ground. For the thing a page most wants
      somebody to leave knowing. */
   quote: (p, s, up) => `
-      <section class="band band-deep">
-        <div class="wrap wrap-narrow">
-          <p class="fx-quote reveal">${esc(s.text)}</p>
+      <section class="band">
+        <div class="wrap">
+          <div class="fx-slab reveal">
+            <p class="fx-quote-k">Worth knowing</p>
+            <p class="fx-quote">${esc(s.text)}</p>
+          </div>
         </div>
       </section>`,
 
@@ -280,8 +440,11 @@ ${list.map((x) => `                <li>${TICK}${esc(x)}</li>`).join('\n')}
 
   faq: (p, s, up) => `
       <section class="band band-cream">
-        <div class="wrap wrap-narrow">
-          <div class="head reveal"><h2>Questions worth asking.</h2></div>
+        <div class="wrap faq-in">
+          <div class="head faq-head reveal">
+            <p class="eyebrow">Questions</p>
+            <h2>Worth asking.</h2>
+          </div>
           <div class="faq reveal">
 ${s.items.map(([q, a]) => `            <details>
               <summary>${esc(q)}<span class="plus" aria-hidden="true"></span></summary>
@@ -294,13 +457,19 @@ ${s.items.map(([q, a]) => `            <details>
   related: (p, s, up) => {
     const i = PRODUCTS.findIndex((x) => x.slug === p.slug)
     const others = [PRODUCTS[(i + 1) % PRODUCTS.length], PRODUCTS[(i + 2) % PRODUCTS.length], PRODUCTS[(i + 3) % PRODUCTS.length]]
+    const tones = ['mint', 'yellow', 'orange']
+    const icons = { 'tokenized-stocks': 'search', 'gifting-and-rewards': 'gift', receive: 'down',
+                    send: 'updown', 'pay-bills': 'receipt', convert: 'swap', earn: 'split', borrow: 'clock' }
     return `
-      <section class="band">
+      <section class="band band-products band-more">
         <div class="wrap">
-          <div class="head reveal"><h2>The rest of it.</h2></div>
+          <div class="head head-ondeep bx-head reveal">
+            <p class="eyebrow">The rest of it</p>
+            <h2>There is more<br />in the app.</h2>
+          </div>
           <div class="prod-more">
-${others.map((o) => `            <a class="prod-card reveal" href="${o.slug}.html">
-              <h3>${o.nav}</h3>
+${others.map((o, n) => `            <a class="prod-card reveal" href="${o.slug}.html">
+              <div class="pr-title">${chip(tones[n], icons[o.slug])}<h3>${o.nav}</h3></div>
               <p>${esc(o.title)}</p>
               <span class="pr-link">Explore ${o.nav} ${ARROW}</span>
             </a>`).join('\n')}
@@ -336,43 +505,41 @@ ${nav(up, p.slug)}
     <main id="main">
       <span id="top"></span>
 
-      <!-- The product hero: the landing hero's type without its globe, and
-           the product's own colour under the screen. Eight pages, five stage
-           colours, so no two neighbours in the menu look alike. -->
+      <!-- The hero: the landing page's wash and type, but in two columns.
+           The landing hero is centred because it has a globe under it; a
+           product page has one panel of the product instead, and putting it
+           beside the words is what keeps the whole introduction — headline,
+           lead, buttons and the thing itself — inside one screen. -->
       <section class="hero hero-product">
         <div class="hero-wash" aria-hidden="true"></div>
-        <div class="wrap hero-in">
-          <p class="eyebrow hero-intro" style="--hero-d: 0s">${esc(p.eyebrow)}</p>
-          <h1 class="hero-hl hero-product-hl hero-intro" style="--hero-d: 0.05s"><span>${esc(p.title)}</span></h1>
-          <p class="lead hero-lead hero-intro" style="--hero-d: 0.1s">${esc(p.lead)}</p>
-          <div class="cta-row hero-cta hero-intro" style="--hero-d: 0.2s">
-            <a class="btn btn-ink" href="${APP_URL}">Get Started</a>
-            <a class="btn btn-white" href="#more">See how it works</a>
+        <div class="wrap ph-in">
+          <div class="ph-text">
+            <p class="eyebrow hero-intro" style="--hero-d: 0s">${esc(p.eyebrow)}</p>
+            <h1 class="ph-hl hero-intro" style="--hero-d: 0.05s">${esc(p.title)}</h1>
+            <p class="lead ph-lead hero-intro" style="--hero-d: 0.1s">${esc(p.lead)}</p>
+            <div class="cta-row ph-cta hero-intro" style="--hero-d: 0.2s">
+              <a class="btn btn-ink" href="${APP_URL}">Get Started</a>
+              <a class="btn btn-white" href="#more">See how it works</a>
+            </div>
           </div>
-        </div>
-
-        <div class="prod-shot hero-intro" style="--hero-d: 0.3s">
-          <div class="stage ${p.stage} fx-hero-stage">
-            <img src="${up}img/${p.shot}" loading="eager" alt="${esc(p.shotAlt)}" />
+          <div class="ph-art hero-intro" style="--hero-d: 0.3s">
+            ${slab(p.stage, p.prop, p.panel, up)}
           </div>
         </div>
       </section>
 
       <span id="more"></span>
-${p.spine.map((s) => KIT[s.type](p, s, up)).join('\n')}
+${p.spine.map((s) => KIT[s.type](p, s, up).replace('<section class="band', `<section id="s-${s.type}" class="band`)).join('\n')}
 
-      <section class="closing">
+      <section class="closing closing-prod">
         <div class="wrap">
           <div class="closing-slab reveal">
             <img class="cta-prop cta-coin" src="${up}img/cta/coin.webp" width="274" height="290" loading="lazy" alt="" aria-hidden="true" />
             <img class="cta-prop cta-pen" src="${up}img/cta/pen.webp" width="302" height="369" loading="lazy" alt="" aria-hidden="true" />
             <img class="cta-prop cta-notes" src="${up}img/cta/notes.webp" width="593" height="593" loading="lazy" alt="" aria-hidden="true" />
             <div class="closing-in">
-              <h2>Your money. A wider world.</h2>
-              <p class="closing-lead">
-                From Nigerian companies to US names, discover tokenized stocks worth a closer look.
-                Keep your everyday money in the same app.
-              </p>
+              <h2>${esc(p.close[0])}</h2>
+              <p class="closing-lead">${esc(p.close[1])}</p>
               <a class="btn btn-deep" href="${APP_URL}">Get Started</a>
             </div>
           </div>

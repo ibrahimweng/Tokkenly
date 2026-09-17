@@ -98,68 +98,132 @@
     <main id="main">
       <span id="top"></span>
 
-      <!-- The product hero: the landing hero's type without its globe, and
-           the product's own colour under the screen. Eight pages, five stage
-           colours, so no two neighbours in the menu look alike. -->
+      <!-- The hero: the landing page's wash and type, but in two columns.
+           The landing hero is centred because it has a globe under it; a
+           product page has one panel of the product instead, and putting it
+           beside the words is what keeps the whole introduction — headline,
+           lead, buttons and the thing itself — inside one screen. -->
       <section class="hero hero-product">
         <div class="hero-wash" aria-hidden="true"></div>
-        <div class="wrap hero-in">
-          <p class="eyebrow hero-intro" style="--hero-d: 0s">Receive</p>
-          <h1 class="hero-hl hero-product-hl hero-intro" style="--hero-d: 0.05s"><span>Get paid. Get on with life.</span></h1>
-          <p class="lead hero-lead hero-intro" style="--hero-d: 0.1s">Receive payments and transfers into Tokkenly. Put that money towards an investment, a bill, or someone who needs it.</p>
-          <div class="cta-row hero-cta hero-intro" style="--hero-d: 0.2s">
-            <a class="btn btn-ink" href="https://app.tokkenly.com">Get Started</a>
-            <a class="btn btn-white" href="#more">See how it works</a>
+        <div class="wrap ph-in">
+          <div class="ph-text">
+            <p class="eyebrow hero-intro" style="--hero-d: 0s">Receive</p>
+            <h1 class="ph-hl hero-intro" style="--hero-d: 0.05s">Get paid. Get on with life.</h1>
+            <p class="lead ph-lead hero-intro" style="--hero-d: 0.1s">Receive payments and transfers into Tokkenly. Put that money towards an investment, a bill, or someone who needs it.</p>
+            <div class="cta-row ph-cta hero-intro" style="--hero-d: 0.2s">
+              <a class="btn btn-ink" href="https://app.tokkenly.com">Get Started</a>
+              <a class="btn btn-white" href="#more">See how it works</a>
+            </div>
           </div>
-        </div>
-
-        <div class="prod-shot hero-intro" style="--hero-d: 0.3s">
-          <div class="stage stage-yellow fx-hero-stage">
-            <img src="../img/p-receive.webp" loading="eager" alt="The Receive screen, showing the ways money can arrive." />
+          <div class="ph-art hero-intro" style="--hero-d: 0.3s">
+            <div class="slab stage-yellow">
+            <img class="slab-prop" style="--w2: 58%" src="../img/pr/notes-purple.webp" loading="lazy" alt="" aria-hidden="true" />
+            <div class="pn"><div class="pn-head"><p class="pn-k">Your account number</p><p class="pn-fig">7043 118 220</p></div><div class="pn-rows"><div class="pn-pair"><div class="pn-row"><p class="pn-k">Bank</p><p class="pn-v">Wema Bank</p></div><div class="pn-row"><p class="pn-k">Name</p><p class="pn-v">Amara Nwosu</p></div></div><div class="pn-pair"><div class="pn-row"><p class="pn-k">Currency</p><p class="pn-v">Naira</p></div><div class="pn-row"><p class="pn-k">To receive</p><p class="pn-v">No fee</p></div></div></div><p class="pn-btn">Copy details</p></div>
+          </div>
           </div>
         </div>
       </section>
 
       <span id="more"></span>
 
-      <section class="band band-cream">
+      <section id="s-bento" class="band band-products">
         <div class="wrap">
-          <div class="head reveal"><h2>Three ways in.</h2></div>
-          <div class="grid-3 cards">
-            <article class="card reveal">
-              <h3>A Nigerian bank account</h3>
-              <p>Your own account number, in your own name, at a Nigerian bank. Anyone who can send a transfer can pay you.</p>
+          <div class="head head-ondeep bx-head reveal">
+            <p class="eyebrow">Three ways in</p>
+            <h2>However they pay you.</h2>
+            <p class="lead">A bank transfer, a wallet, or a card. All of it lands in the same balance.</p>
+          </div>
+
+          <div class="pr-grid">
+            <div class="pr-row pr-row-b">
+              <article class="pr-card pr-narrow reveal">
+                <div class="pr-top">
+                  <div class="pr-title"><span class="pr-chip pr-chip-yellow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M 3.5 6 L 20.5 6 A 1.5 1.5 0 0 1 22 7.5 L 22 16.5 A 1.5 1.5 0 0 1 20.5 18 L 3.5 18 A 1.5 1.5 0 0 1 2 16.5 L 2 7.5 A 1.5 1.5 0 0 1 3.5 6 M 2 10 L 22 10 M 5.5 14.5 L 9 14.5" /></svg></span><h3>A debit card</h3></div>
+                  <p>Top up from a card you already hold. Paused while we finish the checks — and the screen says so rather than failing quietly.</p>
+                </div>
+                <div class="pr-stage" aria-hidden="true"><img class="pr-prop" style="--l: -2%; --t: 8%; --w: 104%" src="../img/ts/notes-green.webp" loading="lazy" alt="" /></div>
+              </article>
+              <article class="pr-card pr-wide reveal">
+                <div class="pr-body">
+                  <div class="pr-top">
+                    <div class="pr-title"><span class="pr-chip pr-chip-mint" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M 12 4 L 12 14 M 12 14 L 8 10 M 12 14 L 16 10 M 5 16 L 5 19 L 19 19 L 19 16" /></svg></span><h3>A Nigerian account, and a wallet address.</h3></div>
+                    <div class="pr-paras">
+                      <p>Your own account number, in your own name, at a Nigerian bank. Anyone who can send a transfer can pay you.</p>
+                      <p>For stablecoins, an address on the network you pick. It is yours, it does not change, and you can hand it out once.</p>
+                    </div>
+                  </div>
+
+                </div>
+                <div class="pn"><div class="pn-list">
+              <div class="pn-item">
+                <span class="pn-badge" aria-hidden="true">N</span>
+                <div><p class="pn-name">Wema Bank</p><p class="pn-sub">7043 118 220 &#183; Amara Nwosu</p></div>
+                <p class="pn-val">Naira</p>
+              </div>
+              <div class="pn-item">
+                <span class="pn-badge" aria-hidden="true">B</span>
+                <div><p class="pn-name">Base</p><p class="pn-sub">0x7a2f&#8230;4c19</p></div>
+                <p class="pn-val">USDC</p>
+              </div>
+              <div class="pn-item">
+                <span class="pn-badge" aria-hidden="true">T</span>
+                <div><p class="pn-name">Tron</p><p class="pn-sub">TJmv&#8230;9Qp4</p></div>
+                <p class="pn-val">USDT</p>
+              </div></div></div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="s-trio" class="band band-ts">
+        <div class="wrap">
+          <div class="head tx-head reveal">
+            <p class="eyebrow">While it is moving</p>
+            <h2>Money in transit gets a row of its own.</h2>
+          </div>
+          <div class="ts-cards tx-cards">
+            <article class="ts-card ts-card-stone reveal">
+              <div class="ts-copy">
+                <h3>It says where it actually is</h3>
+                <p>In route, at the bank, not landed yet. Not a balance that jumps with no explanation.</p>
+              </div>
+              <div class="ts-slot">
+                <div class="ts-stage" style="--ar: 461.333 / 388">
+                  <img class="ts-prop" style="--l: -2%; --t: 8%; --w: 104%" src="../img/ts/notes-green.webp" width="700" height="742" loading="lazy" alt="" />
+                </div>
+              </div>
             </article>
-            <article class="card reveal">
-              <h3>A crypto wallet</h3>
-              <p>USDC or USDT, on the network you pick. The address is yours and it does not change.</p>
+            <article class="ts-card ts-card-grad reveal">
+              <div class="ts-slot">
+                <div class="ts-stage" style="--ar: 461.333 / 388">
+                  <img class="ts-prop" style="--l: 28.13%; --t: 40.355%; --w: 52.795%; --r: -100.9deg; --fx: -1" src="../img/ts/pen.webp" width="700" height="742" loading="lazy" alt="" />
+                  <img class="ts-prop" style="--l: -1.018%; --t: -4.133%; --w: 77.024%" src="../img/ts/pen.webp" width="700" height="742" loading="lazy" alt="" />
+                </div>
+              </div>
+              <div class="ts-copy ts-copy-end">
+                <h3>It is counted honestly</h3>
+                <p>Money still moving is not spendable, and the screen keeps the two apart until it lands.</p>
+              </div>
             </article>
-            <article class="card reveal">
-              <h3>A debit card</h3>
-              <p>Top up from a card you already hold. Paused while we finish the checks — the screen says so.</p>
+            <article class="ts-card ts-card-stone reveal">
+              <div class="ts-copy">
+                <h3>It ends in a receipt</h3>
+                <p>When it lands the row becomes a record you can find again in Activity.</p>
+              </div>
+              <div class="ts-slot">
+                <div class="ts-stage" style="--ar: 461.333 / 388">
+                  <img class="ts-prop" style="--l: -6%; --t: 6%; --w: 112%" src="../img/pr/notes-purple.webp" width="700" height="742" loading="lazy" alt="" />
+                </div>
+              </div>
             </article>
           </div>
         </div>
       </section>
 
-      <section class="band band-cream">
+      <section id="s-facts" class="band">
         <div class="wrap">
-          <div class="head reveal"><h2>What happens when money lands.</h2></div>
-          <div class="fx-alt reveal">
-            <div class="fx-alt-text">
-              <h3>You see it move before it settles.</h3>
-              <p>Money in transit gets a row of its own that says where it actually is — in route, at the bank, not landed yet. Not a balance that jumps with no explanation.</p>
-            </div>
-            <div class="stage stage-yellow fx-alt-stage">
-              <img src="../img/p-addmoney.webp" loading="lazy" alt="The Add money screen with the account details to send naira to." />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="band">
-        <div class="wrap">
-          <div class="head reveal"><h2>Before you ask.</h2></div>
+          <div class="head px-head reveal"><h2>Before you ask.</h2></div>
           <dl class="fx-facts reveal">
             <div class="fx-fact">
               <dt>What it costs</dt>
@@ -177,22 +241,25 @@
         </div>
       </section>
 
-      <section class="band">
+      <section id="s-related" class="band band-products band-more">
         <div class="wrap">
-          <div class="head reveal"><h2>The rest of it.</h2></div>
+          <div class="head head-ondeep bx-head reveal">
+            <p class="eyebrow">The rest of it</p>
+            <h2>There is more<br />in the app.</h2>
+          </div>
           <div class="prod-more">
             <a class="prod-card reveal" href="send.html">
-              <h3>Send</h3>
+              <div class="pr-title"><span class="pr-chip pr-chip-mint" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M 8.5 4 L 8.5 15 M 8.5 15 L 5 11.5 M 8.5 15 L 12 11.5 M 16.5 20 L 16.5 9 M 16.5 9 L 13 12.5 M 16.5 9 L 20 12.5" /></svg></span><h3>Send</h3></div>
               <p>Make someone’s day.</p>
               <span class="pr-link">Explore Send <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></span>
             </a>
             <a class="prod-card reveal" href="pay-bills.html">
-              <h3>Pay bills</h3>
+              <div class="pr-title"><span class="pr-chip pr-chip-yellow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M 7 5 L 17 5 L 17 20 L 14.5 18 L 12 20 L 9.5 18 L 7 20 Z M 10 9 L 14 9 M 10 13 L 14 13" /></svg></span><h3>Pay bills</h3></div>
               <p>One less thing on your list.</p>
               <span class="pr-link">Explore Pay bills <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></span>
             </a>
             <a class="prod-card reveal" href="convert.html">
-              <h3>Convert</h3>
+              <div class="pr-title"><span class="pr-chip pr-chip-orange" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M 4 8 L 17 8 M 17 8 L 13.5 4.5 M 17 8 L 13.5 11.5 M 20 16 L 7 16 M 7 16 L 10.5 12.5 M 7 16 L 10.5 19.5" /></svg></span><h3>Convert</h3></div>
               <p>Change currencies. Keep your plans.</p>
               <span class="pr-link">Explore Convert <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></span>
             </a>
@@ -200,18 +267,15 @@
         </div>
       </section>
 
-      <section class="closing">
+      <section class="closing closing-prod">
         <div class="wrap">
           <div class="closing-slab reveal">
             <img class="cta-prop cta-coin" src="../img/cta/coin.webp" width="274" height="290" loading="lazy" alt="" aria-hidden="true" />
             <img class="cta-prop cta-pen" src="../img/cta/pen.webp" width="302" height="369" loading="lazy" alt="" aria-hidden="true" />
             <img class="cta-prop cta-notes" src="../img/cta/notes.webp" width="593" height="593" loading="lazy" alt="" aria-hidden="true" />
             <div class="closing-in">
-              <h2>Your money. A wider world.</h2>
-              <p class="closing-lead">
-                From Nigerian companies to US names, discover tokenized stocks worth a closer look.
-                Keep your everyday money in the same app.
-              </p>
+              <h2>Give out your details once.</h2>
+              <p class="closing-lead">Then get paid into the same app you invest and spend from.</p>
               <a class="btn btn-deep" href="https://app.tokkenly.com">Get Started</a>
             </div>
           </div>

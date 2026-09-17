@@ -98,31 +98,35 @@
     <main id="main">
       <span id="top"></span>
 
-      <!-- The product hero: the landing hero's type without its globe, and
-           the product's own colour under the screen. Eight pages, five stage
-           colours, so no two neighbours in the menu look alike. -->
+      <!-- The hero: the landing page's wash and type, but in two columns.
+           The landing hero is centred because it has a globe under it; a
+           product page has one panel of the product instead, and putting it
+           beside the words is what keeps the whole introduction — headline,
+           lead, buttons and the thing itself — inside one screen. -->
       <section class="hero hero-product">
         <div class="hero-wash" aria-hidden="true"></div>
-        <div class="wrap hero-in">
-          <p class="eyebrow hero-intro" style="--hero-d: 0s">Borrow</p>
-          <h1 class="hero-hl hero-product-hl hero-intro" style="--hero-d: 0.05s"><span>Give yourself some breathing room.</span></h1>
-          <p class="lead hero-lead hero-intro" style="--hero-d: 0.1s">When you need extra funds, explore borrowing in Tokkenly. Review the costs and repayment terms before choosing what works for you.</p>
-          <div class="cta-row hero-cta hero-intro" style="--hero-d: 0.2s">
-            <a class="btn btn-ink" href="https://app.tokkenly.com">Get Started</a>
-            <a class="btn btn-white" href="#more">See how it works</a>
+        <div class="wrap ph-in">
+          <div class="ph-text">
+            <p class="eyebrow hero-intro" style="--hero-d: 0s">Borrow</p>
+            <h1 class="ph-hl hero-intro" style="--hero-d: 0.05s">Give yourself some breathing room.</h1>
+            <p class="lead ph-lead hero-intro" style="--hero-d: 0.1s">When you need extra funds, explore borrowing in Tokkenly. Review the costs and repayment terms before choosing what works for you.</p>
+            <div class="cta-row ph-cta hero-intro" style="--hero-d: 0.2s">
+              <a class="btn btn-ink" href="https://app.tokkenly.com">Get Started</a>
+              <a class="btn btn-white" href="#more">See how it works</a>
+            </div>
           </div>
-        </div>
-
-        <div class="prod-shot hero-intro" style="--hero-d: 0.3s">
-          <div class="stage stage-yellow fx-hero-stage">
-            <img src="../img/p-borrow.webp" loading="eager" alt="The Borrow screen, showing what is available to borrow." />
+          <div class="ph-art hero-intro" style="--hero-d: 0.3s">
+            <div class="slab stage-yellow">
+            <img class="slab-prop" style="--w2: 48%" src="../img/ts/coin-dangote.webp" loading="lazy" alt="" aria-hidden="true" />
+            <div class="pn"><div class="pn-head"><p class="pn-k">You are borrowing</p><p class="pn-fig">$200.00</p></div><div class="pn-rows"><div class="pn-row"><p class="pn-k">Rate</p><p class="pn-v">9.4% a year</p></div><div class="pn-row"><p class="pn-k">Costs you</p><p class="pn-v">About $1.57 a month</p></div><div class="pn-row"><p class="pn-k">Repay</p><p class="pn-v">Any time, no fee</p></div><div class="pn-row"><p class="pn-k">Sold if shares fall below</p><p class="pn-v">$812.00</p></div></div><p class="pn-note">Your shares stay yours and keep earning. We only sell if they fall to that level.</p><p class="pn-btn">Borrow $200.00</p></div>
+          </div>
           </div>
         </div>
       </section>
 
       <span id="more"></span>
 
-      <section class="band band-risk">
+      <section id="s-risk" class="band band-risk">
         <div class="wrap wrap-narrow">
           <p class="prod-risk reveal">
             <strong>Worth saying plainly.</strong> Borrow carries risk. Rates change, what you
@@ -132,9 +136,45 @@
         </div>
       </section>
 
-      <section class="band">
+      <section id="s-split" class="band">
+        <div class="wrap sp-in">
+          <div class="sp-text reveal">
+            <div class="sp-head">
+              <p class="eyebrow">What backs it</p>
+              <h2>Your shares stay<br />yours.</h2>
+              <p class="lead">What you hold backs the loan and keeps tracking its price while you owe. If it falls far enough, some of it may be sold to cover the loan — said here rather than found out later.</p>
+            </div>
+            <div class="sp-body">
+              <div class="points">
+                <div class="point">
+                  <div class="point-copy">
+                    <h3>The level is a number, not a feeling</h3>
+                    <p>Tokkenly shows the price your holding would have to fall to, before you borrow.</p>
+                  </div>
+                </div>
+                <div class="point">
+                  <div class="point-copy">
+                    <h3>What you owe sits apart</h3>
+                    <p>It is never mixed into what you have, on any screen.</p>
+                  </div>
+                </div>
+              </div>
+              <a class="btn btn-mint" href="#s-facts">Read the terms</a>
+            </div>
+          </div>
+
+          <div class="reveal">
+            <div class="slab stage-mint">
+            <img class="slab-prop" style="--w2: 50%" src="../img/cta/coin.webp" loading="lazy" alt="" aria-hidden="true" />
+            <div class="pn"><div class="pn-head"><p class="pn-k">What you owe</p><p class="pn-fig">$201.57</p></div><div class="pn-rows"><div class="pn-row"><p class="pn-k">Borrowed</p><p class="pn-v">$200.00</p></div><div class="pn-row"><p class="pn-k">Interest so far</p><p class="pn-v">$1.57</p></div><div class="pn-row"><p class="pn-k">Backed by</p><p class="pn-v">$1,624.00 in shares</p></div></div><p class="pn-note">Sold if that falls below $812.00.</p></div>
+          </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="s-facts" class="band">
         <div class="wrap">
-          <div class="head reveal"><h2>What you are agreeing to.</h2></div>
+          <div class="head px-head reveal"><h2>What you are agreeing to.</h2></div>
           <dl class="fx-facts reveal">
             <div class="fx-fact">
               <dt>How much</dt>
@@ -150,37 +190,28 @@
             </div>
             <div class="fx-fact">
               <dt>What backs it</dt>
-              <dd>What you hold. If its value falls far enough, some of it may be sold to cover the loan — said here rather than found out later.</dd>
+              <dd>What you hold. If its value falls far enough, some of it may be sold to cover the loan.</dd>
             </div>
           </dl>
         </div>
       </section>
 
-      <section class="band">
+      <section id="s-steps" class="band">
         <div class="wrap">
-          <div class="head reveal"><h2>Start to finish.</h2></div>
+          <div class="head px-head reveal"><h2>Start to finish.</h2></div>
           <div class="steps">
             <article class="step reveal">
-              <div class="stage stage-yellow">
-                <img src="../img/p-borrow.webp" loading="lazy" alt="" />
-              </div>
-              <p class="num">1</p>
+              <p class="num">Step 1</p>
               <h3>See what is available</h3>
               <p>A figure based on what you hold, with the terms beside it.</p>
             </article>
             <article class="step reveal">
-              <div class="stage stage-yellow">
-                <img src="../img/p-borrow.webp" loading="lazy" alt="" />
-              </div>
-              <p class="num">2</p>
+              <p class="num">Step 2</p>
               <h3>Read the cost</h3>
               <p>The rate, the total and the repayments, in money you can check.</p>
             </article>
             <article class="step reveal">
-              <div class="stage stage-yellow">
-                <img src="../img/p-home.webp" loading="lazy" alt="" />
-              </div>
-              <p class="num">3</p>
+              <p class="num">Step 3</p>
               <h3>Keep track</h3>
               <p>What you owe sits apart from what you have, so the two are never confused.</p>
             </article>
@@ -188,9 +219,12 @@
         </div>
       </section>
 
-      <section class="band band-cream">
-        <div class="wrap wrap-narrow">
-          <div class="head reveal"><h2>Questions worth asking.</h2></div>
+      <section id="s-faq" class="band band-cream">
+        <div class="wrap faq-in">
+          <div class="head faq-head reveal">
+            <p class="eyebrow">Questions</p>
+            <h2>Worth asking.</h2>
+          </div>
           <div class="faq reveal">
             <details>
               <summary>What happens if I miss a repayment?<span class="plus" aria-hidden="true"></span></summary>
@@ -204,22 +238,25 @@
         </div>
       </section>
 
-      <section class="band">
+      <section id="s-related" class="band band-products band-more">
         <div class="wrap">
-          <div class="head reveal"><h2>The rest of it.</h2></div>
+          <div class="head head-ondeep bx-head reveal">
+            <p class="eyebrow">The rest of it</p>
+            <h2>There is more<br />in the app.</h2>
+          </div>
           <div class="prod-more">
             <a class="prod-card reveal" href="tokenized-stocks.html">
-              <h3>Tokenized Stocks</h3>
+              <div class="pr-title"><span class="pr-chip pr-chip-mint" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M 10.5 4 A 6.5 6.5 0 1 0 10.5 17 A 6.5 6.5 0 1 0 10.5 4 M 15.4 15.4 L 20 20" /></svg></span><h3>Tokenized Stocks</h3></div>
               <p>From Nigeria to Wall Street.</p>
               <span class="pr-link">Explore Tokenized Stocks <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></span>
             </a>
             <a class="prod-card reveal" href="gifting-and-rewards.html">
-              <h3>Gifting &amp; Rewards</h3>
+              <div class="pr-title"><span class="pr-chip pr-chip-yellow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M 4 10 L 20 10 L 20 20 L 4 20 Z M 4 10 L 4 7 L 20 7 L 20 10 M 12 7 L 12 20 M 12 7 A 2.6 2.6 0 1 0 8.5 7 M 12 7 A 2.6 2.6 0 1 1 15.5 7" /></svg></span><h3>Gifting &amp; Rewards</h3></div>
               <p>Make their day. Start their portfolio.</p>
               <span class="pr-link">Explore Gifting &amp; Rewards <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></span>
             </a>
             <a class="prod-card reveal" href="receive.html">
-              <h3>Receive</h3>
+              <div class="pr-title"><span class="pr-chip pr-chip-orange" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M 12 4 L 12 14 M 12 14 L 8 10 M 12 14 L 16 10 M 5 16 L 5 19 L 19 19 L 19 16" /></svg></span><h3>Receive</h3></div>
               <p>Get paid. Get on with life.</p>
               <span class="pr-link">Explore Receive <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></span>
             </a>
@@ -227,18 +264,15 @@
         </div>
       </section>
 
-      <section class="closing">
+      <section class="closing closing-prod">
         <div class="wrap">
           <div class="closing-slab reveal">
             <img class="cta-prop cta-coin" src="../img/cta/coin.webp" width="274" height="290" loading="lazy" alt="" aria-hidden="true" />
             <img class="cta-prop cta-pen" src="../img/cta/pen.webp" width="302" height="369" loading="lazy" alt="" aria-hidden="true" />
             <img class="cta-prop cta-notes" src="../img/cta/notes.webp" width="593" height="593" loading="lazy" alt="" aria-hidden="true" />
             <div class="closing-in">
-              <h2>Your money. A wider world.</h2>
-              <p class="closing-lead">
-                From Nigerian companies to US names, discover tokenized stocks worth a closer look.
-                Keep your everyday money in the same app.
-              </p>
+              <h2>Find out what you could borrow.</h2>
+              <p class="closing-lead">The figure, the rate and the terms, before you agree to anything.</p>
               <a class="btn btn-deep" href="https://app.tokkenly.com">Get Started</a>
             </div>
           </div>

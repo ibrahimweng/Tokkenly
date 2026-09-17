@@ -71,7 +71,7 @@ for (const slug of SLUGS) {
   await p.goto(`http://localhost:4321/products/${slug}.html`, { waitUntil: 'domcontentloaded' })
   const shape = await p.$$eval('main > section', (ss) => ss
     .map((x) => [...x.classList].filter((c) => c !== 'reveal').join('.') + ':' +
-      [...x.querySelectorAll('.fx-stats,.fx-alt,.fx-facts,.fx-cmp,.fx-two,.fx-quote,.steps,.grid-3,.faq,.prod-more,.prod-risk')]
+      [...x.querySelectorAll('.fx-stats,.fx-facts,.fx-cmp,.fx-two,.fx-slab,.steps,.faq,.pr-grid,.ts-cards,.sp-in,.prod-more,.prod-risk')]
         .map((e) => e.className.split(' ')[0]).join(','))
     .join(' | '))
   shapes.set(slug, shape)
@@ -80,6 +80,70 @@ for (const [slug, shape] of shapes) {
   const twin = [...shapes].find(([s2, sh]) => s2 !== slug && sh === shape)
   ok(!twin, `${slug.padEnd(20)} ${twin ? 'is the same shape as ' + twin[0] : 'has a shape of its own'}`)
 }
+/* ---------------------------------------------------------------------------
+   The one that the redesign exists for.
+
+   These pages used to put a whole 780x1600 phone screenshot on a coloured
+   slab beside every paragraph: 656 tall against ninety words, so the picture
+   outweighed the copy four to one and no page fitted a screen. The landing
+   page never shows a whole phone — it shows a receipt of four rows and a
+   button, built in markup.
+
+   So: no app screenshots on a product page, no panel taller than the copy it
+   stands beside, and the whole introduction inside one screen. */
+console.log('\n=== compact ===')
+const SHOTS = /(^|\/)(p-[a-z]+|stock|home|wallet|invest)\.webp$/
+await p.setViewportSize({ width: 1440, height: 900 })
+for (const slug of SLUGS) {
+  await p.goto(`http://localhost:4321/products/${slug}.html`, { waitUntil: 'load' })
+  await p.evaluate(() => document.querySelectorAll('.reveal').forEach((e) => e.classList.add('in')))
+  const m = await p.evaluate(() => {
+    const h = (e) => Math.round(e.getBoundingClientRect().height)
+    const pairs = []
+    for (const row of document.querySelectorAll('.pr-wide')) {
+      const pn = row.querySelector('.pn'), body = row.querySelector('.pr-body')
+      if (pn && body) pairs.push([h(pn), h(body)])
+    }
+    for (const row of document.querySelectorAll('.sp-in, .ph-in')) {
+      const pn = row.querySelector('.pn'), text = row.querySelector('.sp-text, .ph-text')
+      if (pn && text) pairs.push([h(pn), h(text)])
+    }
+    return {
+      shots: [...document.querySelectorAll('main img')].map((i) => i.getAttribute('src')),
+      tallest: Math.max(0, ...[...document.querySelectorAll('.pn')].map(h)),
+      hero: Math.round(document.querySelector('.hero-product').getBoundingClientRect().bottom),
+      pairs,
+    }
+  })
+  const shot = m.shots.find((s) => SHOTS.test(s || ''))
+  const fat = m.pairs.find(([pn, text]) => pn > text * 1.5 + 40)
+  ok(!shot && m.tallest <= 460 && m.hero <= 1000 && !fat,
+    `${slug.padEnd(20)} panel ${String(m.tallest).padStart(3)}px, hero ends ${m.hero}px` +
+    `${shot ? '  SCREENSHOT: ' + shot : ''}${m.tallest > 460 ? '  TOO TALL' : ''}` +
+    `${m.hero > 1000 ? '  HERO OVERRUNS' : ''}${fat ? `  panel ${fat[0]} vs copy ${fat[1]}` : ''}`)
+}
+
+/* The receipt has to read. `.pr-card p` is one class and one element and beats
+   any colour a white panel inside that card merely inherits, which is how the
+   landing page's own pop-up spent a while as pale mint on white. */
+console.log('\n=== the panels read ===')
+for (const [url, sel] of [['index.html', '.popup .pop-v'], ['products/send.html', '.pn .pn-v']]) {
+  await p.goto('http://localhost:4321/' + url, { waitUntil: 'load' })
+  const col = await p.$eval(sel, (e) => getComputedStyle(e).color)
+  const [r, g, bl] = col.match(/\d+/g).map(Number)
+  const lum = (0.2126 * r + 0.7152 * g + 0.0722 * bl) / 255
+  ok(lum < 0.35, `${url.padEnd(24)} ${sel} is ${col}`)
+}
+
+/* A 52px badge drawn as min(52px, 2.709vw) is 10px on a phone. */
+console.log('\n=== the chips survive a phone ===')
+await p.setViewportSize({ width: 390, height: 900 })
+for (const url of ['index.html', 'products/tokenized-stocks.html']) {
+  await p.goto('http://localhost:4321/' + url, { waitUntil: 'load' })
+  const w = await p.$eval('.pr-chip', (e) => Math.round(e.getBoundingClientRect().width))
+  ok(w >= 40, `${url.padEnd(34)} chip is ${w}px`)
+}
+
 await b.close()
 console.log(`\n${bad ? 'FAIL=' + bad : 'FAIL=0'}`)
 process.exit(bad ? 1 : 0)
