@@ -145,8 +145,8 @@ ${PRODUCTS.map((p) => `              <a href="${up}products/${p.slug}.html"${p.s
               </a>`).join('\n')}
             </div>
           </div>
-          <a href="${up}index.html#why">About us</a>
-          <a href="#" data-soon>Blog</a>
+          <a href="${up}about.html">About us</a>
+          <a href="${up}blog.html">Blog</a>
           <a href="${up}contact.html">Help</a>
         </nav>
 
@@ -162,8 +162,8 @@ ${PRODUCTS.map((p) => `              <a href="${up}products/${p.slug}.html"${p.s
         <p class="mm-head">Products</p>
 ${PRODUCTS.map((p) => `        <a href="${up}products/${p.slug}.html">${p.nav}</a>`).join('\n')}
         <p class="mm-head">Company</p>
-        <a href="${up}index.html#why">About us</a>
-        <a href="#" data-soon>Blog</a>
+        <a href="${up}about.html">About us</a>
+        <a href="${up}blog.html">Blog</a>
         <a href="${up}contact.html">Help</a>
         <a class="btn btn-mint mm-cta" href="${APP_URL}">Sign up</a>
       </div>
@@ -200,8 +200,8 @@ ${PRODUCTS.slice(4).map((p) => `                  <a href="${up}products/${p.slu
             </div>
             <div class="foot-col">
               <p class="foot-head">Company</p>
-              <a href="${up}index.html#why">About us</a>
-              <a href="#" data-soon>Blog</a>
+              <a href="${up}about.html">About us</a>
+              <a href="${up}blog.html">Blog</a>
             </div>
             <div class="foot-col">
               <p class="foot-head">Legal</p>

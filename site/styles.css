@@ -2745,59 +2745,308 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
   .gr-tab { height: 46px; font-size: 13.5px; }
 }
 
-/* ------------------------------------------- the company and legal pages -- */
-/* Contact us (394:780), Terms of service (399:559) and Privacy policy
-   (399:785). One band, one column, and the shared close underneath.
 
-   The contact form's numbers are the frame's: 1120 inside the 1520, a field
-   that is a 15 label, 14, a 31 value, 14, then the rule — 75 in total — and 54
-   between fields. The message field is the same with a 108 value instead of a
-   31, and the three channels below it are thirds of the form's width with 48
-   between and a rule over each. */
-.band-page { padding-block: min(140px, 7.3vw) min(120px, 6.25vw); }
+/* ============================================ the company and legal pages ==
+   About us (397:559), Blog (391:559), Contact us (394:780), Terms of service
+   (399:559), Privacy policy (399:785).
 
-.page-head { display: grid; justify-items: center; gap: 22px; text-align: center; }
-.page-head h1 {
-  max-width: 1100px;
-  font-size: clamp(34px, 5.4vw, 68px); line-height: 1.02; letter-spacing: -0.042em;
+   Every number below is the frame's, read at 1920 where the content column is
+   1520, and written as a share of that width so the page narrows in step with
+   its type instead of snapping at a breakpoint. A size of 84 is therefore
+   clamp(…, 4.375vw, 84px), because 84/1920 is 4.375 per cent.
+   ========================================================================= */
+
+/* ---------------------------------------------- a bar over a dark top ---- */
+/* Only About starts on a dark section. The bar is transparent until it goes
+   solid, so over that section its ink is white and returns to the page's green
+   on the same --nav-solid the bar already animates. */
+body[data-navtone='over-dark'] .nav .brand-word,
+body[data-navtone='over-dark'] .nav .nav-links > a,
+body[data-navtone='over-dark'] .nav .drop-btn {
+  color: color-mix(in srgb, var(--muted) calc(var(--nav-solid) * 100%), #fff);
+}
+body[data-navtone='over-dark'] .nav .brand-mark {
+  color: color-mix(in srgb, var(--mint) calc(var(--nav-solid) * 100%), #fff);
+}
+body[data-navtone='over-dark'] .nav .nav-end .btn-mint {
+  background: color-mix(in srgb, var(--mint) calc(var(--nav-solid) * 100%), #fff);
+}
+body[data-navtone='over-dark'] .nav .burger span { background: color-mix(in srgb, var(--ink) calc(var(--nav-solid) * 100%), #fff); }
+
+/* ================================================================ about == */
+/* Masthead 443:494. The section is 1024 tall on a 1920 frame and the picture
+   inside it is 2153.863 x 1211.548 centred at the top — wider and taller than
+   the section on purpose, clipped by it. Both are shares of the section, so
+   the same crop survives every width instead of being a phone-sized guess. */
+.ab-mast {
+  position: relative; isolation: isolate; overflow: hidden;
+  background: var(--deep);
+  min-height: min(1024px, 53.333vw);
+  padding-block: min(168px, 8.75vw);
+  display: flex; flex-direction: column; align-items: flex-start;
+}
+.ab-mast-img {
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  z-index: -1; width: 112.18%; height: 118.315%;
+  object-fit: cover; object-position: 50% 0; max-width: none;
+}
+/* The one place the frame is not reproduced as drawn. Its masthead puts white
+   at 88 and 66 per cent on the photograph, and over the pink half of that sky
+   the lead paragraph measures 1.8:1 — below AA by a long way and genuinely hard
+   to read. Every type value is the frame's; what changes is the ground under
+   it, a scrim in the page's own ink that fades out before it reaches her.
+
+   The figures are measured rather than guessed: every pixel behind each line
+   is composited with the ink over it, and these are the lightest stops at
+   which the worst of them still clears 4.5:1. As drawn the lead paragraph
+   measures 1.8:1; it now measures 5.7 at 1920 and 5.2 at 390. */
+.ab-mast::after {
+  content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background: linear-gradient(101deg,
+    rgba(5, 51, 41, 0.90) 0%,
+    rgba(5, 51, 41, 0.88) 40%,
+    rgba(5, 51, 41, 0.82) 54%,
+    rgba(5, 51, 41, 0.30) 66%,
+    rgba(5, 51, 41, 0) 80%);
+}
+.ab-mast-in { width: 100%; }
+.ab-mast-text {
+  /* 800 of the 1520 column, as a share rather than a fixed 800, so the
+     headline breaks over the same words at every width. */
+  max-width: min(800px, 52.632%);
+  display: grid; justify-items: start; gap: min(34px, 1.771vw);
+}
+.eyebrow-mint { color: var(--mint); }
+.ab-mast h1 {
+  font-size: clamp(38px, 4.792vw, 92px); line-height: 0.98; letter-spacing: -0.045em;
+  color: #fff;
+}
+.ab-mast-body {
+  display: grid; gap: min(22px, 1.146vw); padding-top: min(22px, 1.146vw);
+  font-size: clamp(16.5px, 1.25vw, 24px); line-height: 1.56; letter-spacing: -0.004em;
+}
+.ab-lead-1 { color: rgba(255, 255, 255, 0.88); }
+.ab-lead-2 { color: rgba(255, 255, 255, 0.66); }
+
+/* Body 397:572 — 130 between the three groups, 130 over and 150 under. */
+.ab-body {
+  display: grid; gap: min(130px, 6.771vw);
+  padding-block: min(130px, 6.771vw) min(150px, 7.813vw);
+}
+
+/* Statement 397:585 */
+.ab-statement {
+  background: var(--deep); border-radius: min(40px, 2.083vw);
+  padding: min(110px, 5.729vw);
+  display: flex; align-items: center; gap: min(90px, 4.688vw);
+}
+.ab-statement-l { flex: 1 1 0; min-width: 0; display: grid; gap: min(24px, 1.25vw); }
+.ab-statement-l h2 {
+  font-size: clamp(30px, 3.333vw, 64px); line-height: 1.04; letter-spacing: -0.04em;
+  color: #fff;
+}
+.ab-statement-l p {
+  font-size: clamp(16px, 1.042vw, 20px); line-height: 1.68; color: var(--on-deep-muted);
+}
+.ab-stats { flex: none; width: min(420px, 32.308%); display: grid; gap: min(26px, 1.354vw); }
+.ab-stat { display: grid; gap: 6px; }
+.ab-stat-k {
+  font-size: clamp(17px, 1.146vw, 22px); font-weight: 700; line-height: 1.3;
+  letter-spacing: -0.02em; color: var(--mint);
+}
+.ab-stat-v { font-size: clamp(14.5px, 0.834vw, 16px); line-height: 1.55; color: var(--on-deep-muted); }
+
+/* Stand for 397:599 — eyebrow, head and lead 22 apart, then 40 more to the
+   rules. */
+.ab-values-head { display: grid; justify-items: start; gap: min(22px, 1.146vw); }
+.ab-values-head h2 {
+  max-width: min(1100px, 72.368%);
+  font-size: clamp(30px, 2.917vw, 56px); line-height: 1.06; letter-spacing: -0.038em;
   color: var(--ink);
 }
-.page-lead { max-width: 720px; }
-.page-head-left { justify-items: start; text-align: left; }
-.page-head-left h1 { max-width: 1000px; }
-.page-updated { font-size: 14.5px; color: var(--muted); }
+.ab-values-intro {
+  max-width: min(780px, 51.316%);
+  font-size: clamp(16px, 1.042vw, 20px); line-height: 1.6; color: var(--muted);
+}
+/* 506 three times is the 1520 column, and the frame stops each cell's words 48
+   short of the next rather than opening a gap in the rules. */
+.ab-grid {
+  margin-top: min(40px, 2.083vw);
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.ab-value {
+  border-top: 1px solid #dfe4e1;
+  padding: min(36px, 1.875vw) min(48px, 3.158%) min(36px, 1.875vw) 0;
+  display: grid; gap: min(12px, 0.625vw); align-content: start;
+}
+/* Sentence case, not caps: the frame letterspaces "Custody" but does not
+   uppercase it, unlike the eyebrows and the blog kickers. */
+.ab-cat {
+  font-size: 12px; font-weight: 600; line-height: 1.33;
+  letter-spacing: 0.12em; color: var(--mint);
+}
+.ab-value h3 {
+  font-size: clamp(19px, 1.354vw, 26px); line-height: 1.24; letter-spacing: -0.024em;
+  color: var(--ink);
+}
+.ab-p { font-size: clamp(15px, 0.885vw, 17px); line-height: 1.68; color: var(--muted); }
 
-/* ---------------------------------------------------------- the form ---- */
+/* Narrative 397:630 — 800 of picture, 90 of air, 600 of words, in the 1520. */
+.ab-narrative {
+  display: grid; align-items: center;
+  grid-template-columns: 52.632% 39.474%; gap: 5.921%;
+  justify-content: start;
+}
+.ab-photo {
+  /* height:auto is load-bearing: the <img> carries width/height attributes, and a
+     mapped height of 1184px is not auto, so aspect-ratio would be ignored and
+     the picture would come out 184 too tall. */
+  width: 100%; height: auto; aspect-ratio: 800 / 1000; object-fit: cover;
+  border-radius: min(30px, 1.563vw);
+}
+.ab-narrative-t { display: grid; justify-items: start; gap: min(22px, 1.146vw); }
+.ab-narrative-t h2 {
+  font-size: clamp(28px, 2.708vw, 52px); line-height: 1.06; letter-spacing: -0.036em;
+  color: var(--ink);
+}
+.ab-narrative-t p {
+  font-size: clamp(16px, 1.042vw, 20px); line-height: 1.68; color: var(--muted);
+}
+
+/* ================================================================= blog == */
+/* The frame measures 120 from the bar, which is a sibling in its column; here
+   the bar is fixed over the page, so its height is part of the offset. */
+.bl { padding-block: calc(var(--nav-h) + min(120px, 6.25vw)) min(144px, 7.5vw); }
+.bl-head {
+  display: grid; justify-items: center; gap: min(18px, 0.938vw); text-align: center;
+}
+.bl-head h1 {
+  max-width: min(1000px, 65.789%);
+  font-size: clamp(38px, 3.542vw, 68px); line-height: 1.02; letter-spacing: -0.042em;
+  color: var(--ink);
+}
+.bl-lead {
+  max-width: min(760px, 50%);
+  font-size: clamp(16.5px, 1.042vw, 20px); line-height: 1.6; color: var(--muted);
+}
+
+.bl-filters {
+  margin-top: min(72px, 3.75vw);
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 12px;
+}
+.bl-chip {
+  font: inherit; font-size: clamp(14px, 0.781vw, 15px); font-weight: 600;
+  line-height: 1.4; letter-spacing: -0.01em; cursor: pointer;
+  padding: 12px 22px; border-radius: var(--r-pill);
+  background: var(--surface); color: var(--muted); border: 1px solid #e5ebe8;
+  transition: background var(--t-base) var(--ease-out), color var(--t-base) var(--ease-out),
+    border-color var(--t-base) var(--ease-out);
+}
+.bl-chip:hover { border-color: rgba(5, 51, 41, 0.2); color: var(--ink); }
+.bl-chip.is-on { background: var(--deep); color: #fff; border-color: var(--deep); }
+
+/* 485 three times with 32 between is the 1520 column; 56 between the rows. */
+.bl-grid {
+  margin-top: min(72px, 3.75vw);
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: min(32px, 2.105%); row-gap: min(56px, 2.917vw);
+}
+.bl-post { display: grid; align-content: start; gap: 16px; }
+/* The frame's thumbnails are still empty rectangles. */
+.bl-thumb {
+  display: block; width: 100%; aspect-ratio: 485 / 300;
+  background: #d9d9d9; border-radius: min(18px, 0.938vw);
+}
+.bl-cat {
+  font-size: 12px; font-weight: 600; line-height: 1.33;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+}
+.bl-title {
+  font-size: clamp(19px, 1.25vw, 24px); line-height: 1.26; letter-spacing: -0.024em;
+  color: var(--ink);
+}
+.bl-meta { font-size: clamp(13.5px, 0.729vw, 14px); line-height: 1.4; color: var(--muted); }
+
+/* Newsletter 391:628 */
+.bl-news {
+  margin-top: min(72px, 3.75vw);
+  background: var(--mint); border-radius: var(--r-xl);
+  padding: min(80px, 4.167vw) min(120px, 6.25vw);
+  display: grid; justify-items: center; gap: min(22px, 1.146vw); text-align: center;
+}
+.bl-news h2 {
+  font-size: clamp(26px, 2.292vw, 44px); line-height: 1.1; letter-spacing: -0.034em;
+  color: var(--ink);
+}
+.bl-news-p { font-size: clamp(15.5px, 0.938vw, 18px); line-height: 1.6; color: #1f473d; }
+/* nowrap, not wrap: this form is a grid item sized to fit-content, and a
+   wrapping flex container's max-content is its widest item rather than the
+   row, which stacked the button under the field on every width. */
+.bl-form { display: flex; flex-wrap: nowrap; justify-content: center; gap: 12px; }
+.bl-vh {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap;
+}
+.bl-input {
+  appearance: none; font: inherit; font-size: 16px; line-height: 1.4;
+  flex: none; width: 380px; height: 58px; padding: 0 26px;
+  border: 0; border-radius: var(--r-pill); background: var(--surface); color: var(--ink);
+}
+.bl-input::placeholder { color: var(--placeholder); }
+.bl-input:focus-visible { outline: 2px solid var(--deep); outline-offset: 2px; }
+.bl-sub { font-size: 15px; font-weight: 700; padding-inline: 34px; }
+
+/* ============================================================== contact == */
+/* The form's numbers are the frame's: 1120 inside the 1520, a field that is a
+   label, 14, a value, 14, then the rule, and 54 between fields. The message
+   field is the same with a 108-tall value, and the three channels below are
+   thirds of the form's width with 48 between and a rule over each. */
+.band-page { padding-block: calc(var(--nav-h) + min(140px, 7.292vw)) min(180px, 9.375vw); }
+
+.page-head { display: grid; justify-items: center; gap: min(22px, 1.146vw); text-align: center; }
+.page-head h1 {
+  max-width: min(1100px, 72.368%);
+  font-size: clamp(38px, 4.375vw, 84px); line-height: 1; letter-spacing: -0.044em;
+  color: var(--ink);
+}
+.page-lead {
+  max-width: min(720px, 47.368%);
+  font-size: clamp(17px, 1.146vw, 22px); line-height: 1.6; color: var(--muted);
+}
+
 .cf {
-  width: min(1120px, 100%); margin: min(110px, 5.8vw) auto 0;
+  width: min(1120px, 100%); margin: min(110px, 5.729vw) auto 0;
   display: grid; gap: min(54px, 2.813vw);
 }
 .cf-field { display: grid; gap: 14px; margin: 0; }
 .cf-label {
   font-size: 11.5px; font-weight: 600; text-transform: uppercase;
-  letter-spacing: 0.1em; color: var(--muted);
+  letter-spacing: 0.14em; color: var(--muted);
 }
 /* The rule is the field's own bottom border, so it cannot fall out of step
    with the input the way a separate element would. */
 .cf-input {
   appearance: none; width: 100%; font: inherit;
-  font-size: clamp(17px, 1.146vw, 22px); line-height: 1.4;
+  font-size: clamp(17px, 1.146vw, 22px); line-height: 1.4; letter-spacing: -0.01em;
   color: var(--ink); background: transparent;
-  border: 0; border-bottom: 1px solid var(--line);
+  border: 0; border-bottom: 1px solid #c9d2ce;
   border-radius: 0; padding: 0 0 13px;
   transition: border-color var(--t-base) var(--ease-out);
 }
 .cf-input::placeholder { color: #9aa8a3; }
 .cf-input:focus { outline: none; border-bottom-color: var(--ink); }
 .cf-input:focus-visible { outline: none; }
-textarea.cf-input { resize: vertical; min-height: 108px; }
+textarea.cf-input {
+  resize: vertical; min-height: 108px;
+  font-size: clamp(16px, 1.042vw, 20px); line-height: 1.65; letter-spacing: -0.01em;
+}
 
 .cf-send { margin: 0; }
 .cf-btn {
-  display: inline-flex; align-items: center; gap: 10px;
+  display: inline-flex; align-items: center; gap: 12px;
   background: none; border: 0; padding: 0; cursor: pointer;
-  font: inherit; font-size: clamp(16px, 1.042vw, 20px); font-weight: 600;
-  letter-spacing: -0.01em; color: var(--ink);
+  font: inherit; font-size: clamp(16px, 0.938vw, 18px); font-weight: 600;
+  letter-spacing: -0.015em; color: var(--ink);
 }
 .cf-btn .pr-arrow { width: 20px; height: 20px; transition: transform var(--t-base) var(--ease-out); }
 .cf-btn:hover .pr-arrow { transform: translateX(4px); }
@@ -2808,45 +3057,207 @@ textarea.cf-input { resize: vertical; min-height: 108px; }
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: min(48px, 2.5vw);
 }
-.cf-channel { border-top: 1px solid var(--line); padding-top: 35px; }
+.cf-channel {
+  border-top: 1px solid #c9d2ce;
+  padding-block: min(34px, 1.771vw);
+}
+/* The frame marks this one with a dashed rule: still to be filled in. */
+.cf-channel-soon { border-top-style: dashed; border-top-color: #d8c4bb; }
 .cf-channel h2 {
-  font-size: clamp(18px, 1.146vw, 22px); line-height: 1.3; letter-spacing: -0.022em;
-  color: var(--ink); margin: 0 0 12px; overflow-wrap: anywhere;
+  font-size: clamp(19px, 1.25vw, 24px); line-height: 1.26; letter-spacing: -0.022em;
+  color: var(--ink); margin: 0 0 10px; overflow-wrap: anywhere;
 }
 .cf-channel h2 a { color: inherit; text-decoration: none; }
 .cf-channel h2 a:hover { text-decoration: underline; }
-.cf-channel p { font-size: clamp(14.5px, 0.834vw, 16px); line-height: 1.6; color: var(--muted); }
+.cf-channel p { font-size: clamp(14.5px, 0.834vw, 16px); line-height: 1.65; color: var(--muted); }
 
-/* --------------------------------------------------------- the prose ---- */
-/* The clauses number themselves, so adding one never means renumbering. */
-.prose {
-  width: min(820px, 100%); margin: min(96px, 5vw) 0 0;
-  padding: 0; list-style: none; counter-reset: clause;
-  display: grid; gap: min(56px, 2.917vw);
+/* ==================================================== terms and privacy == */
+/* One object, two pages. A head, the dashed placeholder warning, then a 330
+   index and the clauses 120 apart. Three kinds of clause — numbered, the
+   definition list, and the boxed one marked READ THIS ONE — and a 20px spacer
+   that the frame drops in an irregular pattern, so it is a real element here
+   rather than a margin rule that would have to guess. */
+.lg { padding-block: calc(var(--nav-h) + min(130px, 6.771vw)) min(160px, 8.333vw); }
+.lg-head { display: grid; justify-items: start; gap: min(20px, 1.042vw); }
+.lg-head h1 {
+  max-width: min(1200px, 78.947%);
+  font-size: clamp(38px, 4.375vw, 84px); line-height: 1; letter-spacing: -0.044em;
+  color: var(--ink);
 }
-.prose-part { counter-increment: clause; }
-.prose-part h2 {
-  display: flex; gap: 16px;
-  font-size: clamp(21px, 1.563vw, 30px); line-height: 1.25; letter-spacing: -0.025em;
-  color: var(--ink); margin: 0 0 18px;
+.lg-sub {
+  max-width: min(900px, 59.211%);
+  font-size: clamp(16px, 0.99vw, 19px); line-height: 1.6; color: var(--muted);
 }
-.prose-part h2::before {
-  content: counter(clause); flex: none;
-  font-size: 0.62em; font-weight: 600; color: var(--mint);
-  font-variant-numeric: tabular-nums; padding-top: 0.35em;
+
+.lg-warn {
+  margin-top: min(80px, 4.167vw);
+  border: 1px dashed #d8c4bb; border-radius: 20px;
+  padding: min(28px, 1.458vw) min(32px, 1.667vw);
+  display: grid; gap: 10px;
 }
-.prose-part p {
-  font-size: clamp(15.5px, 1.042vw, 18px); line-height: 1.75; color: #2c4a43;
-  margin: 0 0 14px; padding-left: 32px;
+.lg-warn-k {
+  font-size: 12px; font-weight: 600; line-height: 1.33;
+  letter-spacing: 0.12em; text-transform: uppercase; color: #b0533a;
 }
-.prose-part p:last-child { margin-bottom: 0; }
+.lg-warn-p { font-size: clamp(15px, 0.885vw, 17px); line-height: 1.65; color: #7a4433; }
+
+.lg-split {
+  margin-top: min(80px, 4.167vw);
+  /* 330 of index, 120 of air, the rest clauses — all as shares of the 1520,
+     so the split is the frame's at every width. */
+  display: grid; grid-template-columns: 21.711% minmax(0, 1fr);
+  column-gap: 7.895%;
+  align-items: start;
+}
+
+/* The index is sticky because it is an index of a page this long; at rest it
+   looks exactly as the frame draws it, with the first clause marked. */
+.lg-index { position: sticky; top: calc(var(--nav-h) + 24px); }
+.lg-index-k {
+  font-size: 11px; font-weight: 600; line-height: 1.4;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted);
+}
+.lg-index ol { display: block; }
+.lg-index li { font-size: clamp(14px, 0.781vw, 15px); line-height: 1.65; }
+.lg-index-part {
+  padding: min(26px, 1.354vw) 0 min(14px, 0.729vw);
+  font-size: 11px; font-weight: 600; line-height: 1.4;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--mint);
+}
+.lg-index a {
+  display: block; color: var(--muted);
+  transition: color var(--t-fast) var(--ease-out);
+}
+.lg-index a:hover { color: var(--ink); }
+.lg-index a[aria-current='true'] { color: var(--ink); font-weight: 600; }
+
+.lg-clauses { min-width: 0; }
+.lg-sp { height: 20px; }
+
+.lg-part {
+  background: var(--deep); border-radius: min(26px, 1.354vw);
+  padding: min(54px, 2.813vw);
+  display: flex; align-items: center; gap: min(40px, 2.083vw);
+}
+.lg-part-n {
+  flex: none;
+  font-size: clamp(34px, 3.333vw, 64px); font-weight: 700; line-height: 1;
+  letter-spacing: -0.04em; color: var(--mint); font-variant-numeric: tabular-nums;
+}
+.lg-part-t { flex: 1 1 0; min-width: 0; display: grid; gap: 8px; }
+.lg-part-t h2 {
+  font-size: clamp(22px, 1.771vw, 34px); line-height: 1.18; letter-spacing: -0.028em;
+  color: #fff;
+}
+.lg-part-t p {
+  font-size: clamp(15px, 0.885vw, 17px); line-height: 1.6; color: var(--on-deep-muted);
+}
+
+.lg-clause {
+  border-top: 1px solid #d8ded9;
+  padding-block: min(40px, 2.083vw);
+  display: flex; align-items: flex-start; gap: min(32px, 1.667vw);
+}
+.lg-n {
+  flex: none; width: 40px;
+  font-size: clamp(15px, 0.885vw, 17px); font-weight: 600; line-height: 1.6;
+  color: var(--mint); font-variant-numeric: tabular-nums;
+}
+.lg-c { flex: 1 1 0; min-width: 0; display: grid; gap: 12px; }
+.lg-c h3 {
+  font-size: clamp(19px, 1.354vw, 26px); line-height: 1.24; letter-spacing: -0.024em;
+  color: var(--ink);
+}
+.lg-c p { font-size: clamp(15px, 0.885vw, 17px); line-height: 1.75; color: var(--muted); }
+
+.lg-defs {
+  border-top: 1px solid #d8ded9;
+  padding-block: min(40px, 2.083vw);
+}
+.lg-defs h3 {
+  font-size: clamp(20px, 1.458vw, 28px); line-height: 1.24; letter-spacing: -0.026em;
+  color: var(--ink);
+}
+.lg-def-list { display: block; margin: 0; }
+.lg-def {
+  border-top: 1px solid #d8ded9;
+  padding-block: 16px;
+  display: flex; align-items: flex-start; gap: min(32px, 1.667vw);
+  font-size: clamp(15px, 0.885vw, 17px); line-height: 1.6;
+}
+.lg-def dt { flex: none; width: min(240px, 22.43%); font-weight: 600; color: var(--ink); }
+.lg-def dd { flex: 1 1 0; min-width: 0; margin: 0; color: #9aa8a3; }
+
+.lg-callout {
+  background: #e4efea; border-radius: min(24px, 1.25vw);
+  padding: min(44px, 2.292vw);
+  display: grid; gap: 14px;
+}
+.lg-callout-k {
+  font-size: 11px; font-weight: 600; line-height: 1.4;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--mint);
+}
+.lg-callout h3 {
+  font-size: clamp(21px, 1.563vw, 30px); line-height: 1.22; letter-spacing: -0.026em;
+  color: var(--ink);
+}
+.lg-callout-p { font-size: clamp(15.5px, 0.938vw, 18px); line-height: 1.75; color: var(--muted); }
+
+/* ---------------------------------------------------------- narrower ---- */
+@media (max-width: 1240px) {
+  .ab-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ab-value { padding-right: min(40px, 4%); }
+  .bl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lg-split { grid-template-columns: 24% minmax(0, 1fr); column-gap: 5%; }
+}
 
 @media (max-width: 1040px) {
-  .band-page { padding-block: min(96px, 11vw) min(80px, 9vw); }
+  /* The measures above are shares of the 1520 column, which is what keeps a
+     headline breaking over the frame's words as the page narrows. Below this
+     the column is itself the measure, and holding a half of it would set the
+     lead in a 160-wide gutter on a phone. */
+  .page-head h1, .page-lead, .bl-head h1, .bl-lead,
+  .lg-head h1, .lg-sub, .ab-values-head h2, .ab-values-intro { max-width: 100%; }
+
+  .band-page { padding-block: calc(var(--nav-h) + min(64px, 7vw)) min(80px, 9vw); }
   .cf { margin-top: 56px; }
   .cf-channels { margin-top: 64px; grid-template-columns: minmax(0, 1fr); gap: 32px; }
-  .cf-channel { padding-top: 24px; }
-  .prose { margin-top: 56px; }
-  .prose-part p { padding-left: 0; }
-  .prose-part h2 { gap: 12px; }
+  .cf-channel { padding-block: 24px; }
+
+  /* Narrow, the words run the full width, so the scrim has to as well: the
+     horizontal one leaves its right-hand end over bright sky. */
+  .ab-mast::after {
+    background: linear-gradient(180deg, rgba(5, 51, 41, 0.72) 0%, rgba(5, 51, 41, 0.85) 100%);
+  }
+  .ab-mast { min-height: 0; padding-block: calc(var(--nav-h) + 72px) 72px; }
+  .ab-mast-img { width: 118%; height: 100%; }
+  .ab-mast-text { max-width: 100%; gap: 22px; }
+  .ab-body { gap: 80px; padding-block: 80px 88px; }
+  .ab-statement { flex-direction: column; align-items: flex-start; gap: 40px; padding: 44px 32px; }
+  .ab-stats { width: 100%; }
+  .ab-narrative { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+  .ab-photo { aspect-ratio: 4 / 5; }
+
+  .bl { padding-block: calc(var(--nav-h) + min(64px, 7vw)) 88px; }
+  .bl-filters, .bl-grid, .bl-news { margin-top: 48px; }
+  .bl-news { padding: 48px 28px; }
+
+  .lg { padding-block: calc(var(--nav-h) + min(64px, 7vw)) 96px; }
+  .lg-warn, .lg-split { margin-top: 48px; }
+  .lg-split { grid-template-columns: minmax(0, 1fr); column-gap: 0; row-gap: 48px; }
+  .lg-index { position: static; }
+  .lg-part { padding: 32px 26px; gap: 22px; }
+  .lg-callout { padding: 30px 26px; }
+}
+
+@media (max-width: 720px) {
+  .ab-grid, .bl-grid { grid-template-columns: minmax(0, 1fr); }
+  .ab-value { padding-right: 0; }
+  .bl-form { flex-direction: column; align-items: stretch; }
+  .bl-input { width: 100%; }
+  .lg-clause { flex-direction: column; gap: 10px; }
+  .lg-n { width: auto; }
+  .lg-def { flex-direction: column; gap: 4px; }
+  .lg-def dt { width: auto; }
+  .lg-part { flex-direction: column; align-items: flex-start; gap: 14px; }
 }
