@@ -1532,8 +1532,9 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
   aspect-ratio: 1520 / 532;
   display: grid; place-items: center;
   /* The frame's linear runs almost exactly top to bottom, starting above the
-     box; the top stop below is the colour at the point the box begins. */
-  background: linear-gradient(to bottom, #e7c9e0 0%, #d4cec6 100%);
+     box; the stops below are the colours at the points the box begins and
+     ends. Which pair is used comes from the variant. */
+  background: linear-gradient(to bottom, var(--cta-from) 0%, var(--cta-to) 100%);
 }
 .closing-in {
   position: relative; z-index: 2;
@@ -1564,45 +1565,100 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
    button. */
 .cta-prop { position: absolute; height: auto; pointer-events: none; }
 
-/* The frame parks all three a little inside the slab, which reads as floating
-   rather than as composition, and puts the notes' ink at 64.6% where the
-   headline reaches 66% — they touch. So each one moves outward until it either
-   meets an edge or runs off it, and the middle is left to the words:
+/* --------------------------------------------------------- cta variants -- */
+/* Every page closes on this slab, and each gets its own pairing and its own
+   arrangement, so the close does not read as the same panel five times.
 
-     coin   ink 2.6%  -> 15.1%    across the top left, just over the corner
-     pen    ink 0.8%  -> 15.0%    off the left edge and off the bottom
-     notes  ink 73.5% -> 99.0%    off the right edge and off the bottom
+   A page declares its variant on the section and gives each prop an at-*
+   anchor:
 
-   Nothing enters the band between 15% and 73%, which is where the headline,
-   the lead and the button live. The headline's widest line stops at 66%. */
-.cta-coin  { left: -0.195%; top: -3.531%; width: 17.786%; }
+     <section class="closing" data-cta="blog">
+       <img class="cta-prop cta-globe n-tl" src="./img/hero/globe.webp" …>
+       <img class="cta-prop cta-notes n-br" src="./img/hero/notes.webp" …>
+
+   The variant block below places them above 1040. Below that the n-* anchor
+   takes over, because a slab that has stopped holding its ratio has no height
+   worth measuring a per cent against.
+
+   The anchor is not the desktop position. They are separate on purpose: a tall
+   slab wants its own arrangement, and every variant must anchor exactly one
+   prop n-tl, because a phone keeps that one and drops the rest. Without that
+   rule a variant whose props are all low or to the side loses its art entirely
+   at 390.
+
+   The numbers are not typed. For each prop an ink rectangle was chosen — where
+   the drawing itself should sit as a share of the 1520 x 532 slab — and the box
+   back-computed from that asset's alpha bounds, because every one of these
+   carries a wide transparent margin (the globe's ink is 71% of its file, the
+   notes' 68 by 56). Placing them by their file bounds is what puts them in the
+   wrong place.
+
+   The one rule every variant keeps: no ink between 15% and 73%. That band is
+   the headline, the lead and the button.
+
+   variant    pairing                 props, and where the ink sits
+   landing    pink -> taupe           dangote 2.6-15 tl · pen 0.8-15 bl · notes 73.5-99 r
+   blog       sky blue -> pink        globe -6-14 tl · notes 80-97 br
+   about      sky blue -> green       coin 82-96 tr · gun -4-18 bl
+   contact    green -> pink           globe -8-14 l · coin 84-95 tr
+   terms      green -> brown          coin 3-16 bl · gun 78-102 r
+   privacy    brown -> lighter brown  notes 74-98 br · globe 2-14 tl          */
+
+[data-cta='landing'] { --cta-from: #e7c9e0; --cta-to: #d4cec6; }
+[data-cta='landing'] .cta-dangote { left: -0.195%; top: -3.531%; width: 17.786%; }
+[data-cta='landing'] .cta-pen     { left: -1.889%; top: 50.772%; width: 19.693%; }
+[data-cta='landing'] .cta-notes   { left: 67.389%; top:  8.347%; width: 37.753%; }
+
+[data-cta='blog'] { --cta-from: #cfe3f5; --cta-to: #eccfe0; }
+[data-cta='blog'] .cta-globe { left: -10.303%; top: -29.980%; width: 28.248%; }
+[data-cta='blog'] .cta-notes { left:  75.930%; top:  46.251%; width: 25.139%; }
+
+[data-cta='about'] { --cta-from: #cfe5f5; --cta-to: #cfe3cd; }
+[data-cta='about'] .cta-coin { left: 78.873%; top: -18.462%; width: 20.027%; }
+[data-cta='about'] .cta-gun  { left: -6.238%; top:  40.733%; width: 25.549%; }
+
+[data-cta='contact'] { --cta-from: #cfe4d2; --cta-to: #eccfe0; }
+[data-cta='contact'] .cta-globe { left: -12.734%; top: 6.822%; width: 31.073%; }
+[data-cta='contact'] .cta-coin  { left:  81.543%; top: 1.352%; width: 15.735%; }
+
+[data-cta='terms'] { --cta-from: #d3e3cf; --cta-to: #dcc9b4; }
+[data-cta='terms'] .cta-coin { left:  0.096%; top: 47.143%; width: 18.596%; }
+[data-cta='terms'] .cta-gun  { left: 75.558%; top:  7.163%; width: 27.872%; }
+
+[data-cta='privacy'] { --cta-from: #e0d0bc; --cta-to: #c3ab92; }
+[data-cta='privacy'] .cta-notes { left: 68.255%; top:  21.766%; width: 35.491%; }
+[data-cta='privacy'] .cta-globe { left: -0.582%; top: -15.188%; width: 16.949%; }
+
 /* The frame mirrors the pen rather than turning it: ball to the upper left,
    barrel running down to the right, magenta into green. rotate(180deg) put the
-   ball on the wrong side, which is how it has been since this section was
-   first built. Mirroring moves the ink's x offset but not its y, so the top
-   here is not the same number a rotation would need. */
-.cta-pen   { left: -1.889%; top: 50.772%; width: 19.693%; transform: scaleX(-1); }
-.cta-notes { left: 67.389%; top:  8.347%; width: 37.753%; }
+   ball on the wrong side, which is how it had been since this section was
+   first built. Mirroring moves the ink's x offset but not its y, so its top
+   above is not the number a rotation would need. */
+.cta-pen { transform: scaleX(-1); }
 
 /* Between a phone and a desktop the slab keeps its 1520 x 532 and so gets very
    short, while the type has already bottomed out on its clamp — which is what
    put the coin through the headline at 834. Below 1040 the slab stops holding
-   that ratio and takes its height from the words instead, and the props become
-   corner accents measured from the corner they belong to rather than from the
-   top left of a box whose height no longer means anything. */
+   that ratio and takes its height from the words instead, and the props go to
+   the corner their anchor names. */
 @media (max-width: 1040px) {
   .closing { min-height: 0; }
   .closing-slab { aspect-ratio: auto; padding-block: min(104px, 12vw); }
   .closing-in { padding-inline: min(200px, 22vw); }
-  .cta-coin  { left: -3.5%; top: -7%; width: 23%; }
-  .cta-pen   { left: -6%; top: auto; bottom: -10%; width: 25%; }
-  .cta-notes { left: auto; right: -9%; top: auto; bottom: -12%; width: 42%; }
+  [data-cta] .cta-prop { top: auto; bottom: auto; left: auto; right: auto; }
+  [data-cta] .n-tl { left: -3.5%; top: -7%;  width: 23%; }
+  [data-cta] .n-tr { right: -4%;  top: -7%;  width: 22%; }
+  [data-cta] .n-bl { left: -6%;   bottom: -10%; width: 25%; }
+  [data-cta] .n-br { right: -7%;  bottom: -11%; width: 32%; }
+  [data-cta] .n-l  { left: -9%;   top: 34%;  width: 26%; }
+  [data-cta] .n-r  { right: -9%;  bottom: -12%; width: 42%; }
 }
 @media (max-width: 820px) {
   .closing-in { padding-inline: min(170px, 21vw); }
-  .cta-coin  { width: 20%; }
-  .cta-pen   { width: 22%; bottom: -12%; }
-  .cta-notes { width: 38%; bottom: -14%; }
+  [data-cta] .n-tl, [data-cta] .n-tr { width: 20%; }
+  [data-cta] .n-bl { width: 22%; bottom: -12%; }
+  [data-cta] .n-br { width: 28%; bottom: -13%; }
+  [data-cta] .n-r  { width: 38%; bottom: -14%; }
 }
 
 /* -------------------------------------------------------------- bands -- */
@@ -2153,12 +2209,12 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
   .foot-word + .risk { margin-top: 0.3em; }
   .closing { min-height: 0; }
   .closing-slab { aspect-ratio: auto; padding-block: 56px; }
-  /* At 350 the slab is a third of its width and the props are placed as
-     shares of it, so the pen lands under the button and the notes across the
-     lead. The coin sits in the corner clear of everything, so it stays and
-     they go — faded props behind the words are not a compromise, they are
-     just harder to read. */
-  .cta-pen, .cta-notes { display: none; }
+  /* At 350 the slab is a third of its width, so anything not in a corner
+     lands under the button or across the lead. Whichever prop the page
+     anchored top left is clear of the words, so that one stays and the rest
+     go — faded props behind the words are not a compromise, they are just
+     harder to read. */
+  .cta-prop:not(.n-tl) { display: none; }
   /* A span left on in a single-column stack invents a second track and
      collapses the first to 0. On a phone every card is just a card, and the
      wide ones put their screens under the words instead of beside them. */
