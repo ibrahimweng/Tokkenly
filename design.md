@@ -9767,3 +9767,57 @@ section had moved 233 pixels, because the images above it were still arriving;
 the pointer was outside the card, the run tore itself down, and the shot was of
 a card at rest. The page is walked and its images waited for now, and the
 section's top has to sit still before anything is hovered.
+
+
+### 11g.86 — the screens keep the app's spacing, and the card pans over them
+
+**The note.** The three mocks were squeezed. Getting a whole screen into a
+485x600 crop meant shrinking every gap until it fitted, and a screen with the
+air taken out reads as one: too many things, too close together, none of them
+given any weight.
+
+**The fix is the other way round.** The screen is a real phone rendering at
+390 design pixels wide, as tall as its content needs — 766 to 870 — and the
+card's glass shows 507 of that. It does not fit and is not meant to. The run
+pans it, the way a thumb would, and each pan is the moment the step it is
+about comes into view. Nothing is squeezed anywhere.
+
+**One line makes the rest of the file the app.** `scale` takes a number, and
+CSS will not divide one length by another — but `atan2` takes two lengths and
+returns the angle between them, and the tangent of that angle is exactly the
+ratio. So `scale: tan(atan2(100cqw, 390px))` on the phone, once, and every
+value below it can be written the size the app writes it: `.btn` 56, `.field`
+48, `.card` padding 20 gap 16, the 8/12/16/20/24/32 spacing scale, the
+11/12/13/14/18/22/40 type ramp, `--r-card` 24 on a phone, `--r-panel` 16,
+`--r-sheet` 28, and the light theme's colours straight out of `tokens.css`.
+Nothing in the section is chosen by eye any more, and a reviewer can check it
+against the app by reading the numbers.
+
+**What that bought back.** The sign-up screen has its fourth field, its NIN
+callout and its sign-in line again — all three were cut for space and none of
+them needed to be. The Wallet shows its whole hero and all three doors. Invest
+shows four companies and the list keeps running under the rail, which is what
+it does.
+
+**Pinned, not panned.** The tab rail and the sheet are children of the glass
+rather than of the page, so panning moves the page underneath them and they
+stay where a thumb left them. The app fades its content into the canvas before
+the rail, so this does too — at 112 pixels rather than the app's 148, because
+the glass is 507 tall and 148 would swallow a fifth of it.
+
+**Only when it has to.** A page that slides at every step never settles, and
+the move is meant to read as emphasis. So `show()` pans only when the target
+is not already in the glass, and it happens in the same beat as the arrow's
+travel: they leave together and arrive together, which means `centre()` has to
+aim at where the target *will* be rather than where it is. Sign-up pans twice
+— once to reach the email field, once to bring up the button four filled
+fields were for. The Wallet pans once, to put all three doors on screen before
+one is pressed. Invest pans once, to read the row it is about to add. The
+sign-up run is about eight seconds now; the other two are five and six.
+
+**One the hoisting caught.** The reduced-motion branch runs first and calls
+`rest()`, and `rest()` needs the phone's height. The height was a `var`
+declared three hundred lines further down: hoisted, but not its value. 870
+minus undefined is NaN, NaN does not move a page, and the still sat at the top
+of a form whose button is its point. The two constants are declared above the
+branch that needs them now.

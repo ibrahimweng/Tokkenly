@@ -61,7 +61,7 @@ const onTarget = (k, sel) => p.evaluate(([kind, s]) => {
 console.log('\n--- the markup ---')
 ok((await p.$$eval('.gs-mock', (e) => e.length)) === 3, 'three mocks')
 ok((await p.$$eval('.gs-mock[role="img"][aria-label]', (e) => e.length)) === 3, 'each is one captioned image')
-ok((await p.$$eval('.gs-scr[aria-hidden="true"]', (e) => e.length)) === 3, 'each screen is hidden from the reader')
+ok((await p.$$eval('.gs-win[aria-hidden="true"]', (e) => e.length)) === 3, 'each screen is hidden from the reader')
 ok((await p.$$eval('.gs-mock img', (e) => e.length)) === 0, 'no screenshots left in the section')
 /* The icons are one sprite and forty <use>s. A <use> inherits from the <use>,
    not from where the symbol is written, so paint the stroke on the wrong side
@@ -81,26 +81,48 @@ ok((await p.$$eval('.gs-mock[data-gs="fund"] .m-rail, .gs-mock[data-gs="invest"]
   (e) => e.length)) === 2, 'the two signed-in screens have the tab rail')
 ok((await p.$$eval('.gs-mock[data-gs="signup"] .m-rail', (e) => e.length)) === 0,
   'and the sign-up screen does not')
+/* The screens are the app at phone scale — 390 design pixels wide, with the
+   app's own 56px buttons and 48px fields and 20px card padding — and the glass
+   shows 507 of the 850-1,000 each one is tall. That is the point: nothing is
+   squeezed to fit, the run pans instead. */
 for (const k of ['signup', 'fund', 'invest']) {
-  const box = await p.locator(`.gs-mock[data-gs="${k}"] .gs-scr`).boundingBox()
-  ok(box && box.width > 200 && box.height > 300,
-    `${k}: screen laid out ${box && Math.round(box.width)}x${Math.round(box.height)}`)
-}
-/* Content that runs past the bottom of the crop is content the run will press
-   where nobody can see it. Invest is allowed to bleed: its list is meant to
-   run on under the fold, and the last thing it presses is four rows above it. */
-for (const [k, bleeds] of [['signup', false], ['fund', false], ['invest', true]]) {
-  const over = await p.evaluate((kind) => {
-    const scr = document.querySelector(`.gs-mock[data-gs="${kind}"] .gs-scr`)
-    // Only what the column lays out. The sheet and the tab rail float over
-    // the screen by design, and counting them as flow would say every card
-    // fits whatever is in it.
-    const kids = [...scr.children].filter((e) => getComputedStyle(e).position === 'static')
-    const last = kids[kids.length - 1].getBoundingClientRect()
-    return Math.round(last.bottom - scr.getBoundingClientRect().bottom)
+  const m = await p.evaluate((kind) => {
+    const mock = document.querySelector(`.gs-mock[data-gs="${kind}"]`)
+    const win = mock.querySelector('.gs-win').getBoundingClientRect()
+    const scr = mock.querySelector('.gs-scr')
+    const cs = (sel, prop) => {
+      const e = mock.querySelector(sel)
+      return e ? parseFloat(getComputedStyle(e)[prop]) : null
+    }
+    return {
+      scale: win.width / 390,
+      glass: Math.round(win.height / (win.width / 390)),
+      screen: scr.offsetHeight,
+      phone: mock.querySelector('.gs-phone').offsetWidth,
+      btn: cs('.m-btn', 'height'), field: cs('.m-field', 'height'),
+      pad: cs('.m-card', 'paddingTop'), body: cs('.m-body', 'fontSize'),
+    }
   }, k)
-  ok(bleeds || over <= 1, `${k}: content ${over <= 1 ? 'fits the crop' : 'OVERFLOWS by ' + over}`)
+  ok(m.phone === 390, `${k}: the screen is 390 design px wide (${m.phone})`)
+  ok(Math.abs(m.glass - 507) <= 2, `${k}: the glass shows ${m.glass} of them`)
+  ok(m.screen > m.glass + 150,
+    `${k}: the screen is ${m.screen} tall, so the run has somewhere to pan`)
+  ok(m.btn === null || m.btn === 56, `${k}: buttons are the app's 56 (${m.btn})`)
+  ok(m.field === null || m.field === 48, `${k}: fields are the app's 48 (${m.field})`)
+  ok(m.pad === null || m.pad === 20, `${k}: cards pad 20 (${m.pad})`)
+  ok(m.body === null || m.body === 14, `${k}: body is 14 (${m.body})`)
 }
+/* The rail and the sheet are pinned to the glass, not to the page: pan the
+   screen and they stay where a thumb left them, which is what they do in the
+   product. */
+for (const k of ['fund', 'invest']) {
+  ok(await p.$eval(`.gs-mock[data-gs="${k}"] .m-rail`,
+    (e) => e.parentElement.classList.contains('gs-phone')),
+    `${k}: the tab rail is pinned to the glass, not to the page`)
+}
+ok(await p.$eval('.gs-mock[data-gs="fund"] .m-sheet',
+  (e) => e.parentElement.classList.contains('gs-phone')),
+  'and so is the sheet')
 
 console.log('\n--- at rest ---')
 ok(!(await shown('signup')), 'the arrow is parked')
@@ -134,6 +156,13 @@ await p.waitForTimeout(1200)
 ok((await text('signup', '[data-f="go"]')) === 'Checking your invite…',
   `the button takes it: "${await text('signup', '[data-f="go"]')}"`)
 ok((await onTarget('signup', '[data-f="go"]')) !== 'on', 'and the arrow comes off it')
+/* The button is 200 design pixels below anything the glass showed at rest, so
+   pressing it means the page came up to it. That is the arrangement: the
+   screen keeps the app's spacing and the run moves the page, rather than the
+   spacing shrinking until a whole screen fits. */
+const lifted = await p.$eval('.gs-mock[data-gs="signup"] .gs-scr',
+  (e) => parseFloat(getComputedStyle(e).getPropertyValue('--pan')) || 0)
+ok(lifted < -300, `the page came up to reach it (${Math.round(lifted)}px)`)
 
 console.log('\n--- and leaving puts it all back ---')
 await p.mouse.move(10, 10)
@@ -142,26 +171,35 @@ ok((await text('signup', '[data-f="code"] .m-val')) === '', 'the fields are empt
 ok((await text('signup', '[data-f="go"]')) === 'Create account', 'the button is a button again')
 ok(!(await shown('signup')), 'the arrow is gone')
 ok(!(await has('signup', '[data-f="code"]', 'is-done')), 'and nothing is left tinted')
+ok((await p.$eval('.gs-mock[data-gs="signup"] .gs-scr',
+  (e) => parseFloat(getComputedStyle(e).getPropertyValue('--pan')) || 0)) === 0,
+  'and the page is back at its top')
 
 /* ------------------------------------------------------------- 2. fund --- */
 console.log('\n--- add money ---')
 await p.hover('.gs-mock[data-gs="fund"]')
-await p.waitForTimeout(760)
-ok((await onTarget('fund', '[data-f="add"]')) === 'on',
-  `the arrow lands on the door: ${await onTarget('fund', '[data-f="add"]')}`)
-await p.waitForTimeout(700)
-ok(await attr('fund', '.m-sheet', 'data-on'), 'the sheet rises')
-ok(await p.$eval('.gs-mock[data-gs="fund"] .gs-scr', (e) =>
-  getComputedStyle(e, '::after').backgroundColor !== 'rgba(0, 0, 0, 0)'), 'and dims what it covers')
-await p.waitForTimeout(500)
-ok((await onTarget('fund', '[data-f="crypto"]')) === 'on', 'it reads the crypto row first')
-await p.waitForTimeout(900)
-ok((await onTarget('fund', '[data-f="bank"]')) === 'on', 'then settles on the bank one')
+/* The wallet's first move is the page, not the hand: the three doors are
+   below the glass at rest, so the run brings them up before pressing one. */
 await p.waitForTimeout(1000)
+const panned = await p.$eval('.gs-mock[data-gs="fund"] .gs-scr',
+  (e) => parseFloat(getComputedStyle(e).getPropertyValue('--pan')) || 0)
+ok(panned < -80, `the page comes up to show all three doors (${Math.round(panned)}px)`)
+await p.waitForTimeout(500)
+ok((await onTarget('fund', '[data-f="add"]')) === 'on',
+  `then the arrow lands on one: ${await onTarget('fund', '[data-f="add"]')}`)
+await p.waitForTimeout(400)
+ok(await attr('fund', '.m-sheet', 'data-on'), 'the sheet rises')
+ok(await p.$eval('.gs-mock[data-gs="fund"] .gs-phone', (e) =>
+  getComputedStyle(e, '::after').backgroundColor !== 'rgba(0, 0, 0, 0)'), 'and dims what it covers')
+await p.waitForTimeout(950)
+ok((await onTarget('fund', '[data-f="crypto"]')) === 'on', 'it reads the crypto row first')
+await p.waitForTimeout(700)
+ok((await onTarget('fund', '[data-f="bank"]')) === 'on', 'then settles on the bank one')
+await p.waitForTimeout(600)
 ok(await attr('fund', '.m-acct', 'data-on'), 'the account details take the sheet over')
 ok(await has('fund', '[data-f="bank"]', 'is-gone'), 'the three ways stand down')
 ok((await text('fund', '.m-sheet-h')) === 'Bank transfer', 'and the sheet says which one you picked')
-await p.waitForTimeout(800)
+await p.waitForTimeout(1400)
 ok((await text('fund', '[data-f="copy"]')) === 'Copied', 'the number is copied')
 await p.mouse.move(10, 10)
 await p.waitForTimeout(500)

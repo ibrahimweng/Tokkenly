@@ -460,6 +460,20 @@
 ;(function () {
   'use strict'
 
+  /* The screen's own width, which is what every measurement inside it is in:
+     the CSS scales the whole thing to the glass, and this is the number that
+     scaling divides by. And the glass's own height in those same pixels — it
+     is 552 of the card's 600, which at 390 wide is 552 x 390/425. The CSS
+     says both numbers too.
+
+     Declared up here rather than beside the code that uses them, because the
+     reduced-motion branch below calls rest(), and rest() needs the height. A
+     `var` further down is hoisted but its value is not, so the first thing
+     that ran got 974 minus undefined — which is what the sign-up card's pan
+     came out as, and NaN does not move a page. */
+  var PHONE_W = 390
+  var PHONE_H = 506.5
+
   var mocks = [].slice.call(document.querySelectorAll('.gs-mock'))
   if (!mocks.length) return
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -470,15 +484,18 @@
   }
 
   /* Where a target sits inside the card, as a percentage of the card, so the
-     pointer lands on the same spot whatever size the card is drawn at. */
-  function centre(mock, sel) {
+     pointer lands on the same spot whatever size the card is drawn at.
+     `shift` is how far the page is about to move underneath it: the arrow has
+     to aim at where the target will be when it gets there, not where it was
+     when the step started. */
+  function centre(mock, sel, shift) {
     var el = mock.querySelector(sel)
     if (!el) return null
     var a = el.getBoundingClientRect(), b = mock.getBoundingClientRect()
     if (!b.width || !b.height) return null
     return {
       x: ((a.left + a.width / 2) - b.left) / b.width * 100,
-      y: ((a.top + a.height / 2) - b.top) / b.height * 100,
+      y: ((a.top + a.height / 2 + (shift || 0)) - b.top) / b.height * 100,
     }
   }
 
@@ -504,7 +521,9 @@
 
     if (kind === 'signup') {
       ;['code', 'name', 'email', 'pass'].forEach(function (f, i) {
-        to('[data-f="' + f + '"]', i ? 360 : 480)
+        // The email is the one below the fold when its turn comes, and the
+        // step that brings it up carries the pan, so it gets the room.
+        to('[data-f="' + f + '"]', i === 2 ? 680 : i ? 440 : 480)
         tap(240)
         act(function (r) { r.type(q('[data-f="' + f + '"]')) }, 0)
         // Typing is driven by its own timer; hold here for as long as it runs.
@@ -515,14 +534,20 @@
           el.classList.remove('is-caret')
         }, 120)
       })
-      to('[data-f="go"]', 360)
+      // The button is 200 pixels below anything seen so far. This is the move
+      // the whole arrangement is for: the page comes up, and the thing the
+      // four fields were for is suddenly the only thing on the screen.
+      to('[data-f="go"]', 720)
       tap(240)
       act(function () { q('[data-f="go"]').textContent = 'Checking your invite…' }, 240)
       off(9, 7, 620)
     }
 
     if (kind === 'fund') {
-      to('[data-f="add"]', 620)
+      // A wallet is read before it is used: the three doors come up together,
+      // and then one of them is pressed.
+      steps.push([880, function (r) { r.show('.m-ways', 700) }])
+      to('[data-f="add"]', 520)
       tap()
       act(function () { q('[data-f="sheet"]').setAttribute('data-on', '') }, 640)
       // A pointer that goes straight to its answer has not looked at the list.
@@ -561,7 +586,9 @@
         })
         q('.m-count').textContent = '1 company'
       }, 700)
-      to('.m-co[data-co="AAPL"]', 460)
+      // The list starts at the bottom edge of the glass, so reading the row
+      // means bringing it up.
+      to('.m-co[data-co="AAPL"]', 700)
       act(function () { q('.m-co[data-co="AAPL"]').classList.add('is-hot') }, 300)
       to('[data-f="add-aapl"]', 360)
       tap()
@@ -583,7 +610,7 @@
   }
 
   /* How long a field takes to fill, at the one rate every field types at. */
-  var PER_CHAR = 44
+  var PER_CHAR = 38
   function typeMs(el) {
     return el ? (el.getAttribute('data-type') || '').length * PER_CHAR + 160 : 0
   }
@@ -591,12 +618,29 @@
   /* ------------------------------------------------------------- the run -- */
   function runner(mock, kind) {
     var cursor = mock.querySelector('.gs-cursor')
+    var win = mock.querySelector('.gs-win')
+    var screen = mock.querySelector('.gs-scr')
     var timers = []
     var live = false
     var last = null
+    var pan = 0                       // design pixels, zero or negative
 
     function at(ms, fn) { timers.push(setTimeout(fn, ms)) }
     function clear() { timers.forEach(clearTimeout); timers = [] }
+
+    /* How many page pixels one design pixel is drawn at. Read rather than
+       stored, because the card is a different width at every breakpoint and
+       the CSS works it out with a trig call this cannot see. */
+    function scale() {
+      var w = win.getBoundingClientRect().width
+      return w ? w / PHONE_W : 1
+    }
+
+    function setPan(px, ms) {
+      pan = px
+      screen.style.setProperty('--pan-ms', ms + 'ms')
+      screen.style.setProperty('--pan', px + 'px')
+    }
 
     /* One place that writes a position, so travel time and position are set
        together and the arrow can never be mid-flight when the tap lands. */
@@ -609,7 +653,10 @@
 
     var api = {
       move: function (sel, ms) {
-        var p = centre(mock, sel)
+        // Page first, in the same beat: they travel together and arrive
+        // together, so the arrow never lands where the target used to be.
+        var shift = api.show(sel, ms)
+        var p = centre(mock, sel, shift)
         if (!p) return
         cursor.classList.add('is-on')
         place(p.x, p.y, ms)
@@ -620,6 +667,30 @@
       drift: function (dx, dy, ms) {
         if (!last) return
         place(last.x + dx, last.y + dy, ms)
+      },
+      /* Bring something into the glass, if it is not already comfortably in
+         it. The screens are 850 to 1,000 design pixels tall and the glass
+         shows about 506 of that, so the run moves the page the way a thumb
+         would rather than the section shrinking a screen until it fits.
+         Only when it has to: a page that slides at every step is a page that
+         never settles, and the move is supposed to read as emphasis. */
+      show: function (sel, ms) {
+        var el = screen.querySelector(sel)
+        if (!el) return 0                     // pinned to the glass, or absent
+        var k = scale()
+        var top = (el.getBoundingClientRect().top - screen.getBoundingClientRect().top) / k
+        var h = el.offsetHeight
+        var glass = win.getBoundingClientRect().height / k
+        var seen = -pan                       // design px of screen above the glass
+        // Already all the way in? Then nothing moves. A page that slides at
+        // every step is a page that never settles, and the move is supposed
+        // to read as emphasis rather than as fidgeting.
+        if (top >= seen && top + h <= seen + glass) return 0
+        var room = Math.max(0, screen.offsetHeight - glass)
+        var want = -Math.min(room, Math.max(0, top + h / 2 - glass / 2))
+        var shift = (want - pan) * k          // page pixels, for the arrow
+        setPan(want, ms)
+        return shift
       },
       tap: function () {
         cursor.classList.remove('is-tap')
@@ -658,9 +729,11 @@
       clear()
       rest(mock, false)
       cursor.classList.remove('is-on', 'is-tap')
-      // Straight back to the corner it comes in from. Animated, it would
-      // sail across a screen that has already snapped back to frame one.
+      // Straight back to the corner it comes in from, and the page straight
+      // back to its top. Animated, either would sail across a screen that has
+      // already snapped back to frame one.
       place(92, 106, 0)
+      setPan(0, 0)
     }
 
     return {
@@ -700,6 +773,13 @@
     var count = mock.querySelector('.m-count')
     if (count) count.textContent = '6 companies'
 
+    /* The page itself, back to its top. */
+    var screen = mock.querySelector('.gs-scr')
+    if (screen) {
+      screen.style.setProperty('--pan-ms', '0ms')
+      screen.style.setProperty('--pan', '0px')
+    }
+
     if (finished) {
       /* Where each run lands, for a reader who will never see it move. Not
          the literal last frame: 'Checking your invite…' and 'Copied' are
@@ -708,6 +788,12 @@
          is about. */
       var sheet = mock.querySelector('.m-sheet')
       if (sheet) sheet.setAttribute('data-on', '')
+      // A filled form whose button is off the bottom of the glass is a form
+      // that looks unfinished, so this one rests at its foot.
+      if (screen && mock.querySelector('[data-f="go"]')) {
+        screen.style.setProperty('--pan',
+          -Math.max(0, screen.offsetHeight - PHONE_H) + 'px')
+      }
       // A search reading 'appl' over a list with Microsoft in it is a search
       // that does not work. If the field is filled, the list matches it.
       if (mock.querySelector('[data-f="search"]')) {
