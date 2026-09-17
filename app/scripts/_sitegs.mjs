@@ -89,28 +89,38 @@ for (const k of ['signup', 'fund', 'invest']) {
   const m = await p.evaluate((kind) => {
     const mock = document.querySelector(`.gs-mock[data-gs="${kind}"]`)
     const win = mock.querySelector('.gs-win').getBoundingClientRect()
-    const scr = mock.querySelector('.gs-scr')
-    const cs = (sel, prop) => {
+    const phone = mock.querySelector('.gs-phone').getBoundingClientRect()
+    const scr = mock.querySelector('.gs-scr').getBoundingClientRect()
+    const k = win.width / 390                 // page pixels per screen pixel
+    // Everything is laid out at page scale, so read it back and divide into
+    // the screen's own pixels — which is where the app's numbers live.
+    const at = (sel, prop) => {
       const e = mock.querySelector(sel)
-      return e ? parseFloat(getComputedStyle(e)[prop]) : null
+      return e ? +(parseFloat(getComputedStyle(e)[prop]) / k).toFixed(1) : null
     }
     return {
-      scale: win.width / 390,
-      glass: Math.round(win.height / (win.width / 390)),
-      screen: scr.offsetHeight,
-      phone: mock.querySelector('.gs-phone').offsetWidth,
-      btn: cs('.m-btn', 'height'), field: cs('.m-field', 'height'),
-      pad: cs('.m-card', 'paddingTop'), body: cs('.m-body', 'fontSize'),
+      glassW: win.width, phoneW: phone.width,
+      glass: Math.round(win.height / k),
+      screen: Math.round(scr.height / k),
+      btn: at('.m-btn', 'height'), field: at('.m-field', 'height'),
+      pad: at('.m-card', 'paddingTop'), body: at('.m-body', 'fontSize'),
     }
   }, k)
-  ok(m.phone === 390, `${k}: the screen is 390 design px wide (${m.phone})`)
-  ok(Math.abs(m.glass - 507) <= 2, `${k}: the glass shows ${m.glass} of them`)
+  /* The one that matters most. The screen is sized from a container unit, and
+     the first attempt did it through `tan(atan2(100cqw, 390px))` — a number,
+     which has to resolve before layout, which is while a container unit is
+     still 0. Chromium deferred it and rendered correctly; Safari resolved it
+     as written and drew every card empty. Whatever the mechanism, the screen
+     has to come out exactly as wide as the glass it is drawn in. */
+  ok(Math.abs(m.phoneW - m.glassW) < 1,
+    `${k}: the screen is drawn the width of its glass (${m.phoneW.toFixed(1)} vs ${m.glassW.toFixed(1)})`)
+  ok(Math.abs(m.glass - 507) <= 2, `${k}: the glass shows ${m.glass} of the screen's own pixels`)
   ok(m.screen > m.glass + 150,
     `${k}: the screen is ${m.screen} tall, so the run has somewhere to pan`)
-  ok(m.btn === null || m.btn === 56, `${k}: buttons are the app's 56 (${m.btn})`)
-  ok(m.field === null || m.field === 48, `${k}: fields are the app's 48 (${m.field})`)
-  ok(m.pad === null || m.pad === 20, `${k}: cards pad 20 (${m.pad})`)
-  ok(m.body === null || m.body === 14, `${k}: body is 14 (${m.body})`)
+  ok(m.btn === null || Math.abs(m.btn - 56) < 0.5, `${k}: buttons are the app's 56 (${m.btn})`)
+  ok(m.field === null || Math.abs(m.field - 48) < 0.5, `${k}: fields are the app's 48 (${m.field})`)
+  ok(m.pad === null || Math.abs(m.pad - 20) < 0.5, `${k}: cards pad 20 (${m.pad})`)
+  ok(m.body === null || Math.abs(m.body - 14) < 0.5, `${k}: body is 14 (${m.body})`)
 }
 /* The rail and the sheet are pinned to the glass, not to the page: pan the
    screen and they stay where a thumb left them, which is what they do in the

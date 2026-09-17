@@ -9844,4 +9844,59 @@ changes; and the header says what the script needs, which is how the other
 capture script is written.
 
 `_shot-nav` reports `FAIL=0` in a one-preview sweep now instead of a stack
-trace, which was the last crash line in it.
+trace, which was the last crash line in it. The sweep comes back 45 reporting
+and 45 clean — 45 rather than 44 because a script that stands down is a script
+with a result, and a crash was never counted as one.
+
+### 11g.88 — a number that resolves too early, and three empty cards in Safari
+
+**What was seen.** The Getting Started section rendered as three coloured
+slabs with a blank cream rectangle on each. Chromium was fine. Safari showed
+nothing inside the glass at all.
+
+**What it was.** 11g.86 sized the phone with one clever line:
+
+    scale: tan(atan2(100cqw, 390px));
+
+`scale` takes a `<number>`, and a number has to resolve at computed-value
+time — before layout, which is while a container query unit is still nothing.
+Chromium defers it and gets the right answer. Safari resolves it as written:
+`100cqw` is 0, `atan2(0, 390px)` is 0deg, `tan(0deg)` is 0, and a scale of 0
+is an empty card. Reproduced by forcing `scale: 0` in Chromium, which produced
+the reported screenshot exactly.
+
+**The fix is to stop needing a number.** A *length* has no such problem: it
+resolves at used-value time, where `cqw` is exactly what it says. So the unit
+is a length now —
+
+    --px: calc(100cqw / 390);
+
+— and every size is a multiple of it: `calc(56 * var(--px))` is the app's 56px
+button. There is no transform on the screen at all, and nothing in the section
+depends on a container unit surviving a trip through a math function that
+returns a number. 194 lengths converted.
+
+The pan came with it. `--pan` was a length the transform scaled; it is a plain
+number of the screen's own pixels now, and the stylesheet multiplies. The
+driver measures in page pixels and divides by the scale, which it was already
+doing for half its sums.
+
+**Two things it cost, and one it gave back.** The driver's `show()` read
+`offsetHeight` as screen pixels because a transformed subtree lays out
+unscaled; it is page pixels now and has to be divided. Same for the
+reduced-motion still's pan. What it gave back: the type is laid out at the
+size it is drawn at rather than rasterised at 390 and scaled, so every glyph
+is hinted. Same geometry to a tenth of a pixel, visibly crisper.
+
+**The guard.** The suite asserts the screen comes out exactly as wide as the
+glass it is drawn in, at all three widths. That is the invariant every sizing
+mechanism has to satisfy, and it is false for a scale of 0, a scale of 1, and
+anything else that goes wrong — which is more than a test for this particular
+trig call would have been worth.
+
+**The lesson, since it is the second one this week.** Both bugs in this
+section came from a clever thing that worked where it was written: the `<use>`
+whose stroke was inherited by nothing, and now a scale computed from a unit
+that is not there yet. Cleverness in a hand-written stylesheet is a bet that
+every engine agrees about an edge, and there is no build step here to lose
+that bet quietly.

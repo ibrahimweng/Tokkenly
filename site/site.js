@@ -636,10 +636,13 @@
       return w ? w / PHONE_W : 1
     }
 
+    /* --pan is a plain number of the screen's own pixels; the stylesheet
+       multiplies it by what one of those is worth on the page. Nothing here
+       has to know the scale to move the page. */
     function setPan(px, ms) {
       pan = px
       screen.style.setProperty('--pan-ms', ms + 'ms')
-      screen.style.setProperty('--pan', px + 'px')
+      screen.style.setProperty('--pan', String(px))
     }
 
     /* One place that writes a position, so travel time and position are set
@@ -677,16 +680,18 @@
       show: function (sel, ms) {
         var el = screen.querySelector(sel)
         if (!el) return 0                     // pinned to the glass, or absent
-        var k = scale()
-        var top = (el.getBoundingClientRect().top - screen.getBoundingClientRect().top) / k
-        var h = el.offsetHeight
+        var k = scale()                       // page pixels per screen pixel
+        var scr = screen.getBoundingClientRect()
+        var r = el.getBoundingClientRect()
+        var top = (r.top - scr.top) / k
+        var h = r.height / k
         var glass = win.getBoundingClientRect().height / k
-        var seen = -pan                       // design px of screen above the glass
+        var seen = -pan                       // screen px above the glass
         // Already all the way in? Then nothing moves. A page that slides at
         // every step is a page that never settles, and the move is supposed
         // to read as emphasis rather than as fidgeting.
         if (top >= seen && top + h <= seen + glass) return 0
-        var room = Math.max(0, screen.offsetHeight - glass)
+        var room = Math.max(0, scr.height / k - glass)
         var want = -Math.min(room, Math.max(0, top + h / 2 - glass / 2))
         var shift = (want - pan) * k          // page pixels, for the arrow
         setPan(want, ms)
@@ -777,7 +782,7 @@
     var screen = mock.querySelector('.gs-scr')
     if (screen) {
       screen.style.setProperty('--pan-ms', '0ms')
-      screen.style.setProperty('--pan', '0px')
+      screen.style.setProperty('--pan', '0')
     }
 
     if (finished) {
@@ -790,9 +795,11 @@
       if (sheet) sheet.setAttribute('data-on', '')
       // A filled form whose button is off the bottom of the glass is a form
       // that looks unfinished, so this one rests at its foot.
-      if (screen && mock.querySelector('[data-f="go"]')) {
-        screen.style.setProperty('--pan',
-          -Math.max(0, screen.offsetHeight - PHONE_H) + 'px')
+      var win = mock.querySelector('.gs-win')
+      if (screen && win && mock.querySelector('[data-f="go"]')) {
+        var k = win.getBoundingClientRect().width / PHONE_W || 1
+        var tall = screen.getBoundingClientRect().height / k
+        screen.style.setProperty('--pan', String(-Math.max(0, tall - PHONE_H)))
       }
       // A search reading 'appl' over a list with Microsoft in it is a search
       // that does not work. If the field is filled, the list matches it.
