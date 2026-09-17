@@ -2744,3 +2744,109 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
   .gr-tabs { grid-template-columns: minmax(0, 1fr); }
   .gr-tab { height: 46px; font-size: 13.5px; }
 }
+
+/* ------------------------------------------- the company and legal pages -- */
+/* Contact us (394:780), Terms of service (399:559) and Privacy policy
+   (399:785). One band, one column, and the shared close underneath.
+
+   The contact form's numbers are the frame's: 1120 inside the 1520, a field
+   that is a 15 label, 14, a 31 value, 14, then the rule — 75 in total — and 54
+   between fields. The message field is the same with a 108 value instead of a
+   31, and the three channels below it are thirds of the form's width with 48
+   between and a rule over each. */
+.band-page { padding-block: min(140px, 7.3vw) min(120px, 6.25vw); }
+
+.page-head { display: grid; justify-items: center; gap: 22px; text-align: center; }
+.page-head h1 {
+  max-width: 1100px;
+  font-size: clamp(34px, 5.4vw, 68px); line-height: 1.02; letter-spacing: -0.042em;
+  color: var(--ink);
+}
+.page-lead { max-width: 720px; }
+.page-head-left { justify-items: start; text-align: left; }
+.page-head-left h1 { max-width: 1000px; }
+.page-updated { font-size: 14.5px; color: var(--muted); }
+
+/* ---------------------------------------------------------- the form ---- */
+.cf {
+  width: min(1120px, 100%); margin: min(110px, 5.8vw) auto 0;
+  display: grid; gap: min(54px, 2.813vw);
+}
+.cf-field { display: grid; gap: 14px; margin: 0; }
+.cf-label {
+  font-size: 11.5px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.1em; color: var(--muted);
+}
+/* The rule is the field's own bottom border, so it cannot fall out of step
+   with the input the way a separate element would. */
+.cf-input {
+  appearance: none; width: 100%; font: inherit;
+  font-size: clamp(17px, 1.146vw, 22px); line-height: 1.4;
+  color: var(--ink); background: transparent;
+  border: 0; border-bottom: 1px solid var(--line);
+  border-radius: 0; padding: 0 0 13px;
+  transition: border-color var(--t-base) var(--ease-out);
+}
+.cf-input::placeholder { color: #9aa8a3; }
+.cf-input:focus { outline: none; border-bottom-color: var(--ink); }
+.cf-input:focus-visible { outline: none; }
+textarea.cf-input { resize: vertical; min-height: 108px; }
+
+.cf-send { margin: 0; }
+.cf-btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: none; border: 0; padding: 0; cursor: pointer;
+  font: inherit; font-size: clamp(16px, 1.042vw, 20px); font-weight: 600;
+  letter-spacing: -0.01em; color: var(--ink);
+}
+.cf-btn .pr-arrow { width: 20px; height: 20px; transition: transform var(--t-base) var(--ease-out); }
+.cf-btn:hover .pr-arrow { transform: translateX(4px); }
+.cf-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
+
+.cf-channels {
+  width: min(1120px, 100%); margin: min(96px, 5vw) auto 0;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: min(48px, 2.5vw);
+}
+.cf-channel { border-top: 1px solid var(--line); padding-top: 35px; }
+.cf-channel h2 {
+  font-size: clamp(18px, 1.146vw, 22px); line-height: 1.3; letter-spacing: -0.022em;
+  color: var(--ink); margin: 0 0 12px; overflow-wrap: anywhere;
+}
+.cf-channel h2 a { color: inherit; text-decoration: none; }
+.cf-channel h2 a:hover { text-decoration: underline; }
+.cf-channel p { font-size: clamp(14.5px, 0.834vw, 16px); line-height: 1.6; color: var(--muted); }
+
+/* --------------------------------------------------------- the prose ---- */
+/* The clauses number themselves, so adding one never means renumbering. */
+.prose {
+  width: min(820px, 100%); margin: min(96px, 5vw) 0 0;
+  padding: 0; list-style: none; counter-reset: clause;
+  display: grid; gap: min(56px, 2.917vw);
+}
+.prose-part { counter-increment: clause; }
+.prose-part h2 {
+  display: flex; gap: 16px;
+  font-size: clamp(21px, 1.563vw, 30px); line-height: 1.25; letter-spacing: -0.025em;
+  color: var(--ink); margin: 0 0 18px;
+}
+.prose-part h2::before {
+  content: counter(clause); flex: none;
+  font-size: 0.62em; font-weight: 600; color: var(--mint);
+  font-variant-numeric: tabular-nums; padding-top: 0.35em;
+}
+.prose-part p {
+  font-size: clamp(15.5px, 1.042vw, 18px); line-height: 1.75; color: #2c4a43;
+  margin: 0 0 14px; padding-left: 32px;
+}
+.prose-part p:last-child { margin-bottom: 0; }
+
+@media (max-width: 1040px) {
+  .band-page { padding-block: min(96px, 11vw) min(80px, 9vw); }
+  .cf { margin-top: 56px; }
+  .cf-channels { margin-top: 64px; grid-template-columns: minmax(0, 1fr); gap: 32px; }
+  .cf-channel { padding-top: 24px; }
+  .prose { margin-top: 56px; }
+  .prose-part p { padding-left: 0; }
+  .prose-part h2 { gap: 12px; }
+}
