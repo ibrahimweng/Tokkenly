@@ -26,7 +26,7 @@
  *      node build-products.mjs
  */
 
-import { writeFileSync, mkdirSync } from 'node:fs'
+import { writeFileSync, mkdirSync, readFileSync, existsSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { PRODUCTS, PROPS, APP_URL } from './copy-products.mjs'
@@ -531,12 +531,18 @@ ${nav(up, p.slug)}
       <span id="more"></span>
 ${p.spine.map((s) => KIT[s.type](p, s, up).replace('<section class="band', `<section id="s-${s.type}" class="band`)).join('\n')}
 
-      <section class="closing closing-prod">
+      <!-- The close declares its cta variant and anchors each prop, because
+           every placement rule lives under [data-cta] with an n-* anchor under
+           it now. Without them the gradient's two custom properties are
+           undefined and .cta-prop falls back to position: absolute with no
+           offsets, so all three draw at natural size in the corner, on top of
+           the words. -->
+      <section class="closing closing-prod" data-cta="product">
         <div class="wrap">
           <div class="closing-slab reveal">
-            <img class="cta-prop cta-coin" src="${up}img/cta/coin.webp" width="274" height="290" loading="lazy" alt="" aria-hidden="true" />
-            <img class="cta-prop cta-pen" src="${up}img/cta/pen.webp" width="302" height="369" loading="lazy" alt="" aria-hidden="true" />
-            <img class="cta-prop cta-notes" src="${up}img/cta/notes.webp" width="593" height="593" loading="lazy" alt="" aria-hidden="true" />
+            <img class="cta-prop cta-coin n-tl" src="${up}img/cta/coin.webp" width="274" height="290" loading="lazy" alt="" aria-hidden="true" />
+            <img class="cta-prop cta-pen n-bl" src="${up}img/cta/pen.webp" width="302" height="369" loading="lazy" alt="" aria-hidden="true" />
+            <img class="cta-prop cta-notes n-r" src="${up}img/cta/notes.webp" width="593" height="593" loading="lazy" alt="" aria-hidden="true" />
             <div class="closing-in">
               <h2>${esc(p.close[0])}</h2>
               <p class="closing-lead">${esc(p.close[1])}</p>
@@ -557,11 +563,33 @@ ${footer(up)}
 /* build-pages.mjs imports nav and footer from here, so writing on import would
    rebuild the product pages every time that runs. Only write when this file is
    the thing being run. */
+/* `--check` writes nothing and reports any committed page this script would
+   not produce.
+
+   These pages are generated AND committed, which is a trap with a name: an
+   edit made to one of them by hand survives exactly until the next person
+   runs the builder. That has already happened — a fix for the closing slab
+   was written into all eight files, and a regeneration one commit later, made
+   for an unrelated footer link, took it back out. Nothing complained, because
+   nothing was watching. This is what watches. */
 if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))) {
+  const check = process.argv.includes('--check')
   mkdirSync(OUT, { recursive: true })
+  const stale = []
   for (const p of PRODUCTS) {
-    writeFileSync(resolve(OUT, `${p.slug}.html`), page(p))
+    const file = resolve(OUT, `${p.slug}.html`)
+    const html = page(p)
+    if (check) {
+      if (!existsSync(file) || readFileSync(file, 'utf8') !== html) stale.push(p.slug)
+      continue
+    }
+    writeFileSync(file, html)
     console.log('wrote products/' + p.slug + '.html  ' + p.spine.map((s) => s.type).join(' '))
   }
-  console.log(PRODUCTS.length + ' pages')
+  if (!check) console.log(PRODUCTS.length + ' pages')
+  else if (stale.length) {
+    console.error('STALE — edited by hand, or built from an older copy: ' + stale.join(', '))
+    console.error('Run `node site/build-products.mjs` and commit what it writes.')
+    process.exit(1)
+  } else console.log(`${PRODUCTS.length} pages, all in step with the builder`)
 }

@@ -11,10 +11,29 @@
      node app/scripts/_siteprod.mjs
 */
 import { chromium } from 'playwright'
+import { execFileSync } from 'node:child_process'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+/* Before opening a browser: are the committed pages the ones the builder
+   would write? They are generated and committed, so a hand-edit to one of
+   them lives until the next regeneration and then vanishes without a word.
+   That has happened once already. */
+const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
+console.log('=== in step with the builder ===')
+let builderOk = true
+try {
+  console.log('  ok    ' + execFileSync('node', ['site/build-products.mjs', '--check'],
+    { cwd: REPO, encoding: 'utf8' }).trim())
+} catch (e) {
+  builderOk = false
+  console.log('  FAIL  ' + String(e.stderr || e.message).trim().replace(/\n/g, '\n        '))
+}
+
 const SLUGS = ['tokenized-stocks', 'gifting-and-rewards', 'receive', 'send',
                'pay-bills', 'convert', 'earn', 'borrow']
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
-let bad = 0
+let bad = builderOk ? 0 : 1
 const ok = (c, m) => { console.log(`${c ? '  ok  ' : '  FAIL'}  ${m}`); if (!c) bad++ }
 
 for (const w of [1440, 834, 390]) {

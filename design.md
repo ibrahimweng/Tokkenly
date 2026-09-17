@@ -10136,3 +10136,24 @@ The landing page's comparison is pointed at 4323 rather than the older commit,
 so it credits their contrast fix to them and shows only what this merge adds
 to it: the chip from 23px and 10px to 44, the card padding from 16px and 7px
 to 26.
+
+**A postscript, from the second merge an hour later.** Four more commits had
+landed: a cta variant system that gives every page its own gradient and its
+own arrangement of props, and `afb1fa6`, which fixed the eight product pages
+for it — `data-cta="product"` on the section and an `n-*` anchor on each prop,
+written into all eight files by hand.
+
+`site/products/*.html` are generated. One commit later, `6eeb3f2` added the
+contact, terms and privacy pages, updated the builder's footer links, ran
+`node build-products.mjs` — and the regeneration took the hand-written fix
+straight back out of all eight. Nothing complained. On `main` at that moment
+every product page closed with its coin, pen and notes drawing at natural size
+in the middle of the slab, stacked on the headline and through the lead.
+
+The fix is in the builder now, so a regeneration produces it. And the real
+lesson is the second commit rather than the first: an edit to a generated file
+is not wrong, it is just invisible, and it survives exactly until someone runs
+the generator. So `build-products.mjs --check` writes nothing and exits 1 on
+any committed page the builder would not produce, `_siteprod.mjs` runs it
+before it opens a browser, and the next time this happens it is a failing line
+rather than eight broken pages nobody looked at.
