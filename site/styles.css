@@ -1520,6 +1520,11 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 
 /* ------------------------------------------------- closing call to action */
 .closing {
+  /* Every slab falls back to the frame's pairing, so a page that declares no
+     variant still has a background. This belongs here and not on the slab:
+     a custom property set on .closing-slab itself would beat one a variant
+     sets on the section, and the variants would stop working. */
+  --cta-from: #e7c9e0; --cta-to: #d4cec6;
   /* The frame's section is a fixed 1024 with the 532 slab centred in it, not
      a slab with 144 of padding either side. */
   padding-block: var(--section-y);
@@ -1598,6 +1603,7 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 
    variant    pairing                 props, and where the ink sits
    landing    pink -> taupe           dangote 2.6-15 tl · pen 0.8-15 bl · notes 73.5-99 r
+   product    pink -> taupe           coin 2.6-15 tl · pen 0.8-15 bl · notes 73.5-99 r
    blog       sky blue -> pink        globe -6-14 tl · notes 80-97 br
    about      sky blue -> green       coin 82-96 tr · gun -4-18 bl
    contact    green -> pink           globe -8-14 l · coin 84-95 tr
@@ -1608,6 +1614,14 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 [data-cta='landing'] .cta-dangote { left: -0.195%; top: -3.531%; width: 17.786%; }
 [data-cta='landing'] .cta-pen     { left: -1.889%; top: 50.772%; width: 19.693%; }
 [data-cta='landing'] .cta-notes   { left: 67.389%; top:  8.347%; width: 37.753%; }
+
+/* The eight product pages share one close. Their coin is a different file
+   from the landing's — cta/coin.webp against cta/coin-dangote.webp — but the
+   same proportions, so the same ink target lands it in the same place. */
+[data-cta='product'] { --cta-from: #e7c9e0; --cta-to: #d4cec6; }
+[data-cta='product'] .cta-coin  { left: -0.181%; top: -3.525%; width: 17.809%; }
+[data-cta='product'] .cta-pen   { left: -1.889%; top: 50.772%; width: 19.693%; }
+[data-cta='product'] .cta-notes { left: 67.388%; top:  8.349%; width: 37.753%; }
 
 [data-cta='blog'] { --cta-from: #cfe3f5; --cta-to: #eccfe0; }
 [data-cta='blog'] .cta-globe { left: -10.303%; top: -29.980%; width: 28.248%; }
