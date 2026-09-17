@@ -613,14 +613,18 @@
 })()
 
 /* ------------------------------------------- gifting: the two-state card -- */
-/*  Two panels behind one card, switched by the pills inside it, with the bar
- *  under the active pill acting as the dwell timer.
+/*  Two panels behind one card, switched by the pills inside it, where the
+ *  selected pill filling left to right is the dwell timer.
  *
- *  The bar is not a decoration driven by a separate clock. It IS the clock:
- *  the script plays one Web Animations timeline per turn and advances on its
- *  `finished` promise, so what the eye sees filling and what decides to move
- *  on are the same object and cannot drift. Pausing is `anim.pause()`, which
- *  stops the paint and the count together.
+ *  The fill is not a decoration driven by a separate clock. It IS the clock:
+ *  the selected button fills from left to right across its turn, and the turn
+ *  ends when that fill finishes. One Web Animations timeline does both, so
+ *  what the eye sees filling and what decides to move on are the same object
+ *  and cannot drift. Pausing is `anim.pause()`, which stops the paint and the
+ *  count together.
+ *
+ *  The fill is a clipped second copy of the button rather than a coloured
+ *  overlay, so the label flips from white to dark exactly at the sweep edge.
  *
  *  It pauses whenever advancing would be rude or pointless: scrolled out of
  *  view, pointer resting on the card, keyboard focus inside it, or the tab in
@@ -653,7 +657,7 @@
       t.classList.toggle('is-on', on)
       t.setAttribute('aria-selected', on ? 'true' : 'false')
       t.tabIndex = on ? 0 : -1
-      t.querySelector('.gr-bar b').style.transform = 'scaleX(0)'
+      t.querySelector('.gr-fill').style.clipPath = 'inset(0 100% 0 0)'
     })
     panels.forEach(function (p, k) {
       var on = k === n
@@ -672,9 +676,9 @@
   function run() {
     stop()
     if (calm.matches) return
-    var bar = tabs[i].querySelector('.gr-bar b')
-    var mine = anim = bar.animate(
-      [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }],
+    var fill = tabs[i].querySelector('.gr-fill')
+    var mine = anim = fill.animate(
+      [{ clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0 0 0)' }],
       { duration: DWELL, easing: 'linear', fill: 'forwards' }
     )
     if (!seen || held) mine.pause()

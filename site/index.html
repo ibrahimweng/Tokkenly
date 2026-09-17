@@ -357,20 +357,28 @@
                  desktop they are placed back over it, 84.4 per cent down, as
                  the frame has them.
 
-                 The bar under each is the timer itself: the script advances on
-                 its animation finishing, so what is drawn and what is counted
-                 cannot drift apart. -->
+                 The fill IS the timer: the selected button fills from left to
+                 right over its turn and the script advances when that finishes,
+                 so what is drawn and what is counted cannot drift apart.
+
+                 Two types, because one pill has to sit on a pink gradient in one
+                 state and on a dark sweater in the other. Unselected is dark
+                 frosted glass with white text and a faint white stroke, which
+                 reads on either. Selected is solid white with dark text. The
+                 label is drawn twice and the white copy is clipped to the fill,
+                 so the text flips colour exactly at the sweep edge instead of
+                 crossfading through something unreadable. -->
             <div class="gr-tabs" role="tablist" aria-label="Gifting and rewards">
                 <button class="gr-tab is-on" id="gr-t-family" role="tab" type="button"
                         aria-selected="true" aria-controls="gr-p-family" data-tab="family">
-                  <span>For Family and future milestones</span>
-                  <i class="gr-bar" aria-hidden="true"><b></b></i>
+                  <span class="gr-lbl">For Family and future milestones</span>
+                  <span class="gr-fill" aria-hidden="true"><span>For Family and future milestones</span></span>
                 </button>
                 <button class="gr-tab" id="gr-t-loyalty" role="tab" type="button"
                         aria-selected="false" aria-controls="gr-p-loyalty" tabindex="-1"
                         data-tab="loyalty">
-                  <span>Turn loyalty to investment</span>
-                <i class="gr-bar" aria-hidden="true"><b></b></i>
+                  <span class="gr-lbl">Turn loyalty to investment</span>
+                <span class="gr-fill" aria-hidden="true"><span>Turn loyalty to investment</span></span>
               </button>
             </div>
           </div>
