@@ -1013,7 +1013,396 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
   align-items: start;
 }
 .gs-step { display: grid; gap: min(24px, 1.25vw); justify-items: center; }
-.gs-shot { width: 100%; height: auto; border-radius: min(32px, 1.667vw); }
+
+/* ---------- the three step mocks ----------
+   Stage, window, screen.
+
+   The stage is the coloured slab. The window is the glass — a fixed crop of
+   the card. The screen is a real phone rendering of the app, 390 design
+   pixels wide and as tall as its content needs, which is 850 to 1,000. It does
+   not fit the window and is not meant to: the run pans it, the way a thumb
+   would, and each pan is where the step it is about comes into view.
+
+   The first version did the opposite — squeezed a whole screen into the
+   window by shrinking every gap until it fitted. That is not a screen, it is
+   a screen with the air taken out, and it read as one.
+
+   So every number below the scale line is the app's own number, in the app's
+   own pixels: --btn 56, --field 48, --card padding 20 gap 16, the 8/12/16/20/
+   24/32 spacing scale, the 11/12/13/14/18/22/40 type ramp, and the light
+   theme's colours out of tokens.css. Nothing here is chosen by eye. */
+.gs-mock {
+  position: relative; width: 100%; aspect-ratio: 485 / 600;
+  border-radius: min(32px, 1.667vw); overflow: hidden;
+  container-type: inline-size;          /* the pointer measures against this */
+}
+.gs-mock[data-gs='signup'] {
+  background: linear-gradient(196deg, #a4b6c6 0%, #b7c8d0 34%, #c0ccd4 46%,
+              #d47a3b 62%, #f0a772 76%, #46201d 100%);
+}
+.gs-mock[data-gs='fund'] {
+  background: linear-gradient(180deg, #37bda2 0%, #68c0b6 17%, #a7c1d6 33%,
+              #e6c3f3 50%, #efcbff 67%, #dad6fe 84%, #c9dffe 100%);
+}
+.gs-mock[data-gs='invest'] {
+  background: linear-gradient(180deg, #2fbd9d 0%, #40bfa6 17%, #57bfb3 33%,
+              #6bc2be 50%, #81c4cb 67%, #96c6d5 84%, #a7c7de 100%);
+}
+
+/* The glass. Inset at the sides, dropped from the top, bleeding off the
+   bottom, which is how all three exports framed it. In the card's own 485x600
+   that is 30 in from each side and 48 down: a window 425 x 552. */
+.gs-win {
+  position: absolute; left: 6.186%; right: 6.186%; top: 8%; bottom: 0;
+  border-radius: 20px 20px 0 0; overflow: hidden;
+  background: #f4f4f1;                  /* --canvas, light */
+  container-type: inline-size;          /* 100cqw is the glass's width */
+}
+
+/* ---------- the one line that makes the rest of this file the app ----------
+   The phone is 390 wide in its own pixels and the glass is 100cqw wide in the
+   page's. `scale` takes a number, and CSS will not divide one length by
+   another — but atan2 takes two lengths and returns the angle between them,
+   and the tangent of that angle is exactly the ratio. One trig call, and
+   every value below can be written the size the app writes it.
+
+   The phone's height is the glass's: 552 card-pixels is 552 x 390/425 = 506.5
+   phone-pixels, which is where the tab rail sits and where the sheet stops. */
+.gs-phone {
+  position: absolute; left: 0; top: 0;
+  width: 390px; height: 506.5px;
+  transform-origin: 0 0;
+  scale: tan(atan2(100cqw, 390px));
+  color: #17171a;                       /* --ink */
+  font-size: 14px; line-height: 20px;   /* .t-body */
+  font-weight: 400;
+}
+/* The screen inside it: as tall as its content, moved by the run. */
+.gs-scr {
+  position: absolute; left: 0; right: 0; top: 0;
+  translate: 0 var(--pan, 0px);
+  transition: translate var(--pan-ms, 620ms) cubic-bezier(0.32, 0.04, 0.2, 1);
+}
+.m-canvas { background: #f4f4f1; }
+/* Room under the last thing on the page for the bar that floats over it. Only
+   where there is one: the sign-up screen has no rail, and padding for a bar
+   that is not there is a card that ends in nothing. */
+.gs-phone:has(.m-rail) .m-canvas { padding-bottom: 104px; }
+.gs-scr * { text-align: left; }
+
+/* The icons are the product's own line set, at the same 24 grid, so the
+   mock's glyphs and the app's glyphs are one drawing. Each is a <use> of a
+   symbol defined once above the section; the viewBox rides on the symbol.
+
+   The stroke has to be set here rather than on the sprite. A <use> clones its
+   symbol into a shadow tree, and inherited properties reach that tree from the
+   <use> element — not from where the symbol happens to be written. Painted on
+   the <defs>, they were inherited by nothing and every icon came out a filled
+   black blob. */
+.m-i {
+  width: 100%; height: 100%; display: block;
+  fill: none; stroke: currentColor; stroke-width: 1.7;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+/* The sprite itself is never drawn. Not display:none — Safari has declined to
+   resolve a <use> into a hidden tree — just a box with nothing in it. */
+.m-sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+/* ---------- type: the app's ramp, two weights ---------- */
+.m-h1 { font-size: 22px; line-height: 28px; font-weight: 600; letter-spacing: -0.01em; margin: 0; }
+.m-title { font-size: 18px; line-height: 24px; font-weight: 600; margin: 0; }
+.m-body { font-size: 14px; line-height: 20px; margin: 0; }
+.m-caps {
+  font-size: 11px; line-height: 16px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase; color: #6c6c76; margin: 0;
+}
+.m-note { font-size: 12px; line-height: 16px; color: #55555e; }
+.m-muted { color: #55555e; }
+.m-alt { font-size: 12px; line-height: 16px; color: #55555e; margin: 0; text-align: center; }
+.m-alt b { color: #17171a; font-weight: 600; }
+.m-h1row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+
+/* ---------- surfaces ---------- */
+.m-card {
+  background: #fff; border-radius: 24px; padding: 20px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.m-panel {
+  background: #e9e9e4; border-radius: 16px; padding: 16px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.m-cardhead { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.m-page { padding: 16px 20px 0; display: flex; flex-direction: column; gap: 24px; }
+
+/* ---------- controls ---------- */
+.m-btn {
+  height: 56px; border-radius: 999px; display: grid; place-items: center;
+  font-size: 14px; font-weight: 600; flex: none;
+}
+.m-btn-primary { background: #1a1a1e; color: #f7f7f5; }
+.m-btn-secondary { background: #e9e9e4; color: #17171a; }
+.m-btn.is-done { background: #eef8f3; color: #0f7d55; }
+.m-field {
+  position: relative; display: flex; align-items: center; gap: 12px;
+  height: 48px; padding: 0 20px; border-radius: 16px;
+  background: #e9e9e4; font-size: 14px;
+}
+/* Placeholder until something is typed, then the typed value replaces it —
+   one element, two states, so nothing has to be kept in step. */
+.m-field::before {
+  content: attr(data-ph); position: absolute; left: 20px; right: 20px;
+  color: #55555e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.m-search::before { left: 50px; }
+.m-field[data-on]::before { content: none; }
+.m-val { position: relative; white-space: pre; }
+/* The caret only exists while the field is the one being typed into — keyed
+   off a class the driver moves, not off data-on, which stays put once a field
+   is filled. Keyed off data-on it meant four fields blinking at once by the
+   end of the run, which is four carets in one window. */
+.m-field.is-caret .m-val::after {
+  content: ''; display: inline-block; width: 1.5px; height: 18px;
+  background: #17171a; margin-left: 2px; vertical-align: -3px;
+  animation: m-blink 1s steps(1, end) infinite;
+}
+@keyframes m-blink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
+.m-field.is-done { background: #eef8f3; }
+.m-fi, .m-si { width: 18px; height: 18px; color: #55555e; flex: none; }
+.m-fi { margin-left: auto; }
+.m-chips { display: flex; gap: 8px; }
+.m-chips span {
+  height: 44px; padding: 0 16px; border-radius: 999px; background: #e9e9e4;
+  color: #55555e; font-size: 13px; font-weight: 600;
+  display: inline-flex; align-items: center; white-space: nowrap;
+}
+.m-chips span.on { background: #1a1a1e; color: #f7f7f5; }
+.m-callout {
+  display: flex; gap: 12px; align-items: flex-start;
+  background: #e4efea; border-radius: 16px; padding: 16px 20px;
+  color: #55555e; font-size: 13px; line-height: 18px;
+}
+.m-callout .m-i { width: 18px; height: 18px; flex: none; margin-top: 1px; }
+.m-chev { width: 16px; height: 16px; color: #6c6c76; flex: none; }
+.m-two { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.m-two b { font-size: 15px; line-height: 20px; font-weight: 600; }
+.m-two i { font-size: 12px; line-height: 16px; font-style: normal; color: #55555e; }
+.m-pill {
+  font-size: 12px; line-height: 16px; font-weight: 600; color: #8a6510;
+  background: #f6efdc; border-radius: 999px; padding: 4px 10px; flex: none;
+}
+
+/* ---------- the account bar every signed-in screen wears ---------- */
+.m-topbar { display: flex; align-items: center; gap: 12px; padding: 16px 20px 0; }
+.m-avatar {
+  width: 40px; height: 40px; border-radius: 999px; background: #e9e9e4;
+  color: #17171a; display: grid; place-items: center; font-size: 12px; font-weight: 600;
+}
+.m-grow { flex: 1; }
+.m-iconbtn {
+  position: relative; width: 44px; height: 44px; border-radius: 999px;
+  background: #fff; display: grid; place-items: center; color: #55555e; flex: none;
+}
+.m-iconbtn .m-i { width: 18px; height: 18px; }
+/* A badge for nothing is not drawn. */
+.m-bucket {
+  display: none; position: absolute; top: 2px; right: 0;
+  min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px;
+  background: #0f7d55; color: #fff; font-size: 10px; line-height: 1; font-weight: 600;
+  place-items: center;
+}
+.m-bucket.is-on { display: grid; }
+
+/* ---------- 1. create your account ---------- */
+.m-auth { margin: 16px 20px 24px; }
+.m-brand { display: flex; align-items: center; gap: 12px; }
+.m-logo {
+  width: 36px; height: 36px; border-radius: 12px; background: #1a1a1e;
+  color: #f7f7f5; display: grid; place-items: center; font-size: 16px; font-weight: 600;
+}
+.m-word { font-size: 17px; font-weight: 600; }
+.m-head { display: flex; flex-direction: column; gap: 8px; }
+.m-or { display: flex; align-items: center; gap: 12px; color: #6c6c76; font-size: 12px; }
+.m-or::before, .m-or::after { content: ''; height: 1px; background: #e5e5df; flex: 1; }
+.m-form { display: flex; flex-direction: column; gap: 16px; }
+.m-group { display: flex; flex-direction: column; gap: 8px; }
+
+/* ---------- 2. add money ---------- */
+.m-figrow { display: flex; align-items: center; gap: 12px; }
+.m-figure { font-size: 40px; line-height: 48px; font-weight: 600; letter-spacing: -0.03em; }
+.m-bar { display: flex; gap: 4px; }
+.m-bar i { height: 8px; border-radius: 999px; background: #1a1a1e; }
+.m-bar i:nth-child(2) { background: #767680; }
+.m-bar i:nth-child(3) { background: #949490; }
+.m-bar i:nth-child(4) { background: #0f7d55; }
+.m-keys { display: flex; gap: 16px; font-size: 13px; color: #55555e; }
+.m-keys span { display: inline-flex; align-items: center; gap: 8px; }
+.m-keys i { width: 8px; height: 8px; border-radius: 999px; background: #1a1a1e; flex: none; }
+.m-keys span:nth-child(2) i { background: #767680; }
+.m-keys span:nth-child(3) i { background: #949490; }
+.m-lent i { background: #0f7d55; }
+.m-ways { display: flex; flex-direction: column; gap: 12px; }
+.m-way {
+  background: #fff; border-radius: 24px; padding: 20px;
+  display: flex; align-items: center; gap: 16px;
+}
+.m-badge {
+  width: 32px; height: 32px; border-radius: 10px; background: #e9e9e4;
+  display: grid; place-items: center; color: #17171a; flex: none;
+}
+.m-badge .m-i { width: 18px; height: 18px; }
+
+/* The bar the product floats over its signed-in screens: a capsule of four
+   tabs and a button of its own beside it. It is pinned to the glass, not to
+   the screen, so panning moves the page under it and not it with the page. */
+.m-rail {
+  position: absolute; left: 20px; right: 20px; bottom: 32px; z-index: 2;
+  display: flex; align-items: center; gap: 12px;
+}
+/* A floating bar is still a bar, and a hard edge under it makes the page look
+   like it stopped there rather than continued. The app fades the content into
+   the canvas before the pill; this is the same fade, sized to the pill's own
+   reach rather than to a whole phone's worth of bottom padding, because the
+   glass is 507 pixels tall and the app's 148 would swallow a fifth of it. */
+.gs-phone:has(.m-rail)::before {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 112px;
+  background: linear-gradient(to top, #f4f4f1 55%, transparent);
+  z-index: 1; pointer-events: none;
+}
+.m-tabs {
+  flex: 1; min-width: 0; display: flex; justify-content: space-between; gap: 2px;
+  padding: 6px; background: #fff; border-radius: 999px;
+  box-shadow: 0 10px 30px rgba(24, 24, 20, 0.18), inset 0 0 0 1px #e5e5df;
+}
+.m-tabs span {
+  height: 52px; padding: 0 10px; border-radius: 999px; color: #55555e;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+}
+.m-tabs span.on { color: #17171a; }
+.m-tabs i { font-style: normal; font-size: 10px; line-height: 12px; font-weight: 600; white-space: nowrap; }
+.m-tabs .m-i { width: 18px; height: 18px; }
+.m-more {
+  width: 64px; height: 64px; flex: none; border-radius: 999px; background: #fff;
+  display: grid; place-items: center; color: #17171a;
+  box-shadow: 0 10px 30px rgba(24, 24, 20, 0.18), inset 0 0 0 1px #e5e5df;
+}
+.m-more .m-i { width: 22px; height: 22px; }
+
+/* The screen dims behind a sheet, the way it does in the product. Without it
+   the sheet is a white card on a white screen and the thing it is covering
+   looks like it is still yours to press. */
+.gs-phone:has(.m-sheet[data-on])::after {
+  content: ''; position: absolute; inset: 0; z-index: 3;
+  background: rgba(28, 28, 26, 0.34);          /* --scrim, light */
+  animation: m-dim 420ms var(--ease-out);
+}
+@keyframes m-dim { from { opacity: 0; } to { opacity: 1; } }
+.m-sheet {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 4;
+  background: #fff; border-radius: 28px 28px 0 0; padding: 24px 20px 20px;
+  display: flex; flex-direction: column; gap: 16px;
+  box-shadow: 0 10px 30px rgba(24, 24, 20, 0.18);
+  translate: 0 102%;
+  transition: translate 520ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.m-sheet[data-on] { translate: 0 0; }
+.m-sheet-h { font-size: 18px; line-height: 24px; font-weight: 600; margin: 0; }
+.m-row {
+  display: flex; align-items: center; gap: 12px; min-height: 56px;
+  padding: 12px 16px; border-radius: 16px;
+  transition: background 200ms var(--ease-out);
+}
+.m-row.is-hot { background: #e9e9e4; }
+.m-row.is-gone { display: none; }
+.m-ic {
+  width: 40px; height: 40px; border-radius: 999px; background: #e9e9e4;
+  display: grid; place-items: center; color: #17171a; flex: none;
+}
+.m-ic .m-i { width: 18px; height: 18px; }
+/* The account details replace the three ways once one is chosen. */
+.m-acct { display: none; flex-direction: column; gap: 12px; }
+.m-acct[data-on] { display: flex; }
+.m-acctno {
+  font-size: 28px; line-height: 34px; font-weight: 600; letter-spacing: -0.01em;
+  margin: 0; font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 3. explore tokenized stocks ---------- */
+.m-idx { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.m-idx-v { font-size: 22px; line-height: 28px; font-weight: 600; letter-spacing: -0.01em; margin: 0; }
+.m-idx-s { font-size: 11px; line-height: 15px; color: #6c6c76; margin: 2px 0 0; }
+.m-up { font-size: 12px; line-height: 16px; font-weight: 600; color: #0f7d55; margin: 0; }
+.m-list { gap: 4px; }
+.m-count {
+  font-size: 11px; line-height: 16px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase; color: #6c6c76;
+}
+.m-co {
+  display: flex; align-items: center; gap: 12px; padding: 12px 0; border-radius: 12px;
+  transition: background 200ms var(--ease-out);
+}
+.m-co + .m-co { border-top: 1px solid #e5e5df; }
+.m-co.is-hot { background: #f1f1ee; }
+.m-co.is-gone { display: none; }
+.m-co .m-two b { font-size: 14px; }
+.m-px { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; margin-left: auto; }
+.m-px b { font-size: 14px; line-height: 20px; font-weight: 600; }
+.m-add {
+  width: 36px; height: 36px; border-radius: 999px; display: grid; place-items: center;
+  color: #55555e; flex: none;
+}
+.m-add .m-i-plus, .m-add .m-i-check { display: block; width: 18px; height: 18px; }
+.m-add .m-i-check { display: none; }
+.m-add.is-done { background: #eef8f3; color: #0f7d55; }
+.m-add.is-done .m-i-plus { display: none; }
+.m-add.is-done .m-i-check { display: block; }
+.m-soon { color: #55555e; background: #eeeee9; }
+
+/* ---------- the pointer ----------
+   An arrow, not a dot. A dot centred on what it presses covers the thing it
+   presses, and a tick appearing under a dark disc is a tick nobody sees. An
+   arrow puts its tip on the target and its body out of the way, which is what
+   a cursor is for.
+
+   It is nothing until a run starts, so a card at rest is the screen and only
+   the screen. --gs-move is set per step by the driver, so the travel takes
+   exactly as long as the step that asked for it rather than a constant that
+   would overrun the short hops. */
+.gs-cursor {
+  position: absolute; left: 92%; top: 106%;
+  width: 5cqw; height: 5cqw;
+  opacity: 0; pointer-events: none; z-index: 3;
+  filter: drop-shadow(0 0.6cqw 1.2cqw rgba(5, 51, 41, 0.28));
+  transition: opacity 200ms var(--ease-out),
+              left var(--gs-move, 480ms) cubic-bezier(0.32, 0.04, 0.2, 1),
+              top var(--gs-move, 480ms) cubic-bezier(0.32, 0.04, 0.2, 1);
+}
+.gs-cursor.is-on { opacity: 1; }
+/* Filled, and outlined in white so it reads on a dark button as well as on a
+   light field. Set here rather than on the symbol, for the same reason the
+   line icons' stroke is: a <use> inherits from the <use>, not from the
+   symbol's own surroundings. */
+.gs-arrow {
+  width: 100%; height: 100%; display: block;
+  fill: #08372e; stroke: #fff; stroke-width: 1.7; stroke-linejoin: round;
+}
+/* The press: the arrow dips, and a ring leaves from the tip. */
+.gs-cursor::after {
+  content: ''; position: absolute; left: 0; top: 0;
+  width: 7cqw; height: 7cqw; margin: -3.5cqw 0 0 -3.5cqw;
+  border-radius: 99px; border: 0.45cqw solid rgba(8, 55, 46, 0.55);
+  opacity: 0;
+}
+.gs-cursor.is-tap::after { animation: gs-ring 460ms var(--ease-out); }
+.gs-cursor.is-tap .gs-arrow { animation: gs-press 460ms var(--ease-out); }
+@keyframes gs-ring {
+  from { opacity: 0.85; transform: scale(0.18); }
+  to { opacity: 0; transform: scale(1); }
+}
+@keyframes gs-press {
+  0%, 100% { transform: none; }
+  34% { transform: scale(0.8); }
+}
+
 .gs-copy { display: grid; gap: 10px; justify-items: center; text-align: center; }
 .gs-num {
   width: 34px; height: 34px; border-radius: 50%;
@@ -1584,8 +1973,8 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
   transition: transform 420ms var(--ease-out), box-shadow 420ms var(--ease-out);
 }
 .ts-card:hover, .pr-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
-.gs-step:hover .gs-shot { transform: translateY(-8px); box-shadow: var(--shadow-lg); }
-.gs-shot { transition: transform 420ms var(--ease-out), box-shadow 420ms var(--ease-out); }
+.gs-step:hover .gs-mock { transform: translateY(-8px); box-shadow: var(--shadow-lg); }
+.gs-mock { transition: transform 420ms var(--ease-out), box-shadow 420ms var(--ease-out); }
 
 /* The props inside a card drift a little further than the card does, so the
    card reads as having depth rather than as a single flat plate.
@@ -1616,8 +2005,12 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 .faq details:hover { border-color: rgba(5, 51, 41, 0.18); }
 
 @media (prefers-reduced-motion: reduce) {
-  .ts-card, .pr-card, .gs-shot, .ts-stage, .ts-bleed, .pr-sticker, .pop-btn { transition: none; }
-  .ts-card:hover, .pr-card:hover, .gs-step:hover .gs-shot { transform: none; }
+  .ts-card, .pr-card, .gs-mock, .ts-stage, .ts-bleed, .pr-sticker, .pop-btn { transition: none; }
+  .ts-card:hover, .pr-card:hover, .gs-step:hover .gs-mock { transform: none; }
+  /* The run never starts here, so the pointer is never anything at all. */
+  .gs-cursor { display: none; }
+  .m-sheet, .gs-scr { transition: none; }
+  .m-val::after { animation: none; }
   .ts-stage, .ts-bleed, .pr-sticker { transform: none; }
 }
 
