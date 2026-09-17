@@ -9821,3 +9821,27 @@ declared three hundred lines further down: hoisted, but not its value. 870
 minus undefined is NaN, NaN does not move a page, and the still sat at the top
 of a form whose button is its point. The two constants are declared above the
 branch that needs them now.
+
+### 11g.87 — the last crash in the sweep was a capture script, not the product
+
+`_shot-nav.mjs` photographs two nav fixes against the build that had them
+wrong: 4173 is the working tree, 4174 a worktree at the earlier commit. It
+lives in `scripts/`, so `all.sh` ran it with everything else — and a normal
+sweep starts one preview, not two. It has been dying on the missing port ever
+since, and reporting it as `CRASH (exit 1)`, which is a capture script claiming
+a failure of the product with a stack trace on it.
+
+`_shot-convert.mjs` learned this in 11g.83 and stands down instead: no before
+to compare against is not a failure, it is nothing to do. This is the same
+guard, in the same words, on the one script that still had the bug. Both ports
+are checked up front, the missing one is named, and it exits 0.
+
+Three small things went with it, because they were in the way of reading it:
+the port column in `SHOTS` was dead — every row said 4173 and the loop
+overrode it — so the two ports are named once at the top; the output directory
+is an argument now, defaulting to `/tmp` so nothing that already runs it
+changes; and the header says what the script needs, which is how the other
+capture script is written.
+
+`_shot-nav` reports `FAIL=0` in a one-preview sweep now instead of a stack
+trace, which was the last crash line in it.
