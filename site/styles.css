@@ -557,39 +557,182 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 }
 
 /* ------------------------------------------------- gifting and rewards -- */
-/* 688 of copy against a 768 stage, 64 between, on the 1520 column. */
-.gift-in {
-  display: grid; grid-template-columns: 688fr 768fr;
-  gap: min(64px, 3.334vw); align-items: start;
+/* The head row is the frame's split: 802 of headline against a 518 column,
+   200 apart on the 1520. Packed left and right rather than divided into
+   fractions, because the frame leaves the slack in the middle. */
+.gr-head {
+  display: grid; grid-template-columns: 52.763% 34.079%;
+  justify-content: space-between; align-items: start;
+  gap: min(64px, 3.334vw);
 }
-/* Two blocks 48 apart, exactly as the frame nests them: the head is its own
-   16-gap pair, the body is the points and the button. Flattening these into
-   one stack puts a 48 gap where the frame has 16. */
-.gift-text { display: grid; gap: min(48px, 2.5vw); align-content: start; min-width: 0; }
-.gift-head { display: grid; gap: 16px; }
-.gift-body { display: grid; gap: min(48px, 2.5vw); justify-items: start; min-width: 0; }
-.gift-lead { max-width: 518px; }
+.gr-aside { display: grid; gap: 24px; justify-items: start; }
+.gr-lead { max-width: 518px; }
 
-/* 400 is the frame's width, but as a flat width it wins over max-width once
-   an ancestor track sizes to max-content — which is what pushed a phone 30px
-   sideways. min() cannot be beaten that way. */
-.points { display: grid; gap: 28px; width: min(400px, 100%); padding-bottom: 24px; }
-/* The rule is a grid column, not a pseudo-element pinned with absolute
-   positioning, so its height is the copy's height with nothing to tune. The
-   copy is one child so it cannot fall into the 3px column. */
-.point { display: grid; grid-template-columns: 3px minmax(0, 1fr); gap: 19px; }
-.point::before { content: ''; background: var(--sand); border-radius: 2px; }
-.point-copy { min-width: 0; }
-.point h3 {
-  font-size: clamp(18px, 1.146vw, 22px); line-height: 1.3; letter-spacing: -0.022em;
-  color: var(--ink); margin: 0 0 9px;
+/* ---------------------------------------------------------------- card -- */
+/* 1520 x 700 in the frame. Everything inside is positioned in per cent of
+   that box and sized in cqw, so one set of numbers holds at every width. */
+.gr { margin-top: min(64px, 3.334vw); position: relative; container-type: inline-size; }
+.gr-card {
+  position: relative; overflow: hidden;
+  aspect-ratio: 1520 / 700;
+  border-radius: clamp(14px, 1.042vw, 20px);
+
+  /* One ramp, cut in half. Loyalty is the top half and family the bottom, and
+     they share #f8c8ff, so panning between them never crosses a colour that
+     belongs to neither state. Cross-fading two gradients would. */
+  background-image: linear-gradient(180deg, #7ec1c4 0%, #f8c8ff 50%, #dfccd7 100%);
+  background-size: 100% 200%;
+  background-position: 0 100%;
+  transition: background-position 880ms cubic-bezier(0.62, 0.02, 0.2, 1);
 }
-.point p { font-size: clamp(14.5px, 0.834vw, 16px); line-height: 1.6; color: var(--muted); }
-.gift-cta { justify-self: start; }
+.gr[data-active='loyalty'] .gr-card { background-position: 0 0; }
 
-.gift-stage {
-  width: 100%; height: auto; display: block;
-  border-radius: min(34px, 1.771vw);
+.gr-panel {
+  position: absolute; inset: 0;
+  opacity: 0; visibility: hidden;
+  transition: opacity 340ms var(--ease-out), visibility 0s linear 340ms;
+}
+.gr-panel.is-on {
+  opacity: 1; visibility: visible;
+  transition: opacity 420ms var(--ease-out) 120ms, visibility 0s;
+}
+
+/* Every child drifts up a little on the way in. The portrait is excluded
+   below: it is large enough that any travel reads as a wobble. */
+.gr-panel > * {
+  transform: translateY(14px);
+  transition: transform 520ms cubic-bezier(0.16, 0.84, 0.44, 1);
+}
+.gr-panel.is-on > * { transform: none; }
+.gr-panel > :nth-child(2) { transition-delay: 60ms; }
+.gr-panel > :nth-child(3) { transition-delay: 110ms; }
+.gr-panel > :nth-child(4) { transition-delay: 160ms; }
+
+/* ------------------------------------------------------------- the art -- */
+.gr-portrait, .gr-sticker {
+  position: absolute; display: block; height: auto;
+  max-width: none; pointer-events: none; user-select: none;
+}
+.gr-portrait { object-fit: cover; }
+.gr-panel > .gr-portrait { transform: none; }
+
+/* The portraits take the frame's node box with object-fit: cover, which is
+   what a Figma FILL image is — the node box is a window on the picture, not
+   the picture, and the two aspects differ.
+
+   The stickers do not: their node boxes disagree with what the frame actually
+   renders, so these are measured off the render instead, by column and row
+   histogram so a few stray pixels cannot set the box. Both bleed off an edge,
+   exactly as the frame clips them. */
+.gr-portrait-family {
+  left: 37.664%; top: -60.077%; width: 63.675%; height: 193.307%; object-fit: cover;
+}
+.gr-portrait-loyalty {
+  left: 45.970%; top: -10.577%; width: 56.364%; height: 171.113%; object-fit: cover;
+}
+.gr-cloud { left: -4%; top: 60%; width: 38%; }
+.gr-coin  { left: 0.539%; top: 73.986%; width: 12.355%; }
+
+.gr-copy {
+  position: absolute; top: 9%; margin: 0;
+  font-size: clamp(19px, 3.026cqw, 46px); line-height: 1.674;
+  letter-spacing: -0.014em; font-weight: 400; color: #132c28;
+}
+.gr-copy-family  { left: 3.743%; width: 40%; }
+.gr-copy-loyalty { left: 5.341%; width: 34%; }
+
+/* ------------------------------------------------------- floating cards -- */
+.gr-float {
+  position: absolute;
+  background: #fff; border-radius: clamp(10px, 0.921cqw, 14px);
+  box-shadow: 0 18px 44px rgba(8, 35, 30, 0.16), 0 2px 6px rgba(8, 35, 30, 0.08);
+}
+.gr-caps {
+  display: block; text-transform: uppercase;
+  font-size: clamp(9px, 0.724cqw, 11px); font-weight: 600;
+  letter-spacing: 0.09em; color: #8a9a95;
+}
+
+/* popular — 350 x 225 at 698.75, 286 */
+.gr-popular {
+  left: 41.5%; top: 40.857%; width: 23.026%;
+  padding: 1.184cqw; display: grid; align-content: start; gap: 0.855cqw;
+}
+.gr-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center; gap: 0.79cqw; padding: 0.46cqw 0;
+}
+.gr-n {
+  font-size: clamp(11px, 0.987cqw, 15px); font-weight: 500; color: #12312a;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.gr-v2 {
+  display: grid; justify-items: end; gap: 0.13cqw;
+  font-size: clamp(11px, 0.987cqw, 15px); font-weight: 600; color: #12312a;
+}
+.gr-v2 em { font-style: normal; font-size: clamp(9px, 0.79cqw, 12px); font-weight: 500; color: #12866d; }
+.gr-plus {
+  position: relative; width: 1.184cqw; height: 1.184cqw; min-width: 12px; min-height: 12px;
+}
+.gr-plus::before, .gr-plus::after {
+  content: ''; position: absolute; inset: 0; margin: auto;
+  background: #9fb0ab; border-radius: 1px;
+}
+.gr-plus::before { width: 100%; height: 1.5px; }
+.gr-plus::after { width: 1.5px; height: 100%; }
+
+/* indexes — two 169 x 147 cards in a 350 x 195 box at 645, 242 */
+.gr-indexes { position: absolute; left: 42.434%; top: 34.571%; width: 23.026%; aspect-ratio: 350 / 195; }
+.gr-index {
+  position: absolute; width: 48.286%;
+  background: #fff; border-radius: clamp(9px, 0.79cqw, 12px);
+  padding: 1.053cqw; display: grid; gap: 0.4cqw; align-content: start;
+  box-shadow: 0 18px 44px rgba(8, 35, 30, 0.16), 0 2px 6px rgba(8, 35, 30, 0.08);
+}
+.gr-index-a { left: 0; top: 24.615%; }
+.gr-index-b { left: 51.714%; top: 0; }
+.gr-v { font-size: clamp(15px, 1.447cqw, 22px); font-weight: 600; letter-spacing: -0.02em; color: #12312a; }
+.gr-d { font-size: clamp(10px, 0.855cqw, 13px); font-weight: 500; color: #12866d; }
+.gr-m { font-size: clamp(9px, 0.724cqw, 11px); line-height: 1.45; color: #8a9a95; }
+
+/* ---------------------------------------------------------------- tabs -- */
+/* 602 wide, 56 tall, centred, 84.43 per cent down — the frame's Frame 58. */
+.gr-tabs {
+  position: absolute; left: 50%; top: 84.429%; transform: translateX(-50%);
+  display: flex; gap: 4.211cqw; z-index: 3;
+}
+.gr-tab {
+  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  height: clamp(42px, 3.684cqw, 56px); padding: 0 clamp(18px, 1.974cqw, 30px);
+  border: 1.5px solid rgba(255, 255, 255, 0.8); border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.24); color: #123029;
+  font: inherit; font-size: clamp(12px, 1.086cqw, 16.5px); font-weight: 600;
+  letter-spacing: -0.01em; white-space: nowrap; cursor: pointer;
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  transition: background var(--t-base) var(--ease-out),
+    border-color var(--t-base) var(--ease-out), color var(--t-base) var(--ease-out),
+    box-shadow var(--t-base) var(--ease-out);
+}
+.gr-tab:hover { background: rgba(255, 255, 255, 0.5); }
+.gr-tab.is-on {
+  background: #fff; border-color: #fff; color: var(--deep);
+  box-shadow: 0 10px 26px rgba(8, 35, 30, 0.14);
+}
+.gr-tab:focus-visible { outline: 2px solid var(--deep); outline-offset: 3px; }
+
+/* The timer, drawn. The script starts this animation and advances when it
+   finishes, so the bar can never disagree with the clock. */
+.gr-bar {
+  position: absolute; left: 14%; right: 14%; bottom: -10px; height: 3px;
+  border-radius: 2px; background: rgba(255, 255, 255, 0.45); overflow: hidden;
+  opacity: 0; transition: opacity 200ms var(--ease-out);
+}
+.gr-tab.is-on .gr-bar { opacity: 1; }
+.gr-bar b { display: block; height: 100%; background: var(--mint); transform: scaleX(0); transform-origin: left center; }
+
+@media (prefers-reduced-motion: reduce) {
+  .gr-card, .gr-panel, .gr-panel > * { transition: none; }
+  .gr-bar { display: none; }
 }
 
 /* --------------------------------------------------------- why tokkenly -- */
@@ -1629,4 +1772,58 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
   }
   .reveal { opacity: 1; transform: none; }
   .hero-intro { animation: none; opacity: 1; transform: none; }
+}
+
+/* ------------------------------------------------ gifting on a phone -- */
+/* The card turns portrait and the tabs step out from under the photo to sit
+   below it, full width, on the page. Inside the card the copy keeps the top
+   and the portrait the bottom right, so the two never cross.
+
+   Every placement here is re-cut rather than left to scale: the portraits
+   carry an explicit height on the desktop (they are Figma FILL boxes), and
+   inheriting it into a tall card is what made them swallow it. */
+@media (max-width: 1040px) {
+  .gr-head { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .gr-lead { max-width: none; }
+  .gr-card { aspect-ratio: 4 / 5; }
+
+  .gr-copy, .gr-copy-family, .gr-copy-loyalty {
+    left: 7%; top: 5.5%; width: 66%;
+    font-size: clamp(19px, 4.4cqw, 30px); line-height: 1.5;
+  }
+
+  .gr-portrait { height: auto; object-fit: contain; }
+  .gr-portrait-family  { left: auto; right: -14%; top: auto; bottom: -1%; width: 74%; }
+  .gr-portrait-loyalty { left: auto; right: -12%; top: auto; bottom: -1%; width: 70%; }
+  .gr-cloud { left: -10%; top: auto; bottom: 2%; width: 46%; }
+  .gr-coin  { left: 2%;  top: auto; bottom: 4%; width: 22%; }
+
+  .gr-popular { left: 6%; top: 42%; width: 56%; padding: 3.2cqw; gap: 2.2cqw; }
+  .gr-popular .gr-row { gap: 2cqw; padding: 1.1cqw 0; }
+  .gr-indexes { left: 6%; top: 40%; width: 62%; }
+  .gr-index { padding: 2.6cqw; gap: 1cqw; }
+
+  .gr-tabs {
+    position: static; transform: none;
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 10px; margin-top: 14px;
+  }
+  .gr-tab {
+    width: 100%; height: 48px; padding: 0 12px; font-size: 13px;
+    background: #fff; border-color: rgba(5, 51, 41, 0.12); color: var(--muted);
+    -webkit-backdrop-filter: none; backdrop-filter: none;
+  }
+  .gr-tab span { overflow: hidden; text-overflow: ellipsis; }
+  .gr-tab.is-on { background: var(--deep); border-color: var(--deep); color: #fff; }
+  .gr-bar { bottom: 7px; left: 26%; right: 26%; height: 2px; background: rgba(255, 255, 255, 0.3); }
+}
+@media (max-width: 620px) {
+  .gr-card { aspect-ratio: 3 / 4; }
+  .gr-copy, .gr-copy-family, .gr-copy-loyalty { width: 76%; font-size: clamp(18px, 5.4cqw, 24px); }
+  .gr-popular { left: 5%; top: 40%; width: 62%; }
+  .gr-indexes { left: 5%; top: 38%; width: 70%; }
+  .gr-portrait-family  { right: -24%; width: 86%; }
+  .gr-portrait-loyalty { right: -20%; width: 80%; }
+  .gr-tabs { grid-template-columns: minmax(0, 1fr); }
+  .gr-tab { height: 46px; font-size: 13.5px; }
 }

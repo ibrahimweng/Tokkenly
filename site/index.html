@@ -260,49 +260,120 @@
       </section>
 
       <!-- ------------------------------------------ gifting and rewards -- -->
-      <!-- Text 688 wide on the left, a 768x665 stage on the right. The stage
-           is exported whole: the portrait inside it bleeds past the frame in
-           Figma and is clipped by it, which a plain img plus object-fit would
-           not reproduce at every width. -->
+      <!-- One 1520x700 card with two states. The head row is the frame's own
+           split: an 802 headline against a 518 column holding the lead and the
+           button, 200 apart on the 1520.
+
+           The card is a container, so everything inside it is sized in cqw and
+           positioned in per cent of the frame's 1520x700 — one set of numbers
+           that holds at every width instead of a breakpoint per element.
+
+           The two states' gradients meet exactly: loyalty runs #7ec1c4 to
+           #f8c8ff and family runs #f8c8ff to #dfccd7. They are one ramp cut in
+           half, so switching pans the background through it rather than
+           cross-fading two of them, and the card never passes through a colour
+           that is in neither state. -->
       <section class="band band-gift" id="gifting">
-        <div class="wrap gift-in">
-          <div class="gift-text reveal">
-            <div class="gift-head">
-              <h2>Give more than a gift. Give a start.</h2>
-              <p class="lead gift-lead">
+        <div class="wrap">
+          <div class="gr-head reveal">
+            <h2>Give more than a gift. Give a start.</h2>
+            <div class="gr-aside">
+              <p class="lead gr-lead">
                 Celebrate someone you love or thank the people who support your business with
                 tokenized stocks. Turn gifts and rewards into a starting point for investing.
               </p>
-            </div>
-
-            <div class="gift-body">
-            <div class="points">
-              <div class="point">
-                <div class="point-copy">
-                  <h3>For friends, family, and future milestones</h3>
-                  <p>Gift an investment for any milestone.<br />Choose a future date for them to unlock it.</p>
-                </div>
-              </div>
-              <div class="point">
-                <div class="point-copy">
-                  <h3>Turn loyalty into investment</h3>
-                  <p>Reward customers with tokenized stocks.<br />Turn loyalty moments into lasting investments.</p>
-                </div>
-              </div>
-            </div>
-
-            <a class="btn btn-mint gift-cta" href="#get-started">Explore Gifting and Rewards</a>
+              <a class="btn btn-mint" href="#get-started">Explore Gifting and Rewards</a>
             </div>
           </div>
 
-          <img
-            class="gift-stage reveal"
-            src="./img/sec/gift-stage.webp"
-            width="768"
-            height="665"
-            loading="lazy"
-            alt="A woman in a gele and sunglasses, laughing."
-          />
+          <div class="gr reveal" data-gr data-active="family">
+            <div class="gr-card">
+
+              <!-- family ------------------------------------------------- -->
+              <div class="gr-panel is-on" id="gr-p-family" role="tabpanel"
+                   aria-labelledby="gr-t-family" data-panel="family">
+                <img class="gr-portrait gr-portrait-family" src="./img/gift/family-portrait.webp"
+                     width="864" height="1184" loading="lazy" decoding="async"
+                     alt="A couple looking at a phone together, smiling." />
+                <p class="gr-copy gr-copy-family">
+                  Gift an investment for any milestone.<br />
+                  Choose a future date for them to unlock it.
+                </p>
+                <div class="gr-float gr-indexes">
+                  <div class="gr-index gr-index-a">
+                    <span class="gr-caps">S&amp;P 500</span>
+                    <span class="gr-v">5,648.40</span>
+                    <span class="gr-d">+0.42% today</span>
+                    <span class="gr-m">500 companies &middot; 11 on Tokkenly</span>
+                  </div>
+                  <div class="gr-index gr-index-b">
+                    <span class="gr-caps">NASDAQ-100</span>
+                    <span class="gr-v">17,713.62</span>
+                    <span class="gr-d">+0.71% today</span>
+                    <span class="gr-m">100 companies &middot; 7 on Tokkenly</span>
+                  </div>
+                </div>
+                <img class="gr-sticker gr-cloud" src="./img/gift/cloud.webp"
+                     width="1100" height="893" loading="lazy" decoding="async" alt="" />
+              </div>
+
+              <!-- loyalty ------------------------------------------------ -->
+              <div class="gr-panel" id="gr-p-loyalty" role="tabpanel"
+                   aria-labelledby="gr-t-loyalty" data-panel="loyalty">
+                <div class="gr-float gr-popular">
+                  <span class="gr-caps">Popular</span>
+                  <div class="gr-row">
+                    <span class="gr-n">AAPLc &middot; Apple</span>
+                    <span class="gr-v2">$229.35<em>+1.1%</em></span>
+                    <span class="gr-plus" aria-hidden="true"></span>
+                  </div>
+                  <div class="gr-row">
+                    <span class="gr-n">MSFTc &middot; Microsoft</span>
+                    <span class="gr-v2">$430.20<em>+0.6%</em></span>
+                    <span class="gr-plus" aria-hidden="true"></span>
+                  </div>
+                  <div class="gr-row">
+                    <span class="gr-n">NVDAc &middot; Nvidia</span>
+                    <span class="gr-v2">$118.90<em>+2.4%</em></span>
+                    <span class="gr-plus" aria-hidden="true"></span>
+                  </div>
+                </div>
+                <img class="gr-portrait gr-portrait-loyalty" src="./img/gift/loyalty-portrait.webp"
+                     width="864" height="1184" loading="lazy" decoding="async"
+                     alt="A woman in a gele and sunglasses, laughing." />
+                <p class="gr-copy gr-copy-loyalty">
+                  Reward customers with tokenized stocks.<br />
+                  Turn loyalty moments into lasting investments.
+                </p>
+                <img class="gr-sticker gr-coin" src="./img/gift/coin.webp"
+                     width="600" height="646" loading="lazy" decoding="async" alt="" />
+              </div>
+
+            </div>
+
+            <!-- The tabs are a sibling of the card, not a child: on a phone
+                 they leave it and sit underneath, where they are legible
+                 against the page instead of against somebody's face. On the
+                 desktop they are placed back over it, 84.4 per cent down, as
+                 the frame has them.
+
+                 The bar under each is the timer itself: the script advances on
+                 its animation finishing, so what is drawn and what is counted
+                 cannot drift apart. -->
+            <div class="gr-tabs" role="tablist" aria-label="Gifting and rewards">
+                <button class="gr-tab is-on" id="gr-t-family" role="tab" type="button"
+                        aria-selected="true" aria-controls="gr-p-family" data-tab="family">
+                  <span>For Family and future milestones</span>
+                  <i class="gr-bar" aria-hidden="true"><b></b></i>
+                </button>
+                <button class="gr-tab" id="gr-t-loyalty" role="tab" type="button"
+                        aria-selected="false" aria-controls="gr-p-loyalty" tabindex="-1"
+                        data-tab="loyalty">
+                  <span>Turn loyalty to investment</span>
+                <i class="gr-bar" aria-hidden="true"><b></b></i>
+              </button>
+            </div>
+          </div>
         </div>
       </section>
 

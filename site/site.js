@@ -611,3 +611,135 @@
   row.addEventListener('pointerleave', function () { if (open) hide(open) })
   window.addEventListener('blur', function () { if (open) hide(open, true) })
 })()
+
+/* ------------------------------------------- gifting: the two-state card -- */
+/*  Two panels behind one card, switched by the pills inside it, with the bar
+ *  under the active pill acting as the dwell timer.
+ *
+ *  The bar is not a decoration driven by a separate clock. It IS the clock:
+ *  the script plays one Web Animations timeline per turn and advances on its
+ *  `finished` promise, so what the eye sees filling and what decides to move
+ *  on are the same object and cannot drift. Pausing is `anim.pause()`, which
+ *  stops the paint and the count together.
+ *
+ *  It pauses whenever advancing would be rude or pointless: scrolled out of
+ *  view, pointer resting on the card, keyboard focus inside it, or the tab in
+ *  the background. Reduced motion turns the whole timer off and leaves two
+ *  plain tabs.
+ */
+;(function () {
+  var root = document.querySelector('[data-gr]')
+  if (!root) return
+
+  var DWELL = 7000                    /* per panel, ms */
+  var card = root.querySelector('.gr-card')
+  var tabs = [].slice.call(root.querySelectorAll('.gr-tab'))
+  var panels = [].slice.call(root.querySelectorAll('.gr-panel'))
+  if (tabs.length < 2) return
+
+  var calm = window.matchMedia('(prefers-reduced-motion: reduce)')
+  var i = tabs.findIndex(function (t) { return t.classList.contains('is-on') })
+  if (i < 0) i = 0
+
+  var anim = null                     /* the current bar timeline */
+  var seen = false                    /* is the card on screen */
+  var held = false                    /* pointer or focus holding it */
+
+  function paint(n) {
+    i = n
+    root.dataset.active = tabs[n].dataset.tab
+    tabs.forEach(function (t, k) {
+      var on = k === n
+      t.classList.toggle('is-on', on)
+      t.setAttribute('aria-selected', on ? 'true' : 'false')
+      t.tabIndex = on ? 0 : -1
+      t.querySelector('.gr-bar b').style.transform = 'scaleX(0)'
+    })
+    panels.forEach(function (p, k) {
+      var on = k === n
+      p.classList.toggle('is-on', on)
+      /* inert rather than hidden: hidden would kill the cross-fade, but the
+         off panel must still be out of reach of tab and of a screen reader. */
+      p.inert = !on
+      p.setAttribute('aria-hidden', on ? 'false' : 'true')
+    })
+  }
+
+  function stop() {
+    if (anim) { anim.cancel(); anim = null }
+  }
+
+  function run() {
+    stop()
+    if (calm.matches) return
+    var bar = tabs[i].querySelector('.gr-bar b')
+    var mine = anim = bar.animate(
+      [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }],
+      { duration: DWELL, easing: 'linear', fill: 'forwards' }
+    )
+    if (!seen || held) mine.pause()
+    mine.finished.then(function () {
+      /* A cancel rejects, so reaching here means this turn really ended —
+         but guard anyway in case a click replaced the timeline. */
+      if (anim !== mine) return
+      paint((i + 1) % tabs.length)
+      run()
+    }).catch(function () {})
+  }
+
+  function hold(on) {
+    held = on
+    if (!anim) return
+    if (on) anim.pause()
+    else if (seen) anim.play()
+  }
+
+  tabs.forEach(function (t, k) {
+    t.addEventListener('click', function () {
+      if (k === i) return
+      paint(k)
+      run()                           /* a click restarts that panel's turn */
+    })
+    /* Arrow keys move along the tablist, as a tablist should. */
+    t.addEventListener('keydown', function (e) {
+      var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0
+      if (!d) return
+      e.preventDefault()
+      var n = (i + d + tabs.length) % tabs.length
+      paint(n); run(); tabs[n].focus()
+    })
+  })
+
+  root.addEventListener('pointerenter', function (e) {
+    if (e.pointerType !== 'touch') hold(true)
+  })
+  root.addEventListener('pointerleave', function (e) {
+    if (e.pointerType !== 'touch') hold(false)
+  })
+  root.addEventListener('focusin', function () { hold(true) })
+  root.addEventListener('focusout', function () {
+    if (!root.contains(document.activeElement)) hold(false)
+  })
+  document.addEventListener('visibilitychange', function () {
+    if (!anim) return
+    if (document.hidden) anim.pause()
+    else if (seen && !held) anim.play()
+  })
+
+  /* The turn only starts once the card is actually on screen, and gives back
+     the time it spent off it rather than advancing to a panel nobody saw. */
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function (es) {
+      seen = es[0].isIntersecting
+      if (!anim) return
+      if (seen && !held && !document.hidden) anim.play()
+      else anim.pause()
+    }, { threshold: 0.35 }).observe(card)
+  } else {
+    seen = true
+  }
+
+  paint(i)
+  run()
+  calm.addEventListener('change', function () { paint(i); run() })
+})()
