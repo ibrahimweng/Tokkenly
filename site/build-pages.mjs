@@ -93,9 +93,12 @@ ${p.form.map(field).join('\n')}
           </form>
 
           <div class="cf-channels reveal">
-${p.channels.map(([h, s], i) => `            <div class="cf-channel">
+${p.channels.map(([h, s, links], i) => `            <div class="cf-channel">
               <h2>${i === 0 ? `<a href="mailto:${esc(h)}">${esc(h)}</a>` : esc(h)}</h2>
               <p>${esc(s)}</p>
+${links ? `              <ul class="cf-links">
+${links.map(([label, href]) => `                <li><a href="${href}">${esc(label)} ${ARROW}</a></li>`).join('\n')}
+              </ul>` : ''}
             </div>`).join('\n')}
           </div>
         </div>

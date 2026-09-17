@@ -26,14 +26,25 @@ export const PAGES = {
       'You don’t need to hear back from us to open a Tokkenly account and make your first move.'],
     form: [
       ['name', 'Your name', 'First and last name', 'text'],
-      ['email', 'Email', EMAIL, 'email'],
+      ['email', 'Email', 'you@example.com', 'email'],
       ['about', 'What is it about?', 'Account, a transaction, or something else', 'text'],
       ['message', 'Message', 'Tell us what happened, and when', 'textarea'],
     ],
     channels: [
       [EMAIL, 'We reply within one working day.'],
-      ['Answers to the common ones', 'Account checks, withdrawals, converting, and what a tokenized share actually is.'],
-      ['Office, phone, socials', 'Registered address, a support line and the accounts you actually run.'],
+      ['Answers to the common ones',
+       'Some of it is already written down, and reading it is faster than waiting for us.', [
+        ['What a tokenized share is', './products/tokenized-stocks.html#s-faq'],
+        ['The rate, and the ninety seconds it is held for', './products/convert.html#s-faq'],
+        ['Why there is a cap before your identity check', './products/send.html#s-facts'],
+        ['Everything else people ask', './index.html#faq'],
+      ]],
+      ['Something has gone wrong',
+       'Money that has not arrived, a payment stuck halfway, an account you cannot get into.', [
+        ['Email us, with URGENT first', `mailto:${EMAIL}?subject=URGENT`],
+        ['What we owe you when it does', './terms.html'],
+        ['What we do with your data', './privacy.html'],
+      ]],
     ],
   },
 

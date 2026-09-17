@@ -2817,6 +2817,19 @@ textarea.cf-input { resize: vertical; min-height: 108px; }
 .cf-channel h2 a:hover { text-decoration: underline; }
 .cf-channel p { font-size: clamp(14.5px, 0.834vw, 16px); line-height: 1.6; color: var(--muted); }
 
+/* The two columns that are not an address carry the things they describe.
+   They used to be a heading and a sentence about content that was not on the
+   page, which reads as a placeholder sitting next to a real one. */
+.cf-links { list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 12px; }
+.cf-links a {
+  display: inline-flex; align-items: baseline; gap: 8px;
+  font-size: clamp(14px, 0.834vw, 15.5px); line-height: 1.5; font-weight: 600;
+  color: var(--positive); text-decoration: none;
+}
+.cf-links a:hover { text-decoration: underline; }
+.cf-links .pr-arrow { width: 14px; height: 14px; flex: none; transform: translateY(1px); transition: transform var(--t-base) var(--ease-out); }
+.cf-links a:hover .pr-arrow { transform: translate(3px, 1px); }
+
 /* --------------------------------------------------------- the prose ---- */
 /* The clauses number themselves, so adding one never means renumbering. */
 .prose {

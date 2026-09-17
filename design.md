@@ -10208,3 +10208,35 @@ Its own `checkProps` already asked a different question — does the stylesheet
 hold a placement for every prop the page emits — so the two now sit either
 side of the gap the bug fell through: one says the rule exists, the other says
 the file still carries the markup that reaches it.
+
+**The contact page's two empty columns.** Under the form sit three channels.
+The first was the address and a promise about answering it. The other two were
+a heading and a sentence describing content that was not on the page —
+"Answers to the common ones", "Office, phone, socials" — with nothing to
+click. Next to a real one they read as placeholders, because that is what they
+were.
+
+Both carry the thing they describe now. The FAQ column points into the
+answers that already exist, by anchor: what a tokenized share is, the rate and
+the ninety seconds it is held for, why there is a cap before the identity
+check, and the landing page's own list. The third became "Something has gone
+wrong" — an URGENT-subject mailto, the terms, the privacy policy.
+
+It is not the third column that was asked for. A registered address, a support
+line and social handles are not in this repository, and they are not the kind
+of thing to invent for a financial product: a made-up registered address on a
+contact page is a lie with regulatory shape to it, and the socials in the
+footer are still `data-soon`. So the column says something true instead, and
+the real ones are the client's to supply.
+
+The form's email field also suggested `ibrahimweng0@gmail.com` — the project's
+own address, in the box where a visitor types theirs. It reads as a form that
+has already been filled in. `you@example.com` now.
+
+**Two things the link check found by being pointed somewhere new.** Adding
+contact, terms and privacy to `_siteprod.mjs`'s resolver crashed it outright:
+`apiRequestContext.get` refuses a `mailto:` rather than skipping it, and the
+filter only skipped `#` and `http`. Anything carrying a scheme is somebody
+else's to resolve. And the four new anchors are exactly the sort of link that
+rots without a sound when a section is renamed, which is the reason to have
+them in the check at all.

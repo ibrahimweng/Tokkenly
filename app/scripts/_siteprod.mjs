@@ -71,14 +71,23 @@ console.log('\n=== links ===')
 const p = await b.newPage({ viewport: { width: 1440, height: 1000 } })
 await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 const seen = new Map()
-for (const slug of [...SLUGS, null]) {
-  const url = slug ? `http://localhost:4321/products/${slug}.html` : 'http://localhost:4321/index.html'
+/* The company pages are in here too: the contact page points into the FAQs on
+   three product pages by anchor, and an anchor is the sort of link that rots
+   silently when a section is renamed. */
+const OTHERS = ['index.html', 'contact.html', 'terms.html', 'privacy.html']
+for (const slug of [...SLUGS, ...OTHERS]) {
+  const url = OTHERS.includes(slug)
+    ? `http://localhost:4321/${slug}`
+    : `http://localhost:4321/products/${slug}.html`
   await p.goto(url, { waitUntil: 'load' })
   const hrefs = await p.$$eval('a[href]', (as) => as
     .filter((a) => !a.hasAttribute('data-soon'))
     .map((a) => a.getAttribute('href')))
   for (const h of hrefs) {
-    if (!h || h.startsWith('#') || h.startsWith('http')) continue
+    /* Anything carrying a scheme is somebody else's to resolve — the app on
+       its own domain, and the contact page's mailto:, which the request
+       context refuses outright rather than skipping. */
+    if (!h || h.startsWith('#') || /^[a-z][a-z0-9+.-]*:/i.test(h)) continue
     const abs = new URL(h, url).href
     if (!seen.has(abs)) {
       const r = await p.request.get(abs)
