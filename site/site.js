@@ -440,3 +440,322 @@
     }, 0.15)
   }
 })()
+
+/* ------------------------------------------------ the getting-started run --
+
+   Three cards, each a light-mode rendering of a real screen, each with a
+   short scripted run: a pointer arrives, presses something, a field fills, a
+   sheet rises. Hover starts it; leaving resets it to frame one. A phone has
+   no hover, so there it plays once when the card scrolls into view.
+
+   Why a driver rather than CSS keyframes: a keyframe timeline that types into
+   four fields, moves a pointer between six targets and opens a sheet is a
+   wall of percentages that nobody can read or re-time. This is a list of
+   steps with durations, which is what it is.
+
+   Everything it touches is a class or a data attribute — no inline styles
+   except the pointer's position, which is the one thing that genuinely has to
+   be a number. Reset puts every one of them back, so a run that is abandoned
+   half way leaves nothing behind. */
+;(function () {
+  'use strict'
+
+  var mocks = [].slice.call(document.querySelectorAll('.gs-mock'))
+  if (!mocks.length) return
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    /* The screens still have to show the product. Put each one in the state
+       its run would have finished in, and never move it again. */
+    mocks.forEach(function (m) { rest(m, true) })
+    return
+  }
+
+  /* Where a target sits inside the card, as a percentage of the card, so the
+     pointer lands on the same spot whatever size the card is drawn at. */
+  function centre(mock, sel) {
+    var el = mock.querySelector(sel)
+    if (!el) return null
+    var a = el.getBoundingClientRect(), b = mock.getBoundingClientRect()
+    if (!b.width || !b.height) return null
+    return {
+      x: ((a.left + a.width / 2) - b.left) / b.width * 100,
+      y: ((a.top + a.height / 2) - b.top) / b.height * 100,
+    }
+  }
+
+  /* --------------------------------------------------------- the scripts --
+     Each step is [duration, fn]. A step that only waits has no fn. The
+     longest of the three comes to about seven and a half seconds, which is
+     the pace the section was tuned at: long enough to read every step, short
+     enough to finish while somebody is still looking at it. The other two are
+     shorter, so three of them side by side drift apart rather than beating in
+     unison, which is most of what keeps the section from reading as noise. */
+  function script(mock, kind) {
+    var q = function (s) { return mock.querySelector(s) }
+    var steps = []
+    var to = function (sel, ms) {
+      var d = ms || 480
+      steps.push([d, function (r) { r.move(sel, d) }])
+    }
+    var off = function (dx, dy, hold) {
+      steps.push([hold, function (r) { r.drift(dx, dy, 380) }])
+    }
+    var tap = function (ms) { steps.push([ms || 260, function (r) { r.tap() }]) }
+    var act = function (fn, ms) { steps.push([ms || 0, fn]) }
+
+    if (kind === 'signup') {
+      ;['code', 'name', 'email', 'pass'].forEach(function (f, i) {
+        to('[data-f="' + f + '"]', i ? 360 : 480)
+        tap(240)
+        act(function (r) { r.type(q('[data-f="' + f + '"]')) }, 0)
+        // Typing is driven by its own timer; hold here for as long as it runs.
+        steps.push([typeMs(q('[data-f="' + f + '"]')), null])
+        act(function () {
+          var el = q('[data-f="' + f + '"]')
+          el.classList.add('is-done')
+          el.classList.remove('is-caret')
+        }, 120)
+      })
+      to('[data-f="go"]', 360)
+      tap(240)
+      act(function () { q('[data-f="go"]').textContent = 'Checking your invite…' }, 240)
+      off(9, 7, 620)
+    }
+
+    if (kind === 'fund') {
+      to('[data-f="add"]', 620)
+      tap()
+      act(function () { q('[data-f="sheet"]').setAttribute('data-on', '') }, 640)
+      // A pointer that goes straight to its answer has not looked at the list.
+      to('[data-f="crypto"]', 420)
+      act(function () { q('[data-f="crypto"]').classList.add('is-hot') }, 300)
+      act(function () { q('[data-f="crypto"]').classList.remove('is-hot') }, 0)
+      to('[data-f="bank"]', 360)
+      act(function () { q('[data-f="bank"]').classList.add('is-hot') }, 260)
+      tap()
+      act(function () {
+        ;['bank', 'crypto', 'card'].forEach(function (f) {
+          q('[data-f="' + f + '"]').classList.add('is-gone')
+        })
+        q('[data-f="acct"]').setAttribute('data-on', '')
+        q('.m-sheet-h').textContent = 'Bank transfer'
+      }, 620)
+      to('[data-f="copy"]', 460)
+      tap()
+      act(function () {
+        var c = q('[data-f="copy"]')
+        c.classList.add('is-done')
+        c.textContent = 'Copied'
+      }, 220)
+      off(9, 7, 620)
+    }
+
+    if (kind === 'invest') {
+      to('[data-f="search"]', 620)
+      tap()
+      act(function (r) { r.type(q('[data-f="search"]')) }, 0)
+      steps.push([typeMs(q('[data-f="search"]')), null])
+      act(function () {
+        q('[data-f="search"]').classList.remove('is-caret')
+        mock.querySelectorAll('.m-co').forEach(function (row) {
+          if (row.getAttribute('data-co') !== 'AAPL') row.classList.add('is-gone')
+        })
+        q('.m-count').textContent = '1 company'
+      }, 700)
+      to('.m-co[data-co="AAPL"]', 460)
+      act(function () { q('.m-co[data-co="AAPL"]').classList.add('is-hot') }, 300)
+      to('[data-f="add-aapl"]', 360)
+      tap()
+      act(function () {
+        // The plus and the tick are both in the markup and the class picks
+        // one. Writing a '✓' over the button, as this used to, deleted both
+        // drawings — and reset cannot put back what is no longer there, so
+        // the second run opened with a tick on a row nothing was added from.
+        var a = q('[data-f="add-aapl"]')
+        a.classList.add('is-done')
+        var b = q('.m-bucket')
+        b.textContent = '1'
+        b.classList.add('is-on')
+      }, 260)
+      off(6, 8, 820)
+    }
+
+    return steps
+  }
+
+  /* How long a field takes to fill, at the one rate every field types at. */
+  var PER_CHAR = 44
+  function typeMs(el) {
+    return el ? (el.getAttribute('data-type') || '').length * PER_CHAR + 160 : 0
+  }
+
+  /* ------------------------------------------------------------- the run -- */
+  function runner(mock, kind) {
+    var cursor = mock.querySelector('.gs-cursor')
+    var timers = []
+    var live = false
+    var last = null
+
+    function at(ms, fn) { timers.push(setTimeout(fn, ms)) }
+    function clear() { timers.forEach(clearTimeout); timers = [] }
+
+    /* One place that writes a position, so travel time and position are set
+       together and the arrow can never be mid-flight when the tap lands. */
+    function place(x, y, ms) {
+      cursor.style.setProperty('--gs-move', ms + 'ms')
+      cursor.style.left = x + '%'
+      cursor.style.top = y + '%'
+      last = { x: x, y: y }
+    }
+
+    var api = {
+      move: function (sel, ms) {
+        var p = centre(mock, sel)
+        if (!p) return
+        cursor.classList.add('is-on')
+        place(p.x, p.y, ms)
+      },
+      /* After a press, the hand comes off the button. Without it the arrow
+         sits on the tick it just produced, which is the one frame the whole
+         step exists to show. */
+      drift: function (dx, dy, ms) {
+        if (!last) return
+        place(last.x + dx, last.y + dy, ms)
+      },
+      tap: function () {
+        cursor.classList.remove('is-tap')
+        // Reflow, or a second tap on the same element never restarts.
+        void cursor.offsetWidth
+        cursor.classList.add('is-tap')
+      },
+      type: function (el) {
+        if (!el) return
+        var text = el.getAttribute('data-type') || ''
+        var out = el.querySelector('.m-val')
+        // One caret in the window, in the field the pointer just pressed.
+        mock.querySelectorAll('.is-caret').forEach(function (o) { o.classList.remove('is-caret') })
+        el.setAttribute('data-on', '')
+        el.classList.add('is-caret')
+        for (var i = 1; i <= text.length; i++) {
+          ;(function (n) { at(n * PER_CHAR, function () { out.textContent = text.slice(0, n) }) })(i)
+        }
+      },
+    }
+
+    function play() {
+      var steps = script(mock, kind)
+      var t = 0
+      steps.forEach(function (st) {
+        var fn = st[1]
+        if (fn) at(t, function () { if (live) fn(api) })
+        t += st[0]
+      })
+      // Hold on the finished screen, then take it from the top. The pause is
+      // most of what keeps three of these side by side from reading as noise.
+      at(t + 2200, function () { if (live) { reset(); play() } })
+    }
+
+    function reset() {
+      clear()
+      rest(mock, false)
+      cursor.classList.remove('is-on', 'is-tap')
+      // Straight back to the corner it comes in from. Animated, it would
+      // sail across a screen that has already snapped back to frame one.
+      place(92, 106, 0)
+    }
+
+    return {
+      start: function () { if (live) return; live = true; reset(); play() },
+      stop: function () { live = false; reset() },
+    }
+  }
+
+  /* Frame one, or the state the run ends in. One function for both, so the
+     reduced-motion rendering and the reset can never drift apart. */
+  function rest(mock, finished) {
+    mock.querySelectorAll('[data-f]').forEach(function (el) {
+      el.classList.remove('is-hot', 'is-gone', 'is-done', 'is-caret')
+      if (el.classList.contains('m-sheet') || el.classList.contains('m-acct')) {
+        el.removeAttribute('data-on')
+      }
+      if (el.classList.contains('m-field') || el.classList.contains('m-search')) {
+        el.removeAttribute('data-on')
+        var v = el.querySelector('.m-val')
+        if (v) v.textContent = finished ? (el.getAttribute('data-type') || '') : ''
+        if (finished) el.setAttribute('data-on', '')
+      }
+    })
+    mock.querySelectorAll('.m-co').forEach(function (r) { r.classList.remove('is-gone', 'is-hot') })
+    var copy = mock.querySelector('[data-f="copy"]')
+    if (copy) copy.textContent = 'Copy'
+    var go = mock.querySelector('[data-f="go"]')
+    if (go) go.textContent = 'Create account'
+    // Just the class: the plus and the tick are both in the markup and
+    // neither side of this writes text over them. See the run's own note.
+    var add = mock.querySelector('[data-f="add-aapl"]')
+    if (add) add.classList.remove('is-done')
+    var bucket = mock.querySelector('.m-bucket')
+    if (bucket) { bucket.textContent = '0'; bucket.classList.remove('is-on') }
+    var head = mock.querySelector('.m-sheet-h')
+    if (head) head.textContent = 'How are you adding it?'
+    var count = mock.querySelector('.m-count')
+    if (count) count.textContent = '6 companies'
+
+    if (finished) {
+      /* Where each run lands, for a reader who will never see it move. Not
+         the literal last frame: 'Checking your invite…' and 'Copied' are
+         things that are true for a second, and a still of one of them is a
+         still of a product caught mid-blink. These are the frames each run
+         is about. */
+      var sheet = mock.querySelector('.m-sheet')
+      if (sheet) sheet.setAttribute('data-on', '')
+      // A search reading 'appl' over a list with Microsoft in it is a search
+      // that does not work. If the field is filled, the list matches it.
+      if (mock.querySelector('[data-f="search"]')) {
+        mock.querySelectorAll('.m-co').forEach(function (r) {
+          if (r.getAttribute('data-co') !== 'AAPL') r.classList.add('is-gone')
+        })
+        if (count) count.textContent = '1 company'
+      }
+    }
+  }
+
+  var canHover = matchMedia('(hover: hover) and (pointer: fine)').matches
+
+  mocks.forEach(function (mock) {
+    var run = runner(mock, mock.getAttribute('data-gs'))
+    rest(mock, false)
+
+    if (canHover) {
+      mock.addEventListener('pointerenter', run.start)
+      /* Leaving means the pointer left, not that the card did.
+         These cards move under a stationary pointer twice over — the
+         section's own reveal slides all three up when it comes into view, and
+         hover lifts the one you are on by another eight pixels. Either one
+         fires pointerleave with the pointer exactly where it was, and the run
+         it tore down did not start again until you moved. So ask where the
+         pointer is rather than taking the event's word for it. */
+      mock.addEventListener('pointerleave', function (e) {
+        var r = mock.getBoundingClientRect()
+        if (e.clientX > r.left && e.clientX < r.right &&
+            e.clientY > r.top && e.clientY < r.bottom) return
+        run.stop()
+      })
+      // And a run that was torn down while the pointer stayed on the card
+      // picks itself back up on the next movement over it. start() is a
+      // no-op while one is already going, so this costs a comparison.
+      mock.addEventListener('pointermove', run.start)
+      return
+    }
+    /* No hover: play it once when it arrives, and leave it on its last frame
+       rather than snapping back to an empty form nobody asked to see. */
+    if (!('IntersectionObserver' in window)) return
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return
+        io.unobserve(e.target)
+        run.start()
+      })
+    }, { threshold: 0.4 })
+    io.observe(mock)
+  })
+})()

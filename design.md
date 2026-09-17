@@ -9649,3 +9649,121 @@ offered, and not a rate at all. The fix was to stop passing a flag saying which
 field to leave alone and let each field decline the write while it holds the
 caret: one rule, in one place, instead of a decision every caller had to get
 right.
+
+### 11g.85 — Getting Started animates, and the three screens become real
+
+**The section.** The landing page ends on three cards: sign up, add money,
+invest. Each carried a 485×600 webp — a photograph of a screen — and the one
+thing the section is about, that the product is three short steps, had to be
+taken on trust from three stills.
+
+They are markup now. A pointer arrives, presses something, fields fill, a sheet
+rises. Hover starts the run; leaving it puts every card back to frame one.
+There is no thumbnail and no video: the screens are the product's own
+components, drawn in the card, and the run is a list of steps with durations.
+
+**Why not keyframes.** A CSS timeline that types into four fields, moves a
+pointer between six targets and opens a sheet is a wall of percentages nobody
+can read or re-time. The driver in site.js is a list of `[duration, fn]` pairs
+per card, which is what it is. Everything it touches is a class or a data
+attribute; the only inline style is the pointer's position, which genuinely has
+to be a number.
+
+**Why not overlay the exports.** The first plan was to keep the webp as the
+stage and float a live screen where the photographed one sat. A live copy of a
+screenshot laid over the screenshot leaves a sliver of the old one showing at
+every edge you get wrong by a pixel, at every width. So the stages were
+measured off the exports — the screen sits at 6.2% in from each side and 8%
+down, and bleeds off the bottom — and rebuilt as gradients. Card one loses a
+literal photograph for a gradient; everything else gains a screen that can be
+walked through.
+
+**Resolution-independent, once.** Each card is a container (`container-type:
+inline-size`) and every size inside it is written in `cqw`. One number — the
+card's own width — sets the whole screen, so a card 350px wide on a phone and
+660 on a tablet keeps its proportions rather than needing a second set of sizes
+at each breakpoint.
+
+**Three seconds of missing UI.** The brief was to fill in what the design was
+missing, and the mocks were thinner than the screens they claim to be. Checked
+against the real app and rebuilt: sign-up gained its fourth field and the real
+placeholders; the Wallet gained the account bar, the chevron and eye on its
+hero, the lent-out key, and all three doors rather than one; Invest gained the
+magnifier in its field, the index sub-lines, the list as a panel with a count,
+the launch pill on Microsoft, and a fourth company. Both signed-in screens
+gained the product's floating tab rail — which is *why* the Invest list runs
+off the bottom and why the Wallet has room under its doors. The sign-up screen
+has none, because you are not in yet.
+
+**The pointer is an arrow.** It was a dot, centred on whatever it pressed. A
+dot centred on a button covers the button, and a tick appearing under a dark
+disc is a tick nobody sees. An arrow puts its tip on the target and its body
+somewhere the target is not — and after each press it comes off the control, so
+the state the step exists to show is not under the hand that made it.
+
+**Four things the build found.**
+
+*One caret, not four.* The caret was keyed off `data-on`, which is what marks a
+field as filled. By the end of the sign-up run four fields had one each, which
+is four carets in one window. It is keyed off a class the driver moves now:
+the field being typed into has it, and nothing else does.
+
+*Leaving means the pointer left.* These cards move under a stationary pointer
+twice over — the section's own reveal slides all three up when it comes into
+view, and hover lifts the one you are on by another eight pixels. Either fires
+`pointerleave` with the pointer exactly where it was, and the run it tore down
+did not start again until you moved. It asks where the pointer actually is now,
+and re-arms on any movement over the card.
+
+*A sheet dims what it covers.* Without it the sheet was a white card on a white
+screen and the wallet behind it looked like it was still yours to press.
+
+*Two things cannot share a name.* The tab capsule was called `.m-pill`, which
+was already the launch badge, and it came out in the badge's cream.
+
+*A `<use>` inherits from the `<use>`.* The icons are one sprite and forty
+references to it — twenty-seven copies of the same five attributes is not
+hand-written HTML, it is a build step that never happened. The stroke went on
+the sprite's `<defs>`, where it looked right and was inherited by nothing: a
+`<use>` clones its symbol into a shadow tree, and inherited properties reach
+that tree from the `<use>` element, not from where the symbol is written. Every
+glyph rendered as a filled black blob. Two things about it are worth keeping:
+the stroke belongs on `.m-i`, next to the `<use>`; and a whole-image pixel diff
+did not notice, because at 12px an icon is a rounding error in a 364px card.
+The suite asks for the computed `fill` and `stroke` now, which cannot miss it.
+
+*Do not write over a drawing.* The plus on a company row becomes a tick, and
+the first version did it by writing a `✓` into the button — which deleted the
+two SVGs inside it. Reset cannot put back what is no longer there, so the
+second run opened with a tick on a row nothing had been added from. Both
+drawings live in the markup and a class picks one, and the suite counts them
+after a reset.
+
+**Reduced motion.** The run never starts. Each card is put in the frame its
+step is about — the filled form, the sheet up with three ways on it, the search
+filled and the list narrowed to match it — and never moved again. Not the
+literal last frame: "Checking your invite…" and "Copied" are true for a second,
+and a still of one of them is a still of a product caught mid-blink.
+
+**No hover, no pointer.** A phone has no hover, so there each card plays once
+when it scrolls into view and stays on its last frame rather than snapping back
+to a form nobody asked to see.
+
+**Two scripts, and what they had to learn.** `_sitegs.mjs` drives the three
+runs and reads the DOM at each step. `_siteshots-gs.mjs` photographs them
+against a worktree of the previous commit. Both take the `_site` prefix, which
+is how `all.sh` knows they need a server it does not start.
+
+The capture script learned two things the hard way. A fresh page per shot:
+hovering card two after card one leaves the pointer somewhere Playwright will
+not always re-enter from, and a run that never started photographs as a card at
+rest — a picture of the old behaviour filed under the new one. And a shot waits
+for its state rather than for a stopwatch: the runs are driven by `setTimeout`,
+so under load they drift, and "wait 4.4 seconds and press the shutter" came
+back with the sheet halfway through a step about a third of the time.
+
+The worst of it was neither. Two hundred milliseconds after one hover the
+section had moved 233 pixels, because the images above it were still arriving;
+the pointer was outside the card, the run tore itself down, and the shot was of
+a card at rest. The page is walked and its images waited for now, and the
+section's top has to sit still before anything is hovered.
