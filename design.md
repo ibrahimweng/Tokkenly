@@ -10026,8 +10026,13 @@ inheritance loses to any rule that matches. So the amount, the names, the
 arrival time and the button label on both wide product cards have been pale
 mint on white since the section was built. It is invisible in a design tool,
 because there the panel is a frame with its own text colour; it only appears
-once the two live in the same cascade. Both panels state their own colours
-now, at a specificity that holds inside a dark card.
+once the two live in the same cascade.
+
+The fix here raised the panel's own specificity so it wins. That is not the
+fix that shipped — a parallel session had already found the same bug and cured
+it at the root, and 11g.91 says what happened. The `.pn` panel keeps its own
+colours anyway, because it is the one thing on these pages that has to read
+correctly on white, on a dark card and on a coloured slab alike.
 
 *The bento collapses on a phone.* Every measurement in it is
 `min(N px, M vw)`, which has a ceiling and no floor. At 390 the 52px chip
@@ -10061,3 +10066,177 @@ that are not on the landing page — the rewritten hero, "Built on Base", and
 "Get Started" against the page's "Sign up". That gap is a decision already
 taken (new pages only, leave the landing page), not a defect, and the suite is
 the record of it.
+
+### 11g.91 — two sessions on the same components, and who wins what
+
+The product pages of 11g.90 were built on this machine while another session
+was rebuilding the landing page on the same branch. Eleven commits had landed
+on `main` in the meantime: three sticker sets, a Why statement that opens a
+scene per phrase, a gifting section rebuilt as a two-state card, a composed
+closing call to action — and a fix for the pop-up's contrast. The push was
+rejected, which is the right outcome; a merge followed, and three things had
+to be decided rather than merged.
+
+**The pop-up's colour. Both sessions found it. Theirs is the better fix and
+it landed first.**
+
+Same diagnosis on both sides: `.pr-card p` is one class and one element, so it
+reaches into the white receipt inside the card and paints its labels and
+values `#a9c4bb` — 1.86:1 on the panel, 1.62:1 on the ledger, where AA wants
+4.5.
+
+Two cures. This branch raised the panel's specificity so it wins the contest.
+`1256817` scoped the offending rule instead: `.pr-card .pr-top p`, and every
+card's own copy lives in `.pr-top` while the pop-up never does. That removes
+the contest rather than winning it, and nothing breaks if the file is
+reordered. It also took the panel's own greys to AA on the way past —
+`#566661` at 6.05:1, the note `#4f5f5a` at 6.74 — where this branch had only
+put the old `#6c7d78` back, which clears AA on white by a hair and fails on
+the ledger at 3.77.
+
+So the merge takes their selectors and their colours. The one thing kept from
+here is a floor under the measurements: the pop-up is written in
+`min(N px, M vw)` like the rest of the bento, and `min(14px, 0.73vw)` is 2.8px
+on a phone. That is 11g.90's second bug, which their fix does not touch and
+which is orthogonal to it.
+
+The `.pn` panel keeps its own colours regardless. It is the one component on
+these pages that has to read on white, on a `#00221a` card and on a coloured
+slab, and stating its colours once is cheaper than tracking which ground it
+happens to be standing on.
+
+**The end of the stylesheet.** A both-sides-added conflict, and both sides
+stay: the product page kit here, the gifting phone tier there. Git had left
+the closing brace outside the hunk, so resolving it by search-and-replace
+produced an unbalanced file twice; it was resolved by line range in the end,
+with a brace check after.
+
+**The ruled points.** `.points` and `.point` — the sand rule beside each
+point of the gifting section — went out with the section main replaced. The
+product pages' `split` is the only thing still using them, so they move into
+the product page kit and stop being the landing page's to delete.
+
+And one thing carried rather than accepted: main's `Explore Gifting and
+Rewards` still pointed at `#get-started`. That was correct when it was
+written and is not any more, because 11g.89 built the page it names.
+
+**What this says about working in parallel.** Nothing here was a code
+conflict in the interesting sense. All three decisions were about which of two
+working answers to keep, and in the one case where both sessions had solved
+the same problem, the merge is worse if it defends its own. Taking the
+smaller, more structural fix and keeping only the part of this branch's work
+that was genuinely additional is the whole of it.
+
+**Re-shot, not assumed.** Every screenshot was taken again from the merged
+tree against three live servers — 4322 for the previous commit, 4323 for main
+without this branch's work, 4321 for the merge. At 1440 the eight pages are
+pixel-identical to the pre-merge capture. At 834 and 390 they move by 100 to
+170 pixels, which is the AA greys and the floors landing in the same rules.
+The landing page's comparison is pointed at 4323 rather than the older commit,
+so it credits their contrast fix to them and shows only what this merge adds
+to it: the chip from 23px and 10px to 44, the card padding from 16px and 7px
+to 26.
+
+**A postscript, from the second merge an hour later.** Four more commits had
+landed: a cta variant system that gives every page its own gradient and its
+own arrangement of props, and `afb1fa6`, which fixed the eight product pages
+for it — `data-cta="product"` on the section and an `n-*` anchor on each prop,
+written into all eight files by hand.
+
+`site/products/*.html` are generated. One commit later, `6eeb3f2` added the
+contact, terms and privacy pages, updated the builder's footer links, ran
+`node build-products.mjs` — and the regeneration took the hand-written fix
+straight back out of all eight. Nothing complained. On `main` at that moment
+every product page closed with its coin, pen and notes drawing at natural size
+in the middle of the slab, stacked on the headline and through the lead.
+
+The fix is in the builder now, so a regeneration produces it. And the real
+lesson is the second commit rather than the first: an edit to a generated file
+is not wrong, it is just invisible, and it survives exactly until someone runs
+the generator. So `build-products.mjs --check` writes nothing and exits 1 on
+any committed page the builder would not produce, `_siteprod.mjs` runs it
+before it opens a browser, and the next time this happens it is a failing line
+rather than eight broken pages nobody looked at.
+
+**And the rest of the closes, checked.** The same failure could have been
+sitting on the landing page and the three new ones, so all twelve were
+measured rather than eyeballed. Two questions, because they are not the same
+question.
+
+*Did a rule reach the prop at all?* `left` and `right` both computing to
+`auto` on an absolutely positioned element is that answered. Every prop on
+every page at 1440, 834 and 390 is placed; each page declares a variant, each
+gradient resolves, and each has exactly one `n-tl` prop, which is the one a
+phone keeps.
+
+*Does the art land on the words?* A box test cannot answer it — these renders
+carry a wide transparent margin, and the variants are fitted against the ink
+rather than the file, so a prop's box overlapping the copy is the normal case.
+Three renders per slab instead: the ground alone, the ground plus props, the
+ground plus copy. Anything differing from the ground is ink, and the answer is
+where the two masks meet. Zero at all three widths, on all twelve pages.
+
+The same measurement pointed at the broken build returns about sixteen per
+cent of the prop ink sitting on the words, on exactly the eight product pages
+and none of the other four, which is the only reason to trust the zero.
+
+`_sitecta.mjs` keeps the first question and leaves the second to hand. One
+DOM read against three screenshots and a pixel walk per slab, for a question
+that only moves when a variant is re-fitted — and the cheap one is the whole
+of the bug that actually happened. Against the broken build it fails all
+eight, at all three widths, and at 390 it says something the desktop capture
+did not: with no anchor to fall back on, the art does not merely land badly,
+it disappears.
+
+A note on the reading of it. Two attempts at the expensive question were
+written before the cheap one was kept, and the first of them reported ink on
+the words for all twelve pages — including the four that were provably clean.
+It was intersecting prop ink with `.closing-in`, which is a full-width grid
+box with a centred column of words inside it, so it answered a question
+nobody had asked. A measurement that disagrees with a validated one is wrong
+until shown otherwise, and it was.
+
+**And the other builder.** `build-pages.mjs` writes contact, terms and
+privacy, and it has the same shape of exposure — generated and committed —
+with one thing on top: it imports the nav and the footer from
+`build-products.mjs`, so a routing change regenerates all eleven pages at
+once. That is precisely the edit that undid the cta fix, and a guard on one
+builder and not the other would have missed it in exactly the same way. It
+takes `--check` too, and `_siteprod.mjs` runs both before it opens a browser.
+
+Its own `checkProps` already asked a different question — does the stylesheet
+hold a placement for every prop the page emits — so the two now sit either
+side of the gap the bug fell through: one says the rule exists, the other says
+the file still carries the markup that reaches it.
+
+**The contact page's two empty columns.** Under the form sit three channels.
+The first was the address and a promise about answering it. The other two were
+a heading and a sentence describing content that was not on the page —
+"Answers to the common ones", "Office, phone, socials" — with nothing to
+click. Next to a real one they read as placeholders, because that is what they
+were.
+
+Both carry the thing they describe now. The FAQ column points into the
+answers that already exist, by anchor: what a tokenized share is, the rate and
+the ninety seconds it is held for, why there is a cap before the identity
+check, and the landing page's own list. The third became "Something has gone
+wrong" — an URGENT-subject mailto, the terms, the privacy policy.
+
+It is not the third column that was asked for. A registered address, a support
+line and social handles are not in this repository, and they are not the kind
+of thing to invent for a financial product: a made-up registered address on a
+contact page is a lie with regulatory shape to it, and the socials in the
+footer are still `data-soon`. So the column says something true instead, and
+the real ones are the client's to supply.
+
+The form's email field also suggested `ibrahimweng0@gmail.com` — the project's
+own address, in the box where a visitor types theirs. It reads as a form that
+has already been filled in. `you@example.com` now.
+
+**Two things the link check found by being pointed somewhere new.** Adding
+contact, terms and privacy to `_siteprod.mjs`'s resolver crashed it outright:
+`apiRequestContext.get` refuses a `mailto:` rather than skipping it, and the
+filter only skipped `#` and `http`. Anything carrying a scheme is somebody
+else's to resolve. And the four new anchors are exactly the sort of link that
+rots without a sound when a section is renamed, which is the reason to have
+them in the check at all.

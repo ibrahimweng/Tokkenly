@@ -11,10 +11,36 @@
      node app/scripts/_siteprod.mjs
 */
 import { chromium } from 'playwright'
+import { execFileSync } from 'node:child_process'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+/* Before opening a browser: are the committed pages the ones the builder
+   would write? They are generated and committed, so a hand-edit to one of
+   them lives until the next regeneration and then vanishes without a word.
+   That has happened once already. */
+const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
+console.log('=== in step with the builder ===')
+let builderOk = true
+/* Both builders, because they share a nav and a footer: build-pages imports
+   them from build-products, so one routing change regenerates all thirteen
+   pages. That is exactly the edit that quietly undid the product pages' cta
+   fix, and checking half the site would have missed it just as well. */
+for (const script of ['site/build-products.mjs', 'site/build-pages.mjs']) {
+  try {
+    console.log('  ok    ' + script.replace('site/', '').padEnd(20) +
+      execFileSync('node', [script, '--check'], { cwd: REPO, encoding: 'utf8' }).trim())
+  } catch (e) {
+    builderOk = false
+    console.log('  FAIL  ' + script.replace('site/', '').padEnd(20) +
+      String(e.stderr || e.message).trim().replace(/\n/g, '\n        '))
+  }
+}
+
 const SLUGS = ['tokenized-stocks', 'gifting-and-rewards', 'receive', 'send',
                'pay-bills', 'convert', 'earn', 'borrow']
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
-let bad = 0
+let bad = builderOk ? 0 : 1
 const ok = (c, m) => { console.log(`${c ? '  ok  ' : '  FAIL'}  ${m}`); if (!c) bad++ }
 
 for (const w of [1440, 834, 390]) {
@@ -45,14 +71,23 @@ console.log('\n=== links ===')
 const p = await b.newPage({ viewport: { width: 1440, height: 1000 } })
 await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 const seen = new Map()
-for (const slug of [...SLUGS, null]) {
-  const url = slug ? `http://localhost:4321/products/${slug}.html` : 'http://localhost:4321/index.html'
+/* The company pages are in here too: the contact page points into the FAQs on
+   three product pages by anchor, and an anchor is the sort of link that rots
+   silently when a section is renamed. */
+const OTHERS = ['index.html', 'about.html', 'blog.html', 'contact.html', 'terms.html', 'privacy.html']
+for (const slug of [...SLUGS, ...OTHERS]) {
+  const url = OTHERS.includes(slug)
+    ? `http://localhost:4321/${slug}`
+    : `http://localhost:4321/products/${slug}.html`
   await p.goto(url, { waitUntil: 'load' })
   const hrefs = await p.$$eval('a[href]', (as) => as
     .filter((a) => !a.hasAttribute('data-soon'))
     .map((a) => a.getAttribute('href')))
   for (const h of hrefs) {
-    if (!h || h.startsWith('#') || h.startsWith('http')) continue
+    /* Anything carrying a scheme is somebody else's to resolve — the app on
+       its own domain, and the contact page's mailto:, which the request
+       context refuses outright rather than skipping. */
+    if (!h || h.startsWith('#') || /^[a-z][a-z0-9+.-]*:/i.test(h)) continue
     const abs = new URL(h, url).href
     if (!seen.has(abs)) {
       const r = await p.request.get(abs)

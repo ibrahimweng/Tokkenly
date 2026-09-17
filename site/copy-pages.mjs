@@ -135,12 +135,27 @@ export const PAGES = {
       ['about', 'What is it about?', 'Account, a transaction, or something else', 'text'],
       ['message', 'Message', 'Tell us what happened, and when', 'textarea'],
     ],
-    /* The third channel is the one with the dashed rule in the frame: it is
-       marked as still to be filled in, the same way the legal pages are. */
+    /* The frame draws the second and third columns as a heading and a sentence
+       with nothing to click, and marks the third — registered address, support
+       line, socials — with a dashed rule, meaning still to come. Those details
+       are not in this repository and are not the kind of thing to invent for a
+       money product, so both columns carry links to things that do exist. This
+       is the one place the page departs from 394:780. */
     channels: [
-      [EMAIL, 'We reply within one working day.', false],
-      ['Answers to the common ones', 'Account checks, withdrawals, converting, and what a tokenized share actually is.', false],
-      ['Office, phone, socials', 'Registered address, a support line and the accounts you actually run.', true],
+      [EMAIL, 'We reply within one working day.'],
+      ['Answers to the common ones',
+       'Some of it is already written down, and reading it is faster than waiting for us.', [
+        ['What a tokenized share is', './products/tokenized-stocks.html#s-faq'],
+        ['The rate, and the ninety seconds it is held for', './products/convert.html#s-faq'],
+        ['Why there is a cap before your identity check', './products/send.html#s-facts'],
+        ['Everything else people ask', './index.html#faq'],
+      ]],
+      ['Something has gone wrong',
+       'Money that has not arrived, a payment stuck halfway, an account you cannot get into.', [
+        ['Email us, with URGENT first', `mailto:${EMAIL}?subject=URGENT`],
+        ['What we owe you when it does', './terms.html'],
+        ['What we do with your data', './privacy.html'],
+      ]],
     ],
   },
 

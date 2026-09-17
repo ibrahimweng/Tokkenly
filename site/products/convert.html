@@ -268,12 +268,18 @@
         </div>
       </section>
 
-      <section class="closing closing-prod">
+      <!-- The close declares its cta variant and anchors each prop, because
+           every placement rule lives under [data-cta] with an n-* anchor under
+           it now. Without them the gradient's two custom properties are
+           undefined and .cta-prop falls back to position: absolute with no
+           offsets, so all three draw at natural size in the corner, on top of
+           the words. -->
+      <section class="closing closing-prod" data-cta="product">
         <div class="wrap">
           <div class="closing-slab reveal">
-            <img class="cta-prop cta-coin" src="../img/cta/coin.webp" width="274" height="290" loading="lazy" alt="" aria-hidden="true" />
-            <img class="cta-prop cta-pen" src="../img/cta/pen.webp" width="302" height="369" loading="lazy" alt="" aria-hidden="true" />
-            <img class="cta-prop cta-notes" src="../img/cta/notes.webp" width="593" height="593" loading="lazy" alt="" aria-hidden="true" />
+            <img class="cta-prop cta-coin n-tl" src="../img/cta/coin.webp" width="274" height="290" loading="lazy" alt="" aria-hidden="true" />
+            <img class="cta-prop cta-pen n-bl" src="../img/cta/pen.webp" width="302" height="369" loading="lazy" alt="" aria-hidden="true" />
+            <img class="cta-prop cta-notes n-r" src="../img/cta/notes.webp" width="593" height="593" loading="lazy" alt="" aria-hidden="true" />
             <div class="closing-in">
               <h2>See what the rate is today.</h2>
               <p class="closing-lead">Move between naira and stablecoins without leaving Tokkenly.</p>

@@ -3061,8 +3061,6 @@ textarea.cf-input {
   border-top: 1px solid #c9d2ce;
   padding-block: min(34px, 1.771vw);
 }
-/* The frame marks this one with a dashed rule: still to be filled in. */
-.cf-channel-soon { border-top-style: dashed; border-top-color: #d8c4bb; }
 .cf-channel h2 {
   font-size: clamp(19px, 1.25vw, 24px); line-height: 1.26; letter-spacing: -0.022em;
   color: var(--ink); margin: 0 0 10px; overflow-wrap: anywhere;
@@ -3070,6 +3068,19 @@ textarea.cf-input {
 .cf-channel h2 a { color: inherit; text-decoration: none; }
 .cf-channel h2 a:hover { text-decoration: underline; }
 .cf-channel p { font-size: clamp(14.5px, 0.834vw, 16px); line-height: 1.65; color: var(--muted); }
+
+/* The two columns that are not an address carry the things they describe.
+   They used to be a heading and a sentence about content that was not on the
+   page, which reads as a placeholder sitting next to a real one. */
+.cf-links { list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 12px; }
+.cf-links a {
+  display: inline-flex; align-items: baseline; gap: 8px;
+  font-size: clamp(14px, 0.834vw, 15.5px); line-height: 1.5; font-weight: 600;
+  color: var(--positive); text-decoration: none;
+}
+.cf-links a:hover { text-decoration: underline; }
+.cf-links .pr-arrow { width: 14px; height: 14px; flex: none; transform: translateY(1px); transition: transform var(--t-base) var(--ease-out); }
+.cf-links a:hover .pr-arrow { transform: translate(3px, 1px); }
 
 /* ==================================================== terms and privacy == */
 /* One object, two pages. A head, the dashed placeholder warning, then a 330

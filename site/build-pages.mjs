@@ -10,7 +10,7 @@
    of the 3D props are the per-page variation asked for separately, so those
    come from the stylesheet rather than from the frame, and only the slab's
    headline, lead and button label are the frame's. */
-import { writeFileSync, readFileSync } from 'node:fs'
+import { writeFileSync, readFileSync, existsSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { PAGES, EMAIL } from './copy-pages.mjs'
@@ -199,9 +199,12 @@ ${p.form.map(field).join('\n')}
           </form>
 
           <div class="cf-channels reveal">
-${p.channels.map(([h, s, soon], i) => `            <div class="cf-channel${soon ? ' cf-channel-soon' : ''}">
+${p.channels.map(([h, s, links], i) => `            <div class="cf-channel">
               <h2>${i === 0 ? `<a href="mailto:${esc(h)}">${esc(h)}</a>` : esc(h)}</h2>
               <p>${esc(s)}</p>
+${links ? `              <ul class="cf-links">
+${links.map(([label, href]) => `                <li><a href="${href}">${esc(label)} ${ARROW}</a></li>`).join('\n')}
+              </ul>` : ''}
             </div>`).join('\n')}
           </div>
         </div>
@@ -324,8 +327,38 @@ ${footer('./')}
 `
 }
 
+/* `--check` writes nothing and reports any committed page this script would
+   not produce.
+
+   checkProps above asks whether the stylesheet has a placement for every prop
+   a page emits. This asks the other half: whether the file on disk is still
+   the file this script makes. They are generated AND committed, so an edit
+   made to one of them by hand survives exactly until the next person runs the
+   builder — and that is not a hypothetical. The eight product pages were
+   fixed for the cta variants by hand, and a regeneration one commit later,
+   made for a footer link, took the fix back out of all eight without a word.
+
+   These five are more exposed than they look: their nav and footer are
+   imported from build-products.mjs, so a routing change regenerates both
+   sets, which is precisely the edit that did the damage last time. */
+const check = process.argv.includes('--check')
 checkProps()
+const stale = []
 for (const p of Object.values(PAGES)) {
-  writeFileSync(resolve(HERE, `${p.slug}.html`), page(p))
+  const file = resolve(HERE, `${p.slug}.html`)
+  const html = page(p)
+  if (check) {
+    if (!existsSync(file) || readFileSync(file, 'utf8') !== html) stale.push(p.slug)
+    continue
+  }
+  writeFileSync(file, html)
   console.log('wrote ' + p.slug + '.html')
+}
+if (check) {
+  if (stale.length) {
+    console.error('STALE — edited by hand, or built from an older copy: ' + stale.join(', '))
+    console.error('Run `node site/build-pages.mjs` and commit what it writes.')
+    process.exit(1)
+  }
+  console.log(`${Object.keys(PAGES).length} pages, all in step with the builder`)
 }
