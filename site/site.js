@@ -27,7 +27,10 @@
     ticking = true
     requestAnimationFrame(function () {
       ticking = false
-      var run = hero ? hero.offsetHeight - nav.offsetHeight : 320
+      /* The hero is as tall as the composition, which on a 34 inch screen is
+       over 2000px — a ramp that long leaves the bar clear for a screen and a
+       half. Capped, it finishes about where a normal window's hero would. */
+    var run = Math.min(hero ? hero.offsetHeight - nav.offsetHeight : 320, 760)
       var p = span(window.scrollY, 0, Math.max(run, 1))
       var blur = ease(span(p, 0, 0.62))
       var solid = ease(span(p, 0.38, 1))
