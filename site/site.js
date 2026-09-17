@@ -625,6 +625,8 @@
  *
  *  The fill is a clipped second copy of the button rather than a coloured
  *  overlay, so the label flips from white to dark exactly at the sweep edge.
+ *  The clip is a pill, not a rectangle, so that edge is a rounded cap and the
+ *  fill reads as something running down a tube.
  *
  *  It pauses whenever advancing would be rude or pointless: scrolled out of
  *  view, pointer resting on the card, keyboard focus inside it, or the tab in
@@ -657,7 +659,7 @@
       t.classList.toggle('is-on', on)
       t.setAttribute('aria-selected', on ? 'true' : 'false')
       t.tabIndex = on ? 0 : -1
-      t.querySelector('.gr-fill').style.clipPath = 'inset(0 100% 0 0)'
+      t.querySelector('.gr-fill').style.clipPath = 'inset(0 100% 0 0 round 999px)'
     })
     panels.forEach(function (p, k) {
       var on = k === n
@@ -678,7 +680,7 @@
     if (calm.matches) return
     var fill = tabs[i].querySelector('.gr-fill')
     var mine = anim = fill.animate(
-      [{ clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0 0 0)' }],
+      [{ clipPath: 'inset(0 100% 0 0 round 999px)' }, { clipPath: 'inset(0 0 0 0 round 999px)' }],
       { duration: DWELL, easing: 'linear', fill: 'forwards' }
     )
     if (!seen || held) mine.pause()
