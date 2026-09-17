@@ -557,39 +557,230 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 }
 
 /* ------------------------------------------------- gifting and rewards -- */
-/* 688 of copy against a 768 stage, 64 between, on the 1520 column. */
-.gift-in {
-  display: grid; grid-template-columns: 688fr 768fr;
-  gap: min(64px, 3.334vw); align-items: start;
+/* The head row is the frame's split: 802 of headline against a 518 column,
+   200 apart on the 1520. Packed left and right rather than divided into
+   fractions, because the frame leaves the slack in the middle. */
+.gr-head {
+  display: grid; grid-template-columns: 52.763% 34.079%;
+  justify-content: space-between; align-items: start;
+  gap: min(64px, 3.334vw);
 }
-/* Two blocks 48 apart, exactly as the frame nests them: the head is its own
-   16-gap pair, the body is the points and the button. Flattening these into
-   one stack puts a 48 gap where the frame has 16. */
-.gift-text { display: grid; gap: min(48px, 2.5vw); align-content: start; min-width: 0; }
-.gift-head { display: grid; gap: 16px; }
-.gift-body { display: grid; gap: min(48px, 2.5vw); justify-items: start; min-width: 0; }
-.gift-lead { max-width: 518px; }
+.gr-aside { display: grid; gap: 24px; justify-items: start; }
+.gr-lead { max-width: 518px; }
 
-/* 400 is the frame's width, but as a flat width it wins over max-width once
-   an ancestor track sizes to max-content — which is what pushed a phone 30px
-   sideways. min() cannot be beaten that way. */
-.points { display: grid; gap: 28px; width: min(400px, 100%); padding-bottom: 24px; }
-/* The rule is a grid column, not a pseudo-element pinned with absolute
-   positioning, so its height is the copy's height with nothing to tune. The
-   copy is one child so it cannot fall into the 3px column. */
-.point { display: grid; grid-template-columns: 3px minmax(0, 1fr); gap: 19px; }
-.point::before { content: ''; background: var(--sand); border-radius: 2px; }
-.point-copy { min-width: 0; }
-.point h3 {
-  font-size: clamp(18px, 1.146vw, 22px); line-height: 1.3; letter-spacing: -0.022em;
-  color: var(--ink); margin: 0 0 9px;
+/* ---------------------------------------------------------------- card -- */
+/* 1520 x 700 in the frame. Everything inside is positioned in per cent of
+   that box and sized in cqw, so one set of numbers holds at every width. */
+.gr { margin-top: min(64px, 3.334vw); position: relative; container-type: inline-size; }
+.gr-card {
+  position: relative; overflow: hidden;
+  aspect-ratio: 1520 / 700;
+  border-radius: clamp(14px, 1.042vw, 20px);
+
+  /* One ramp, cut in half. Loyalty is the top half and family the bottom, and
+     they share #f8c8ff, so panning between them never crosses a colour that
+     belongs to neither state. Cross-fading two gradients would. */
+  background-image: linear-gradient(180deg, #7ec1c4 0%, #f8c8ff 50%, #dfccd7 100%);
+  background-size: 100% 200%;
+  background-position: 0 100%;
+  transition: background-position 880ms cubic-bezier(0.62, 0.02, 0.2, 1);
 }
-.point p { font-size: clamp(14.5px, 0.834vw, 16px); line-height: 1.6; color: var(--muted); }
-.gift-cta { justify-self: start; }
+.gr[data-active='loyalty'] .gr-card { background-position: 0 0; }
 
-.gift-stage {
-  width: 100%; height: auto; display: block;
-  border-radius: min(34px, 1.771vw);
+.gr-panel {
+  position: absolute; inset: 0;
+  opacity: 0; visibility: hidden;
+  transition: opacity 340ms var(--ease-out), visibility 0s linear 340ms;
+}
+.gr-panel.is-on {
+  opacity: 1; visibility: visible;
+  transition: opacity 420ms var(--ease-out) 120ms, visibility 0s;
+}
+
+/* Every child drifts up a little on the way in. The portrait is excluded
+   below: it is large enough that any travel reads as a wobble. */
+.gr-panel > * {
+  transform: translateY(14px);
+  transition: transform 520ms cubic-bezier(0.16, 0.84, 0.44, 1);
+}
+.gr-panel.is-on > * { transform: none; }
+.gr-panel > :nth-child(2) { transition-delay: 60ms; }
+.gr-panel > :nth-child(3) { transition-delay: 110ms; }
+.gr-panel > :nth-child(4) { transition-delay: 160ms; }
+
+/* ------------------------------------------------------------- the art -- */
+.gr-portrait, .gr-sticker {
+  position: absolute; display: block; height: auto;
+  max-width: none; pointer-events: none; user-select: none;
+}
+.gr-portrait { object-fit: cover; }
+.gr-panel > .gr-portrait { transform: none; }
+
+/* The portraits take the frame's node box with object-fit: cover, which is
+   what a Figma FILL image is — the node box is a window on the picture, not
+   the picture, and the two aspects differ.
+
+   The stickers do not: their node boxes disagree with what the frame actually
+   renders, so these are measured off the render instead, by column and row
+   histogram so a few stray pixels cannot set the box. Both bleed off an edge,
+   exactly as the frame clips them. */
+.gr-portrait-family {
+  left: 37.664%; top: -60.077%; width: 63.675%; height: 193.307%; object-fit: cover;
+}
+.gr-portrait-loyalty {
+  left: 45.970%; top: -10.577%; width: 56.364%; height: 171.113%; object-fit: cover;
+}
+.gr-cloud { left: -4%; top: 60%; width: 38%; }
+.gr-coin  { left: 0.539%; top: 73.986%; width: 12.355%; }
+
+.gr-copy {
+  position: absolute; top: 9%; margin: 0;
+  font-size: clamp(19px, 3.026cqw, 46px); line-height: 1.674;
+  letter-spacing: -0.014em; font-weight: 400; color: #132c28;
+}
+.gr-copy-family  { left: 3.743%; width: 40%; }
+.gr-copy-loyalty { left: 5.341%; width: 34%; }
+
+/* ------------------------------------------------------- floating cards -- */
+.gr-float {
+  position: absolute;
+  background: #fff; border-radius: clamp(10px, 0.921cqw, 14px);
+  box-shadow: 0 18px 44px rgba(8, 35, 30, 0.16), 0 2px 6px rgba(8, 35, 30, 0.08);
+}
+.gr-caps {
+  display: block; text-transform: uppercase;
+  font-size: clamp(9px, 0.724cqw, 11px); line-height: 1.4545; font-weight: 600;
+  letter-spacing: 0.09em; color: #8a9a95;
+}
+
+/* popular — 350 x 225 at 698.75, 286 */
+.gr-popular {
+  left: 41.5%; top: 40.857%; width: 23.026%;
+  padding: 1.184cqw; display: grid; align-content: start; gap: 0.855cqw;
+}
+.gr-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center; gap: 0.79cqw; padding: 0.46cqw 0;
+}
+.gr-n {
+  font-size: clamp(11px, 0.987cqw, 15px); font-weight: 500; color: #12312a;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.gr-v2 {
+  display: grid; justify-items: end; gap: 0.13cqw;
+  font-size: clamp(11px, 0.987cqw, 15px); font-weight: 600; color: #12312a;
+}
+.gr-v2 em { font-style: normal; font-size: clamp(9px, 0.79cqw, 12px); font-weight: 500; color: #12866d; }
+.gr-plus {
+  position: relative; width: 1.184cqw; height: 1.184cqw; min-width: 12px; min-height: 12px;
+}
+.gr-plus::before, .gr-plus::after {
+  content: ''; position: absolute; inset: 0; margin: auto;
+  background: #9fb0ab; border-radius: 1px;
+}
+.gr-plus::before { width: 100%; height: 1.5px; }
+.gr-plus::after { width: 1.5px; height: 100%; }
+
+/* indexes — two 169 x 147 cards in a 350 x 195 box at 645, 242 */
+/* Purely a positioning box — the frame's 350x195 `indexes` frame, which has no
+   fill of its own. It must not carry .gr-float, which is what was painting a
+   white card behind the pair.
+
+   The two cards inside are 169x147 and offset from each other on both axes:
+   the left one sits 48 lower, the right one 181 across. That stagger is the
+   whole composition, so both numbers are taken from the frame and confirmed
+   against its render, not rounded to something tidier. */
+.gr-indexes {
+  position: absolute; left: 42.434%; top: 34.571%; width: 23.026%;
+  aspect-ratio: 350 / 195;
+}
+.gr-index {
+  position: absolute; width: 48.286%;
+  background: #fff; border-radius: clamp(10px, 0.921cqw, 14px);
+  padding: 1.053cqw; display: grid; gap: 0.395cqw; align-content: start;
+  box-shadow: 0 18px 44px rgba(8, 35, 30, 0.16), 0 2px 6px rgba(8, 35, 30, 0.08);
+}
+.gr-index-a { left: 0; top: 24.615%; }
+.gr-index-b { left: 51.714%; top: 0; }
+.gr-v { font-size: clamp(15px, 1.447cqw, 22px); line-height: 1.318; font-weight: 600; letter-spacing: -0.02em; color: #12312a; }
+.gr-d { font-size: clamp(10px, 0.855cqw, 13px); line-height: 1.3846; font-weight: 500; color: #12866d; }
+.gr-m { font-size: clamp(9px, 0.724cqw, 11px); line-height: 1.545; color: #8a9a95; }
+
+/* ---------------------------------------------------------------- tabs -- */
+/* 602 wide, 56 tall, centred, 84.43 per cent down — the frame's Frame 58. */
+.gr-tabs {
+  position: absolute; left: 50%; top: 84.429%; transform: translateX(-50%);
+  display: flex; gap: 4.211cqw; z-index: 3;
+}
+/* Two types, because the same pill sits on a pink gradient in one state and on
+   a dark sweater in the other. A translucent white pill with dark text fails on
+   the second; dark frosted glass with white text and a faint white stroke reads
+   on both, and solid white with dark text reads on anything. */
+.gr-tab {
+  position: relative; overflow: hidden;
+  display: inline-flex; align-items: center; justify-content: center;
+  height: clamp(42px, 3.684cqw, 56px); padding: 0 clamp(18px, 1.974cqw, 30px);
+  border: 0; border-radius: var(--r-pill);
+  background: rgba(5, 38, 32, 0.63);
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.42);
+  color: #fff;
+  font: inherit; font-size: clamp(12px, 1.086cqw, 16.5px); font-weight: 600;
+  letter-spacing: -0.01em; white-space: nowrap; cursor: pointer;
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+  transition: background var(--t-base) var(--ease-out),
+    box-shadow var(--t-base) var(--ease-out);
+}
+.gr-tab:hover { background: rgba(5, 38, 32, 0.74); }
+
+/* Tinted glass rather than a dark slab: brightness() darkens whatever is
+   actually behind the pill and keeps its hue, so over the pink gradient it
+   reads as darker pink and over the sweater as darker sweater. saturate()
+   puts back the chroma that darkening takes away, which is what stops it
+   collapsing towards grey.
+
+   0.44 is not an arbitrary number. It is the lightest tint that still clears
+   4.5:1 for white text over the palest thing this pill ever sits on, which is
+   the bottom of the pink gradient. Anything lighter reads better as glass and
+   worse as text.
+
+   The solid fallback above stays for anything without backdrop-filter —
+   without it an unsupported browser gets white text on near-nothing. */
+@supports ((backdrop-filter: brightness(0.44)) or (-webkit-backdrop-filter: brightness(0.44))) {
+  .gr-tab {
+    background: rgba(5, 38, 32, 0.06);
+    -webkit-backdrop-filter: blur(10px) saturate(1.55) brightness(0.44);
+    backdrop-filter: blur(10px) saturate(1.55) brightness(0.44);
+  }
+  .gr-tab:hover {
+    background: rgba(5, 38, 32, 0.12);
+    -webkit-backdrop-filter: blur(10px) saturate(1.55) brightness(0.37);
+    backdrop-filter: blur(10px) saturate(1.55) brightness(0.37);
+  }
+}
+.gr-tab.is-on { box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.8), 0 10px 26px rgba(8, 35, 30, 0.2); }
+.gr-tab:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.gr-lbl { position: relative; z-index: 1; }
+
+/* The fill IS the timer. It is a second copy of the whole button — white
+   ground, dark label — clipped from the left, so the text flips colour exactly
+   at the sweep edge rather than crossfading through a value that reads on
+   neither side. The script animates the clip and advances when it finishes. */
+/* `round` is what makes the leading edge a cap rather than a straight cut: the
+   clip is itself a pill, so the fill grows as a tube and the label reveals
+   along the curve. Below one button-height the cap is a circle opening out,
+   which is the right shape for the start of the move. */
+.gr-fill {
+  position: absolute; inset: 0; z-index: 2;
+  display: flex; align-items: center; justify-content: center;
+  background: #fff; color: var(--deep); border-radius: inherit;
+  clip-path: inset(0 100% 0 0 round var(--r-pill));
+}
+
+/* No sweep, so the selected button is simply filled and nothing advances on
+   its own. Both pills stay legible either way. */
+@media (prefers-reduced-motion: reduce) {
+  .gr-card, .gr-panel, .gr-panel > * { transition: none; }
+  .gr-tab.is-on .gr-fill { clip-path: inset(0 0 0 0 round var(--r-pill)); }
 }
 
 /* --------------------------------------------------------- why tokkenly -- */
@@ -606,37 +797,160 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
   border-radius: min(22px, 1.146vw);
 }
 .why-in { position: relative; }
-/* Figma: image 25 inside the statement's lower frame, at x 280.8 of 800 and
-   ending exactly on the paragraphs' top edge. So it is anchored to the body,
-   not to the row and not to a hand-tuned offset — bottom: 100% puts it where
-   the frame puts it at any width, and it can never land on a paragraph.
-
-   It only appears where the composition has room for it. The gap it sits in
-   is a product of 1920: the statement column is shorter than the 597x712
-   portrait beside it and space-between opens the slack. Below that the
-   headline takes another line, the portrait shrinks, the slack closes, and
-   the column packs from the top instead so there is no hole where the coin
-   would have been. */
-.why-body { position: relative; }
+/* image 25 at 594,77 in the section, which is 394 across the 1520 column and
+   67 above the row — over the portrait's top-right corner. Both axes are
+   shares of that column, so it holds the corner at every width; a percentage
+   top would resolve against the row's height instead, hence the margin. */
 .why-coin {
-  position: absolute; left: 35.11%; bottom: 100%; width: 34.25%;
-  height: auto; z-index: 2; pointer-events: none; display: none;
+  position: absolute; left: 25.943%; top: 0; margin-top: -4.424%;
+  width: 18.004%; height: auto;
 }
-@media (min-width: 1880px) { .why-coin { display: block; } }
 .why-text { display: grid; gap: min(48px, 2.5vw); align-content: start; }
-/* Only where the coin shows: the slack it sits in is what space-between opens. */
-@media (min-width: 1880px) { .why-text { align-content: space-between; } }
 .why-head { display: grid; gap: 20px; }
 .why-head h2 { color: #1e1818; }
-.why-body { display: grid; gap: 24px; justify-items: start; }
+/* Frame 19 opens 100 below the headline before the first paragraph — the
+   gap is in the composition, not a leftover from where the coin used to be. */
+.why-body { display: grid; gap: 24px; justify-items: start; padding-top: min(100px, 5.208vw); }
 .why-paras { display: grid; gap: 24px; }
 .why-paras p {
   font-size: clamp(16.5px, 1.05vw, 20px); line-height: 1.6; letter-spacing: -0.005em;
   color: #433b37;
 }
+/* The frame sets the statement's first block at 30/51 and leaves the Base
+   paragraph at 20/32 under it. Two classes, to clear .why-paras p rather than
+   sit level with it and rely on which one is written last. */
+.why-paras .why-lead {
+  font-size: clamp(19px, 1.5625vw, 30px);
+  line-height: 1.7; letter-spacing: -0.012em;
+  color: #2c2521;
+}
 /* This section's eyebrow is near-black rather than the page's muted green. */
 .eyebrow-ink { color: #433b37; }
 .eyebrow-ink::before { background: #1e1818; }
+
+
+/* ------------------------------------ what each phrase in the statement opens */
+/* Three phrases in the statement each open a little scene. The trigger is the
+   phrase itself — an inline box, no padding on any side, so the hot area is
+   exactly the glyphs and never reaches the line above, the line below, or the
+   words either side of it on its own line. */
+.wt { font-weight: 700; color: #1e1818; transition: color 220ms var(--ease-out); }
+@media (hover: hover) and (pointer: fine) and (min-width: 1041px) {
+  .wt { cursor: default; }
+  /* The frame's mint is #2bbd9b, which is 1.97:1 on the page ground and fails
+     even the 3:1 that large bold text gets. This is the closest it can be
+     turned down and still clear it: 3.27:1. */
+  .wt.is-lit { color: #189171; }
+}
+
+/* Pinned to the content column, not to the wrap: the wrap carries the gutters,
+   and a percentage inside it would drift as they narrow. Everything in here is
+   placed in shares of 1520. */
+.wt-layer {
+  position: absolute; top: 0; bottom: 0; left: var(--gutter); right: var(--gutter);
+  z-index: 4;
+  pointer-events: none;                    /* never steals the hover it reacts to */
+  display: none;
+}
+@media (hover: hover) and (pointer: fine) and (min-width: 1041px) {
+  .wt-layer { display: block; }
+}
+/* JS parks this on the phrase's own centre, so everything inside is placed
+   relative to the words it came out of. */
+.wt-group { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+
+.wt-card {
+  position: absolute; left: 0; top: 0;
+  width: var(--w); height: var(--h);
+  opacity: 0;
+  /* Rest: sitting on the phrase, small. On: out at its own offset, full size.
+     The overshoot is in the curve rather than in a keyframe so the return can
+     reuse the same property with a different one. */
+  transform: translate(-50%, -50%) scale(0.42);
+  transition:
+    transform 620ms cubic-bezier(0.22, 1.42, 0.46, 1),
+    opacity 200ms ease-out;
+}
+.wt-group.is-on .wt-card {
+  opacity: 1;
+  transform: translate(-50%, -50%) translate(var(--tx), var(--ty)) scale(1);
+  transition-delay: var(--d, 0ms), var(--d, 0ms);
+}
+/* Going back is quicker and has no overshoot — an overshoot on the way out
+   reads as a bounce off the text rather than a return to it. */
+.wt-group:not(.is-on) .wt-card {
+  transition:
+    transform 260ms cubic-bezier(0.4, 0, 0.9, 0.4),
+    opacity 200ms ease-in 60ms;
+}
+
+/* The blur axis. .wt-blur is turned to face the way the card travels and
+   carries a one-dimensional blur, so the streak runs along that line and
+   points back at the phrase; .wt-art turns the artwork back upright and adds
+   the card's own tilt on top. */
+.wt-blur { width: 100%; height: 100%; transform: rotate(var(--axis, 0deg)); }
+/* Everything below is written at the size the frame draws it on a 1520
+   column; --k is that column over 1520, so a narrower page shrinks the frames,
+   the radii and the type together rather than leaving 10px text on a card half
+   the size. */
+.wt-art {
+  width: 100%; height: 100%;
+  transform: rotate(calc(-1 * var(--axis, 0deg) + var(--tilt, 0deg)));
+  background: #fff; padding: calc(5px * var(--k, 1)); border-radius: calc(14px * var(--k, 1));
+  box-shadow: 0 calc(20px * var(--k, 1)) calc(40px * var(--k, 1)) calc(-14px * var(--k, 1)) rgba(5, 51, 41, 0.34),
+              0 calc(4px * var(--k, 1)) calc(12px * var(--k, 1)) calc(-6px * var(--k, 1)) rgba(5, 51, 41, 0.2);
+}
+.wt-art > img { width: 100%; height: 100%; object-fit: cover; border-radius: calc(10px * var(--k, 1)); }
+.wt-plain .wt-art { background: none; padding: 0; }
+
+/* ---- the two built panels --------------------------------------------- */
+.wt-sent, .wt-chat { width: 100%; height: 100%; background: #131514; overflow: hidden; }
+.wt-sent {
+  border-radius: calc(13px * var(--k, 1));
+  display: grid; align-content: start; justify-items: center;
+  padding: calc(6px * var(--k, 1)) calc(5px * var(--k, 1));
+  gap: calc(2px * var(--k, 1)); text-align: center;
+}
+.wt-sent-t { font-size: calc(7px * var(--k, 1)); font-weight: 700; color: #fff; }
+.wt-sent-s { font-size: calc(6.2px * var(--k, 1)); line-height: 1.3; color: #9aa4a0; }
+.wt-sent-i {
+  width: calc(38px * var(--k, 1)); height: calc(38px * var(--k, 1));
+  margin: calc(3px * var(--k, 1)) 0 calc(4px * var(--k, 1)); color: #808b87;
+}
+.wt-sent-b {
+  width: 100%; padding: calc(3.5px * var(--k, 1)) 0; border-radius: 999px;
+  background: #2b2e2d; color: #b9c2bf; font-size: calc(5.5px * var(--k, 1)); font-weight: 600;
+}
+.wt-chat {
+  border-radius: calc(20px * var(--k, 1));
+  display: grid; align-content: start;
+  gap: calc(10px * var(--k, 1));
+  padding: calc(15px * var(--k, 1)) calc(14px * var(--k, 1));
+}
+/* A set width rather than a max: shrink-wrapped bubbles rewrap the two lines
+   the frame draws into one long one. */
+.wt-bub {
+  width: 70%; padding: calc(11px * var(--k, 1)) calc(11px * var(--k, 1));
+  border-radius: calc(11px * var(--k, 1));
+  font-size: calc(12.5px * var(--k, 1)); line-height: 1.43; letter-spacing: -0.005em;
+}
+.wt-bub-in { justify-self: start; background: #2a2c2b; color: #d8dedb; }
+.wt-bub-out { justify-self: end; background: #3a4654; color: #fff; }
+.wt-chat-s {
+  justify-self: end; margin-top: calc(5px * var(--k, 1));
+  font-size: calc(9px * var(--k, 1)); color: #8b9491;
+}
+.wt-chat-s span { opacity: 0.55; }
+.wt-chat-s b { color: var(--mint); font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* No travel and no streak: the cards simply appear where they belong. */
+  .wt-card, .wt-group.is-on .wt-card, .wt-group:not(.is-on) .wt-card {
+    transition: opacity 140ms linear;
+  }
+  .wt-card { transform: translate(-50%, -50%) translate(var(--tx), var(--ty)); }
+  .wt-blur { filter: none !important; }
+}
 
 /* ------------------------------------------------------------ products -- */
 .band-products { background: var(--deep); }
@@ -683,7 +997,10 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 .pr-chip-orange svg { stroke: #ff8a5c; }
 
 .pr-paras { display: grid; gap: 13px; }
-.pr-card p {
+/* Scoped to .pr-top, which is where every card's own copy lives. Left as
+   `.pr-card p` it also caught the pop-up's labels and values and painted them
+   #a9c4bb on white — 1.86:1, where AA wants 4.5. */
+.pr-card .pr-top p {
   font-size: clamp(14px, 0.834vw, 16px); line-height: 1.6; letter-spacing: -0.005em;
   color: var(--on-deep-muted);
 }
@@ -709,21 +1026,28 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
   display: grid; gap: clamp(16px, 1.042vw, 20px); align-content: space-between;
   color: #1e1818;
 }
-.popup .pop-head { display: grid; gap: 6px; }
-.popup .pop-k {
+.pop-head { display: grid; gap: 6px; }
+.pop-k {
   font-size: clamp(9.5px, 0.573vw, 11px); font-weight: 600;
-  letter-spacing: 0.1em; text-transform: uppercase; color: #6c7d78;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  /* 6.05:1 on the white panel, 5.26:1 on the #f0efec ledger. The old #6c7d78
+     cleared AA on white by a hair and failed on the ledger at 3.77. */
+  color: #566661;
 }
-.popup .pop-amount { font-size: clamp(26px, 2.084vw, 40px); font-weight: 700; color: #1e1818; letter-spacing: -0.03em; line-height: 1.1; }
-.popup .pop-ledger {
+.pop-amount { font-size: clamp(26px, 2.084vw, 40px); font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; }
+.pop-ledger {
   background: #f0efec; border-radius: min(14px, 0.73vw);
   padding: clamp(14px, 0.938vw, 18px); display: grid; gap: clamp(12px, 0.73vw, 14px);
 }
-.popup .pop-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(12px, 0.73vw, 14px); }
-.popup .pop-row { display: grid; gap: 3px; }
-.popup .pop-v { font-size: clamp(11.5px, 0.73vw, 14px); font-weight: 600; color: #1e1818; }
-.popup .pop-note { font-size: clamp(10.5px, 0.678vw, 13px); line-height: 1.5; color: #6c7d78; }
-.popup .pop-btn {
+/* main scoped `.pr-card p` to `.pr-top` — where every card own copy lives —
+   so nothing reaches into the white panel any more and the panel needs no
+   specificity of its own. Its greys are measured for AA with it. The one
+   thing added here is a floor: min(14px, 0.73vw) is 2.8px on a phone. */
+.pop-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(12px, 0.73vw, 14px); }
+.pop-row { display: grid; gap: 3px; }
+.pop-v { font-size: clamp(11.5px, 0.73vw, 14px); font-weight: 600; }
+.pop-note { font-size: clamp(10.5px, 0.678vw, 13px); line-height: 1.5; color: #4f5f5a; }
+.pop-btn {
   background: #1e1818; color: #fff; border-radius: 999px;
   text-align: center; padding: clamp(13px, 0.782vw, 15px) 0;
   font-size: clamp(11.5px, 0.73vw, 14px); font-weight: 600;
@@ -1225,11 +1549,61 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 .btn-deep { background: var(--deep); color: #fff; }
 .btn-deep:hover { background: #07463a; }
 
-/* Placed as shares of the 1520 slab, so they hold their corners as it narrows. */
+/* Shares of the 1520 x 530 slab, so they hold their corners as it narrows.
+
+   These are not the frame's node boxes. Each asset carries a wide transparent
+   margin — the coin's ink is 70% of its file, the notes' only 68 x 56 — so the
+   box that puts the ink in the right place is meaningfully bigger than the ink
+   and offset from it. The numbers below are derived: the ink rectangle was
+   measured off the frame's own render, then each box back-computed from that
+   asset's alpha bounds. The pen is rotated 180, so its ink offset is taken
+   after the rotation, not before.
+
+   The previous values had the pen at left 23.75% against the frame's 1.9%,
+   which is what was pushing it into the middle of the slab and crowding the
+   button. */
 .cta-prop { position: absolute; height: auto; pointer-events: none; }
-.cta-coin  { left: 1.18%;  top: -1.5%;  width: 18.03%; }
-.cta-pen   { left: 23.75%; top: 53.76%; width: 19.87%; transform: rotate(180deg); }
-.cta-notes { left: 53.75%; top: 30.64%; width: 39.01%; }
+
+/* The frame parks all three a little inside the slab, which reads as floating
+   rather than as composition, and puts the notes' ink at 64.6% where the
+   headline reaches 66% — they touch. So each one moves outward until it either
+   meets an edge or runs off it, and the middle is left to the words:
+
+     coin   ink 2.6%  -> 15.1%    across the top left, just over the corner
+     pen    ink 0.8%  -> 15.0%    off the left edge and off the bottom
+     notes  ink 73.5% -> 99.0%    off the right edge and off the bottom
+
+   Nothing enters the band between 15% and 73%, which is where the headline,
+   the lead and the button live. The headline's widest line stops at 66%. */
+.cta-coin  { left: -0.195%; top: -3.531%; width: 17.786%; }
+/* The frame mirrors the pen rather than turning it: ball to the upper left,
+   barrel running down to the right, magenta into green. rotate(180deg) put the
+   ball on the wrong side, which is how it has been since this section was
+   first built. Mirroring moves the ink's x offset but not its y, so the top
+   here is not the same number a rotation would need. */
+.cta-pen   { left: -1.889%; top: 50.772%; width: 19.693%; transform: scaleX(-1); }
+.cta-notes { left: 67.389%; top:  8.347%; width: 37.753%; }
+
+/* Between a phone and a desktop the slab keeps its 1520 x 532 and so gets very
+   short, while the type has already bottomed out on its clamp — which is what
+   put the coin through the headline at 834. Below 1040 the slab stops holding
+   that ratio and takes its height from the words instead, and the props become
+   corner accents measured from the corner they belong to rather than from the
+   top left of a box whose height no longer means anything. */
+@media (max-width: 1040px) {
+  .closing { min-height: 0; }
+  .closing-slab { aspect-ratio: auto; padding-block: min(104px, 12vw); }
+  .closing-in { padding-inline: min(200px, 22vw); }
+  .cta-coin  { left: -3.5%; top: -7%; width: 23%; }
+  .cta-pen   { left: -6%; top: auto; bottom: -10%; width: 25%; }
+  .cta-notes { left: auto; right: -9%; top: auto; bottom: -12%; width: 42%; }
+}
+@media (max-width: 820px) {
+  .closing-in { padding-inline: min(170px, 21vw); }
+  .cta-coin  { width: 20%; }
+  .cta-pen   { width: 22%; bottom: -12%; }
+  .cta-notes { width: 38%; bottom: -14%; }
+}
 
 /* -------------------------------------------------------------- bands -- */
 .band { padding-block: var(--section-y); position: relative; }
@@ -1632,8 +2006,7 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 
 /* A ledger row is the one thing in the pop-up that looks clickable. */
 .pop-row { border-radius: 6px; transition: background 200ms var(--ease-out); }
-.pop-ledger:hover .pop-row { opacity: 0.72; }
-.pop-ledger .pop-row:hover { opacity: 1; background: rgba(5, 51, 41, 0.05); }
+.pop-ledger .pop-row:hover { background: rgba(5, 51, 41, 0.05); }
 .pop-btn { transition: transform 260ms var(--ease-out), background 260ms var(--ease-out); }
 .pr-card:hover .pop-btn { transform: translateY(-2px); background: #053329; }
 
@@ -2050,7 +2423,18 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 .sp-head h2 { font-size: clamp(31px, 3.8vw, 60px); }
 .sp-head .lead { max-width: 44ch; }
 .sp-body { display: grid; gap: min(36px, 2vw); justify-items: start; min-width: 0; }
-.sp-in .points { padding-bottom: 0; }
+.points { display: grid; gap: 28px; width: min(400px, 100%); }
+/* The rule is a grid column, not a pseudo-element pinned with absolute
+   positioning, so its height is the copy's height with nothing to tune. The
+   copy is one child so it cannot fall into the 3px column. */
+.point { display: grid; grid-template-columns: 3px minmax(0, 1fr); gap: 19px; }
+.point::before { content: ''; background: var(--sand); border-radius: 2px; }
+.point-copy { min-width: 0; }
+.point h3 {
+  font-size: clamp(18px, 1.146vw, 22px); line-height: 1.3; letter-spacing: -0.022em;
+  color: var(--ink); margin: 0 0 9px;
+}
+.point p { font-size: clamp(14.5px, 0.834vw, 16px); line-height: 1.6; color: var(--muted); }
 
 /* ---- the steps --------------------------------------------------------
    Three of them, text only. The pictures live in the bento and the split;
@@ -2231,4 +2615,62 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
      the copy (see the .pr-narrow rule in the tiers above); the art slot has
      to sit in that room rather than at the card's own bottom. */
   .pr-narrow .pr-stage { bottom: 0; }
+}
+
+/* ------------------------------------------------ gifting on a phone -- */
+/* The card turns portrait and the tabs step out from under the photo to sit
+   below it, full width, on the page. Inside the card the copy keeps the top
+   and the portrait the bottom right, so the two never cross.
+
+   Every placement here is re-cut rather than left to scale: the portraits
+   carry an explicit height on the desktop (they are Figma FILL boxes), and
+   inheriting it into a tall card is what made them swallow it. */
+@media (max-width: 1040px) {
+  .gr-head { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .gr-lead { max-width: none; }
+  .gr-card { aspect-ratio: 4 / 5; }
+
+  .gr-copy, .gr-copy-family, .gr-copy-loyalty {
+    left: 7%; top: 5.5%; width: 66%;
+    font-size: clamp(19px, 4.4cqw, 30px); line-height: 1.5;
+  }
+
+  .gr-portrait { height: auto; object-fit: contain; }
+  .gr-portrait-family  { left: auto; right: -14%; top: auto; bottom: -1%; width: 74%; }
+  .gr-portrait-loyalty { left: auto; right: -12%; top: auto; bottom: -1%; width: 70%; }
+  .gr-cloud { left: -10%; top: auto; bottom: 2%; width: 46%; }
+  .gr-coin  { left: 2%;  top: auto; bottom: 4%; width: 22%; }
+
+  .gr-popular { left: 6%; top: 42%; width: 56%; padding: 3.2cqw; gap: 2.2cqw; }
+  .gr-popular .gr-row { gap: 2cqw; padding: 1.1cqw 0; }
+  .gr-indexes { left: 6%; top: 40%; width: 62%; }
+  .gr-index { padding: 2.6cqw; gap: 1cqw; }
+
+  .gr-tabs {
+    position: static; transform: none;
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 10px; margin-top: 14px;
+  }
+  /* Off the card there is no photograph to fight, so the pair inverts: a white
+     pill that fills deep green. The mechanism is the same one. */
+  .gr-tab {
+    width: 100%; height: 48px; padding: 0 12px; font-size: 13px;
+    background: #fff; color: var(--muted);
+    box-shadow: inset 0 0 0 1px rgba(5, 51, 41, 0.14);
+    -webkit-backdrop-filter: none; backdrop-filter: none;
+  }
+  .gr-tab:hover { background: #fff; }
+  .gr-tab.is-on { box-shadow: inset 0 0 0 1px rgba(5, 51, 41, 0.14); }
+  .gr-lbl, .gr-fill span { overflow: hidden; text-overflow: ellipsis; }
+  .gr-fill { background: var(--deep); color: #fff; padding: 0 12px; }
+}
+@media (max-width: 620px) {
+  .gr-card { aspect-ratio: 3 / 4; }
+  .gr-copy, .gr-copy-family, .gr-copy-loyalty { width: 76%; font-size: clamp(18px, 5.4cqw, 24px); }
+  .gr-popular { left: 5%; top: 40%; width: 62%; }
+  .gr-indexes { left: 5%; top: 38%; width: 70%; }
+  .gr-portrait-family  { right: -24%; width: 86%; }
+  .gr-portrait-loyalty { right: -20%; width: 80%; }
+  .gr-tabs { grid-template-columns: minmax(0, 1fr); }
+  .gr-tab { height: 46px; font-size: 13.5px; }
 }
