@@ -384,7 +384,7 @@
      Hover sets a transform on these same elements, so the drift is written to
      a custom property and composed in CSS instead of fighting over the
      transform itself. */
-  var props = [].slice.call(document.querySelectorAll('.pr-sticker, .ts-bleed, .ts-slot'))
+  var props = [].slice.call(document.querySelectorAll('.pr-sticker, .ts-bleed, .ts-stage'))
   if (props.length) {
     var pending = false
     var drift = function () {

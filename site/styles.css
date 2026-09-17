@@ -423,14 +423,17 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 .globe:active { cursor: grabbing; }
 .globe:focus-visible { outline: 2px solid var(--mint); outline-offset: 12px; border-radius: 50%; }
 
-/* The render carries its own pink backdrop — the dot mesh means it cannot be
-   cut out without eating the sphere — so the rectangle is faded into the wash
-   instead. The mask is wide enough that the fade lands outside the sphere. */
+/* The source PNG is a clean cut-out, so the sphere sits on the wash with
+   nothing behind it and needs no mask.
+
+   The frame crops it: a 77.1 x 75.0 per cent window on the source, centred,
+   which is how the sphere fills its box rather than floating in the empty
+   margin the render has around it. Contain plus that scale puts it at the
+   same size, and no clip is needed because everything outside the window is
+   transparent anyway. */
 .globe-img {
   position: absolute; inset: 0; width: 100%; height: 100%;
-  object-fit: contain; z-index: 2;
-  -webkit-mask-image: radial-gradient(closest-side, #000 72%, transparent 99%);
-  mask-image: radial-gradient(closest-side, #000 72%, transparent 99%);
+  object-fit: contain; transform: scale(1.333); z-index: 2;
 }
 
 /* Cards are placed by JS: left/top in per cent of this box, plus a scale and
@@ -464,14 +467,14 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 .sticker-gun   { left:  3.750%; top: min(551px, 28.698vw); width: 18.385%; }
 /* image 24 is FIT inside a 511 square, so the box is square and the art
    letterboxes inside it. Its own backdrop is faded out at the edges. */
+/* FIT inside a 511 square in the frame, so contain in a square box here.
+   Figma reports a rotated node's axis-aligned bounds, which for a 511 square
+   turned 14 degrees is 620 — so its top-left is 54 up and left of the box's
+   own corner. Using the reported figure directly puts the sticker 54px out. */
 .sticker-notes {
-  left: 80.469%; top: min(789px, 41.094vw); width: 26.615%;
+  left: 83.307%; top: min(843px, 43.932vw); width: 26.615%;
   aspect-ratio: 1; object-fit: contain;
   transform: rotate(14.05deg);
-  /* The art letterboxes to roughly 60% of the square, so the fade is sized to
-     the art rather than to the box — a mask cut to the box would eat it. */
-  -webkit-mask-image: radial-gradient(36% 56% at 50% 50%, #000 72%, transparent 100%);
-  mask-image: radial-gradient(36% 56% at 50% 50%, #000 72%, transparent 100%);
 }
 
 /* ---------------------------------------------------- tokenized stocks -- */
@@ -518,12 +521,27 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
   color: #443b37; margin: 0;
 }
 
-.ts-slot { display: block; width: 100%; flex: 1 1 auto; min-height: 0; object-fit: contain; }
-/* The notes run past the card on two sides; the card's own clip cuts them.
-   The export carries the rotation already, so none is applied here. */
+/* Cards one and two hold loose stickers, not one flat picture. They used to
+   be a single export each, which on card two meant the card's gradient was
+   baked into a rectangle 391 tall sitting on a card gradient 600 tall — two
+   gradients that could not agree, with a visible seam where they met.
+
+   .ts-stage is pinned to the top of the slot and holds the frame's ratio, so
+   the stickers keep their places however much room the copy leaves; the
+   slot's own clip is the frame's clip, which is what trims the coins at the
+   bottom and the pen at the top. */
+.ts-slot { position: relative; flex: 1 1 auto; min-height: 0; overflow: hidden; }
+.ts-stage { position: absolute; inset: 0 0 auto 0; aspect-ratio: var(--ar); }
+.ts-prop {
+  position: absolute; left: var(--l); top: var(--t); width: var(--w);
+  height: auto; transform: rotate(var(--r, 0deg)) scaleX(var(--fx, 1));
+}
+/* image 23 in the frame: a 643 square at the card's own -75,124, turned 4.77.
+   The source is a cut-out, so the card's clip is the only thing trimming it. */
 .ts-bleed {
-  position: absolute; left: -8%; top: 30%; width: 158%; height: auto;
-  pointer-events: none; z-index: 1;
+  position: absolute; left: -15.5%; top: 20.6%; width: 132.6%;
+  aspect-ratio: 1; object-fit: contain;
+  transform: rotate(4.77deg); pointer-events: none; z-index: 1;
 }
 
 /* ------------------------------------------------- gifting and rewards -- */
@@ -574,13 +592,28 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 }
 .why-in { position: relative; }
 /* Figma puts it at x 1142 y 3786 on the page: 61.97% across the 1520 column,
-   190 below the top of the row. */
+   which is 35.11% across the 800 the statement sits in.
+
+   It hangs off the bottom of the headline rather than off the top of the row.
+   Anchored to the row, the headline grew a line as the column narrowed and
+   ran straight into the coin: at 1440 the two boxes crossed by 181px and it
+   sat on the word "everything". Hung off the headline it lands where Figma
+   puts it at 1920 and moves down with the words at every width below. */
 .why-coin {
-  position: absolute; left: 61.97%; top: min(176px, 9.167vw);
-  width: 18.026%; height: auto; z-index: 2; pointer-events: none;
+  position: absolute; left: 35.11%; top: 100%; margin-top: min(-68px, -3.542vw);
+  width: 34.25%; height: auto; z-index: 2; pointer-events: none;
+  display: none;
 }
+/* The coin lives in the slack between the headline and the body, and that
+   slack is a product of the 1920 composition: the statement column is shorter
+   than the 597x712 portrait beside it, and space-between opens the gap. Below
+   1880 the headline takes a fourth line, the portrait shrinks, and the gap
+   closes to 36px — there is nowhere left for a 218px coin to go that is not
+   on top of a paragraph. So it is drawn where it was drawn for, and nowhere
+   else. */
+@media (min-width: 1880px) { .why-coin { display: block; } }
 .why-text { display: grid; gap: min(48px, 2.5vw); align-content: space-between; }
-.why-head { display: grid; gap: 20px; }
+.why-head { position: relative; display: grid; gap: 20px; }
 .why-head h2 { color: #1e1818; }
 .why-body { display: grid; gap: 24px; justify-items: start; }
 .why-paras { display: grid; gap: 24px; }
@@ -649,14 +682,18 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 .pr-narrow .pr-link { margin-top: 0; }
 .pr-arrow { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 
-/* The stickers sit on the card's own green, so the export keeps its baked
-   backdrop — matting it would eat the naira sign, which is the same green. */
-/* The exports carry their own rotation and their own padding, so these are
-   placed to land the art where the frame lands it rather than derived from
-   the node box — the two do not agree once a rotated node is exported. */
-.pr-sticker { position: absolute; pointer-events: none; height: auto; }
-.pr-sticker-notes { left: 2%; top: 13%; width: 108%; }
-.pr-sticker-conv { left: -6%; top: 44%; width: 112%; }
+/* Both are cut-outs, so each sits on the frame's own box for that node and is
+   turned by the frame's own angle. */
+.pr-sticker { position: absolute; pointer-events: none; object-fit: contain; }
+.pr-sticker-notes {
+  left: -10%; top: 22.6%; width: 108.6%; aspect-ratio: 1;
+  transform: rotate(14.05deg);
+}
+.pr-sticker-conv {
+  left: -9.4%; top: 51.1%; width: 108.8%; aspect-ratio: 544 / 276;
+  object-fit: cover;
+  transform: rotate(4.53deg);
+}
 
 /* ---- the pop-ups ------------------------------------------------------ */
 .popup {
@@ -1272,12 +1309,12 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
    --drift is the scroll-linked offset the script writes; --lift and --pop are
    the hover. Composing all three here rather than having the script own the
    transform means the two never fight over the same property. */
-.ts-slot, .ts-bleed, .pr-sticker {
+.ts-stage, .ts-bleed, .pr-sticker {
   --drift: 0px; --lift: 0px; --pop: 1;
   transform: translateY(calc(var(--drift) + var(--lift))) scale(var(--pop));
   transition: transform 620ms var(--ease-out);
 }
-.ts-card:hover .ts-slot { --lift: -10px; --pop: 1.03; }
+.ts-card:hover .ts-stage { --lift: -10px; --pop: 1.03; }
 .ts-card:hover .ts-bleed { --lift: -14px; --pop: 1.04; }
 .pr-card:hover .pr-sticker { --lift: -12px; --pop: 1.04; }
 
@@ -1296,9 +1333,9 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 .faq details:hover { border-color: rgba(5, 51, 41, 0.18); }
 
 @media (prefers-reduced-motion: reduce) {
-  .ts-card, .pr-card, .gs-shot, .ts-slot, .ts-bleed, .pr-sticker, .pop-btn { transition: none; }
+  .ts-card, .pr-card, .gs-shot, .ts-stage, .ts-bleed, .pr-sticker, .pop-btn { transition: none; }
   .ts-card:hover, .pr-card:hover, .gs-step:hover .gs-shot { transform: none; }
-  .ts-slot, .ts-bleed, .pr-sticker { transform: none; }
+  .ts-stage, .ts-bleed, .pr-sticker { transform: none; }
 }
 
 /* ------------------------------------------------------------- motion -- */
@@ -1339,7 +1376,6 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
   .ts-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .gift-in, .why-in, .faq-in { grid-template-columns: minmax(0, 1fr); gap: 44px; }
   .why-stage { aspect-ratio: 16 / 10; }
-  .why-coin { display: none; }
   .pr-row-a, .pr-row-b { grid-template-columns: minmax(0, 1fr); }
   .pr-card, .pr-narrow { aspect-ratio: auto; }
   .pr-wide { grid-template-columns: minmax(0, 1fr); padding-right: min(36px, 1.875vw); }
