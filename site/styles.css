@@ -683,7 +683,10 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 .pr-chip-orange svg { stroke: #ff8a5c; }
 
 .pr-paras { display: grid; gap: 13px; }
-.pr-card p {
+/* Scoped to .pr-top, which is where every card's own copy lives. Left as
+   `.pr-card p` it also caught the pop-up's labels and values and painted them
+   #a9c4bb on white — 1.86:1, where AA wants 4.5. */
+.pr-card .pr-top p {
   font-size: clamp(14px, 0.834vw, 16px); line-height: 1.6; letter-spacing: -0.005em;
   color: var(--on-deep-muted);
 }
@@ -712,7 +715,10 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 .pop-head { display: grid; gap: 6px; }
 .pop-k {
   font-size: clamp(9.5px, 0.573vw, 11px); font-weight: 600;
-  letter-spacing: 0.1em; text-transform: uppercase; color: #6c7d78;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  /* 6.05:1 on the white panel, 5.26:1 on the #f0efec ledger. The old #6c7d78
+     cleared AA on white by a hair and failed on the ledger at 3.77. */
+  color: #566661;
 }
 .pop-amount { font-size: clamp(26px, 2.084vw, 40px); font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; }
 .pop-ledger {
@@ -722,7 +728,7 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 .pop-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: min(14px, 0.73vw); }
 .pop-row { display: grid; gap: 3px; }
 .pop-v { font-size: clamp(11.5px, 0.73vw, 14px); font-weight: 600; }
-.pop-note { font-size: clamp(10.5px, 0.678vw, 13px); line-height: 1.5; color: #6c7d78; }
+.pop-note { font-size: clamp(10.5px, 0.678vw, 13px); line-height: 1.5; color: #4f5f5a; }
 .pop-btn {
   background: #1e1818; color: #fff; border-radius: 999px;
   text-align: center; padding: min(15px, 0.782vw) 0;
@@ -1332,8 +1338,7 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 
 /* A ledger row is the one thing in the pop-up that looks clickable. */
 .pop-row { border-radius: 6px; transition: background 200ms var(--ease-out); }
-.pop-ledger:hover .pop-row { opacity: 0.72; }
-.pop-ledger .pop-row:hover { opacity: 1; background: rgba(5, 51, 41, 0.05); }
+.pop-ledger .pop-row:hover { background: rgba(5, 51, 41, 0.05); }
 .pop-btn { transition: transform 260ms var(--ease-out), background 260ms var(--ease-out); }
 .pr-card:hover .pop-btn { transform: translateY(-2px); background: #053329; }
 
