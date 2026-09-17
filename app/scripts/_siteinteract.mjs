@@ -38,9 +38,18 @@ await d.locator('summary').click()
 t('answer opens', await d.evaluate((e) => e.open))
 t('answer has text', ((await d.locator('.answer p').textContent()) || '').includes('money app'))
 
-const before = p.url()
-await p.locator('.nav-links a[data-soon]').click()
-t('unbuilt link does not navigate', p.url() === before)
+/* This used to click the one nav link that was not built yet and assert it
+   stayed put. About and Blog are real pages now, so there is no unbuilt link
+   left in the bar — what is worth asserting is that every one of them goes
+   somewhere, which is the state that replaced it. The three socials in the
+   footer are still data-soon and are the only ones left on the site. */
+const navHrefs = await p.$$eval('.nav-links a[href], .nav-links [data-soon]',
+  (as) => as.map((a) => [a.getAttribute('href'), a.hasAttribute('data-soon')]))
+t(`every link in the bar is built (${navHrefs.length})`,
+  navHrefs.length > 0 && navHrefs.every(([h, soon]) => !soon && h && h !== '#'))
+const soon = await p.$$eval('[data-soon]', (as) => as.map((a) => a.getAttribute('aria-label') || '?'))
+t(`and what is left unbuilt is the socials (${soon.join(', ')})`,
+  soon.length === 3 && soon.every((s) => /Tokkenly on /.test(s)))
 await p.close()
 
 /* ---- phone: the burger ---- */
@@ -53,8 +62,15 @@ await p.locator('.burger').click()
 t('burger opens the menu', await p.locator('#mobile-menu').isVisible())
 const btn = await p.locator('.nav-end .btn').boundingBox()
 t(`bar button stays small (w=${Math.round(btn.width)})`, btn.width < 140)
-await p.locator('#mobile-menu a[href="#faq"]').click()
-t('choosing closes the menu', await p.locator('#mobile-menu').isHidden())
+/* Help was an anchor on this page and is the contact page now, so the menu
+   navigates away rather than closing in place. Either way the thing being
+   asserted is that choosing an item ends the menu. */
+await p.locator('#mobile-menu a[href="./contact.html"]').click()
+await p.waitForLoadState('load')
+t(`choosing takes you there (${new URL(p.url()).pathname})`, /\/contact\.html$/.test(p.url()))
+await p.goBack()
+await p.waitForLoadState('load')
+t('and the menu is closed when you come back', await p.locator('#mobile-menu').isHidden())
 /* The hero is the globe with its orbit of portraits. This used to assert a
    colour panel with a screenshot on it, which is the hero from two rebuilds
    ago; what is worth asserting now is that the globe is drawn, that it keeps

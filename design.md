@@ -10283,3 +10283,34 @@ opens a browser. It names what it is looking for, so it excludes itself by
 filename rather than by splitting the strings up — which would have hidden
 them from the next person reading the file, and the point of this check is
 that the strings are visible.
+
+**A postscript that makes the point better than the entry does.** While the
+app sweep for this ran, the parallel session rebuilt the company and legal
+pages from their Figma frames and added About and Blog. It set
+`EMAIL = 'ibrahimweng0@gmail.com'` again, put it in the blog page's newsletter
+box as the placeholder — the one address a reader would certainly not type
+there — and wrote the reason down:
+
+> The one deliberate difference: the Contact frame shows Support@tokkenly.com
+> and the project's rule is one address everywhere, so EMAIL is used instead.
+
+The frame was right and the rule was wrong. That session had the old CLAUDE.md
+and followed it correctly, which is the whole argument for rewriting the
+instruction rather than only the twelve strings: an instruction that says
+"anywhere the project needs an email address" will keep producing this, by
+people doing as they are told, until it stops saying that.
+
+The merge keeps their frame-to-file mapping and their pages, and takes the
+address back to the role. Two of their placeholders become `you@example.com`:
+the newsletter box, and the contact form's `Example@gmail.com`, which is
+nobody's name but is still a real-looking address where an instruction
+belongs.
+
+**And two assertions that their work made obsolete, fixed rather than
+deleted.** `_siteinteract.mjs` clicked the one nav link that was not built yet
+and checked it stayed put — About and Blog are pages now, so there is no
+unbuilt link left in the bar. It asserts the state that replaced it: every
+link in the bar is built, and the only three `data-soon` left on the site are
+the footer's socials. The mobile menu's Help was an anchor on the landing page
+and is the contact page now, so that step follows it there and checks the menu
+is closed on the way back.

@@ -23,7 +23,7 @@ const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 console.log('=== in step with the builder ===')
 let builderOk = true
 /* Both builders, because they share a nav and a footer: build-pages imports
-   them from build-products, so one routing change regenerates all eleven
+   them from build-products, so one routing change regenerates all thirteen
    pages. That is exactly the edit that quietly undid the product pages' cta
    fix, and checking half the site would have missed it just as well. */
 for (const script of ['site/build-products.mjs', 'site/build-pages.mjs']) {
@@ -98,7 +98,7 @@ const seen = new Map()
 /* The company pages are in here too: the contact page points into the FAQs on
    three product pages by anchor, and an anchor is the sort of link that rots
    silently when a section is renamed. */
-const OTHERS = ['index.html', 'contact.html', 'terms.html', 'privacy.html']
+const OTHERS = ['index.html', 'about.html', 'blog.html', 'contact.html', 'terms.html', 'privacy.html']
 for (const slug of [...SLUGS, ...OTHERS]) {
   const url = OTHERS.includes(slug)
     ? `http://localhost:4321/${slug}`

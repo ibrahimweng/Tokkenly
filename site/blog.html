@@ -3,11 +3,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Help — Tokkenly</title>
-    <meta name="description" content="Questions about your account, a transaction, or the product. A real person reads these." />
+    <title>Blog — Tokkenly</title>
+    <meta name="description" content="Plain explanations of tokenized stocks, naira and stablecoins, and the everyday money tools around them." />
     <link rel="icon" href="./favicon.svg" />
-    <meta property="og:title" content="Help — Tokkenly" />
-    <meta property="og:description" content="Questions about your account, a transaction, or the product. A real person reads these." />
+    <meta property="og:title" content="Blog — Tokkenly" />
+    <meta property="og:description" content="Plain explanations of tokenized stocks, naira and stablecoins, and the everyday money tools around them." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="preload" href="./fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin />
@@ -98,73 +98,81 @@
     <main id="main">
       <span id="top"></span>
 
-      <section class="band band-page">
+      <section class="band bl">
         <div class="wrap">
-          <div class="page-head reveal">
-            <h1>Get in touch.</h1>
-            <p class="page-lead">Questions about your account, a transaction, or the product. A real person reads these.</p>
+          <div class="bl-head reveal">
+            <h1>Blogs</h1>
+            <p class="bl-lead">Plain explanations of tokenized stocks, naira and stablecoins, and the everyday money tools around them.</p>
           </div>
 
-          <form class="cf reveal" method="post" action="mailto:support@tokkenly.com">
-            <p class="cf-field">
-              <label class="cf-label" for="cf-name">Your name</label>
-              <input class="cf-input" id="cf-name" name="name" type="text" placeholder="First and last name" />
-            </p>
-            <p class="cf-field">
-              <label class="cf-label" for="cf-email">Email</label>
-              <input class="cf-input" id="cf-email" name="email" type="email" placeholder="you@example.com" />
-            </p>
-            <p class="cf-field">
-              <label class="cf-label" for="cf-about">What is it about?</label>
-              <input class="cf-input" id="cf-about" name="about" type="text" placeholder="Account, a transaction, or something else" />
-            </p>
-            <p class="cf-field">
-              <label class="cf-label" for="cf-message">Message</label>
-              <textarea class="cf-input" id="cf-message" name="message" rows="3" placeholder="Tell us what happened, and when"></textarea>
-            </p>
-            <p class="cf-send">
-              <button class="cf-btn" type="submit">Send message <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></button>
-            </p>
-          </form>
+          <div class="bl-filters reveal">
+            <button class="bl-chip is-on" type="button" aria-pressed="true">All</button>
+            <button class="bl-chip" type="button" aria-pressed="false">Tokenized stocks</button>
+            <button class="bl-chip" type="button" aria-pressed="false">Money basics</button>
+            <button class="bl-chip" type="button" aria-pressed="false">Product</button>
+            <button class="bl-chip" type="button" aria-pressed="false">Company</button>
+          </div>
 
-          <div class="cf-channels reveal">
-            <div class="cf-channel">
-              <h2><a href="mailto:support@tokkenly.com">support@tokkenly.com</a></h2>
-              <p>We reply within one working day.</p>
+          <div class="bl-grid reveal">
+            <article class="bl-post">
+              <span class="bl-thumb" aria-hidden="true"></span>
+              <p class="bl-cat">Money basics</p>
+              <h2 class="bl-title">Naira, dollars, and the rate you actually get</h2>
+              <p class="bl-meta">5 Sept 2026 · 5 min read</p>
+            </article>
+            <article class="bl-post">
+              <span class="bl-thumb" aria-hidden="true"></span>
+              <p class="bl-cat">Tokenized stocks</p>
+              <h2 class="bl-title">Nigerian listings, US listings, one portfolio</h2>
+              <p class="bl-meta">29 Aug 2026 · 6 min read</p>
+            </article>
+            <article class="bl-post">
+              <span class="bl-thumb" aria-hidden="true"></span>
+              <p class="bl-cat">Product</p>
+              <h2 class="bl-title">Gifting a first investment</h2>
+              <p class="bl-meta">22 Aug 2026 · 4 min read</p>
+            </article>
+            <article class="bl-post">
+              <span class="bl-thumb" aria-hidden="true"></span>
+              <p class="bl-cat">Money basics</p>
+              <h2 class="bl-title">Putting idle stablecoins to work</h2>
+              <p class="bl-meta">15 Aug 2026 · 7 min read</p>
+            </article>
+            <article class="bl-post">
+              <span class="bl-thumb" aria-hidden="true"></span>
+              <p class="bl-cat">Product</p>
+              <h2 class="bl-title">Borrowing without selling your shares</h2>
+              <p class="bl-meta">8 Aug 2026 · 6 min read</p>
+            </article>
+            <article class="bl-post">
+              <span class="bl-thumb" aria-hidden="true"></span>
+              <p class="bl-cat">Company</p>
+              <h2 class="bl-title">Why we built Tokkenly on Base</h2>
+              <p class="bl-meta">1 Aug 2026 · 5 min read</p>
+            </article>
+          </div>
 
-            </div>
-            <div class="cf-channel">
-              <h2>Answers to the common ones</h2>
-              <p>Some of it is already written down, and reading it is faster than waiting for us.</p>
-              <ul class="cf-links">
-                <li><a href="./products/tokenized-stocks.html#s-faq">What a tokenized share is <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></a></li>
-                <li><a href="./products/convert.html#s-faq">The rate, and the ninety seconds it is held for <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></a></li>
-                <li><a href="./products/send.html#s-facts">Why there is a cap before your identity check <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></a></li>
-                <li><a href="./index.html#faq">Everything else people ask <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></a></li>
-              </ul>
-            </div>
-            <div class="cf-channel">
-              <h2>Something has gone wrong</h2>
-              <p>Money that has not arrived, a payment stuck halfway, an account you cannot get into.</p>
-              <ul class="cf-links">
-                <li><a href="mailto:support@tokkenly.com?subject=URGENT">Email us, with URGENT first <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></a></li>
-                <li><a href="./terms.html">What we owe you when it does <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></a></li>
-                <li><a href="./privacy.html">What we do with your data <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></a></li>
-              </ul>
-            </div>
+          <div class="bl-news reveal">
+            <h2>Get it in your inbox.</h2>
+            <p class="bl-news-p">One email a month. What moved, what we shipped, and nothing else.</p>
+            <form class="bl-form" method="post" action="mailto:support@tokkenly.com">
+              <label class="bl-vh" for="bl-email">Email</label>
+              <input class="bl-input" id="bl-email" name="email" type="email" placeholder="you@example.com" />
+              <button class="btn btn-deep bl-sub" type="submit">Subscribe</button>
+            </form>
           </div>
         </div>
       </section>
 
-      <section class="closing" data-cta="contact">
+      <section class="closing" data-cta="blog">
         <div class="wrap">
           <div class="closing-slab reveal">
               <img class="cta-prop cta-globe n-tl" src="./img/hero/globe.webp" width="1024" height="1024" loading="lazy" alt="" aria-hidden="true" />
-              <img class="cta-prop cta-coin n-tr" src="./img/hero/coin.webp" width="967" height="1024" loading="lazy" alt="" aria-hidden="true" />
+              <img class="cta-prop cta-notes n-br" src="./img/hero/notes.webp" width="488" height="488" loading="lazy" alt="" aria-hidden="true" />
             <div class="closing-in">
-              <h2>Or skip the wait and start.</h2>
-              <p class="closing-lead">You don’t need to hear back from us to open a Tokkenly account and make your first move.</p>
-              <a class="btn btn-deep" href="https://app.tokkenly.com">Sign up</a>
+              <h2>Put what you read to work.</h2>
+              <p class="closing-lead">Open a Tokkenly account and make your first investment in minutes.</p>
+              <a class="btn btn-deep" href="https://app.tokkenly.com">Get started</a>
             </div>
           </div>
         </div>

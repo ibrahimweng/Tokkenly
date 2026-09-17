@@ -30,7 +30,7 @@
 import { chromium } from 'playwright'
 
 const BASE = (process.argv[2] ?? 'http://localhost:4321').replace(/\/$/, '')
-const PAGES = ['index.html', 'contact.html', 'terms.html', 'privacy.html',
+const PAGES = ['index.html', 'about.html', 'blog.html', 'contact.html', 'terms.html', 'privacy.html',
   ...['tokenized-stocks', 'gifting-and-rewards', 'receive', 'send',
       'pay-bills', 'convert', 'earn', 'borrow'].map((s) => `products/${s}.html`)]
 

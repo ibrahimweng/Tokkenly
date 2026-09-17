@@ -3,14 +3,26 @@
    Same split as copy-products.mjs: this file is the one a person reads and
    edits, build-pages.mjs turns it into HTML. Nothing here is markup.
 
-   Shapes come from the Figma frames — Contact us (394:780), Terms of service
-   (399:559), Privacy policy (399:785). Words are drafted here in the voice the
-   product pages use, and are the client's to cut.
+   EVERY STRING BELOW IS THE STRING IN FIGMA. These five frames are fully
+   written in the file — About us (397:559), Blog (391:559), Contact us
+   (394:780), Terms of service (399:559) and Privacy policy (399:785) — so
+   there is nothing here to draft. Where a heading reads "placeholder", that
+   is what the frame says, and the page ships saying it.
 
-   The site's own address is support@tokkenly.com — a role, not a person. The
-   owner's personal address is where this mail is actually read, but it is not
-   what the page shows: nobody's name belongs in a support address, and an
-   address on a public page outlives whoever is reading it this month.
+   The Contact frame shows Support@tokkenly.com and the frame is right. A
+   support address is a role, not a person: nobody's name belongs in one, and
+   an address on a public page outlives whoever happens to be reading it this
+   month. The owner's personal address is where this mail is really delivered,
+   and it is not what the page says.
+
+   Frame → this file:
+     hero/eyebrow/leads .... the Head or Masthead group
+     blocks ................ the Clauses column, in frame order, including the
+                             20px spacers, which fall in an irregular enough
+                             pattern that carrying them as data is safer than
+                             deriving them from a rule
+     index ................. derived from blocks, because the frame's index is
+                             exactly its clause list
 
    Where a form asks a visitor for THEIR address, the placeholder is
    you@example.com. Where the product invents a person, that person gets their
@@ -18,7 +30,101 @@
 
 export const EMAIL = 'support@tokkenly.com'
 
+/* Every clause body in both legal frames is this same sentence. */
+const CLAUSE = 'Placeholder body text. The clause that belongs here has not been drafted — this block exists so the page can be reviewed at the right length and rhythm. Replace with the wording your counsel provides.'
+
+/* And every definition is this. */
+const DEFS = [
+  ['Tokenized stock', 'placeholder definition'],
+  ['Stablecoin', 'placeholder definition'],
+  ['Wallet', 'placeholder definition'],
+  ['Naira balance', 'placeholder definition'],
+]
+
+const WARNING = [
+  'PLACEHOLDER — NOT LEGAL COPY',
+  'Layout only. Every clause below is a real heading with placeholder body text so the page can be reviewed. Binding wording for a regulated money product has to come from your lawyers — none of it is written here.',
+]
+
 export const PAGES = {
+  about: {
+    slug: 'about',
+    nav: 'About us',
+    title: 'Building a wider world for your money.',
+    meta: 'Tokkenly brings tokenized stocks and everyday money into one app, built on Base.',
+    eyebrow: 'About us',
+    leads: [
+      'Our goal is to give people in Nigeria more control over what their money can do.',
+      'From everyday spending and bills to converting naira and dollars and investing in tokenized stocks listed in Nigeria and the US, we make managing money simple, open and secure — built on Base.',
+    ],
+    statement: {
+      h: 'Built on Base.',
+      p: 'Tokkenly brings tokenized stocks and everyday money into one app. Invest across Nigerian and US markets, receive and send money, pay bills, earn, borrow, and convert currencies through a simple, familiar experience.',
+      stats: [
+        ['Two markets', 'Nigerian and US listings, in one portfolio'],
+        ['One app', 'Invest, receive, send, pay, earn, borrow, convert'],
+        ['Naira and stablecoins', 'Convert between them as your plans change'],
+      ],
+    },
+    values: {
+      eyebrow: 'What we stand for',
+      h: 'Before you hand anybody your money.',
+      intro: 'Six things we hold ourselves to, written the same way we write them inside the app.',
+      items: [
+        ['Custody', 'The real shares are held for you', 'A token that tracks one real share. You get the price moves and the dividends.'],
+        ['Pricing', 'The rate you see is the rate you get', 'Your balance sits in dollars. Nothing is folded into a worse rate when you add money or take it out.'],
+        ['Clarity', 'Every cost, before you confirm', 'The amount, the fee and what you get, before you press the button.'],
+        ['Access', 'Two markets, one portfolio', 'Tokenized stocks linked to companies listed in Nigeria and the US, side by side.'],
+        ['Range', 'One app, not five', 'Investing sits next to receiving, sending, paying bills, earning, borrowing and converting.'],
+        ['Risk', 'Nothing here is guaranteed', 'Shares go down as well as up. Nothing here is a savings account.'],
+      ],
+    },
+    narrative: {
+      eyebrow: 'Why we built it',
+      h: 'Getting paid is only the beginning.',
+      ps: [
+        'Put your money to work, send it where it matters, and take care of the essentials. Your portfolio, your naira and your stablecoins belong in the same conversation — not in four different apps that never speak to each other.',
+        'That is the whole idea. Invest, then get on with life, with the tools to receive, send, pay, earn, borrow and convert close at hand.',
+      ],
+    },
+    cta: 'about',
+    props: [['coin', 'n-tl'], ['gun', 'n-bl']],
+    /* The frame breaks this headline by hand after "for". */
+    close: ['Come along for\nthe rest of it.',
+      'Open a Tokkenly account and hold naira, dollars and stocks in one place.',
+      'Get started'],
+  },
+
+  blog: {
+    slug: 'blog',
+    nav: 'Blog',
+    title: 'Blogs',
+    meta: 'Plain explanations of tokenized stocks, naira and stablecoins, and the everyday money tools around them.',
+    lead: 'Plain explanations of tokenized stocks, naira and stablecoins, and the everyday money tools around them.',
+    filters: ['All', 'Tokenized stocks', 'Money basics', 'Product', 'Company'],
+    /* The frame's thumbnails are empty #d9d9d9 rectangles — six posts drawn,
+       no artwork chosen yet — so they ship as the same empty tiles. */
+    posts: [
+      ['Money basics', 'Naira, dollars, and the rate you actually get', '5 Sept 2026 · 5 min read'],
+      ['Tokenized stocks', 'Nigerian listings, US listings, one portfolio', '29 Aug 2026 · 6 min read'],
+      ['Product', 'Gifting a first investment', '22 Aug 2026 · 4 min read'],
+      ['Money basics', 'Putting idle stablecoins to work', '15 Aug 2026 · 7 min read'],
+      ['Product', 'Borrowing without selling your shares', '8 Aug 2026 · 6 min read'],
+      ['Company', 'Why we built Tokkenly on Base', '1 Aug 2026 · 5 min read'],
+    ],
+    newsletter: {
+      h: 'Get it in your inbox.',
+      p: 'One email a month. What moved, what we shipped, and nothing else.',
+      ph: 'you@example.com',
+      btn: 'Subscribe',
+    },
+    cta: 'blog',
+    props: [['globe', 'n-tl'], ['notes', 'n-br']],
+    close: ['Put what you read to work.',
+      'Open a Tokkenly account and make your first investment in minutes.',
+      'Get started'],
+  },
+
   contact: {
     slug: 'contact',
     nav: 'Help',
@@ -28,13 +134,20 @@ export const PAGES = {
     cta: 'contact',
     props: [['globe', 'n-tl'], ['coin', 'n-tr']],
     close: ['Or skip the wait and start.',
-      'You don’t need to hear back from us to open a Tokkenly account and make your first move.'],
+      'You don’t need to hear back from us to open a Tokkenly account and make your first move.',
+      'Sign up'],
     form: [
       ['name', 'Your name', 'First and last name', 'text'],
       ['email', 'Email', 'you@example.com', 'email'],
       ['about', 'What is it about?', 'Account, a transaction, or something else', 'text'],
       ['message', 'Message', 'Tell us what happened, and when', 'textarea'],
     ],
+    /* The frame draws the second and third columns as a heading and a sentence
+       with nothing to click, and marks the third — registered address, support
+       line, socials — with a dashed rule, meaning still to come. Those details
+       are not in this repository and are not the kind of thing to invent for a
+       money product, so both columns carry links to things that do exist. This
+       is the one place the page departs from 394:780. */
     channels: [
       [EMAIL, 'We reply within one working day.'],
       ['Answers to the common ones',
@@ -56,88 +169,99 @@ export const PAGES = {
   terms: {
     slug: 'terms',
     nav: 'Terms of service',
-    title: 'Terms of service.',
-    meta: 'The agreement between you and Tokkenly: what we do, what you agree to, and what happens when something goes wrong.',
-    lead: 'The agreement between you and Tokkenly. Plain where it can be, exact where it has to be.',
-    updated: 'Last updated 17 September 2026',
+    title: 'Terms of Service',
+    meta: 'The agreement between you and Tokkenly. The frame is laid out; the binding wording comes from counsel.',
+    eyebrow: 'Legal',
+    sub: 'Last updated: placeholder date · Applies to the Tokkenly app and website',
+    warning: WARNING,
+    blocks: [
+      ['part', '01', 'Getting started', 'Who we are, who can open an account, and what the words mean.'],
+      ['sp'],
+      ['clause', 1, 'Declarations and basic information', CLAUSE],
+      ['clause', 2, 'About Tokkenly and its services', CLAUSE],
+      ['defs', 3, 'Definitions', DEFS],
+      ['clause', 4, 'Account and registration', CLAUSE],
+      ['clause', 5, 'Eligibility and verification', CLAUSE],
+      ['sp'],
+      ['part', '02', 'Using Tokkenly', 'What the product does, what you can do with it, and what you cannot.'],
+      ['sp'],
+      ['clause', 6, 'Scope of the services', CLAUSE],
+      ['clause', 7, 'Transactions', CLAUSE],
+      ['clause', 8, 'Deposits and withdrawals', CLAUSE],
+      ['clause', 9, 'Customer responsibilities', CLAUSE],
+      ['clause', 10, 'Prohibited uses', CLAUSE],
+      ['sp'],
+      ['part', '03', 'Money and risk', 'What it costs, what can go wrong, and what happens when it does.'],
+      ['sp'],
+      ['clause', 11, 'Fees and charges', CLAUSE],
+      ['callout', 12, 'Risk disclosure', CLAUSE],
+      ['sp'],
+      ['clause', 13, 'Complaints', CLAUSE],
+      ['clause', 14, 'Exclusion of liability', CLAUSE],
+      ['sp'],
+      ['part', '04', 'The legal part', 'Rights, data, changes, and where any of this gets settled.'],
+      ['sp'],
+      ['clause', 15, 'Intellectual property', CLAUSE],
+      ['callout', 16, 'Personal data and privacy', CLAUSE],
+      ['sp'],
+      ['clause', 17, 'Termination', CLAUSE],
+      ['clause', 18, 'Changes to these terms', CLAUSE],
+      ['clause', 19, 'Jurisdiction and arbitration', CLAUSE],
+      ['clause', 20, 'General provisions', CLAUSE],
+      ['sp'],
+    ],
     cta: 'terms',
     props: [['coin', 'n-tl'], ['gun', 'n-r']],
-    close: ['Ready when you are.',
-      'Open an account in two minutes and read the fine print at your own pace.'],
-    sections: [
-      ['Who we are', [
-        'Tokkenly is a product for holding, moving and investing money in one place. These terms are the agreement between you and us. Opening an account means you accept them.',
-        'Where a term below conflicts with something we have told you in writing about your own account, the written thing about your account wins.',
-      ]],
-      ['Opening an account', [
-        'You must be eighteen or over and able to enter a contract. You give us a legal name, a date of birth and an identity document, and we check them before your account can hold a balance.',
-        'One person, one account. If we find duplicates we keep the oldest and close the rest, returning any balance to you.',
-      ]],
-      ['What a tokenized share is', [
-        'A tokenized share tracks the price of a listed company. It is not the share itself, and holding one does not make you a shareholder of that company. You do not get a vote, and you should not expect a dividend unless we say in writing that a particular product pays one.',
-        'Prices move. The value of what you hold can fall below what you paid, and past performance tells you nothing about what happens next.',
-      ]],
-      ['Money in and money out', [
-        'Deposits are credited when they clear. Withdrawals go back to an account in your own name; we do not send money to third parties.',
-        'We may hold a withdrawal while we finish a check. When we do, we tell you it is held and what we need from you.',
-      ]],
-      ['Fees', [
-        'Fees are shown before you confirm anything, on the screen where you confirm it. If a fee changes, the change applies to what you do after it takes effect, not to anything already done.',
-      ]],
-      ['Borrowing', [
-        'Where you borrow against what you hold, what you hold is collateral. If its value falls far enough, some of it is sold to repay the loan, and we tell you before that happens where the market gives us time to.',
-      ]],
-      ['Closing an account', [
-        'You can close your account whenever you like. We will ask you to withdraw your balance first.',
-        'We can close or suspend an account if we have to for a legal or a fraud reason, or if the account is used for something these terms forbid. Where the law allows us to tell you why, we will.',
-      ]],
-      ['When something goes wrong', [
-        'Tell us. Write to ' + EMAIL + ' and we will look at it. If we got something wrong we will put it right.',
-        'We are responsible for our own failures. We are not responsible for a loss that comes from the market moving, from you giving us wrong details, or from something outside our reasonable control.',
-      ]],
-      ['Changes to these terms', [
-        'We will give you notice before a material change takes effect, at the address on your account. Continuing to use Tokkenly after that means you accept the change.',
-      ]],
-    ],
+    close: ['Still have questions?',
+      'Talk to us about anything on this page, or open an account and start when you’re ready.',
+      'Contact us'],
   },
 
   privacy: {
     slug: 'privacy',
     nav: 'Privacy policy',
-    title: 'Privacy policy.',
-    meta: 'What we collect, why we collect it, how long we keep it, and what you can ask us to do with it.',
-    lead: 'What we collect, why, how long we keep it, and what you can ask us to do with it.',
-    updated: 'Last updated 17 September 2026',
+    title: 'Privacy Policy',
+    meta: 'How Tokkenly collects, uses and protects your information. The frame is laid out; the binding wording comes from counsel.',
+    eyebrow: 'Legal',
+    sub: 'Last updated: placeholder date · How Tokkenly collects, uses and protects your information',
+    warning: WARNING,
+    blocks: [
+      ['part', '01', 'What we collect', 'The information you give us, and the information we observe.'],
+      ['sp'],
+      ['clause', 1, 'Who this policy covers', CLAUSE],
+      ['clause', 2, 'Information you provide', CLAUSE],
+      ['clause', 3, 'Information collected automatically', CLAUSE],
+      ['defs', 4, 'Terms used in this policy', DEFS],
+      ['sp'],
+      ['part', '02', 'Why we hold it', 'The reasons we process information, and the legal basis for each.'],
+      ['sp'],
+      ['clause', 5, 'How we use your information', CLAUSE],
+      ['clause', 6, 'Identity verification and KYC', CLAUSE],
+      ['clause', 7, 'Legal bases for processing', CLAUSE],
+      ['clause', 8, 'Marketing and communications', CLAUSE],
+      ['sp'],
+      ['part', '03', 'Who else sees it', 'Service providers, regulators, and where information travels.'],
+      ['sp'],
+      ['clause', 9, 'Sharing with third parties', CLAUSE],
+      ['callout', 10, 'International transfers', CLAUSE],
+      ['sp'],
+      ['clause', 11, 'How long we keep it', CLAUSE],
+      ['clause', 12, 'Security', CLAUSE],
+      ['sp'],
+      ['part', '04', 'Your control', 'What you can ask us to do, and how to ask.'],
+      ['sp'],
+      ['callout', 13, 'Your rights', CLAUSE],
+      ['sp'],
+      ['clause', 14, 'Cookies and similar technologies', CLAUSE],
+      ['clause', 15, 'Children', CLAUSE],
+      ['clause', 16, 'Changes to this policy', CLAUSE],
+      ['clause', 17, 'How to contact us', CLAUSE],
+      ['sp'],
+    ],
     cta: 'privacy',
     props: [['globe', 'n-tl'], ['notes', 'n-br']],
-    close: ['Your money, your record.',
-      'Every movement accounted for, and nothing shared that you did not ask us to share.'],
-    sections: [
-      ['What we collect', [
-        'What you give us: your name, date of birth, address, email, phone number and identity document. Without these we cannot open an account for you, because the law requires us to know who holds it.',
-        'What you do: the deposits, withdrawals, purchases, sales and transfers you make, and when you made them. This is your record and it is the point of the product.',
-        'What your device tells us: an IP address, a device type and a rough location, used to spot someone signing in who is not you.',
-      ]],
-      ['Why we collect it', [
-        'To run your account. To meet the legal checks we are required to perform. To find and stop fraud. To answer you when you write to us.',
-        'We do not sell your information, and we do not hand it to anyone who wants to advertise at you.',
-      ]],
-      ['Who else sees it', [
-        'The companies that do a specific job for us: identity checking, payments, and the infrastructure the app runs on. Each of them sees only what that job needs, and none of them may use it for anything else.',
-        'A regulator or a court, where we are legally required to produce it.',
-      ]],
-      ['How long we keep it', [
-        'While your account is open, and for as long afterwards as the law requires us to keep financial records. That period is longer than most people expect and it is not ours to shorten.',
-        'Everything we are not required to keep is deleted when your account closes.',
-      ]],
-      ['What you can ask for', [
-        'A copy of what we hold about you. A correction, if something is wrong. Deletion of anything we are not required to keep. An explanation of why a decision went the way it did.',
-        'Write to ' + EMAIL + '. We answer within one working day and act within thirty.',
-      ]],
-      ['Keeping it safe', [
-        'Traffic is encrypted in transit and at rest. Access inside Tokkenly is limited to the people whose job needs it and is logged.',
-        'If something happens that puts your information at risk, we tell you, and we tell you what to do about it.',
-      ]],
-    ],
+    close: ['Your data stays yours.',
+      'Ask us anything about how we handle it, or open an account and set your own preferences.',
+      'Contact us'],
   },
 }

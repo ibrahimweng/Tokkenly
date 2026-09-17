@@ -1161,3 +1161,49 @@
     io.observe(mock)
   })
 })()
+
+/* ------------------------------------------ the index on a legal page --
+   Terms and Privacy are drawn with one entry in the index marked as the one
+   you are reading. Without script that is the first entry, which is what the
+   frame shows at rest; with it, it follows the page. */
+;(function () {
+  var index = document.querySelector('.lg-index')
+  if (!index) return
+  var links = [].slice.call(index.querySelectorAll('a[href^="#clause-"]'))
+  if (!links.length || !('IntersectionObserver' in window)) return
+
+  var byId = {}
+  var targets = []
+  links.forEach(function (a) {
+    var el = document.getElementById(a.getAttribute('href').slice(1))
+    if (!el) return
+    byId[el.id] = a
+    targets.push(el)
+  })
+  if (!targets.length) return
+
+  var marked = null
+  function paint() {
+    // The one you are reading is the last clause whose top has passed a line a
+    // quarter down the window. Measured live rather than remembered from the
+    // observer: a page that has been scrolled and come back has stale flags,
+    // and the index then marks whatever it saw last.
+    var line = window.innerHeight * 0.25
+    var current = targets[0]
+    for (var i = 0; i < targets.length; i++) {
+      if (targets[i].getBoundingClientRect().top <= line) current = targets[i]
+    }
+    if (current === marked) return
+    marked = current
+    links.forEach(function (a) { a.removeAttribute('aria-current') })
+    var a = byId[current.id]
+    if (a) a.setAttribute('aria-current', 'true')
+  }
+
+  // The observer is only the trigger: something crossing the window is the
+  // cheapest signal that the answer may have changed.
+  var io = new IntersectionObserver(paint, { rootMargin: '0px', threshold: [0, 1] })
+  targets.forEach(function (t) { io.observe(t) })
+  addEventListener('resize', paint, { passive: true })
+  paint()
+})()
