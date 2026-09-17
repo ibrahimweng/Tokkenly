@@ -22,12 +22,19 @@ import { fileURLToPath } from 'node:url'
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 console.log('=== in step with the builder ===')
 let builderOk = true
-try {
-  console.log('  ok    ' + execFileSync('node', ['site/build-products.mjs', '--check'],
-    { cwd: REPO, encoding: 'utf8' }).trim())
-} catch (e) {
-  builderOk = false
-  console.log('  FAIL  ' + String(e.stderr || e.message).trim().replace(/\n/g, '\n        '))
+/* Both builders, because they share a nav and a footer: build-pages imports
+   them from build-products, so one routing change regenerates all eleven
+   pages. That is exactly the edit that quietly undid the product pages' cta
+   fix, and checking half the site would have missed it just as well. */
+for (const script of ['site/build-products.mjs', 'site/build-pages.mjs']) {
+  try {
+    console.log('  ok    ' + script.replace('site/', '').padEnd(20) +
+      execFileSync('node', [script, '--check'], { cwd: REPO, encoding: 'utf8' }).trim())
+  } catch (e) {
+    builderOk = false
+    console.log('  FAIL  ' + script.replace('site/', '').padEnd(20) +
+      String(e.stderr || e.message).trim().replace(/\n/g, '\n        '))
+  }
 }
 
 const SLUGS = ['tokenized-stocks', 'gifting-and-rewards', 'receive', 'send',

@@ -10195,3 +10195,16 @@ It was intersecting prop ink with `.closing-in`, which is a full-width grid
 box with a centred column of words inside it, so it answered a question
 nobody had asked. A measurement that disagrees with a validated one is wrong
 until shown otherwise, and it was.
+
+**And the other builder.** `build-pages.mjs` writes contact, terms and
+privacy, and it has the same shape of exposure — generated and committed —
+with one thing on top: it imports the nav and the footer from
+`build-products.mjs`, so a routing change regenerates all eleven pages at
+once. That is precisely the edit that undid the cta fix, and a guard on one
+builder and not the other would have missed it in exactly the same way. It
+takes `--check` too, and `_siteprod.mjs` runs both before it opens a browser.
+
+Its own `checkProps` already asked a different question — does the stylesheet
+hold a placement for every prop the page emits — so the two now sit either
+side of the gap the bug fell through: one says the rule exists, the other says
+the file still carries the markup that reaches it.
