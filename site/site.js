@@ -440,3 +440,174 @@
     }, 0.15)
   }
 })()
+
+/* ------------------------------ what each phrase in the statement opens -- */
+/* Three phrases in the Why Tokkenly statement each open a small scene. The
+   trigger is the phrase itself, so the hot area is the inline box and nothing
+   more — no padding, no block wrapper, nothing that could reach the line above
+   or below.
+
+   The cards start on the phrase and travel out to their own offsets, and while
+   they travel they carry a one-dimensional blur turned to face the direction
+   of travel. That is what makes them read as having come out of the words
+   rather than as having faded in near them: the streak points back at the
+   phrase the whole way. */
+;(function () {
+  var layer = document.querySelector('.wt-layer')
+  if (!layer) return
+  var row = layer.parentNode
+  while (row && !row.classList.contains('why-in')) row = row.parentNode
+  if (!row) return
+
+  var hots = [].slice.call(document.querySelectorAll('.wt'))
+  var groups = {}
+  ;[].slice.call(layer.querySelectorAll('.wt-group')).forEach(function (g) {
+    groups[g.dataset.wt] = { el: g, cards: [].slice.call(g.querySelectorAll('.wt-card')) }
+  })
+
+  var fine = window.matchMedia('(hover: hover) and (pointer: fine)')
+  var still = window.matchMedia('(prefers-reduced-motion: reduce)')
+  var REF = 1520                          /* the column the offsets were read off */
+  var TRAVEL = 620                        /* must match the transition in the CSS */
+
+  /* One filter per card. They are built here rather than sitting in the markup
+     because nothing about this works without the script anyway. */
+  var svgNS = 'http://www.w3.org/2000/svg'
+  var defs = document.createElementNS(svgNS, 'svg')
+  defs.setAttribute('width', '0'); defs.setAttribute('height', '0')
+  defs.setAttribute('aria-hidden', 'true')
+  defs.setAttribute('style', 'position:absolute;width:0;height:0;overflow:hidden')
+  var n = 0
+  Object.keys(groups).forEach(function (k) {
+    groups[k].cards.forEach(function (card) {
+      var f = document.createElementNS(svgNS, 'filter')
+      f.setAttribute('id', 'wtb-' + n)
+      /* A tight filter region would clip the streak off at the card's edge. */
+      f.setAttribute('x', '-70%'); f.setAttribute('y', '-70%')
+      f.setAttribute('width', '240%'); f.setAttribute('height', '240%')
+      f.setAttribute('color-interpolation-filters', 'sRGB')
+      var b = document.createElementNS(svgNS, 'feGaussianBlur')
+      b.setAttribute('stdDeviation', '0 0')
+      f.appendChild(b); defs.appendChild(f)
+      card.__blur = b
+      card.__url = 'url(#wtb-' + n + ')'
+      card.__face = card.querySelector('.wt-blur')
+      n++
+    })
+  })
+  document.body.appendChild(defs)
+
+  /* The union of a phrase's line boxes, in the row's coordinates. A phrase that
+     wraps has two boxes; taking the union keeps the cards anchored to the whole
+     phrase rather than to whichever fragment happens to come first. */
+  /* Measured against the layer, which already spans the content column, so
+     these come out in column coordinates with no gutter arithmetic. */
+  function anchorOf(el) {
+    var r = layer.getBoundingClientRect()
+    var boxes = el.getClientRects()
+    var l = Infinity, t = Infinity, rr = -Infinity, b = -Infinity
+    for (var i = 0; i < boxes.length; i++) {
+      l = Math.min(l, boxes[i].left); t = Math.min(t, boxes[i].top)
+      rr = Math.max(rr, boxes[i].right); b = Math.max(b, boxes[i].bottom)
+    }
+    return { x: (l + rr) / 2 - r.left, y: (t + b) / 2 - r.top, col: r.width }
+  }
+
+  function place(key) {
+    var g = groups[key]
+    var hot = document.querySelector('.wt[data-wt="' + key + '"]')
+    if (!g || !hot) return null
+    var a = anchorOf(hot)
+    var k = a.col / REF
+    layer.style.setProperty('--k', k.toFixed(4))
+    g.el.style.left = a.x + 'px'
+    g.el.style.top = a.y + 'px'
+    g.cards.forEach(function (card) {
+      var w = +card.dataset.w * k, h = +card.dataset.h * k
+      var tx = +card.dataset.dx * k, ty = +card.dataset.dy * k
+      /* Keep the card inside the row however the phrase happens to sit. */
+      var half = w / 2 + 6
+      tx = Math.max(half - a.x, Math.min(a.col - half - a.x, tx))
+      card.style.setProperty('--w', w + 'px')
+      card.style.setProperty('--h', h + 'px')
+      card.style.setProperty('--tx', tx + 'px')
+      card.style.setProperty('--ty', ty + 'px')
+      card.style.setProperty('--tilt', card.dataset.tilt + 'deg')
+      card.style.setProperty('--d', card.dataset.d + 'ms')
+      card.style.setProperty('--axis', (Math.atan2(ty, tx) * 180 / Math.PI).toFixed(2) + 'deg')
+      card.__reach = Math.hypot(tx, ty)
+    })
+    return g
+  }
+
+  var running = null
+  function streak(g, out) {
+    if (still.matches) return
+    if (running) cancelAnimationFrame(running)
+    var t0 = performance.now()
+    var span = out ? 260 : TRAVEL
+    var step = function (now) {
+      var done = true
+      g.cards.forEach(function (card) {
+        var d = +card.dataset.d
+        var p = (now - t0 - (out ? 0 : d)) / span
+        if (p < 0) { done = false; p = 0 }
+        if (p < 1) done = false
+        p = Math.max(0, Math.min(1, p))
+        /* Heaviest as it leaves the phrase, gone by the time it lands. On the
+           way back it builds instead, so the card smears into the words. */
+        var peak = Math.min(34, card.__reach / 8)
+        var k = out ? peak * 0.5 * (1 - Math.pow(1 - p, 2)) : peak * Math.pow(1 - p, 1.5)
+        card.__blur.setAttribute('stdDeviation', k.toFixed(2) + ' 0')
+        card.__face.style.filter = k > 0.08 ? card.__url : ''
+      })
+      if (!done) running = requestAnimationFrame(step)
+      else {
+        running = null
+        g.cards.forEach(function (c) { c.__blur.setAttribute('stdDeviation', '0 0'); c.__face.style.filter = '' })
+      }
+    }
+    running = requestAnimationFrame(step)
+  }
+
+  var open = null
+  function show(key) {
+    if (!fine.matches || window.innerWidth <= 1040) return
+    if (open === key) return
+    if (open) hide(open, true)
+    var g = place(key)
+    if (!g) return
+    open = key
+    document.querySelector('.wt[data-wt="' + key + '"]').classList.add('is-lit')
+    /* Read back before flipping the class so the start state is committed and
+       the transition actually runs from the phrase rather than from nowhere. */
+    void g.el.offsetWidth
+    g.el.classList.add('is-on')
+    streak(g, false)
+  }
+  function hide(key, quiet) {
+    var g = groups[key]
+    if (!g) return
+    g.el.classList.remove('is-on')
+    var hot = document.querySelector('.wt[data-wt="' + key + '"]')
+    if (hot) hot.classList.remove('is-lit')
+    if (!quiet) streak(g, true)
+    if (open === key) open = null
+  }
+
+  hots.forEach(function (el) {
+    var key = el.dataset.wt
+    el.addEventListener('pointerenter', function (e) {
+      if (e.pointerType === 'touch') return
+      show(key)
+    })
+    el.addEventListener('pointerleave', function (e) {
+      if (e.pointerType === 'touch') return
+      hide(key)
+    })
+  })
+  /* Leaving the section entirely, or scrolling it away, closes whatever is
+     open — otherwise a card can be left hanging when the pointer jumps out. */
+  row.addEventListener('pointerleave', function () { if (open) hide(open) })
+  window.addEventListener('blur', function () { if (open) hide(open, true) })
+})()

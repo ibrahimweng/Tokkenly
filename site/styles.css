@@ -606,37 +606,160 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
   border-radius: min(22px, 1.146vw);
 }
 .why-in { position: relative; }
-/* Figma: image 25 inside the statement's lower frame, at x 280.8 of 800 and
-   ending exactly on the paragraphs' top edge. So it is anchored to the body,
-   not to the row and not to a hand-tuned offset — bottom: 100% puts it where
-   the frame puts it at any width, and it can never land on a paragraph.
-
-   It only appears where the composition has room for it. The gap it sits in
-   is a product of 1920: the statement column is shorter than the 597x712
-   portrait beside it and space-between opens the slack. Below that the
-   headline takes another line, the portrait shrinks, the slack closes, and
-   the column packs from the top instead so there is no hole where the coin
-   would have been. */
-.why-body { position: relative; }
+/* image 25 at 594,77 in the section, which is 394 across the 1520 column and
+   67 above the row — over the portrait's top-right corner. Both axes are
+   shares of that column, so it holds the corner at every width; a percentage
+   top would resolve against the row's height instead, hence the margin. */
 .why-coin {
-  position: absolute; left: 35.11%; bottom: 100%; width: 34.25%;
-  height: auto; z-index: 2; pointer-events: none; display: none;
+  position: absolute; left: 25.943%; top: 0; margin-top: -4.424%;
+  width: 18.004%; height: auto;
 }
-@media (min-width: 1880px) { .why-coin { display: block; } }
 .why-text { display: grid; gap: min(48px, 2.5vw); align-content: start; }
-/* Only where the coin shows: the slack it sits in is what space-between opens. */
-@media (min-width: 1880px) { .why-text { align-content: space-between; } }
 .why-head { display: grid; gap: 20px; }
 .why-head h2 { color: #1e1818; }
-.why-body { display: grid; gap: 24px; justify-items: start; }
+/* Frame 19 opens 100 below the headline before the first paragraph — the
+   gap is in the composition, not a leftover from where the coin used to be. */
+.why-body { display: grid; gap: 24px; justify-items: start; padding-top: min(100px, 5.208vw); }
 .why-paras { display: grid; gap: 24px; }
 .why-paras p {
   font-size: clamp(16.5px, 1.05vw, 20px); line-height: 1.6; letter-spacing: -0.005em;
   color: #433b37;
 }
+/* The frame sets the statement's first block at 30/51 and leaves the Base
+   paragraph at 20/32 under it. Two classes, to clear .why-paras p rather than
+   sit level with it and rely on which one is written last. */
+.why-paras .why-lead {
+  font-size: clamp(19px, 1.5625vw, 30px);
+  line-height: 1.7; letter-spacing: -0.012em;
+  color: #2c2521;
+}
 /* This section's eyebrow is near-black rather than the page's muted green. */
 .eyebrow-ink { color: #433b37; }
 .eyebrow-ink::before { background: #1e1818; }
+
+
+/* ------------------------------------ what each phrase in the statement opens */
+/* Three phrases in the statement each open a little scene. The trigger is the
+   phrase itself — an inline box, no padding on any side, so the hot area is
+   exactly the glyphs and never reaches the line above, the line below, or the
+   words either side of it on its own line. */
+.wt { font-weight: 700; color: #1e1818; transition: color 220ms var(--ease-out); }
+@media (hover: hover) and (pointer: fine) and (min-width: 1041px) {
+  .wt { cursor: default; }
+  /* The frame's mint is #2bbd9b, which is 1.97:1 on the page ground and fails
+     even the 3:1 that large bold text gets. This is the closest it can be
+     turned down and still clear it: 3.27:1. */
+  .wt.is-lit { color: #189171; }
+}
+
+/* Pinned to the content column, not to the wrap: the wrap carries the gutters,
+   and a percentage inside it would drift as they narrow. Everything in here is
+   placed in shares of 1520. */
+.wt-layer {
+  position: absolute; top: 0; bottom: 0; left: var(--gutter); right: var(--gutter);
+  z-index: 4;
+  pointer-events: none;                    /* never steals the hover it reacts to */
+  display: none;
+}
+@media (hover: hover) and (pointer: fine) and (min-width: 1041px) {
+  .wt-layer { display: block; }
+}
+/* JS parks this on the phrase's own centre, so everything inside is placed
+   relative to the words it came out of. */
+.wt-group { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+
+.wt-card {
+  position: absolute; left: 0; top: 0;
+  width: var(--w); height: var(--h);
+  opacity: 0;
+  /* Rest: sitting on the phrase, small. On: out at its own offset, full size.
+     The overshoot is in the curve rather than in a keyframe so the return can
+     reuse the same property with a different one. */
+  transform: translate(-50%, -50%) scale(0.42);
+  transition:
+    transform 620ms cubic-bezier(0.22, 1.42, 0.46, 1),
+    opacity 200ms ease-out;
+}
+.wt-group.is-on .wt-card {
+  opacity: 1;
+  transform: translate(-50%, -50%) translate(var(--tx), var(--ty)) scale(1);
+  transition-delay: var(--d, 0ms), var(--d, 0ms);
+}
+/* Going back is quicker and has no overshoot — an overshoot on the way out
+   reads as a bounce off the text rather than a return to it. */
+.wt-group:not(.is-on) .wt-card {
+  transition:
+    transform 260ms cubic-bezier(0.4, 0, 0.9, 0.4),
+    opacity 200ms ease-in 60ms;
+}
+
+/* The blur axis. .wt-blur is turned to face the way the card travels and
+   carries a one-dimensional blur, so the streak runs along that line and
+   points back at the phrase; .wt-art turns the artwork back upright and adds
+   the card's own tilt on top. */
+.wt-blur { width: 100%; height: 100%; transform: rotate(var(--axis, 0deg)); }
+/* Everything below is written at the size the frame draws it on a 1520
+   column; --k is that column over 1520, so a narrower page shrinks the frames,
+   the radii and the type together rather than leaving 10px text on a card half
+   the size. */
+.wt-art {
+  width: 100%; height: 100%;
+  transform: rotate(calc(-1 * var(--axis, 0deg) + var(--tilt, 0deg)));
+  background: #fff; padding: calc(5px * var(--k, 1)); border-radius: calc(14px * var(--k, 1));
+  box-shadow: 0 calc(20px * var(--k, 1)) calc(40px * var(--k, 1)) calc(-14px * var(--k, 1)) rgba(5, 51, 41, 0.34),
+              0 calc(4px * var(--k, 1)) calc(12px * var(--k, 1)) calc(-6px * var(--k, 1)) rgba(5, 51, 41, 0.2);
+}
+.wt-art > img { width: 100%; height: 100%; object-fit: cover; border-radius: calc(10px * var(--k, 1)); }
+.wt-plain .wt-art { background: none; padding: 0; }
+
+/* ---- the two built panels --------------------------------------------- */
+.wt-sent, .wt-chat { width: 100%; height: 100%; background: #131514; overflow: hidden; }
+.wt-sent {
+  border-radius: calc(13px * var(--k, 1));
+  display: grid; align-content: start; justify-items: center;
+  padding: calc(6px * var(--k, 1)) calc(5px * var(--k, 1));
+  gap: calc(2px * var(--k, 1)); text-align: center;
+}
+.wt-sent-t { font-size: calc(7px * var(--k, 1)); font-weight: 700; color: #fff; }
+.wt-sent-s { font-size: calc(6.2px * var(--k, 1)); line-height: 1.3; color: #9aa4a0; }
+.wt-sent-i {
+  width: calc(38px * var(--k, 1)); height: calc(38px * var(--k, 1));
+  margin: calc(3px * var(--k, 1)) 0 calc(4px * var(--k, 1)); color: #808b87;
+}
+.wt-sent-b {
+  width: 100%; padding: calc(3.5px * var(--k, 1)) 0; border-radius: 999px;
+  background: #2b2e2d; color: #b9c2bf; font-size: calc(5.5px * var(--k, 1)); font-weight: 600;
+}
+.wt-chat {
+  border-radius: calc(20px * var(--k, 1));
+  display: grid; align-content: start;
+  gap: calc(10px * var(--k, 1));
+  padding: calc(15px * var(--k, 1)) calc(14px * var(--k, 1));
+}
+/* A set width rather than a max: shrink-wrapped bubbles rewrap the two lines
+   the frame draws into one long one. */
+.wt-bub {
+  width: 70%; padding: calc(11px * var(--k, 1)) calc(11px * var(--k, 1));
+  border-radius: calc(11px * var(--k, 1));
+  font-size: calc(12.5px * var(--k, 1)); line-height: 1.43; letter-spacing: -0.005em;
+}
+.wt-bub-in { justify-self: start; background: #2a2c2b; color: #d8dedb; }
+.wt-bub-out { justify-self: end; background: #3a4654; color: #fff; }
+.wt-chat-s {
+  justify-self: end; margin-top: calc(5px * var(--k, 1));
+  font-size: calc(9px * var(--k, 1)); color: #8b9491;
+}
+.wt-chat-s span { opacity: 0.55; }
+.wt-chat-s b { color: var(--mint); font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* No travel and no streak: the cards simply appear where they belong. */
+  .wt-card, .wt-group.is-on .wt-card, .wt-group:not(.is-on) .wt-card {
+    transition: opacity 140ms linear;
+  }
+  .wt-card { transform: translate(-50%, -50%) translate(var(--tx), var(--ty)); }
+  .wt-blur { filter: none !important; }
+}
 
 /* ------------------------------------------------------------ products -- */
 .band-products { background: var(--deep); }

@@ -321,6 +321,63 @@
             alt="A man looking at his phone, smiling."
           />
 
+          <!-- Everything that floats over this row, lined up on the 1520
+               column rather than on the wrap. Decorative throughout: the
+               paragraph says the same thing on its own. -->
+          <div class="wt-layer" aria-hidden="true">
+            <!-- image 25: over the portrait's top-right corner. -->
+            <img class="why-coin" src="./img/sec/coin-lg.webp" width="274" height="290" loading="lazy" alt="" />
+
+            <div class="wt-group" data-wt="bills">
+              <div class="wt-card" data-w="138" data-h="180" data-dx="-49" data-dy="-142" data-tilt="-23" data-d="0">
+                <div class="wt-blur"><div class="wt-art">
+                  <img src="./img/why/outage.webp" width="460" height="630" loading="lazy" alt="" />
+                </div></div>
+              </div>
+              <div class="wt-card" data-w="160" data-h="238" data-dx="62" data-dy="-150" data-tilt="4" data-d="55">
+                <div class="wt-blur"><div class="wt-art">
+                  <img src="./img/why/restored.webp" width="460" height="630" loading="lazy" alt="" />
+                </div></div>
+              </div>
+            </div>
+
+            <div class="wt-group" data-wt="send">
+              <div class="wt-card" data-w="121" data-h="170" data-dx="-327" data-dy="-92" data-tilt="-16" data-d="0">
+                <div class="wt-blur"><div class="wt-art">
+                  <img src="./img/why/family.webp" width="460" height="630" loading="lazy" alt="" />
+                </div></div>
+              </div>
+              <div class="wt-card wt-plain" data-w="90" data-h="104" data-dx="-217" data-dy="-88" data-tilt="0" data-d="60">
+                <div class="wt-blur"><div class="wt-art">
+                  <div class="wt-sent">
+                    <p class="wt-sent-t">Sent</p>
+                    <p class="wt-sent-s">Your transfer is successful</p>
+                    <svg class="wt-sent-i" viewBox="0 0 37 42" fill="none" aria-hidden="true">
+                      <ellipse cx="18.5" cy="29.3" rx="18.2" ry="12.3" stroke="currentColor" stroke-width="1.1" opacity=".56" />
+                      <ellipse cx="18.5" cy="21.6" rx="18.2" ry="12.3" stroke="currentColor" stroke-width="1.1" />
+                      <path d="M0.3 21.6v7.7M36.7 21.6v7.7" stroke="currentColor" stroke-width="1.1" />
+                      <ellipse cx="18.5" cy="9.4" rx="12.6" ry="8.6" stroke="currentColor" stroke-width="1.1" stroke-dasharray="3 3" opacity=".7" />
+                      <path d="M13.2 9.9l3.6 3.4 7-7.2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity=".7" />
+                    </svg>
+                    <p class="wt-sent-b">Done</p>
+                  </div>
+                </div></div>
+              </div>
+            </div>
+
+            <div class="wt-group" data-wt="income">
+              <div class="wt-card wt-plain" data-w="227" data-h="184" data-dx="15" data-dy="-113" data-tilt="0" data-d="0">
+                <div class="wt-blur"><div class="wt-art">
+                  <div class="wt-chat">
+                    <p class="wt-bub wt-bub-in">Hey, i just sent your salary to tokkenly</p>
+                    <p class="wt-bub wt-bub-out">Thanks ive received them</p>
+                    <p class="wt-chat-s">10:24 AM <span>·</span> <b>Sent</b></p>
+                  </div>
+                </div></div>
+              </div>
+            </div>
+          </div>
+
           <div class="why-text reveal">
             <div class="why-head">
               <p class="eyebrow eyebrow-ink">Why Tokkenly</p>
@@ -328,13 +385,12 @@
             </div>
 
             <div class="why-body">
-              <!-- image 25 sits on the paragraphs' top edge, which is where the
-                   frame puts it. -->
-              <img class="why-coin" src="./img/sec/coin-lg.webp" width="274" height="290" loading="lazy" alt="" aria-hidden="true" />
               <div class="why-paras">
-                <p>
-                  You want to invest. You also have bills to pay, people to send money to, and
-                  income to receive. That shouldn’t mean a different app for every task.
+                <p class="why-lead">
+                  You want to invest. You also have <b class="wt" data-wt="bills">bills to pay</b>,
+                  <b class="wt" data-wt="send">people to send money to</b>, and
+                  <b class="wt" data-wt="income">income to receive</b>. That shouldn’t mean a
+                  different app for every task.
                 </p>
                 <p>
                   Built on Base, Tokkenly brings tokenized stocks and everyday money into one app.
