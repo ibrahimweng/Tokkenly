@@ -10157,3 +10157,41 @@ the generator. So `build-products.mjs --check` writes nothing and exits 1 on
 any committed page the builder would not produce, `_siteprod.mjs` runs it
 before it opens a browser, and the next time this happens it is a failing line
 rather than eight broken pages nobody looked at.
+
+**And the rest of the closes, checked.** The same failure could have been
+sitting on the landing page and the three new ones, so all twelve were
+measured rather than eyeballed. Two questions, because they are not the same
+question.
+
+*Did a rule reach the prop at all?* `left` and `right` both computing to
+`auto` on an absolutely positioned element is that answered. Every prop on
+every page at 1440, 834 and 390 is placed; each page declares a variant, each
+gradient resolves, and each has exactly one `n-tl` prop, which is the one a
+phone keeps.
+
+*Does the art land on the words?* A box test cannot answer it — these renders
+carry a wide transparent margin, and the variants are fitted against the ink
+rather than the file, so a prop's box overlapping the copy is the normal case.
+Three renders per slab instead: the ground alone, the ground plus props, the
+ground plus copy. Anything differing from the ground is ink, and the answer is
+where the two masks meet. Zero at all three widths, on all twelve pages.
+
+The same measurement pointed at the broken build returns about sixteen per
+cent of the prop ink sitting on the words, on exactly the eight product pages
+and none of the other four, which is the only reason to trust the zero.
+
+`_sitecta.mjs` keeps the first question and leaves the second to hand. One
+DOM read against three screenshots and a pixel walk per slab, for a question
+that only moves when a variant is re-fitted — and the cheap one is the whole
+of the bug that actually happened. Against the broken build it fails all
+eight, at all three widths, and at 390 it says something the desktop capture
+did not: with no anchor to fall back on, the art does not merely land badly,
+it disappears.
+
+A note on the reading of it. Two attempts at the expensive question were
+written before the cheap one was kept, and the first of them reported ink on
+the words for all twelve pages — including the four that were provably clean.
+It was intersecting prop ink with `.closing-in`, which is a full-width grid
+box with a centred column of words inside it, so it answered a question
+nobody had asked. A measurement that disagrees with a validated one is wrong
+until shown otherwise, and it was.
