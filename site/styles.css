@@ -3569,7 +3569,7 @@ textarea.cf-input {
 }
 .p2-sibs .prod-card {
   background: #d1cbc2; color: var(--ink);
-  min-height: min(251px, 13.073vw);
+  min-height: var(--sch, min(251px, 13.073vw));
   gap: min(22px, 1.146vw);
 }
 .p2-sibs .prod-card h3 { color: var(--ink); font-size: clamp(17px, 1.125vw, 21.6px); }

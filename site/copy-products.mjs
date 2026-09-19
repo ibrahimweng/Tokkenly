@@ -189,7 +189,13 @@ export const PRODUCTS = [
         ] },
 
       { type: 'siblings', eyebrow: 'The rest of it', h: 'There is more\nin the app.',
-        cards: ['gifting-and-rewards', 'receive-and-send', 'borrow-and-earn'] },
+        /* This frame keeps the older sibling band: icon chips and a short
+           line each, where the newer pages use a letter and a sentence. */
+        cards: [
+          ['gifting-and-rewards', 'gift', 'Gifting &amp; Rewards', 'Make their day. Start their portfolio.', 'Explore Gifting &amp; Rewards'],
+          ['receive-and-send', 'updown', 'Receive and send', 'Get paid. Make someone\u2019s day.', 'Explore Receive and send'],
+          ['borrow-and-earn', 'split', 'Borrow and earn', 'Put it to work, or borrow against it.', 'Explore Borrow and earn'],
+        ] },
 
       { type: 'pclose' },
     ],
@@ -300,7 +306,10 @@ export const PRODUCTS = [
             frag: { k: 'Claimed', v: 'In their portfolio', rows: [['Holding', '0.11 AAPLc'], ['Worth', '$25.00']] } },
         ] },
 
-      { type: 'pfaq', h: 'A few things you might be wondering.',
+      /* The frame sets this heading at 90 in an 830 column, with 46 before
+         the questions rather than the 200 the other pages leave. */
+      { type: 'pfaq', h: 'A few things you might be wondering.', pad: [140, 120],
+        cols: [54.583, 42.391, 3.026], h2: [90, 0.978],
         items: [
           ['What if they already use Tokkenly?',
            'It lands straight in their portfolio. No link to claim, no account to open.'],
@@ -312,8 +321,8 @@ export const PRODUCTS = [
            'Any tokenized stock on the list, or a dollar amount. The rule is yours to set, and it is on the screen before anyone earns against it.'],
         ] },
 
-      { type: 'siblings', h: 'There is more in the app.', badge: 'letter', hSize: 34,
-        gap: 34, cardGap: 24,
+      { type: 'siblings', h: 'There is more in the app.', badge: 'letter', hSize: [32, 1.281],
+        gap: 34, cardGap: 24, cardH: 260,
         cards: ['tokenized-stocks', 'receive-and-send', 'borrow-and-earn'] },
 
       { type: 'pclose', tall: true },
@@ -457,11 +466,7 @@ export const PRODUCTS = [
 
       { type: 'siblings', h: 'There is more in the app.', badge: 'letter', hSize: 34,
         pad: [20, 140], gap: 34, cardGap: 24,
-        cards: [
-          ['tokenized-stocks', 'T', 'Tokenized stocks', 'Invest in Nigerian and US companies from one app.', 'Explore tokenized stocks'],
-          ['pay-bills', 'P', 'Pay bills', 'Airtime, data and electricity from the balance you hold.', 'Explore pay bills'],
-          ['convert', 'C', 'Convert', 'Move between naira and stablecoins without leaving the app.', 'Explore convert'],
-        ] },
+        cards: ['tokenized-stocks', 'pay-bills', 'convert'] },
 
       { type: 'pclose', tall: true },
     ],

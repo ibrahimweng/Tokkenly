@@ -718,6 +718,7 @@ ${s.items.map(([q, a]) => `            <details>
         s.pad ? `--spt:min(${s.pad[0]}px, ${(s.pad[0] / 19.2).toFixed(3)}vw);--spb:min(${s.pad[1]}px, ${(s.pad[1] / 19.2).toFixed(3)}vw)` : '',
         s.gap ? `--sg:min(${s.gap}px, ${(s.gap / 19.2).toFixed(3)}vw)` : '',
         s.cardGap ? `--scg:min(${s.cardGap}px, ${(s.cardGap / 15.2).toFixed(3)}%)` : '',
+        s.cardH ? `--sch:min(${s.cardH}px, ${(s.cardH / 19.2).toFixed(3)}vw)` : '',
       ].filter(Boolean).join(';')}">
         <div class="wrap">
           <div class="p2-head reveal">
