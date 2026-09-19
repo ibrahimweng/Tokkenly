@@ -525,14 +525,30 @@ const SIBS = {
 /* The hero receipt: a white card the frame floats over the art, written out
    rather than screenshotted, the same way the landing page's panels are. */
 const panel2 = (n) => `
-        <div class="p2-pn" style="left:${n.l}%;top:${n.t}vw;width:${n.w}%" aria-hidden="true">
+        <div class="p2-pn${n.big ? ' p2-pn-lg' : ''}" style="left:${n.l}%;top:${n.t}vw;width:${n.w}%" aria-hidden="true">
           <div class="p2-pn-head"><span>${esc(n.head[0])}</span><b>${esc(n.head[1])}</b></div>
           <div class="p2-pn-rows">
 ${n.pairs.map(([k, v]) => `            <div class="p2-pn-row"><span>${esc(k)}</span><b>${v}</b></div>`).join('\n')}
+${(n.rows || []).map(([k, v]) => `            <div class="p2-pn-row p2-pn-wide"><span>${esc(k)}</span><b>${v}</b></div>`).join('\n')}
           </div>
-          <p class="p2-pn-note">${esc(n.note)}</p>
+${n.note ? `          <p class="p2-pn-note">${esc(n.note)}</p>` : ''}
           <span class="p2-pn-btn">${esc(n.btn)}</span>
         </div>`
+
+/* The white card that bleeds out of a gradient side: a head, a list of three
+   routes, and the line under them. Same object on both sides of the band. */
+const sidePanel = (n) => `
+            <div class="p2-sp" style="left:${n.l}%;top:${n.t}%;width:${n.w}%" aria-hidden="true">
+              <div class="p2-sp-head"><span>${esc(n.head[0])}</span><b>${esc(n.head[1])}</b></div>
+              <div class="p2-sp-list">
+${n.list.map(([badge, name, sub, val]) => `                <div class="p2-frow">
+                  <span class="p2-badge p2-badge-lg">${esc(badge)}</span>
+                  <span class="p2-fmid"><b>${esc(name)}</b><i>${esc(sub)}</i></span>
+                  <span class="p2-fval">${esc(val)}</span>
+                </div>`).join('\n')}
+              </div>
+              <p class="p2-sp-note">${esc(n.note)}</p>
+            </div>`
 
 const KIT2 = {
   /* The frame's hero: one centred column of words on a radial wash, with the
@@ -646,7 +662,12 @@ ${s.items.map(([q, a]) => `            <details>
 
   /* Three sand cards, the other products this one sits beside. */
   siblings: (p, s, up) => `
-      <section class="band p2-sibs${s.badge === 'letter' ? ' p2-sibs-letter' : ''}"${s.hSize ? ` style="--sh:${s.hSize}px"` : ''}>
+      <section class="band p2-sibs${s.badge === 'letter' ? ' p2-sibs-letter' : ''}" style="${[
+        s.hSize ? `--sh:${s.hSize}px` : '',
+        s.pad ? `--spt:min(${s.pad[0]}px, ${(s.pad[0] / 19.2).toFixed(3)}vw);--spb:min(${s.pad[1]}px, ${(s.pad[1] / 19.2).toFixed(3)}vw)` : '',
+        s.gap ? `--sg:min(${s.gap}px, ${(s.gap / 19.2).toFixed(3)}vw)` : '',
+        s.cardGap ? `--scg:min(${s.cardGap}px, ${(s.cardGap / 15.2).toFixed(3)}%)` : '',
+      ].filter(Boolean).join(';')}">
         <div class="wrap">
           <div class="p2-head reveal">
 ${s.eyebrow ? `            <p class="eyebrow">${esc(s.eyebrow)}</p>` : ''}
@@ -704,6 +725,56 @@ ${st.frag.rows.map(([k, v]) => `                  <div class="p2-rrow"><span>${e
               </div>
             </div>`).join('\n')}
           </div>
+        </div>
+      </section>`,
+
+  /* Money in and money out: a centred head, then two 744 gradients with a
+     white panel bleeding out of each — up and left on one, down and right on
+     the other, which is what stops the pair reading as one object twice. */
+  twoside: (p, s, up) => `
+      <section class="band p2-two">
+        <div class="wrap">
+          <div class="p2-head p2-head-mid p2-two-head reveal">
+            <h2>${lines2(s.h)}</h2>
+            <p>${esc(s.lead)}</p>
+            <a class="btn btn-mint" href="${APP_URL}">${esc(s.btn)}</a>
+          </div>
+          <div class="p2-two-row">
+${s.cards.map((c) => `            <article class="p2-side${c.foot ? ' p2-side-foot' : ''} reveal" style="--grad: linear-gradient(to bottom, ${c.grad.join(', ')})">
+              <div class="p2-side-copy">
+                <span class="p2-pill">${esc(c.pill)}</span>
+                <h3>${esc(c.h)}</h3>
+                <p>${esc(c.p)}</p>
+              </div>
+${sidePanel(c.panel)}
+            </article>`).join('\n')}
+          </div>
+        </div>
+      </section>`,
+
+  /* The dark band: a head with its button out to the right, then two rows of
+     a wide card and a narrow one, swapping sides. */
+  intransit: (p, s, up) => `
+      <section class="band p2-transit">
+        <div class="wrap">
+          <div class="p2-transit-head reveal">
+            <div>
+              <h2>${lines2(s.h)}</h2>
+              <p>${esc(s.lead)}</p>
+            </div>
+            <a class="btn btn-mint" href="${APP_URL}">${esc(s.btn)}</a>
+          </div>
+${s.rows.map((row) => `          <div class="p2-transit-row">
+${row.map((c) => `            <article class="p2-tcard${c.wide ? ' p2-tcard-wide' : ''}${c.foot ? ' p2-tcard-foot' : ''} reveal" style="--grad: ${c.grad ? `linear-gradient(to bottom, ${c.grad.join(', ')})` : c.bg}">
+              <div class="p2-tcard-t">
+                <h3>${esc(c.h)}</h3>
+                <p>${esc(c.p)}</p>
+              </div>
+${c.mini ? `              <div class="p2-mini">
+${c.mini.map(([k, v]) => `                <div class="p2-rrow"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('\n')}
+              </div>` : ''}
+            </article>`).join('\n')}
+          </div>`).join('\n')}
         </div>
       </section>`,
 

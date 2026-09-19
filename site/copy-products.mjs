@@ -317,6 +317,7 @@ export const PRODUCTS = [
         ] },
 
       { type: 'siblings', h: 'There is more in the app.', badge: 'letter', hSize: 34,
+        gap: 34, cardGap: 24,
         cards: [
           ['tokenized-stocks', 'T', 'Tokenized stocks', 'Invest in Nigerian and US companies from one app.', 'Explore tokenized stocks'],
           ['receive', 'R', 'Receive and send', 'Get paid into Tokkenly, and send from the same place.', 'Explore receive and send'],
@@ -391,6 +392,87 @@ export const PRODUCTS = [
   /* ------------------------------------------------------------- everyday -- */
   {
     slug: 'receive',
+    /* Frame 644:1611. The frame merges receive and send into one page: the
+       hero, then money in and money out side by side, then what happens while
+       it is moving, then the questions, the siblings and the close. */
+    sections: [
+      { type: 'phero', align: 'left', eyebrow: 'Receive and send',
+        h: 'Receive and send money',
+        lead: 'Get paid, support loved ones, or move money where you need it.\nKeep it in Tokkenly, ready for whatever comes next.',
+        ctas: [['Get Started', 'ink', null], ['See how it works', 'white', '#more']],
+        wash: ['#c7e1ff', '#c7e1ff 20%', '#f8c8ff 58%', '#eaeae9'],
+        washH: 42.344, height: 53.333,
+        panel: { l: 62.604, t: 11.823, w: 26.563, big: true,
+          head: ['You are sending', '$120.00'],
+          pairs: [['To', 'Adaeze Okonkwo'], ['Paying with', 'USDC'],
+                  ['They receive', '$120.00'], ['Fee', 'No fee']],
+          rows: [['Arrives', 'In about a minute']],
+          btn: 'Send $120.00' } },
+
+      { type: 'twoside',
+        h: 'Money in, and money out.',
+        lead: 'Three ways it can reach you, and three places it can go. Both sides sit in the same balance.',
+        btn: 'See how to get paid',
+        cards: [
+          { grad: ['#2bbd9b', '#c7e1ff 53%', '#d1cbc2'], foot: true, pill: 'Money in',
+            h: 'However they pay you.',
+            p: 'Your own account number, in your own name, at a Nigerian bank. For stablecoins, an address on the network you chose.',
+            panel: { l: 7.661, t: -16.317, w: 84.812,
+              head: ['Your account number', '7043 118 220'],
+              list: [['N', 'Wema Bank', '7043 118 220 \u00B7 Amara Nwosu', 'Naira'],
+                     ['B', 'Base', '0x7a2f\u20264c19', 'USDC'],
+                     ['T', 'Tron', 'TJmv\u20269Qp4', 'USDT']],
+              note: 'Nothing to receive, whichever route they use.' } },
+          { grad: ['#f7b79a', '#f8c8ff 64%', '#d1cbc2 82%'], pill: 'Money out',
+            h: 'Wherever it needs to go.',
+            p: 'A person on Tokkenly, a crypto wallet, or a Nigerian bank account. One screen asks the question once.',
+            panel: { l: 4.973, t: 40.226, w: 107.258,
+              head: ['You are sending', '$120.00'],
+              list: [['A', 'Adaeze Okonkwo', 'On Tokkenly', 'Instant'],
+                     ['W', 'A crypto wallet', 'Base \u00B7 USDC', 'Network fee'],
+                     ['B', 'A Nigerian account', 'GTBank \u00B7 0221\u2026', 'Minutes']],
+              note: 'The fee is on the screen, in money, before you confirm.' } },
+        ] },
+
+      { type: 'intransit',
+        h: 'What happens while it is moving.',
+        lead: 'Money in transit gets a row of its own, so a balance never jumps without an explanation.',
+        btn: 'Signup now',
+        rows: [
+          [{ wide: true, bg: '#d1cbc2', h: 'It says where it actually is.',
+             p: 'In route, at the bank, not landed yet \u2014 not a balance that jumps with no explanation.',
+             mini: [['Sent', '14:02'], ['At the bank', '14:03'], ['Landed', '\u2014']] },
+           { grad: ['#d1cbc2', '#fac6ff'], h: 'Still moving is not spendable.',
+             p: 'The screen keeps the two apart until it lands, so one is never mistaken for the other.' }],
+          [{ grad: ['#d1cbc2', '#c8e1ff'], h: 'It ends in a receipt.',
+             p: 'When it lands the row becomes a record you can find again in Activity.' },
+           { wide: true, bg: '#d1cbc2', foot: true, h: 'Your limit is on the screen.',
+             p: 'Until your identity check is done, outgoing payments are capped \u2014 and the cap is shown rather than discovered when a payment fails.',
+             mini: [['Sent today', '$120.00'], ['Daily cap', '$500.00'], ['Left today', '$380.00']] }],
+        ] },
+
+      { type: 'pfaq', h: 'A few things you might be wondering.',
+        items: [
+          ['What do I give someone so they can pay me?',
+           'Your account number at a Nigerian bank, in your own name, or an address on the network you chose. Both are on the same screen.'],
+          ['Why is money I received not spendable yet?',
+           'It is still moving. The row says where it is, and the screen keeps what is in transit apart from what you can spend until it lands.'],
+          ['What happens if a payment fails?',
+           'It comes back to your balance and the row says why. Nothing is held quietly.'],
+          ['Can I send to a bank that is not mine?',
+           'Yes. A person on Tokkenly, a crypto wallet or any Nigerian account \u2014 one screen asks the question once.'],
+        ] },
+
+      { type: 'siblings', h: 'There is more in the app.', badge: 'letter', hSize: 34,
+        pad: [20, 140], gap: 34, cardGap: 24,
+        cards: [
+          ['tokenized-stocks', 'T', 'Tokenized stocks', 'Invest in Nigerian and US companies from one app.', 'Explore tokenized stocks'],
+          ['pay-bills', 'P', 'Pay bills', 'Airtime, data and electricity from the balance you hold.', 'Explore pay bills'],
+          ['convert', 'C', 'Convert', 'Move between naira and stablecoins without leaving the app.', 'Explore convert'],
+        ] },
+
+      { type: 'pclose', tall: true },
+    ],
     close: ['Give out your details once.', 'Then get paid into the same app you invest and spend from.'],
     nav: 'Receive',
     eyebrow: 'Receive',
