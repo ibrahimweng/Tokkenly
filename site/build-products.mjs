@@ -518,6 +518,11 @@ const closingProd = (p, up, s) => `
    once, here, so the rebuild can move a page without hunting through copy. */
 /* The frame types these as glyphs rather than drawing them, so they are
    characters here too and inherit the line's colour. */
+/* Art the hero draws in front of its words, and which the frame lets hang
+   over the foot of the band rather than cutting at it. Everything else is
+   behind the words and is cut. */
+const FRONT_ART = new Set(['inset', 'coin'])
+
 const CROSS2 = '&#10005;'
 const TICK2 = '&#10003;'
 
@@ -535,7 +540,7 @@ const SIBS = {
 /* The hero receipt: a white card the frame floats over the art, written out
    rather than screenshotted, the same way the landing page's panels are. */
 const panel2 = (n) => `
-        <div class="p2-pn${n.big ? ' p2-pn-lg' : ''}${n.pay ? ' p2-pn-pay' : ''}" style="left:${n.l}%;top:${n.t}vw;width:${n.w}%" aria-hidden="true">
+        <div class="p2-pn${n.big ? ' p2-pn-lg' : ''}${n.pay ? ' p2-pn-pay' : ''}" style="left:${n.l}%;top:calc(${n.t} * var(--u));width:${n.w}%">
 ${n.swap ? `          <div class="p2-sw">
 ${n.swap.map(([k, v, tag]) => `            <div class="p2-sw-f"><span class="p2-sw-l"><i>${esc(k)}</i><b>${v}</b></span><span class="p2-sw-t">${esc(tag)}</span></div>`).join('\n')}
           </div>` : ''}
@@ -600,11 +605,17 @@ const KIT2 = {
         s.hSize ? `--hfs:clamp(${Math.round(s.hSize[0] * 0.4)}px, ${(s.hSize[0] / 19.2).toFixed(3)}vw, ${s.hSize[0]}px);--hflh:${s.hSize[1]}` : '',
         s.gaps ? `--hg1:min(${s.gaps[0]}px, ${(s.gaps[0] / 19.2).toFixed(3)}vw);--hg3:min(${s.gaps[1] - s.gaps[0]}px, ${((s.gaps[1] - s.gaps[0]) / 19.2).toFixed(3)}vw)` : '',
       ].filter(Boolean).join(';')}">
-${s.wash ? `        <div class="p2-wash" aria-hidden="true"
-             style="--w: ${typeof s.wash === 'string' ? s.wash : `radial-gradient(118% 92% at 50% -2%, ${s.wash.join(', ')})`}${s.washH ? `;--wh:${s.washH}vw` : ''}"></div>` : ''}
-${s.mask ? `        <span class="p2-mask" style="left:${s.mask.l}%;top:${s.mask.t}vw;width:${s.mask.w}%;aspect-ratio:${s.mask.w} / ${s.mask.h}" aria-hidden="true"><img src="${up}img/${s.mask.src}" alt="" /></span>` : ''}
-${(s.coins || []).map(([name, w, d, fx, sl, st, sw]) => `        <span class="p2-coin${fx ? ' p2-coin-fx' : ''}" style="--b:${w}%;--d:${d}s;--sl:${sl}%;--st:${st}vw;--sw:${sw}%" aria-hidden="true"><img src="${up}img/ts/coin-${name}.webp" alt="" /></span>`).join('\n')}
-${(s.art || []).map(([kind, src, l, t, w]) => `        <img class="p2-art p2-art-${kind}" src="${up}img/${src}" style="left:${l}%;top:${t}vw;width:${w}%" alt="" aria-hidden="true" />`).join('\n')}
+        <div class="p2-hero-clip" aria-hidden="true">
+${s.wash ? `          <div class="p2-wash"
+               style="--w: ${typeof s.wash === 'string' ? s.wash : `radial-gradient(118% 92% at 50% -2%, ${s.wash.join(', ')})`}${s.washH ? `;--wh:${s.washH}vw` : ''}"></div>` : ''}
+          <div class="p2-hero-art">
+${s.mask ? `            <span class="p2-mask" style="left:${s.mask.l}%;top:calc(${s.mask.t} * var(--u));width:${s.mask.w}%;aspect-ratio:${s.mask.w} / ${s.mask.h}"><img src="${up}img/${s.mask.src}" alt="" /></span>` : ''}
+${s.coins ? `            <div class="p2-coins">
+${s.coins.map(([name, w, d, fx, sl, st, sw]) => `              <span class="p2-coin${fx ? ' p2-coin-fx' : ''}" style="--b:${w}%;--d:${d}s;--sl:${sl}%;--st:calc(${st} * var(--u));--sw:${sw}%"><img src="${up}img/ts/coin-${name}.webp" alt="" /></span>`).join('\n')}
+            </div>` : ''}
+${(s.art || []).filter(([kind]) => !FRONT_ART.has(kind)).map(([kind, src, l, t, w]) => `            <img class="p2-art p2-art-${kind}" src="${up}img/${src}" style="left:${l}%;top:calc(${t} * var(--u));width:${w}%" alt="" />`).join('\n')}
+          </div>
+        </div>
         <div class="wrap p2-hero-in">
 ${s.eyebrow ? `          <p class="eyebrow hero-intro" style="--hero-d: 0s">${esc(s.eyebrow)}</p>` : ''}
 ${s.pill ? `          <span class="p2-pill${s.caps ? ' p2-pill-caps' : ''} hero-intro" style="--hero-d: 0s">${esc(s.pill)}</span>` : ''}
@@ -614,7 +625,10 @@ ${s.pill ? `          <span class="p2-pill${s.caps ? ' p2-pill-caps' : ''} hero-
 ${s.ctas.map(([label, tone, href]) => `            <a class="btn btn-${tone}" href="${href || APP_URL}">${esc(label)}</a>`).join('\n')}
           </div>
         </div>
+${((s.art || []).some(([kind]) => FRONT_ART.has(kind)) || s.panel) ? `        <div class="p2-hero-art p2-hero-front" aria-hidden="true">
+${(s.art || []).filter(([kind]) => FRONT_ART.has(kind)).map(([kind, src, l, t, w]) => `          <img class="p2-art p2-art-${kind}" src="${up}img/${src}" style="left:${l}%;top:calc(${t} * var(--u));width:${w}%" alt="" />`).join('\n')}
 ${s.panel ? panel2(s.panel) : ''}
+        </div>` : ''}
       </section>`,
 
   /* Three 485 cards on the 1520, each a gradient with a white fragment of the
@@ -996,7 +1010,12 @@ ${bePanel(n.panel, 'be-half-pn')}
           <h2 class="be-steps-h reveal">${esc(s.h)}</h2>
           <div class="be-steps-row">
 ${s.steps.map((n) => `            <article class="be-step reveal">
-              <span class="be-step-art" style="--fill:${n.fill}" aria-hidden="true"></span>
+              <span class="be-step-art" style="--fill:${n.fill}" aria-hidden="true">
+                <span class="p2-frag be-step-frag">
+                  <span class="p2-fhead"><span>${esc(n.frag.k)}</span><b>${n.frag.v}</b></span>
+${n.frag.rows.map(([k, v]) => `                  <span class="p2-rrow"><span>${esc(k)}</span><b>${v}</b></span>`).join('\n')}
+                </span>
+              </span>
               <span class="be-step-n" aria-hidden="true">${n.n}</span>
               <h3>${esc(n.h)}</h3>
               <p>${esc(n.p)}</p>

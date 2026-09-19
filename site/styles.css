@@ -3297,7 +3297,7 @@ textarea.cf-input {
 /* 1169 tall on the 1920, 184 over the words and 104 under them, with the wash
    stopping 32 short of the foot and the coins laid across the whole band. */
 .p2-hero {
-  position: relative; isolation: isolate; overflow: hidden;
+  position: relative; isolation: isolate;
   min-height: min(var(--hhp, 1169px), var(--hh, 60.885vw));
   padding-top: min(184px, 9.583vw); padding-bottom: var(--hpb, min(104px, 5.417vw));
   display: grid; align-content: start;
@@ -3321,8 +3321,44 @@ textarea.cf-input {
    so a coin is fully out of sight before it wraps. Positions are viewport
    widths because the hero is the viewport wide; translate's own -50% centres
    each coin on the path rather than hanging it from its corner. */
+/* The band the coins are measured against, not the viewport. The hero's own
+   height stops growing at the frame's 1169, so a path in viewport widths
+   keeps sinking past the foot of it on anything wider than 1920 — at 2560 the
+   middle of the arc lands 330 below the band and overflow slices the coins in
+   half. This layer caps at 1920 and centres, and --u is the unit everything
+   inside it is written in: a viewport width up to 1920, and 19.2px after
+   that. Below 1920 the two are the same number, so nothing moves. */
+/* Everything the hero draws behind and over its words lives in here, and it
+   is this layer — not the viewport — that the art is measured against. The
+   hero's own height stops growing at the frame's number, so anything placed
+   in viewport widths keeps sinking past the foot of the band on a screen
+   wider than 1920: the coin arc lands 330 low at 2560, and Pay bills' receipt
+   starts below the band altogether. The layer caps at 1920 and centres, the
+   way the column inside it does, and --u is the unit its children are written
+   in: a viewport width up to 1920, and 19.2px after that. Below 1920 the two
+   are the same number, so nothing moves.
+
+   Inset rather than a transform on purpose: a transform would make this a
+   stacking context and trap the children, and they have to keep sitting on
+   either side of the words — the coins behind, the receipt in front. */
+/* The hero itself no longer clips: the frame lets some of its art hang over
+   the foot of the band — Gifting's small portrait carries on into the two-
+   ways band under it — and a section that clips cuts that off. The clipping
+   moves in here instead, full bleed so a coin still leaves at the screen's
+   edge rather than at the capped layer's. */
+.p2-hero-clip { position: absolute; inset: 0; overflow: hidden; z-index: -1; }
+/* In front of the words and not clipped: the receipt, and the art the frame
+   draws over the foot of the band. */
+.p2-hero-front { z-index: 1; }
+.p2-hero-art {
+  --u: min(1vw, 19.2px);
+  position: absolute; top: 0; height: 100%; pointer-events: none;
+  left: max(0px, calc((100% - 1920px) / 2));
+  right: max(0px, calc((100% - 1920px) / 2));
+}
+.p2-coins { position: absolute; inset: 0; z-index: -1; }
 .p2-coin {
-  position: absolute; left: 0; top: 0; z-index: -1; pointer-events: none;
+  position: absolute; left: 0; top: 0;
   width: var(--b); will-change: transform;
   animation: p2-coin-run 18s linear infinite;
   animation-delay: var(--d);
@@ -3345,31 +3381,31 @@ textarea.cf-input {
 .p2-coin-fx img { transform: scaleX(-1); }
 
 @keyframes p2-coin-run {
-  0% { transform: translate(calc(-15.625vw - 50%), calc(28.105vw - 50%)) scale(0.4995); }
-  4.17% { transform: translate(calc(-10.156vw - 50%), calc(31.571vw - 50%)) scale(0.5318); }
-  8.33% { transform: translate(calc(-4.688vw - 50%), calc(34.696vw - 50%)) scale(0.5721); }
-  12.50% { transform: translate(calc(0.781vw - 50%), calc(37.480vw - 50%)) scale(0.6205); }
-  16.67% { transform: translate(calc(6.250vw - 50%), calc(39.923vw - 50%)) scale(0.6759); }
-  20.83% { transform: translate(calc(11.719vw - 50%), calc(42.024vw - 50%)) scale(0.7365); }
-  25% { transform: translate(calc(17.188vw - 50%), calc(43.785vw - 50%)) scale(0.7992); }
-  29.17% { transform: translate(calc(22.656vw - 50%), calc(45.204vw - 50%)) scale(0.8600); }
-  33.33% { transform: translate(calc(28.125vw - 50%), calc(46.283vw - 50%)) scale(0.9145); }
-  37.50% { transform: translate(calc(33.594vw - 50%), calc(47.020vw - 50%)) scale(0.9583); }
-  41.67% { transform: translate(calc(39.063vw - 50%), calc(47.416vw - 50%)) scale(0.9876); }
-  45.83% { transform: translate(calc(44.531vw - 50%), calc(47.470vw - 50%)) scale(0.9998); }
-  50% { transform: translate(calc(50.000vw - 50%), calc(47.184vw - 50%)) scale(0.9936); }
-  54.17% { transform: translate(calc(55.469vw - 50%), calc(46.557vw - 50%)) scale(0.9696); }
-  58.33% { transform: translate(calc(60.938vw - 50%), calc(45.588vw - 50%)) scale(0.9302); }
-  62.50% { transform: translate(calc(66.406vw - 50%), calc(44.279vw - 50%)) scale(0.8787); }
-  66.67% { transform: translate(calc(71.875vw - 50%), calc(42.628vw - 50%)) scale(0.8194); }
-  70.83% { transform: translate(calc(77.344vw - 50%), calc(40.636vw - 50%)) scale(0.7569); }
-  75% { transform: translate(calc(82.813vw - 50%), calc(38.303vw - 50%)) scale(0.6953); }
-  79.17% { transform: translate(calc(88.281vw - 50%), calc(35.629vw - 50%)) scale(0.6379); }
-  83.33% { transform: translate(calc(93.750vw - 50%), calc(32.614vw - 50%)) scale(0.5870); }
-  87.50% { transform: translate(calc(99.219vw - 50%), calc(29.257vw - 50%)) scale(0.5440); }
-  91.67% { transform: translate(calc(104.688vw - 50%), calc(25.560vw - 50%)) scale(0.5092); }
-  95.83% { transform: translate(calc(110.156vw - 50%), calc(21.521vw - 50%)) scale(0.4821); }
-  100% { transform: translate(calc(115.625vw - 50%), calc(17.141vw - 50%)) scale(0.4619); }
+  0% { transform: translate(calc(-15.625 * var(--u) - 50%), calc(28.105 * var(--u) - 50%)) scale(0.4995); }
+  4.17% { transform: translate(calc(-10.156 * var(--u) - 50%), calc(31.571 * var(--u) - 50%)) scale(0.5318); }
+  8.33% { transform: translate(calc(-4.688 * var(--u) - 50%), calc(34.696 * var(--u) - 50%)) scale(0.5721); }
+  12.50% { transform: translate(calc(0.781 * var(--u) - 50%), calc(37.480 * var(--u) - 50%)) scale(0.6205); }
+  16.67% { transform: translate(calc(6.250 * var(--u) - 50%), calc(39.923 * var(--u) - 50%)) scale(0.6759); }
+  20.83% { transform: translate(calc(11.719 * var(--u) - 50%), calc(42.024 * var(--u) - 50%)) scale(0.7365); }
+  25% { transform: translate(calc(17.188 * var(--u) - 50%), calc(43.785 * var(--u) - 50%)) scale(0.7992); }
+  29.17% { transform: translate(calc(22.656 * var(--u) - 50%), calc(45.204 * var(--u) - 50%)) scale(0.8600); }
+  33.33% { transform: translate(calc(28.125 * var(--u) - 50%), calc(46.283 * var(--u) - 50%)) scale(0.9145); }
+  37.50% { transform: translate(calc(33.594 * var(--u) - 50%), calc(47.020 * var(--u) - 50%)) scale(0.9583); }
+  41.67% { transform: translate(calc(39.063 * var(--u) - 50%), calc(47.416 * var(--u) - 50%)) scale(0.9876); }
+  45.83% { transform: translate(calc(44.531 * var(--u) - 50%), calc(47.470 * var(--u) - 50%)) scale(0.9998); }
+  50% { transform: translate(calc(50.000 * var(--u) - 50%), calc(47.184 * var(--u) - 50%)) scale(0.9936); }
+  54.17% { transform: translate(calc(55.469 * var(--u) - 50%), calc(46.557 * var(--u) - 50%)) scale(0.9696); }
+  58.33% { transform: translate(calc(60.938 * var(--u) - 50%), calc(45.588 * var(--u) - 50%)) scale(0.9302); }
+  62.50% { transform: translate(calc(66.406 * var(--u) - 50%), calc(44.279 * var(--u) - 50%)) scale(0.8787); }
+  66.67% { transform: translate(calc(71.875 * var(--u) - 50%), calc(42.628 * var(--u) - 50%)) scale(0.8194); }
+  70.83% { transform: translate(calc(77.344 * var(--u) - 50%), calc(40.636 * var(--u) - 50%)) scale(0.7569); }
+  75% { transform: translate(calc(82.813 * var(--u) - 50%), calc(38.303 * var(--u) - 50%)) scale(0.6953); }
+  79.17% { transform: translate(calc(88.281 * var(--u) - 50%), calc(35.629 * var(--u) - 50%)) scale(0.6379); }
+  83.33% { transform: translate(calc(93.750 * var(--u) - 50%), calc(32.614 * var(--u) - 50%)) scale(0.5870); }
+  87.50% { transform: translate(calc(99.219 * var(--u) - 50%), calc(29.257 * var(--u) - 50%)) scale(0.5440); }
+  91.67% { transform: translate(calc(104.688 * var(--u) - 50%), calc(25.560 * var(--u) - 50%)) scale(0.5092); }
+  95.83% { transform: translate(calc(110.156 * var(--u) - 50%), calc(21.521 * var(--u) - 50%)) scale(0.4821); }
+  100% { transform: translate(calc(115.625 * var(--u) - 50%), calc(17.141 * var(--u) - 50%)) scale(0.4619); }
 }
 
 .p2-hero-in {
@@ -3795,8 +3831,12 @@ textarea.cf-input {
 /* 744 x 619, and the white panel inside is allowed out of it: on one side it
    rides up over the top edge, on the other it runs past the right. Clipping
    either would put the pair back to being one object drawn twice. */
+/* The card clips. The frame hangs its panel 101 over the top on one side and
+   54 past the right edge and 104 below on the other, and the card cuts all
+   three — without that the panels float free of the cards and the left one
+   lands on the button above the band. */
 .p2-side {
-  position: relative; aspect-ratio: 744 / 619;
+  position: relative; overflow: hidden; aspect-ratio: 744 / 619;
   border-radius: min(40px, 2.083vw); background: var(--grad);
 }
 .p2-side-copy {
@@ -3820,7 +3860,13 @@ textarea.cf-input {
   display: grid; gap: min(26px, 1.354vw);
   box-shadow: 0 18px 44px rgba(5, 51, 41, 0.10);
 }
-.p2-sp-head { display: grid; gap: min(8px, 0.417vw); }
+/* A row, not a stack: the label sits against the figure, the way the frame
+   draws it. Stacked it runs 70 tall, and on the card that hangs 101 over the
+   top that is enough to leave the figure showing where nothing should. */
+.p2-sp-head {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center; gap: min(16px, 0.834vw);
+}
 .p2-sp-head span { font-size: clamp(12px, 0.88vw, 16.9px); font-weight: 600; color: var(--muted); }
 .p2-sp-head b {
   font-size: clamp(22px, 1.99vw, 38px); font-weight: 700; line-height: 1.1;
@@ -4491,4 +4537,25 @@ textarea.cf-input {
   .be-halves-cloud { display: none; }
   .be-halves { padding-block: min(80px, 9vw) 0; }
   .be-steps { padding-block: min(80px, 9vw); }
+}
+
+/* ---- what the step cards hold (the frame leaves them empty) ------------ */
+.be-step-art { position: relative; overflow: hidden; }
+.be-step-frag {
+  position: absolute; left: 9.402%; top: 38.236%; width: 81.197%;
+  padding: min(20px, 1.042vw); border-radius: min(18px, 0.938vw);
+  z-index: 1;
+}
+.be-step-frag .p2-fhead { display: flex; padding-bottom: 0; }
+.be-step-frag .p2-fhead span {
+  text-transform: uppercase; letter-spacing: 0.07em; line-height: 1.19;
+  font-size: clamp(9.5px, 0.573vw, 11px); font-weight: 600; color: var(--muted);
+}
+.be-step-frag .p2-fhead b { line-height: 1.15; }
+.be-step-frag .p2-rrow { display: flex; }
+.be-step-frag .p2-rrow span { line-height: 1.186; }
+.be-step-frag .p2-rrow b { line-height: 1.215; }
+
+@media (max-width: 1040px) {
+  .be-step-frag { left: 8%; right: 8%; width: auto; }
 }

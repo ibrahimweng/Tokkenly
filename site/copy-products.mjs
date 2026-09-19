@@ -778,13 +778,21 @@ export const PRODUCTS = [
         ] },
 
       { type: 'besteps', h: 'Start to finish.',
+        /* The frame leaves these three cards empty. They carry the same
+           written-out fragment the rest of the site uses, one per step. */
         steps: [
           { n: '01', fill: '#d9d5ce', h: 'See what is available',
-            p: 'A figure based on what you hold, with the terms beside it.' },
+            p: 'A figure based on what you hold, with the terms beside it.',
+            frag: { k: 'You could borrow', v: '$812.00',
+                    rows: [['Backed by', '$1,624.00'], ['Rate', '9.4% a year'], ['Ready', 'Now']] } },
           { n: '02', fill: 'linear-gradient(to bottom, #f8c8ff, #e0cbd9)', h: 'Read the cost',
-            p: 'The rate, the total and the repayments, in money you can check.' },
+            p: 'The rate, the total and the repayments, in money you can check.',
+            frag: { k: 'Before you agree', v: '9.4%',
+                    rows: [['You borrow', '$200.00'], ['A month', 'About $1.57'], ['Total', '$201.57']] } },
           { n: '03', fill: '#d9d5ce', h: 'Keep track',
-            p: 'What you owe sits apart from what you have, so the two are never confused.' },
+            p: 'What you owe sits apart from what you have, so the two are never confused.',
+            frag: { k: 'What you owe', v: '$201.57',
+                    rows: [['Borrowed', '$200.00'], ['Interest so far', '$1.57'], ['Repay', 'Any time']] } },
         ] },
 
       { type: 'pfaq', loose: true, eyebrow: 'Questions', h: 'Worth asking.',
