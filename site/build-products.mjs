@@ -845,14 +845,18 @@ ${sidePanel(c.panel)}
             <a class="btn btn-mint" href="${APP_URL}">${esc(s.btn)}</a>
           </div>
 ${s.rows.map((row) => `          <div class="p2-transit-row">
-${row.map((c) => `            <article class="p2-tcard${c.wide ? ' p2-tcard-wide' : ''}${c.foot ? ' p2-tcard-foot' : ''} reveal" style="--grad: ${c.grad ? `linear-gradient(to bottom, ${c.grad.join(', ')})` : c.bg}">
-              <div class="p2-tcard-t">
+${row.map((c) => `            <article class="p2-tcard${c.wide ? ' p2-tcard-wide' : ''}${c.tight ? ' p2-tcard-tight' : ''} reveal" style="--grad: ${c.grad ? `linear-gradient(to bottom, ${c.grad.join(', ')})` : c.bg}">
+${c.art ? `              <img class="p2-tcard-art" src="${up}img/${c.art.src}" alt="" aria-hidden="true" loading="lazy"
+                   style="left:${c.art.l}%;top:${c.art.t}%;width:${c.art.w}%;aspect-ratio:${c.art.ar[0]} / ${c.art.ar[1]}" />` : ''}
+${c.mini ? `              <div class="p2-mini${c.mini.tone === 'tan' ? ' p2-mini-tan' : ''}" style="--ml:${c.mini.l}%;--mt:${c.mini.t}%;--mw:${c.mini.w}%;--mh:${c.mini.h}%">
+${c.mini.rows.map(([k, v]) => `                <div class="p2-rrow"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('\n')}
+              </div>` : ''}
+              <div class="p2-tcard-t${c.textAt ? ' p2-tcard-t-at' : ''}"${c.textAt ? ` style="--tl:${c.textAt.l}%;--tt:${c.textAt.t}%;--tw:${c.textAt.w}%"` : ''}>
                 <h3>${esc(c.h)}</h3>
                 <p>${esc(c.p)}</p>
               </div>
-${c.mini ? `              <div class="p2-mini">
-${c.mini.map(([k, v]) => `                <div class="p2-rrow"><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join('\n')}
-              </div>` : ''}
+${c.cursor ? `              <img class="p2-tcard-cur" src="${up}img/rs/cursor.svg" alt="" aria-hidden="true"
+                   style="left:${c.cursor.l}%;top:${c.cursor.t}%;width:${c.cursor.w}%" />` : ''}
             </article>`).join('\n')}
           </div>`).join('\n')}
         </div>

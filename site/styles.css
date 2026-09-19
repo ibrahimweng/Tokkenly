@@ -3921,18 +3921,58 @@ textarea.cf-input {
   display: grid; align-content: start; gap: min(24px, 1.25vw);
 }
 .p2-tcard-wide { aspect-ratio: 908 / 360; }
-.p2-tcard-foot { align-content: space-between; }
-.p2-tcard-t { display: grid; gap: min(12px, 0.625vw); max-width: min(560px, 100%); }
-.p2-tcard h3 {
-  font-size: clamp(19px, 1.459vw, 28px); line-height: 1.16; letter-spacing: -0.03em; color: var(--ink);
+/* The receipt card sets its words a notch tighter than the other three. */
+.p2-tcard-tight { padding: min(38px, 2.639vw) min(36px, 2.5vw); }
+.p2-tcard-t { display: grid; gap: min(12px, 0.625vw); max-width: 100%; }
+/* A card whose words are placed rather than stacked: the frame drops them
+   below the fragment instead of running the fragment under them. */
+.p2-tcard-t-at {
+  position: absolute; max-width: none;
+  left: var(--tl); top: var(--tt); width: var(--tw);
 }
-.p2-tcard p { font-size: clamp(14px, 0.86vw, 16.5px); line-height: 1.5; color: rgba(5, 51, 41, 0.72); }
+/* The dark band sets its cards in the near-black, not the deep green the
+   rest of the page uses. */
+.p2-tcard h3 {
+  font-size: clamp(19px, 1.459vw, 28px); line-height: 1.16; letter-spacing: -0.03em; color: #1e1818;
+}
+.p2-tcard p { font-size: clamp(14px, 0.86vw, 16.5px); line-height: 1.5; color: rgba(30, 24, 24, 0.72); }
+.p2-tcard .p2-rrow span { color: rgba(30, 24, 24, 0.66); }
+.p2-tcard .p2-rrow b { color: #1e1818; }
+/* The frame's rows are 44 on a line box of 18, and its two panels space them
+   differently: the white one leaves 12 either side of every rule, the tan one
+   runs its rows straight into them. One pitch for both put the tan panel's
+   rows 15 out by the third, which is most of what was wrong here. */
+.p2-tcard .p2-rrow { line-height: 1.3; }
+.p2-mini:not(.p2-mini-tan) { row-gap: min(12px, 0.625vw); }
+.p2-mini:not(.p2-mini-tan) .p2-rrow + .p2-rrow { padding-top: min(25px, 1.302vw); }
+.p2-mini-tan .p2-rrow { line-height: 1.214; }
+/* and it is the one place in the band that sets its figures in the green */
+.p2-mini-tan .p2-rrow b { color: var(--ink); }
+/* Placed by the frame's box over the card, not sized to its own rows: both
+   of these are taller than the room they are given and are cut by the card,
+   the first past its foot and the second over its head. */
 .p2-mini {
-  align-self: end; width: min(360px, 46%);
-  background: #fff; border-radius: min(18px, 0.938vw); padding: 0 min(18px, 0.938vw);
+  position: absolute; overflow: hidden;
+  left: var(--ml); top: var(--mt); width: var(--mw); height: var(--mh);
+  display: grid; align-content: start;
+  background: #fff; border-radius: min(18px, 0.938vw);
+  padding: min(6px, 0.313vw) 2.195% 0;
 }
 .p2-mini .p2-rrow:first-child { border-top: 0; }
-.p2-tcard-wide .p2-mini { justify-self: end; }
+/* The one on the dark card is a tint of that card rather than white, and it
+   hangs off the top of it, so its rows are set from the foot up. */
+.p2-mini-tan {
+  background: #bfb8b0; align-content: end;
+  padding: 0 2.195% min(8px, 0.417vw);
+}
+.p2-mini-tan .p2-rrow + .p2-rrow { border-top-color: #aeaca4; }
+/* The props the frame lays over these cards. Each is placed by its own box
+   and left to be cut by the card it sits on. */
+.p2-tcard-art {
+  position: absolute; height: auto; max-width: none;
+  object-fit: contain; pointer-events: none;
+}
+.p2-tcard-cur { position: absolute; height: auto; pointer-events: none; z-index: 1; }
 
 /* The taller hero receipt (694:1608): five rows rather than four, and no
    note under them. */
@@ -3953,7 +3993,20 @@ textarea.cf-input {
   .p2-transit-head > div { max-width: 100%; }
   .p2-transit-row, .p2-transit-row:nth-of-type(odd) { grid-template-columns: minmax(0, 1fr); gap: 24px; }
   .p2-tcard, .p2-tcard-wide { aspect-ratio: auto; min-height: 280px; }
-  .p2-mini { width: 100%; }
+  /* Nothing can be placed against a card with no height of its own, so the
+     fragment goes back in the flow and the props step aside. */
+  .p2-mini, .p2-tcard-t-at {
+    position: static; left: auto; top: auto; width: 100%; height: auto;
+    padding-inline: min(18px, 4%);
+  }
+  .p2-mini-tan { align-content: start; }
+  /* The frame hangs one of the fragments over the head of its card, which
+     only reads as placement. Stacked, the words come first on both. */
+  .p2-tcard-t, .p2-tcard-t-at { order: -1; }
+  /* and the rows go back to being parted by the rule alone */
+  .p2-mini:not(.p2-mini-tan) { row-gap: 0; }
+  .p2-mini:not(.p2-mini-tan) .p2-rrow + .p2-rrow { padding-top: 0; }
+  .p2-tcard-art, .p2-tcard-cur { display: none; }
 }
 
 

@@ -439,17 +439,29 @@ export const PRODUCTS = [
         h: 'What happens while it is moving.',
         lead: 'Money in transit gets a row of its own, so a balance never jumps without an explanation.',
         btn: 'Signup now',
+        /* Every placement below is the frame's own box over its card's:
+           645:1617 the mini, 697:1729 the gun, 696:878 the receipt,
+           666:1641 the frag and 679:1643 the cursor. Two of them are meant
+           to run off the card and be cut by it \u2014 the mini past the foot,
+           the frag over the head \u2014 so the tops and heights are the
+           frame's, not what fits. */
         rows: [
           [{ wide: true, bg: '#d1cbc2', h: 'It says where it actually is.',
              p: 'In route, at the bank, not landed yet \u2014 not a balance that jumps with no explanation.',
-             mini: [['Sent', '14:02'], ['At the bank', '14:03'], ['Landed', '\u2014']] },
+             mini: { l: 4.846, t: 50, w: 90.308, h: 77.778,
+                     rows: [['Sent', '14:02'], ['At the bank', '14:03'], ['Landed', '\u2014']] } },
            { grad: ['#d1cbc2', '#fac6ff'], h: 'Still moving is not spendable.',
-             p: 'The screen keeps the two apart until it lands, so one is never mistaken for the other.' }],
-          [{ grad: ['#d1cbc2', '#c8e1ff'], h: 'It ends in a receipt.',
-             p: 'When it lands the row becomes a record you can find again in Activity.' },
-           { wide: true, bg: '#d1cbc2', foot: true, h: 'Your limit is on the screen.',
+             p: 'The screen keeps the two apart until it lands, so one is never mistaken for the other.',
+             art: { src: 'rs/money-gun.webp', l: 17.625, t: 16.944, w: 70.646, ar: [353.230, 452.701] } }],
+          [{ grad: ['#d1cbc2', '#c8e1ff'], tight: true, h: 'It ends in a receipt.',
+             p: 'When it lands the row becomes a record you can find again in Activity.',
+             art: { src: 'rs/receipt.webp', l: 7.2, t: 37.222, w: 76.123, ar: [380.617, 427.057] } },
+           { wide: true, bg: '#d1cbc2', h: 'Your limit is on the screen.',
              p: 'Until your identity check is done, outgoing payments are capped \u2014 and the cap is shown rather than discovered when a payment fails.',
-             mini: [['Sent today', '$120.00'], ['Daily cap', '$500.00'], ['Left today', '$380.00']] }],
+             textAt: { l: 4.846, t: 54.444, w: 90.308 },
+             cursor: { l: 86.712, t: 53.748, w: 3.109 },
+             mini: { l: 6.057, t: -11.944, w: 90.308, h: 60, tone: 'tan',
+                     rows: [['Sent today', '$120.00'], ['Daily cap', '$500.00'], ['Left today', '$380.00']] } }],
         ] },
 
       { type: 'pfaq', h: 'A few things you might be wondering.',
