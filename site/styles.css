@@ -3294,13 +3294,13 @@ textarea.cf-input {
    stopping 32 short of the foot and the coins laid across the whole band. */
 .p2-hero {
   position: relative; isolation: isolate; overflow: hidden;
-  min-height: min(1169px, 60.885vw);
+  min-height: min(1169px, var(--hh, 60.885vw));
   padding-top: min(184px, 9.583vw); padding-bottom: min(104px, 5.417vw);
   display: grid; align-content: start;
 }
 .p2-wash {
   position: absolute; left: 0; right: 0; top: 0; z-index: -2; pointer-events: none;
-  height: min(1137px, 59.219vw);
+  height: min(1137px, var(--wh, 59.219vw));
   background: var(--w);
 }
 /* Behind the words, in front of the wash, and moving. The frame lays the
@@ -3554,7 +3554,10 @@ textarea.cf-input {
 /* The same three-up grid as the landing page's related band, but in sand with
    dark type rather than deep green: this band sits on the page ground, not on
    a dark slab. */
-.p2-sibs .p2-head h2 { font-size: clamp(27px, 2.292vw, 44px); line-height: 1.02; max-width: min(760px, 50%); }
+/* 44 where the frame sets two lines, 34 where it sets one. */
+.p2-sibs .p2-head h2 {
+  font-size: clamp(27px, 2.292vw, var(--sh, 44px)); line-height: 1.02; max-width: min(760px, 50%);
+}
 .p2-sibs .prod-card {
   background: #d1cbc2; color: var(--ink);
   min-height: min(251px, 13.073vw);
@@ -3592,6 +3595,164 @@ textarea.cf-input {
   .p2-card-row { grid-template-columns: minmax(0, 1fr); }
   .p2-card, .p2-card:nth-child(3) { aspect-ratio: 485 / 400; }
   .p2-sibs .prod-card { min-height: 0; }
+}
+
+
+/* ---- hero, the left-hand variant (530:812) ----------------------------- */
+/* Same wash and the same 184 over the words, but the column holds the left
+   757 of the 1520 and the art runs off the right edge. */
+.p2-hero-left { display: grid; align-content: center; }
+.p2-hero-left .p2-hero-in { justify-items: start; text-align: left; }
+.p2-hero-left .p2-hero-in h1 { max-width: min(757px, 49.803%); }
+.p2-hero-left .p2-hero-lead { max-width: min(680px, 44.737%); }
+.p2-hero-left .p2-hero-in .cta-row { margin-top: min(13px, 0.677vw); }
+/* A photograph the section clips on three sides, and the small one over it. */
+.p2-art { position: absolute; z-index: -1; height: auto; max-width: none; pointer-events: none; }
+.p2-art-inset { z-index: 0; border-radius: min(24px, 1.25vw); }
+
+/* The hero receipt (530:827): the gift, written out. */
+.p2-pn {
+  position: absolute; z-index: 1;
+  background: #fff; border-radius: min(22px, 1.146vw);
+  padding: min(28px, 1.459vw);
+  display: grid; gap: min(18px, 0.938vw);
+  box-shadow: 0 18px 44px rgba(5, 51, 41, 0.10);
+}
+.p2-pn-head { display: grid; gap: min(6px, 0.313vw); }
+.p2-pn-head span {
+  font-size: clamp(9.5px, 0.573vw, 11px); font-weight: 600; line-height: 1.3; color: #6c7d78;
+}
+.p2-pn-head b {
+  font-size: clamp(24px, 1.875vw, 36px); font-weight: 700; line-height: 1.1;
+  letter-spacing: -0.03em; color: #1e1818;
+}
+.p2-pn-rows {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: min(14px, 0.729vw);
+  padding: min(18px, 0.938vw); border-radius: min(14px, 0.729vw); background: #f0efec;
+}
+.p2-pn-row { display: grid; gap: 3px; min-width: 0; }
+.p2-pn-row span { font-size: clamp(9.5px, 0.573vw, 11px); font-weight: 600; color: #6c7d78; }
+.p2-pn-row b {
+  font-size: clamp(12px, 0.729vw, 14px); font-weight: 600; line-height: 1.35; color: #1e1818;
+}
+.p2-pn-note { font-size: clamp(11px, 0.677vw, 13px); line-height: 1.5; color: #6c7d78; }
+.p2-pn-btn {
+  display: grid; place-items: center; height: min(52px, 2.709vw); border-radius: var(--r-pill);
+  background: #1e1818; color: #fff;
+  font-size: clamp(12px, 0.729vw, 14px); font-weight: 600;
+}
+
+/* ---- two-up cards, and the fragments only they carry ------------------- */
+/* The frame closes this head with an 18 spacer, and puts 48 rather than 56
+   between it and the cards. Both are kept: they are the difference between
+   the band measuring 1106 and measuring 1079. */
+.p2-head-mid { justify-items: center; text-align: center; padding-bottom: min(34px, 1.771vw); }
+.p2-cards .p2-head-mid + .p2-card-row { margin-top: min(48px, 2.5vw); }
+.p2-head-mid h2 { max-width: min(1100px, 72.368%); }
+.p2-head-mid > p:not(.eyebrow) { max-width: min(740px, 48.685%); }
+.p2-card-row { grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); }
+/* 744 x 560 rather than 485 x 400, so the copy sets bigger in it. */
+.p2-card-big { aspect-ratio: 744 / 560; }
+.p2-card-big .p2-card-copy { padding-inline: min(36px, 4.839%); }
+.p2-card-big .p2-card-copy h3 { font-size: clamp(22px, 1.875vw, 36px); line-height: 1.18; }
+
+.p2-ghost-g1 { left: 16.667%; top: 46.429%; width: 66.801%; aspect-ratio: 497 / 100; border-radius: min(18px, 0.938vw); }
+.p2-ghost-g2 { left: 14.382%; top: 49.107%; width: 71.371%; aspect-ratio: 531 / 100; border-radius: min(18px, 0.938vw); background: rgba(255, 255, 255, 0.48); }
+.p2-frag-gift {
+  left: 12.097%; top: 51.786%; width: 75.941%;
+  padding: min(20px, 1.042vw); display: grid; gap: min(12px, 0.625vw);
+}
+.p2-frag-gift .p2-frow { padding-block: 0; }
+.p2-badge-lg { width: min(38px, 1.979vw); height: min(38px, 1.979vw); font-size: clamp(12px, 0.782vw, 15px); }
+.p2-quote {
+  padding-top: min(13px, 0.677vw); border-top: 1px solid rgba(5, 51, 41, 0.09);
+  font-size: clamp(11.5px, 0.729vw, 14px); line-height: 1.5; color: var(--ink);
+}
+
+.p2-frag-rules { left: 15.591%; top: 40.893%; width: 68.817%; padding: min(20px, 1.042vw); }
+.p2-fhead {
+  display: flex; align-items: center; justify-content: space-between; gap: min(12px, 0.625vw);
+  padding-bottom: min(11px, 0.573vw);
+}
+.p2-fhead span { font-size: clamp(9.5px, 0.573vw, 11px); font-weight: 600; color: var(--muted); }
+.p2-fhead b {
+  font-size: clamp(15px, 1.042vw, 20px); font-weight: 700; letter-spacing: -0.02em; color: var(--ink);
+}
+.p2-rrow {
+  display: flex; align-items: center; justify-content: space-between; gap: min(16px, 0.834vw);
+  padding-block: min(13px, 0.677vw); border-top: 1px solid rgba(5, 51, 41, 0.09);
+}
+.p2-rrow span { font-size: clamp(11px, 0.703vw, 13.5px); font-weight: 500; color: var(--muted); }
+.p2-rrow b { font-size: clamp(11.5px, 0.729vw, 14px); font-weight: 600; color: var(--ink); }
+
+/* ---- words beside a photograph (642:1612) ------------------------------ */
+/* 660 and 660 with 200 between them, both centred on the band. */
+.p2-split-in {
+  display: grid; grid-template-columns: 43.421% 43.421%;
+  gap: 13.158%; align-items: center;
+}
+.p2-split-b .p2-split-copy { order: 2; }
+.p2-split-copy { display: grid; justify-items: start; gap: min(44px, 2.292vw); }
+.p2-split-copy h2 {
+  font-size: clamp(34px, 5vw, 96px); line-height: 1.06; letter-spacing: -0.026em; color: var(--ink);
+}
+.p2-split-copy > p {
+  margin-top: min(-20px, -1.042vw);
+  font-size: clamp(16px, 0.99vw, 19px); line-height: 1.5; color: var(--muted);
+}
+.p2-split-photo {
+  width: 100%; height: auto; object-fit: cover; border-radius: min(28px, 1.459vw);
+}
+
+/* ---- three numbered steps (640:1696) ----------------------------------- */
+.p2-steps { padding-block: min(150px, 7.813vw) min(144px, 7.5vw); }
+.p2-steps-h {
+  font-size: clamp(32px, 4.584vw, 88px); line-height: 1.08; letter-spacing: -0.03em; color: var(--ink);
+}
+.p2-steps-row {
+  margin-top: min(50px, 2.604vw);
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: min(30px, 1.974%);
+}
+.p2-step { display: grid; gap: min(24px, 1.25vw); align-content: start; }
+.p2-step-card {
+  position: relative; overflow: hidden;
+  aspect-ratio: 487 / 340; border-radius: min(40px, 2.083vw); background: var(--grad);
+}
+.p2-frag-step { left: 4.517%; top: 27.941%; width: 90.760%; padding: min(20px, 1.042vw); }
+.p2-step-t { display: grid; gap: min(10px, 0.521vw); padding-inline: min(24px, 4.928%); }
+.p2-step-top { display: flex; align-items: center; gap: min(22px, 1.146vw); }
+.p2-num {
+  flex: none; display: grid; place-items: center;
+  width: min(46px, 2.396vw); height: min(46px, 2.396vw); border-radius: 50%;
+  background: var(--deep); color: #fff;
+  font-size: clamp(11px, 0.729vw, 14px); font-weight: 700; letter-spacing: -0.01em;
+}
+.p2-step-t h3 {
+  font-size: clamp(18px, 1.354vw, 26px); line-height: 1.2; letter-spacing: -0.025em; color: var(--ink);
+}
+.p2-step-t p { font-size: clamp(14px, 0.86vw, 16.5px); line-height: 1.5; color: var(--muted); }
+
+/* ---- the sibling cards, lettered (642:1670) ---------------------------- */
+.p2-sibs-letter .pr-chip {
+  display: grid; place-items: center;
+  width: min(44px, 2.292vw); height: min(44px, 2.292vw);
+  font-size: clamp(15px, 1.094vw, 21px); font-weight: 700; color: var(--ink);
+}
+.p2-sibs-letter .prod-card h3 { font-weight: 600; }
+
+/* The close on a page whose frame gives it the full 1024 rather than 820. */
+.closing-prod-tall { padding-block: min(246px, 12.813vw); }
+
+@media (max-width: 1040px) {
+  .p2-hero-left .p2-hero-in h1, .p2-hero-left .p2-hero-lead { max-width: 100%; }
+  .p2-art, .p2-pn { display: none; }
+  .p2-split-in, .p2-split-b .p2-split-in { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+  .p2-split-b .p2-split-copy { order: 0; }
+  .p2-split-copy { gap: 28px; }
+  .p2-steps-row { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+  .p2-steps { padding-block: min(80px, 9vw) min(88px, 9vw); }
+  .closing-prod-tall { padding-block: min(144px, 12vw); }
 }
 
 /* ---------------------------------------------------------- narrower ---- */

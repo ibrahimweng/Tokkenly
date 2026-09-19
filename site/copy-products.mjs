@@ -189,7 +189,11 @@ export const PRODUCTS = [
         ] },
 
       { type: 'siblings', eyebrow: 'The rest of it', h: 'There is more\nin the app.',
-        cards: ['gifting-and-rewards', 'receive-and-send', 'borrow-and-earn'] },
+        cards: [
+          ['gifting-and-rewards', 'gift', 'Gifting &amp; Rewards', 'Make their day. Start their portfolio.', 'Explore Gifting &amp; Rewards'],
+          ['receive', 'updown', 'Receive and send', 'Get paid. Make someone\u2019s day.', 'Explore Receive and send'],
+          ['earn', 'split', 'Borrow and earn', 'Put it to work, or borrow against it.', 'Explore Borrow and earn'],
+        ] },
 
       { type: 'pclose' },
     ],
@@ -247,6 +251,80 @@ export const PRODUCTS = [
   /* ------------------------------------------------------------ new page -- */
   {
     slug: 'gifting-and-rewards',
+    /* Frame 640:1611. Seven bands: a hero with the words on the left and a
+       portrait running off the right, two ways to give, the unlock, three
+       steps, the questions, the siblings and the close. */
+    sections: [
+      { type: 'phero', align: 'left', h: 'Give stocks as gifts or rewards',
+        lead: 'Give tokenized stocks for birthdays, graduations, or just because.\nReward customers through referrals, cashback, and loyalty programs.',
+        ctas: [['Get Started', 'ink', null], ['See how it works', 'white', '#more']],
+        wash: ['#c7e1ff', '#c7e1ff 20%', '#f8c8ff 58%', '#eaeae9'],
+        washH: 39.583, height: 53.333,
+        /* Boxes as shares of the 1920 hero: left, top, width. The portrait
+           starts above the section and ends below it; the section clips. */
+        art: [
+          ['photo', 'gift/hero-portrait.webp', 46.302, -15.052, 47.953],
+          ['inset', 'gift/hero-inset.webp', 58.333, 40.156, 12.714],
+        ],
+        panel: { l: 77.969, t: 26.563, w: 19.375, head: ['You are gifting', '$25.00'],
+          pairs: [['To', 'Chidi Umeh'], ['Gift', 'Apple &#183; AAPLc'],
+                  ['Unlocks', '14 March 2027'], ['Fee', 'No fee']],
+          note: '\u201CHappy birthday. Start somewhere.\u201D', btn: 'Send gift' } },
+
+      { type: 'cards3', cols: 2, centred: true,
+        h: 'Two ways to give.',
+        lead: 'One for the people you know, one for the people who buy from you. Both land in a real portfolio.',
+        cards: [
+          { grad: ['#f8c8ff 4%', '#f7b79a 57%', '#d1cbc2'], big: true,
+            h: 'For people you know', p: 'A birthday, a graduation, or no occasion at all.',
+            gift: { badge: 'C', name: 'Chidi Umeh', sub: 'Gift \u00B7 Apple \u00B7 AAPLc',
+                    note: '\u201CHappy birthday. Start somewhere.\u201D' } },
+          { grad: ['#2bbd9b', '#c7e1ff 50%', '#d1cbc2'], big: true,
+            h: 'For people who buy from you', p: 'Referrals, cashback and loyalty, paid in stock.',
+            rules: { k: 'Reward rule', v: '2% back',
+                     rows: [['Per order', '2% in AAPLc'], ['Per referral', '$5.00'], ['Tier 3', '3% back']] } },
+        ] },
+
+      { type: 'psplit', side: 'a',
+        h: 'A gift with a date on it.',
+        p: 'Pick a company they will recognise, write a line, and set the day it opens. A gift with a date on it arrives twice \u2014 once when it lands, and once when it unlocks.',
+        btn: 'Start a gift',
+        photo: 'gift/unlock-portrait.webp', ratio: '660 / 617' },
+
+      { type: 'steps3', h: 'How a gift travels.',
+        steps: [
+          { grad: ['#f7b79a', '#f8c8ff 51%', '#d1cbc2'], h: 'Pick what to give',
+            p: 'Choose a tokenized stock and an amount. A slice is fine \u2014 you do not have to give a whole share.',
+            frag: { k: 'Gift', v: '$25.00', rows: [['Company', 'Apple \u00B7 AAPLc'], ['Amount', '$25.00']] } },
+          { grad: ['#d1cbc2', '#ff9900'], h: 'Say when it opens',
+            p: 'Send it now, or set a date. Until that day it sits in their portfolio, tracking the price.',
+            frag: { k: 'Unlocks in', v: '540 days', rows: [['From', 'Aunty Nsozi'], ['Opens', '14 March 2027']] } },
+          { grad: ['#2bbd9b', '#c7e1ff 61%', '#d1cbc2'], h: 'They claim it',
+            p: 'They get a link, open an account, and it lands in their portfolio. Theirs to keep, sell or add to.',
+            frag: { k: 'Claimed', v: 'In their portfolio', rows: [['Holding', '0.11 AAPLc'], ['Worth', '$25.00']] } },
+        ] },
+
+      { type: 'pfaq', h: 'A few things you might be wondering.',
+        items: [
+          ['What if they already use Tokkenly?',
+           'It lands straight in their portfolio. No link to claim, no account to open.'],
+          ['Can I take a gift back?',
+           'Not once it has been claimed. Before it is claimed, an unclaimed gift returns to you.'],
+          ['Is a gift taxed?',
+           'That depends on where the two of you are and what you do with it. Tokkenly does not give tax advice \u2014 talk to someone who does.'],
+          ['What can I pay rewards in?',
+           'Any tokenized stock on the list, or a dollar amount. The rule is yours to set, and it is on the screen before anyone earns against it.'],
+        ] },
+
+      { type: 'siblings', h: 'There is more in the app.', badge: 'letter', hSize: 34,
+        cards: [
+          ['tokenized-stocks', 'T', 'Tokenized stocks', 'Invest in Nigerian and US companies from one app.', 'Explore tokenized stocks'],
+          ['receive', 'R', 'Receive and send', 'Get paid into Tokkenly, and send from the same place.', 'Explore receive and send'],
+          ['earn', 'B', 'Borrow and earn', 'Put stablecoins to work, or borrow against what you hold.', 'Explore borrow and earn'],
+        ] },
+
+      { type: 'pclose', tall: true },
+    ],
     close: ['Give something that grows.', 'Pick a company, set the day it opens, and let the gift do the rest.'],
     nav: 'Gifting &amp; Rewards',
     eyebrow: 'Gifting and Rewards',

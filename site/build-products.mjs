@@ -483,8 +483,8 @@ ${others.map((o, n) => `            <a class="prod-card reveal" href="${o.slug}.
 
 /* The close is the same on every product page, spine or sections, so it is a
    function rather than two copies of the same markup. */
-const closingProd = (p, up) => `
-      <section class="closing closing-prod" data-cta="product">
+const closingProd = (p, up, tall) => `
+      <section class="closing closing-prod${tall ? ' closing-prod-tall' : ''}" data-cta="product">
         <div class="wrap">
           <div class="closing-slab reveal">
             <img class="cta-prop cta-coin n-tl" src="${up}img/cta/coin.webp" width="274" height="290" loading="lazy" alt="" aria-hidden="true" />
@@ -522,22 +522,36 @@ const SIBS = {
   'borrow-and-earn':    ['Borrow and earn', 'Put it to work, or borrow against it.', 'earn', 'split'],
 }
 
+/* The hero receipt: a white card the frame floats over the art, written out
+   rather than screenshotted, the same way the landing page's panels are. */
+const panel2 = (n) => `
+        <div class="p2-pn" style="left:${n.l}%;top:${n.t}vw;width:${n.w}%" aria-hidden="true">
+          <div class="p2-pn-head"><span>${esc(n.head[0])}</span><b>${esc(n.head[1])}</b></div>
+          <div class="p2-pn-rows">
+${n.pairs.map(([k, v]) => `            <div class="p2-pn-row"><span>${esc(k)}</span><b>${v}</b></div>`).join('\n')}
+          </div>
+          <p class="p2-pn-note">${esc(n.note)}</p>
+          <span class="p2-pn-btn">${esc(n.btn)}</span>
+        </div>`
+
 const KIT2 = {
   /* The frame's hero: one centred column of words on a radial wash, with the
      coins laid across the whole band behind them. */
   phero: (p, s, up) => `
-      <section class="p2-hero">
+      <section class="p2-hero${s.align === 'left' ? ' p2-hero-left' : ''}"${s.height ? ` style="--hh:${s.height}vw"` : ''}>
         <div class="p2-wash" aria-hidden="true"
-             style="--w: radial-gradient(118% 92% at 50% -2%, ${s.wash.join(', ')})"></div>
-${s.coins.map(([name, w, d, fx, sl, st, sw]) => `        <span class="p2-coin${fx ? ' p2-coin-fx' : ''}" style="--b:${w}%;--d:${d}s;--sl:${sl}%;--st:${st}vw;--sw:${sw}%" aria-hidden="true"><img src="${up}img/ts/coin-${name}.webp" alt="" /></span>`).join('\n')}
+             style="--w: radial-gradient(118% 92% at 50% -2%, ${s.wash.join(', ')})${s.washH ? `;--wh:${s.washH}vw` : ''}"></div>
+${(s.coins || []).map(([name, w, d, fx, sl, st, sw]) => `        <span class="p2-coin${fx ? ' p2-coin-fx' : ''}" style="--b:${w}%;--d:${d}s;--sl:${sl}%;--st:${st}vw;--sw:${sw}%" aria-hidden="true"><img src="${up}img/ts/coin-${name}.webp" alt="" /></span>`).join('\n')}
+${(s.art || []).map(([kind, src, l, t, w]) => `        <img class="p2-art p2-art-${kind}" src="${up}img/${src}" style="left:${l}%;top:${t}vw;width:${w}%" alt="" aria-hidden="true" />`).join('\n')}
         <div class="wrap p2-hero-in">
-          <p class="eyebrow hero-intro" style="--hero-d: 0s">${esc(s.eyebrow)}</p>
+${s.eyebrow ? `          <p class="eyebrow hero-intro" style="--hero-d: 0s">${esc(s.eyebrow)}</p>` : ''}
           <h1 class="hero-intro" style="--hero-d: 0.05s">${lines2(s.h)}</h1>
-          <p class="p2-hero-lead hero-intro" style="--hero-d: 0.1s">${esc(s.lead)}</p>
-          <div class="cta-row centred hero-intro" style="--hero-d: 0.2s">
+          <p class="p2-hero-lead hero-intro" style="--hero-d: 0.1s">${lines2(s.lead)}</p>
+          <div class="cta-row${s.align === 'left' ? '' : ' centred'} hero-intro" style="--hero-d: 0.2s">
 ${s.ctas.map(([label, tone, href]) => `            <a class="btn btn-${tone}" href="${href || APP_URL}">${esc(label)}</a>`).join('\n')}
           </div>
         </div>
+${s.panel ? panel2(s.panel) : ''}
       </section>`,
 
   /* Three 485 cards on the 1520, each a gradient with a white fragment of the
@@ -546,12 +560,12 @@ ${s.ctas.map(([label, tone, href]) => `            <a class="btn btn-${tone}" hr
   cards3: (p, s, up) => `
       <section class="band p2-cards">
         <div class="wrap">
-          <div class="p2-head reveal">
+          <div class="p2-head${s.centred ? ' p2-head-mid' : ''} reveal">
             <h2>${esc(s.h)}</h2>
             <p>${esc(s.lead)}</p>
           </div>
-          <div class="p2-card-row">
-${s.cards.map((c) => `            <article class="p2-card${c.foot ? ' p2-card-foot' : ''} reveal" style="--grad: linear-gradient(to bottom, ${c.grad.join(', ')})">
+          <div class="p2-card-row" style="--cols:${s.cols || 3}">
+${s.cards.map((c) => `            <article class="p2-card${c.foot ? ' p2-card-foot' : ''}${c.big ? ' p2-card-big' : ''} reveal" style="--grad: linear-gradient(to bottom, ${c.grad.join(', ')})">
               <div class="p2-card-copy">
                 <h3>${esc(c.h)}</h3>
                 <p>${esc(c.p)}</p>
@@ -562,6 +576,21 @@ ${c.list.map(([badge, name, sub, val]) => `                <div class="p2-frow">
                   <span class="p2-fmid"><b>${esc(name)}</b><i>${sub}</i></span>
                   <span class="p2-fval">${val}</span>
                 </div>`).join('\n')}
+              </div>` : ''}
+${c.gift ? `              <div class="p2-stack">
+                <span class="p2-ghost p2-ghost-g1" aria-hidden="true"></span>
+                <span class="p2-ghost p2-ghost-g2" aria-hidden="true"></span>
+                <div class="p2-frag p2-frag-gift">
+                  <div class="p2-frow">
+                    <span class="p2-badge p2-badge-lg">${esc(c.gift.badge)}</span>
+                    <span class="p2-fmid"><b>${esc(c.gift.name)}</b><i>${c.gift.sub}</i></span>
+                  </div>
+                  <p class="p2-quote">${esc(c.gift.note)}</p>
+                </div>
+              </div>` : ''}
+${c.rules ? `              <div class="p2-frag p2-frag-rules">
+                <div class="p2-fhead"><span>${esc(c.rules.k)}</span><b>${esc(c.rules.v)}</b></div>
+${c.rules.rows.map(([k, v]) => `                <div class="p2-rrow"><span>${esc(k)}</span><b>${v}</b></div>`).join('\n')}
               </div>` : ''}
 ${c.stack ? `              <div class="p2-stack">
                 <span class="p2-ghost p2-ghost-1" aria-hidden="true"></span>
@@ -603,7 +632,7 @@ ${s.slot.slab ? `            <img class="p2-slot-slab" src="${up}img/${s.slot.sl
       <section class="band p2-faq">
         <div class="wrap faq-in">
           <div class="head faq-head reveal">
-            <p class="eyebrow">${esc(s.eyebrow)}</p>
+${s.eyebrow ? `            <p class="eyebrow">${esc(s.eyebrow)}</p>` : ''}
             <h2>${esc(s.h)}</h2>
           </div>
           <div class="faq reveal">
@@ -617,29 +646,68 @@ ${s.items.map(([q, a]) => `            <details>
 
   /* Three sand cards, the other products this one sits beside. */
   siblings: (p, s, up) => `
-      <section class="band p2-sibs">
+      <section class="band p2-sibs${s.badge === 'letter' ? ' p2-sibs-letter' : ''}"${s.hSize ? ` style="--sh:${s.hSize}px"` : ''}>
         <div class="wrap">
           <div class="p2-head reveal">
-            <p class="eyebrow">${esc(s.eyebrow)}</p>
+${s.eyebrow ? `            <p class="eyebrow">${esc(s.eyebrow)}</p>` : ''}
             <h2>${lines2(s.h)}</h2>
           </div>
           <div class="prod-more">
-${s.cards.map((key) => {
-    const [title, sub, href, icon] = SIBS[key]
+${s.cards.map((c) => {
+    /* A page may name a product and take the shared words, or write the card
+       out itself: the frames do both, and two of them use a letter where the
+       others use an icon. */
+    const [href, badge, title, sub, link] = Array.isArray(c) ? c : [SIBS[c][2], SIBS[c][3], SIBS[c][0], SIBS[c][1], 'Explore ' + SIBS[c][0]]
     return `            <article class="prod-card reveal">
               <div class="pr-title">
-                <span class="pr-chip" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="${ICONS[icon]}" /></svg></span>
+                <span class="pr-chip" aria-hidden="true">${s.badge === 'letter' ? esc(badge) : `<svg viewBox="0 0 24 24"><path d="${ICONS[badge]}" /></svg>`}</span>
                 <h3>${title}</h3>
-                <p>${sub}</p>
+                <p>${esc(sub)}</p>
               </div>
-              <a class="pr-link" href="${up}products/${href}.html">Explore ${title} ${ARROW}</a>
+              <a class="pr-link" href="${up}products/${href}.html">${esc(link)} ${ARROW}</a>
             </article>`
   }).join('\n')}
           </div>
         </div>
       </section>`,
 
-  pclose: (p, s, up) => closingProd(p, up),
+  /* 660 of words beside a 660 photograph, 200 apart, both centred. */
+  psplit: (p, s, up) => `
+      <section class="band p2-split p2-split-${s.side}">
+        <div class="wrap p2-split-in">
+          <div class="p2-split-copy reveal">
+            <h2>${lines2(s.h)}</h2>
+            <p>${esc(s.p)}</p>
+${s.btn ? `            <a class="btn btn-mint" href="${APP_URL}">${esc(s.btn)}</a>` : ''}
+          </div>
+          <img class="p2-split-photo reveal" src="${up}img/${s.photo}" style="aspect-ratio:${s.ratio}" alt="" aria-hidden="true" loading="lazy" />
+        </div>
+      </section>`,
+
+  /* Three numbered steps: a gradient card holding a fragment, then the number,
+     the heading and a line under it. */
+  steps3: (p, s, up) => `
+      <section class="band p2-steps">
+        <div class="wrap">
+          <h2 class="p2-steps-h reveal">${lines2(s.h)}</h2>
+          <div class="p2-steps-row">
+${s.steps.map((st, i) => `            <div class="p2-step reveal">
+              <div class="p2-step-card" style="--grad: linear-gradient(to bottom, ${st.grad.join(', ')})">
+                <div class="p2-frag p2-frag-step">
+                  <div class="p2-fhead"><span>${esc(st.frag.k)}</span><b>${esc(st.frag.v)}</b></div>
+${st.frag.rows.map(([k, v]) => `                  <div class="p2-rrow"><span>${esc(k)}</span><b>${v}</b></div>`).join('\n')}
+                </div>
+              </div>
+              <div class="p2-step-t">
+                <div class="p2-step-top"><span class="p2-num">${String(i + 1).padStart(2, '0')}</span><h3>${esc(st.h)}</h3></div>
+                <p>${esc(st.p)}</p>
+              </div>
+            </div>`).join('\n')}
+          </div>
+        </div>
+      </section>`,
+
+  pclose: (p, s, up) => closingProd(p, up, s && s.tall),
 }
 
 /* ----------------------------------------------------------------- page -- */
