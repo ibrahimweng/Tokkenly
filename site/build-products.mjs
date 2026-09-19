@@ -522,14 +522,6 @@ const SIBS = {
   'borrow-and-earn':    ['Borrow and earn', 'Put it to work, or borrow against it.', 'earn', 'split'],
 }
 
-/* left and width are shares of the 1920 hero; top is a share of its 1169, so
-   it is turned into a viewport length rather than a percentage of a box whose
-   height the words decide. */
-const coinTop = (pc) => {
-  const px = pc / 100 * 1169
-  return `min(${px.toFixed(0)}px, ${(px / 1920 * 100).toFixed(3)}vw)`
-}
-
 const KIT2 = {
   /* The frame's hero: one centred column of words on a radial wash, with the
      coins laid across the whole band behind them. */
@@ -537,7 +529,7 @@ const KIT2 = {
       <section class="p2-hero">
         <div class="p2-wash" aria-hidden="true"
              style="--w: radial-gradient(118% 92% at 50% -2%, ${s.wash.join(', ')})"></div>
-${s.coins.map(([name, l, t, w, fx]) => `        <img class="p2-coin${fx ? ' p2-coin-fx' : ''}" src="${up}img/ts/coin-${name}.webp" style="left:${l}%;top:${coinTop(t)};width:${w}%" alt="" aria-hidden="true" />`).join('\n')}
+${s.coins.map(([name, w, d, fx, sl, st, sw]) => `        <span class="p2-coin${fx ? ' p2-coin-fx' : ''}" style="--b:${w}%;--d:${d}s;--sl:${sl}%;--st:${st}vw;--sw:${sw}%" aria-hidden="true"><img src="${up}img/ts/coin-${name}.webp" alt="" /></span>`).join('\n')}
         <div class="wrap p2-hero-in">
           <p class="eyebrow hero-intro" style="--hero-d: 0s">${esc(s.eyebrow)}</p>
           <h1 class="hero-intro" style="--hero-d: 0.05s">${lines2(s.h)}</h1>

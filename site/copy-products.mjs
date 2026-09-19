@@ -95,18 +95,47 @@ export const PRODUCTS = [
         lead: 'The companies on your radar can be part of your portfolio. Invest in tokenized stocks linked to companies listed in Nigeria and the US, right from Tokkenly.',
         ctas: [['Get Started', 'ink', null], ['See how it works', 'white', '#more']],
         wash: ['#f7c9fe', '#d1cbc2 58.5%', '#eaeae9'],
-        /* Each coin is its box in the frame's 1920 x 1169 hero, as a share of
-           it: left, top, width. The Tesla coin is mirrored in the frame, so
-           its left is a width to the left of the x Figma reports. */
+        /* The coins do not sit still. They run the arc the frame lays them
+           on, left to right, growing as they cross the middle and shrinking
+           away at both edges, on an 18 second loop.
+
+           So a coin is no longer a box. It is a width and a place in that
+           loop: the width it would have AT THE MIDDLE, as a share of the
+           1920, and the delay that puts it exactly where the frame draws it
+           at the start. Run the clock to zero and the eight of them compose
+           the frame again, which is what the negative delays are for — and
+           what a paused animation falls back to when the reader has asked
+           for less motion.
+
+           The path itself is in the stylesheet, because it is one set of
+           keyframes every coin shares. Only the phase differs.
+
+           The last three numbers are the frame's own box — left, top and
+           width — which is what a reader who has asked for less motion gets
+           instead. Pausing would have done it, except the stylesheet's
+           blanket reduced-motion rule cuts every animation to 0.01ms, so a
+           paused coin lands on the last keyframe rather than on its phase.
+           The static box is not a second guess at the arrangement; it is the
+           same eight boxes the frame draws.
+
+           The eight share one width and are spaced evenly round the loop,
+           2.25 seconds apart. The first pass gave each coin the width and the
+           phase that put it exactly on its frame box, and it looked wrong
+           moving: the frame spaces them by eye, so as a procession they
+           bunched in the middle and left a hole behind them. Evenly spaced,
+           with the path doing all of the sizing, the only thing that changes
+           as a coin crosses is how near it is — which is the point.
+
+              [name, width %, delay s, mirrored, left %, top vw, width %] */
         coins: [
-          ['apple',   -3.750, 50.813, 14.813, 0],
-          ['tesla',    8.750, 57.742, 13.146, 1],
-          ['dangote2',20.781, 64.756, 13.281, 0],
-          ['nasdaq',  31.979, 55.860, 26.891, 0],
-          ['nvidia',  54.844, 57.742, 19.943, 0],
-          ['spy',     72.917, 57.742, 12.771, 0],
-          ['intel',   83.490, 45.338, 12.859, 0],
-          ['sandisk', 93.594, 36.698, 12.859, 0],
+          ['apple',    22.917,   0.00, 0, -3.750, 30.938, 14.813],
+          ['tesla',    22.917,  -2.25, 1,  8.750, 35.156, 13.146],
+          ['dangote2', 22.917,  -4.50, 0, 20.781, 39.427, 13.281],
+          ['nasdaq',   22.917,  -6.75, 0, 31.979, 34.010, 26.891],
+          ['nvidia',   22.917,  -9.00, 0, 54.844, 35.156, 19.943],
+          ['spy',      22.917, -11.25, 0, 72.917, 35.156, 12.771],
+          ['intel',    22.917, -13.50, 0, 83.490, 27.604, 12.859],
+          ['sandisk',  22.917, -15.75, 0, 93.594, 22.344, 12.859],
         ] },
 
       { type: 'cards3',

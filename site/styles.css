@@ -3303,10 +3303,70 @@ textarea.cf-input {
   height: min(1137px, 59.219vw);
   background: var(--w);
 }
-/* Behind the words, in front of the wash. The frame mirrors one of them
-   rather than turning it, which is a scaleX and not a rotate. */
-.p2-coin { position: absolute; z-index: -1; height: auto; pointer-events: none; }
-.p2-coin-fx { transform: scaleX(-1); }
+/* Behind the words, in front of the wash, and moving. The frame lays the
+   eight coins on an arc; they run it, left to right, on an 18 second loop,
+   growing as they cross the middle and shrinking away at both edges.
+
+   Every coin shares one set of keyframes — the path is the path — and differs
+   only in its width and its phase. The phases are negative delays chosen so
+   that at time zero the eight of them stand exactly where the frame draws
+   them, which is why pausing the animation is the whole reduced-motion
+   fallback: paused, it IS the frame.
+
+   The travel runs from 300 short of the left edge to 300 past the right one,
+   so a coin is fully out of sight before it wraps. Positions are viewport
+   widths because the hero is the viewport wide; translate's own -50% centres
+   each coin on the path rather than hanging it from its corner. */
+.p2-coin {
+  position: absolute; left: 0; top: 0; z-index: -1; pointer-events: none;
+  width: var(--b); will-change: transform;
+  animation: p2-coin-run 18s linear infinite;
+  animation-delay: var(--d);
+}
+.p2-coin img { display: block; width: 100%; height: auto; }
+/* Not paused — the stylesheet's blanket reduced-motion rule cuts every
+   animation to 0.01ms, so a paused coin sits on its last keyframe, off the
+   right edge with seven others on top of it. The coins go back to the frame's
+   own boxes instead, which is the same picture standing still. It belongs
+   here rather than in the block with the rest: that block is earlier in the
+   file, and on equal specificity the later rule wins. */
+@media (prefers-reduced-motion: reduce) {
+  .p2-coin {
+    animation: none;
+    left: var(--sl); top: var(--st); width: var(--sw); transform: none;
+  }
+}
+/* The frame mirrors one of them rather than turning it, and the mirror has to
+   live on the image: the span's transform is the path's. */
+.p2-coin-fx img { transform: scaleX(-1); }
+
+@keyframes p2-coin-run {
+  0% { transform: translate(calc(-15.625vw - 50%), calc(28.105vw - 50%)) scale(0.4995); }
+  4.17% { transform: translate(calc(-10.156vw - 50%), calc(31.571vw - 50%)) scale(0.5318); }
+  8.33% { transform: translate(calc(-4.688vw - 50%), calc(34.696vw - 50%)) scale(0.5721); }
+  12.50% { transform: translate(calc(0.781vw - 50%), calc(37.480vw - 50%)) scale(0.6205); }
+  16.67% { transform: translate(calc(6.250vw - 50%), calc(39.923vw - 50%)) scale(0.6759); }
+  20.83% { transform: translate(calc(11.719vw - 50%), calc(42.024vw - 50%)) scale(0.7365); }
+  25% { transform: translate(calc(17.188vw - 50%), calc(43.785vw - 50%)) scale(0.7992); }
+  29.17% { transform: translate(calc(22.656vw - 50%), calc(45.204vw - 50%)) scale(0.8600); }
+  33.33% { transform: translate(calc(28.125vw - 50%), calc(46.283vw - 50%)) scale(0.9145); }
+  37.50% { transform: translate(calc(33.594vw - 50%), calc(47.020vw - 50%)) scale(0.9583); }
+  41.67% { transform: translate(calc(39.063vw - 50%), calc(47.416vw - 50%)) scale(0.9876); }
+  45.83% { transform: translate(calc(44.531vw - 50%), calc(47.470vw - 50%)) scale(0.9998); }
+  50% { transform: translate(calc(50.000vw - 50%), calc(47.184vw - 50%)) scale(0.9936); }
+  54.17% { transform: translate(calc(55.469vw - 50%), calc(46.557vw - 50%)) scale(0.9696); }
+  58.33% { transform: translate(calc(60.938vw - 50%), calc(45.588vw - 50%)) scale(0.9302); }
+  62.50% { transform: translate(calc(66.406vw - 50%), calc(44.279vw - 50%)) scale(0.8787); }
+  66.67% { transform: translate(calc(71.875vw - 50%), calc(42.628vw - 50%)) scale(0.8194); }
+  70.83% { transform: translate(calc(77.344vw - 50%), calc(40.636vw - 50%)) scale(0.7569); }
+  75% { transform: translate(calc(82.813vw - 50%), calc(38.303vw - 50%)) scale(0.6953); }
+  79.17% { transform: translate(calc(88.281vw - 50%), calc(35.629vw - 50%)) scale(0.6379); }
+  83.33% { transform: translate(calc(93.750vw - 50%), calc(32.614vw - 50%)) scale(0.5870); }
+  87.50% { transform: translate(calc(99.219vw - 50%), calc(29.257vw - 50%)) scale(0.5440); }
+  91.67% { transform: translate(calc(104.688vw - 50%), calc(25.560vw - 50%)) scale(0.5092); }
+  95.83% { transform: translate(calc(110.156vw - 50%), calc(21.521vw - 50%)) scale(0.4821); }
+  100% { transform: translate(calc(115.625vw - 50%), calc(17.141vw - 50%)) scale(0.4619); }
+}
 
 .p2-hero-in {
   display: grid; justify-items: center; text-align: center;
