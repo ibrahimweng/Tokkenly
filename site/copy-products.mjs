@@ -779,107 +779,94 @@ export const PRODUCTS = [
 
   /* ---------------------------------------------------------- with a risk -- */
   {
-    slug: 'earn',
-    close: ['Put some of it to work.', 'Read the terms, choose an amount, and keep track in Tokkenly.'],
-    nav: 'Earn',
-    eyebrow: 'Earn',
-    title: 'Put idle stablecoins to work.',
-    lead:
-      'Explore earning opportunities for the stablecoins you hold. Review the terms, choose an ' +
-      'amount, and keep track in Tokkenly.',
-    stage: 'stage-deep',
-    prop: 'pen',
-    panel: [
-      ['head', 'You are committing', '$500.00'],
-      ['pairs', [['Rate', '5.2% a year'], ['Paid', 'Daily'],
-                 ['Term', 'No lock-in'], ['End it', 'Any time']]],
-      ['note', 'Not a deposit, and not guaranteed. Rates change.'],
-      ['btn', 'Commit $500.00'],
-    ],
-    spine: [
-      { type: 'risk', lead: true },
-      { type: 'bento', eyebrow: 'How it works', head: 'You choose the amount.<br />Not the whole balance.',
-        lead: 'What is committed is shown apart from what is not, so you always know which is which.',
-        rows: [
-          ['a',
-           { chip: 'mint', icon: 'split', h: 'Committed and spendable, side by side.',
-             p: ['Money at work and money you can spend are two different things, and Tokkenly never adds them up into one comforting number.',
-                 'End it and the commitment comes back to spendable, on the terms you were shown before you started.'],
-             panel: [['head', 'Your stablecoins', '$840.20'],
-                     ['bar', [['Committed', '$500.00', 60], ['Spendable', '$340.20', 40]]],
-                     ['note', 'Earned so far: $4.31']] },
-           { chip: 'yellow', icon: 'book', h: 'The terms are on the screen.',
-             p: ['The rate, what it is paid on, and what you have to do to get your money back. Before you agree, not after.'],
-             prop: 'purple' }],
-        ] },
-      { type: 'facts', head: 'Plainly.', rows: [
-        ['What you commit', 'Stablecoins you already hold.'],
-        ['What you are told first', 'The rate, the term, and how to end it.'],
-        ['What is not promised', 'A return. Rates change and this is not a deposit.'],
-      ] },
-      { type: 'faq', items: [
-        ['Is this a savings account?',
-         'No. It is not a deposit, it is not guaranteed, and it is not protected the way a bank deposit is. That is the honest answer and it is on the screen too.'],
-        ['Can I take it out?',
-         'The terms say how and when, and they are shown before you commit.'],
-      ] },
-      { type: 'related' },
-    ],
-  },
+    slug: 'borrow-and-earn',
+    /* Frame 560:1129. The frame merges earning and borrowing into one page: a
+       hero with both panels on a stage, the two halves, three steps, the
+       questions, the siblings and the close. */
+    sections: [
+      { type: 'behero', eyebrow: 'Borrow and earn',
+        h: 'Earn more, or\nborrow against it.',
+        lead: 'Earn on your stablecoins or borrow when you need flexibility.\n' +
+              'Review the terms, choose an amount, and pick what fits your plans.',
+        ctas: [['Get Started', 'ink', null], ['See how it works', 'ghost', '#s-steps']],
+        height: 78.021, padTop: 184, hW: 63.158, gaps: [18, 32],
+        wash: ['#c7e1ff 0%', '#c7e1ff 20.5%', '#f8c8ff 58.5%', '#eaeae9 100%'], washH: 45.833,
+        stage: {
+          top: 36.146, cloud: { l: 30.000, t: 6.996, w: 33.789, h: 68.029 },
+          panels: [
+            { l: 5.921, t: 11.452, w: 36.842, spread: true,
+              head: ['You are committing', '$500.00'],
+              pairs: [['Rate', '5.2% a year'], ['Paid', 'Daily'],
+                      ['Term', 'No lock-in'], ['End it', 'Any time']],
+              note: 'Not a deposit, and not guaranteed. Rates change.',
+              btn: 'Commit $500.00' },
+            { l: 57.763, t: 33.953, w: 36.842,
+              head: ['You are borrowing', '$200.00'],
+              stack: [['Rate', '9.4% a year'], ['Costs you', 'About $1.57 a month'],
+                      ['Repay', 'Any time, no fee'], ['Sold if shares fall below', '$812.00']],
+              note: 'Your shares stay yours. They are only sold if they fall to that level.',
+              btn: 'Borrow $200.00' },
+          ] } },
 
-  {
-    slug: 'borrow',
-    close: ['Find out what you could borrow.', 'The figure, the rate and the terms, before you agree to anything.'],
-    nav: 'Borrow',
-    eyebrow: 'Borrow',
-    title: 'Give yourself some breathing room.',
+      { type: 'halves', h: 'Two things to do with what you hold.',
+        lead: 'Committed, spendable and owed are counted apart on every screen.',
+        sides: [
+          { pill: 'Earn',
+            grad: ['#2bbd9b', '#2bbd9b 40%', '#c7d9ed 66%', '#d1cbc2 80%', '#eaeae9 94%'],
+            h: 'You choose the amount.',
+            p: 'Money at work and money you can spend are two different things. Tokkenly ' +
+               'never adds them into one number.',
+            btn: ['See earning terms', 'deep'],
+            panel: { head: ['Your stablecoins', '$840.20'],
+              bar: [['Committed $500.00', 49.837], ['Spendable $340.20', 50.163]],
+              note: 'Earned so far: $4.31' } },
+          { pill: 'Borrow', low: true,
+            grad: ['#f7b79a', '#f7b79a 42%', '#f8c8ff 65%', '#d1cbc2 81%', '#eaeae9 94%'],
+            h: 'What you hold stays yours.',
+            p: 'What you hold backs the loan and keeps tracking its price. If it falls far ' +
+               'enough, some may be sold.',
+            btn: ['See what you could borrow', 'mint'],
+            panel: { head: ['What you owe', '$201.57'],
+              stack: [['Borrowed', '$200.00'], ['Interest so far', '$1.57'],
+                      ['Backed by', '$1,624.00 in shares']],
+              note: 'Sold if that falls below $812.00.' } },
+        ] },
+
+      { type: 'besteps', h: 'Start to finish.',
+        steps: [
+          { n: '01', fill: '#d9d5ce', h: 'See what is available',
+            p: 'A figure based on what you hold, with the terms beside it.' },
+          { n: '02', fill: 'linear-gradient(to bottom, #f8c8ff, #e0cbd9)', h: 'Read the cost',
+            p: 'The rate, the total and the repayments, in money you can check.' },
+          { n: '03', fill: '#d9d5ce', h: 'Keep track',
+            p: 'What you owe sits apart from what you have, so the two are never confused.' },
+        ] },
+
+      { type: 'pfaq', loose: true, eyebrow: 'Questions', h: 'Worth asking.',
+        items: [
+          ['Is this a savings account?',
+           'No. It is not a deposit, it is not guaranteed, and the rate can change. The terms say what it is and what it is not, and they are on the screen before you commit.'],
+          ['Can I take it out?',
+           'The terms say how and when. Most of what is here has no lock-in.'],
+          ['What happens if I miss a repayment?',
+           'The terms say, and they say it before you borrow. Interest keeps running, and if what backs the loan falls far enough, some of it may be sold.'],
+          ['Does borrowing affect my investments?',
+           'What you hold backs the loan and keeps tracking its price. You still own it, and you still get the moves — but it is spoken for while the loan is open.'],
+        ] },
+
+      { type: 'siblings', h: 'There is more in the app.', badge: 'letter', divided: true,
+        pad: [20, 140], gap: 34, hSize: [32, 1.281],
+        cards: ['tokenized-stocks', 'convert', 'receive-and-send'] },
+
+      { type: 'pclose', pad: 96, h2: [58, 1.017] },
+    ],
+    close: ['See what you could earn, or borrow.',
+            'The figure, the rate and the terms, before you agree to anything.', 'Get Started'],
+    nav: 'Borrow and earn',
+    eyebrow: 'Borrow and earn',
+    title: 'Earn more, or borrow against it.',
     lead:
-      'When you need extra funds, explore borrowing in Tokkenly. Review the costs and repayment ' +
-      'terms before choosing what works for you.',
-    stage: 'stage-yellow',
-    prop: 'dangote',
-    panel: [
-      ['head', 'You are borrowing', '$200.00'],
-      ['rows', [['Rate', '9.4% a year'], ['Costs you', 'About $1.57 a month'],
-                ['Repay', 'Any time, no fee'], ['Sold if shares fall below', '$812.00']]],
-      ['note', 'Your shares stay yours and keep earning. We only sell if they fall to that level.'],
-      ['btn', 'Borrow $200.00'],
-    ],
-    spine: [
-      { type: 'risk', lead: true },
-      { type: 'split', side: 'a',
-        eyebrow: 'What backs it',
-        head: 'Your shares stay<br />yours.',
-        lead:
-          'What you hold backs the loan and keeps tracking its price while you owe. If it falls far ' +
-          'enough, some of it may be sold to cover the loan — said here rather than found out later.',
-        points: [
-          ['The level is a number, not a feeling', 'Tokkenly shows the price your holding would have to fall to, before you borrow.'],
-          ['What you owe sits apart', 'It is never mixed into what you have, on any screen.'],
-        ],
-        cta: ['Read the terms', '#s-facts'],
-        stage: 'stage-mint', prop: 'coin',
-        panel: [['head', 'What you owe', '$201.57'],
-                ['rows', [['Borrowed', '$200.00'], ['Interest so far', '$1.57'], ['Backed by', '$1,624.00 in shares']]],
-                ['note', 'Sold if that falls below $812.00.']] },
-      { type: 'facts', head: 'What you are agreeing to.', rows: [
-        ['How much', 'What you can borrow is shown as a figure, not a promise. It depends on what you hold.'],
-        ['What it costs', 'The rate and the total, in money, before you agree.'],
-        ['Paying it back', 'The schedule is on the screen. So is what happens if you do not keep to it.'],
-        ['What backs it', 'What you hold. If its value falls far enough, some of it may be sold to cover the loan.'],
-      ] },
-      { type: 'steps', head: 'Start to finish.', items: [
-        ['See what is available', 'A figure based on what you hold, with the terms beside it.'],
-        ['Read the cost', 'The rate, the total and the repayments, in money you can check.'],
-        ['Keep track', 'What you owe sits apart from what you have, so the two are never confused.'],
-      ] },
-      { type: 'faq', items: [
-        ['What happens if I miss a repayment?',
-         'The terms say, and they say it before you borrow. Missing repayments costs money and can mean some of what you hold is sold.'],
-        ['Does borrowing affect my investments?',
-         'What you hold backs the loan, so yes — it is not free of consequence. The screen shows what is pledged.'],
-      ] },
-      { type: 'related' },
-    ],
+      'Earn on your stablecoins or borrow when you need flexibility. Review the terms, choose an ' +
+      'amount, and pick what fits your plans.',
   },
 ]

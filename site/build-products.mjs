@@ -483,8 +483,11 @@ ${others.map((o, n) => `            <a class="prod-card reveal" href="${o.slug}.
 
 /* The close is the same on every product page, spine or sections, so it is a
    function rather than two copies of the same markup. */
-const closingProd = (p, up, tall) => `
-      <section class="closing closing-prod${tall ? ' closing-prod-tall' : ''}" data-cta="product">
+const closingProd = (p, up, s) => `
+      <section class="closing closing-prod${s && s.tall ? ' closing-prod-tall' : ''}" data-cta="product"${(s && (s.pad || s.h2)) ? ` style="${[
+        s.pad ? `--cpad:min(${s.pad}px, ${(s.pad / 19.2).toFixed(3)}vw)` : '',
+        s.h2 ? `--cfs:clamp(${Math.round(s.h2[0] * 0.5)}px, ${(s.h2[0] / 19.2).toFixed(3)}vw, ${s.h2[0]}px);--clh:${s.h2[1]}` : '',
+      ].filter(Boolean).join(';')}"` : ''}>
         <div class="wrap">
           <div class="closing-slab reveal">
             <img class="cta-prop cta-coin n-tl" src="${up}img/cta/coin.webp" width="274" height="290" loading="lazy" alt="" aria-hidden="true" />
@@ -546,6 +549,27 @@ ${n.stack.map(([k, v]) => `            <div class="p2-rrow"><span>${esc(k)}</spa
 ${n.note ? `          <p class="p2-pn-note">${esc(n.note)}</p>` : ''}
           <span class="p2-pn-btn${n.pay ? ' p2-pn-btn-deep' : ''}">${n.btn}</span>
         </div>`
+
+/* The panels on Borrow and earn: the same card, placed on a stage or inside
+   a half, with either a grid of pairs, a stack of rows, or a split bar. */
+const bePanel = (n, cls) => `
+            <div class="be-pn${cls ? ' ' + cls : ''}${n.spread ? ' be-pn-spread' : ''}"${cls ? '' : ` style="left:${n.l}%;top:${n.t}%;width:${n.w}%"`} aria-hidden="true">
+              <div class="be-pn-head"><span>${esc(n.head[0])}</span><b>${n.head[1]}</b></div>
+${n.pairs ? `              <div class="be-pn-pairs">
+${n.pairs.map(([k, v]) => `                <div class="be-kv"><span>${esc(k)}</span><b>${v}</b></div>`).join('\n')}
+              </div>` : ''}
+${n.stack ? `              <div class="be-pn-rows">
+${n.stack.map(([k, v]) => `                <div class="p2-rrow"><span>${esc(k)}</span><b>${v}</b></div>`).join('\n')}
+              </div>` : ''}
+${n.bar ? `              <div class="be-track">
+${n.bar.map(([, w], i) => `                <i class="be-seg-${i}" style="--w:${w}%"></i>`).join('\n')}
+              </div>
+              <div class="be-legend">
+${n.bar.map(([k], i) => `                <span class="be-li"><i class="be-dot-${i}"></i>${esc(k)}</span>`).join('\n')}
+              </div>` : ''}
+              <p class="be-pn-note">${esc(n.note)}</p>
+${n.btn ? `              <span class="be-pn-btn">${esc(n.btn)}</span>` : ''}
+            </div>`
 
 /* The white card that bleeds out of a gradient side: a head, a list of three
    routes, and the line under them. Same object on both sides of the band. */
@@ -668,7 +692,7 @@ ${s.slot.slab ? `            <img class="p2-slot-slab" src="${up}img/${s.slot.sl
   /* The head holds the left 656 and the questions the right 800, which is the
      landing page's FAQ turned into a product band. */
   pfaq: (p, s, up) => `
-      <section class="band p2-faq"${(s.pad || s.cols || s.h2) ? ` style="${[
+      <section class="band p2-faq${s.loose ? ' p2-faq-loose' : ''}"${(s.pad || s.cols || s.h2) ? ` style="${[
         s.pad ? `--spt:min(${s.pad[0]}px, ${(s.pad[0] / 19.2).toFixed(3)}vw);--spb:min(${s.pad[1]}px, ${(s.pad[1] / 19.2).toFixed(3)}vw)` : '',
         s.cols ? `--fc1:${s.cols[0]}%;--fc2:${s.cols[1]}%;--fcg:${s.cols[2]}%` : '',
         s.h2 ? `--fh:clamp(${Math.round(s.h2[0] * 0.5)}px, ${(s.h2[0] / 19.2).toFixed(3)}vw, ${s.h2[0]}px);--flh:${s.h2[1]}` : '',
@@ -907,7 +931,78 @@ ${s.points.map(([h, t]) => `              <div class="cv-point">
         </div>
       </section>`,
 
-  pclose: (p, s, up) => closingProd(p, up, s && s.tall),
+  pclose: (p, s, up) => closingProd(p, up, s),
+
+  /* Borrow and earn's hero: the words over the landing page's wash, then a
+     stage carrying both panels with the cloud between them. */
+  behero: (p, s, up) => `
+      <section class="p2-hero p2-hero-mid be-hero" style="${[
+        `--hh:${s.height}vw;--hhp:${(s.height * 19.2).toFixed(0)}px`,
+        s.padTop ? `--hpt:min(${s.padTop}px, ${(s.padTop / 19.2).toFixed(3)}vw)` : '',
+        s.hW ? `--hw:min(${(s.hW * 15.2).toFixed(0)}px, ${s.hW}%)` : '',
+        s.gaps ? `--hg1:min(${s.gaps[0]}px, ${(s.gaps[0] / 19.2).toFixed(3)}vw);--hg3:min(${s.gaps[1] - s.gaps[0]}px, ${((s.gaps[1] - s.gaps[0]) / 19.2).toFixed(3)}vw)` : '',
+      ].filter(Boolean).join(';')}">
+        <div class="p2-wash" aria-hidden="true"
+             style="--w: radial-gradient(118% 92% at 50% -2%, ${s.wash.join(', ')});--wh:${s.washH}vw"></div>
+        <div class="wrap p2-hero-in">
+          <p class="eyebrow hero-intro" style="--hero-d: 0s">${esc(s.eyebrow)}</p>
+          <h1 class="hero-intro" style="--hero-d: 0.05s">${lines2(s.h)}</h1>
+          <p class="p2-hero-lead hero-intro" style="--hero-d: 0.1s">${lines2(s.lead)}</p>
+          <div class="cta-row centred hero-intro" style="--hero-d: 0.2s">
+${s.ctas.map(([label, tone, href]) => `            <a class="btn btn-${tone}" href="${href || APP_URL}">${esc(label)}</a>`).join('\n')}
+          </div>
+        </div>
+        <div class="wrap be-stage-wrap" style="--st:${s.stage.top}vw">
+          <div class="be-stage reveal">
+            <img class="be-cloud" src="${up}img/be/cloud.webp" alt="" aria-hidden="true"
+                 style="left:${s.stage.cloud.l}%;top:${s.stage.cloud.t}%;width:${s.stage.cloud.w}%;height:${s.stage.cloud.h}%" />
+${s.stage.panels.map((n) => bePanel(n)).join('\n')}
+          </div>
+        </div>
+      </section>`,
+
+  /* Two cards side by side, the second dropped 144 so they read as a pair
+     rather than a row, each with its own panel. */
+  halves: (p, s, up) => `
+      <section class="band be-halves">
+        <img class="be-halves-cloud" src="${up}img/be/cloud.webp" alt="" aria-hidden="true" loading="lazy" />
+        <div class="wrap">
+          <div class="head be-halves-head reveal">
+            <h2>${esc(s.h)}</h2>
+            <p>${esc(s.lead)}</p>
+          </div>
+          <div class="be-halves-row">
+${s.sides.map((n) => `            <div class="be-half${n.low ? ' be-half-low' : ''} reveal">
+              <div class="be-half-card" style="--grad: linear-gradient(to bottom, ${n.grad.join(', ')})">
+                <div class="be-half-copy">
+                  <span class="p2-pill p2-pill-caps">${esc(n.pill)}</span>
+                  <h3>${esc(n.h)}</h3>
+                  <p>${esc(n.p)}</p>
+                  <a class="btn btn-${n.btn[1]}" href="${APP_URL}">${esc(n.btn[0])}</a>
+                </div>
+${bePanel(n.panel, 'be-half-pn')}
+              </div>
+            </div>`).join('\n')}
+          </div>
+        </div>
+      </section>`,
+
+  /* Three steps, each a tall card with the number and the line under it, and
+     a rule between the columns. */
+  besteps: (p, s, up) => `
+      <section class="band be-steps" id="s-steps">
+        <div class="wrap">
+          <h2 class="be-steps-h reveal">${esc(s.h)}</h2>
+          <div class="be-steps-row">
+${s.steps.map((n) => `            <article class="be-step reveal">
+              <span class="be-step-art" style="--fill:${n.fill}" aria-hidden="true"></span>
+              <span class="be-step-n" aria-hidden="true">${n.n}</span>
+              <h3>${esc(n.h)}</h3>
+              <p>${esc(n.p)}</p>
+            </article>`).join('\n')}
+          </div>
+        </div>
+      </section>`,
 }
 
 /* ----------------------------------------------------------------- page -- */

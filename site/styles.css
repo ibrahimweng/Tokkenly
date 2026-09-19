@@ -2442,10 +2442,12 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
    it does not need the 1024 the landing page reserves. */
 /* The frames give the product close the same 144 over and under as every
    other band, not the 96 this had before them. */
-.closing-prod { min-height: 0; padding-block: min(144px, 7.5vw); }
+.closing-prod { min-height: 0; padding-block: var(--cpad, min(144px, 7.5vw)); }
 /* The slab's own type: 70 over 69, tight, in a 760 measure. The 22 either
    side of the lead is the component's, and the block is centred in the 532. */
-.closing-prod .closing-in h2 { font-size: clamp(36px, 3.646vw, 70px); line-height: 0.986; }
+.closing-prod .closing-in h2 {
+  font-size: var(--cfs, clamp(36px, 3.646vw, 70px)); line-height: var(--clh, 0.986);
+}
 
 /* ---- the hero ---------------------------------------------------------
    Two columns, not one: the landing hero is centred because it has a globe
@@ -4317,4 +4319,176 @@ textarea.cf-input {
   .p2-sibs-div .prod-more { grid-template-columns: minmax(0, 1fr); }
   .p2-sibs-div .prod-card + .prod-card { padding-left: 0; padding-top: 24px; }
   .p2-sibs-div .prod-card + .prod-card::before { width: 100%; height: 1px; }
+}
+
+/* -------------------------------------------------------- borrow and earn */
+/* Frame 560:1129, measured at 1920. The questions band here is the landing
+   page's, not the product one: 80 of row with a 30 plus and 26 inside. */
+.p2-faq-loose .faq details { padding: min(24px, 1.25vw) min(26px, 1.354vw); }
+.p2-faq-loose .faq .plus { width: min(30px, 1.563vw); height: min(30px, 1.563vw); }
+.p2-faq-loose .faq-head h2 { margin-top: min(16px, 0.834vw); }
+
+/* ---- the hero stage (694:1522) ----------------------------------------- */
+.be-hero .p2-hero-in { row-gap: var(--hg1, min(18px, 0.938vw)); }
+.be-hero .p2-hero-in h1 { margin-top: 0; font-size: clamp(40px, 5.209vw, 100px); line-height: 1.05; }
+.be-hero .p2-hero-lead { margin-top: 0; line-height: 1.6; }
+.be-hero .p2-hero-in .cta-row { margin-top: var(--hg3, min(14px, 0.729vw)); }
+.be-stage-wrap { margin-top: min(96px, 5vw); }
+.be-stage {
+  position: relative; overflow: hidden;
+  aspect-ratio: 1520 / 700; border-radius: min(40px, 2.084vw);
+  background: linear-gradient(to bottom, #79c1c1, #fac8ff);
+}
+/* The cloud is placed by where its own shape lands, not by the picture's
+   box: the file carries a wide transparent margin on every side. */
+.be-cloud { position: absolute; object-fit: fill; z-index: 3; }
+
+/* ---- the panel both the stage and the halves carry --------------------- */
+.be-pn {
+  background: #fff; border-radius: min(24px, 1.25vw);
+  padding: min(26px, 1.354vw);
+  display: grid; align-content: start; gap: min(18px, 0.938vw);
+  box-shadow: 0 18px 44px rgba(5, 51, 41, 0.10);
+}
+.be-stage .be-pn { position: absolute; z-index: 2; height: 57.571%; }
+/* The first panel is a fixed 403 with its four parts spread through it. */
+.be-pn-spread { align-content: space-between; }
+.be-pn-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+.be-pn-head span {
+  text-transform: uppercase; letter-spacing: 0.07em;
+  font-size: clamp(9.5px, 0.573vw, 11px); font-weight: 600; line-height: 1.273; color: #6c7d78;
+}
+.be-pn-head b {
+  font-size: clamp(19px, 1.459vw, 28px); font-weight: 700; line-height: 1.143;
+  letter-spacing: -0.03em; color: var(--ink);
+}
+.be-pn-pairs {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: min(15px, 0.782vw) min(20px, 1.042vw);
+}
+.be-kv { display: grid; gap: min(4px, 0.209vw); min-width: 0; }
+.be-kv span { font-size: clamp(9.5px, 0.573vw, 11px); font-weight: 600; line-height: 1.364; color: #6c7d78; }
+.be-kv b {
+  font-size: clamp(12px, 0.729vw, 14px); font-weight: 600; line-height: 1.429; color: var(--ink);
+}
+.be-pn-rows { padding-block: min(6px, 0.313vw); padding-inline: min(16px, 0.834vw); }
+.be-pn-rows .p2-rrow { padding-block: min(13px, 0.677vw); }
+.be-pn-rows .p2-rrow:first-child { border-top: 0; }
+.be-pn-rows .p2-rrow span, .be-pn-rows .p2-rrow b { line-height: 1.286; }
+.be-track { display: flex; height: min(18px, 0.938vw); border-radius: var(--r-pill); overflow: hidden; }
+.be-track i { display: block; width: var(--w); }
+.be-seg-0 { background: #1e1818; }
+.be-seg-1 { background: var(--mint); }
+.be-legend {
+  display: flex; flex-wrap: wrap; gap: min(26px, 1.354vw);
+  font-size: clamp(11px, 0.729vw, 14px); font-weight: 600; line-height: 1.286; color: var(--ink);
+}
+.be-li { display: inline-flex; align-items: center; gap: min(9px, 0.469vw); }
+.be-li i { flex: none; width: min(9px, 0.469vw); height: min(9px, 0.469vw); border-radius: 50%; }
+.be-dot-0 { background: #1e1818; }
+.be-dot-1 { background: var(--mint); }
+.be-pn-note {
+  font-size: clamp(11px, 0.729vw, 14px); line-height: 1.429; color: #6c7d78;
+}
+.be-pn-btn {
+  display: grid; place-items: center; height: min(54px, 2.813vw); border-radius: var(--r-pill);
+  background: var(--deep); color: #fff;
+  font-size: clamp(12px, 0.729vw, 14px); font-weight: 600;
+}
+
+/* ---- the two halves (649:1671) ----------------------------------------- */
+.be-halves { position: relative; padding-block: min(150px, 7.813vw) 0; }
+/* One cloud, drawn across the seam between this band and the steps. */
+.be-halves-cloud {
+  position: absolute; z-index: 2; pointer-events: none; object-fit: fill;
+  left: 17.188%; top: 47.443vw; width: 26.750%; height: 24.802vw;
+}
+.be-halves-head { max-width: none; text-align: left; margin: 0; }
+.be-halves-head h2 {
+  margin-top: 0; max-width: min(1484px, 97.632%);
+  font-size: clamp(36px, 4.688vw, 90px); line-height: 1.056;
+}
+.be-halves-head > p {
+  margin-top: min(14px, 0.729vw); max-width: min(740px, 48.685%);
+  font-size: clamp(14.5px, 0.886vw, 17px); line-height: 1.7; color: var(--muted);
+}
+.be-halves-row {
+  margin-top: min(48px, 2.5vw);
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: min(32px, 2.105%);
+  align-items: start;
+}
+.be-half-low { margin-top: min(144px, 7.5vw); }
+.be-half-card {
+  position: relative; overflow: hidden;
+  aspect-ratio: 744 / 680; border-radius: min(40px, 2.084vw); background: var(--grad);
+  padding: min(44px, 2.292vw) min(40px, 2.084vw) 0;
+}
+.be-half-copy { display: grid; justify-items: start; }
+.be-half-copy h3 {
+  margin-top: min(24px, 1.25vw); max-width: min(401px, 60.392%);
+  font-size: clamp(20px, 1.667vw, 32px); line-height: 1.282; letter-spacing: -0.028em; color: var(--ink);
+}
+.be-half-copy p {
+  margin-top: min(14px, 0.729vw);
+  font-size: clamp(13px, 0.938vw, 18px); line-height: 1.445; color: rgba(5, 51, 41, 0.76);
+}
+.be-half-copy .btn { margin-top: min(30px, 1.563vw); }
+.be-half-pn { margin-top: min(82px, 4.271vw); }
+/* The borrowing half puts its panel first and sets its copy on an even 23. */
+.be-half-low .be-half-card { display: flex; flex-direction: column; }
+.be-half-low .be-half-pn { margin-top: 0; order: -1; }
+.be-half-low .be-half-copy { margin-top: min(68px, 3.542vw); }
+.be-half-low .be-half-copy h3 { margin-top: min(23px, 1.198vw); max-width: min(448px, 67.470%); }
+.be-half-low .be-half-copy p { margin-top: min(23px, 1.198vw); }
+.be-half-low .be-half-copy .btn { margin-top: min(23px, 1.198vw); }
+
+/* ---- start to finish (649:1762) ---------------------------------------- */
+.be-steps { position: relative; padding-block: min(140px, 7.292vw) min(144px, 7.5vw); }
+.be-steps-h {
+  font-size: clamp(32px, 4.271vw, 82px); line-height: 1.049; letter-spacing: -0.038em; color: var(--ink);
+}
+.be-steps-row {
+  margin-top: min(44px, 2.292vw);
+  display: grid; grid-template-columns: 31.535% 34.232% 34.233%; gap: 0;
+  align-items: start;
+}
+.be-step { position: relative; display: grid; justify-items: start; }
+.be-step + .be-step { padding-left: min(40px, 7.702%); }
+.be-step + .be-step::before {
+  content: ''; position: absolute; left: 0; top: 0;
+  width: 1px; height: min(150px, 7.813vw); background: rgba(5, 51, 41, 0.16);
+}
+.be-step-art {
+  display: block; width: 97.636%; aspect-ratio: 468 / 680;
+  border-radius: min(32px, 1.667vw); background: var(--fill);
+}
+.be-step-n {
+  margin-top: min(14px, 0.729vw);
+  display: grid; place-items: center;
+  width: min(44px, 2.292vw); height: min(44px, 2.292vw); border-radius: 50%;
+  background: var(--deep); color: #fff;
+  font-size: clamp(9px, 0.625vw, 12px); font-weight: 700; letter-spacing: 0.02em;
+}
+.be-step h3 {
+  margin-top: min(14px, 0.729vw);
+  font-size: clamp(15px, 1.146vw, 22px); line-height: 1.318; letter-spacing: -0.022em; color: var(--ink);
+}
+.be-step p {
+  margin-top: min(14px, 0.729vw); max-width: min(440px, 91.667%);
+  font-size: clamp(12px, 0.834vw, 16px); line-height: 1.563; color: var(--muted);
+}
+
+@media (max-width: 1040px) {
+  .be-stage { aspect-ratio: auto; overflow: visible; background: none; }
+  .be-stage .be-pn { position: static; height: auto; width: 100%; margin-top: 20px; }
+  .be-cloud { display: none; }
+  .be-halves-row { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .be-half-low { margin-top: 0; }
+  .be-half-card { aspect-ratio: auto; padding-bottom: min(40px, 5vw); }
+  .be-steps-row { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+  .be-step + .be-step { padding-left: 0; padding-top: 24px; }
+  .be-step + .be-step::before { width: 100%; height: 1px; }
+  .be-halves-cloud { display: none; }
+  .be-halves { padding-block: min(80px, 9vw) 0; }
+  .be-steps { padding-block: min(80px, 9vw); }
 }
