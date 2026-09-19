@@ -205,6 +205,47 @@
       RX = parseFloat(cs.getPropertyValue('--rx')) || RX
       RY = parseFloat(cs.getPropertyValue('--ry')) || RY
       CARD = parseFloat(cs.getPropertyValue('--card')) || 1
+      ARC = null
+    }
+
+    /* Spacing the cards by angle bunches them at the front and the back, where
+       an ellipse turns slowest, and stretches them thin at the sides. The ring
+       reads as a crowd with two gaps rather than a ring. So the cards are laid
+       out along the path's own length instead: equal steps of distance, not of
+       angle. It also means they travel at one speed the whole way round rather
+       than racing the sides and dawdling past the middle.
+
+       The table is the ellipse walked in 720 steps with the running distance
+       kept at each one. It depends on the radii and on the box, so it is
+       dropped whenever either changes and built again on the next frame. */
+    var ARC = null
+    function buildArc(box, h) {
+      var n = 720, run = new Float64Array(n + 1), total = 0
+      var ax = RX / 100 * box, ay = RY / 100 * h
+      var px = ax, py = 0
+      for (var k = 1; k <= n; k++) {
+        var t = k / n * Math.PI * 2
+        var x = ax * Math.cos(t), y = ay * Math.sin(t)
+        var dx = x - px, dy = y - py
+        total += Math.sqrt(dx * dx + dy * dy)
+        run[k] = total
+        px = x; py = y
+      }
+      ARC = { run: run, total: total, n: n, box: box, h: h }
+    }
+
+    /* A fraction of the way round the path, in degrees. */
+    function angleAt(frac) {
+      var f = frac - Math.floor(frac)
+      var target = f * ARC.total
+      var lo = 1, hi = ARC.n
+      while (lo < hi) {
+        var mid = (lo + hi) >> 1
+        if (ARC.run[mid] < target) lo = mid + 1; else hi = mid
+      }
+      var a = ARC.run[lo - 1], b = ARC.run[lo]
+      var t = b > a ? (target - a) / (b - a) : 0
+      return (lo - 1 + t) / ARC.n * 360
     }
 
     var spin = 0
@@ -217,9 +258,13 @@
 
     function layout() {
       var box = globe.clientWidth || 1
+      var h = globe.clientHeight || 1
+      if (!ARC || ARC.box !== box || ARC.h !== h) buildArc(box, h)
       for (var i = 0; i < cards.length; i++) {
         var card = cards[i]
-        var a = (parseFloat(card.dataset.a) + spin) * Math.PI / 180
+        /* Its place in the ring is its place in the markup: the cards are
+           spread evenly along the path and carried round together. */
+        var a = angleAt(i / cards.length + spin / 360) * Math.PI / 180
         var depth = Math.sin(a)
         var scale = 1 + depth * DEPTH
         /* The card's own width is a share of the globe box, so it scales with

@@ -428,7 +428,10 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
   cursor: grab;
   --rx: 53.8;   /* ellipse radii, per cent of this box */
   --ry: 25.3;
-  --card: 1;    /* card size against the Figma original */
+  /* Twelve cards where the frame drew six, so each one comes down to fit:
+     the near half of the ring is about 1120 of path and six cards at the
+     front scale of 1.12 need to live in it. */
+  --card: 0.8;  /* card size against the Figma original */
 }
 .globe:active { cursor: grabbing; }
 .globe:focus-visible { outline: 2px solid var(--mint); outline-offset: 12px; border-radius: 50%; }
@@ -2223,9 +2226,10 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
      nothing is left with enough clear air to sit in. */
   .hero-stage { aspect-ratio: 390 / 330; }
   /* A ring at the desktop radius is wider than the phone, so the outer cards
-     hang off both edges. Pulled in and scaled down, all six stay on screen. */
-  /* 0.78 put six 200px cards on a 312px sphere and buried it. */
-  .globe { left: 8%; width: 84%; --rx: 45; --ry: 21.5; --card: 0.62; }
+     hang off both edges. Pulled in and scaled down, they all stay on screen.
+     0.78 put six 200px cards on a 312px sphere and buried it; twelve need to
+     come down further still. */
+  .globe { left: 8%; width: 84%; --rx: 45; --ry: 21.5; --card: 0.48; }
   .stickers { display: none; }
   .hero-cta { flex-direction: column; align-items: stretch; width: 100%; }
   .hero-cta .btn { width: 100%; }
