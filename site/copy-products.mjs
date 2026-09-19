@@ -693,53 +693,88 @@ export const PRODUCTS = [
 
   {
     slug: 'convert',
-    close: ['See what the rate is today.', 'Move between naira and stablecoins without leaving Tokkenly.'],
+    /* Frame 648:1611. The swap panel sits beside the words, then the two ways
+       of doing it side by side over a portrait, the balances slab, the
+       questions, the siblings and the close. */
+    sections: [
+      { type: 'phero', align: 'left', pill: 'Convert', caps: true,
+        h: 'Move between naira and stablecoins.',
+        lead: 'Type the amount in whichever currency you are already thinking in. The ' +
+              'other one solves itself, and the rate on the screen is the rate you get.',
+        ctas: [['See today\u2019s rate', 'ink', null]],
+        height: 41.146, padTop: 176, padBot: 54, hW: 45.921, leadW: 45.921,
+        hSize: [100, 1.06], gaps: [24, 48], leadLh: 1.55,
+        /* Lilac at the top, the page's own ground at the foot. */
+        wash: 'linear-gradient(to bottom, #f0d7f4, #f1d9f3 25%, #efdcf1 51%, ' +
+              '#ede3ed 76%, #ebe6eb 89%, #eaeae9)',
+        washH: 41.146,
+        art: [['coin', 'cta/coin.webp', 85.630, 8.724, 10.625]],
+        panel: { l: 61.406, t: 11.615, w: 29.167, pay: true,
+          swap: [['You convert', '&#8358;25,000', 'Naira'], ['You get', '$16.67', 'USDC']],
+          stack: [['Rate', '&#8358;1,500 to $1'], ['Held for', '89 seconds'], ['Fee', 'None']],
+          btn: 'Convert' } },
+
+      { type: 'cmp2',
+        h: 'The way it usually goes,\nand the way it goes here.',
+        lead: 'Same money, fewer apps and no arithmetic in the middle.',
+        btn: 'See today\u2019s rate',
+        photo: 'cv/compare-portrait.webp',
+        a: { pill: 'Usually', items: [
+          'Open a second app, or message someone',
+          'Agree a rate you cannot see move',
+          'Send, wait, and hope the other leg lands',
+          'Work out what you actually got'] },
+        b: { pill: 'In Tokkenly', items: [
+          'Type the amount in either currency',
+          'The rate is on the screen and counts down',
+          'Both legs post in the same app',
+          'The row says which stage it is at'] },
+        frag: { k: 'Rate held', v: '89s',
+                rows: [['You convert', '&#8358;25,000'], ['You get', '$16.67'], ['Fee', 'None']] } },
+
+      { type: 'cvband',
+        eyebrow: 'One amount, two faces',
+        h: 'Type in either\ncurrency.',
+        lead: '&#8358;25,000 and $16.67 are not two amounts. They are one amount wearing ' +
+              'the two faces it is passing between, so you type whichever one you are ' +
+              'thinking in and the other solves itself.',
+        points: [
+          ['The rate is held while you decide',
+           'Ninety seconds, counted down on the screen. If you take longer, Tokkenly asks for a fresh one.'],
+          ['Both balances stay yours', 'Before and after. Nothing leaves the app in between.'],
+        ],
+        btn: 'See what it costs',
+        panel: { head: ['Your balances', '$1,024.86'],
+          bar: [['Naira', '&#8358;312,000', 61.42], ['USDC', '$616.20', 37.63]],
+          note: 'One balance becomes the other. Neither leaves Tokkenly.' } },
+
+      { type: 'pfaq', h: 'A few things you might be wondering.', pad: [144, 144],
+        cols: [32.895, 53.947, 13.158], h2: [82, 1.0732],
+        items: [
+          ['What if the rate moves while I am deciding?',
+           'It does not. The rate you are shown is held for ninety seconds. If you take longer, Tokkenly asks for a fresh one rather than quietly using a different number.'],
+          ['Can I convert straight into an investment?',
+           'Yes. Convert, then buy \u2014 both are in the same app, and your balance does not leave it in between.'],
+          ['Why does the second leg sometimes lag?',
+           'The first leg posts immediately. The second lands when the desk settles it, and the row says which stage it is at.'],
+          ['Is there a minimum?',
+           'A small one, so a conversion is worth the network fee. The screen says what it is before you confirm.'],
+        ] },
+
+      { type: 'siblings', h: 'There is more in the app.', badge: 'letter', divided: true,
+        pad: [20, 140], gap: 34, hSize: [32, 1.281],
+        cards: ['tokenized-stocks', 'pay-bills', 'receive-and-send'] },
+
+      { type: 'pclose', tall: true },
+    ],
+    close: ['See what the rate is today.',
+            'Move between naira and stablecoins without leaving Tokkenly.', 'See today\u2019s rate'],
     nav: 'Convert',
     eyebrow: 'Convert',
     title: 'Change currencies. Keep your plans.',
     lead:
       'Move between naira and stablecoins for the way you want to use your money. Spend, send, or ' +
       'invest from one app.',
-    stage: 'stage-peach',
-    prop: 'notes',
-    panel: [
-      ['swap', [['You convert', '&#8358;25,000', 'Naira'], ['You get', '$16.67', 'USDC']]],
-      ['rows', [['Rate', '&#8358;1,500 to $1'], ['Held for', '89 seconds'], ['Fee', 'None']]],
-      ['btn', 'Convert'],
-    ],
-    spine: [
-      { type: 'compare', head: 'The way it usually goes.',
-        before: ['Ask around for a rate', 'Send naira and hope', 'Wait, and ask again', 'Find out the rate moved'],
-        after: ['See the rate', 'It is held for ninety seconds', 'Convert', 'Both balances are yours, before and after'] },
-      { type: 'split', side: 'b',
-        eyebrow: 'One amount, two faces',
-        head: 'Type in either<br />currency.',
-        lead:
-          '&#8358;25,000 and $16.67 are not two amounts. They are one amount wearing the two faces it ' +
-          'is passing between, so you type whichever one you are thinking in and the other solves itself.',
-        points: [
-          ['The rate is held while you decide', 'Ninety seconds, counted down on the screen. If you take longer, Tokkenly asks for a fresh one.'],
-          ['Both balances stay yours', 'Before and after. Nothing leaves the app in between.'],
-        ],
-        cta: ['See what it costs', '#s-facts'],
-        stage: 'stage-deep', prop: 'coin',
-        panel: [['head', 'Your balances', '$1,024.86'],
-                ['bar', [['Naira', '&#8358;312,000', 62], ['USDC', '$616.20', 38]]],
-                ['note', 'One balance becomes the other. Neither leaves Tokkenly.']] },
-      { type: 'facts', head: 'What it costs you.', rows: [
-        ['Fee', 'None.'],
-        ['Rate', 'The one on the screen. It is held for ninety seconds while you decide, and the screen counts it down.'],
-        ['Your limits', 'Untouched. Moving your own money between your own balances is not a payment out of your account.'],
-        ['How long', 'The first leg posts immediately. The second lands when the desk settles it, and the row says which stage it is at.'],
-      ] },
-      { type: 'faq', items: [
-        ['What if the rate moves while I am deciding?',
-         'It does not. The rate you are shown is held for ninety seconds. If you take longer, Tokkenly asks for a fresh one rather than quietly using a different number.'],
-        ['Can I convert straight into an investment?',
-         'Yes. Convert, then buy — both are in the same app and your balance does not leave it in between.'],
-      ] },
-      { type: 'related' },
-    ],
   },
 
   /* ---------------------------------------------------------- with a risk -- */

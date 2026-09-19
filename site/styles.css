@@ -3297,7 +3297,7 @@ textarea.cf-input {
 .p2-hero {
   position: relative; isolation: isolate; overflow: hidden;
   min-height: min(var(--hhp, 1169px), var(--hh, 60.885vw));
-  padding-top: min(184px, 9.583vw); padding-bottom: min(104px, 5.417vw);
+  padding-top: min(184px, 9.583vw); padding-bottom: var(--hpb, min(104px, 5.417vw));
   display: grid; align-content: start;
 }
 .p2-wash {
@@ -3372,19 +3372,19 @@ textarea.cf-input {
 
 .p2-hero-in {
   display: grid; justify-items: center; text-align: center;
-  gap: min(19px, 0.969vw);
+  gap: var(--hg1, min(19px, 0.969vw));
 }
 .p2-hero-in h1 {
   max-width: min(802px, 52.764%);
-  font-size: clamp(40px, 5.209vw, 100px); line-height: 1.05; letter-spacing: -0.0288em;
-  color: var(--ink);
+  font-size: var(--hfs, clamp(40px, 5.209vw, 100px)); line-height: var(--hflh, 1.05);
+  letter-spacing: -0.0288em; color: var(--ink);
 }
 .p2-hero-lead {
   max-width: min(680px, 44.737%);
-  font-size: clamp(16.5px, 1.042vw, 20px); line-height: 1.6; color: var(--muted);
+  font-size: clamp(16.5px, 1.042vw, 20px); line-height: var(--hll, 1.6); color: var(--muted);
 }
 /* 48 from the lead to the buttons, of which 19 is the column's own gap. */
-.p2-hero-in .cta-row { margin-top: min(29px, 1.511vw); gap: min(24px, 1.25vw); }
+.p2-hero-in .cta-row { margin-top: var(--hg3, min(29px, 1.511vw)); gap: min(24px, 1.25vw); }
 
 /* ---- three cards (636:1651) -------------------------------------------- */
 .p2-head { display: grid; justify-items: start; gap: min(16px, 0.834vw); }
@@ -3613,12 +3613,14 @@ textarea.cf-input {
    empty under them. Centring it put the headline 100 low. */
 .p2-hero-left { display: grid; align-content: start; }
 .p2-hero-left .p2-hero-in { justify-items: start; text-align: left; }
-.p2-hero-left .p2-hero-in h1 { max-width: min(757px, 49.803%); }
-.p2-hero-left .p2-hero-lead { max-width: min(680px, 44.737%); }
-.p2-hero-left .p2-hero-in .cta-row { margin-top: min(13px, 0.677vw); }
+.p2-hero-left .p2-hero-in h1 { max-width: var(--hw, min(757px, 49.803%)); }
+.p2-hero-left .p2-hero-lead { max-width: var(--hlw, min(680px, 44.737%)); }
+.p2-hero-left .p2-hero-in .cta-row { margin-top: var(--hg3, min(13px, 0.677vw)); }
 /* A photograph the section clips on three sides, and the small one over it. */
 .p2-art { position: absolute; z-index: -1; height: auto; max-width: none; pointer-events: none; }
 .p2-art-inset { z-index: 0; border-radius: min(24px, 1.25vw); }
+/* Convert's coin falls across the panel's corner rather than behind it. */
+.p2-art-coin { z-index: 3; }
 
 /* The hero receipt (530:827): the gift, written out. */
 .p2-pn {
@@ -3933,7 +3935,7 @@ textarea.cf-input {
   text-transform: none; letter-spacing: -0.01em;
   font-size: clamp(13px, 0.834vw, 16px); line-height: 1.25; color: var(--ink);
 }
-.p2-pn-pay .p2-pn-head b { font-size: clamp(21px, 1.563vw, 30px); line-height: 1.067; }
+.p2-pn-pay .p2-pn-head b { font-size: clamp(21px, 1.563vw, 30px); line-height: 1.067; color: var(--ink); }
 .p2-pn-pay .p2-pn-rows {
   padding: 0; background: none; border-radius: 0;
   gap: min(15px, 0.782vw) min(20px, 1.042vw);
@@ -4098,4 +4100,221 @@ textarea.cf-input {
   .lg-def { flex-direction: column; gap: 4px; }
   .lg-def dt { width: auto; }
   .lg-part { flex-direction: column; align-items: flex-start; gap: 14px; }
+}
+
+/* ---------------------------------------------------------------- convert */
+/* Frame 648:1611. Everything here is measured off it at 1920: a width is a
+   share of the column it sits in, a height or anything placed against one is
+   min(px, vw), so a band's height comes from its words. */
+
+/* ---- the swap panel in the hero (648:1629) ----------------------------- */
+.p2-sw { display: grid; gap: min(10px, 0.521vw); }
+.p2-sw-f {
+  display: flex; align-items: center; justify-content: space-between; gap: min(20px, 1.042vw);
+  height: min(84px, 4.375vw); padding-inline: min(20px, 1.042vw);
+  border-radius: min(16px, 0.834vw); background: #f2f5f4;
+}
+.p2-sw-l { display: grid; gap: min(3px, 0.157vw); min-width: 0; }
+.p2-sw-l i {
+  font-style: normal; text-transform: uppercase; letter-spacing: 0.07em;
+  font-size: clamp(9.5px, 0.573vw, 11px); font-weight: 600; line-height: 1.273; color: #6c7d78;
+}
+.p2-sw-l b {
+  font-size: clamp(17px, 1.25vw, 24px); font-weight: 700; line-height: 1.292;
+  letter-spacing: -0.02em; color: var(--ink);
+}
+.p2-sw-t {
+  flex: none; display: grid; place-items: center;
+  height: min(32px, 1.667vw); padding-inline: min(13px, 0.678vw);
+  border-radius: var(--r-pill); background: #fff;
+  font-size: clamp(11px, 0.678vw, 13px); font-weight: 600; line-height: 1.231; color: var(--deep);
+}
+
+/* ---- the two ways of doing it (648:1657) ------------------------------- */
+.cv-cmp { padding-block: min(144px, 7.5vw); }
+.cv-cmp-head { max-width: none; }
+.cv-cmp-head h2 {
+  margin-top: 0; margin-inline: auto; max-width: min(1009px, 66.382%);
+  font-size: clamp(38px, 4.688vw, 90px); line-height: 1.056;
+}
+.cv-cmp-head > p {
+  margin: min(14px, 0.729vw) auto 0; max-width: min(700px, 46.053%);
+  font-size: clamp(14.5px, 0.886vw, 17px); line-height: 1.7; color: var(--muted);
+}
+.cv-stage {
+  position: relative; overflow: hidden; margin-top: min(80px, 4.167vw);
+  aspect-ratio: 1520 / 751; border-radius: min(34px, 1.771vw);
+  background: linear-gradient(to bottom, #dccbd1, #d4cdc6);
+}
+/* The export carries the stage behind the cut-out, so it is placed at the
+   group's own box and the two grounds meet without a seam. */
+.cv-stage-photo {
+  position: absolute; left: 18.515%; top: 0; width: 65.860%; height: 100%;
+  object-fit: cover;
+}
+.cv-side { position: absolute; border-radius: min(26px, 1.354vw); }
+.cv-side .p2-pill { border-color: rgba(5, 51, 41, 0.3); }
+.cv-side ul { list-style: none; margin: 0; padding: 0; }
+.cv-side li {
+  display: flex; align-items: baseline; gap: min(16px, 0.834vw);
+  padding-block: min(20px, 1.042vw);
+  font-size: clamp(13px, 0.938vw, 18px); line-height: 1.445; color: var(--ink);
+}
+.cv-side li + li { border-top: 1px solid rgba(30, 24, 24, 0.14); }
+.cv-side li i { flex: none; width: min(15px, 0.782vw); font-style: normal; font-size: 0.86em; }
+/* 40 inside, and the list starts 26 under the eyebrow. */
+.cv-side-a {
+  left: 4.355%; top: 6.991%; width: 31.776%; height: 54.727%;
+  padding: min(44px, 2.292vw) min(40px, 2.084vw); background: #cbbfb8;
+}
+.cv-side-b {
+  left: 64.079%; top: 32.889%; width: 32.895%; height: 59.254%;
+  padding: min(40px, 2.084vw);
+  background: linear-gradient(to bottom, #2bbd9b, #acc1d8 28%, #ecc3f6 42%, #f3c8ff 55%, #c4e1ff);
+}
+.cv-side-b ul { margin-top: min(56px, 2.917vw); }
+.cv-side-a ul { margin-top: min(26px, 1.354vw); }
+.cv-side-b li + li { border-top-color: rgba(5, 51, 41, 0.16); }
+.cv-frag {
+  left: 47.645%; top: 54.594%; width: 17.763%;
+  padding: min(20px, 1.042vw); border-radius: min(18px, 0.938vw);
+}
+.cv-frag .p2-fhead { padding-bottom: 0; }
+.cv-frag .p2-fhead span { text-transform: uppercase; letter-spacing: 0.07em; line-height: 1.19; }
+.cv-frag .p2-fhead b { line-height: 1.25; }
+.cv-frag .p2-rrow span { line-height: 1.186; }
+.cv-frag .p2-rrow b { line-height: 1.215; }
+.cv-cmp .cta-row { margin-top: min(48px, 2.5vw); }
+
+/* ---- the balances slab (532:1027) -------------------------------------- */
+.cv-band { padding-block: min(144px, 7.5vw) 0; }
+.cv-band-in {
+  display: grid; grid-template-columns: 45.263% 50.526%; gap: 4.211%;
+  align-items: center;
+}
+.cv-slab {
+  position: relative; overflow: hidden;
+  aspect-ratio: 688 / 751; border-radius: min(34px, 1.771vw);
+  background: #a4b6c2;
+}
+/* The frame blurs this photograph inside the slab, so the picture comes in
+   as the node's own render rather than the sharp original. */
+.cv-slab-photo {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+}
+/* The coin falls across the panel's corner and off the slab's bottom edge.
+   These are the coin's own ink placed where the frame draws it, not the
+   picture's box: the file carries a wide transparent margin. */
+.cv-slab-coin {
+  position: absolute; left: 46.817%; top: 58.362%; width: 55.451%; z-index: 3;
+  height: auto; max-width: none;
+}
+.cv-pn {
+  position: absolute; left: 8.690%; top: 21.505%; width: 82.619%; z-index: 2;
+  padding: 6.218%; border-radius: min(28px, 1.459vw); background: #fff;
+  box-shadow: 0 22px 52px rgba(5, 51, 41, 0.14);
+}
+.cv-pn-head { display: grid; gap: min(10px, 0.521vw); }
+.cv-pn-head span {
+  text-transform: uppercase; letter-spacing: 0.07em;
+  font-size: clamp(11px, 0.729vw, 14px); font-weight: 600; line-height: 1.572; color: #6c7d78;
+}
+.cv-pn-head b {
+  font-size: clamp(30px, 2.396vw, 46px); font-weight: 700; line-height: 1.327;
+  letter-spacing: -0.03em; color: #1e1818;
+}
+.cv-pn-bar { margin-top: min(27px, 1.407vw); }
+.cv-track { display: flex; gap: 0.949%; height: min(24px, 1.266vw); }
+.cv-track i { display: block; width: var(--w); border-radius: var(--r-pill); }
+.cv-track i:first-child { background: var(--mint); }
+.cv-track i:last-child { background: #e3ddd4; }
+.cv-keys {
+  margin-top: min(17px, 0.876vw);
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3.797%;
+}
+.cv-key { display: grid; gap: min(5px, 0.261vw); }
+.cv-key span {
+  text-transform: uppercase; letter-spacing: 0.07em;
+  font-size: clamp(11px, 0.729vw, 14px); font-weight: 600; line-height: 1.572; color: #6c7d78;
+}
+.cv-key b {
+  font-size: clamp(16px, 1.146vw, 22px); font-weight: 700; line-height: 1.319;
+  letter-spacing: -0.02em; color: #1e1818;
+}
+.cv-pn-note {
+  margin-top: min(27px, 1.407vw);
+  font-size: clamp(14px, 0.99vw, 19px); line-height: 1.579; color: #6c7d78;
+}
+.cv-text { display: grid; justify-items: start; }
+.cv-text .eyebrow { margin-bottom: min(16px, 0.834vw); }
+.cv-text h2 {
+  max-width: min(584px, 76.042%);
+  font-size: clamp(30px, 3.021vw, 58px); line-height: 1.053; letter-spacing: -0.038em;
+  color: var(--ink);
+}
+.cv-lead {
+  margin-top: min(16px, 0.834vw); max-width: min(584px, 76.042%);
+  font-size: clamp(15px, 1.042vw, 20px); line-height: 1.6; color: var(--muted);
+}
+.cv-points { margin-top: min(40px, 2.084vw); display: grid; gap: min(28px, 1.459vw); }
+.cv-point { padding-left: min(22px, 1.146vw); max-width: min(400px, 52.084%); }
+.cv-point h3 {
+  font-size: clamp(15px, 1.042vw, 20px); font-weight: 700; line-height: 1.45;
+  letter-spacing: -0.022em; color: var(--ink);
+}
+.cv-point p {
+  margin-top: min(9px, 0.469vw);
+  font-size: clamp(13px, 0.834vw, 16px); line-height: 1.625; color: var(--muted);
+}
+.cv-band .btn { margin-top: min(36px, 1.875vw); }
+
+@media (max-width: 1040px) {
+  .cv-stage { aspect-ratio: auto; height: auto; overflow: visible; background: none; }
+  .cv-stage-photo { position: static; width: 100%; height: auto; border-radius: min(28px, 3vw); }
+  .cv-side, .cv-frag { position: static; width: 100%; margin-top: 20px; }
+  .cv-side { height: auto; }
+  .cv-band-in { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+  .cv-text h2, .cv-lead, .cv-point { max-width: 100%; }
+  .cv-cmp { padding-block: min(80px, 9vw); }
+  .cv-band { padding-block: min(80px, 9vw) 0; }
+}
+
+/* ---- the siblings, drawn as columns rather than cards (648:1768) -------- */
+/* Convert's frame sets this band as three plain columns with a rule between
+   them, where the other pages give each sibling a sand card. */
+.p2-sibs .p2-head h2 { line-height: var(--slh, 1.02); }
+.p2-sibs-div .prod-more { grid-template-columns: 31.360% 34.320% 34.320%; gap: 0; }
+.p2-sibs-div .prod-card {
+  overflow: visible; background: none; color: var(--ink); border-radius: 0;
+  padding: min(26px, 1.354vw) 0; min-height: 0;
+  gap: 0; align-content: start; transition: none;
+}
+.p2-sibs-div .prod-card:hover { transform: none; box-shadow: none; }
+.p2-sibs-div .prod-card + .prod-card { position: relative; padding-left: min(44px, 8.434%); }
+.p2-sibs-div .prod-card + .prod-card::before {
+  content: ''; position: absolute; left: 0; top: 0;
+  width: 1px; height: min(120px, 6.25vw); background: rgba(5, 51, 41, 0.16);
+}
+.p2-sibs-div .pr-title { gap: 0; }
+.p2-sibs-div .pr-chip {
+  width: min(50px, 2.605vw); height: min(50px, 2.605vw);
+  border-radius: min(12px, 0.625vw); background: #dcd6cd;
+}
+.p2-sibs-div .prod-card h3 {
+  margin-top: min(10px, 0.521vw);
+  font-size: clamp(16px, 1.042vw, 20px); line-height: 1.3; color: var(--ink);
+}
+.p2-sibs-div .prod-card p {
+  margin-top: min(10px, 0.521vw); max-width: min(433px, 90.83%);
+  font-size: clamp(12px, 0.782vw, 15px); line-height: 1.467; color: rgba(5, 51, 41, 0.72);
+}
+.p2-sibs-div .prod-card .pr-link {
+  margin-top: min(26px, 1.354vw);
+  font-size: clamp(12px, 0.782vw, 15px); line-height: 1.334; color: var(--ink);
+}
+
+@media (max-width: 1040px) {
+  .p2-sibs-div .prod-more { grid-template-columns: minmax(0, 1fr); }
+  .p2-sibs-div .prod-card + .prod-card { padding-left: 0; padding-top: 24px; }
+  .p2-sibs-div .prod-card + .prod-card::before { width: 100%; height: 1px; }
 }

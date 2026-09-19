@@ -513,24 +513,36 @@ const closingProd = (p, up, tall) => `
 
 /* The six products, as the sibling cards name them. The href is resolved
    once, here, so the rebuild can move a page without hunting through copy. */
+/* The frame types these as glyphs rather than drawing them, so they are
+   characters here too and inherit the line's colour. */
+const CROSS2 = '&#10005;'
+const TICK2 = '&#10003;'
+
+/* The words are the frames': every sibling band across Section 1 writes the
+   product in sentence case and the line under it the same way. */
 const SIBS = {
-  'tokenized-stocks':   ['Tokenized Stocks', 'Nigerian and US companies, in one list.', 'tokenized-stocks', 'search'],
-  'gifting-and-rewards':['Gifting &amp; Rewards', 'Make their day. Start their portfolio.', 'gifting-and-rewards', 'gift'],
-  'receive-and-send':   ['Receive and send', 'Get paid. Make someone&#8217;s day.', 'receive', 'updown'],
-  'pay-bills':          ['Pay bills', 'Airtime, data and electricity, in one place.', 'pay-bills', 'receipt'],
-  'convert':            ['Convert', 'Naira and stablecoins, at the rate on the screen.', 'convert', 'swap'],
-  'borrow-and-earn':    ['Borrow and earn', 'Put it to work, or borrow against it.', 'earn', 'split'],
+  'tokenized-stocks':   ['Tokenized stocks', 'Invest in Nigerian and US companies from one app.', 'tokenized-stocks', 'search'],
+  'gifting-and-rewards':['Gifting and rewards', 'Make their day, and start their portfolio.', 'gifting-and-rewards', 'gift'],
+  'receive-and-send':   ['Receive and send', 'Get paid into Tokkenly, and send from the same place.', 'receive', 'updown'],
+  'pay-bills':          ['Pay bills', 'Airtime, data and electricity from the balance you hold.', 'pay-bills', 'receipt'],
+  'convert':            ['Convert', 'Move between naira and stablecoins without leaving the app.', 'convert', 'swap'],
+  'borrow-and-earn':    ['Borrow and earn', 'Put stablecoins to work, or borrow against what you hold.', 'earn', 'split'],
 }
 
 /* The hero receipt: a white card the frame floats over the art, written out
    rather than screenshotted, the same way the landing page's panels are. */
 const panel2 = (n) => `
         <div class="p2-pn${n.big ? ' p2-pn-lg' : ''}${n.pay ? ' p2-pn-pay' : ''}" style="left:${n.l}%;top:${n.t}vw;width:${n.w}%" aria-hidden="true">
-          <div class="p2-pn-head"><span>${esc(n.head[0])}</span><b>${esc(n.head[1])}</b></div>
-          <div class="p2-pn-rows">
+${n.swap ? `          <div class="p2-sw">
+${n.swap.map(([k, v, tag]) => `            <div class="p2-sw-f"><span class="p2-sw-l"><i>${esc(k)}</i><b>${v}</b></span><span class="p2-sw-t">${esc(tag)}</span></div>`).join('\n')}
+          </div>` : ''}
+${n.head ? `          <div class="p2-pn-head"><span>${esc(n.head[0])}</span><b>${esc(n.head[1])}</b></div>` : ''}
+${n.pairs ? `          <div class="p2-pn-rows">
 ${n.pairs.map(([k, v]) => `            <div class="p2-pn-row"><span>${esc(k)}</span><b>${v}</b></div>`).join('\n')}
-${(n.rows || []).map(([k, v]) => `            <div class="p2-pn-row p2-pn-wide"><span>${esc(k)}</span><b>${v}</b></div>`).join('\n')}
-          </div>
+          </div>` : ''}
+${n.stack ? `          <div class="p2-pn-rows p2-pn-stack">
+${n.stack.map(([k, v]) => `            <div class="p2-rrow"><span>${esc(k)}</span><b>${v}</b></div>`).join('\n')}
+          </div>` : ''}
 ${n.note ? `          <p class="p2-pn-note">${esc(n.note)}</p>` : ''}
           <span class="p2-pn-btn${n.pay ? ' p2-pn-btn-deep' : ''}">${n.btn}</span>
         </div>`
@@ -557,11 +569,15 @@ const KIT2 = {
       <section class="p2-hero${s.align === 'left' ? ' p2-hero-left' : ''}${s.align === 'mid' ? ' p2-hero-mid' : ''}" style="${[
         s.height ? `--hh:${s.height}vw;--hhp:${(s.height * 19.2).toFixed(0)}px` : '',
         s.padTop ? `--hpt:min(${s.padTop}px, ${(s.padTop / 19.2).toFixed(3)}vw)` : '',
+        s.padBot ? `--hpb:min(${s.padBot}px, ${(s.padBot / 19.2).toFixed(3)}vw)` : '',
+        s.leadLh ? `--hll:${s.leadLh}` : '',
         s.hW ? `--hw:min(${(s.hW * 15.2).toFixed(0)}px, ${s.hW}%)` : '',
         s.leadW ? `--hlw:min(${(s.leadW * 15.2).toFixed(0)}px, ${s.leadW}%)` : '',
+        s.hSize ? `--hfs:clamp(${Math.round(s.hSize[0] * 0.4)}px, ${(s.hSize[0] / 19.2).toFixed(3)}vw, ${s.hSize[0]}px);--hflh:${s.hSize[1]}` : '',
+        s.gaps ? `--hg1:min(${s.gaps[0]}px, ${(s.gaps[0] / 19.2).toFixed(3)}vw);--hg3:min(${s.gaps[1] - s.gaps[0]}px, ${((s.gaps[1] - s.gaps[0]) / 19.2).toFixed(3)}vw)` : '',
       ].filter(Boolean).join(';')}">
 ${s.wash ? `        <div class="p2-wash" aria-hidden="true"
-             style="--w: radial-gradient(118% 92% at 50% -2%, ${s.wash.join(', ')})${s.washH ? `;--wh:${s.washH}vw` : ''}"></div>` : ''}
+             style="--w: ${typeof s.wash === 'string' ? s.wash : `radial-gradient(118% 92% at 50% -2%, ${s.wash.join(', ')})`}${s.washH ? `;--wh:${s.washH}vw` : ''}"></div>` : ''}
 ${s.mask ? `        <span class="p2-mask" style="left:${s.mask.l}%;top:${s.mask.t}vw;width:${s.mask.w}%;aspect-ratio:${s.mask.w} / ${s.mask.h}" aria-hidden="true"><img src="${up}img/${s.mask.src}" alt="" /></span>` : ''}
 ${(s.coins || []).map(([name, w, d, fx, sl, st, sw]) => `        <span class="p2-coin${fx ? ' p2-coin-fx' : ''}" style="--b:${w}%;--d:${d}s;--sl:${sl}%;--st:${st}vw;--sw:${sw}%" aria-hidden="true"><img src="${up}img/ts/coin-${name}.webp" alt="" /></span>`).join('\n')}
 ${(s.art || []).map(([kind, src, l, t, w]) => `        <img class="p2-art p2-art-${kind}" src="${up}img/${src}" style="left:${l}%;top:${t}vw;width:${w}%" alt="" aria-hidden="true" />`).join('\n')}
@@ -673,8 +689,8 @@ ${s.items.map(([q, a]) => `            <details>
 
   /* Three sand cards, the other products this one sits beside. */
   siblings: (p, s, up) => `
-      <section class="band p2-sibs${s.badge === 'letter' ? ' p2-sibs-letter' : ''}" style="${[
-        s.hSize ? `--sh:${s.hSize}px` : '',
+      <section class="band p2-sibs${s.badge === 'letter' ? ' p2-sibs-letter' : ''}${s.divided ? ' p2-sibs-div' : ''}" style="${[
+        s.hSize ? `--sh:${s.hSize[0] || s.hSize}px${s.hSize[1] ? `;--slh:${s.hSize[1]}` : ''}` : '',
         s.pad ? `--spt:min(${s.pad[0]}px, ${(s.pad[0] / 19.2).toFixed(3)}vw);--spb:min(${s.pad[1]}px, ${(s.pad[1] / 19.2).toFixed(3)}vw)` : '',
         s.gap ? `--sg:min(${s.gap}px, ${(s.gap / 19.2).toFixed(3)}vw)` : '',
         s.cardGap ? `--scg:min(${s.cardGap}px, ${(s.cardGap / 15.2).toFixed(3)}%)` : '',
@@ -689,10 +705,10 @@ ${s.cards.map((c) => {
     /* A page may name a product and take the shared words, or write the card
        out itself: the frames do both, and two of them use a letter where the
        others use an icon. */
-    const [href, badge, title, sub, link] = Array.isArray(c) ? c : [SIBS[c][2], SIBS[c][3], SIBS[c][0], SIBS[c][1], 'Explore ' + SIBS[c][0]]
+    const [href, badge, title, sub, link] = Array.isArray(c) ? c : [SIBS[c][2], SIBS[c][3], SIBS[c][0], SIBS[c][1], 'Explore ' + SIBS[c][0].toLowerCase()]
     return `            <article class="prod-card reveal">
               <div class="pr-title">
-                <span class="pr-chip" aria-hidden="true">${s.badge === 'letter' ? esc(badge) : `<svg viewBox="0 0 24 24"><path d="${ICONS[badge]}" /></svg>`}</span>
+                <span class="pr-chip" aria-hidden="true">${s.badge === 'letter' ? esc(title.replace(/[^A-Za-z]/g, '')[0]) : `<svg viewBox="0 0 24 24"><path d="${ICONS[badge]}" /></svg>`}</span>
                 <h3>${title}</h3>
                 <p>${esc(sub)}</p>
               </div>
@@ -828,6 +844,69 @@ ${t.frag.rows.map(([k, v]) => `                <div class="p2-rrow"><span>${esc(
         </div>
       </section>`,
 
+  /* Convert's two ways of doing it: a portrait on a mauve stage with a card
+     either side of it, offset so they read as a before and an after, and the
+     receipt fragment sitting between them. */
+  cmp2: (p, s, up) => `
+      <section class="band cv-cmp">
+        <div class="wrap">
+          <div class="head cv-cmp-head reveal">
+            <h2>${lines2(s.h)}</h2>
+            <p>${esc(s.lead)}</p>
+          </div>
+          <div class="cv-stage reveal">
+            <img class="cv-stage-photo" src="${up}img/${s.photo}" alt="" aria-hidden="true" loading="lazy" />
+${[['a', s.a, CROSS2], ['b', s.b, TICK2]].map(([k, side, mark]) => `            <div class="cv-side cv-side-${k}">
+              <span class="p2-pill p2-pill-caps">${esc(side.pill)}</span>
+              <ul>
+${side.items.map((x) => `                <li><i aria-hidden="true">${mark}</i>${esc(x)}</li>`).join('\n')}
+              </ul>
+            </div>`).join('\n')}
+            <div class="p2-frag cv-frag" aria-hidden="true">
+              <div class="p2-fhead"><span>${esc(s.frag.k)}</span><b>${s.frag.v}</b></div>
+${s.frag.rows.map(([k, v]) => `              <div class="p2-rrow"><span>${esc(k)}</span><b>${v}</b></div>`).join('\n')}
+            </div>
+          </div>
+          <div class="cta-row centred"><a class="btn btn-mint" href="${APP_URL}">${esc(s.btn)}</a></div>
+        </div>
+      </section>`,
+
+  /* The balances slab: a photograph with the split of what you hold drawn on
+     it, the words beside it, and the coin falling off the bottom corner. */
+  cvband: (p, s, up) => `
+      <section class="band cv-band">
+        <div class="wrap cv-band-in">
+          <div class="cv-slab reveal">
+            <img class="cv-slab-photo" src="${up}img/cv/band-photo.webp" alt="" aria-hidden="true" loading="lazy" />
+            <div class="cv-pn" aria-hidden="true">
+              <div class="cv-pn-head"><span>${esc(s.panel.head[0])}</span><b>${s.panel.head[1]}</b></div>
+              <div class="cv-pn-bar">
+                <div class="cv-track">
+${s.panel.bar.map(([, , w]) => `                  <i style="--w:${w}%"></i>`).join('\n')}
+                </div>
+                <div class="cv-keys">
+${s.panel.bar.map(([k, v]) => `                  <div class="cv-key"><span>${esc(k)}</span><b>${v}</b></div>`).join('\n')}
+                </div>
+              </div>
+              <p class="cv-pn-note">${esc(s.panel.note)}</p>
+            </div>
+            <img class="cv-slab-coin" src="${up}img/cta/coin.webp" alt="" aria-hidden="true" loading="lazy" />
+          </div>
+          <div class="cv-text reveal">
+            <p class="eyebrow">${esc(s.eyebrow)}</p>
+            <h2>${lines2(s.h)}</h2>
+            <p class="cv-lead">${s.lead}</p>
+            <div class="cv-points">
+${s.points.map(([h, t]) => `              <div class="cv-point">
+                <h3>${esc(h)}</h3>
+                <p>${esc(t)}</p>
+              </div>`).join('\n')}
+            </div>
+            <a class="btn btn-mint" href="${APP_URL}">${esc(s.btn)}</a>
+          </div>
+        </div>
+      </section>`,
+
   pclose: (p, s, up) => closingProd(p, up, s && s.tall),
 }
 
@@ -917,7 +996,7 @@ if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import
       continue
     }
     writeFileSync(file, html)
-    console.log('wrote products/' + p.slug + '.html  ' + p.spine.map((s) => s.type).join(' '))
+    console.log('wrote products/' + p.slug + '.html  ' + (p.sections || p.spine).map((s) => s.type).join(' '))
   }
   if (!check) console.log(PRODUCTS.length + ' pages')
   else if (stale.length) {
