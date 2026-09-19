@@ -607,7 +607,7 @@ const KIT2 = {
       ].filter(Boolean).join(';')}">
         <div class="p2-hero-clip" aria-hidden="true">
 ${s.wash ? `          <div class="p2-wash"
-               style="--w: ${typeof s.wash === 'string' ? s.wash : `radial-gradient(118% 92% at 50% -2%, ${s.wash.join(', ')})`}${s.washH ? `;--wh:${s.washH}vw` : ''}"></div>` : ''}
+               style="--w: ${typeof s.wash === 'string' ? s.wash : `radial-gradient(118% 92% at 50% -2%, ${s.wash.join(', ')})`}${s.washH ? `;--wh:min(${(s.washH * 19.2).toFixed(0)}px, ${s.washH}vw)` : ''}"></div>` : ''}
           <div class="p2-hero-art">
 ${s.mask ? `            <span class="p2-mask" style="left:${s.mask.l}%;top:calc(${s.mask.t} * var(--u));width:${s.mask.w}%;aspect-ratio:${s.mask.w} / ${s.mask.h}"><img src="${up}img/${s.mask.src}" alt="" /></span>` : ''}
 ${s.coins ? `            <div class="p2-coins">
@@ -958,7 +958,7 @@ ${s.points.map(([h, t]) => `              <div class="cv-point">
         s.gaps ? `--hg1:min(${s.gaps[0]}px, ${(s.gaps[0] / 19.2).toFixed(3)}vw);--hg3:min(${s.gaps[1] - s.gaps[0]}px, ${((s.gaps[1] - s.gaps[0]) / 19.2).toFixed(3)}vw)` : '',
       ].filter(Boolean).join(';')}">
         <div class="p2-wash" aria-hidden="true"
-             style="--w: radial-gradient(118% 92% at 50% -2%, ${s.wash.join(', ')});--wh:${s.washH}vw"></div>
+             style="--w: radial-gradient(118% 92% at 50% -2%, ${s.wash.join(', ')});--wh:min(${(s.washH * 19.2).toFixed(0)}px, ${s.washH}vw)"></div>
         <div class="wrap p2-hero-in">
           <p class="eyebrow hero-intro" style="--hero-d: 0s">${esc(s.eyebrow)}</p>
           <h1 class="hero-intro" style="--hero-d: 0.05s">${lines2(s.h)}</h1>

@@ -3302,9 +3302,13 @@ textarea.cf-input {
   padding-top: min(184px, 9.583vw); padding-bottom: var(--hpb, min(104px, 5.417vw));
   display: grid; align-content: start;
 }
+/* The page sets --wh already capped at its own height on the 1920, the way
+   --hhp caps the band. It used to be capped here instead, at a flat 1137,
+   which is only the right number for the one page whose wash is that tall —
+   every shorter wash went on growing past its design height until it hit it. */
 .p2-wash {
   position: absolute; left: 0; right: 0; top: 0; z-index: -2; pointer-events: none;
-  height: min(1137px, var(--wh, 59.219vw));
+  height: var(--wh, min(1137px, 59.219vw));
   background: var(--w);
 }
 /* Behind the words, in front of the wash, and moving. The frame lays the
@@ -3888,6 +3892,11 @@ textarea.cf-input {
   border-radius: min(40px, 2.083vw);
   padding-block: min(144px, 7.5vw);
 }
+/* Those 40 leave the wrap 1840 to work in on the 1920, not the 1920 every
+   other band gets. Left to the global cap it took the full 1920 as soon as
+   the viewport passed 2000, which widened the rows and made the band 40
+   taller than the frame draws it. */
+.p2-transit > .wrap { --wrap: 1840px; }
 .p2-transit-head {
   display: flex; align-items: flex-end; justify-content: space-between;
   gap: min(200px, 13.889%);
@@ -4068,7 +4077,11 @@ textarea.cf-input {
 .p2-stage-photo {
   position: absolute; left: -28%; top: -52%; width: 128%; height: auto; max-width: none;
 }
-.p2-split-copy .p2-pill { margin-bottom: min(-18px, -0.938vw); }
+/* Flat, because min() takes the MORE negative of two negatives: below the
+   1920 this always resolved to the 18 and above it went on deepening. The
+   scaling form is max(-18px, -0.938vw), but that would also loosen the pull
+   on a phone, which is not what is broken here. */
+.p2-split-copy .p2-pill { margin-bottom: -18px; }
 
 @media (max-width: 1040px) {
   .p2-hero-mid .p2-hero-in h1, .p2-hero-mid .p2-hero-lead { max-width: 100%; }
@@ -4444,10 +4457,19 @@ textarea.cf-input {
 
 /* ---- the two halves (649:1671) ----------------------------------------- */
 .be-halves { position: relative; padding-block: min(150px, 7.813vw) 0; }
-/* One cloud, drawn across the seam between this band and the steps. */
+/* One cloud, drawn across the seam between this band and the steps. The band
+   around it stops growing at 1920 and centres, so the cloud has to do the
+   same: in raw vw it kept swelling past that and came down over the first
+   step. Everything is written in --u, which is 1% of the width up to 1920 and
+   flat after, and the left edge carries the same centring offset the wrap
+   has. Below 1920 this is identical to the percentages it replaces. */
 .be-halves-cloud {
+  --u: min(1vw, 19.2px);
   position: absolute; z-index: 2; pointer-events: none; object-fit: fill;
-  left: 17.188%; top: 47.443vw; width: 26.750%; height: 24.802vw;
+  left: calc(max(0px, calc((100% - 1920px) / 2)) + 17.188 * var(--u));
+  top: calc(47.443 * var(--u));
+  width: calc(26.750 * var(--u));
+  height: calc(24.802 * var(--u));
 }
 .be-halves-head { max-width: none; text-align: left; margin: 0; }
 .be-halves-head h2 {
