@@ -575,7 +575,76 @@ export const PRODUCTS = [
 
   {
     slug: 'pay-bills',
-    close: ['Clear the list in one app.', 'Airtime, data and electricity, beside the rest of your money.'],
+    /* Frame 647:1611. A centred hero over a masked screenshot, the three
+       bills as tiles, the receipt, the questions and the close. No sibling
+       band on this one. */
+    sections: [
+      { type: 'phero', align: 'mid', pill: 'Pay bills', caps: true,
+        h: 'Pay airtime, data and electricity without leaving Tokkenly.',
+        lead: 'Your money is already here, so your bill payments can be too. The receipt keeps the token where you can find it again.',
+        ctas: [['Pay a bill', 'ink', null]],
+        height: 69.271, padTop: 190, hW: 85.395, leadW: 46.053,
+        /* A photograph behind the words. The frame fades it out with a mask
+           of its own, so the export already carries the fade and sits on the
+           page's own ground: it goes in flat, at the mask group's box. */
+        mask: { src: 'pb/hero-bulb.webp', l: 32.935, t: 35.729, w: 34.130, h: 33.371 },
+        panel: { l: 39.167, t: 52.415, w: 21.719, pay: true,
+          head: ['Ikeja Electric', '&#8358;5,000'],
+          pairs: [['Meter', '4512 8890 22'], ['Type', 'Prepaid'],
+                  ['Paying with', 'Naira'], ['Fee', '&#8358;0']],
+          btn: 'Pay &#8358;5,000' } },
+
+      { type: 'tiles3', h: 'What you can pay.',
+        lead: 'The three that actually come up, paid from the balance you already hold.',
+        btn: 'Pay a bill',
+        tiles: [
+          { grad: ['#2bbd9b', '#2bbd9b 40%', '#c7e1ff 62%', '#d1cbc2 80%', '#eaeae9 94%'],
+            h: 'Airtime', p: 'Any Nigerian network. Your number is remembered, so the second time is one tap.',
+            l: 19.467, w: 60.656,
+            frag: { k: 'Airtime', v: '&#8358;1,000',
+                    rows: [['Number', '0803 411 2290'], ['Network', 'MTN'], ['Saved', 'One tap next time']] } },
+          { grad: ['#c7e1ff', '#c7e1ff 40%', '#f8c8ff 63%', '#d1cbc2 81%', '#eaeae9 94%'],
+            h: 'Data', p: 'The screen says how much data and how long it lasts, not a price code you decode.',
+            l: 12.500, w: 74.385,
+            frag: { k: 'Data', v: '6GB \u00B7 30 days',
+                    rows: [['Bundle', '6GB monthly'], ['Costs', '&#8358;2,500'], ['Expires', '30 days']] } },
+          { grad: ['#f7b79a', '#f7b79a 42%', '#f8c8ff 64%', '#d1cbc2 82%', '#eaeae9 94%'],
+            h: 'Electricity', p: 'Prepaid or postpaid. The token comes back on the receipt, where you can find it.',
+            l: 14.549, w: 70.902,
+            frag: { k: 'Token', v: '8842 1190\u2026',
+                    rows: [['Meter', '4512 8890 22'], ['Type', 'Prepaid'], ['Kept in', 'Activity']] } },
+        ] },
+
+      { type: 'psplit', side: 'a', pill: 'After you pay', caps: true,
+        cols: [46.711, 46.053, 7.237], h2: [68, 1.0735], gaps: [-22, -14],
+        h: 'The receipt keeps\nthe token.',
+        p: 'A token is no use if you cannot find it later. It sits on the receipt, in Activity.',
+        btn: 'Open a receipt',
+        stage: { photo: 'pb/receipt-portrait.webp', ratio: '700 / 800',
+          panel: { l: 15.714, t: 57.875, w: 68.571, pay: true,
+            head: ['Paid', '&#8358;5,000'],
+            rows: [['Token', '8842 1190 5573 2041'], ['Meter', '4512 8890 22'], ['Kept in', 'Activity']],
+            note: 'Open it again any time from Activity.' } } },
+
+      /* The frame sizes the heading column to its own three lines (491) and
+         leaves 200 before the questions. */
+      { type: 'pfaq', h: 'A few things you might be wondering.', pad: [110, 120],
+        cols: [32.323, 54.519, 13.158], h2: [82, 1.0732],
+        items: [
+          ['Which networks can I top up?',
+           'All four Nigerian networks. The number you used last is remembered, so the second time is one tap.'],
+          ['Where do I find a prepaid token again?',
+           'On the receipt, and the receipt stays in Activity. You do not have to write it down.'],
+          ['What happens if the biller is down?',
+           'The payment does not go out and the money stays in your balance. The row says what happened.'],
+          ['Can I pay a bill that is not mine?',
+           'Yes. Any meter number or phone number \u2014 it does not have to be your own.'],
+        ] },
+
+      { type: 'pclose', tall: true },
+    ],
+    close: ['Clear the whole list in one app.',
+            'Airtime, data and electricity, beside the rest of your money.', 'Pay a bill'],
     nav: 'Pay bills',
     eyebrow: 'Pay bills',
     title: 'One less thing on your list.',

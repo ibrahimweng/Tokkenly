@@ -2443,7 +2443,9 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 /* The frames give the product close the same 144 over and under as every
    other band, not the 96 this had before them. */
 .closing-prod { min-height: 0; padding-block: min(144px, 7.5vw); }
-.closing-prod .closing-in h2 { font-size: clamp(30px, 3.6vw, 58px); }
+/* The slab's own type: 70 over 69, tight, in a 760 measure. The 22 either
+   side of the lead is the component's, and the block is centred in the 532. */
+.closing-prod .closing-in h2 { font-size: clamp(36px, 3.646vw, 70px); line-height: 0.986; }
 
 /* ---- the hero ---------------------------------------------------------
    Two columns, not one: the landing hero is centred because it has a globe
@@ -3294,7 +3296,7 @@ textarea.cf-input {
    stopping 32 short of the foot and the coins laid across the whole band. */
 .p2-hero {
   position: relative; isolation: isolate; overflow: hidden;
-  min-height: min(1169px, var(--hh, 60.885vw));
+  min-height: min(var(--hhp, 1169px), var(--hh, 60.885vw));
   padding-top: min(184px, 9.583vw); padding-bottom: min(104px, 5.417vw);
   display: grid; align-content: start;
 }
@@ -3701,19 +3703,23 @@ textarea.cf-input {
 
 /* ---- words beside a photograph (642:1612) ------------------------------ */
 /* 660 and 660 with 200 between them, both centred on the band. */
+/* 660 and 660 with 200 between them by default; Pay bills draws 710 and 700
+   with 110, so the three are properties. */
 .p2-split-in {
-  display: grid; grid-template-columns: 43.421% 43.421%;
-  gap: 13.158%; align-items: center;
+  display: grid; grid-template-columns: var(--c1, 43.421%) var(--c2, 43.421%);
+  gap: var(--cg, 13.158%); align-items: center;
 }
 .p2-split-b .p2-split-copy { order: 2; }
 .p2-split-copy { display: grid; justify-items: start; gap: min(44px, 2.292vw); }
 .p2-split-copy h2 {
-  font-size: clamp(34px, 5vw, 96px); line-height: 1.06; letter-spacing: -0.026em; color: var(--ink);
+  font-size: var(--sh, clamp(34px, 5vw, 96px)); line-height: var(--slh, 1.06);
+  letter-spacing: -0.026em; color: var(--ink);
 }
 .p2-split-copy > p {
-  margin-top: min(-20px, -1.042vw);
+  margin-top: var(--sgp, max(-20px, -1.042vw));
   font-size: clamp(16px, 0.99vw, 19px); line-height: 1.5; color: var(--muted);
 }
+.p2-split-copy .btn { margin-top: var(--sgb, 0px); }
 .p2-split-photo {
   width: 100%; height: auto; object-fit: cover; border-radius: min(28px, 1.459vw);
 }
@@ -3889,6 +3895,137 @@ textarea.cf-input {
   .p2-transit-row, .p2-transit-row:nth-of-type(odd) { grid-template-columns: minmax(0, 1fr); gap: 24px; }
   .p2-tcard, .p2-tcard-wide { aspect-ratio: auto; min-height: 280px; }
   .p2-mini { width: 100%; }
+}
+
+
+/* ---- hero, the centred-with-a-screenshot variant (647:1612) ------------ */
+/* No wash on this one. A photograph sits behind the words, faded almost to
+   the page's ground so the words stay the loudest thing in the hero. The
+   frame fades it with a mask of its own, and the export carries that fade,
+   so the picture goes in flat at the mask group's box. */
+.p2-hero-mid { display: grid; align-content: start; }
+.p2-hero { padding-top: var(--hpt, min(184px, 9.583vw)); }
+.p2-hero-mid .p2-hero-in h1 { max-width: var(--hw, min(1298px, 85.395%)); }
+.p2-hero-mid .p2-hero-lead { max-width: var(--hlw, min(700px, 46.053%)); }
+/* This hero sets a notch under the others — 96 over 102, and a lead on 31 —
+   and spaces its column unevenly: 34 under the pill, 26 under the headline,
+   38 over the button. The left-aligned heroes keep the column's even 19. */
+.p2-hero-mid .p2-hero-in { row-gap: 0; }
+.p2-hero-mid .p2-hero-in h1 {
+  margin-top: min(34px, 1.771vw);
+  font-size: clamp(38.4px, 5vw, 96px); line-height: 1.0625;
+}
+.p2-hero-mid .p2-hero-in > h1:first-child { margin-top: 0; }
+.p2-hero-mid .p2-hero-lead { margin-top: min(26px, 1.354vw); line-height: 1.55; }
+.p2-hero-mid .p2-hero-in .cta-row { margin-top: min(38px, 1.979vw); }
+/* Some frames upper-case the eyebrow in the layer, so the caps are a style
+   rather than the words. The pages that do it say so. */
+.p2-pill-caps { text-transform: uppercase; letter-spacing: 0.093em; }
+.p2-mask { position: absolute; z-index: -1; display: block; }
+.p2-mask img { display: block; width: 100%; height: 100%; }
+.p2-pn-btn-deep { background: var(--deep); }
+/* Pay bills draws its receipt differently from the one on Receive: the head
+   is a row, the biller against the amount; the pairs sit on the white rather
+   than in a grey well; and the labels are set as typed, not upper-cased. */
+.p2-pn-pay { padding: min(26px, 1.354vw); }
+.p2-pn-pay .p2-pn-head { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+.p2-pn-pay .p2-pn-head span {
+  text-transform: none; letter-spacing: -0.01em;
+  font-size: clamp(13px, 0.834vw, 16px); line-height: 1.25; color: var(--ink);
+}
+.p2-pn-pay .p2-pn-head b { font-size: clamp(21px, 1.563vw, 30px); line-height: 1.067; }
+.p2-pn-pay .p2-pn-rows {
+  padding: 0; background: none; border-radius: 0;
+  gap: min(15px, 0.782vw) min(20px, 1.042vw);
+}
+.p2-pn-pay .p2-pn-row { gap: min(4px, 0.209vw); }
+.p2-pn-pay .p2-pn-row span { text-transform: none; letter-spacing: 0; line-height: 1.364; }
+.p2-pn-pay .p2-pn-row b { line-height: 1.429; }
+.p2-pn-pay .p2-pn-btn { height: min(54px, 2.813vw); }
+.p2-pn-pay .p2-pn-stack {
+  padding: min(6px, 0.313vw) min(16px, 0.834vw); background: none; border-radius: 0;
+}
+.p2-pn-pay .p2-pn-stack .p2-rrow { padding-block: min(13px, 0.677vw); }
+.p2-pn-pay .p2-pn-stack .p2-rrow span,
+.p2-pn-pay .p2-pn-stack .p2-rrow b { line-height: 1.286; }
+/* The receipt on the stage sits flat on the picture rather than lifted off
+   the page, and stacks its rows instead of pairing them. */
+.p2-pn-flat { box-shadow: none; }
+.p2-pn-stack { display: block; padding-block: min(6px, 0.313vw); }
+.p2-pn-stack .p2-rrow:first-child { border-top: 0; }
+
+/* The questions band keeps the page's 144 unless its frame says otherwise;
+   Pay bills draws it at 110 over and 120 under. */
+.p2-faq { padding-block: var(--spt, min(144px, 7.5vw)) var(--spb, min(144px, 7.5vw)); }
+/* Each frame sizes the heading column to its own heading and leaves 200 to
+   the questions, so the split is a property rather than one measure. */
+.p2-faq .faq-in {
+  grid-template-columns: var(--fc1, 43.158%) var(--fc2, 52.632%);
+  gap: var(--fcg, 4.211%);
+}
+/* The frame puts the heading's first line on the band's own top edge, where
+   .head's 16 would otherwise push it down. */
+.p2-faq .faq-head h2 {
+  margin-top: 0;
+  font-size: var(--fh, clamp(34px, 5.4vw, 68px)); line-height: var(--flh, 1.02);
+}
+/* The product frames draw the question at 78 with a 26 plus and 29 inside
+   the rule, against the 30/30 the landing page uses. */
+.p2-faq .faq details { padding: min(25px, 1.302vw) min(29px, 1.511vw); }
+.p2-faq .faq .plus { width: min(26px, 1.354vw); height: min(26px, 1.354vw); }
+
+/* ---- three bill tiles (647:1650) --------------------------------------- */
+.p2-tiles { padding-block: min(150px, 7.813vw) min(144px, 7.5vw); }
+.p2-tiles-head { gap: min(14px, 0.729vw); }
+.p2-tiles-head h2 { max-width: min(805px, 52.961%); }
+.p2-tiles-head > p:not(.eyebrow) { max-width: min(700px, 46.053%); }
+/* 18 of spacer plus the head's own 14 gap. */
+.p2-tiles-head .btn { margin-top: min(32px, 1.667vw); }
+.p2-tiles-row {
+  margin-top: min(46px, 2.396vw);
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: min(28px, 1.842%);
+}
+.p2-tile {
+  position: relative; overflow: hidden;
+  aspect-ratio: 488 / 450; border-radius: min(40px, 2.083vw); background: var(--grad);
+}
+.p2-tile-t {
+  position: absolute; left: 0; right: 0; top: min(36px, 1.875vw); z-index: 2;
+  padding-inline: min(34px, 6.967%);
+  display: grid; gap: min(12px, 0.625vw);
+}
+.p2-tile-t h3 {
+  font-size: clamp(20px, 1.667vw, 32px); line-height: 1.16; letter-spacing: -0.03em; color: var(--ink);
+}
+.p2-tile-t p { font-size: clamp(14px, 0.886vw, 17px); line-height: 1.5; color: rgba(5, 51, 41, 0.72); }
+/* Each fragment gets its own left and width: the frame nudges all three
+   rather than centring them, and evening them up flattens the row. Its key
+   is upper-cased in the layer, and the rule sits straight under the head. */
+.p2-frag-tile { top: 46.889%; padding: min(20px, 1.042vw); }
+.p2-frag-tile .p2-fhead { padding-bottom: 0; }
+.p2-frag-tile .p2-fhead span { text-transform: uppercase; letter-spacing: 0.07em; line-height: 1.19; }
+.p2-frag-tile .p2-fhead b { line-height: 1.15; }
+/* 43 of row and the rule under it: the frame draws the rule as its own
+   object between rows, so here it rides on the row's top edge. */
+.p2-frag-tile .p2-rrow span { line-height: 1.186; }
+.p2-frag-tile .p2-rrow b { line-height: 1.215; }
+
+/* ---- a stage: a photograph with the receipt on it (647:1684) ----------- */
+.p2-stage {
+  position: relative; overflow: hidden;
+  border-radius: min(34px, 1.771vw); background: rgba(209, 203, 194, 0.7);
+}
+.p2-stage-photo {
+  position: absolute; left: -28%; top: -52%; width: 128%; height: auto; max-width: none;
+}
+.p2-split-copy .p2-pill { margin-bottom: min(-18px, -0.938vw); }
+
+@media (max-width: 1040px) {
+  .p2-hero-mid .p2-hero-in h1, .p2-hero-mid .p2-hero-lead { max-width: 100%; }
+  .p2-mask { display: none; }
+  .p2-tiles-row { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .p2-tiles { padding-block: min(80px, 9vw) min(88px, 9vw); }
+  .p2-stage { aspect-ratio: 700 / 620; }
 }
 
 /* ---------------------------------------------------------- narrower ---- */

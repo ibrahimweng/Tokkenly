@@ -493,7 +493,7 @@ const closingProd = (p, up, tall) => `
             <div class="closing-in">
               <h2>${esc(p.close[0])}</h2>
               <p class="closing-lead">${esc(p.close[1])}</p>
-              <a class="btn btn-deep" href="${APP_URL}">Get Started</a>
+              <a class="btn btn-deep" href="${APP_URL}">${esc(p.close[2] || 'Get Started')}</a>
             </div>
           </div>
         </div>
@@ -525,14 +525,14 @@ const SIBS = {
 /* The hero receipt: a white card the frame floats over the art, written out
    rather than screenshotted, the same way the landing page's panels are. */
 const panel2 = (n) => `
-        <div class="p2-pn${n.big ? ' p2-pn-lg' : ''}" style="left:${n.l}%;top:${n.t}vw;width:${n.w}%" aria-hidden="true">
+        <div class="p2-pn${n.big ? ' p2-pn-lg' : ''}${n.pay ? ' p2-pn-pay' : ''}" style="left:${n.l}%;top:${n.t}vw;width:${n.w}%" aria-hidden="true">
           <div class="p2-pn-head"><span>${esc(n.head[0])}</span><b>${esc(n.head[1])}</b></div>
           <div class="p2-pn-rows">
 ${n.pairs.map(([k, v]) => `            <div class="p2-pn-row"><span>${esc(k)}</span><b>${v}</b></div>`).join('\n')}
 ${(n.rows || []).map(([k, v]) => `            <div class="p2-pn-row p2-pn-wide"><span>${esc(k)}</span><b>${v}</b></div>`).join('\n')}
           </div>
 ${n.note ? `          <p class="p2-pn-note">${esc(n.note)}</p>` : ''}
-          <span class="p2-pn-btn">${esc(n.btn)}</span>
+          <span class="p2-pn-btn${n.pay ? ' p2-pn-btn-deep' : ''}">${n.btn}</span>
         </div>`
 
 /* The white card that bleeds out of a gradient side: a head, a list of three
@@ -554,13 +554,20 @@ const KIT2 = {
   /* The frame's hero: one centred column of words on a radial wash, with the
      coins laid across the whole band behind them. */
   phero: (p, s, up) => `
-      <section class="p2-hero${s.align === 'left' ? ' p2-hero-left' : ''}"${s.height ? ` style="--hh:${s.height}vw"` : ''}>
-        <div class="p2-wash" aria-hidden="true"
-             style="--w: radial-gradient(118% 92% at 50% -2%, ${s.wash.join(', ')})${s.washH ? `;--wh:${s.washH}vw` : ''}"></div>
+      <section class="p2-hero${s.align === 'left' ? ' p2-hero-left' : ''}${s.align === 'mid' ? ' p2-hero-mid' : ''}" style="${[
+        s.height ? `--hh:${s.height}vw;--hhp:${(s.height * 19.2).toFixed(0)}px` : '',
+        s.padTop ? `--hpt:min(${s.padTop}px, ${(s.padTop / 19.2).toFixed(3)}vw)` : '',
+        s.hW ? `--hw:min(${(s.hW * 15.2).toFixed(0)}px, ${s.hW}%)` : '',
+        s.leadW ? `--hlw:min(${(s.leadW * 15.2).toFixed(0)}px, ${s.leadW}%)` : '',
+      ].filter(Boolean).join(';')}">
+${s.wash ? `        <div class="p2-wash" aria-hidden="true"
+             style="--w: radial-gradient(118% 92% at 50% -2%, ${s.wash.join(', ')})${s.washH ? `;--wh:${s.washH}vw` : ''}"></div>` : ''}
+${s.mask ? `        <span class="p2-mask" style="left:${s.mask.l}%;top:${s.mask.t}vw;width:${s.mask.w}%;aspect-ratio:${s.mask.w} / ${s.mask.h}" aria-hidden="true"><img src="${up}img/${s.mask.src}" alt="" /></span>` : ''}
 ${(s.coins || []).map(([name, w, d, fx, sl, st, sw]) => `        <span class="p2-coin${fx ? ' p2-coin-fx' : ''}" style="--b:${w}%;--d:${d}s;--sl:${sl}%;--st:${st}vw;--sw:${sw}%" aria-hidden="true"><img src="${up}img/ts/coin-${name}.webp" alt="" /></span>`).join('\n')}
 ${(s.art || []).map(([kind, src, l, t, w]) => `        <img class="p2-art p2-art-${kind}" src="${up}img/${src}" style="left:${l}%;top:${t}vw;width:${w}%" alt="" aria-hidden="true" />`).join('\n')}
         <div class="wrap p2-hero-in">
 ${s.eyebrow ? `          <p class="eyebrow hero-intro" style="--hero-d: 0s">${esc(s.eyebrow)}</p>` : ''}
+${s.pill ? `          <span class="p2-pill${s.caps ? ' p2-pill-caps' : ''} hero-intro" style="--hero-d: 0s">${esc(s.pill)}</span>` : ''}
           <h1 class="hero-intro" style="--hero-d: 0.05s">${lines2(s.h)}</h1>
           <p class="p2-hero-lead hero-intro" style="--hero-d: 0.1s">${lines2(s.lead)}</p>
           <div class="cta-row${s.align === 'left' ? '' : ' centred'} hero-intro" style="--hero-d: 0.2s">
@@ -645,7 +652,11 @@ ${s.slot.slab ? `            <img class="p2-slot-slab" src="${up}img/${s.slot.sl
   /* The head holds the left 656 and the questions the right 800, which is the
      landing page's FAQ turned into a product band. */
   pfaq: (p, s, up) => `
-      <section class="band p2-faq">
+      <section class="band p2-faq"${(s.pad || s.cols || s.h2) ? ` style="${[
+        s.pad ? `--spt:min(${s.pad[0]}px, ${(s.pad[0] / 19.2).toFixed(3)}vw);--spb:min(${s.pad[1]}px, ${(s.pad[1] / 19.2).toFixed(3)}vw)` : '',
+        s.cols ? `--fc1:${s.cols[0]}%;--fc2:${s.cols[1]}%;--fcg:${s.cols[2]}%` : '',
+        s.h2 ? `--fh:clamp(${Math.round(s.h2[0] * 0.5)}px, ${(s.h2[0] / 19.2).toFixed(3)}vw, ${s.h2[0]}px);--flh:${s.h2[1]}` : '',
+      ].filter(Boolean).join(';')}"` : ''}>
         <div class="wrap faq-in">
           <div class="head faq-head reveal">
 ${s.eyebrow ? `            <p class="eyebrow">${esc(s.eyebrow)}</p>` : ''}
@@ -694,14 +705,28 @@ ${s.cards.map((c) => {
 
   /* 660 of words beside a 660 photograph, 200 apart, both centred. */
   psplit: (p, s, up) => `
-      <section class="band p2-split p2-split-${s.side}">
-        <div class="wrap p2-split-in">
+      <section class="band p2-split p2-split-${s.side}"${(s.h2 || s.gaps) ? ` style="${[
+        s.h2 ? `--sh:clamp(${Math.round(s.h2[0] * 0.441)}px, ${(s.h2[0] / 19.2).toFixed(3)}vw, ${s.h2[0]}px);--slh:${s.h2[1]}` : '',
+        s.gaps ? `--sgp:max(${s.gaps[0]}px, ${(s.gaps[0] / 19.2).toFixed(3)}vw);--sgb:max(${s.gaps[1]}px, ${(s.gaps[1] / 19.2).toFixed(3)}vw)` : '',
+      ].filter(Boolean).join(';')}"` : ''}>
+        <div class="wrap p2-split-in"${s.cols ? ` style="--c1:${s.cols[0]}%;--c2:${s.cols[1]}%;--cg:${s.cols[2]}%"` : ''}>
           <div class="p2-split-copy reveal">
+${s.pill ? `            <span class="p2-pill${s.caps ? ' p2-pill-caps' : ''}">${esc(s.pill)}</span>` : ''}
             <h2>${lines2(s.h)}</h2>
             <p>${esc(s.p)}</p>
 ${s.btn ? `            <a class="btn btn-mint" href="${APP_URL}">${esc(s.btn)}</a>` : ''}
           </div>
-          <img class="p2-split-photo reveal" src="${up}img/${s.photo}" style="aspect-ratio:${s.ratio}" alt="" aria-hidden="true" loading="lazy" />
+${s.photo ? `          <img class="p2-split-photo reveal" src="${up}img/${s.photo}" style="aspect-ratio:${s.ratio}" alt="" aria-hidden="true" loading="lazy" />` : ''}
+${s.stage ? `          <div class="p2-stage reveal" style="aspect-ratio:${s.stage.ratio}">
+            <img class="p2-stage-photo" src="${up}img/${s.stage.photo}" alt="" aria-hidden="true" loading="lazy" />
+            <div class="p2-pn p2-pn-flat${s.stage.panel.pay ? ' p2-pn-pay' : ''}" style="left:${s.stage.panel.l}%;top:${s.stage.panel.t}%;width:${s.stage.panel.w}%" aria-hidden="true">
+              <div class="p2-pn-head"><span>${esc(s.stage.panel.head[0])}</span><b>${s.stage.panel.head[1]}</b></div>
+              <div class="p2-pn-rows p2-pn-stack">
+${s.stage.panel.rows.map(([k, v]) => `                <div class="p2-rrow"><span>${esc(k)}</span><b>${v}</b></div>`).join('\n')}
+              </div>
+              <p class="p2-pn-note">${esc(s.stage.panel.note)}</p>
+            </div>
+          </div>` : ''}
         </div>
       </section>`,
 
@@ -775,6 +800,31 @@ ${c.mini.map(([k, v]) => `                <div class="p2-rrow"><span>${esc(k)}</
               </div>` : ''}
             </article>`).join('\n')}
           </div>`).join('\n')}
+        </div>
+      </section>`,
+
+  /* Three 488 tiles, each a gradient with a white fragment placed by its own
+     left and width: the frame does not centre them, it nudges each one. */
+  tiles3: (p, s, up) => `
+      <section class="band p2-tiles">
+        <div class="wrap">
+          <div class="p2-head p2-tiles-head reveal">
+            <h2>${esc(s.h)}</h2>
+            <p>${esc(s.lead)}</p>
+            <a class="btn btn-mint" href="${APP_URL}">${esc(s.btn)}</a>
+          </div>
+          <div class="p2-tiles-row">
+${s.tiles.map((t) => `            <article class="p2-tile reveal" style="--grad: linear-gradient(to bottom, ${t.grad.join(', ')})">
+              <div class="p2-tile-t">
+                <h3>${esc(t.h)}</h3>
+                <p>${esc(t.p)}</p>
+              </div>
+              <div class="p2-frag p2-frag-tile" style="left:${t.l}%;width:${t.w}%">
+                <div class="p2-fhead"><span>${esc(t.frag.k)}</span><b>${t.frag.v}</b></div>
+${t.frag.rows.map(([k, v]) => `                <div class="p2-rrow"><span>${esc(k)}</span><b>${v}</b></div>`).join('\n')}
+              </div>
+            </article>`).join('\n')}
+          </div>
         </div>
       </section>`,
 
