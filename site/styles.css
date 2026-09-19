@@ -2440,7 +2440,9 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 /* The landing page's closing slab is drawn for one line of headline and one
    of lead; a product page's own ending keeps to that, and the section around
    it does not need the 1024 the landing page reserves. */
-.closing-prod { min-height: 0; padding-block: clamp(48px, 5vw, 96px); }
+/* The frames give the product close the same 144 over and under as every
+   other band, not the 96 this had before them. */
+.closing-prod { min-height: 0; padding-block: min(144px, 7.5vw); }
 .closing-prod .closing-in h2 { font-size: clamp(30px, 3.6vw, 58px); }
 
 /* ---- the hero ---------------------------------------------------------
@@ -3274,6 +3276,263 @@ textarea.cf-input {
   color: var(--ink);
 }
 .lg-callout-p { font-size: clamp(15.5px, 0.938vw, 18px); line-height: 1.75; color: var(--muted); }
+
+
+/* ===================================================== product pages, v2 ==
+   The six frames in Section 1 (Tokenized stocks 529:681 and its siblings)
+   redraw these pages around a different set of bands. Everything below is
+   measured off those frames at 1920, where the column is 1520.
+
+   The rule of thumb for the units: a width is a percentage, because the
+   column narrows in step with the type. A height, or anything placed against
+   one, is min(px, vw), because a section in code takes its height from its
+   words and a percentage of that would move the moment a line wrapped
+   differently. */
+
+/* ---- hero (529:748) ---------------------------------------------------- */
+/* 1169 tall on the 1920, 184 over the words and 104 under them, with the wash
+   stopping 32 short of the foot and the coins laid across the whole band. */
+.p2-hero {
+  position: relative; isolation: isolate; overflow: hidden;
+  min-height: min(1169px, 60.885vw);
+  padding-top: min(184px, 9.583vw); padding-bottom: min(104px, 5.417vw);
+  display: grid; align-content: start;
+}
+.p2-wash {
+  position: absolute; left: 0; right: 0; top: 0; z-index: -2; pointer-events: none;
+  height: min(1137px, 59.219vw);
+  background: var(--w);
+}
+/* Behind the words, in front of the wash. The frame mirrors one of them
+   rather than turning it, which is a scaleX and not a rotate. */
+.p2-coin { position: absolute; z-index: -1; height: auto; pointer-events: none; }
+.p2-coin-fx { transform: scaleX(-1); }
+
+.p2-hero-in {
+  display: grid; justify-items: center; text-align: center;
+  gap: min(19px, 0.969vw);
+}
+.p2-hero-in h1 {
+  max-width: min(802px, 52.764%);
+  font-size: clamp(40px, 5.209vw, 100px); line-height: 1.05; letter-spacing: -0.0288em;
+  color: var(--ink);
+}
+.p2-hero-lead {
+  max-width: min(680px, 44.737%);
+  font-size: clamp(16.5px, 1.042vw, 20px); line-height: 1.6; color: var(--muted);
+}
+/* 48 from the lead to the buttons, of which 19 is the column's own gap. */
+.p2-hero-in .cta-row { margin-top: min(29px, 1.511vw); gap: min(24px, 1.25vw); }
+
+/* ---- three cards (636:1651) -------------------------------------------- */
+.p2-head { display: grid; justify-items: start; gap: min(16px, 0.834vw); }
+.p2-head h2 {
+  max-width: min(900px, 59.211%);
+  font-size: clamp(34px, 5vw, 96px); line-height: 1.06; letter-spacing: -0.026em;
+  color: var(--ink);
+}
+/* :not(.eyebrow) is load-bearing. The sibling band's head opens with an
+   eyebrow, and a bare `.p2-head > p` outranks `.eyebrow` on specificity — it
+   was setting the label at 19px and pushing the band 16 taller than the
+   frame's. */
+.p2-head > p:not(.eyebrow) {
+  max-width: min(760px, 50%);
+  font-size: clamp(16px, 0.99vw, 19px); line-height: 1.5; color: var(--muted);
+}
+.p2-card-row {
+  margin-top: min(56px, 2.917vw);
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: min(32px, 2.105%);
+}
+/* 485 x 400 with the gradient running top to bottom. The card clips, which is
+   what makes the fragment inside it read as a piece of a bigger screen. */
+.p2-card {
+  position: relative; overflow: hidden;
+  aspect-ratio: 485 / 400; border-radius: min(40px, 2.083vw);
+  background: var(--grad);
+}
+.p2-card-copy {
+  position: absolute; left: 0; right: 0; top: 0; z-index: 2;
+  padding: min(38px, 1.979vw) min(36px, 7.423%) 0;
+  display: grid; gap: min(10px, 0.521vw);
+}
+/* The third card puts its words at the foot instead, under the fragment. */
+.p2-card-foot .p2-card-copy { top: auto; bottom: min(26px, 1.354vw); }
+.p2-card-copy h3 {
+  font-size: clamp(19px, 1.354vw, 26px); line-height: 1.18; letter-spacing: -0.5px;
+  color: var(--ink);
+}
+.p2-card-copy p {
+  font-size: clamp(13.5px, 0.808vw, 15.5px); line-height: 1.45;
+  color: rgba(5, 51, 41, 0.72);
+}
+
+/* The white fragment: three rows of a list, hairline-separated. */
+.p2-frag {
+  position: absolute; z-index: 1;
+  left: 9.072%; top: 39%; width: 82.062%;
+  background: #fff; border-radius: min(18px, 0.938vw);
+  padding: min(8px, 0.417vw) min(20px, 1.042vw);
+}
+.p2-card-foot .p2-frag { left: 9.691%; top: 9.5%; width: 80.619%; }
+.p2-frow {
+  display: flex; align-items: center; gap: min(13px, 0.677vw);
+  padding-block: min(14px, 0.729vw);
+}
+.p2-frow + .p2-frow { border-top: 1px solid rgba(5, 51, 41, 0.09); }
+.p2-badge {
+  flex: none; display: grid; place-items: center;
+  width: min(34px, 1.771vw); height: min(34px, 1.771vw); border-radius: 50%;
+  background: rgba(43, 189, 155, 0.22);
+  font-size: clamp(11px, 0.729vw, 14px); font-weight: 700; color: var(--ink);
+}
+.p2-fmid { flex: 1 1 auto; min-width: 0; display: grid; gap: 2px; }
+.p2-fmid b {
+  font-size: clamp(12px, 0.755vw, 14.5px); font-weight: 600; line-height: 1.2;
+  color: var(--ink);
+}
+.p2-fmid i {
+  font-style: normal; font-size: clamp(10.5px, 0.625vw, 12px); line-height: 1.2;
+  color: var(--muted);
+}
+.p2-fval {
+  flex: none; font-size: clamp(12px, 0.755vw, 14.5px); font-weight: 600;
+  color: var(--ink);
+}
+
+/* The middle card's fragment is wider than the card and sits on two ghosts of
+   itself, so the stack reads as a screen behind a screen. */
+.p2-stack { position: absolute; inset: 0; z-index: 1; }
+.p2-ghost {
+  position: absolute; display: block; border-radius: min(24px, 1.25vw);
+  background: rgba(255, 255, 255, 0.34);
+}
+.p2-ghost-1 { left: 26.598%; top: 36%; width: 83.093%; aspect-ratio: 403 / 307; }
+.p2-ghost-2 { left: 22.062%; top: 41.25%; width: 92.371%; aspect-ratio: 448 / 307; background: rgba(255, 255, 255, 0.48); }
+.p2-frag-lg {
+  left: 17.320%; top: 46.25%; width: 101.856%;
+  padding: min(29px, 1.511vw);
+  border-radius: min(24px, 1.25vw);
+  display: grid; gap: min(19px, 0.977vw);
+}
+/* The frame stacks the label over the figure rather than setting them on one
+   line: a caps label, then the number at nearly three times its size. */
+.p2-srow {
+  display: grid; gap: min(3px, 0.156vw);
+  padding: min(21px, 1.115vw) min(24px, 1.255vw);
+  background: rgba(5, 51, 41, 0.05); border-radius: min(17px, 0.886vw);
+}
+.p2-srow span {
+  font-size: clamp(9.5px, 0.625vw, 12px); font-weight: 600; line-height: 1.33;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+}
+.p2-srow b {
+  font-size: clamp(17px, 1.459vw, 28px); font-weight: 700; line-height: 1.2;
+  letter-spacing: -0.02em; color: var(--ink);
+}
+.p2-snote { font-size: clamp(12px, 0.872vw, 16.7px); line-height: 1.4; color: var(--muted); }
+
+/* ---- a row of words beside a slot (637:1658, 637:1674) ----------------- */
+/* 750 of words, 110 of air, 660 of slot, in the 1520. Which side the slot
+   takes is the only difference between the two rows. */
+.p2-row-in {
+  display: grid; grid-template-columns: 49.342% 43.421%;
+  gap: 7.237%; align-items: center;
+}
+.p2-row-b .p2-row-in { grid-template-columns: 43.421% 49.342%; }
+.p2-row-b .p2-row-copy { order: 2; }
+.p2-row-copy { display: grid; justify-items: start; }
+.p2-pill {
+  display: inline-flex; align-items: center;
+  padding: 7px 14px; border-radius: var(--r-pill);
+  border: 1px solid rgba(5, 51, 41, 0.26);
+  font-size: clamp(10.5px, 0.599vw, 11.5px); font-weight: 600; line-height: 1.2;
+  letter-spacing: 0.02em; color: var(--ink);
+}
+.p2-row-copy h2 {
+  margin-top: min(26px, 1.354vw);
+  font-size: clamp(30px, 3.542vw, 68px); line-height: 1.08; letter-spacing: -0.038em;
+  color: var(--ink);
+}
+.p2-row-copy > p {
+  margin-top: min(20px, 1.042vw); max-width: min(470px, 62.667%);
+  font-size: clamp(15.5px, 0.938vw, 18px); line-height: 1.55; color: var(--muted);
+}
+.p2-row-copy .btn { margin-top: min(34px, 1.771vw); }
+
+/* The slot is a window: a gradient with a hairline, clipping whatever is put
+   in it. The frame runs a photograph past every edge of the first one. */
+.p2-slot {
+  position: relative; overflow: hidden;
+  aspect-ratio: 660 / 600; border-radius: min(40px, 2.083vw);
+  background: var(--grad);
+  border: 1.2px solid rgba(5, 51, 41, 0.22);
+}
+.p2-row-b .p2-slot { aspect-ratio: 660 / 724; }
+.p2-slot-photo {
+  position: absolute; left: -4.242%; top: -17.5%; width: 111.515%;
+  height: auto; max-width: none;
+}
+.p2-slot-prop, .p2-slot-slab { position: absolute; height: auto; max-width: none; }
+/* A chip is one of the search rows, lifted out of the list and dropped on the
+   picture — the same two lines, on white, with nothing else around them. */
+.p2-chip {
+  position: absolute; display: grid; gap: 2px;
+  padding: min(14px, 2.121%) min(20px, 3.03%);
+  background: #fff; border-radius: min(20px, 1.042vw);
+}
+.p2-chip b {
+  font-size: clamp(11px, 0.755vw, 14.5px); font-weight: 600; line-height: 1.2;
+  color: var(--ink); white-space: nowrap;
+}
+.p2-chip i {
+  font-style: normal; font-size: clamp(9.5px, 0.625vw, 12px); line-height: 1.2;
+  color: var(--muted);
+}
+
+/* ---- the sibling cards (529:938) --------------------------------------- */
+/* The same three-up grid as the landing page's related band, but in sand with
+   dark type rather than deep green: this band sits on the page ground, not on
+   a dark slab. */
+.p2-sibs .p2-head h2 { font-size: clamp(27px, 2.292vw, 44px); line-height: 1.02; max-width: min(760px, 50%); }
+.p2-sibs .prod-card {
+  background: #d1cbc2; color: var(--ink);
+  min-height: min(251px, 13.073vw);
+  gap: min(22px, 1.146vw);
+}
+.p2-sibs .prod-card h3 { color: var(--ink); font-size: clamp(17px, 1.125vw, 21.6px); }
+.p2-sibs .prod-card p { color: rgba(5, 51, 41, 0.72); }
+.p2-sibs .prod-card .pr-link { color: var(--ink); }
+.p2-sibs .pr-title { display: grid; justify-items: start; gap: min(12px, 0.625vw); }
+/* The chip is the landing page's, in sand rather than in white at eight per
+   cent: on this ground the translucent one disappears. */
+.p2-sibs .pr-chip { background: #aea393; border-radius: min(12px, 0.625vw); }
+.p2-sibs .pr-chip svg { width: 58%; height: 58%; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* The bracket the frame draws behind the fractions slab: three sides of a
+   rounded box, open at the foot, one hairline wide. */
+.p2-slot-bracket {
+  position: absolute; left: 9.394%; top: 24.171%; width: 56.667%; height: 36.741%;
+  fill: none; stroke: rgba(5, 51, 41, 0.55); stroke-width: 1; vector-effect: non-scaling-stroke;
+}
+
+@media (max-width: 1040px) {
+  .p2-hero { min-height: 0; padding-top: calc(var(--nav-h) + min(72px, 8vw)); padding-bottom: min(72px, 8vw); }
+  .p2-hero-in h1, .p2-hero-lead, .p2-head h2, .p2-head > p, .p2-row-copy > p { max-width: 100%; }
+  .p2-coin { display: none; }
+  .p2-coin:nth-of-type(4) { display: block; left: auto; right: -14%; top: auto; bottom: -6%; width: 46%; }
+  .p2-card-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .p2-card:nth-child(3) { grid-column: span 2; aspect-ratio: 970 / 400; }
+  .p2-row-in, .p2-row-b .p2-row-in { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+  .p2-row-b .p2-row-copy { order: 0; }
+  .p2-slot, .p2-row-b .p2-slot { aspect-ratio: 660 / 560; }
+}
+
+@media (max-width: 720px) {
+  .p2-card-row { grid-template-columns: minmax(0, 1fr); }
+  .p2-card, .p2-card:nth-child(3) { aspect-ratio: 485 / 400; }
+  .p2-sibs .prod-card { min-height: 0; }
+}
 
 /* ---------------------------------------------------------- narrower ---- */
 @media (max-width: 1240px) {

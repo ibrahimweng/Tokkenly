@@ -83,6 +83,88 @@ export const PRODUCTS = [
                  ['You get', '0.2208 AAPLc'], ['Fee', 'No fee']]],
       ['btn', 'Buy $50.00'],
     ],
+    /* ---------------------------------------------------------------------
+       The frame (529:681) redraws this page around seven bands rather than
+       the old spine. `sections` is what the builder reads when it is here;
+       `spine` below is the previous page and stays until every product has
+       been rebuilt, so the site keeps building one page at a time. */
+    sections: [
+      { type: 'phero',
+        eyebrow: 'Tokenized Stocks',
+        h: 'Invest in Nigerian\nand US Stocks',
+        lead: 'The companies on your radar can be part of your portfolio. Invest in tokenized stocks linked to companies listed in Nigeria and the US, right from Tokkenly.',
+        ctas: [['Get Started', 'ink', null], ['See how it works', 'white', '#more']],
+        wash: ['#f7c9fe', '#d1cbc2 58.5%', '#eaeae9'],
+        /* Each coin is its box in the frame's 1920 x 1169 hero, as a share of
+           it: left, top, width. The Tesla coin is mirrored in the frame, so
+           its left is a width to the left of the x Figma reports. */
+        coins: [
+          ['apple',   -3.750, 50.813, 14.813, 0],
+          ['tesla',    8.750, 57.742, 13.146, 1],
+          ['dangote2',20.781, 64.756, 13.281, 0],
+          ['nasdaq',  31.979, 55.860, 26.891, 0],
+          ['nvidia',  54.844, 57.742, 19.943, 0],
+          ['spy',     72.917, 57.742, 12.771, 0],
+          ['intel',   83.490, 45.338, 12.859, 0],
+          ['sandisk', 93.594, 36.698, 12.859, 0],
+        ] },
+
+      { type: 'cards3',
+        h: 'What you can buy.',
+        lead: 'Nigerian and US companies come back in the same search, and you choose an amount of money rather than a number of shares.',
+        cards: [
+          { grad: ['#2bbd9b', '#c7e1ff 46%', '#d1cbc2'], foot: false,
+            h: 'Nigerian companies', p: 'Dangote, MTN, GTCO and the rest of the NGX.',
+            list: [['D', 'Dangote Cement', 'DANGCEMc', '&#8358;512.00'],
+                   ['M', 'MTN Nigeria', 'MTNNc', '&#8358;289.50'],
+                   ['G', 'GTCO', 'GTCOc', '&#8358;62.30']] },
+          { grad: ['#f7b79a', '#f8c8ff 48%', '#d1cbc2'], foot: false,
+            h: 'Any amount from $1', p: 'A slice is a real position. No whole share required.',
+            stack: { rows: [['You buy', '$1.00'], ['You get', '0.0044 AAPLc']],
+                     note: 'No minimum. A dollar is a real position.' } },
+          { grad: ['#c7e1ff', '#f8c8ff 58%', '#d1cbc2'], foot: true,
+            h: 'American companies', p: 'Apple, Tesla and the names you already follow.',
+            list: [['A', 'Apple', 'AAPLc', '$226.40'],
+                   ['T', 'Tesla', 'TSLAc', '$412.90'],
+                   ['N', 'NVIDIA', 'NVDAc', '$184.20']] },
+        ] },
+
+      { type: 'prow', side: 'a', pill: 'Search',
+        h: 'Search a name,\nnot a ticker.',
+        p: 'AAPLc is Apple and DANGCEMc is Dangote Cement. The list says which is which rather than making you already know.',
+        btn: 'Explore the list',
+        slot: { grad: ['#c7e1ff', '#c7e1ff 40%', '#f8c8ff 63%', '#d1cbc2 82%', '#eaeae9 96%'],
+                photo: 'ts/portrait-search.webp',
+                chips: [['Dangote Cement', 'DANGCEMc', 46.06, 71.67, 23.79],
+                        ['MTN Nigeria', 'MTNNc', 52.12, 57.50, 18.94],
+                        ['GTCO', 'GTCOc', 73.79, 65.33, 12.12]],
+                prop: ['ts/frag-coin.webp', 0, 64.17, 33.52] } },
+
+      { type: 'prow', side: 'b', pill: 'Fractions',
+        h: 'Buy a slice,\nnot a whole share.',
+        p: 'You choose an amount of money, not a number of shares. A dollar is a real starting position.',
+        btn: 'See what a dollar buys',
+        slot: { grad: ['#c7e1ff', '#f8c8ff 45%', '#d1cbc2'],
+                slab: ['ts/slab-fractions.webp', 4.85, 20.30, 85.61, 81.49] } },
+
+      { type: 'pfaq', eyebrow: 'Questions', h: 'A few things you might be wondering.',
+        items: [
+          ['What does it cost to buy?',
+           'The price on the screen. Any fee is on the same screen, before you confirm.'],
+          ['Do I own the actual share?',
+           'No. You own a tokenized stock that tracks the share price. What it represents is written on the product\u2019s own page, and it is worth reading before you buy.'],
+          ['What happens if the company\u2019s price falls?',
+           'Your holding falls with it. Investments can lose value, and Tokkenly does not guarantee a return.'],
+          ['Can I buy part of a share?',
+           'Yes. You choose an amount of money rather than a number of shares.'],
+        ] },
+
+      { type: 'siblings', eyebrow: 'The rest of it', h: 'There is more\nin the app.',
+        cards: ['gifting-and-rewards', 'receive-and-send', 'borrow-and-earn'] },
+
+      { type: 'pclose' },
+    ],
+
     spine: [
       { type: 'stats', head: 'Two markets, one list.', items: [
         ['2', 'markets', 'Nigerian and US companies in the same search.'],

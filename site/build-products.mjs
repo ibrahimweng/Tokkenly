@@ -42,6 +42,8 @@ const esc = (s) => String(s).replace(/&(?![a-z#][a-z0-9]*;)/gi, '&amp;').replace
 const plain = (s) => String(s).replace(/&[a-z#][a-z0-9]*;/gi, ' ').replace(/\s+/g, ' ').trim()
 
 const ARROW = '<svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg>'
+/* The frames break several headlines by hand; a \n in the copy is that break. */
+const lines2 = (s) => esc(s).split('\n').join('<br />')
 const TICK = '<svg class="fx-i" viewBox="0 0 16 16" aria-hidden="true"><path d="m3 8.5 3.2 3.2L13 5" /></svg>'
 const CROSS = '<svg class="fx-i" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7" /></svg>'
 
@@ -479,6 +481,175 @@ ${others.map((o, n) => `            <a class="prod-card reveal" href="${o.slug}.
   },
 }
 
+/* The close is the same on every product page, spine or sections, so it is a
+   function rather than two copies of the same markup. */
+const closingProd = (p, up) => `
+      <section class="closing closing-prod" data-cta="product">
+        <div class="wrap">
+          <div class="closing-slab reveal">
+            <img class="cta-prop cta-coin n-tl" src="${up}img/cta/coin.webp" width="274" height="290" loading="lazy" alt="" aria-hidden="true" />
+            <img class="cta-prop cta-pen n-bl" src="${up}img/cta/pen.webp" width="302" height="369" loading="lazy" alt="" aria-hidden="true" />
+            <img class="cta-prop cta-notes n-r" src="${up}img/cta/notes.webp" width="593" height="593" loading="lazy" alt="" aria-hidden="true" />
+            <div class="closing-in">
+              <h2>${esc(p.close[0])}</h2>
+              <p class="closing-lead">${esc(p.close[1])}</p>
+              <a class="btn btn-deep" href="${APP_URL}">Get Started</a>
+            </div>
+          </div>
+        </div>
+      </section>`
+
+/* ------------------------------------------------------- the second kit ---
+   The frames in Section 1 redraw every product page. Those pages are built
+   from `sections` rather than `spine`, and these are their renderers. A page
+   that still has only a spine goes on using KIT above, so the two can live
+   side by side while the rebuild runs page by page.
+
+   Everything here is measured off its frame at 1920. Where a number is a
+   share of the column it is written as a percentage; where it is a share of
+   the page's own height it is written as min(px, vw), because a section in
+   code takes its height from its words and a percentage of that would slide
+   the moment a line wrapped differently. */
+
+/* The six products, as the sibling cards name them. The href is resolved
+   once, here, so the rebuild can move a page without hunting through copy. */
+const SIBS = {
+  'tokenized-stocks':   ['Tokenized Stocks', 'Nigerian and US companies, in one list.', 'tokenized-stocks', 'search'],
+  'gifting-and-rewards':['Gifting &amp; Rewards', 'Make their day. Start their portfolio.', 'gifting-and-rewards', 'gift'],
+  'receive-and-send':   ['Receive and send', 'Get paid. Make someone&#8217;s day.', 'receive', 'updown'],
+  'pay-bills':          ['Pay bills', 'Airtime, data and electricity, in one place.', 'pay-bills', 'receipt'],
+  'convert':            ['Convert', 'Naira and stablecoins, at the rate on the screen.', 'convert', 'swap'],
+  'borrow-and-earn':    ['Borrow and earn', 'Put it to work, or borrow against it.', 'earn', 'split'],
+}
+
+/* left and width are shares of the 1920 hero; top is a share of its 1169, so
+   it is turned into a viewport length rather than a percentage of a box whose
+   height the words decide. */
+const coinTop = (pc) => {
+  const px = pc / 100 * 1169
+  return `min(${px.toFixed(0)}px, ${(px / 1920 * 100).toFixed(3)}vw)`
+}
+
+const KIT2 = {
+  /* The frame's hero: one centred column of words on a radial wash, with the
+     coins laid across the whole band behind them. */
+  phero: (p, s, up) => `
+      <section class="p2-hero">
+        <div class="p2-wash" aria-hidden="true"
+             style="--w: radial-gradient(118% 92% at 50% -2%, ${s.wash.join(', ')})"></div>
+${s.coins.map(([name, l, t, w, fx]) => `        <img class="p2-coin${fx ? ' p2-coin-fx' : ''}" src="${up}img/ts/coin-${name}.webp" style="left:${l}%;top:${coinTop(t)};width:${w}%" alt="" aria-hidden="true" />`).join('\n')}
+        <div class="wrap p2-hero-in">
+          <p class="eyebrow hero-intro" style="--hero-d: 0s">${esc(s.eyebrow)}</p>
+          <h1 class="hero-intro" style="--hero-d: 0.05s">${lines2(s.h)}</h1>
+          <p class="p2-hero-lead hero-intro" style="--hero-d: 0.1s">${esc(s.lead)}</p>
+          <div class="cta-row centred hero-intro" style="--hero-d: 0.2s">
+${s.ctas.map(([label, tone, href]) => `            <a class="btn btn-${tone}" href="${href || APP_URL}">${esc(label)}</a>`).join('\n')}
+          </div>
+        </div>
+      </section>`,
+
+  /* Three 485 cards on the 1520, each a gradient with a white fragment of the
+     product sitting in it. The third card puts its words under the fragment
+     rather than over it, which is the only variation the frame draws. */
+  cards3: (p, s, up) => `
+      <section class="band p2-cards">
+        <div class="wrap">
+          <div class="p2-head reveal">
+            <h2>${esc(s.h)}</h2>
+            <p>${esc(s.lead)}</p>
+          </div>
+          <div class="p2-card-row">
+${s.cards.map((c) => `            <article class="p2-card${c.foot ? ' p2-card-foot' : ''} reveal" style="--grad: linear-gradient(to bottom, ${c.grad.join(', ')})">
+              <div class="p2-card-copy">
+                <h3>${esc(c.h)}</h3>
+                <p>${esc(c.p)}</p>
+              </div>
+${c.list ? `              <div class="p2-frag">
+${c.list.map(([badge, name, sub, val]) => `                <div class="p2-frow">
+                  <span class="p2-badge">${esc(badge)}</span>
+                  <span class="p2-fmid"><b>${esc(name)}</b><i>${sub}</i></span>
+                  <span class="p2-fval">${val}</span>
+                </div>`).join('\n')}
+              </div>` : ''}
+${c.stack ? `              <div class="p2-stack">
+                <span class="p2-ghost p2-ghost-1" aria-hidden="true"></span>
+                <span class="p2-ghost p2-ghost-2" aria-hidden="true"></span>
+                <div class="p2-frag p2-frag-lg">
+${c.stack.rows.map(([k, v]) => `                  <div class="p2-srow"><span>${esc(k)}</span><b>${v}</b></div>`).join('\n')}
+                  <p class="p2-snote">${esc(c.stack.note)}</p>
+                </div>
+              </div>` : ''}
+            </article>`).join('\n')}
+          </div>
+        </div>
+      </section>`,
+
+  /* 750 of words and a 660 slot, 110 apart, with the slot on the right in
+     the a row and on the left in the b row. */
+  prow: (p, s, up) => `
+      <section class="band p2-row p2-row-${s.side}">
+        <div class="wrap p2-row-in">
+          <div class="p2-row-copy reveal">
+            <span class="p2-pill">${esc(s.pill)}</span>
+            <h2>${lines2(s.h)}</h2>
+            <p>${esc(s.p)}</p>
+            <a class="btn btn-mint" href="${APP_URL}">${esc(s.btn)}</a>
+          </div>
+          <div class="p2-slot reveal" style="--grad: linear-gradient(to bottom, ${s.slot.grad.join(', ')})">
+${s.slot.photo ? `            <img class="p2-slot-photo" src="${up}img/${s.slot.photo}" alt="" aria-hidden="true" loading="lazy" />` : ''}
+${(s.slot.chips || []).map(([name, sub, l, t, w]) => `            <span class="p2-chip" style="left:${l}%;top:${t}%;width:${w}%"><b>${esc(name)}</b><i>${esc(sub)}</i></span>`).join('\n')}
+${s.slot.prop ? `            <img class="p2-slot-prop" src="${up}img/${s.slot.prop[0]}" style="left:${s.slot.prop[1]}%;top:${s.slot.prop[2]}%;width:${s.slot.prop[3]}%" alt="" aria-hidden="true" loading="lazy" />` : ''}
+${s.slot.slab ? `            <img class="p2-slot-slab" src="${up}img/${s.slot.slab[0]}" style="left:${s.slot.slab[1]}%;top:${s.slot.slab[2]}%;width:${s.slot.slab[3]}%" alt="" aria-hidden="true" loading="lazy" />
+            <svg class="p2-slot-bracket" viewBox="0 0 374 266" aria-hidden="true" preserveAspectRatio="none"><path d="M373.5 80V25a25 25 0 0 0-25-25H25A25 25 0 0 0 0 25v240.5" /></svg>` : ''}
+          </div>
+        </div>
+      </section>`,
+
+  /* The head holds the left 656 and the questions the right 800, which is the
+     landing page's FAQ turned into a product band. */
+  pfaq: (p, s, up) => `
+      <section class="band p2-faq">
+        <div class="wrap faq-in">
+          <div class="head faq-head reveal">
+            <p class="eyebrow">${esc(s.eyebrow)}</p>
+            <h2>${esc(s.h)}</h2>
+          </div>
+          <div class="faq reveal">
+${s.items.map(([q, a]) => `            <details>
+              <summary><span>${esc(q)}</span><span class="plus" aria-hidden="true"></span></summary>
+              <div class="answer"><p>${esc(a)}</p></div>
+            </details>`).join('\n')}
+          </div>
+        </div>
+      </section>`,
+
+  /* Three sand cards, the other products this one sits beside. */
+  siblings: (p, s, up) => `
+      <section class="band p2-sibs">
+        <div class="wrap">
+          <div class="p2-head reveal">
+            <p class="eyebrow">${esc(s.eyebrow)}</p>
+            <h2>${lines2(s.h)}</h2>
+          </div>
+          <div class="prod-more">
+${s.cards.map((key) => {
+    const [title, sub, href, icon] = SIBS[key]
+    return `            <article class="prod-card reveal">
+              <div class="pr-title">
+                <span class="pr-chip" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="${ICONS[icon]}" /></svg></span>
+                <h3>${title}</h3>
+                <p>${sub}</p>
+              </div>
+              <a class="pr-link" href="${up}products/${href}.html">Explore ${title} ${ARROW}</a>
+            </article>`
+  }).join('\n')}
+          </div>
+        </div>
+      </section>`,
+
+  pclose: (p, s, up) => closingProd(p, up),
+}
+
 /* ----------------------------------------------------------------- page -- */
 function page(p) {
   const up = '../'
@@ -504,7 +675,7 @@ ${nav(up, p.slug)}
 
     <main id="main">
       <span id="top"></span>
-
+${p.sections ? p.sections.map((s) => KIT2[s.type](p, s, up)).join('\n') : `
       <!-- The hero: the landing page's wash and type, but in two columns.
            The landing hero is centred because it has a globe under it; a
            product page has one panel of the product instead, and putting it
@@ -531,26 +702,7 @@ ${nav(up, p.slug)}
       <span id="more"></span>
 ${p.spine.map((s) => KIT[s.type](p, s, up).replace('<section class="band', `<section id="s-${s.type}" class="band`)).join('\n')}
 
-      <!-- The close declares its cta variant and anchors each prop, because
-           every placement rule lives under [data-cta] with an n-* anchor under
-           it now. Without them the gradient's two custom properties are
-           undefined and .cta-prop falls back to position: absolute with no
-           offsets, so all three draw at natural size in the corner, on top of
-           the words. -->
-      <section class="closing closing-prod" data-cta="product">
-        <div class="wrap">
-          <div class="closing-slab reveal">
-            <img class="cta-prop cta-coin n-tl" src="${up}img/cta/coin.webp" width="274" height="290" loading="lazy" alt="" aria-hidden="true" />
-            <img class="cta-prop cta-pen n-bl" src="${up}img/cta/pen.webp" width="302" height="369" loading="lazy" alt="" aria-hidden="true" />
-            <img class="cta-prop cta-notes n-r" src="${up}img/cta/notes.webp" width="593" height="593" loading="lazy" alt="" aria-hidden="true" />
-            <div class="closing-in">
-              <h2>${esc(p.close[0])}</h2>
-              <p class="closing-lead">${esc(p.close[1])}</p>
-              <a class="btn btn-deep" href="${APP_URL}">Get Started</a>
-            </div>
-          </div>
-        </div>
-      </section>
+${closingProd(p, up)}`}
     </main>
 ${footer(up)}
 
