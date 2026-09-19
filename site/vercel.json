@@ -6,6 +6,12 @@
   "outputDirectory": ".",
   "cleanUrls": true,
   "trailingSlash": false,
+  "redirects": [
+    { "source": "/products/receive", "destination": "/products/receive-and-send", "permanent": true },
+    { "source": "/products/send", "destination": "/products/receive-and-send", "permanent": true },
+    { "source": "/products/earn", "destination": "/products/borrow-and-earn", "permanent": true },
+    { "source": "/products/borrow", "destination": "/products/borrow-and-earn", "permanent": true }
+  ],
   "headers": [
     {
       "source": "/fonts/(.*)",

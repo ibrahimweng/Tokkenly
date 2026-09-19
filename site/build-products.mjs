@@ -193,10 +193,10 @@ export const footer = (up) => `
               <p class="foot-head">Products</p>
               <div class="foot-split">
                 <div>
-${PRODUCTS.slice(0, 4).map((p) => `                  <a href="${up}products/${p.slug}.html">${p.nav}</a>`).join('\n')}
+${PRODUCTS.slice(0, Math.ceil(PRODUCTS.length / 2)).map((p) => `                  <a href="${up}products/${p.slug}.html">${p.nav}</a>`).join('\n')}
                 </div>
                 <div>
-${PRODUCTS.slice(4).map((p) => `                  <a href="${up}products/${p.slug}.html">${p.nav}</a>`).join('\n')}
+${PRODUCTS.slice(Math.ceil(PRODUCTS.length / 2)).map((p) => `                  <a href="${up}products/${p.slug}.html">${p.nav}</a>`).join('\n')}
                 </div>
               </div>
             </div>
@@ -526,10 +526,10 @@ const TICK2 = '&#10003;'
 const SIBS = {
   'tokenized-stocks':   ['Tokenized stocks', 'Invest in Nigerian and US companies from one app.', 'tokenized-stocks', 'search'],
   'gifting-and-rewards':['Gifting and rewards', 'Make their day, and start their portfolio.', 'gifting-and-rewards', 'gift'],
-  'receive-and-send':   ['Receive and send', 'Get paid into Tokkenly, and send from the same place.', 'receive', 'updown'],
+  'receive-and-send':   ['Receive and send', 'Get paid into Tokkenly, and send from the same place.', 'receive-and-send', 'updown'],
   'pay-bills':          ['Pay bills', 'Airtime, data and electricity from the balance you hold.', 'pay-bills', 'receipt'],
   'convert':            ['Convert', 'Move between naira and stablecoins without leaving the app.', 'convert', 'swap'],
-  'borrow-and-earn':    ['Borrow and earn', 'Put stablecoins to work, or borrow against what you hold.', 'earn', 'split'],
+  'borrow-and-earn':    ['Borrow and earn', 'Put stablecoins to work, or borrow against what you hold.', 'borrow-and-earn', 'split'],
 }
 
 /* The hero receipt: a white card the frame floats over the art, written out

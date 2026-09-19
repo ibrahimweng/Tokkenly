@@ -189,11 +189,7 @@ export const PRODUCTS = [
         ] },
 
       { type: 'siblings', eyebrow: 'The rest of it', h: 'There is more\nin the app.',
-        cards: [
-          ['gifting-and-rewards', 'gift', 'Gifting &amp; Rewards', 'Make their day. Start their portfolio.', 'Explore Gifting &amp; Rewards'],
-          ['receive', 'updown', 'Receive and send', 'Get paid. Make someone\u2019s day.', 'Explore Receive and send'],
-          ['earn', 'split', 'Borrow and earn', 'Put it to work, or borrow against it.', 'Explore Borrow and earn'],
-        ] },
+        cards: ['gifting-and-rewards', 'receive-and-send', 'borrow-and-earn'] },
 
       { type: 'pclose' },
     ],
@@ -318,11 +314,7 @@ export const PRODUCTS = [
 
       { type: 'siblings', h: 'There is more in the app.', badge: 'letter', hSize: 34,
         gap: 34, cardGap: 24,
-        cards: [
-          ['tokenized-stocks', 'T', 'Tokenized stocks', 'Invest in Nigerian and US companies from one app.', 'Explore tokenized stocks'],
-          ['receive', 'R', 'Receive and send', 'Get paid into Tokkenly, and send from the same place.', 'Explore receive and send'],
-          ['earn', 'B', 'Borrow and earn', 'Put stablecoins to work, or borrow against what you hold.', 'Explore borrow and earn'],
-        ] },
+        cards: ['tokenized-stocks', 'receive-and-send', 'borrow-and-earn'] },
 
       { type: 'pclose', tall: true },
     ],
@@ -391,7 +383,7 @@ export const PRODUCTS = [
 
   /* ------------------------------------------------------------- everyday -- */
   {
-    slug: 'receive',
+    slug: 'receive-and-send',
     /* Frame 644:1611. The frame merges receive and send into one page: the
        hero, then money in and money out side by side, then what happens while
        it is moving, then the questions, the siblings and the close. */
@@ -474,7 +466,7 @@ export const PRODUCTS = [
       { type: 'pclose', tall: true },
     ],
     close: ['Give out your details once.', 'Then get paid into the same app you invest and spend from.'],
-    nav: 'Receive',
+    nav: 'Receive and send',
     eyebrow: 'Receive',
     title: 'Get paid. Get on with life.',
     lead:
@@ -520,58 +512,6 @@ export const PRODUCTS = [
     ],
   },
 
-  {
-    slug: 'send',
-    close: ['Send your first one today.', 'From the same app you keep, invest and spend your money in.'],
-    nav: 'Send',
-    eyebrow: 'Send',
-    title: 'Make someone’s day.',
-    lead:
-      'Help family out. Pay a friend back. Send money from the same app where you keep and invest it.',
-    stage: 'stage-mint',
-    prop: 'coin',
-    panel: [
-      ['head', 'You are sending', '$120.00'],
-      ['pairs', [['To', 'Adaeze Okonkwo'], ['Paying with', 'USDC'],
-                 ['They receive', '$120.00'], ['Fee', 'No fee']]],
-      ['rows', [['Arrives', 'In about a minute']]],
-      ['btn', 'Send $120.00'],
-    ],
-    spine: [
-      { type: 'split', side: 'a',
-        eyebrow: 'One screen, one question',
-        head: 'Where is it<br />going?',
-        lead:
-          'A person on Tokkenly, a crypto wallet, or a Nigerian bank account. Tokkenly asks once, ' +
-          'then gets out of the way.',
-        points: [
-          ['It shows what you have', 'And will not let you send past it, so nothing bounces at the last step.'],
-          ['The fee is in money', 'Stated on the screen before you confirm, not a percentage you have to work out.'],
-        ],
-        cta: ['Read the rules', '#s-facts'],
-        stage: 'stage-sand', prop: 'purple',
-        panel: [['list', [
-          ['A', 'Adaeze Okonkwo', 'On Tokkenly', 'Instant', 'flat'],
-          ['W', 'A crypto wallet', 'Base &#183; USDC', 'Network fee', 'flat'],
-          ['B', 'A Nigerian account', 'GTBank &#183; 0221&#8230;', 'Minutes', 'flat'],
-        ]]] },
-      { type: 'steps', head: 'Three taps, not three apps.', items: [
-        ['Say where it goes', 'A person, a wallet, or a bank account. One screen asks the question once.'],
-        ['Say how much', 'Type it or pick it. Tokkenly shows what you have and will not let you send past it.'],
-        ['Send it', 'It leaves, and the row it makes says where it has got to until it lands.'],
-      ] },
-      { type: 'facts', head: 'The rules, stated once.', rows: [
-        ['Who you can send to', 'Another Tokkenly account, a crypto wallet, or a Nigerian bank account.'],
-        ['What it costs', 'The fee is on the screen before you confirm, in money — not a percentage you have to work out.'],
-        ['Your limit', 'Until your identity check is done, outgoing payments are capped. The cap is shown on the screen rather than discovered when a payment fails.'],
-        ['Sending shares', 'You can send a tokenized stock to another Tokkenly user from the holding itself.'],
-      ] },
-      { type: 'quote', text:
-        'Moving your own money between your own balances is not sending it. Converting naira to ' +
-        'dollars inside Tokkenly does not touch your sending limit.' },
-      { type: 'related' },
-    ],
-  },
 
   {
     slug: 'pay-bills',

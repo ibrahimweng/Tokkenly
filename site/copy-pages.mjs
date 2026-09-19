@@ -157,7 +157,7 @@ export const PAGES = {
        'Some of it is already written down, and reading it is faster than waiting for us.', [
         ['What a tokenized share is', './products/tokenized-stocks.html#s-faq'],
         ['The rate, and the ninety seconds it is held for', './products/convert.html#s-faq'],
-        ['Why there is a cap before your identity check', './products/send.html#s-facts'],
+        ['Why there is a cap before your identity check', './products/receive-and-send.html'],
         ['Everything else people ask', './index.html#faq'],
       ]],
       ['Something has gone wrong',
