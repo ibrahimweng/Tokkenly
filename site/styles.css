@@ -1571,15 +1571,20 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 .cta-prop { position: absolute; height: auto; pointer-events: none; }
 
 /* --------------------------------------------------------- cta variants -- */
-/* Every page closes on this slab, and each gets its own pairing and its own
-   arrangement, so the close does not read as the same panel five times.
+/* Every page closes on this slab, and the file gives it to them all the same
+   way. There are two slabs in Figma, not seven: "Slab / mint", which the
+   landing page and the five company and legal pages use, and "Slab /
+   product", which the four product frames use. The per-page pairings that
+   were here before — sky blue on About, brown on Privacy — were invented, and
+   they are gone.
 
-   A page declares its variant on the section and gives each prop an at-*
+   A page declares its variant on the section and gives each prop an n-*
    anchor:
 
      <section class="closing" data-cta="blog">
-       <img class="cta-prop cta-globe n-tl" src="./img/hero/globe.webp" …>
-       <img class="cta-prop cta-notes n-br" src="./img/hero/notes.webp" …>
+       <img class="cta-prop cta-dangote n-tl" src="./img/cta/coin-dangote.webp" …>
+       <img class="cta-prop cta-pen n-bl" src="./img/cta/pen-slab.webp" …>
+       <img class="cta-prop cta-notes n-r" src="./img/cta/notes.webp" …>
 
    The variant block below places them above 1040. Below that the n-* anchor
    takes over, because a slab that has stopped holding its ratio has no height
@@ -1591,57 +1596,68 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
    rule a variant whose props are all low or to the side loses its art entirely
    at 390.
 
-   The numbers are not typed. For each prop an ink rectangle was chosen — where
-   the drawing itself should sit as a share of the 1520 x 532 slab — and the box
-   back-computed from that asset's alpha bounds, because every one of these
-   carries a wide transparent margin (the globe's ink is 71% of its file, the
-   notes' 68 by 56). Placing them by their file bounds is what puts them in the
-   wrong place.
+   The numbers are the frame's, taken from each prop's own transform rather
+   than from the layer panel, which is not the same thing for any of the three:
+   the pen is mirrored, so its box starts a width to the left of the x Figma
+   reports, and the notes are turned, so the box Figma reports is not the box
+   they draw into. Each line below is the rendered rectangle as a share of the
+   1520 x 532 slab.
 
-   The one rule every variant keeps: no ink between 15% and 73%. That band is
-   the headline, the lead and the button.
+   Both slabs keep the same rule: no ink between 15% and 73% of the height.
+   That band is the headline, the lead and the button.
 
-   variant    pairing                 props, and where the ink sits
-   landing    pink -> taupe           dangote 2.6-15 tl · pen 0.8-15 bl · notes 73.5-99 r
-   product    pink -> taupe           coin 2.6-15 tl · pen 0.8-15 bl · notes 73.5-99 r
-   blog       sky blue -> pink        globe -6-14 tl · notes 80-97 br
-   about      sky blue -> green       coin 82-96 tr · gun -4-18 bl
-   contact    green -> pink           globe -8-14 l · coin 84-95 tr
-   terms      green -> brown          coin 3-16 bl · gun 78-102 r
-   privacy    brown -> lighter brown  notes 74-98 br · globe 2-14 tl          */
+   The two slabs do not even share their coin: the mint one carries the
+   Dangote coin, cta/coin-dangote.webp, and the product one the plain coin,
+   cta/coin.webp. Two different files in the file, not one placed twice.
 
-[data-cta='landing'] { --cta-from: #e7c9e0; --cta-to: #d4cec6; }
-[data-cta='landing'] .cta-dangote { left: -0.195%; top: -3.531%; width: 17.786%; }
-[data-cta='landing'] .cta-pen     { left: -1.889%; top: 50.772%; width: 19.693%; }
-[data-cta='landing'] .cta-notes   { left: 67.389%; top:  8.347%; width: 37.753%; }
+   variant                          props, and where the box sits
+   landing, blog, about, contact,   dangote 1.2 tl · pen 3.9 bl, mirrored ·
+   terms, privacy  (Slab / mint)    notes 53.7 r, turned 14.05
+   product      (Slab / product)    coin -0.2 tl · pen -1.9 bl · notes 67.4 r */
 
-/* The eight product pages share one close. Their coin is a different file
-   from the landing's — cta/coin.webp against cta/coin-dangote.webp — but the
-   same proportions, so the same ink target lands it in the same place. */
+/* Slab / mint — six of the ten frames. The gradient's own stops are #fec4ff
+   and #d4cec6, but the frame starts the ramp above the slab and ends it below,
+   so the colours at the slab's own edges are the two below. */
+[data-cta='landing'], [data-cta='blog'], [data-cta='about'],
+[data-cta='contact'], [data-cta='terms'], [data-cta='privacy'] {
+  --cta-from: #e7c9e0; --cta-to: #d4cec6;
+}
+[data-cta='landing'] .cta-dangote, [data-cta='blog'] .cta-dangote,
+[data-cta='about'] .cta-dangote, [data-cta='contact'] .cta-dangote,
+[data-cta='terms'] .cta-dangote, [data-cta='privacy'] .cta-dangote {
+  left: 1.206%; top: -1.564%; width: 18.004%;
+}
+/* This slab's pen is not the file the product slab uses. The rectangle holds
+   two paints, the first of them switched off, and the one that draws is a
+   crop: the drawing's own 952 x 1024, cut to 13.816-88.348 across and
+   6.266-90.816 down, which is the ink with a hair of margin. That cut is
+   baked into cta/pen-slab.webp rather than rebuilt here, because object-fit
+   only ever crops about the centre and this one is not centred. */
+[data-cta='landing'] .cta-pen, [data-cta='blog'] .cta-pen,
+[data-cta='about'] .cta-pen, [data-cta='contact'] .cta-pen,
+[data-cta='terms'] .cta-pen, [data-cta='privacy'] .cta-pen {
+  left: 3.857%; top: 53.688%; width: 19.885%;
+}
+[data-cta='landing'] .cta-notes, [data-cta='blog'] .cta-notes,
+[data-cta='about'] .cta-notes, [data-cta='contact'] .cta-notes,
+[data-cta='terms'] .cta-notes, [data-cta='privacy'] .cta-notes {
+  left: 53.717%; top: 30.697%; width: 39.013%;
+  /* Figma turns counter-clockwise and CSS turns the other way, so 14.05
+     becomes -14.05. The origin is the corner, not the centre, because the
+     corner is the point the frame's transform is written around. */
+  transform: rotate(-14.05deg); transform-origin: 0 0;
+}
+
+/* Slab / product — the four product frames, and the four product pages that
+   have no frame yet. Same three props, fitted rather than cropped, and the
+   notes sit further right and are not turned. */
 [data-cta='product'] { --cta-from: #e7c9e0; --cta-to: #d4cec6; }
 [data-cta='product'] .cta-coin  { left: -0.181%; top: -3.525%; width: 17.809%; }
-[data-cta='product'] .cta-pen   { left: -1.889%; top: 50.772%; width: 19.693%; }
+/* The pen's box is taller than the pen, and a fitted paint centres in it, so
+   the drawing starts 21.88 below the box — the one prop on this slab whose
+   top is not its box's top. The coin and the notes fit to the pixel. */
+[data-cta='product'] .cta-pen   { left: -1.889%; top: 54.883%; width: 19.693%; }
 [data-cta='product'] .cta-notes { left: 67.388%; top:  8.349%; width: 37.753%; }
-
-[data-cta='blog'] { --cta-from: #cfe3f5; --cta-to: #eccfe0; }
-[data-cta='blog'] .cta-globe { left: -10.303%; top: -29.980%; width: 28.248%; }
-[data-cta='blog'] .cta-notes { left:  75.930%; top:  46.251%; width: 25.139%; }
-
-[data-cta='about'] { --cta-from: #cfe5f5; --cta-to: #cfe3cd; }
-[data-cta='about'] .cta-coin { left: 78.873%; top: -18.462%; width: 20.027%; }
-[data-cta='about'] .cta-gun  { left: -6.238%; top:  40.733%; width: 25.549%; }
-
-[data-cta='contact'] { --cta-from: #cfe4d2; --cta-to: #eccfe0; }
-[data-cta='contact'] .cta-globe { left: -12.734%; top: 6.822%; width: 31.073%; }
-[data-cta='contact'] .cta-coin  { left:  81.543%; top: 1.352%; width: 15.735%; }
-
-[data-cta='terms'] { --cta-from: #d3e3cf; --cta-to: #dcc9b4; }
-[data-cta='terms'] .cta-coin { left:  0.096%; top: 47.143%; width: 18.596%; }
-[data-cta='terms'] .cta-gun  { left: 75.558%; top:  7.163%; width: 27.872%; }
-
-[data-cta='privacy'] { --cta-from: #e0d0bc; --cta-to: #c3ab92; }
-[data-cta='privacy'] .cta-notes { left: 68.255%; top:  21.766%; width: 35.491%; }
-[data-cta='privacy'] .cta-globe { left: -0.582%; top: -15.188%; width: 16.949%; }
 
 /* The frame mirrors the pen rather than turning it: ball to the upper left,
    barrel running down to the right, magenta into green. rotate(180deg) put the
@@ -2774,40 +2790,47 @@ body[data-navtone='over-dark'] .nav .nav-end .btn-mint {
 body[data-navtone='over-dark'] .nav .burger span { background: color-mix(in srgb, var(--ink) calc(var(--nav-solid) * 100%), #fff); }
 
 /* ================================================================ about == */
-/* Masthead 443:494. The section is 1024 tall on a 1920 frame and the picture
-   inside it is 2153.863 x 1211.548 centred at the top — wider and taller than
-   the section on purpose, clipped by it. Both are shares of the section, so
-   the same crop survives every width instead of being a phone-sized guess. */
+/* The whole page is dark. The masthead (443:494) and the body (397:572) are
+   both #1e1818 — flat ink, not the page's green — and only the statement card
+   and the closing slab are light, so the two gradients read as the two things
+   the page wants you to look at.
+
+   Masthead: 919 tall on a 1920 frame, 168 over and under, the words holding
+   the left 800 of the 1520 column. */
 .ab-mast {
   position: relative; isolation: isolate; overflow: hidden;
-  background: var(--deep);
-  min-height: min(1024px, 53.333vw);
+  background: #1e1818;
+  min-height: min(919px, 47.865vw);
   padding-block: min(168px, 8.75vw);
   display: flex; flex-direction: column; align-items: flex-start;
 }
-.ab-mast-img {
-  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-  z-index: -1; width: 112.18%; height: 118.315%;
-  object-fit: cover; object-position: 50% 0; max-width: none;
-}
-/* The one place the frame is not reproduced as drawn. Its masthead puts white
-   at 88 and 66 per cent on the photograph, and over the pink half of that sky
-   the lead paragraph measures 1.8:1 — below AA by a long way and genuinely hard
-   to read. Every type value is the frame's; what changes is the ground under
-   it, a scrim in the page's own ink that fades out before it reaches her.
+/* The cloud, 698:1789: a 843.019 x 612.776 rectangle with its top left corner
+   at 923.915, 372.767 of the 1920, turned 16.829 degrees and running off the
+   section's bottom edge, which the section clips.
 
-   The figures are measured rather than guessed: every pixel behind each line
-   is composited with the ink over it, and these are the lightest stops at
-   which the worst of them still clears 4.5:1. As drawn the lead paragraph
-   measures 1.8:1; it now measures 5.7 at 1920 and 5.2 at 390. */
-.ab-mast::after {
-  content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
-  background: linear-gradient(101deg,
-    rgba(5, 51, 41, 0.90) 0%,
-    rgba(5, 51, 41, 0.88) 40%,
-    rgba(5, 51, 41, 0.82) 54%,
-    rgba(5, 51, 41, 0.30) 66%,
-    rgba(5, 51, 41, 0) 80%);
+   It is rebuilt here rather than shipped as a render of the frame, because a
+   render of it is not transparent: the drawing's own file has a white ground,
+   and what Figma exports is the composite — a plate of #1e1818 with the cloud
+   on it. That plate is invisible on this section and only on this section,
+   and the seam at its edge shows up the moment the encoder moves the dark by
+   one value. So the transparent drawing goes in instead and the rotation and
+   the crop are done here: the fill is set to cover, so object-fit cover on a
+   box of the frame's ratio is the same crop, and Figma turns anticlockwise
+   where CSS turns the other way, hence the minus.
+
+   The transform's origin is the corner, not the centre, because the corner is
+   the point the frame's own matrix is written around. Left is measured from
+   the middle so the cloud stays with the column past --wrap; top and width are
+   measured against the viewport rather than against the section, because the
+   section grows past its min-height as soon as the headline takes another
+   line and anything keyed to its height would slide as it did. */
+.ab-mast-art {
+  position: absolute; z-index: -1; max-width: none;
+  left: 50%; margin-left: max(-36.085px, -1.879%);
+  top: min(372.767px, 19.415vw);
+  width: min(843.019px, 43.907vw); height: auto;
+  aspect-ratio: 843.019 / 612.776; object-fit: cover;
+  transform: rotate(-16.829deg); transform-origin: 0 0;
 }
 .ab-mast-in { width: 100%; }
 .ab-mast-text {
@@ -2817,6 +2840,8 @@ body[data-navtone='over-dark'] .nav .burger span { background: color-mix(in srgb
   display: grid; justify-items: start; gap: min(34px, 1.771vw);
 }
 .eyebrow-mint { color: var(--mint); }
+/* The frame's eyebrows on the dark bands are white, with the same mint dot. */
+.eyebrow-ondeep { color: #fff; }
 .ab-mast h1 {
   font-size: clamp(38px, 4.792vw, 92px); line-height: 0.98; letter-spacing: -0.045em;
   color: #fff;
@@ -2828,68 +2853,103 @@ body[data-navtone='over-dark'] .nav .burger span { background: color-mix(in srgb
 .ab-lead-1 { color: rgba(255, 255, 255, 0.88); }
 .ab-lead-2 { color: rgba(255, 255, 255, 0.66); }
 
-/* Body 397:572 — 130 between the three groups, 130 over and 150 under. */
+/* Body 397:572 — 130 between the three groups, 130 over and 150 under, on the
+   same ink as the masthead so the two read as one surface. */
 .ab-body {
+  background: #1e1818;
   display: grid; gap: min(130px, 6.771vw);
   padding-block: min(130px, 6.771vw) min(150px, 7.813vw);
 }
 
-/* Statement 397:585 */
+/* Statement 397:585 — 452 tall, 46 of padding over the words and none under
+   them, 40 at the sides, and the two columns 200 apart: 820 of words, then
+   420 of figures.
+
+   The gradient's stops are #f8c8ff and #d4cec6, but the frame runs the ramp
+   from above the card to below it, so the card's own top is still flat pink
+   for its first 18.22 per cent and its foot stops at 73.35 per cent of the
+   way to the sand. Those are the two numbers below. */
 .ab-statement {
-  background: var(--deep); border-radius: min(40px, 2.083vw);
-  padding: min(110px, 5.729vw);
-  display: flex; align-items: center; gap: min(90px, 4.688vw);
+  border-radius: min(34px, 1.771vw);
+  background: linear-gradient(to bottom, #f8c8ff 0%, #f8c8ff 18.22%, #deccd5 100%);
+  min-height: min(452px, 29.737vw);
+  padding: min(46px, 2.396vw) min(40px, 2.632%) 0;
+  /* 200 of gap and 420 of figures, as shares of the 1440 inside the padding
+     rather than of the 1520 card: a flex gap and a child's width are measured
+     against the content box, and taking them off the card left the words 32
+     wider than the frame's 820. */
+  display: flex; align-items: center; gap: min(200px, 13.889%);
 }
 .ab-statement-l { flex: 1 1 0; min-width: 0; display: grid; gap: min(24px, 1.25vw); }
 .ab-statement-l h2 {
   font-size: clamp(30px, 3.333vw, 64px); line-height: 1.04; letter-spacing: -0.04em;
-  color: #fff;
+  color: #1e1818;
 }
 .ab-statement-l p {
-  font-size: clamp(16px, 1.042vw, 20px); line-height: 1.68; color: var(--on-deep-muted);
+  font-size: clamp(16px, 1.042vw, 20px); line-height: 1.68; color: #1e1818;
 }
-.ab-stats { flex: none; width: min(420px, 32.308%); display: grid; gap: min(26px, 1.354vw); }
+.ab-stats { flex: none; width: min(420px, 29.167%); display: grid; gap: min(26px, 1.354vw); }
 .ab-stat { display: grid; gap: 6px; }
 .ab-stat-k {
   font-size: clamp(17px, 1.146vw, 22px); font-weight: 700; line-height: 1.3;
-  letter-spacing: -0.02em; color: var(--mint);
+  letter-spacing: -0.02em; color: #000;
 }
-.ab-stat-v { font-size: clamp(14.5px, 0.834vw, 16px); line-height: 1.55; color: var(--on-deep-muted); }
+.ab-stat-v { font-size: clamp(14.5px, 0.834vw, 16px); line-height: 1.55; color: #1e1818; }
 
-/* Stand for 397:599 — eyebrow, head and lead 22 apart, then 40 more to the
-   rules. */
+/* Stand for 397:599 — eyebrow, head and lead 22 apart, and 22 again to the
+   cards, not the 40 the rules version used. */
 .ab-values-head { display: grid; justify-items: start; gap: min(22px, 1.146vw); }
 .ab-values-head h2 {
   max-width: min(1100px, 72.368%);
   font-size: clamp(30px, 2.917vw, 56px); line-height: 1.06; letter-spacing: -0.038em;
-  color: var(--ink);
+  color: #fff;
 }
 .ab-values-intro {
   max-width: min(780px, 51.316%);
-  font-size: clamp(16px, 1.042vw, 20px); line-height: 1.6; color: var(--muted);
+  font-size: clamp(16px, 1.042vw, 20px); line-height: 1.6;
+  color: rgba(255, 255, 255, 0.64);
 }
-/* 506 three times is the 1520 column, and the frame stops each cell's words 48
-   short of the next rather than opening a gap in the rules. */
+/* 744 twice with 32 between is the 1520 column, and 32 down between the rows.
+   The rules are gone: each cell is a card in white at five per cent, which on
+   this ink is the only lift the frame gives them — no border, no shadow. */
 .ab-grid {
-  margin-top: min(40px, 2.083vw);
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: min(22px, 1.146vw);
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* The two gaps are written differently on purpose. A percentage column gap
+     is a share of the column, which is what 32 in the 1520 is. A percentage
+     ROW gap is a share of the grid's own height, and this grid's height is
+     what the rows add up to — so the browser resolves it against zero, lays
+     out at 19 instead of 32, and then overflows its own box by the 38 it was
+     short. The row gap is the same 32, measured against the viewport. */
+  column-gap: min(32px, 2.105%); row-gap: min(32px, 1.667vw);
 }
 .ab-value {
-  border-top: 1px solid #dfe4e1;
-  padding: min(36px, 1.875vw) min(48px, 3.158%) min(36px, 1.875vw) 0;
-  display: grid; gap: min(12px, 0.625vw); align-content: start;
+  border-radius: min(40px, 2.083vw);
+  background: rgba(255, 255, 255, 0.05);
+  min-height: min(300px, 19.737vw);
+  padding: min(36px, 1.875vw) min(34px, 4.570%);
+  /* The frame pins the words to the foot of the card and leaves the gap under
+     the icon to take up the slack, so a card whose body runs to two lines
+     grows upward from the same baseline as the others rather than pushing its
+     heading down. */
+  display: flex; flex-direction: column; justify-content: space-between;
+  gap: min(24px, 1.25vw);
 }
-/* Sentence case, not caps: the frame letterspaces "Custody" but does not
-   uppercase it, unlike the eyebrows and the blog kickers. */
-.ab-cat {
-  font-size: 12px; font-weight: 600; line-height: 1.33;
-  letter-spacing: 0.12em; color: var(--mint);
+/* 90 of the card's 676 of content — a share of the card, not of the column,
+   because a percentage here resolves against the card's content box. */
+.ab-icon {
+  width: min(90px, 13.314%); height: auto; flex: none;
+  display: block;
 }
+.ab-value-t { display: grid; gap: min(12px, 0.625vw); }
 .ab-value h3 {
-  font-size: clamp(19px, 1.354vw, 26px); line-height: 1.24; letter-spacing: -0.024em;
-  color: var(--ink);
+  font-size: clamp(21px, 1.875vw, 36px); line-height: 1.25; letter-spacing: -0.4px;
+  color: #fff;
 }
-.ab-p { font-size: clamp(15px, 0.885vw, 17px); line-height: 1.68; color: var(--muted); }
+.ab-p {
+  font-size: clamp(15px, 0.834vw, 16px); line-height: 1.55;
+  color: rgba(255, 255, 255, 0.64);
+}
 
 /* Narrative 397:630 — 800 of picture, 90 of air, 600 of words, in the 1520. */
 .ab-narrative {
@@ -2907,10 +2967,11 @@ body[data-navtone='over-dark'] .nav .burger span { background: color-mix(in srgb
 .ab-narrative-t { display: grid; justify-items: start; gap: min(22px, 1.146vw); }
 .ab-narrative-t h2 {
   font-size: clamp(28px, 2.708vw, 52px); line-height: 1.06; letter-spacing: -0.036em;
-  color: var(--ink);
+  color: var(--canvas);
 }
 .ab-narrative-t p {
-  font-size: clamp(16px, 1.042vw, 20px); line-height: 1.68; color: var(--muted);
+  font-size: clamp(16px, 1.042vw, 20px); line-height: 1.68;
+  color: rgba(255, 255, 255, 0.54);
 }
 
 /* ================================================================= blog == */
@@ -3216,8 +3277,6 @@ textarea.cf-input {
 
 /* ---------------------------------------------------------- narrower ---- */
 @media (max-width: 1240px) {
-  .ab-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .ab-value { padding-right: min(40px, 4%); }
   .bl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .lg-split { grid-template-columns: 24% minmax(0, 1fr); column-gap: 5%; }
 }
@@ -3235,17 +3294,33 @@ textarea.cf-input {
   .cf-channels { margin-top: 64px; grid-template-columns: minmax(0, 1fr); gap: 32px; }
   .cf-channel { padding-block: 24px; }
 
-  /* Narrow, the words run the full width, so the scrim has to as well: the
-     horizontal one leaves its right-hand end over bright sky. */
-  .ab-mast::after {
-    background: linear-gradient(180deg, rgba(5, 51, 41, 0.72) 0%, rgba(5, 51, 41, 0.85) 100%);
-  }
+  /* Narrow, the words run the full width, so the cloud has nowhere to be
+     beside them — and behind them it is a white drawing under white type,
+     which is unreadable at any opacity worth having. So it goes under them
+     instead: the section grows a band at its foot for the cloud to sit in,
+     and the words stop above it. */
   .ab-mast { min-height: 0; padding-block: calc(var(--nav-h) + 72px) 72px; }
-  .ab-mast-img { width: 118%; height: 100%; }
+  /* It stops being positioned and becomes the block under the last line,
+     bleeding half the gutter off the right edge. The turn goes with the
+     positioning: about its own middle it would overrun the line above by a
+     fifth of its height, and reserving that room in a margin means computing
+     it from a width that is itself a min() of two units. Flat, it occupies
+     exactly the box it draws into. */
+  .ab-mast-art {
+    position: static; transform: none;
+    width: min(520px, 68%);
+    margin: min(44px, 6vw) calc(var(--gutter) * -0.5) 0 auto;
+  }
   .ab-mast-text { max-width: 100%; gap: 22px; }
   .ab-body { gap: 80px; padding-block: 80px 88px; }
-  .ab-statement { flex-direction: column; align-items: flex-start; gap: 40px; padding: 44px 32px; }
-  .ab-stats { width: 100%; }
+  .ab-statement { flex-direction: column; align-items: flex-start; gap: 40px; padding: 44px 32px; min-height: 0; }
+  .ab-statement-l { gap: 16px; }
+  .ab-stats { width: 100%; gap: 18px; }
+  .ab-values-head { gap: 14px; }
+  .ab-grid { grid-template-columns: minmax(0, 1fr); }
+  .ab-value { min-height: 0; padding: 30px 28px; gap: 28px; }
+  .ab-value-t { gap: 10px; }
+  .ab-icon { width: 78px; }
   .ab-narrative { grid-template-columns: minmax(0, 1fr); gap: 40px; }
   .ab-photo { aspect-ratio: 4 / 5; }
 
@@ -3262,8 +3337,7 @@ textarea.cf-input {
 }
 
 @media (max-width: 720px) {
-  .ab-grid, .bl-grid { grid-template-columns: minmax(0, 1fr); }
-  .ab-value { padding-right: 0; }
+  .bl-grid { grid-template-columns: minmax(0, 1fr); }
   .bl-form { flex-direction: column; align-items: stretch; }
   .bl-input { width: 100%; }
   .lg-clause { flex-direction: column; gap: 10px; }

@@ -5,11 +5,10 @@
    copied, so a routing change is made once and every page in the site gets it.
 
    Frames: About us 397:559, Blog 391:559, Contact us 394:780, Terms of service
-   399:559, Privacy policy 399:785. Each closes on the shared slab, using the
-   variant named in its copy entry — the gradient pairing and the arrangement
-   of the 3D props are the per-page variation asked for separately, so those
-   come from the stylesheet rather than from the frame, and only the slab's
-   headline, lead and button label are the frame's. */
+   399:559, Privacy policy 399:785. Each closes on the shared slab, and all
+   five carry the same instance of it as the landing page does — one gradient
+   and one arrangement of props, from the stylesheet, with only the headline,
+   the lead and the button label differing page to page. */
 import { writeFileSync, readFileSync, existsSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -24,7 +23,26 @@ const lines = (s) => esc(s).split('\n').join('<br />')
 const ARROW = '<svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg>'
 
 /* ---- the close --------------------------------------------------------- */
-const PROP_SIZE = { coin: [967, 1024], globe: [1024, 1024], gun: [799, 1024], notes: [488, 488] }
+/* Every page frame in the file — the landing page and these five — closes on
+   the same instance of Section / Closing call to action, and the slab inside
+   it is "Slab / mint": the pink-to-sand gradient with the coin over the top
+   left corner, the pen dropping off the bottom and the notes tilted into the
+   right half. The four product frames are the one exception, on "Slab /
+   product", which is why build-products.mjs keeps its own arrangement.
+
+   So there is no per-page pairing here any more. The variant attribute stays
+   because the stylesheet still places the props through it, and because
+   checkProps below reads those rules to prove a page never emits a prop the
+   stylesheet has nowhere to put. */
+/* The file it comes from, and its natural size. Two of the three differ from
+   the product slab's: the coin is the Dangote one, and the pen is the frame's
+   own crop of the pen rather than the whole drawing. So the name a page
+   writes is the prop, not the filename. */
+const PROPS = {
+  dangote: ['coin-dangote', 560, 593],
+  pen: ['pen-slab', 710, 866],
+  notes: ['notes', 488, 488],
+}
 
 const close = (p) => {
   const [h, lead, label] = p.close
@@ -34,8 +52,8 @@ const close = (p) => {
         <div class="wrap">
           <div class="closing-slab reveal">
 ${p.props.map(([name, anchor]) => {
-    const [w, hh] = PROP_SIZE[name]
-    return `              <img class="cta-prop cta-${name} ${anchor}" src="./img/hero/${name}.webp" width="${w}" height="${hh}" loading="lazy" alt="" aria-hidden="true" />`
+    const [file, w, hh] = PROPS[name]
+    return `              <img class="cta-prop cta-${name} ${anchor}" src="./img/cta/${file}.webp" width="${w}" height="${hh}" loading="lazy" alt="" aria-hidden="true" />`
   }).join('\n')}
             <div class="closing-in">
               <h2>${lines(h)}</h2>
@@ -72,16 +90,25 @@ function checkProps() {
 }
 
 /* ---- about -------------------------------------------------------------- */
-/* Masthead (443:494): a dark section the photograph fills, 1024 tall at 1920,
-   with the picture 2153.863 wide and 1211.548 high centred on it and clipped —
-   so it is placed as a share of the section rather than at a fixed size, and
-   goes on overflowing the bottom edge at every width.
+/* Masthead (443:494): 919 tall at 1920 on flat #1e1818 — no photograph and no
+   scrim any more. The words hold the left 800 of the column and the 3D cloud
+   (698:1789) sits to their right, a 843 x 613 rectangle turned 16.83 degrees
+   and run off the bottom edge, which the section clips.
 
-   Values (397:605): three columns of 506 in the 1520, each a rule with the
-   words stopping 48 short of the next one. */
+   The cloud ships as its own transparent drawing and the stylesheet does the
+   turning, the crop and the cut — a render of the rectangle would have the
+   section's ink baked into it, which is fine on the section and nowhere else.
+
+   It is written after the words rather than before them because that is the
+   order it wants narrow, where it stops being positioned and becomes the
+   block under the last line. Wide it is taken out of the flow, so where it
+   sits in the markup costs nothing.
+
+   Values (397:605): two columns of 744 in the 1520, 32 apart, each a card in
+   white at five per cent with a 90 icon over the words, which are pinned to
+   the foot of the card rather than following the icon. */
 const aboutBody = (p) => `
       <section class="ab-mast">
-        <img class="ab-mast-img" src="./img/about/masthead.webp" width="1264" height="722" alt="" aria-hidden="true" />
         <div class="wrap ab-mast-in">
           <div class="ab-mast-text reveal">
             <p class="eyebrow eyebrow-mint">${esc(p.eyebrow)}</p>
@@ -91,6 +118,7 @@ ${p.leads.map((l, i) => `              <p class="ab-lead-${i + 1}">${esc(l)}</p>
             </div>
           </div>
         </div>
+        <img class="ab-mast-art" src="./img/about/cloud.webp" width="1536" height="2048" alt="" aria-hidden="true" />
       </section>
 
       <section class="ab-body">
@@ -108,15 +136,17 @@ ${p.statement.stats.map(([k, v]) => `              <div class="ab-stat"><p class
 
         <div class="wrap">
           <div class="ab-values-head reveal">
-            <p class="eyebrow">${esc(p.values.eyebrow)}</p>
+            <p class="eyebrow eyebrow-ondeep">${esc(p.values.eyebrow)}</p>
             <h2>${esc(p.values.h)}</h2>
             <p class="ab-values-intro">${esc(p.values.intro)}</p>
           </div>
           <div class="ab-grid reveal">
-${p.values.items.map(([cat, h, t]) => `            <div class="ab-value">
-              <p class="ab-cat">${esc(cat)}</p>
-              <h3>${esc(h)}</h3>
-              <p class="ab-p">${esc(t)}</p>
+${p.values.items.map(([icon, h, t]) => `            <div class="ab-value">
+              <img class="ab-icon" src="./img/about/v-${icon}.webp" width="270" height="270" loading="lazy" alt="" aria-hidden="true" />
+              <div class="ab-value-t">
+                <h3>${esc(h)}</h3>
+                <p class="ab-p">${esc(t)}</p>
+              </div>
             </div>`).join('\n')}
           </div>
         </div>
@@ -124,7 +154,7 @@ ${p.values.items.map(([cat, h, t]) => `            <div class="ab-value">
         <div class="wrap ab-narrative">
           <img class="ab-photo reveal" src="./img/about/narrative.webp" width="864" height="1184" loading="lazy" alt="" aria-hidden="true" />
           <div class="ab-narrative-t reveal">
-            <p class="eyebrow">${esc(p.narrative.eyebrow)}</p>
+            <p class="eyebrow eyebrow-ondeep">${esc(p.narrative.eyebrow)}</p>
             <h2>${esc(p.narrative.h)}</h2>
 ${p.narrative.ps.map((t) => `            <p>${esc(t)}</p>`).join('\n')}
           </div>
