@@ -496,7 +496,7 @@ const closingProd = (p, up, s) => `
             <div class="closing-in">
               <h2>${esc(p.close[0])}</h2>
               <p class="closing-lead">${esc(p.close[1])}</p>
-              <a class="btn btn-deep" href="${APP_URL}">${esc(p.close[2] || 'Get Started')}</a>
+              <a class="btn btn-deep" href="${APP_URL}">${esc(p.close[2] || 'Get started')}</a>
             </div>
           </div>
         </div>
@@ -744,7 +744,7 @@ ${s.cards.map((c) => {
     /* A page may name a product and take the shared words, or write the card
        out itself: the frames do both, and two of them use a letter where the
        others use an icon. */
-    const [href, badge, title, sub, link] = Array.isArray(c) ? c : [SIBS[c][2], SIBS[c][3], SIBS[c][0], SIBS[c][1], 'Explore ' + SIBS[c][0].toLowerCase()]
+    const [href, badge, title, sub, link] = Array.isArray(c) ? c : [SIBS[c][2], SIBS[c][3], SIBS[c][0], SIBS[c][1], 'Explore ' + SIBS[c][0]]
     return `            <article class="prod-card reveal">
               <div class="pr-title">
                 <span class="pr-chip" aria-hidden="true">${s.badge === 'letter' ? esc(title.replace(/[^A-Za-z]/g, '')[0]) : `<svg viewBox="0 0 24 24"><path d="${ICONS[badge]}" /></svg>`}</span>
@@ -1068,7 +1068,7 @@ ${p.sections ? p.sections.map((s) => KIT2[s.type](p, s, up)).join('\n') : `
             <h1 class="ph-hl hero-intro" style="--hero-d: 0.05s">${esc(p.title)}</h1>
             <p class="lead ph-lead hero-intro" style="--hero-d: 0.1s">${esc(p.lead)}</p>
             <div class="cta-row ph-cta hero-intro" style="--hero-d: 0.2s">
-              <a class="btn btn-ink" href="${APP_URL}">Get Started</a>
+              <a class="btn btn-ink" href="${APP_URL}">Get started</a>
               <a class="btn btn-white" href="#more">See how it works</a>
             </div>
           </div>

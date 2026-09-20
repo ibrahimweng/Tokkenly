@@ -91,9 +91,9 @@ export const PRODUCTS = [
     sections: [
       { type: 'phero',
         eyebrow: 'Tokenized Stocks',
-        h: 'Invest in Nigerian\nand US Stocks',
+        h: 'Invest in Nigerian\nand US stocks',
         lead: 'The companies on your radar can be part of your portfolio. Invest in tokenized stocks linked to companies listed in Nigeria and the US, right from Tokkenly.',
-        ctas: [['Get Started', 'ink', null], ['See how it works', 'white', '#more']],
+        ctas: [['Get started', 'ink', null], ['See how it works', 'white', '#more']],
         wash: ['#f7c9fe', '#d1cbc2 58.5%', '#eaeae9'],
         /* The coins do not sit still. They run the arc the frame lays them
            on, left to right, growing as they cross the middle and shrinking
@@ -155,7 +155,7 @@ export const PRODUCTS = [
             h: 'American companies', p: 'Apple, Tesla and the names you already follow.',
             list: [['A', 'Apple', 'AAPLc', '$226.40'],
                    ['T', 'Tesla', 'TSLAc', '$412.90'],
-                   ['N', 'NVIDIA', 'NVDAc', '$184.20']] },
+                   ['N', 'Nvidia', 'NVDAc', '$184.20']] },
         ] },
 
       { type: 'prow', side: 'a', pill: 'Search',
@@ -259,7 +259,7 @@ export const PRODUCTS = [
     sections: [
       { type: 'phero', align: 'left', h: 'Give stocks as gifts or rewards',
         lead: 'Give tokenized stocks for birthdays, graduations, or just because.\nReward customers through referrals, cashback, and loyalty programs.',
-        ctas: [['Get Started', 'ink', null], ['See how it works', 'white', '#more']],
+        ctas: [['Get started', 'ink', null], ['See how it works', 'white', '#more']],
         wash: ['#c7e1ff', '#c7e1ff 20%', '#f8c8ff 58%', '#eaeae9'],
         washH: 39.583, height: 53.333,
         /* Boxes as shares of the 1920 hero: left, top, width. The portrait
@@ -289,7 +289,7 @@ export const PRODUCTS = [
 
       { type: 'psplit', side: 'a',
         h: 'A gift with a date on it.',
-        p: 'Pick a company they will recognise, write a line, and set the day it opens. A gift with a date on it arrives twice \u2014 once when it lands, and once when it unlocks.',
+        p: 'Pick a company they will recognize, write a line, and set the day it opens. A gift with a date on it arrives twice \u2014 once when it lands, and once when it unlocks.',
         btn: 'Start a gift',
         photo: 'gift/unlock-portrait.webp', ratio: '660 / 617' },
 
@@ -348,7 +348,7 @@ export const PRODUCTS = [
         eyebrow: 'A gift with a date on it',
         head: 'Worth something<br />in ten years.',
         lead:
-          'Pick a company they will recognise, write a line, and set the day it opens. A gift with a ' +
+          'Pick a company they will recognize, write a line, and set the day it opens. A gift with a ' +
           'date on it is a gift twice: once when it arrives, once when it unlocks.',
         points: [
           ['Any tokenized stock on Tokkenly', 'A slice is fine. You do not have to give a whole share.'],
@@ -400,7 +400,7 @@ export const PRODUCTS = [
       { type: 'phero', align: 'left', eyebrow: 'Receive and send',
         h: 'Receive and send money',
         lead: 'Get paid, support loved ones, or move money where you need it.\nKeep it in Tokkenly, ready for whatever comes next.',
-        ctas: [['Get Started', 'ink', null], ['See how it works', 'white', '#more']],
+        ctas: [['Get started', 'ink', null], ['See how it works', 'white', '#more']],
         wash: ['#c7e1ff', '#c7e1ff 20%', '#f8c8ff 58%', '#eaeae9'],
         washH: 42.344, height: 53.333,
         panel: { l: 62.604, t: 11.823, w: 26.563, big: true,
@@ -438,7 +438,7 @@ export const PRODUCTS = [
       { type: 'intransit',
         h: 'What happens while it is moving.',
         lead: 'Money in transit gets a row of its own, so a balance never jumps without an explanation.',
-        btn: 'Signup now',
+        btn: 'Sign up',
         /* Every placement below is the frame's own box over its card's:
            645:1617 the mini, 697:1729 the gun, 696:878 the receipt,
            666:1641 the frag and 679:1643 the cursor. Two of them are meant
@@ -447,7 +447,7 @@ export const PRODUCTS = [
            frame's, not what fits. */
         rows: [
           [{ wide: true, bg: '#d1cbc2', h: 'It says where it actually is.',
-             p: 'In route, at the bank, not landed yet \u2014 not a balance that jumps with no explanation.',
+             p: 'En route, at the bank, not landed yet \u2014 not a balance that jumps with no explanation.',
              mini: { l: 4.846, t: 50, w: 90.308, h: 77.778,
                      rows: [['Sent', '14:02'], ['At the bank', '14:03'], ['Landed', '\u2014']] } },
            { grad: ['#d1cbc2', '#fac6ff'], h: 'Still moving is not spendable.',
@@ -516,7 +516,7 @@ export const PRODUCTS = [
         ] },
       { type: 'trio', eyebrow: 'While it is moving', head: 'Money in transit gets a row of its own.',
         cards: [
-          ['It says where it actually is', 'In route, at the bank, not landed yet. Not a balance that jumps with no explanation.', 'notes'],
+          ['It says where it actually is', 'En route, at the bank, not landed yet. Not a balance that jumps with no explanation.', 'notes'],
           ['It is counted honestly', 'Money still moving is not spendable, and the screen keeps the two apart until it lands.', 'penback,pen'],
           ['It ends in a receipt', 'When it lands the row becomes a record you can find again in Activity.', 'purple'],
         ] },
@@ -745,7 +745,7 @@ export const PRODUCTS = [
         h: 'Earn more, or\nborrow against it.',
         lead: 'Earn on your stablecoins or borrow when you need flexibility.\n' +
               'Review the terms, choose an amount, and pick what fits your plans.',
-        ctas: [['Get Started', 'ink', null], ['See how it works', 'ghost', '#s-steps']],
+        ctas: [['Get started', 'ink', null], ['See how it works', 'ghost', '#s-steps']],
         height: 78.021, padTop: 184, hW: 63.158, gaps: [18, 32],
         wash: ['#c7e1ff 0%', '#c7e1ff 20.5%', '#f8c8ff 58.5%', '#eaeae9 100%'], washH: 45.833,
         stage: {
@@ -826,7 +826,7 @@ export const PRODUCTS = [
       { type: 'pclose', pad: 96, h2: [58, 1.017] },
     ],
     close: ['See what you could earn, or borrow.',
-            'The figure, the rate and the terms, before you agree to anything.', 'Get Started'],
+            'The figure, the rate and the terms, before you agree to anything.', 'Get started'],
     nav: 'Borrow and earn',
     eyebrow: 'Borrow and earn',
     title: 'Earn more, or borrow against it.',
