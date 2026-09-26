@@ -453,7 +453,14 @@ export const SHEETS: Record<string, Builder> = {
    *  keyboard first, because that is the point of it. */
   jump: () => {
     const input = h('input', { placeholder: 'Search Tokkenly', ariaLabel: 'Search Tokkenly' })
-    const list = h('div', { class: 'jump-list' })
+    // A combobox over a listbox, the same pattern the Invest search uses, so
+    // a screen reader is told there is a list and which row the arrows are on.
+    // Without it the arrow keys moved a highlight only a sighted person saw.
+    input.setAttribute('role', 'combobox')
+    input.setAttribute('aria-expanded', 'true')
+    input.setAttribute('aria-autocomplete', 'list')
+    input.setAttribute('aria-controls', 'jump-list')
+    const list = h('div', { class: 'jump-list', role: 'listbox', id: 'jump-list', ariaLabel: 'Results' })
     let hits = search('')
     let cursor = 0
 
@@ -468,10 +475,11 @@ export const SHEETS: Record<string, Builder> = {
       hits.forEach((hit, i) => {
         if (hit.group !== group) {
           group = hit.group
-          list.appendChild(h('div', { class: 'jump-group', text: group }))
+          list.appendChild(h('div', { class: 'jump-group', ariaHidden: true, text: group }))
         }
         list.appendChild(h('button', {
-          class: 'jump-hit', dataset: { on: i === cursor ? '1' : '0' },
+          class: 'jump-hit', role: 'option', id: 'jump-hit-' + i, tabIndex: -1,
+          dataset: { on: i === cursor ? '1' : '0' },
           on: { click: () => { closeSheet(); go(hit.to) },
                 mouseenter: () => { cursor = i; mark() } },
         },
@@ -483,11 +491,16 @@ export const SHEETS: Record<string, Builder> = {
     }
     const mark = () => {
       const rows = list.querySelectorAll('.jump-hit')
-      rows.forEach((r, i) => r.setAttribute('data-on', i === cursor ? '1' : '0'))
+      rows.forEach((r, i) => {
+        r.setAttribute('data-on', i === cursor ? '1' : '0')
+        r.setAttribute('aria-selected', String(i === cursor))
+      })
+      if (rows[cursor]) input.setAttribute('aria-activedescendant', rows[cursor].id)
+      else input.removeAttribute('aria-activedescendant')
       rows[cursor]?.scrollIntoView({ block: 'nearest' })
     }
     input.addEventListener('input', () => {
-      hits = search(input.value); cursor = 0; paint()
+      hits = search(input.value); cursor = 0; paint(); mark()
     })
     input.addEventListener('keydown', (e) => {
       const k = (e as KeyboardEvent).key
@@ -496,6 +509,7 @@ export const SHEETS: Record<string, Builder> = {
       else if (k === 'Enter' && hits[cursor]) { e.preventDefault(); const to = hits[cursor].to; closeSheet(); go(to) }
     })
     paint()
+    mark()
     setTimeout(() => input.focus(), 0)
 
     const panel = sheet('',
@@ -508,6 +522,9 @@ export const SHEETS: Record<string, Builder> = {
     // no title row on this one; the field is the title
     panel.querySelector('.sheet-head')?.remove()
     panel.querySelector('.sheet')?.classList.add('jump')
+    // Named for what it is. With no heading, the dialog fell back to the
+    // label "Dialog", which is what a screen reader announced on Command K.
+    panel.querySelector('.sheet')?.setAttribute('aria-label', 'Search Tokkenly')
     panel.classList.add('scrim-top')     // a palette sits high, not centred
     return panel
   },

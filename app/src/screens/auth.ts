@@ -63,7 +63,7 @@ function aside(): HTMLElement {
 }
 
 function authCard(title: string, sub: string, body: Node[], footer: Node): HTMLElement {
-  return h('div', { class: 'auth' },
+  return h('main', { class: 'auth' },
     h('div', { class: 'auth-card' },
       h('div', { class: 'brand' },
         h('span', { class: 'brand-mark', text: 'T' }),

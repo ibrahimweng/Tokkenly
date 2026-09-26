@@ -17,7 +17,7 @@ import { pinPad } from '../components/pinpad'
  *  screen, because this screen is the whole app right now — sending somebody
  *  to Security when they cannot reach Security is sending them nowhere. */
 function lockedOut(): HTMLElement {
-  return h('div', { class: 'lock' },
+  return h('main', { class: 'lock' },
     h('div', { class: 'lock-card' },
       h('span', { class: 'mark lock-mark warn-mark', html: icon.alert() }),
       h('h1', { class: 't-title', style: { margin: '0' }, text: 'Locked' }),
@@ -59,7 +59,7 @@ export function lockScreen(): HTMLElement {
     setTimeout(() => actions.unlock(), 500)
   })
 
-  return h('div', { class: 'lock' },
+  return h('main', { class: 'lock' },
     h('div', { class: 'lock-card' },
       h('span', { class: 'avatar lock-avatar', text: initials }),
       h('h1', { class: 't-title', style: { margin: '0' }, text: 'Welcome back, ' + first }),
