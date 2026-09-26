@@ -15,6 +15,7 @@
                 and the sibling cards all write it
      title      the one-line promise under the name in the Products menu
      lead       the page’s meta description
+     image      the picture a shared link shows, a path under img/
      close      the closing slab: headline, lead and, optionally, the button
      sections   the page, band by band, in the order the frame draws it; each
                 `type` is a renderer in build-products.mjs (KIT2)
@@ -27,12 +28,19 @@
    project at this address; signed out, it sends a visitor to /login. */
 export const APP_URL = 'https://app.tokkenly.com'
 
+/* The site’s own address. Nothing in the repository wrote it down, so this is
+   an assumption to confirm: tokkenly.com, with the app on its app. subdomain.
+   Canonical links, og:url, og:image, robots.txt and sitemap.xml all read it,
+   so a different domain is a one-line change here and in index.html’s head. */
+export const SITE_URL = 'https://tokkenly.com'
+
 export const PRODUCTS = [
   /* ------------------------------------------------------------ flagship -- */
   {
     slug: 'tokenized-stocks',
+    image: 'ts/coins-us.webp',
     close: ['Make your next investment now.', 'Explore tokenized stocks with Tokkenly and bring the rest of your money along.'],
-    nav: 'Tokenized Stocks',
+    nav: 'Tokenized stocks',
     title: 'From Nigeria to Wall Street.',
     lead:
       'The companies on your radar can be part of your portfolio. Invest in tokenized stocks linked ' +
@@ -44,7 +52,7 @@ export const PRODUCTS = [
        been rebuilt, so the site keeps building one page at a time. */
     sections: [
       { type: 'phero',
-        eyebrow: 'Tokenized Stocks',
+        eyebrow: 'Tokenized stocks',
         h: 'Invest in Nigerian\nand US stocks',
         lead: 'The companies on your radar can be part of your portfolio. Invest in tokenized stocks linked to companies listed in Nigeria and the US, right from Tokkenly.',
         ctas: [['Get started', 'ink', null], ['See how it works', 'white', '#more']],
@@ -146,7 +154,7 @@ export const PRODUCTS = [
         /* This frame keeps the older sibling band: icon chips and a short
            line each, where the newer pages use a letter and a sentence. */
         cards: [
-          ['gifting-and-rewards', 'gift', 'Gifting &amp; Rewards', 'Make their day. Start their portfolio.', 'Explore Gifting &amp; Rewards'],
+          ['gifting-and-rewards', 'gift', 'Gifting and rewards', 'Make their day. Start their portfolio.', 'Explore Gifting and rewards'],
           ['receive-and-send', 'updown', 'Receive and send', 'Get paid. Make someone\u2019s day.', 'Explore Receive and send'],
           ['borrow-and-earn', 'split', 'Borrow and earn', 'Put it to work, or borrow against it.', 'Explore Borrow and earn'],
         ] },
@@ -159,6 +167,7 @@ export const PRODUCTS = [
   /* ------------------------------------------------------------ new page -- */
   {
     slug: 'gifting-and-rewards',
+    image: 'gift/hero-portrait.webp',
     /* Frame 640:1611. Seven bands: a hero with the words on the left and a
        portrait running off the right, two ways to give, the unlock, three
        steps, the questions, the siblings and the close. */
@@ -234,7 +243,7 @@ export const PRODUCTS = [
       { type: 'pclose', tall: true },
     ],
     close: ['Give something that grows.', 'Pick a company, set the day it opens, and let the gift do the rest.'],
-    nav: 'Gifting &amp; Rewards',
+    nav: 'Gifting and rewards',
     title: 'Make their day. Start their portfolio.',
     lead:
       'Give tokenized stocks for birthdays, graduations, or just because. Reward customers through ' +
@@ -244,6 +253,7 @@ export const PRODUCTS = [
   /* ------------------------------------------------------------- everyday -- */
   {
     slug: 'receive-and-send',
+    image: 'rs/receipt.webp',
     /* Frame 644:1611. The frame merges receive and send into one page: the
        hero, then money in and money out side by side, then what happens while
        it is moving, then the questions, the siblings and the close. */
@@ -303,7 +313,7 @@ export const PRODUCTS = [
                      rows: [['Sent', '14:02'], ['At the bank', '14:03'], ['Landed', '\u2014']] } },
            { grad: ['#d1cbc2', '#fac6ff'], h: 'Still moving is not spendable.',
              p: 'The screen keeps the two apart until it lands, so one is never mistaken for the other.',
-             art: { src: 'rs/money-gun.webp', l: 17.625, t: 16.944, w: 70.646, ar: [353.230, 452.701] } }],
+             art: { src: 'hero/gun.webp', l: 17.625, t: 16.944, w: 70.646, ar: [353.230, 452.701] } }],
           [{ grad: ['#d1cbc2', '#c8e1ff'], tight: true, h: 'It ends in a receipt.',
              p: 'When it lands the row becomes a record you can find again in Activity.',
              art: { src: 'rs/receipt.webp', l: 7.2, t: 37.222, w: 76.123, ar: [380.617, 427.057] } },
@@ -344,6 +354,7 @@ export const PRODUCTS = [
 
   {
     slug: 'pay-bills',
+    image: 'pb/receipt-portrait.webp',
     /* Frame 647:1611. A centred hero over a masked screenshot, the three
        bills as tiles, the receipt, the questions and the close. No sibling
        band on this one. */
@@ -423,6 +434,7 @@ export const PRODUCTS = [
 
   {
     slug: 'convert',
+    image: 'pr/convert.webp',
     /* Frame 648:1611. The swap panel sits beside the words, then the two ways
        of doing it side by side over a portrait, the balances slab, the
        questions, the siblings and the close. */
@@ -509,6 +521,7 @@ export const PRODUCTS = [
   /* ---------------------------------------------------------- with a risk -- */
   {
     slug: 'borrow-and-earn',
+    image: 'be/cloud.webp',
     /* Frame 560:1129. The frame merges earning and borrowing into one page: a
        hero with both panels on a stage, the two halves, three steps, the
        questions, the siblings and the close. */

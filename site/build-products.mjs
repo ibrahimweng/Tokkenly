@@ -22,7 +22,7 @@
 import { writeFileSync, mkdirSync, readFileSync, existsSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { PRODUCTS, APP_URL } from './copy-products.mjs'
+import { PRODUCTS, APP_URL, SITE_URL } from './copy-products.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const OUT = resolve(HERE, 'products')
@@ -32,7 +32,15 @@ export { PRODUCTS }
    so escaping wholesale would double them. Only the characters that break
    markup, and only where they are not already an entity. */
 const esc = (s) => String(s).replace(/&(?![a-z#][a-z0-9]*;)/gi, '&amp;').replace(/</g, '&lt;')
-const plain = (s) => String(s).replace(/&[a-z#][a-z0-9]*;/gi, ' ').replace(/\s+/g, ' ').trim()
+/* The same copy as text, for a <title> or a meta attribute: entities decoded
+   to the characters they stand for, then only what an attribute cannot hold
+   escaped again. The first version replaced every entity with a space, which
+   is how the Gifting page came to be titled "Gifting Rewards". */
+const NAMED = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: '\u00a0', middot: '\u00b7', mdash: '\u2014', ndash: '\u2013', rsquo: '\u2019', lsquo: '\u2018', ldquo: '\u201c', rdquo: '\u201d', hellip: '\u2026' }
+export const decode = (s) => String(s).replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m, e) =>
+  e[0] === '#' ? String.fromCodePoint(e[1] === 'x' || e[1] === 'X' ? parseInt(e.slice(2), 16) : +e.slice(1)) : (NAMED[e.toLowerCase()] ?? m))
+export const plain = (s) => decode(s).replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()
+export const attr = (s) => plain(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
 const ARROW = '<svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg>'
 /* The frames break several headlines by hand; a \n in the copy is that break. */
@@ -55,11 +63,97 @@ const ICONS = {
   split: 'M 12 4 L 12 20 M 4 8 L 20 8 M 7 8 L 4 14 A 3 3 0 0 0 10 14 Z M 17 8 L 14 14 A 3 3 0 0 0 20 14 Z',
   gift: 'M 4 10 L 20 10 L 20 20 L 4 20 Z M 4 10 L 4 7 L 20 7 L 20 10 M 12 7 L 12 20 M 12 7 A 2.6 2.6 0 1 0 8.5 7 M 12 7 A 2.6 2.6 0 1 1 15.5 7',
 }
+/* ---------------------------------------------------------------- images -- */
+/* Every <img> the builders write gets its file's own width and height, read
+   from the file, so the browser can hold the space before the picture
+   arrives and nothing jumps when it does. Read, not typed: an image that is
+   re-exported at another size cannot leave stale numbers behind. An <img>
+   that already carries a width is left alone — some of those numbers are
+   layout, set on purpose.
+
+   The same pass adds a srcset where a smaller cut of the file exists, with
+   the sizes it is laid out at: the full file for a wide screen at 2x, the
+   smaller one for a phone. */
+const SRCSET = {
+  'about/cloud.webp': [['about/cloud-800.webp', 800], '(max-width: 1040px) 68vw, 44vw'],
+  'cv/compare-portrait.webp': [['cv/compare-portrait-800.webp', 800], '(max-width: 1040px) 90vw, 52vw'],
+  'ts/slab-fractions.webp': [['ts/slab-fractions-600.webp', 600], '(max-width: 1040px) 76vw, 30vw'],
+}
+const dims = new Map()
+function sizeOf(rel) {
+  if (dims.has(rel)) return dims.get(rel)
+  const b = readFileSync(resolve(HERE, 'img', rel))
+  let wh = null
+  if (rel.endsWith('.svg')) {
+    const t = b.toString('utf8')
+    const w = t.match(/<svg[^>]*\swidth="([\d.]+)"/), h = t.match(/<svg[^>]*\sheight="([\d.]+)"/)
+    const vb = t.match(/viewBox="[\d.-]+\s+[\d.-]+\s+([\d.]+)\s+([\d.]+)"/)
+    wh = w && h ? [+w[1], +h[1]] : vb ? [+vb[1], +vb[2]] : null
+  } else if (b.toString('ascii', 0, 4) === 'RIFF' && b.toString('ascii', 8, 12) === 'WEBP') {
+    const kind = b.toString('ascii', 12, 16)
+    if (kind === 'VP8X') wh = [1 + b.readUIntLE(24, 3), 1 + b.readUIntLE(27, 3)]
+    else if (kind === 'VP8 ') wh = [b.readUInt16LE(26) & 0x3fff, b.readUInt16LE(28) & 0x3fff]
+    else if (kind === 'VP8L') { const n = b.readUInt32LE(21); wh = [(n & 0x3fff) + 1, ((n >>> 14) & 0x3fff) + 1] }
+  }
+  if (!wh) throw new Error('cannot read the size of img/' + rel)
+  dims.set(rel, wh.map(Math.round))
+  return dims.get(rel)
+}
+export function sized(html) {
+  return html.replace(/<img\b[^>]*>/g, (tag) => {
+    const m = tag.match(/\ssrc="([^"]*?)img\/([^"]+)"/)
+    if (!m) return tag
+    const [, pre, rel] = m
+    let out = tag
+    if (!/\swidth="/.test(tag)) {
+      const [w, h] = sizeOf(rel)
+      out = out.replace(m[0], `${m[0]} width="${w}" height="${h}"`)
+    }
+    if (SRCSET[rel] && !/\ssrcset="/.test(tag)) {
+      const [[small, sw], sizes] = SRCSET[rel]
+      out = out.replace(m[0], `${m[0]} srcset="${pre}img/${small} ${sw}w, ${pre}img/${rel} ${sizeOf(rel)[0]}w" sizes="${sizes}"`)
+    }
+    return out
+  })
+}
+
+/* ------------------------------------------------------------------ head -- */
+/* Everything above the stylesheet that every page carries, written once so a
+   page cannot forget its canonical address or its preview picture.
+
+   Addresses are extensionless because vercel.json has cleanUrls on: a link to
+   /about.html is answered with a 308 to /about, so writing the .html costs
+   every click a round trip. The canonical and og:url are the same extensionless
+   address, absolute, on SITE_URL. A page with no address of its own — the
+   404, which answers at whatever was asked for — passes no path and gets
+   neither.
+
+   The latin-ext cut of Geist carries the naira sign and nothing else this site
+   uses, so it is preloaded only on a page whose markup has a ₦ in it; the
+   browser would fetch it anyway when the glyph is drawn, just later. */
+const NAIRA = /&#8358;|₦/
+export const pageUrl = (path) => SITE_URL + (path === '/' ? '/' : path)
+export const head = ({ title, desc, path, image, up, noindex, body }) => `    <title>${attr(title)}</title>
+    <meta name="description" content="${attr(desc)}" />
+${noindex ? '    <meta name="robots" content="noindex" />\n' : ''}${path ? `    <link rel="canonical" href="${pageUrl(path)}" />\n` : ''}    <link rel="icon" href="${up}favicon.svg" />
+    <meta property="og:site_name" content="Tokkenly" />
+    <meta property="og:title" content="${attr(title)}" />
+    <meta property="og:description" content="${attr(desc)}" />
+    <meta property="og:type" content="website" />
+${path ? `    <meta property="og:url" content="${pageUrl(path)}" />\n` : ''}    <meta property="og:image" content="${SITE_URL}/img/${image}" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="${SITE_URL}/img/${image}" />
+    <link rel="preload" href="${up}fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin />
+${NAIRA.test(body) ? `    <link rel="preload" href="${up}fonts/geist-latin-ext.woff2" as="font" type="font/woff2" crossorigin />\n` : ''}    <link rel="stylesheet" href="${up}styles.css" />`
+
 /* ---------------------------------------------------------------- chrome -- */
+/* The bar, the phone menu and the footer list the products in one order, the
+   order PRODUCTS is written in, and by one name, `nav`. The landing page's
+   hand-written copies of these follow the same list. */
 export const nav = (up, current) => `
     <header class="nav" id="nav">
       <div class="nav-in">
-        <a class="brand" href="${up}index.html" aria-label="Tokkenly, home">
+        <a class="brand" href="/" aria-label="Tokkenly, home">
           <span class="brand-mark" aria-hidden="true">T</span>
           <span class="brand-word">Tokkenly</span>
         </a>
@@ -71,15 +165,15 @@ export const nav = (up, current) => `
               <svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" /></svg>
             </button>
             <div class="drop-menu" id="products-menu" hidden>
-${PRODUCTS.map((p) => `              <a href="${up}products/${p.slug}.html"${p.slug === current ? ' aria-current="page"' : ''}>
-                <span class="dm-name">${p.nav}</span>
+${PRODUCTS.map((p) => `              <a href="/products/${p.slug}"${p.slug === current ? ' aria-current="page"' : ''}>
+                <span class="dm-name">${esc(p.nav)}</span>
                 <span class="dm-say">${esc(p.title)}</span>
               </a>`).join('\n')}
             </div>
           </div>
-          <a href="${up}about.html">About us</a>
-          <a href="${up}blog.html">Blog</a>
-          <a href="${up}contact.html">Help</a>
+          <a href="/about"${current === 'about' ? ' aria-current="page"' : ''}>About us</a>
+          <a href="/blog"${current === 'blog' ? ' aria-current="page"' : ''}>Blog</a>
+          <a href="/contact"${current === 'contact' ? ' aria-current="page"' : ''}>Help</a>
         </nav>
 
         <div class="nav-end">
@@ -92,30 +186,31 @@ ${PRODUCTS.map((p) => `              <a href="${up}products/${p.slug}.html"${p.s
 
       <div class="mobile-menu" id="mobile-menu" hidden>
         <p class="mm-head">Products</p>
-${PRODUCTS.map((p) => `        <a href="${up}products/${p.slug}.html">${p.nav}</a>`).join('\n')}
+${PRODUCTS.map((p) => `        <a href="/products/${p.slug}"${p.slug === current ? ' aria-current="page"' : ''}>${esc(p.nav)}</a>`).join('\n')}
         <p class="mm-head">Company</p>
-        <a href="${up}about.html">About us</a>
-        <a href="${up}blog.html">Blog</a>
-        <a href="${up}contact.html">Help</a>
+        <a href="/about">About us</a>
+        <a href="/blog">Blog</a>
+        <a href="/contact">Help</a>
         <a class="btn btn-mint mm-cta" href="${APP_URL}">Sign up</a>
       </div>
     </header>`
 
+/* Four columns, as the landing page copy lays them out: Products, Company,
+   Support and Legal. Help used to sit under Legal, which it is not.
+
+   The row of social icons is gone until the accounts exist. Three links to
+   "#" were three tab stops that went nowhere; when there is a real profile,
+   a <ul class="socials"> of plain links under the tagline is the whole job. */
 export const footer = (up) => `
     <footer class="foot">
       <div class="wrap">
         <div class="foot-top">
           <div class="foot-brand">
-            <a class="brand" href="${up}index.html" aria-label="Tokkenly, home">
+            <a class="brand" href="/" aria-label="Tokkenly, home">
               <span class="brand-mark" aria-hidden="true">T</span>
               <span class="brand-word">Tokkenly</span>
             </a>
             <p>Your money, free to do more.</p>
-            <ul class="socials">
-              <li><a href="#" data-soon aria-label="Tokkenly on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.7 3h3.3l-7.2 8.3L22.4 21h-6.6l-5.2-6.8L4.6 21H1.3l7.7-8.8L1.6 3h6.8l4.7 6.2L17.7 3Zm-1.2 16h1.8L7.6 4.9H5.7L16.5 19Z" /></svg></a></li>
-              <li><a href="#" data-soon aria-label="Tokkenly on Instagram"><svg viewBox="0 0 24 24" aria-hidden="true" class="ic-stroke"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none" /></svg></a></li>
-              <li><a href="#" data-soon aria-label="Tokkenly on LinkedIn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.98 3.5A2.5 2.5 0 1 1 5 8.5a2.5 2.5 0 0 1 0-5ZM3 9.5h4V21H3V9.5Zm6.5 0h3.8v1.6h.05c.53-.95 1.83-1.95 3.77-1.95 4.03 0 4.78 2.56 4.78 5.89V21h-4v-5.2c0-1.24-.02-2.84-1.77-2.84-1.78 0-2.05 1.35-2.05 2.75V21h-4V9.5Z" /></svg></a></li>
-            </ul>
           </div>
 
           <nav class="foot-cols" aria-label="Footer">
@@ -123,33 +218,37 @@ export const footer = (up) => `
               <p class="foot-head">Products</p>
               <div class="foot-split">
                 <div>
-${PRODUCTS.slice(0, Math.ceil(PRODUCTS.length / 2)).map((p) => `                  <a href="${up}products/${p.slug}.html">${p.nav}</a>`).join('\n')}
+${PRODUCTS.slice(0, Math.ceil(PRODUCTS.length / 2)).map((p) => `                  <a href="/products/${p.slug}">${esc(p.nav)}</a>`).join('\n')}
                 </div>
                 <div>
-${PRODUCTS.slice(Math.ceil(PRODUCTS.length / 2)).map((p) => `                  <a href="${up}products/${p.slug}.html">${p.nav}</a>`).join('\n')}
+${PRODUCTS.slice(Math.ceil(PRODUCTS.length / 2)).map((p) => `                  <a href="/products/${p.slug}">${esc(p.nav)}</a>`).join('\n')}
                 </div>
               </div>
             </div>
             <div class="foot-col">
               <p class="foot-head">Company</p>
-              <a href="${up}about.html">About us</a>
-              <a href="${up}blog.html">Blog</a>
+              <a href="/about">About us</a>
+              <a href="/blog">Blog</a>
+            </div>
+            <div class="foot-col">
+              <p class="foot-head">Support</p>
+              <a href="/contact">Help</a>
             </div>
             <div class="foot-col">
               <p class="foot-head">Legal</p>
-              <a href="${up}terms.html">Terms of service</a>
-              <a href="${up}privacy.html">Privacy policy</a>
-              <a href="${up}contact.html">Help</a>
+              <a href="/terms">Terms of service</a>
+              <a href="/privacy">Privacy policy</a>
             </div>
           </nav>
         </div>
 
         <div class="foot-end">
-          <p class="foot-word" aria-hidden="true">Tokkenly</p>
+          <p class="foot-word" aria-hidden="true" data-word="Tokkenly"></p>
           <p class="risk">Investments and earning products involve risk. Returns are not guaranteed.</p>
         </div>
       </div>
     </footer>`
+
 
 /* The close is the same on every product page, so it is one function that a
    page’s `pclose` section calls with its own spacing. */
@@ -161,7 +260,7 @@ const closingProd = (p, up, s) => `
         <div class="wrap">
           <div class="closing-slab reveal">
             <img class="cta-prop cta-coin n-tl" src="${up}img/cta/coin.webp" width="274" height="290" loading="lazy" alt="" aria-hidden="true" />
-            <img class="cta-prop cta-pen n-bl" src="${up}img/cta/pen.webp" width="302" height="369" loading="lazy" alt="" aria-hidden="true" />
+            <img class="cta-prop cta-pen n-bl" src="${up}img/ts/pen.webp" width="302" height="369" loading="lazy" alt="" aria-hidden="true" />
             <img class="cta-prop cta-notes n-r" src="${up}img/cta/notes.webp" width="593" height="593" loading="lazy" alt="" aria-hidden="true" />
             <div class="closing-in">
               <h2>${esc(p.close[0])}</h2>
@@ -261,7 +360,9 @@ ${n.list.map(([badge, name, sub, val]) => `                <div class="p2-frow">
 
 const KIT2 = {
   /* The frame's hero: one centred column of words on a radial wash, with the
-     coins laid across the whole band behind them. */
+     coins laid across the whole band behind them. Nothing in it is lazy, and
+     the picture that is the page's largest paint — a portrait behind the
+     words, or the masked photograph — is fetched ahead of the rest. */
   phero: (p, s, up) => `
       <section class="p2-hero${s.align === 'left' ? ' p2-hero-left' : ''}${s.align === 'mid' ? ' p2-hero-mid' : ''}" style="${[
         s.height ? `--hh:${s.height}vw;--hhp:${(s.height * 19.2).toFixed(0)}px` : '',
@@ -277,11 +378,11 @@ const KIT2 = {
 ${s.wash ? `          <div class="p2-wash"
                style="--w: ${typeof s.wash === 'string' ? s.wash : `radial-gradient(118% 92% at 50% -2%, ${s.wash.join(', ')})`}${s.washH ? `;--wh:min(${(s.washH * 19.2).toFixed(0)}px, ${s.washH}vw)` : ''}"></div>` : ''}
           <div class="p2-hero-art">
-${s.mask ? `            <span class="p2-mask" style="left:${s.mask.l}%;top:calc(${s.mask.t} * var(--u));width:${s.mask.w}%;aspect-ratio:${s.mask.w} / ${s.mask.h}"><img src="${up}img/${s.mask.src}" alt="" /></span>` : ''}
+${s.mask ? `            <span class="p2-mask" style="left:${s.mask.l}%;top:calc(${s.mask.t} * var(--u));width:${s.mask.w}%;aspect-ratio:${s.mask.w} / ${s.mask.h}"><img src="${up}img/${s.mask.src}" alt="" fetchpriority="high" /></span>` : ''}
 ${s.coins ? `            <div class="p2-coins">
 ${s.coins.map(([name, w, d, fx, sl, st, sw]) => `              <span class="p2-coin${fx ? ' p2-coin-fx' : ''}" style="--b:${w}%;--d:${d}s;--sl:${sl}%;--st:calc(${st} * var(--u));--sw:${sw}%"><img src="${up}img/ts/coin-${name}.webp" alt="" /></span>`).join('\n')}
             </div>` : ''}
-${(s.art || []).filter(([kind]) => !FRONT_ART.has(kind)).map(([kind, src, l, t, w]) => `            <img class="p2-art p2-art-${kind}" src="${up}img/${src}" style="left:${l}%;top:calc(${t} * var(--u));width:${w}%" alt="" />`).join('\n')}
+${(s.art || []).filter(([kind]) => !FRONT_ART.has(kind)).map(([kind, src, l, t, w]) => `            <img class="p2-art p2-art-${kind}" src="${up}img/${src}" style="left:${l}%;top:calc(${t} * var(--u));width:${w}%" alt=""${kind === 'photo' ? ' fetchpriority="high"' : ''} />`).join('\n')}
           </div>
         </div>
         <div class="wrap p2-hero-in">
@@ -419,7 +520,7 @@ ${s.cards.map((c) => {
                 <h3>${title}</h3>
                 <p>${esc(sub)}</p>
               </div>
-              <a class="pr-link" href="${up}products/${href}.html">${esc(link)} ${ARROW}</a>
+              <a class="pr-link" href="/products/${href}">${esc(link)} ${ARROW}</a>
             </article>`
   }).join('\n')}
           </div>
@@ -566,7 +667,10 @@ ${t.frag.rows.map(([k, v]) => `                <div class="p2-rrow"><span>${esc(
             <p>${esc(s.lead)}</p>
           </div>
           <div class="cv-stage reveal">
-            <img class="cv-stage-photo" src="${up}img/${s.photo}" alt="" aria-hidden="true" loading="lazy" />
+            <!-- Not lazy: on a tablet or a phone this band starts inside the
+                 first screen, and a lazy image there waits for layout before
+                 it is even asked for. -->
+            <img class="cv-stage-photo" src="${up}img/${s.photo}" alt="" aria-hidden="true" decoding="async" />
 ${[['a', s.a, CROSS2], ['b', s.b, TICK2]].map(([k, side, mark]) => `            <div class="cv-side cv-side-${k}">
               <span class="p2-pill p2-pill-caps">${esc(side.pill)}</span>
               <ul>
@@ -677,7 +781,7 @@ ${bePanel(n.panel, 'be-half-pn')}
   /* Three steps, each a tall card with the number and the line under it, and
      a rule between the columns. */
   besteps: (p, s, up) => `
-      <section class="band be-steps" id="s-steps">
+      <section class="band be-steps">
         <div class="wrap">
           <h2 class="be-steps-h reveal">${esc(s.h)}</h2>
           <div class="be-steps-row">
@@ -698,23 +802,34 @@ ${n.frag.rows.map(([k, v]) => `                  <span class="p2-rrow"><span>${e
 }
 
 /* ----------------------------------------------------------------- page -- */
+/* Every band carries an id, s-<name>, so another page can point into it: the
+   contact page links straight to two products' questions. The name is the
+   band's `id` if the copy gives it one, else a readable name for its type,
+   numbered from the second time a page uses the same one.
+
+   The hero's "See how it works" goes to #more, which is the point just after
+   the hero, whatever band happens to come next. */
+const ANCHOR = { phero: 'hero', behero: 'hero', pfaq: 'faq', pclose: 'close', steps3: 'steps', besteps: 'steps', cards3: 'cards', tiles3: 'tiles', prow: 'row', psplit: 'split', twoside: 'sides', intransit: 'transit', cmp2: 'compare', cvband: 'balances' }
+function bands(p, up) {
+  const seen = {}
+  return p.sections.map((s, i) => {
+    let key = s.id || ANCHOR[s.type] || s.type
+    seen[key] = (seen[key] || 0) + 1
+    if (seen[key] > 1) key += '-' + seen[key]
+    const html = KIT2[s.type](p, s, up).replace('<section ', `<section id="s-${key}" `)
+    return i === 0 ? html + '\n      <span id="more"></span>' : html
+  }).join('\n')
+}
+
 function page(p) {
   const up = '../'
-  const desc = plain(p.lead)
-  return `<!doctype html>
+  const body = bands(p, up)
+  return sized(`<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${plain(p.nav)} &#8212; Tokkenly</title>
-    <meta name="description" content="${desc}" />
-    <link rel="icon" href="${up}favicon.svg" />
-    <meta property="og:title" content="${plain(p.nav)} &#8212; Tokkenly" />
-    <meta property="og:description" content="${desc}" />
-    <meta property="og:type" content="website" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <link rel="preload" href="${up}fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="stylesheet" href="${up}styles.css" />
+${head({ title: `${plain(p.nav)} — Tokkenly`, desc: p.lead, path: `/products/${p.slug}`, image: p.image, up, body })}
   </head>
   <body>
     <a class="skip" href="#main">Skip to content</a>
@@ -722,14 +837,14 @@ ${nav(up, p.slug)}
 
     <main id="main">
       <span id="top"></span>
-${p.sections.map((s) => KIT2[s.type](p, s, up)).join("\n")}
+${body}
     </main>
 ${footer(up)}
 
     <script src="${up}site.js"></script>
   </body>
 </html>
-`
+`)
 }
 
 /* build-pages.mjs imports nav and footer from here, so writing on import would

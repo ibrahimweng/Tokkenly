@@ -8,16 +8,26 @@
       name="description"
       content="Access local and US markets through tokenized stocks with Tokkenly. Invest for yourself, gift an investment to someone else, and keep your everyday money close, with naira and stablecoins in the same app."
     />
+    <!-- Absolute, because a crawler reading a shared link resolves nothing.
+         The domain is SITE_URL in copy-products.mjs; the generated pages
+         write these same tags from it. -->
+    <link rel="canonical" href="https://tokkenly.com/" />
     <link rel="icon" href="./favicon.svg" />
+    <meta property="og:site_name" content="Tokkenly" />
     <meta property="og:title" content="Tokkenly — Invest close to home. And beyond." />
     <meta
       property="og:description"
       content="Tokenized stocks, alongside the tools to receive, send, pay bills, earn, borrow, and convert."
     />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="./img/home.webp" />
+    <meta property="og:url" content="https://tokkenly.com/" />
+    <meta property="og:image" content="https://tokkenly.com/img/hero/globe.webp" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://tokkenly.com/img/hero/globe.webp" />
     <link rel="preload" href="./fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <!-- The Wallet mock in Getting started shows a naira figure, and the naira
+         sign is only in the latin-ext cut. -->
+    <link rel="preload" href="./fonts/geist-latin-ext.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -38,35 +48,35 @@
               <svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" /></svg>
             </button>
             <div class="drop-menu" id="products-menu" hidden>
-              <a href="./products/tokenized-stocks.html">
-                <span class="dm-name">Tokenized Stocks</span>
+              <a href="/products/tokenized-stocks">
+                <span class="dm-name">Tokenized stocks</span>
                 <span class="dm-say">From Nigeria to Wall Street.</span>
               </a>
-              <a href="./products/gifting-and-rewards.html">
-                <span class="dm-name">Gifting &amp; Rewards</span>
+              <a href="/products/gifting-and-rewards">
+                <span class="dm-name">Gifting and rewards</span>
                 <span class="dm-say">Make their day. Start their portfolio.</span>
               </a>
-              <a href="./products/receive-and-send.html">
+              <a href="/products/receive-and-send">
                 <span class="dm-name">Receive and send</span>
                 <span class="dm-say">Get paid. Get on with life.</span>
               </a>
-              <a href="./products/pay-bills.html">
+              <a href="/products/pay-bills">
                 <span class="dm-name">Pay bills</span>
                 <span class="dm-say">One less thing on your list.</span>
               </a>
-              <a href="./products/borrow-and-earn.html">
-                <span class="dm-name">Borrow and earn</span>
-                <span class="dm-say">Earn more, or borrow against it.</span>
-              </a>
-              <a href="./products/convert.html">
+              <a href="/products/convert">
                 <span class="dm-name">Convert</span>
                 <span class="dm-say">Change currencies. Keep your plans.</span>
               </a>
+              <a href="/products/borrow-and-earn">
+                <span class="dm-name">Borrow and earn</span>
+                <span class="dm-say">Earn more, or borrow against it.</span>
+              </a>
             </div>
           </div>
-          <a href="./about.html">About us</a>
-          <a href="./blog.html">Blog</a>
-          <a href="./contact.html">Help</a>
+          <a href="/about">About us</a>
+          <a href="/blog">Blog</a>
+          <a href="/contact">Help</a>
         </nav>
 
         <div class="nav-end">
@@ -79,16 +89,16 @@
 
       <div class="mobile-menu" id="mobile-menu" hidden>
         <p class="mm-head">Products</p>
-        <a href="./products/tokenized-stocks.html">Tokenized Stocks</a>
-        <a href="./products/gifting-and-rewards.html">Gifting &amp; Rewards</a>
-        <a href="./products/receive-and-send.html">Receive and send</a>
-        <a href="./products/pay-bills.html">Pay bills</a>
-        <a href="./products/borrow-and-earn.html">Borrow and earn</a>
-        <a href="./products/convert.html">Convert</a>
+        <a href="/products/tokenized-stocks">Tokenized stocks</a>
+        <a href="/products/gifting-and-rewards">Gifting and rewards</a>
+        <a href="/products/receive-and-send">Receive and send</a>
+        <a href="/products/pay-bills">Pay bills</a>
+        <a href="/products/convert">Convert</a>
+        <a href="/products/borrow-and-earn">Borrow and earn</a>
         <p class="mm-head">Company</p>
-        <a href="./about.html">About us</a>
-        <a href="./blog.html">Blog</a>
-        <a href="./contact.html">Help</a>
+        <a href="/about">About us</a>
+        <a href="/blog">Blog</a>
+        <a href="/contact">Help</a>
         <a class="btn btn-dark mm-cta" href="https://app.tokkenly.com">Sign up</a>
       </div>
     </header>
@@ -132,6 +142,8 @@
             <img
               class="globe-img"
               src="./img/hero/globe.webp"
+              srcset="./img/hero/globe-700.webp 700w, ./img/hero/globe.webp 1024w"
+              sizes="(max-width: 600px) 84vw, 46vw"
               width="873"
               height="849"
               alt=""
@@ -165,7 +177,7 @@
         <div class="stickers" aria-hidden="true">
           <img class="sticker sticker-coin" src="./img/hero/coin.webp" width="101" height="107" alt="" />
           <img class="sticker sticker-gun sticker-md" src="./img/hero/gun.webp" width="353" height="453" alt="" />
-          <img class="sticker sticker-notes sticker-md" src="./img/hero/notes.webp" width="511" height="511" alt="" />
+          <img class="sticker sticker-notes sticker-md" src="./img/cta/notes.webp" width="511" height="511" alt="" />
         </div>
       </section>
 
@@ -178,7 +190,7 @@
       <section class="band band-ts" id="tokenized-stocks">
         <div class="wrap">
           <div class="head reveal">
-            <p class="eyebrow">Tokenized Stocks</p>
+            <p class="eyebrow">Tokenized stocks</p>
             <h2>Companies you know. Markets to explore.</h2>
             <p class="lead">
               Explore tokenized stocks linked to companies listed in Nigeria and the US, all through
@@ -289,7 +301,7 @@
                 Celebrate someone you love or thank the people who support your business with
                 tokenized stocks. Turn gifts and rewards into a starting point for investing.
               </p>
-              <a class="btn btn-mint" href="./products/gifting-and-rewards.html">Explore Gifting &amp; Rewards</a>
+              <a class="btn btn-mint" href="/products/gifting-and-rewards">Explore Gifting and rewards</a>
             </div>
           </div>
 
@@ -412,7 +424,7 @@
                paragraph says the same thing on its own. -->
           <div class="wt-layer" aria-hidden="true">
             <!-- image 25: over the portrait's top-right corner. -->
-            <img class="why-coin" src="./img/sec/coin-lg.webp" width="274" height="290" loading="lazy" alt="" />
+            <img class="why-coin" src="./img/cta/coin.webp" width="274" height="290" loading="lazy" alt="" />
 
             <div class="wt-group" data-wt="bills">
               <div class="wt-card" data-w="138" data-h="180" data-dx="-49" data-dy="-142" data-tilt="-23" data-d="0">
@@ -515,7 +527,7 @@
                     <p>Support someone at home, settle up with a friend, or move money where you need it. Send from the same app you use for the rest of your money.</p>
                   </div>
                 </div>
-                <a class="pr-link" href="./products/receive-and-send.html">Explore Receive and send <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></a>
+                <a class="pr-link" href="/products/receive-and-send">Explore Receive and send <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></a>
               </div>
           <div class="popup">
             <div class="pop-head">
@@ -535,9 +547,9 @@
               <div class="pr-top">
                 <div class="pr-title"><span class="pr-chip pr-chip-yellow" aria-hidden="true"><svg viewBox="0 0 24 24"><g transform="translate(6,3)"><path d="M 3 5 L 9 5 M 3 9 L 9 9 M 0 0 L 12 0 L 12 18 L 9 16 L 6 18 L 3 16 L 0 18 L 0 0 Z" /></g></svg></span><h3>Pay your bills</h3></div>
                 <p>Take care of your everyday bills with Tokkenly. A little less life admin. A little more time for everything else.</p>
-                <a class="pr-link" href="./products/pay-bills.html">Explore Pay bills <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></a>
+                <a class="pr-link" href="/products/pay-bills">Explore Pay bills <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></a>
               </div>
-              <img class="pr-sticker pr-sticker-notes" src="./img/pr/notes-purple.webp" width="543" height="543" loading="lazy" alt="" />
+              <img class="pr-sticker pr-sticker-notes" src="./img/cta/notes.webp" width="543" height="543" loading="lazy" alt="" />
             </article>
 
             </div>
@@ -545,9 +557,9 @@
             <div class="pr-row pr-row-b">
             <article class="pr-card pr-narrow reveal" id="product-convert">
               <div class="pr-top">
-                <div class="pr-title"><span class="pr-chip pr-chip-orange" aria-hidden="true"><svg viewBox="0 0 24 24"><g transform="translate(4,4)"><path d="M 0 3.5 L 13 3.5 M 13 3.5 L 9.5 0 M 13 3.5 L 9.5 7 M 16 11.5 L 3 11.5 M 3 11.5 L 6.5 8 M 3 11.5 L 6.5 15" /></g></svg></span><h3>Convert naira to USD</h3></div>
+                <div class="pr-title"><span class="pr-chip pr-chip-orange" aria-hidden="true"><svg viewBox="0 0 24 24"><g transform="translate(4,4)"><path d="M 0 3.5 L 13 3.5 M 13 3.5 L 9.5 0 M 13 3.5 L 9.5 7 M 16 11.5 L 3 11.5 M 3 11.5 L 6.5 8 M 3 11.5 L 6.5 15" /></g></svg></span><h3>Convert naira and stablecoins</h3></div>
                 <p>Convert between naira and stablecoins as your needs change. Money for everyday life. Money for what’s next.</p>
-                <a class="pr-link" href="./products/convert.html">Explore Convert <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></a>
+                <a class="pr-link" href="/products/convert">Explore Convert <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></a>
               </div>
               <img class="pr-sticker pr-sticker-conv" src="./img/pr/convert.webp" width="1024" height="1313" loading="lazy" alt="" />
             </article>
@@ -561,7 +573,7 @@
                     <p>Explore borrowing options when you need extra flexibility. Review the terms and repayment requirements, and choose what fits your plans.</p>
                   </div>
                 </div>
-                <a class="pr-link" href="./products/borrow-and-earn.html">Explore Borrow and earn <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></a>
+                <a class="pr-link" href="/products/borrow-and-earn">Explore Borrow and earn <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></a>
               </div>
           <div class="popup">
             <div class="pop-head">
@@ -652,7 +664,7 @@
               <div class="m-card m-auth">
               <div class="m-brand"><span class="m-logo">T</span><span class="m-word">Tokkenly</span></div>
               <div class="m-head">
-                <h4 class="m-title">Create your account</h4>
+                <p class="m-title">Create your account</p>
                 <p class="m-body m-muted">Invite-only during the pilot. Two minutes, then a NIN check before you can hold a balance.</p>
               </div>
               <div class="m-btn m-btn-secondary">Continue with Google</div>
@@ -685,7 +697,7 @@
               <div class="gs-phone"><div class="gs-scr m-canvas">
               <div class="m-topbar"><span class="m-avatar">CO</span><span class="m-grow"></span><span class="m-iconbtn"><svg class="m-i"><use href="#i-search"/></svg></span><span class="m-iconbtn m-bw"><svg class="m-i"><use href="#i-bucket"/></svg><b class="m-bucket">0</b></span><span class="m-iconbtn"><svg class="m-i"><use href="#i-info"/></svg></span></div>
               <div class="m-page">
-                <h4 class="m-h1">Wallet</h4>
+                <p class="m-h1">Wallet</p>
                 <div class="m-card">
                   <div class="m-cardhead"><p class="m-caps">Money you can spend</p><span class="m-chev"><svg class="m-i"><use href="#i-chev"/></svg></span></div>
                   <div class="m-figrow"><span class="m-figure">$2,576.67</span><span class="m-fi"><svg class="m-i"><use href="#i-eye"/></svg></span></div>
@@ -732,7 +744,7 @@
               <div class="gs-phone"><div class="gs-scr m-canvas">
               <div class="m-topbar"><span class="m-avatar">CO</span><span class="m-grow"></span><span class="m-iconbtn"><svg class="m-i"><use href="#i-search"/></svg></span><span class="m-iconbtn m-bw"><svg class="m-i"><use href="#i-bucket"/></svg><b class="m-bucket">0</b></span><span class="m-iconbtn"><svg class="m-i"><use href="#i-info"/></svg></span></div>
               <div class="m-page">
-                <div class="m-h1row"><h4 class="m-h1">Invest</h4><span class="m-note">Tokenized, so it trades 24/7</span></div>
+                <div class="m-h1row"><p class="m-h1">Invest</p><span class="m-note">Tokenized, so it trades 24/7</span></div>
                 <div class="m-field m-search" data-f="search" data-ph="Search a company or a fund" data-type="appl"><span class="m-si"><svg class="m-i"><use href="#i-search"/></svg></span><span class="m-val"></span></div>
                 <div class="m-chips"><span>Open for trading</span><span class="on">Popular</span><span>ETFs</span><span>Technology</span></div>
                 <div class="m-idx">
@@ -872,30 +884,6 @@
               <span class="brand-word">Tokkenly</span>
             </a>
             <p>Your money, free to do more.</p>
-
-            <!-- Real destinations go in the href when the accounts exist; the
-                 row is built so dropping them in is the whole job. -->
-            <ul class="socials">
-              <li>
-                <a href="#" data-soon aria-label="Tokkenly on X">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.7 3h3.3l-7.2 8.3L22.4 21h-6.6l-5.2-6.8L4.6 21H1.3l7.7-8.8L1.6 3h6.8l4.7 6.2L17.7 3Zm-1.2 16h1.8L7.6 4.9H5.7L16.5 19Z" /></svg>
-                </a>
-              </li>
-              <li>
-                <a href="#" data-soon aria-label="Tokkenly on Instagram">
-                  <svg viewBox="0 0 24 24" aria-hidden="true" class="ic-stroke">
-                    <rect x="3" y="3" width="18" height="18" rx="5" />
-                    <circle cx="12" cy="12" r="4" />
-                    <circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none" />
-                  </svg>
-                </a>
-              </li>
-              <li>
-                <a href="#" data-soon aria-label="Tokkenly on LinkedIn">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.98 3.5A2.5 2.5 0 1 1 5 8.5a2.5 2.5 0 0 1 0-5ZM3 9.5h4V21H3V9.5Zm6.5 0h3.8v1.6h.05c.53-.95 1.83-1.95 3.77-1.95 4.03 0 4.78 2.56 4.78 5.89V21h-4v-5.2c0-1.24-.02-2.84-1.77-2.84-1.78 0-2.05 1.35-2.05 2.75V21h-4V9.5Z" /></svg>
-                </a>
-              </li>
-            </ul>
           </div>
 
           <nav class="foot-cols" aria-label="Footer">
@@ -903,27 +891,30 @@
               <p class="foot-head">Products</p>
               <div class="foot-split">
                 <div>
-                  <a href="./products/tokenized-stocks.html">Tokenized Stocks</a>
-                  <a href="./products/gifting-and-rewards.html">Gifting &amp; Rewards</a>
-                  <a href="./products/receive-and-send.html">Receive and send</a>
+                  <a href="/products/tokenized-stocks">Tokenized stocks</a>
+                  <a href="/products/gifting-and-rewards">Gifting and rewards</a>
+                  <a href="/products/receive-and-send">Receive and send</a>
                 </div>
                 <div>
-                  <a href="./products/pay-bills.html">Pay bills</a>
-                  <a href="./products/convert.html">Convert</a>
-                  <a href="./products/borrow-and-earn.html">Borrow and earn</a>
+                  <a href="/products/pay-bills">Pay bills</a>
+                  <a href="/products/convert">Convert</a>
+                  <a href="/products/borrow-and-earn">Borrow and earn</a>
                 </div>
               </div>
             </div>
             <div class="foot-col">
               <p class="foot-head">Company</p>
-              <a href="./about.html">About us</a>
-              <a href="./blog.html">Blog</a>
+              <a href="/about">About us</a>
+              <a href="/blog">Blog</a>
+            </div>
+            <div class="foot-col">
+              <p class="foot-head">Support</p>
+              <a href="/contact">Help</a>
             </div>
             <div class="foot-col">
               <p class="foot-head">Legal</p>
-              <a href="./terms.html">Terms of service</a>
-              <a href="./privacy.html">Privacy policy</a>
-              <a href="./contact.html">Help</a>
+              <a href="/terms">Terms of service</a>
+              <a href="/privacy">Privacy policy</a>
             </div>
           </nav>
         </div>
@@ -931,7 +922,7 @@
         <!-- The wordmark is 318px in the frame: a piece of graphic furniture,
              not a heading, so it is hidden from a screen reader. -->
         <div class="foot-end">
-          <p class="foot-word" aria-hidden="true">Tokkenly</p>
+          <p class="foot-word" aria-hidden="true" data-word="Tokkenly"></p>
           <p class="risk">Investments and earning products involve risk. Returns are not guaranteed.</p>
         </div>
       </div>

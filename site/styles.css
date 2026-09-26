@@ -68,7 +68,12 @@
 
   /* ink */
   --ink: #053329;           /* 13.3:1 on canvas */
-  --muted: #55746e;         /* 4.85:1 — labels, captions, body support */
+  --muted: #4c6963;         /* 4.97:1 on the #eaeae9 canvas, 5.9:1 on white —
+                               labels, captions, body support. It was #55746e,
+                               measured at 4.85 against white; the page ground
+                               is the canvas, where it was 4.24. */
+  --mint-ink: #13735b;      /* the accent as text on a light ground: 4.8:1 on
+                               the canvas, where --mint itself is 1.97 */
   --placeholder: #8ea39f;   /* 2.9:1 — disabled and placeholder ONLY */
   --on-deep: #ffffff;
   --on-deep-muted: #a9c4bb; /* 7.5:1 on deep green */
@@ -168,7 +173,6 @@ ol, ul { margin: 0; padding: 0; list-style: none; }
   padding-inline: var(--gutter);
   position: relative; z-index: 1;
 }
-.wrap-narrow { max-width: 880px; }
 
 /* ---------------------------------------------------------------- type -- */
 h1 { font-size: clamp(40px, 5.4vw, 76px); line-height: 1.06; letter-spacing: -0.04em; }
@@ -215,10 +219,10 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 .btn-dark { background: var(--mint); color: var(--deep); box-shadow: var(--shadow-sm); }
 .btn-dark:hover { background: #35cfab; box-shadow: var(--shadow); }
 /* Except where the ground is already mint — there it inverts. */
-.band-mint-tint .btn-dark, .closing .btn-dark {
+.closing .btn-dark {
   background: var(--deep); color: var(--on-deep);
 }
-.band-mint-tint .btn-dark:hover, .closing .btn-dark:hover { background: #07463a; }
+.closing .btn-dark:hover { background: #07463a; }
 
 /* The hero pair, straight off the Figma frame: near-black pill on ink-light
    text, and a plain white pill beside it. */
@@ -238,17 +242,6 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 .btn-onmint:hover { background: #07463a; }
 .btn-ondeep { background: var(--mint); color: var(--deep); }
 .btn-ondeep:hover { background: #3fd0ad; }
-
-.link-arrow {
-  display: inline-flex; align-items: center; gap: 8px;
-  font-size: 16px; font-weight: 600; color: var(--positive); letter-spacing: -0.01em;
-}
-.link-arrow svg {
-  width: 16px; height: 16px; fill: none; stroke: currentColor;
-  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
-  transition: transform var(--t-base) var(--ease-out);
-}
-.link-arrow:hover svg { transform: translateX(4px); }
 
 .cta-row {
   display: flex; flex-wrap: wrap; align-items: center;
@@ -318,18 +311,7 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 .drop-btn[aria-expanded='true'] .chev { transform: rotate(180deg); }
 
 .drop { position: relative; }
-.drop-menu {
-  position: absolute; top: calc(100% + 10px); left: 0; min-width: 244px; padding: 9px;
-  background: var(--surface); border: 1px solid var(--line-soft);
-  border-radius: var(--r-md); box-shadow: var(--shadow-lg);
-  display: grid; gap: 2px;
-}
 .drop-menu[hidden] { display: none; }
-.drop-menu a {
-  padding: 10px 13px; border-radius: 11px;
-  font-size: 15.5px; font-weight: 500; color: var(--muted);
-  transition: background var(--t-fast) var(--ease-out), color var(--t-fast) var(--ease-out);
-}
 .drop-menu a:hover { background: var(--tint-mint); color: var(--ink); }
 
 .nav-end { display: flex; align-items: center; gap: 10px; margin-left: auto; }
@@ -354,6 +336,8 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
   max-height: calc(100dvh - var(--nav-h)); overflow-y: auto;
 }
 .mobile-menu[hidden] { display: none; }
+/* Open, the menu holds the page still behind it (site.js sets the class). */
+html.menu-open { overflow: hidden; }
 .mobile-menu a { padding: 12px 4px; font-size: 17px; font-weight: 500; color: var(--muted); }
 .mobile-menu a:hover { color: var(--ink); }
 .mm-head {
@@ -653,7 +637,7 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 .gr-caps {
   display: block; text-transform: uppercase;
   font-size: clamp(9px, 0.724cqw, 11px); line-height: 1.4545; font-weight: 600;
-  letter-spacing: 0.09em; color: #8a9a95;
+  letter-spacing: 0.09em; color: #566661;
 }
 
 /* popular — 350 x 225 at 698.75, 286 */
@@ -707,7 +691,7 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 .gr-index-b { left: 51.714%; top: 0; }
 .gr-v { font-size: clamp(15px, 1.447cqw, 22px); line-height: 1.318; font-weight: 600; letter-spacing: -0.02em; color: #12312a; }
 .gr-d { font-size: clamp(10px, 0.855cqw, 13px); line-height: 1.3846; font-weight: 500; color: #12866d; }
-.gr-m { font-size: clamp(9px, 0.724cqw, 11px); line-height: 1.545; color: #8a9a95; }
+.gr-m { font-size: clamp(9px, 0.724cqw, 11px); line-height: 1.545; color: #566661; }
 
 /* ---------------------------------------------------------------- tabs -- */
 /* 602 wide, 56 tall, centred, 84.43 per cent down — the frame's Frame 58. */
@@ -790,16 +774,19 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 /* 597 + 64 + 800 is 1461 against a 1520 column, so the two do not divide the
    row between them — the frame leaves 59 spare on the right. Percentages of
    1520 with the pair packed left reproduce that; fr units would eat the slack. */
-.why-in {
-  display: grid; grid-template-columns: 39.276% 52.632%;
-  gap: 4.211%; justify-content: start; align-items: stretch;
-}
 .why-stage {
   align-self: start; width: 100%; height: auto;
   aspect-ratio: 597 / 712; object-fit: cover;
   border-radius: min(22px, 1.146vw);
 }
-.why-in { position: relative; }
+.why-in {
+  display: grid;
+  grid-template-columns: 39.276% 52.632%;
+  gap: 4.211%;
+  justify-content: start;
+  align-items: stretch;
+  position: relative;
+}
 /* image 25 at 594,77 in the section, which is 394 across the 1520 column and
    67 above the row — over the portrait's top-right corner. Both axes are
    shares of that column, so it holds the corner at every width; a percentage
@@ -958,6 +945,8 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 /* ------------------------------------------------------------ products -- */
 .band-products { background: var(--deep); }
 .head-ondeep h2, .head-ondeep .lead { color: #eaeae9; }
+/* The eyebrow's grey is for a light ground; on the deep band it was 2.3:1. */
+.head-ondeep .eyebrow { color: var(--mint); }
 
 /* 988 + 32 + 500 is exactly 1520, so fr units divide each row correctly. The
    two rows are separate grids because the wide card swaps sides between
@@ -972,13 +961,15 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
   background: #00221a; border-radius: min(26px, 1.354vw);
   aspect-ratio: 988 / 456;
 }
-.pr-narrow { aspect-ratio: 500 / 456; }
 .pr-wide {
   display: grid; grid-template-columns: minmax(0, 421fr) minmax(0, 485fr);
   gap: min(46px, 2.396vw);
   padding: min(36px, 1.875vw) 0 0 min(36px, 1.875vw);
 }
-.pr-narrow { padding: min(36px, 1.875vw) min(36px, 1.875vw) 0; }
+.pr-narrow {
+  aspect-ratio: 500 / 456;
+  padding: min(36px, 1.875vw) min(36px, 1.875vw) 0;
+}
 
 .pr-body { display: flex; flex-direction: column; justify-content: space-between; padding-bottom: min(36px, 1.875vw); }
 .pr-top { display: grid; gap: 13px; align-content: start; }
@@ -1047,14 +1038,8 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
    specificity of its own. Its greys are measured for AA with it. The one
    thing added here is a floor: min(14px, 0.73vw) is 2.8px on a phone. */
 .pop-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(12px, 0.73vw, 14px); }
-.pop-row { display: grid; gap: 3px; }
 .pop-v { font-size: clamp(11.5px, 0.73vw, 14px); font-weight: 600; }
 .pop-note { font-size: clamp(10.5px, 0.678vw, 13px); line-height: 1.5; color: #4f5f5a; }
-.pop-btn {
-  background: #1e1818; color: #fff; border-radius: 999px;
-  text-align: center; padding: clamp(13px, 0.782vw, 15px) 0;
-  font-size: clamp(11.5px, 0.73vw, 14px); font-weight: 600;
-}
 
 /* ----------------------------------------------------- getting started -- */
 .gs-wrap { position: relative; }
@@ -1086,11 +1071,6 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
    own pixels: --btn 56, --field 48, --card padding 20 gap 16, the 8/12/16/20/
    24/32 spacing scale, the 11/12/13/14/18/22/40 type ramp, and the light
    theme's colours out of tokens.css. Nothing here is chosen by eye. */
-.gs-mock {
-  position: relative; width: 100%; aspect-ratio: 485 / 600;
-  border-radius: min(32px, 1.667vw); overflow: hidden;
-  container-type: inline-size;          /* the pointer measures against this */
-}
 .gs-mock[data-gs='signup'] {
   background: linear-gradient(196deg, #a4b6c6 0%, #b7c8d0 34%, #c0ccd4 46%,
               #d47a3b 62%, #f0a772 76%, #46201d 100%);
@@ -1497,16 +1477,6 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 .faq-in .faq-head { max-width: none; margin: 0; text-align: left; }
 .faq-in .faq-head .eyebrow { margin-inline: 0; }
 .faq { display: grid; gap: 12px; }
-.faq details {
-  border: 1px solid #e5ebe8; border-radius: min(18px, 0.938vw);
-  padding: min(24px, 1.25vw) min(26px, 1.354vw);
-}
-.faq summary {
-  list-style: none; cursor: pointer;
-  display: flex; align-items: center; justify-content: space-between; gap: 24px;
-  font-size: clamp(16px, 0.99vw, 19px); font-weight: 700; line-height: 1.3;
-  letter-spacing: -0.022em; color: #1e1818;
-}
 .faq summary::-webkit-details-marker { display: none; }
 .faq .plus {
   flex: none; width: 30px; height: 30px; border-radius: 50%;
@@ -1532,7 +1502,10 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
      a slab with 144 of padding either side. */
   padding-block: var(--section-y);
   min-height: min(1024px, 53.334vw);
-  display: grid; align-content: center;
+  /* minmax(0, 1fr), not the implicit auto column: an auto track grows to
+     its content's min-content width, and on Convert at 390 that was a pixel
+     wider than the phone, which scrolled the whole page sideways. */
+  display: grid; align-content: center; grid-template-columns: minmax(0, 1fr);
 }
 .closing-slab {
   position: relative; overflow: hidden;
@@ -1680,319 +1653,36 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
   .closing-in { padding-inline: min(200px, 22vw); }
   [data-cta] .cta-prop { top: auto; bottom: auto; left: auto; right: auto; }
   [data-cta] .n-tl { left: -3.5%; top: -7%;  width: 23%; }
-  [data-cta] .n-tr { right: -4%;  top: -7%;  width: 22%; }
   [data-cta] .n-bl { left: -6%;   bottom: -10%; width: 25%; }
-  [data-cta] .n-br { right: -7%;  bottom: -11%; width: 32%; }
-  [data-cta] .n-l  { left: -9%;   top: 34%;  width: 26%; }
   [data-cta] .n-r  { right: -9%;  bottom: -12%; width: 42%; }
 }
 @media (max-width: 820px) {
   .closing-in { padding-inline: min(170px, 21vw); }
-  [data-cta] .n-tl, [data-cta] .n-tr { width: 20%; }
+  [data-cta] .n-tl { width: 20%; }
   [data-cta] .n-bl { width: 22%; bottom: -12%; }
-  [data-cta] .n-br { width: 28%; bottom: -13%; }
   [data-cta] .n-r  { width: 38%; bottom: -14%; }
 }
 
 /* -------------------------------------------------------------- bands -- */
 .band { padding-block: var(--section-y); position: relative; }
 
-/* Every section ground is white. Colour arrives as blocks sitting on it —
-   the panels behind the screens, the product cards, the two inset slabs —
-   rather than as a wash behind a whole section. */
-.band-cream, .band-mint-tint, .band-brand { background: transparent; }
-
-/* The two loud ones. */
-.band-deep { background: transparent; color: var(--ink); }
-.band-deep > .wrap { max-width: calc(var(--wrap) + 2 * var(--gutter)); }
-.band-deep .statement {
-  background: var(--deep); color: var(--on-deep);
-  border-radius: var(--r-xl);
-  padding: clamp(56px, 7vw, 104px) clamp(28px, 5vw, 80px);
-  max-width: none;
-}
-.band-deep .statement {
-  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.82fr);
-  gap: clamp(40px, 5vw, 76px); align-items: center; text-align: left;
-}
-.statement-text { display: grid; gap: 20px; }
-.statement-text h2 { margin-block: 4px 4px; }
-
-/* ---------------------------------------------------------------- hub -- */
-/* Seven things, one home — the paragraph beside it in a picture. A column of
-   products, a spine gathering them, and the mark they all arrive at. */
-.hub {
-  display: grid; grid-template-columns: minmax(0, 1fr) 56px auto;
-  align-items: center;
-}
-.hub-list { display: grid; gap: 9px; }
-.hub-list li {
-  position: relative;
-  padding: 10px 17px;
-  border-radius: var(--r-pill);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.06);
-  font-size: 14px; font-weight: 600; color: var(--on-deep);
-  white-space: nowrap;
-}
-/* the stub out of each pill */
-.hub-list li::after {
-  content: ''; position: absolute; left: 100%; top: 50%;
-  width: 28px; height: 1px; background: rgba(43, 189, 155, 0.5);
-}
-.hub-wire { position: relative; align-self: stretch; }
-/* the spine runs between the first and last pill's centres: with seven pills
-   at 41px and six 9px gaps that is 6 per cent in from either end */
-.hub-spine {
-  position: absolute; left: 28px; top: 6%; bottom: 6%;
-  width: 1px; background: rgba(43, 189, 155, 0.5);
-}
-.hub-wire::after {
-  content: ''; position: absolute; left: 28px; top: 50%;
-  width: 28px; height: 1px; background: var(--mint);
-}
-.hub-core {
-  display: grid; justify-items: center; gap: 11px;
-  padding: 22px 20px; border-radius: 26px;
-  background: var(--mint); color: var(--deep);
-  box-shadow: 0 0 0 10px rgba(43, 189, 155, 0.13);
-}
-.hub-mark {
-  width: 46px; height: 46px; display: grid; place-items: center;
-  border-radius: 14px; background: var(--deep); color: var(--mint);
-  font-size: 23px; font-weight: 700;
-}
-.hub-name { font-size: 14px; font-weight: 700; letter-spacing: -0.02em; }
-.band-deep .lead, .band-deep p { color: var(--on-deep-muted); }
-.band-deep .eyebrow { color: var(--on-deep-muted); }
-.band-deep .eyebrow::before { background: var(--mint); }
-
-.band-mint { background: transparent; color: var(--deep); }
-.band-mint .lead, .band-mint p { color: rgba(5, 51, 41, 0.76); }
-.band-mint .eyebrow { color: rgba(5, 51, 41, 0.72); }
-.band-mint .eyebrow::before { background: var(--deep); }
-
-/* A curved lip where a coloured band meets the page, so the colour arrives
-   as a shape rather than as a ruled line across the screen. */
-.band-round { border-radius: var(--r-xl); margin-inline: var(--gutter); }
-
 .head { max-width: 780px; margin: 0 auto; text-align: center; }
 .head .eyebrow { margin-inline: auto; }
 .head h2 { margin-top: 16px; }
 .head .lead { margin-top: 16px; }
 
-.statement { max-width: 860px; margin: 0 auto; text-align: center; display: grid; gap: 22px; }
-.statement h2 { margin-block: 6px 8px; }
-
-/* ------------------------------------------------------- highlighter -- */
-/* The consumer page sets its headline in solid bars — each line on its own
-   block of colour, one line in a different one. It is the loudest thing on
-   that page and it costs nothing but CSS: no photograph, no illustration. */
-.hl { display: grid; justify-items: start; gap: 0.12em; }
-.hl-line {
-  display: inline-block;
-  padding: 0.1em 0.3em 0.16em;
-  border-radius: 14px;
-  background: var(--deep); color: var(--on-deep);
-}
-.hl-accent { background: var(--mint); color: var(--deep); }
-
-/* ------------------------------------------------------------ ticker -- */
-/* Both pages run a strip of bullet-separated words across the page, tilted a
-   few degrees. Onboard fills it with credentials; this one is filled with the
-   seven product names, which are already in the copy. Decorative repetition,
-   so it is hidden from a screen reader — the same words are in the nav, the
-   product grid and the footer. */
-/* The tilt is what makes the strip read as a sticker rather than a rule, and
-   a rotated box is wider than the one it came from — 29px wider at 1440. The
-   clip has to happen on a parent that is NOT rotated, because overflow on the
-   rotated element clips its children and not its own bounding box. A plain
-   wrapper rather than overflow on the body: hiding overflow on the body makes
-   the body the scrolling box and takes scroll-padding-top out of play. */
-.ticker-clip { overflow: hidden; }
-.ticker {
-  position: relative; z-index: 2;
-  margin-block: clamp(-28px, -2vw, -16px) 0;
-  padding-block: 15px;
-  background: var(--deep); color: var(--mint);
-  transform: rotate(-1.6deg) scale(1.04);
-}
-.ticker-track {
-  display: flex; align-items: center; gap: 28px; width: max-content;
-  animation: tick 38s linear infinite;
-  font-size: 14px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
-}
-.ticker-track span { white-space: nowrap; }
-.ticker-track i { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none; }
-@keyframes tick { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-
-/* ------------------------------------------------------- split heads -- */
-/* The questions sit beside their heading rather than under it, on both pages.
-   It halves the vertical run of the section and gives the accordion the width
-   it wants. */
-.split-head {
-  display: grid; grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.25fr);
-  gap: clamp(32px, 5vw, 80px); align-items: start;
-}
-.split-head .head { margin: 0; text-align: left; max-width: none; }
-.split-head .faq { margin-top: 0; }
-
-/* -------------------------------------------------------------- stage -- */
-/* A screen on a block of colour.
- *
- *  This is the device the reference's consumer page is built on: every phone
- *  sits on a saturated panel — lime, purple, yellow — and bleeds off the
- *  bottom of it, rather than floating on the page in a drop shadow. It is
- *  what makes that page read as colourful when most of it is cream and text.
- *
- *  It also solves the problem the empty photograph panels created: the colour
- *  is carried by something that is actually there. These use screenshots of
- *  the real product, which this repository has, rather than photographs,
- *  which it does not.
- */
-/* (The hero's own stage is the globe; see the hero block above.) */
-
-/* -------------------------------------------------------------- shots -- */
-.shot {
-  margin: 0; border-radius: var(--r-lg); overflow: hidden;
-  background: var(--surface); border: 1px solid var(--line-soft);
-  box-shadow: var(--shadow);
-}
-.shot img { width: 100%; height: auto; }
-.shot-wide { aspect-ratio: 1360 / 850; }
-.shot-wide img { height: 100%; object-fit: cover; object-position: top left; }
-
-.hero-shot {
-  border-radius: clamp(var(--r-lg), 2.4vw, 38px);
-  box-shadow: var(--shadow-lg);
-  border-color: transparent;
-}
-
-.shot-phone {
-  width: min(300px, 100%); margin-inline: auto;
-  border-radius: 34px; border-color: var(--line);
-  box-shadow: var(--shadow-lg);
-  aspect-ratio: 390 / 800;
-}
-.shot-phone img { height: 100%; object-fit: cover; object-position: top center; }
-
 /* -------------------------------------------------------------- cards -- */
-.grid-3 {
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(20px, 2.4vw, 32px);
-}
 .cards { margin-top: clamp(48px, 5.5vw, 76px); }
 
 .card { display: grid; gap: 15px; align-content: start; }
-.card .shot { margin-bottom: 8px; }
 .card p { color: var(--muted); font-size: 16px; }
-
-/* The product list. Onboard numbers its capabilities 01–06; so does this.
-   Each card carries a differently tinted chip, which is where most of the
-   page's colour lives — six small blocks rather than one big one. */
-.numbered {
-  margin-top: clamp(48px, 5.5vw, 76px);
-  /* Four cards, not a uniform grid of six. The two that carry a pair of
-     screens run the full width; the two single-screen ones share the row
-     between them, which keeps the mixed rhythm without the table. */
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-.numbered .ncard-wide { grid-column: 1 / -1; }
-/* The product list is the page's dark block.
- *
- *  This is the shape Onboard's own numbered run is built on: a light ground,
- *  a slab of near-black cards across the middle of it, and one loud accent
- *  doing the pointing. White cards on a mint-white page have almost no edge —
- *  six of them read as a table. Six deep green ones read as a thing. Same
- *  palette, same copy, same numbers: only the ground is inverted. */
-.ncard {
-  position: relative; display: grid; gap: 13px; align-content: start;
-  padding: clamp(28px, 2.8vw, 36px);
-  background: var(--deep); color: var(--on-deep);
-  border: 1px solid transparent;
-  border-radius: var(--r-lg); box-shadow: var(--shadow);
-  transition: box-shadow var(--t-base) var(--ease-out), transform var(--t-base) var(--ease-out);
-}
-.ncard:hover { box-shadow: var(--shadow-lg); transform: translateY(-5px); }
-.ncard .num {
-  position: absolute; top: clamp(28px, 2.8vw, 36px); right: clamp(28px, 2.8vw, 36px);
-  font-size: 13px; font-weight: 600; letter-spacing: 0.1em;
-  color: rgba(255, 255, 255, 0.36);
-}
-.ncard .ic {
-  width: 52px; height: 52px; display: grid; place-items: center;
-  border-radius: var(--r-sm); margin-bottom: 4px;
-  background: rgba(255, 255, 255, 0.08); color: var(--mint);
-}
-.ncard .ic svg {
-  width: 24px; height: 24px; fill: none; stroke: currentColor;
-  stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round;
-}
-/* The chips still cycle, but as tinted glass on the dark rather than as six
-   pastel blocks: the fills are the brand's own three at low alpha, and the
-   icon keeps the full colour. Each icon clears 4.5:1 on the card. */
-.ncard:nth-child(3n + 2) .ic { background: rgba(249, 209, 0, 0.14); color: #f9d100; }
-.ncard:nth-child(3n + 3) .ic { background: rgba(248, 81, 19, 0.14); color: #ff8a5c; }
-
-/* The wrap caps at 1200, so a card is no wider at 1920 than at 1440. Left
-   on the global clamp the heading keeps growing past that and wraps on a
-   card that never grew with it, so it stops where the card stops. */
-.ncard h3 { font-size: clamp(19px, 1.5vw, 21.6px); }
-.ncard p:not(.num) { color: var(--on-deep-muted); font-size: 16px; }
-.ncard .link-arrow { margin-top: 8px; color: var(--mint); }
-
-/* Each card ends in the screen it is talking about, rising out of the bottom
-   edge. The reference does this with its dark cards, and it is the difference
-   between a card that describes a product and a card that shows one. */
-.ncard { overflow: hidden; padding-bottom: 0; }
-.ncard-shot {
-  margin: 10px 0 0;
-  height: clamp(150px, 17vw, 210px);
-  border-radius: 18px 18px 0 0;
-  overflow: hidden;
-  box-shadow: 0 -10px 34px rgba(0, 0, 0, 0.28);
-}
-.ncard-shot img {
-  width: 100%; height: 100%;
-  object-fit: cover; object-position: top center;
-}
-
-/* A product with two sides gets one card and both screens. The text sits
-   beside them rather than above, so the pair reads as one product rather
-   than as two cards that happen to be adjacent. */
-.ncard-wide {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr);
-  column-gap: clamp(28px, 3.2vw, 56px);
-  align-items: end;
-}
-.ncard-wide .ncard-body {
-  display: grid; gap: 13px; align-content: start;
-  padding-bottom: clamp(28px, 2.8vw, 36px);
-}
-.ncard-wide .ncard-shots {
-  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(12px, 1.4vw, 20px); align-items: end;
-}
-.ncard-wide .ncard-shot { height: clamp(190px, 21vw, 290px); }
 
 /* -------------------------------------------------------------- split -- */
 .split {
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr);
   gap: clamp(40px, 6vw, 92px); align-items: center;
 }
-.split-text h2 { margin-top: 16px; }
-.split-text > .lead { margin-top: 22px; }
-/* (.points and .point are defined with the gifting section above.) */
 
-/* --------------------------------------------------------- phone row -- */
-.phone-row {
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(20px, 3vw, 46px);
-  margin-top: clamp(52px, 6vw, 82px);
-}
-.phone-row > :nth-child(2) { transform: translateY(-30px); }
-
-/* (.faq, .plus, .answer and .closing are defined with their sections above.) */
 
 /* --------------------------------------------------------------- footer -- */
 /* The footer sits on the page ground, not on a dark band: its own fill is
@@ -2021,7 +1711,6 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 .socials a:hover { background: var(--deep); color: var(--mint); border-color: var(--deep); transform: translateY(-2px); }
 .socials svg { width: 17px; height: 17px; fill: currentColor; }
 /* Instagram is drawn rather than filled, so it needs the opposite treatment. */
-.socials .ic-stroke { fill: none; stroke: currentColor; stroke-width: 1.7; }
 
 .foot-cols { display: grid; grid-auto-flow: column; gap: min(24px, 1.25vw); justify-content: end; }
 .foot-col { display: grid; gap: 11px; align-content: start; }
@@ -2030,7 +1719,7 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 .foot-split > div { display: grid; gap: 11px; align-content: start; }
 .foot-head {
   font-size: 12px; font-weight: 600; letter-spacing: 0.12em;
-  text-transform: uppercase; color: var(--mint);
+  text-transform: uppercase; color: var(--mint-ink);
 }
 .foot-col a {
   font-size: 15.5px; line-height: 20px; color: var(--deep);
@@ -2047,6 +1736,11 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
   letter-spacing: -0.025em; line-height: 0.71;
   color: #d4d4d0; user-select: none;
 }
+/* The 318px wordmark is a logotype drawn in a tint of the ground, which WCAG
+   exempts from contrast; it is aria-hidden and says nothing the bar's own
+   Tokkenly does not. It is drawn from data-word rather than written as text
+   so a contrast audit reads it as the decoration it is. */
+.foot-word::before { content: attr(data-word); }
 .risk { color: var(--deep); font-size: 14px; letter-spacing: -0.005em; }
 /* 0.71 line-height cuts the box off above the descenders, so on a phone the
    y of Tokkenly hangs into whatever follows. */
@@ -2056,10 +1750,29 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 /* It used to be a list of five words. Each row now says what the product is
    for, which is the difference between a menu and a signpost. */
 .drop-menu {
-  display: grid; grid-template-columns: repeat(2, minmax(220px, 1fr));
-  gap: 2px; padding: 10px; min-width: 560px;
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-lg);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  gap: 2px;
+  padding: 10px;
+  min-width: 560px;
 }
-.drop-menu a { display: grid; gap: 3px; padding: 12px 14px; border-radius: 12px; }
+.drop-menu a {
+  font-size: 15.5px;
+  font-weight: 500;
+  color: var(--muted);
+  transition: background var(--t-fast) var(--ease-out), color var(--t-fast) var(--ease-out);
+  display: grid;
+  gap: 3px;
+  padding: 12px 14px;
+  border-radius: 12px;
+}
 .dm-name { font-size: 15px; font-weight: 600; color: var(--ink); }
 .dm-say { font-size: 13px; line-height: 1.45; color: var(--muted); }
 .drop-menu a[aria-current='page'] { background: var(--tint-brand); }
@@ -2071,12 +1784,20 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 /* ------------------------------------------------------- hover states -- */
 /* Hover is CSS, never script: it has to work whether or not GSAP loaded, and
    a transform plus a shadow is cheaper than anything a library would do. */
-.ts-card, .pr-card, .gs-step, .gift-stage, .why-stage {
+.ts-card, .pr-card, .gs-step, .why-stage {
   transition: transform 420ms var(--ease-out), box-shadow 420ms var(--ease-out);
 }
 .ts-card:hover, .pr-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
 .gs-step:hover .gs-mock { transform: translateY(-8px); box-shadow: var(--shadow-lg); }
-.gs-mock { transition: transform 420ms var(--ease-out), box-shadow 420ms var(--ease-out); }
+.gs-mock {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 485 / 600;
+  border-radius: min(32px, 1.667vw);
+  overflow: hidden;
+  container-type: inline-size;
+  transition: transform 420ms var(--ease-out), box-shadow 420ms var(--ease-out);
+}
 
 /* The props inside a card drift a little further than the card does, so the
    card reads as having depth rather than as a single flat plate.
@@ -2094,16 +1815,48 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 .pr-card:hover .pr-sticker { --lift: -12px; --pop: 1.04; }
 
 /* A ledger row is the one thing in the pop-up that looks clickable. */
-.pop-row { border-radius: 6px; transition: background 200ms var(--ease-out); }
+.pop-row {
+  display: grid;
+  gap: 3px;
+  border-radius: 6px;
+  transition: background 200ms var(--ease-out);
+}
 .pop-ledger .pop-row:hover { background: rgba(5, 51, 41, 0.05); }
-.pop-btn { transition: transform 260ms var(--ease-out), background 260ms var(--ease-out); }
+.pop-btn {
+  background: #1e1818;
+  color: #fff;
+  border-radius: 999px;
+  text-align: center;
+  padding: clamp(13px, 0.782vw, 15px) 0;
+  font-size: clamp(11.5px, 0.73vw, 14px);
+  font-weight: 600;
+  transition: transform 260ms var(--ease-out), background 260ms var(--ease-out);
+}
 .pr-card:hover .pop-btn { transform: translateY(-2px); background: #053329; }
 
-.pr-link .pr-arrow, .link-arrow svg { transition: transform 300ms var(--ease-out); }
+.pr-link .pr-arrow { transition: transform 300ms var(--ease-out); }
 .pr-link:hover .pr-arrow { transform: translateX(4px); }
-.faq summary { transition: color 200ms var(--ease-out); }
+.faq summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  font-size: clamp(16px, 0.99vw, 19px);
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.022em;
+  color: #1e1818;
+  transition: color 200ms var(--ease-out);
+}
 .faq details:hover summary { color: var(--deep); }
-.faq details { transition: border-color 260ms var(--ease-out), background 260ms var(--ease-out); }
+.faq details {
+  border: 1px solid #e5ebe8;
+  border-radius: min(18px, 0.938vw);
+  padding: min(24px, 1.25vw) min(26px, 1.354vw);
+  transition: border-color 260ms var(--ease-out), background 260ms var(--ease-out);
+}
 .faq details:hover { border-color: rgba(5, 51, 41, 0.18); }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2152,12 +1905,14 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
      aspect ratios go with them: a 485x600 card at a third of a phone is a
      stamp, and a 988x456 card cannot hold a pop-up beside its copy. */
   .ts-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .gift-in, .why-in, .faq-in { grid-template-columns: minmax(0, 1fr); gap: 44px; }
-  .why-stage { aspect-ratio: 16 / 10; }
+  .why-in, .faq-in { grid-template-columns: minmax(0, 1fr); gap: 44px; }
   /* Stacked in source order, the gifting portrait and this one land back to
      back and read as one block of face. The statement goes between them. */
   .why-text { order: 1; }
-  .why-stage { order: 2; }
+  .why-stage {
+    aspect-ratio: 16 / 10;
+    order: 2;
+  }
   .pr-row-a, .pr-row-b { grid-template-columns: minmax(0, 1fr); }
   .pr-card, .pr-narrow { aspect-ratio: auto; }
   /* Once the card sizes to its copy, a sticker placed as a share of the card's
@@ -2165,19 +1920,25 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
      up sitting on "Explore Convert". Hung off the bottom instead, in units of
      the card's width, each keeps the overhang the frame gives it however tall
      the copy runs. */
-  .pr-card { container-type: inline-size; }
   .pr-sticker-notes { top: auto; bottom: -36.4cqw; }
   .pr-sticker-conv  { top: auto; bottom: -52.72cqw; }
-  .pr-wide { grid-template-columns: minmax(0, 1fr); padding-right: 26px; }
   .pr-wide .popup { border-radius: 20px 20px 0 0; }
-  .pr-narrow { padding-bottom: 240px; }
 
   /* The measurements, given a floor. */
   .pr-grid, .pr-row { gap: 16px; }
-  .pr-card { border-radius: 22px; }
+  .pr-card {
+    container-type: inline-size;
+    border-radius: 22px;
+  }
   .pr-narrow, .pr-wide { padding: 26px 26px 0; }
-  .pr-narrow { padding-bottom: 240px; }
-  .pr-wide { gap: 26px; }
+  .pr-narrow {
+    padding-bottom: 240px;
+  }
+  .pr-wide {
+    grid-template-columns: minmax(0, 1fr);
+    padding-right: 26px;
+    gap: 26px;
+  }
   .pr-body { padding-bottom: 26px; }
   .pr-chip { width: 44px; height: 44px; border-radius: 12px; }
   .popup { padding: 22px; border-radius: 20px 20px 0 0; }
@@ -2185,40 +1946,27 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
   .popup .pop-btn { padding: 14px 0; }
   .gs-steps { grid-template-columns: minmax(0, 1fr); gap: 56px; }
   .gs-gun { display: none; }
-  .foot-top { grid-template-columns: minmax(0, 1fr); gap: 40px; }
   .foot-cols { justify-content: start; gap: 40px; }
-
-  .split-head { grid-template-columns: minmax(0, 1fr); gap: 36px; }
-  .band-deep .statement { grid-template-columns: minmax(0, 1fr); gap: 44px; }
-  .hub { grid-template-columns: minmax(0, 1fr); justify-items: center; gap: 22px; }
-  .hub-list { order: 2; justify-items: center; }
-  .hub-list li::after { display: none; }
-  .hub-wire { display: none; }
-  .hub-core { order: 1; }
   .nav-links { display: none; }
   .burger { display: grid; }
   .split { grid-template-columns: minmax(0, 1fr); gap: 48px; }
-  .split-text { order: 1; }
-  .foot-top { grid-template-columns: minmax(0, 1fr); }
+  .foot-top {
+    gap: 40px;
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 @media (max-width: 880px) {
-  .grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .steps { grid-template-columns: minmax(0, 1fr); max-width: 420px; margin-inline: auto; }
-  .phone-row { gap: 20px; }
-  .phone-row > :nth-child(2) { transform: none; }
-  .band-round { margin-inline: 16px; }
 }
 
 @media (max-width: 880px) {
   .hero-stage { aspect-ratio: 4 / 3; }
-  .stage-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 640px) {
   :root { --gutter: 20px; --nav-h: 64px; }
   body { font-size: 16px; }
-  .grid-3 { grid-template-columns: minmax(0, 1fr); }
 
   /* At 45% of a phone the globe is a thumbnail and the orbit is unreadable.
      It takes most of the width instead, and the stage is re-proportioned to
@@ -2235,7 +1983,6 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
   .hero-cta .btn { width: 100%; }
 
   .ts-cards { grid-template-columns: minmax(0, 1fr); }
-  .foot-cols { grid-auto-flow: row; }
   .foot-split { grid-auto-flow: row; gap: 11px; }
   .foot-col-products { min-width: 0; }
   /* 318px of wordmark on a phone is a horizontal scrollbar. */
@@ -2252,20 +1999,16 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
   /* A span left on in a single-column stack invents a second track and
      collapses the first to 0. On a phone every card is just a card, and the
      wide ones put their screens under the words instead of beside them. */
-  .numbered .ncard-wide { grid-column: auto; grid-template-columns: minmax(0, 1fr); row-gap: 24px; }
-  .ncard-wide .ncard-body { padding-bottom: 0; }
   .cards .card { max-width: 480px; margin-inline: auto; width: 100%; }
   /* Three phones do not fit across a phone. Two columns, and the third wraps
      under the pair rather than shrinking all of them to a thumbnail. */
-  .phone-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .phone-row .stage { width: 100%; }
-  .phone-row > :last-child { grid-column: 1 / -1; max-width: 300px; margin-inline: auto; }
-  .foot-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .foot-cols {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
   .cta-row { gap: 12px; }
   .cta-row .btn { height: 54px; width: 100%; }
-  .cta-row .link-arrow { margin-inline: auto; }
-  .hero-text .cta-row, .cta-row.centred { flex-direction: column; align-items: stretch; }
-  .band-round { margin-inline: 12px; border-radius: var(--r-lg); }
+  .cta-row.centred { flex-direction: column; align-items: stretch; }
   .faq summary { padding: 20px; gap: 16px; }
   .answer { padding: 0 20px 22px; }
 
@@ -2283,259 +2026,26 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 }
 
 /* ===================================================================== *
-   Product page kit
+   Shared by the product pages
    ---------------------------------------------------------------------
-   Eight product pages are built from an ordered list of these, and no two
-   pages list them in the same order.
-
-   Everything here is the landing page's own vocabulary, reused rather than
-   restated: the deep-green band of #00221a cards with their coloured chips
-   and mint links, the stone-and-gradient trio, the split with its ruled
-   points, the white receipt panel. A person arriving from the landing page
-   should recognise the furniture.
-
-   The one rule that shapes all of it: NO WHOLE PHONES. The first version of
-   these pages put 780x1600 screenshots on coloured slabs — 656px tall beside
-   a paragraph of ninety words, so the picture outweighed the copy four to one
-   and no page fitted a screen. The landing page never does that. It shows a
-   receipt: four rows and a button, about 300 tall, saying more about the
-   product than a photograph of the screen it came from.
-
-   So every piece of interface below is a .pn panel, written in markup. It
-   stays crisp, it stays selectable, it weighs nothing, and it cannot grow
-   taller than the words beside it.
+   What the product pages still take from the first product kit: the close,
+   the steps, and the sibling cards. Everything else they draw is in the
+   "product pages, v2" block further down, measured off their frames.
    ===================================================================== */
-
-/* ---- the panel --------------------------------------------------------
-   The landing page's .popup, grown up: it gained a list, a swap and a bar
-   because eight products need to show eight different things, and it kept
-   everything else. Same white, same radius, same sunken ledger, same dark
-   pill at the foot. */
-.pn {
-  background: #fff; border-radius: min(22px, 1.146vw);
-  padding: clamp(20px, 1.6vw, 28px);
-  display: grid; gap: clamp(14px, 1vw, 18px); align-content: start;
-  color: #1e1818; text-align: left;
-  box-shadow: 0 18px 44px rgba(5, 51, 41, 0.16);
-}
-/* Every rule below is written `.pn .pn-x` rather than `.pn-x`, and that is
-   not decoration. A panel sits inside a #00221a bento card, and that card
-   says `.pr-card p { color: var(--on-deep-muted) }` — one class and one
-   element, which beats a colour the panel merely inherits. The first build
-   of this had a white receipt with pale mint figures on it, unreadable, for
-   exactly that reason. So the panel states its own colours and states them
-   loudly enough to win. */
-.pn .pn-head { display: grid; gap: 6px; }
-.pn .pn-k {
-  font-size: clamp(9.5px, 0.573vw, 11px); font-weight: 600; line-height: 1.3;
-  letter-spacing: 0.1em; text-transform: uppercase; color: #6c7d78;
-}
-.pn .pn-fig {
-  font-size: clamp(24px, 1.95vw, 36px); font-weight: 700; color: #1e1818;
-  letter-spacing: -0.03em; line-height: 1.1;
-}
-.pn-rows {
-  background: #f0efec; border-radius: min(14px, 0.73vw);
-  padding: clamp(14px, 1vw, 18px); display: grid; gap: clamp(11px, 0.78vw, 14px);
-}
-.pn-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(11px, 0.78vw, 14px); }
-.pn .pn-row { display: grid; gap: 3px; min-width: 0; }
-.pn .pn-v { font-size: clamp(11.5px, 0.73vw, 14px); font-weight: 600; line-height: 1.35; color: #1e1818; overflow-wrap: anywhere; }
-.pn .pn-note { font-size: clamp(10.5px, 0.678vw, 13px); line-height: 1.5; color: #6c7d78; }
-.pn .pn-btn {
-  background: #1e1818; color: #fff; border-radius: 999px;
-  text-align: center; padding: clamp(12px, 0.85vw, 15px) 0;
-  font-size: clamp(11.5px, 0.73vw, 14px); font-weight: 600;
-}
-
-/* A list of things — search results, ways in, where a payment can go. The
-   badge is a letter in a tinted square, which is what the app draws when a
-   thing has no logo. */
-.pn-list { display: grid; gap: 4px; }
-.pn-item {
-  display: grid; grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: clamp(10px, 0.73vw, 14px); align-items: center;
-  padding: clamp(9px, 0.63vw, 12px); border-radius: min(12px, 0.625vw);
-  background: #f0efec;
-}
-.pn .pn-badge {
-  width: clamp(28px, 1.98vw, 36px); height: clamp(28px, 1.98vw, 36px);
-  border-radius: min(10px, 0.52vw); display: grid; place-items: center;
-  background: #dce9e2; color: #08543f;
-  font-size: clamp(11px, 0.73vw, 14px); font-weight: 700; line-height: 1;
-}
-.pn .pn-name { font-size: clamp(11.5px, 0.73vw, 14px); font-weight: 600; color: #1e1818; line-height: 1.3; }
-.pn .pn-sub { font-size: clamp(10px, 0.626vw, 12px); color: #6c7d78; margin-top: 2px; line-height: 1.35; overflow-wrap: anywhere; }
-.pn .pn-val { font-size: clamp(11px, 0.7vw, 13.5px); font-weight: 600; color: #1e1818; text-align: right; white-space: nowrap; }
-.pn .pn-up { color: var(--positive); }
-.pn .pn-down { color: #b4451f; }
-
-/* Two fields and the flip between them. The Convert screen's whole idea in
-   about 150 pixels. */
-.pn-swap { display: grid; gap: 6px; position: relative; }
-.pn-field {
-  background: #f0efec; border-radius: min(14px, 0.73vw);
-  padding: clamp(13px, 0.95vw, 17px);
-  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: end;
-}
-.pn .pn-big { font-size: clamp(19px, 1.35vw, 26px); font-weight: 700; color: #1e1818; letter-spacing: -0.025em; line-height: 1.15; }
-.pn .pn-unit {
-  font-size: clamp(10.5px, 0.626vw, 12.5px); font-weight: 600; color: #6c7d78;
-  background: #fff; border-radius: 999px; padding: 6px 12px;
-}
-.pn-flip {
-  position: absolute; left: 50%; top: 50%; translate: -50% -50%; z-index: 2;
-  width: clamp(28px, 1.9vw, 34px); height: clamp(28px, 1.9vw, 34px);
-  border-radius: 50%; background: #1e1818; display: grid; place-items: center;
-  border: 3px solid #fff;
-}
-.pn-flip svg { width: 52%; height: 52%; fill: none; stroke: #fff; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-
-/* One bar, split by share. For the two products whose point is that money at
-   work and money you can spend are different things. */
-.pn-bar { display: grid; gap: 11px; }
-.pn-track { display: flex; gap: 3px; height: clamp(12px, 0.83vw, 16px); }
-.pn-seg { border-radius: 999px; }
-.pn-seg:first-child { background: var(--mint); }
-.pn-seg:last-child { background: #d5cfc6; }
-.pn-keys { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.pn-key { display: grid; gap: 3px; }
-.pn-dot { display: flex; align-items: center; gap: 7px; }
-.pn-dot::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--mint); flex: none; }
-.pn-key:last-child .pn-dot::before { background: #d5cfc6; }
-
-/* ---- the slab ---------------------------------------------------------
-   The coloured ground a panel stands on, in the product's own colour, with
-   the landing page's dotted wash over it and one 3-D object bleeding out of
-   the bottom corner. Same five colours as before; what has changed is what
-   stands on it. */
-.slab {
-  position: relative; overflow: hidden; isolation: isolate;
-  border-radius: min(34px, 1.771vw);
-  background: var(--stage, var(--mint));
-  padding: clamp(26px, 3vw, 54px) clamp(20px, 2.4vw, 44px);
-  display: grid; place-items: center;
-}
-.slab::before {
-  content: ''; position: absolute; inset: 0; z-index: 0;
-  background-image: radial-gradient(circle, rgba(5, 51, 41, 0.14) 1px, transparent 1px);
-  background-size: 20px 20px;
-  -webkit-mask-image: linear-gradient(to bottom, #000, transparent 74%);
-  mask-image: linear-gradient(to bottom, #000, transparent 74%);
-}
-.slab-prop {
-  position: absolute; left: -13%; bottom: -17%; z-index: 1;
-  width: min(340px, var(--w2, 56%)); height: auto;
-  pointer-events: none; object-fit: contain;
-  transform: rotate(var(--r, -8deg));
-}
-/* The panel is pushed off the slab's centre so the object beside it has
-   somewhere to be. Centred, the panel covered it and what showed was a
-   sliver at the edge that read as a smudge rather than a thing. */
-.slab .pn { position: relative; z-index: 2; width: 100%; max-width: 372px; justify-self: end; }
-
-.stage-mint   { --stage: var(--mint); }
-.stage-yellow { --stage: #f9d100; }
-.stage-sand   { --stage: var(--sand); }
-.stage-peach  { --stage: #f7b79a; }
-.stage-deep   { --stage: var(--deep); }
-.stage-deep::before { background-image: radial-gradient(circle, rgba(255, 255, 255, 0.16) 1px, transparent 1px); }
 
 /* The landing page's closing slab is drawn for one line of headline and one
    of lead; a product page's own ending keeps to that, and the section around
-   it does not need the 1024 the landing page reserves. */
-/* The frames give the product close the same 144 over and under as every
-   other band, not the 96 this had before them. */
+   it does not need the 1024 the landing page reserves. The frames give it the
+   same 144 over and under as every other band. */
 .closing-prod { min-height: 0; padding-block: var(--cpad, min(144px, 7.5vw)); }
 /* The slab's own type: 70 over 69, tight, in a 760 measure. The 22 either
    side of the lead is the component's, and the block is centred in the 532. */
 .closing-prod .closing-in h2 {
   font-size: var(--cfs, clamp(36px, 3.646vw, 70px)); line-height: var(--clh, 0.986);
 }
-
-/* ---- the hero ---------------------------------------------------------
-   Two columns, not one: the landing hero is centred because it has a globe
-   under it, and a product page has a panel instead. Words on one side, the
-   thing itself on the other, and the whole introduction inside one screen. */
-.hero-product { padding-top: calc(var(--nav-h) + min(112px, 6.4vw)); padding-bottom: min(104px, 5.5vw); }
-.ph-in {
-  display: grid; grid-template-columns: minmax(0, 620fr) minmax(0, 560fr);
-  gap: clamp(36px, 4.2vw, 80px); align-items: center;
-  justify-items: stretch; text-align: left;
-}
-.ph-text { display: grid; justify-items: start; align-content: center; min-width: 0; }
-.px-head h2 { font-size: clamp(29px, 3.4vw, 54px); }
-.px-head .lead { margin-top: 14px; }
-.ph-hl {
-  margin: 18px 0 0; font-size: clamp(38px, 4.3vw, 72px);
-  line-height: 1.05; letter-spacing: -0.04em; color: var(--ink);
-}
-.ph-lead { margin-top: 20px; max-width: 34em; }
-.ph-cta { margin-top: min(32px, 1.8vw); }
-
-/* ---- the bento --------------------------------------------------------
-   The landing page's products grid, carrying this product's own facets
-   instead of the other seven products. Same #00221a cards on the same deep
-   band, same 988/500 asymmetry, same chips and mint links — .pr-* is shared
-   verbatim, and only the two things a product page needs are added.
-
-   The narrow card's art slot is pinned to the bottom and clipped by the card,
-   so an object bleeds out of the corner the way the landing page's do. */
-.pr-stage { position: absolute; left: 0; bottom: -8%; width: 100%; aspect-ratio: var(--ar, 461.333 / 388); z-index: 0; }
-.pr-prop {
-  position: absolute; left: var(--l); top: var(--t); width: var(--w);
-  height: auto; pointer-events: none; object-fit: contain;
-  transform: rotate(var(--r, 0deg)) scaleX(var(--fx, 1));
-}
 .pr-narrow .pr-top { position: relative; z-index: 2; }
-/* The bento's head sits left on a product page: it is a section of the page,
-   not the page's own centred pitch. */
-.bx-head { max-width: 760px; margin: 0; text-align: left; }
-.bx-head .eyebrow { margin-inline: 0; }
-.bx-head h2 { margin-top: 16px; font-size: clamp(29px, 3.4vw, 54px); }
-.bx-head .lead { margin-top: 16px; max-width: 56ch; }
-.pr-wide .pn { align-self: end; margin-bottom: 0; border-radius: min(22px, 1.146vw) min(22px, 1.146vw) 0 0; box-shadow: none; }
 
-/* ---- the trio ---------------------------------------------------------
-   The tokenized-stocks cards: two stone, one gradient, the middle one
-   reading bottom-up. .ts-* is shared verbatim; what is added is the art
-   slot's placement table, which the landing page keeps inline. */
-.tx-head { max-width: 760px; margin: 0 auto; text-align: center; }
-.tx-head .eyebrow { margin-inline: auto; }
-.tx-head h2 { margin-top: 16px; font-size: clamp(29px, 3.4vw, 54px); }
-.ts-cards.tx-cards { margin-top: clamp(40px, 4vw, 64px); }
-
-/* ---- the split --------------------------------------------------------
-   The gifting section's shape: a headline big enough to be the point, two
-   ruled points under it, a mint pill, and the product standing on its own
-   colour beside it. .points and .point are shared verbatim. */
-.sp-in {
-  display: grid; grid-template-columns: minmax(0, 688fr) minmax(0, 768fr);
-  gap: clamp(36px, 3.6vw, 64px); align-items: center;
-}
-.sp-in-b .sp-text { order: 2; }
-.sp-text { display: grid; gap: min(40px, 2.2vw); align-content: center; justify-items: start; min-width: 0; }
-.sp-head { display: grid; gap: 16px; }
-.sp-head h2 { font-size: clamp(31px, 3.8vw, 60px); }
-.sp-head .lead { max-width: 44ch; }
-.sp-body { display: grid; gap: min(36px, 2vw); justify-items: start; min-width: 0; }
-.points { display: grid; gap: 28px; width: min(400px, 100%); }
-/* The rule is a grid column, not a pseudo-element pinned with absolute
-   positioning, so its height is the copy's height with nothing to tune. The
-   copy is one child so it cannot fall into the 3px column. */
-.point { display: grid; grid-template-columns: 3px minmax(0, 1fr); gap: 19px; }
-.point::before { content: ''; background: var(--sand); border-radius: 2px; }
-.point-copy { min-width: 0; }
-.point h3 {
-  font-size: clamp(18px, 1.146vw, 22px); line-height: 1.3; letter-spacing: -0.022em;
-  color: var(--ink); margin: 0 0 9px;
-}
-.point p { font-size: clamp(14.5px, 0.834vw, 16px); line-height: 1.6; color: var(--muted); }
-
-/* ---- the steps --------------------------------------------------------
-   Three of them, text only. The pictures live in the bento and the split;
-   repeating them here is what made every page the same page. A mint rule
-   over each step is the thread the landing page runs through its sections. */
+/* Three steps, text only, with a mint rule over each. */
 .steps {
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: clamp(22px, 2.4vw, 40px); margin-top: clamp(40px, 4vw, 64px);
@@ -2544,113 +2054,15 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
   display: grid; gap: 12px; align-content: start; text-align: left;
   border-top: 2px solid var(--mint); padding-top: clamp(20px, 1.6vw, 28px);
 }
-.step .num {
-  font-size: 12px; font-weight: 600; letter-spacing: 0.12em;
-  text-transform: uppercase; color: var(--positive);
-}
 .step h3 { color: var(--ink); }
 .step p:not(.num) { color: var(--muted); font-size: clamp(14.5px, 0.9vw, 16px); line-height: 1.6; }
 
-/* ---- figures ---------------------------------------------------------- */
-.fx-stats {
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: clamp(20px, 2.6vw, 40px);
-  margin-top: clamp(40px, 4.5vw, 64px);
-}
-.fx-stat { display: grid; gap: 10px; align-content: start; }
-.fx-stat p:last-child { color: var(--muted); }
-.fx-fig {
-  font-size: clamp(44px, 5.2vw, 76px); line-height: 1; font-weight: 600;
-  letter-spacing: -0.03em; color: var(--ink);
-  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
-}
-.fx-fig span {
-  font-size: clamp(14px, 1.15vw, 17px); font-weight: 600; letter-spacing: 0;
-  color: var(--muted);
-}
-
-/* ---- the questions asked before committing ----------------------------
-   Its own measure rather than .wrap-narrow's. That class caps the width at
-   880 but keeps the page's 150px gutter, so the content box comes out at 580
-   — fine for a column of prose, too tight for a term and its answer side by
-   side, which is what this is. */
-.fx-facts {
-  margin: clamp(32px, 3.6vw, 52px) auto 0; display: grid;
-  width: 100%; max-width: 860px;
-}
-.fx-fact {
-  display: grid; grid-template-columns: minmax(0, 14rem) minmax(0, 1fr);
-  gap: clamp(12px, 2vw, 32px);
-  padding: clamp(18px, 2vw, 26px) 0;
-  border-top: 1px solid var(--sunken);
-}
-.fx-fact:last-child { border-bottom: 1px solid var(--sunken); }
-.fx-fact dt { font-weight: 600; color: var(--ink); }
-.fx-fact dd { margin: 0; color: var(--muted); }
-
-/* ---- without, and with ---------------------------------------------- */
-.fx-cmp {
-  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(16px, 2vw, 28px);
-  margin-top: clamp(40px, 4.5vw, 64px);
-}
-.fx-col {
-  border-radius: min(26px, 1.354vw); padding: clamp(24px, 3vw, 40px);
-  display: grid; gap: 18px; align-content: start;
-}
-.fx-col-before { background: #d1cbc2; color: #443b37; }
-.fx-col-after { background: #00221a; color: var(--on-deep); }
-.fx-col-head { font-weight: 600; font-size: clamp(15px, 1.2vw, 18px); }
-.fx-col-before .fx-col-head { color: #1e1818; }
-.fx-col-after .fx-col-head { color: #fff; }
-.fx-col ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 13px; }
-.fx-col li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 12px; align-items: start; }
-.fx-i { width: 18px; height: 18px; margin-top: 2px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
-.fx-col-after .fx-i { color: var(--mint); }
-.fx-col-before .fx-i { color: #8d8175; }
-
-/* ---- two audiences --------------------------------------------------- */
-.fx-two {
-  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: clamp(16px, 2vw, 28px);
-  margin-top: clamp(40px, 4.5vw, 64px);
-}
-.fx-half {
-  background: var(--surface); border-radius: min(26px, 1.354vw);
-  padding: clamp(26px, 3vw, 42px); display: grid; gap: 14px; align-content: start;
-}
-.fx-half p { color: var(--muted); }
-.fx-list { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 12px; }
-.fx-list li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 12px; align-items: start; }
-.fx-list .fx-i { color: var(--mint); }
-
-/* ---- one sentence, on the deep ground -------------------------------- */
-.fx-slab {
-  background: var(--deep); border-radius: min(34px, 1.771vw);
-  padding: clamp(40px, 5vw, 90px) clamp(26px, 4vw, 76px);
-  display: grid; gap: 18px; justify-items: center; text-align: center;
-}
-.fx-quote {
-  font-size: clamp(21px, 2.3vw, 36px); line-height: 1.3; font-weight: 600;
-  letter-spacing: -0.02em; color: var(--on-deep); margin: 0;
-  max-width: 20em; text-wrap: balance;
-}
-.fx-quote-k {
-  font-size: 12px; font-weight: 600; letter-spacing: 0.12em;
-  text-transform: uppercase; color: var(--mint);
-}
-
-/* ---- the rest of it -------------------------------------------------- */
-/* The three other products, as the landing page's own cards rather than as
-   flat tiles: same ground, same chip, same mint link. */
+/* The other products, as the landing page's own cards rather than as flat
+   tiles: same ground, same chip, same mint link. */
 .prod-more {
   display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: min(32px, 1.667vw); margin-top: min(48px, 2.5vw);
 }
-/* Its own band rather than a full section: two short lines of head and three
-   rows of card do not need the page's whole rhythm around them. */
-.band.band-more { padding-block: clamp(56px, 6vw, 104px); }
-.band-more .bx-head h2 { font-size: clamp(27px, 2.8vw, 44px); }
 .prod-card {
   position: relative; overflow: hidden;
   background: #00221a; color: #fff; border-radius: min(26px, 1.354vw);
@@ -2663,55 +2075,11 @@ h3 { font-size: clamp(19px, 1.5vw, 22px); line-height: 1.3; letter-spacing: -0.0
 .prod-card h3 { font-size: clamp(18px, 1.125vw, 22px); color: #fff; }
 .prod-card p { color: var(--on-deep-muted); font-size: clamp(14px, 0.834vw, 16px); line-height: 1.6; }
 .prod-card .pr-link { margin-top: 4px; }
+.ts-card, .prod-card { --lift: 0px; --pop: 1; }
 
-/* ---- said plainly ----------------------------------------------------- */
-.band-risk { padding-block: 0; }
-.prod-risk {
-  max-width: 900px; margin-inline: auto; text-align: center;
-  padding: min(32px, 1.667vw) min(40px, 2.084vw);
-  border: 1px dashed rgba(5, 51, 41, 0.28); border-radius: min(20px, 1.042vw);
-  font-size: clamp(14.5px, 0.886vw, 17px); line-height: 1.6; color: var(--muted);
-}
-.prod-risk strong { color: var(--ink); }
-
-/* ---- hover ------------------------------------------------------------ */
-.ts-card, .prod-card, .slab { --lift: 0px; --pop: 1; }
-.slab .slab-prop, .pr-stage .pr-prop {
-  transition: transform 520ms var(--ease-out);
-}
-.slab:hover .slab-prop { transform: rotate(var(--r, -8deg)) translateY(-10px) scale(1.03); }
-.pr-card:hover .pr-prop { transform: rotate(var(--r, 0deg)) scaleX(var(--fx, 1)) translateY(-10px); }
-.pn-item { transition: background 200ms var(--ease-out); }
-.pn-list:hover .pn-item { opacity: 0.68; }
-.pn-list .pn-item:hover { opacity: 1; background: #e6e4df; }
-.pr-card:hover .pn-btn { transform: translateY(-2px); background: #053329; }
-
-/* ---- the tiers -------------------------------------------------------- */
 @media (max-width: 1040px) { .prod-more { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-
-@media (max-width: 899px) {
-  /* The hero stacks, and the panel goes under the words it belongs to. */
-  .hero-product { padding-top: calc(var(--nav-h) + min(72px, 8vw)); }
-  .ph-in { grid-template-columns: minmax(0, 1fr); gap: 40px; }
-  .sp-in { grid-template-columns: minmax(0, 1fr); gap: 40px; }
-  .sp-in-b .sp-text { order: 0; }
-  .fx-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .fx-cmp, .fx-two { grid-template-columns: minmax(0, 1fr); }
-  .steps { grid-template-columns: minmax(0, 1fr); gap: 28px; }
-  .fx-fact { grid-template-columns: minmax(0, 1fr); gap: 6px; }
-}
-
-@media (max-width: 639px) {
-  .fx-stats { grid-template-columns: minmax(0, 1fr); gap: 26px; }
-  .prod-more { grid-template-columns: minmax(0, 1fr); }
-  .slab { padding: 26px 20px 30px; }
-  .slab-prop { width: min(200px, 44%); }
-  .pn-pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  /* The bento's narrow card leaves a fixed 240 of room for its object below
-     the copy (see the .pr-narrow rule in the tiers above); the art slot has
-     to sit in that room rather than at the card's own bottom. */
-  .pr-narrow .pr-stage { bottom: 0; }
-}
+@media (max-width: 899px) { .steps { grid-template-columns: minmax(0, 1fr); gap: 28px; } }
+@media (max-width: 639px) { .prod-more { grid-template-columns: minmax(0, 1fr); } }
 
 /* ------------------------------------------------ gifting on a phone -- */
 /* The card turns portrait and the tabs step out from under the photo to sit
@@ -3049,11 +2417,22 @@ body[data-navtone='over-dark'] .nav .burger span { background: color-mix(in srgb
   font-size: clamp(26px, 2.292vw, 44px); line-height: 1.1; letter-spacing: -0.034em;
   color: var(--ink);
 }
-.bl-news-p { font-size: clamp(15.5px, 0.938vw, 18px); line-height: 1.6; color: #1f473d; }
+.bl-news-p { font-size: clamp(15.5px, 0.938vw, 18px); line-height: 1.6; color: #16392f; }   /* 5.3:1 on the mint */
 /* nowrap, not wrap: this form is a grid item sized to fit-content, and a
    wrapping flex container's max-content is its widest item rather than the
    row, which stacked the button under the field on every width. */
-.bl-form { display: flex; flex-wrap: nowrap; justify-content: center; gap: 12px; }
+/* The status line sits under the row rather than in it: taken out of the
+   flex flow, it cannot widen the form or push the button onto a line of its
+   own, and it only takes room once there is something to say. */
+.bl-form {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  gap: 12px;
+  position: relative;
+}
+.bl-form .form-status { position: absolute; top: calc(100% + 12px); left: 0; right: 0; text-align: center; }
+.bl-news:has(.form-status:not(:empty)) { padding-bottom: calc(min(80px, 4.167vw) + 40px); }
 .bl-vh {
   position: absolute; width: 1px; height: 1px; overflow: hidden;
   clip-path: inset(50%); white-space: nowrap;
@@ -3066,6 +2445,53 @@ body[data-navtone='over-dark'] .nav .burger span { background: color-mix(in srgb
 .bl-input::placeholder { color: var(--placeholder); }
 .bl-input:focus-visible { outline: 2px solid var(--deep); outline-offset: 2px; }
 .bl-sub { font-size: 15px; font-weight: 700; padding-inline: 34px; }
+/* The chips hide cards with the hidden attribute, which a display: grid on
+   the card would otherwise win against. */
+.bl-post[hidden] { display: none; }
+/* How many are showing, for a screen reader; the grid says it to the eye. */
+.bl-count {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap;
+}
+
+/* ================================================= the forms' outcomes == */
+/* Shared by the contact form and the newsletter. The honeypot is off-screen
+   rather than display: none, which some bots know to skip. The status line is
+   the live region site.js writes into. The two notes are for a reader with no
+   script: the function redirects back to #…-sent or #…-failed and whichever
+   one is the :target shows. */
+.hp { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
+.form-status { margin: 0; font-size: 15px; line-height: 1.5; color: var(--ink); }
+.form-status:empty { display: none; }
+.form-status.is-error { font-weight: 600; }
+.form-status a, .form-note a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.form-note {
+  display: none; margin: 24px auto 0; max-width: 62ch;
+  padding: 14px 20px; border-radius: 14px;
+  background: var(--surface); color: var(--ink);
+  font-size: 15px; line-height: 1.55; text-align: center;
+}
+.form-note:target { display: block; }
+.cf-opt { font-weight: 400; color: var(--muted); }
+button[disabled] { cursor: progress; opacity: 0.6; }
+
+/* ================================================================== 404 == */
+.nf { padding-block: calc(var(--nav-h) + min(160px, 8.333vw)) min(160px, 8.333vw); }
+.nf-in { display: grid; justify-items: center; gap: min(24px, 1.25vw); text-align: center; }
+.nf-in h1 {
+  font-size: clamp(38px, 4.375vw, 84px); line-height: 1; letter-spacing: -0.044em;
+  color: var(--ink);
+}
+.nf-in .page-lead { max-width: 46ch; }
+.nf-in .cta-row { justify-content: center; margin-top: 8px; }
+.nf-links {
+  list-style: none; margin: min(40px, 2.5vw) 0 0; padding: 0;
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 28px;
+}
+.nf-links a { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); font-weight: 500; }
+.nf-links a:hover { text-decoration: underline; }
+.nf-links .pr-arrow { width: 14px; height: 14px; }
+@media (max-width: 720px) { .nf-in { gap: 18px; } }
 
 /* ============================================================== contact == */
 /* The form's numbers are the frame's: 1120 inside the 1520, a field that is a
@@ -3147,7 +2573,7 @@ textarea.cf-input {
 .cf-links a {
   display: inline-flex; align-items: baseline; gap: 8px;
   font-size: clamp(14px, 0.834vw, 15.5px); line-height: 1.5; font-weight: 600;
-  color: var(--positive); text-decoration: none;
+  color: var(--mint-ink); text-decoration: none;
 }
 .cf-links a:hover { text-decoration: underline; }
 .cf-links .pr-arrow { width: 14px; height: 14px; flex: none; transform: translateY(1px); transition: transform var(--t-base) var(--ease-out); }
@@ -3171,17 +2597,20 @@ textarea.cf-input {
   font-size: clamp(16px, 0.99vw, 19px); line-height: 1.6; color: var(--muted);
 }
 
+/* The draft notice. It was a dashed orange box reading PLACEHOLDER — NOT
+   LEGAL COPY, which is an alarm; what it says now is a plain fact about the
+   page, so it is set as one: a white card on a hairline, in the page's ink. */
 .lg-warn {
   margin-top: min(80px, 4.167vw);
-  border: 1px dashed #d8c4bb; border-radius: 20px;
+  border: 1px solid var(--line); border-radius: 20px; background: var(--surface);
   padding: min(28px, 1.458vw) min(32px, 1.667vw);
   display: grid; gap: 10px;
 }
 .lg-warn-k {
   font-size: 12px; font-weight: 600; line-height: 1.33;
-  letter-spacing: 0.12em; text-transform: uppercase; color: #b0533a;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink);
 }
-.lg-warn-p { font-size: clamp(15px, 0.885vw, 17px); line-height: 1.65; color: #7a4433; }
+.lg-warn-p { font-size: clamp(15px, 0.885vw, 17px); line-height: 1.65; color: var(--muted); }
 
 .lg-split {
   margin-top: min(80px, 4.167vw);
@@ -3204,7 +2633,7 @@ textarea.cf-input {
 .lg-index-part {
   padding: min(26px, 1.354vw) 0 min(14px, 0.729vw);
   font-size: 11px; font-weight: 600; line-height: 1.4;
-  letter-spacing: 0.12em; text-transform: uppercase; color: var(--mint);
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--mint-ink);
 }
 .lg-index a {
   display: block; color: var(--muted);
@@ -3243,7 +2672,7 @@ textarea.cf-input {
 .lg-n {
   flex: none; width: 40px;
   font-size: clamp(15px, 0.885vw, 17px); font-weight: 600; line-height: 1.6;
-  color: var(--mint); font-variant-numeric: tabular-nums;
+  color: var(--mint-ink); font-variant-numeric: tabular-nums;
 }
 .lg-c { flex: 1 1 0; min-width: 0; display: grid; gap: 12px; }
 .lg-c h3 {
@@ -3268,7 +2697,9 @@ textarea.cf-input {
   font-size: clamp(15px, 0.885vw, 17px); line-height: 1.6;
 }
 .lg-def dt { flex: none; width: min(240px, 22.43%); font-weight: 600; color: var(--ink); }
-.lg-def dd { flex: 1 1 0; min-width: 0; margin: 0; color: #9aa8a3; }
+/* The frame greyed these out because they said "placeholder definition";
+   they are real definitions now, so they are set as body text. */
+.lg-def dd { flex: 1 1 0; min-width: 0; margin: 0; color: var(--muted); }
 
 .lg-callout {
   background: #e4efea; border-radius: min(24px, 1.25vw);
@@ -3277,7 +2708,7 @@ textarea.cf-input {
 }
 .lg-callout-k {
   font-size: 11px; font-weight: 600; line-height: 1.4;
-  letter-spacing: 0.14em; text-transform: uppercase; color: var(--mint);
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--mint-ink);
 }
 .lg-callout h3 {
   font-size: clamp(21px, 1.563vw, 30px); line-height: 1.22; letter-spacing: -0.026em;
@@ -3301,10 +2732,13 @@ textarea.cf-input {
 /* 1169 tall on the 1920, 184 over the words and 104 under them, with the wash
    stopping 32 short of the foot and the coins laid across the whole band. */
 .p2-hero {
-  position: relative; isolation: isolate;
+  position: relative;
+  isolation: isolate;
   min-height: min(var(--hhp, 1169px), var(--hh, 60.885vw));
-  padding-top: min(184px, 9.583vw); padding-bottom: var(--hpb, min(104px, 5.417vw));
-  display: grid; align-content: start;
+  padding-top: var(--hpt, min(184px, 9.583vw));
+  padding-bottom: var(--hpb, min(104px, 5.417vw));
+  display: grid;
+  align-content: start;
 }
 /* The page sets --wh already capped at its own height on the 1920, the way
    --hhp caps the band. It used to be capped here instead, at a flat 1137,
@@ -3449,7 +2883,8 @@ textarea.cf-input {
 }
 .p2-card-row {
   margin-top: min(56px, 2.917vw);
-  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr));
   gap: min(32px, 2.105%);
 }
 /* 485 x 400 with the gradient running top to bottom. The card clips, which is
@@ -3608,16 +3043,13 @@ textarea.cf-input {
    34, 32 between the cards or 24. All four are properties now. */
 .p2-sibs { padding-block: var(--spt, min(144px, 7.5vw)) var(--spb, min(144px, 7.5vw)); }
 .p2-sibs .prod-more { margin-top: var(--sg, min(48px, 2.5vw)); gap: var(--scg, min(32px, 2.105%)); }
-.p2-sibs .p2-head h2 {
-  font-size: clamp(27px, 2.292vw, var(--sh, 44px)); line-height: 1.02; max-width: min(760px, 50%);
-}
 .p2-sibs .prod-card {
   background: #d1cbc2; color: var(--ink);
   min-height: var(--sch, min(251px, 13.073vw));
   gap: min(22px, 1.146vw);
 }
 .p2-sibs .prod-card h3 { color: var(--ink); font-size: clamp(17px, 1.125vw, 21.6px); }
-.p2-sibs .prod-card p { color: rgba(5, 51, 41, 0.72); }
+.p2-sibs .prod-card p { color: rgba(5, 51, 41, 0.8); }   /* 4.44 at 0.72 on the sand; 5.2 now */
 .p2-sibs .prod-card .pr-link { color: var(--ink); }
 .p2-sibs .pr-title { display: grid; justify-items: start; gap: min(12px, 0.625vw); }
 /* The chip is the landing page's, in sand rather than in white at eight per
@@ -3634,7 +3066,7 @@ textarea.cf-input {
 
 @media (max-width: 1040px) {
   .p2-hero { min-height: 0; padding-top: calc(var(--nav-h) + min(72px, 8vw)); padding-bottom: min(72px, 8vw); }
-  .p2-hero-in h1, .p2-hero-lead, .p2-head h2, .p2-head > p, .p2-row-copy > p { max-width: 100%; }
+  .p2-hero-in h1, .p2-hero-lead, .p2-head h2, .p2-head > p:not(.eyebrow), .p2-row-copy > p { max-width: 100%; }
   .p2-coin { display: none; }
   .p2-coin:nth-of-type(4) { display: block; left: auto; right: -14%; top: auto; bottom: -6%; width: 46%; }
   .p2-card-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -3646,7 +3078,7 @@ textarea.cf-input {
 
 @media (max-width: 720px) {
   .p2-card-row { grid-template-columns: minmax(0, 1fr); }
-  .p2-card, .p2-card:nth-child(3) { aspect-ratio: 485 / 400; }
+  .p2-card, .p2-card:nth-child(3) { aspect-ratio: 485 / 400; grid-column: auto; }
   .p2-sibs .prod-card { min-height: 0; }
 }
 
@@ -3683,7 +3115,7 @@ textarea.cf-input {
   text-transform: uppercase; letter-spacing: 0.07em;
 }
 .p2-pn-head span {
-  font-size: clamp(9.5px, 0.573vw, 11px); font-weight: 600; line-height: 1.3; color: #6c7d78;
+  font-size: clamp(9.5px, 0.573vw, 11px); font-weight: 600; line-height: 1.3; color: #566661;
 }
 .p2-pn-head b {
   font-size: clamp(24px, 1.875vw, 36px); font-weight: 700; line-height: 1.1;
@@ -3695,11 +3127,11 @@ textarea.cf-input {
   padding: min(18px, 0.938vw); border-radius: min(14px, 0.729vw); background: #f0efec;
 }
 .p2-pn-row { display: grid; gap: 3px; min-width: 0; }
-.p2-pn-row span { font-size: clamp(9.5px, 0.573vw, 11px); font-weight: 600; color: #6c7d78; }
+.p2-pn-row span { font-size: clamp(9.5px, 0.573vw, 11px); font-weight: 600; color: #566661; }
 .p2-pn-row b {
   font-size: clamp(12px, 0.729vw, 14px); font-weight: 600; line-height: 1.35; color: #1e1818;
 }
-.p2-pn-note { font-size: clamp(11px, 0.677vw, 13px); line-height: 1.5; color: #6c7d78; }
+.p2-pn-note { font-size: clamp(11px, 0.677vw, 13px); line-height: 1.5; color: #566661; }
 .p2-pn-btn {
   display: grid; place-items: center; height: min(52px, 2.709vw); border-radius: var(--r-pill);
   background: #1e1818; color: #fff;
@@ -3714,7 +3146,6 @@ textarea.cf-input {
 .p2-cards .p2-head-mid + .p2-card-row { margin-top: min(48px, 2.5vw); }
 .p2-head-mid h2 { max-width: min(1100px, 72.368%); }
 .p2-head-mid > p:not(.eyebrow) { max-width: min(740px, 48.685%); }
-.p2-card-row { grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); }
 /* 744 x 560 rather than 485 x 400, so the copy sets bigger in it. */
 .p2-card-big { aspect-ratio: 744 / 560; }
 .p2-card-big .p2-card-copy { padding-inline: min(36px, 4.839%); }
@@ -3970,6 +3401,8 @@ textarea.cf-input {
   padding: 0 2.195% min(8px, 0.417vw);
 }
 .p2-mini-tan .p2-rrow + .p2-rrow { border-top-color: #aeaca4; }
+/* Its labels in a darker brown than the other cards' grey: 5.7:1 on the tan. */
+.p2-mini-tan .p2-rrow span { color: #3f3a38; }
 /* The props the frame lays over these cards. Each is placed by its own box
    and left to be cut by the card it sits on. */
 .p2-tcard-art {
@@ -3986,7 +3419,6 @@ textarea.cf-input {
 .p2-pn-lg .p2-pn-row span { font-size: clamp(11px, 0.786vw, 15.1px); }
 .p2-pn-lg .p2-pn-row b { font-size: clamp(14px, 1vw, 19.2px); }
 .p2-pn-lg .p2-pn-btn { height: min(62px, 3.229vw); font-size: clamp(14px, 1vw, 19.2px); }
-.p2-pn-wide { grid-column: 1 / -1; }
 
 @media (max-width: 1040px) {
   .p2-two-head h2, .p2-two-head > p:not(.eyebrow) { max-width: 100%; }
@@ -4020,19 +3452,22 @@ textarea.cf-input {
    frame fades it with a mask of its own, and the export carries that fade,
    so the picture goes in flat at the mask group's box. */
 .p2-hero-mid { display: grid; align-content: start; }
-.p2-hero { padding-top: var(--hpt, min(184px, 9.583vw)); }
-.p2-hero-mid .p2-hero-in h1 { max-width: var(--hw, min(1298px, 85.395%)); }
-.p2-hero-mid .p2-hero-lead { max-width: var(--hlw, min(700px, 46.053%)); }
 /* This hero sets a notch under the others — 96 over 102, and a lead on 31 —
    and spaces its column unevenly: 34 under the pill, 26 under the headline,
    38 over the button. The left-aligned heroes keep the column's even 19. */
 .p2-hero-mid .p2-hero-in { row-gap: 0; }
 .p2-hero-mid .p2-hero-in h1 {
+  max-width: var(--hw, min(1298px, 85.395%));
   margin-top: min(34px, 1.771vw);
-  font-size: clamp(38.4px, 5vw, 96px); line-height: 1.0625;
+  font-size: clamp(38.4px, 5vw, 96px);
+  line-height: 1.0625;
 }
 .p2-hero-mid .p2-hero-in > h1:first-child { margin-top: 0; }
-.p2-hero-mid .p2-hero-lead { margin-top: min(26px, 1.354vw); line-height: 1.55; }
+.p2-hero-mid .p2-hero-lead {
+  max-width: var(--hlw, min(700px, 46.053%));
+  margin-top: min(26px, 1.354vw);
+  line-height: 1.55;
+}
 .p2-hero-mid .p2-hero-in .cta-row { margin-top: min(38px, 1.979vw); }
 /* Some frames upper-case the eyebrow in the layer, so the caps are a style
    rather than the words. The pages that do it say so. */
@@ -4235,7 +3670,7 @@ textarea.cf-input {
 .p2-sw-l { display: grid; gap: min(3px, 0.157vw); min-width: 0; }
 .p2-sw-l i {
   font-style: normal; text-transform: uppercase; letter-spacing: 0.07em;
-  font-size: clamp(9.5px, 0.573vw, 11px); font-weight: 600; line-height: 1.273; color: #6c7d78;
+  font-size: clamp(9.5px, 0.573vw, 11px); font-weight: 600; line-height: 1.273; color: #566661;
 }
 .p2-sw-l b {
   font-size: clamp(17px, 1.25vw, 24px); font-weight: 700; line-height: 1.292;
@@ -4335,7 +3770,7 @@ textarea.cf-input {
 .cv-pn-head { display: grid; gap: min(10px, 0.521vw); }
 .cv-pn-head span {
   text-transform: uppercase; letter-spacing: 0.07em;
-  font-size: clamp(11px, 0.729vw, 14px); font-weight: 600; line-height: 1.572; color: #6c7d78;
+  font-size: clamp(11px, 0.729vw, 14px); font-weight: 600; line-height: 1.572; color: #566661;
 }
 .cv-pn-head b {
   font-size: clamp(30px, 2.396vw, 46px); font-weight: 700; line-height: 1.327;
@@ -4353,7 +3788,7 @@ textarea.cf-input {
 .cv-key { display: grid; gap: min(5px, 0.261vw); }
 .cv-key span {
   text-transform: uppercase; letter-spacing: 0.07em;
-  font-size: clamp(11px, 0.729vw, 14px); font-weight: 600; line-height: 1.572; color: #6c7d78;
+  font-size: clamp(11px, 0.729vw, 14px); font-weight: 600; line-height: 1.572; color: #566661;
 }
 .cv-key b {
   font-size: clamp(16px, 1.146vw, 22px); font-weight: 700; line-height: 1.319;
@@ -4361,7 +3796,7 @@ textarea.cf-input {
 }
 .cv-pn-note {
   margin-top: min(27px, 1.407vw);
-  font-size: clamp(14px, 0.99vw, 19px); line-height: 1.579; color: #6c7d78;
+  font-size: clamp(14px, 0.99vw, 19px); line-height: 1.579; color: #566661;
 }
 .cv-text { display: grid; justify-items: start; }
 .cv-text .eyebrow { margin-bottom: min(16px, 0.834vw); }
@@ -4400,7 +3835,11 @@ textarea.cf-input {
 /* ---- the siblings, drawn as columns rather than cards (648:1768) -------- */
 /* Convert's frame sets this band as three plain columns with a rule between
    them, where the other pages give each sibling a sand card. */
-.p2-sibs .p2-head h2 { line-height: var(--slh, 1.02); }
+.p2-sibs .p2-head h2 {
+  font-size: clamp(27px, 2.292vw, var(--sh, 44px));
+  max-width: min(760px, 50%);
+  line-height: var(--slh, 1.02);
+}
 .p2-sibs-div .prod-more { grid-template-columns: 31.360% 34.320% 34.320%; gap: 0; }
 .p2-sibs-div .prod-card {
   overflow: visible; background: none; color: var(--ink); border-radius: 0;
@@ -4472,7 +3911,7 @@ textarea.cf-input {
 .be-pn-head { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
 .be-pn-head span {
   text-transform: uppercase; letter-spacing: 0.07em;
-  font-size: clamp(9.5px, 0.573vw, 11px); font-weight: 600; line-height: 1.273; color: #6c7d78;
+  font-size: clamp(9.5px, 0.573vw, 11px); font-weight: 600; line-height: 1.273; color: #566661;
 }
 .be-pn-head b {
   font-size: clamp(19px, 1.459vw, 28px); font-weight: 700; line-height: 1.143;
@@ -4483,7 +3922,7 @@ textarea.cf-input {
   gap: min(15px, 0.782vw) min(20px, 1.042vw);
 }
 .be-kv { display: grid; gap: min(4px, 0.209vw); min-width: 0; }
-.be-kv span { font-size: clamp(9.5px, 0.573vw, 11px); font-weight: 600; line-height: 1.364; color: #6c7d78; }
+.be-kv span { font-size: clamp(9.5px, 0.573vw, 11px); font-weight: 600; line-height: 1.364; color: #566661; }
 .be-kv b {
   font-size: clamp(12px, 0.729vw, 14px); font-weight: 600; line-height: 1.429; color: var(--ink);
 }
@@ -4504,7 +3943,7 @@ textarea.cf-input {
 .be-dot-0 { background: #1e1818; }
 .be-dot-1 { background: var(--mint); }
 .be-pn-note {
-  font-size: clamp(11px, 0.729vw, 14px); line-height: 1.429; color: #6c7d78;
+  font-size: clamp(11px, 0.729vw, 14px); line-height: 1.429; color: #566661;
 }
 .be-pn-btn {
   display: grid; place-items: center; height: min(54px, 2.813vw); border-radius: var(--r-pill);
@@ -4583,10 +4022,6 @@ textarea.cf-input {
   content: ''; position: absolute; left: 0; top: 0;
   width: 1px; height: min(150px, 7.813vw); background: rgba(5, 51, 41, 0.16);
 }
-.be-step-art {
-  display: block; width: 97.636%; aspect-ratio: 468 / 680;
-  border-radius: min(32px, 1.667vw); background: var(--fill);
-}
 .be-step-n {
   margin-top: min(14px, 0.729vw);
   display: grid; place-items: center;
@@ -4619,7 +4054,15 @@ textarea.cf-input {
 }
 
 /* ---- what the step cards hold (the frame leaves them empty) ------------ */
-.be-step-art { position: relative; overflow: hidden; }
+.be-step-art {
+  display: block;
+  width: 97.636%;
+  aspect-ratio: 468 / 680;
+  border-radius: min(32px, 1.667vw);
+  background: var(--fill);
+  position: relative;
+  overflow: hidden;
+}
 .be-step-frag {
   position: absolute; left: 9.402%; top: 38.236%; width: 81.197%;
   padding: min(20px, 1.042vw); border-radius: min(18px, 0.938vw);
