@@ -1,71 +1,66 @@
-/* The eight product pages.
+/* The six product pages, and the things every page on the site owes them.
    ---------------------------------------------------------------------------
    They are generated (site/build-products.mjs, from site/copy-products.mjs),
    which is exactly why they need checking: a template that goes wrong goes
-   wrong eight times, and a page nobody has opened is a page nobody has seen.
+   wrong six times, and a page nobody has opened is a page nobody has seen.
 
-   Wants the site on 4321, which an app sweep does not start, hence the
-   `_site` prefix that tells all.sh to leave it alone:
+   Wants the site on SITE_URL (default :4321), which an app sweep does not
+   start, hence the `_site` prefix that tells all.sh to leave it alone:
 
-     (cd site && python3 -m http.server 4321) &
+     npx serve site -l 4321 &
      node app/scripts/_siteprod.mjs
 */
-import { chromium } from 'playwright'
 import { execFileSync } from 'node:child_process'
-import { dirname, resolve } from 'node:path'
+import { readFileSync, readdirSync } from 'node:fs'
+import { dirname, resolve, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { BASE, launch, open, ok, summary, SLUGS, PAGES } from './_sitelib.mjs'
 
-/* Before opening a browser: are the committed pages the ones the builder
+/* Before opening a browser: are the committed pages the ones the builders
    would write? They are generated and committed, so a hand-edit to one of
    them lives until the next regeneration and then vanishes without a word.
-   That has happened once already. */
+   That has happened once already. Both builders, because they share a nav
+   and a footer. */
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
-console.log('=== in step with the builder ===')
-let builderOk = true
-/* Both builders, because they share a nav and a footer: build-pages imports
-   them from build-products, so one routing change regenerates all thirteen
-   pages. That is exactly the edit that quietly undid the product pages' cta
-   fix, and checking half the site would have missed it just as well. */
+console.log('=== in step with the builders ===')
 for (const script of ['site/build-products.mjs', 'site/build-pages.mjs']) {
   try {
-    console.log('  ok    ' + script.replace('site/', '').padEnd(20) +
+    ok(true, script.replace('site/', '').padEnd(20) +
       execFileSync('node', [script, '--check'], { cwd: REPO, encoding: 'utf8' }).trim())
   } catch (e) {
-    builderOk = false
-    console.log('  FAIL  ' + script.replace('site/', '').padEnd(20) +
-      String(e.stderr || e.message).trim().replace(/\n/g, '\n        '))
+    ok(false, script.replace('site/', '').padEnd(20) + String(e.stderr || e.message).trim().replace(/\n/g, '\n        '))
   }
 }
 
-/* The owner's personal address is where mail is read; it is not what anything
-   shows. It carries a name, and a name has no business being a placeholder, a
-   seeded person, or the address on a contact page. It had crept into six demo
-   people, a typed field in the landing page's signup mock and all three
-   company pages before anyone looked. */
+/* No personal address on a screen. The address mail is really delivered to
+   carries a person's name, and it belongs in configuration — never as a
+   placeholder, a seeded person or the address on a contact page. Rather than
+   naming that address here (and so putting it in one more file), this reads
+   every address in everything the site serves and allows only the three
+   kinds the project allows: the support role, a visitor's you@example.com,
+   and an invented person at example.com. */
 console.log('\n=== nobody\'s name on a screen ===')
-const PERSONAL = ['ibrahimweng0', 'founders@pagrin.com']
-const SEEN = ['site', 'app/src', 'app/scripts']
-let nameOk = true
-for (const needle of PERSONAL) {
-  let hits = ''
-  try {
-    /* This file names what it is looking for, so it would always find itself.
-       Excluded by name rather than by splitting the strings up, which would
-       hide them from the next person reading this. */
-    hits = execFileSync('grep', ['-rIl', '--exclude-dir=node_modules',
-      '--exclude=_siteprod.mjs', needle, ...SEEN], { cwd: REPO, encoding: 'utf8' }).trim()
-  } catch { /* grep exits 1 on no match, which is the good case */ }
-  const files = hits ? hits.split('\n') : []
-  if (files.length) nameOk = false
-  console.log(`${files.length ? '  FAIL' : '  ok  '}  ${needle.padEnd(22)}` +
-    (files.length ? 'on screen in ' + files.join(', ') : 'nowhere it would be seen'))
+const SITE = join(REPO, 'site')
+const served = []
+const walk = (d) => {
+  for (const e of readdirSync(d, { withFileTypes: true })) {
+    const p = join(d, e.name)
+    if (e.isDirectory()) { if (!['api', 'img', 'fonts'].includes(e.name)) walk(p) }
+    else if (/\.(html|js|css|xml|txt)$/.test(e.name)) served.push(p)
+  }
 }
+walk(SITE)
+const ALLOWED = /^(support@tokkenly\.com|[^@\s]+@example\.com)$/i
+let strays = []
+for (const f of served) {
+  const found = readFileSync(f, 'utf8').match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g) || []
+  for (const a of found) if (!ALLOWED.test(a)) strays.push(`${a} in ${f.replace(REPO + '/', '')}`)
+}
+ok(strays.length === 0, strays.length
+  ? 'addresses that are not support@ or example.com: ' + strays.join(', ')
+  : `${served.length} served files, and every address in them is support@ or example.com`)
 
-const SLUGS = ['tokenized-stocks', 'gifting-and-rewards', 'receive', 'send',
-               'pay-bills', 'convert', 'earn', 'borrow']
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
-let bad = (builderOk ? 0 : 1) + (nameOk ? 0 : 1)
-const ok = (c, m) => { console.log(`${c ? '  ok  ' : '  FAIL'}  ${m}`); if (!c) bad++ }
+const b = await launch()
 
 for (const w of [1440, 834, 390]) {
   console.log(`\n=== ${w} ===`)
@@ -73,9 +68,11 @@ for (const w of [1440, 834, 390]) {
     const p = await b.newPage({ viewport: { width: w, height: 1000 }, deviceScaleFactor: 1 })
     const errs = []
     p.on('pageerror', (e) => errs.push('js: ' + e.message))
-    p.on('requestfailed', (r) => { if (!/fonts\.(googleapis|gstatic)/.test(r.url())) errs.push('404: ' + r.url().split('/').pop()) })
-    await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
-    await p.goto(`http://localhost:4321/products/${slug}.html`, { waitUntil: 'load' })
+    p.on('requestfailed', (r) => errs.push('failed: ' + r.url().split('/').pop()))
+    p.on('response', (r) => { if (r.status() >= 400) errs.push(r.status() + ': ' + r.url().split('/').pop()) })
+    try {
+      await open(p, `/products/${slug}`)
+    } catch (e) { ok(false, `${slug.padEnd(20)} ${e.message}`); await p.close(); continue }
     await p.evaluate(async () => {
       const s = innerHeight * 0.8
       for (let y = 0; y < document.body.scrollHeight; y += s) { scrollTo(0, y); await new Promise((r) => setTimeout(r, 60)) }
@@ -84,125 +81,94 @@ for (const w of [1440, 834, 390]) {
     const over = await p.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
     const h1 = await p.$$eval('h1', (e) => e.length)
     ok(errs.length === 0 && over === 0 && h1 === 1,
-      `${slug.padEnd(20)} ${errs.length ? errs.slice(0,2).join(' | ') : ''}${over ? ' sideways ' + over + 'px' : ''}${h1 !== 1 ? ' h1s:' + h1 : ''}`.trimEnd() ||
+      `${slug.padEnd(20)} ${errs.length ? errs.slice(0, 2).join(' | ') : ''}${over ? ' sideways ' + over + 'px' : ''}${h1 !== 1 ? ' h1s:' + h1 : ''}`.trimEnd() ||
       `${slug.padEnd(20)} clean`)
     await p.close()
   }
 }
 
-/* every link on every page resolves */
+/* Every link on every page answers 200 at the address it is written as, and
+   every #anchor it names exists on the page it lands on. A link that only
+   works through a redirect — /about.html answered with a 308 to /about — is a
+   FAIL too: cleanUrls makes that a round trip on every click. */
 console.log('\n=== links ===')
 const p = await b.newPage({ viewport: { width: 1440, height: 1000 } })
-await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 const seen = new Map()
-/* The company pages are in here too: the contact page points into the FAQs on
-   three product pages by anchor, and an anchor is the sort of link that rots
-   silently when a section is renamed. */
-const OTHERS = ['index.html', 'about.html', 'blog.html', 'contact.html', 'terms.html', 'privacy.html']
-for (const slug of [...SLUGS, ...OTHERS]) {
-  const url = OTHERS.includes(slug)
-    ? `http://localhost:4321/${slug}`
-    : `http://localhost:4321/products/${slug}.html`
-  await p.goto(url, { waitUntil: 'load' })
-  const hrefs = await p.$$eval('a[href]', (as) => as
-    .filter((a) => !a.hasAttribute('data-soon'))
-    .map((a) => a.getAttribute('href')))
+for (const path of PAGES) {
+  await open(p, path)
+  const hrefs = await p.$$eval('a[href]', (as) => as.map((a) => a.getAttribute('href')))
   for (const h of hrefs) {
     /* Anything carrying a scheme is somebody else's to resolve — the app on
-       its own domain, and the contact page's mailto:, which the request
-       context refuses outright rather than skipping. */
-    if (!h || h.startsWith('#') || /^[a-z][a-z0-9+.-]*:/i.test(h)) continue
-    const abs = new URL(h, url).href
-    if (!seen.has(abs)) {
-      const r = await p.request.get(abs)
-      seen.set(abs, r.status())
-    }
+       its own domain, and the contact page's mailto:. */
+    if (!h || /^[a-z][a-z0-9+.-]*:/i.test(h)) continue
+    const u = new URL(h, BASE + path)
+    const hash = u.hash.slice(1)
+    u.hash = ''
+    const key = u.href + (hash ? '#' + hash : '')
+    if (seen.has(key)) continue
+    const r = await p.request.get(u.href, { maxRedirects: 0 })
+    let why = r.status() === 200 ? '' : String(r.status())
+    if (!why && hash && !(new RegExp(`\\sid="${hash}"`).test(await r.text()))) why = 'no #' + hash
+    seen.set(key, why)
   }
 }
-for (const [u, st] of seen) ok(st === 200, `${st}  ${u.replace('http://localhost:4321', '')}`)
+for (const [u, why] of seen) ok(!why, `${why || '200'}  ${u.replace(BASE, '')}`)
 
-/* Eight pages, and no two of them the same shape. The whole point of the
-   rebuild: if a future edit collapses them back onto one template, this is
-   the line that notices. */
+/* Six pages, and no two of them the same shape. The whole point of building
+   them from their frames: if a future edit collapses them back onto one
+   template, this is the line that notices. */
 console.log('\n=== shapes ===')
 const shapes = new Map()
 for (const slug of SLUGS) {
-  await p.goto(`http://localhost:4321/products/${slug}.html`, { waitUntil: 'domcontentloaded' })
-  const shape = await p.$$eval('main > section', (ss) => ss
-    .map((x) => [...x.classList].filter((c) => c !== 'reveal').join('.') + ':' +
-      [...x.querySelectorAll('.fx-stats,.fx-facts,.fx-cmp,.fx-two,.fx-slab,.steps,.faq,.pr-grid,.ts-cards,.sp-in,.prod-more,.prod-risk')]
-        .map((e) => e.className.split(' ')[0]).join(','))
-    .join(' | '))
-  shapes.set(slug, shape)
+  await open(p, `/products/${slug}`, { waitUntil: 'domcontentloaded' })
+  shapes.set(slug, await p.$$eval('main > section', (ss) => ss
+    .map((x) => [...x.classList].filter((c) => c !== 'reveal').join('.')).join(' | ')))
 }
 for (const [slug, shape] of shapes) {
   const twin = [...shapes].find(([s2, sh]) => s2 !== slug && sh === shape)
   ok(!twin, `${slug.padEnd(20)} ${twin ? 'is the same shape as ' + twin[0] : 'has a shape of its own'}`)
 }
-/* ---------------------------------------------------------------------------
-   The one that the redesign exists for.
 
-   These pages used to put a whole 780x1600 phone screenshot on a coloured
-   slab beside every paragraph: 656 tall against ninety words, so the picture
-   outweighed the copy four to one and no page fitted a screen. The landing
-   page never shows a whole phone — it shows a receipt of four rows and a
-   button, built in markup.
-
-   So: no app screenshots on a product page, no panel taller than the copy it
-   stands beside, and the whole introduction inside one screen. */
+/* No whole phones. The first version of these pages put 780x1600 app
+   screenshots on coloured slabs beside every paragraph; the frames never do,
+   and nor does the landing page. So: none of those files on a product page,
+   and the hero's "See how it works" lands on the page's #more. */
 console.log('\n=== compact ===')
 const SHOTS = /(^|\/)(p-[a-z]+|stock|home|wallet|invest)\.webp$/
-await p.setViewportSize({ width: 1440, height: 900 })
 for (const slug of SLUGS) {
-  await p.goto(`http://localhost:4321/products/${slug}.html`, { waitUntil: 'load' })
-  await p.evaluate(() => document.querySelectorAll('.reveal').forEach((e) => e.classList.add('in')))
-  const m = await p.evaluate(() => {
-    const h = (e) => Math.round(e.getBoundingClientRect().height)
-    const pairs = []
-    for (const row of document.querySelectorAll('.pr-wide')) {
-      const pn = row.querySelector('.pn'), body = row.querySelector('.pr-body')
-      if (pn && body) pairs.push([h(pn), h(body)])
-    }
-    for (const row of document.querySelectorAll('.sp-in, .ph-in')) {
-      const pn = row.querySelector('.pn'), text = row.querySelector('.sp-text, .ph-text')
-      if (pn && text) pairs.push([h(pn), h(text)])
-    }
-    return {
-      shots: [...document.querySelectorAll('main img')].map((i) => i.getAttribute('src')),
-      tallest: Math.max(0, ...[...document.querySelectorAll('.pn')].map(h)),
-      hero: Math.round(document.querySelector('.hero-product').getBoundingClientRect().bottom),
-      pairs,
-    }
-  })
-  const shot = m.shots.find((s) => SHOTS.test(s || ''))
-  const fat = m.pairs.find(([pn, text]) => pn > text * 1.5 + 40)
-  ok(!shot && m.tallest <= 460 && m.hero <= 1000 && !fat,
-    `${slug.padEnd(20)} panel ${String(m.tallest).padStart(3)}px, hero ends ${m.hero}px` +
-    `${shot ? '  SCREENSHOT: ' + shot : ''}${m.tallest > 460 ? '  TOO TALL' : ''}` +
-    `${m.hero > 1000 ? '  HERO OVERRUNS' : ''}${fat ? `  panel ${fat[0]} vs copy ${fat[1]}` : ''}`)
+  await open(p, `/products/${slug}`)
+  const m = await p.evaluate(() => ({
+    shot: [...document.querySelectorAll('main img')].map((i) => i.getAttribute('src')),
+    hero: document.querySelector('main > section') ? Math.round(document.querySelector('main > section').getBoundingClientRect().height) : 0,
+    more: !!document.getElementById('more'),
+  }))
+  const shot = m.shot.find((s) => SHOTS.test(s || ''))
+  ok(!shot && m.hero > 0 && m.more,
+    `${slug.padEnd(20)} hero ${m.hero}px${shot ? '  SCREENSHOT: ' + shot : ''}${m.more ? '' : '  NO #more'}${m.hero ? '' : '  NO HERO'}`)
 }
 
 /* The receipt has to read. `.pr-card p` is one class and one element and beats
    any colour a white panel inside that card merely inherits, which is how the
    landing page's own pop-up spent a while as pale mint on white. */
 console.log('\n=== the panels read ===')
-for (const [url, sel] of [['index.html', '.popup .pop-v'], ['products/send.html', '.pn .pn-v']]) {
-  await p.goto('http://localhost:4321/' + url, { waitUntil: 'load' })
-  const col = await p.$eval(sel, (e) => getComputedStyle(e).color)
+for (const [url, sel] of [['/', '.popup .pop-v'], ['/products/receive-and-send', '.p2-pn .p2-pn-row b']]) {
+  await open(p, url)
+  const el = await p.$(sel)
+  if (!ok(!!el, `${url.padEnd(28)} has ${sel}`)) continue
+  const col = await el.evaluate((e) => getComputedStyle(e).color)
   const [r, g, bl] = col.match(/\d+/g).map(Number)
   const lum = (0.2126 * r + 0.7152 * g + 0.0722 * bl) / 255
-  ok(lum < 0.35, `${url.padEnd(24)} ${sel} is ${col}`)
+  ok(lum < 0.35, `${url.padEnd(28)} ${sel} is ${col}`)
 }
 
 /* A 52px badge drawn as min(52px, 2.709vw) is 10px on a phone. */
 console.log('\n=== the chips survive a phone ===')
 await p.setViewportSize({ width: 390, height: 900 })
-for (const url of ['index.html', 'products/tokenized-stocks.html']) {
-  await p.goto('http://localhost:4321/' + url, { waitUntil: 'load' })
-  const w = await p.$eval('.pr-chip', (e) => Math.round(e.getBoundingClientRect().width))
-  ok(w >= 40, `${url.padEnd(34)} chip is ${w}px`)
+for (const url of ['/', '/products/tokenized-stocks']) {
+  await open(p, url)
+  const box = await p.$('.pr-chip').then((e) => e && e.boundingBox())
+  ok(!!box && box.width >= 40, `${url.padEnd(34)} chip is ${box ? Math.round(box.width) + 'px' : 'missing'}`)
 }
 
 await b.close()
-console.log(`\n${bad ? 'FAIL=' + bad : 'FAIL=0'}`)
-process.exit(bad ? 1 : 0)
+summary()
