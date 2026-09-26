@@ -31,12 +31,17 @@ const ALLOWED = [
   ['.btn.is-busy', 'the spinner is a glyph on a pseudo-element'],
 ]
 
+/* The phone has chrome the desktop does not — the floating rail and the
+   panel it becomes — so it is walked too, at the routes that draw it. */
+const PHONE = ['/', '/?sheet=more', '/invest', '/activity', '/signin']
+
 const b = await launch()
 let bad = 0
+for (const [width, routes] of [[1440, ROUTES], [390, PHONE]])
 for (const theme of ['dark', 'light']) {
-  const p = await b.newPage({ viewport: { width: 1440, height: 900 } })
+  const p = await b.newPage({ viewport: { width, height: width < 900 ? 844 : 900 } })
   await seen(p, { theme })
-  for (const route of ROUTES) {
+  for (const route of routes) {
     await p.goto(B + route, { waitUntil: 'domcontentloaded' })
     await p.waitForTimeout(240)
     const found = await p.evaluate((allowed) => {
@@ -50,20 +55,53 @@ for (const theme of ['dark', 'light']) {
           return w > 0 && s['border' + d + 'Style'] !== 'none' &&
             c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent'
         })
-        if (!sides.length) continue
         // A focus ring is a ring, and nothing has focus during a walk — but
         // the active element can, so it is excused by name rather than by luck.
         if (el === document.activeElement) continue
-        out.push({
-          what: el.tagName.toLowerCase() + (el.className ? '.' + String(el.className).split(' ').join('.') : ''),
-          sides: sides.join(''),
-        })
+        const what = el.tagName.toLowerCase() + (el.className ? '.' + String(el.className).split(' ').join('.') : '')
+        if (sides.length) out.push({ what, sides: 'border on ' + sides.join('') })
+
+        // The two other ways a line gets drawn without a border, both of
+        // which this suite used to walk straight past.
+        //
+        // A hairline made of a box: an element (or its ::before/::after) one
+        // or two pixels thick in one direction, long in the other, painted.
+        // That is a divider whatever it is called — `.rule`, `.rail-rule`,
+        // `.chip-split` were all this.
+        const painted = (cs) => cs.backgroundColor !== 'rgba(0, 0, 0, 0)' &&
+          cs.backgroundColor !== 'transparent' && cs.backgroundImage === 'none'
+        const thin = (w, hgt) => (hgt > 0 && hgt <= 2 && w >= 12) || (w > 0 && w <= 2 && hgt >= 12)
+        const r = el.getBoundingClientRect()
+        if (painted(s) && s.display !== 'none' && s.visibility !== 'hidden' && thin(r.width, r.height))
+          out.push({ what, sides: `a ${Math.round(r.width)}x${Math.round(r.height)} painted box, which is a divider` })
+        for (const pseudo of ['::before', '::after']) {
+          const ps = getComputedStyle(el, pseudo)
+          if (ps.content === 'none' || ps.display === 'none' || !painted(ps)) continue
+          const pw = parseFloat(ps.width), ph = parseFloat(ps.height)
+          if (thin(pw, ph)) out.push({ what: what + pseudo, sides: `a ${pw}x${ph} painted pseudo-element` })
+        }
+
+        // A ring made of a shadow: no blur, no offset, only spread. An inset
+        // one is an outline drawn inside the box, and `.rail-pill`,
+        // `.rail-more` and `.rail-panel` each carried a 1px one. The only
+        // rings the rule allows are 2px — the focus ring and the error ring —
+        // so a 2px ring passes on a field in error or on whatever holds focus,
+        // and nothing else passes at all.
+        for (const one of s.boxShadow === 'none' ? [] : s.boxShadow.split(/,(?![^(]*\))/)) {
+          if (/rgba\([^)]*,\s*0\)|transparent/.test(one)) continue
+          const n = (one.replace(/rgba?\([^)]*\)/g, '').match(/-?[\d.]+px/g) ?? []).map(parseFloat)
+          const [x = 0, y = 0, blur = 0, spread = 0] = n
+          if (x || y || blur || spread <= 0) continue
+          const excused = spread === 2 &&
+            (el.matches('.field.error') || el.contains(document.activeElement))
+          if (!excused) out.push({ what, sides: `a ${spread}px ${/inset/.test(one) ? 'inset ' : ''}shadow ring` })
+        }
       }
       return out
     }, ALLOWED)
     for (const f of found) {
       bad++
-      check(`${theme} ${route}  ${f.what}`, false, `border on ${f.sides}`)
+      check(`${width} ${theme} ${route}  ${f.what}`, false, f.sides)
     }
   }
   await p.close()

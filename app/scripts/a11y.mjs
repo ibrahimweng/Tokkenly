@@ -322,7 +322,9 @@ console.log('AND THE TYPE IS THE TYPE, WITH NOBODY ELSE IN THE PATH')
       const w = s.getBoundingClientRect().width; s.remove(); return Math.round(w)
     }
     return {
-      faces: [...document.fonts].filter((x) => x.status === 'loaded').length,
+      // Geist's own faces: 'Geist Fallback' is a local() face with metric
+      // overrides (base.css), loaded from the machine rather than fetched.
+      faces: [...document.fonts].filter((x) => x.status === 'loaded' && x.family.replace(/["']/g, '') === 'Geist').length,
       hero: getComputedStyle(document.querySelector('.hero-figure')).fontFamily.split(',')[0],
       // Geist and the fallback are nothing like each other, which is the whole
       // reason this matters: a session that fell back was a different design.

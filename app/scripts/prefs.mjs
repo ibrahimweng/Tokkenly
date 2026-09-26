@@ -47,14 +47,14 @@ console.log('NAIRA BESIDE DOLLARS')
 await at('/transfer')
 ok('naira is there by default', /About \u20a6[\d,]+/.test(await text()))
 await acct()
-await p.getByRole('button', { name: /Show the other currency/ }).click(); await p.waitForTimeout(300)
+await p.getByRole('switch', { name: /Show the other currency/ }).click(); await p.waitForTimeout(300)
 await at('/transfer')
 ok('turning it off removes it', !/About \u20a6[\d,]+/.test(await text()))
 await at('/withdraw')
 ok('but Convert still shows naira, because that is what it is about',
    /₦/.test(await text()))
 await acct()
-await p.getByRole('button', { name: /Show the other currency/ }).click(); await p.waitForTimeout(300)
+await p.getByRole('switch', { name: /Show the other currency/ }).click(); await p.waitForTimeout(300)
 
 console.log('HIDE MY BALANCES  the switch, and where it sits')
 {
@@ -112,7 +112,7 @@ console.log('HIDE MY BALANCES  the switch, and where it sits')
   // control you cannot find again on purpose.
   await acct()
   ok('Preferences still holds it too',
-     (await p.getByRole('button', { name: /Hide my balances/ }).count()) === 1)
+     (await p.getByRole('switch', { name: /Hide my balances/ }).count()) === 1)
 }
 
 console.log('THE REMINDERS ON HOME  where they sit, and how to be rid of them')
@@ -212,7 +212,7 @@ console.log('NOTIFICATIONS')
 await at('/')
 const before = await p.evaluate(() => document.querySelector('.bell .dot')?.textContent ?? '0')
 await notifs()
-await p.getByRole('button', { name: /Money landing/ }).click(); await p.waitForTimeout(300)
+await p.getByRole('switch', { name: /Money landing/ }).click(); await p.waitForTimeout(300)
 await at('/')
 const after = await p.evaluate(() => document.querySelector('.bell .dot')?.textContent ?? '0')
 ok('turning one off changes what reaches you', before !== after, `${before} → ${after}`)
@@ -227,7 +227,7 @@ ok('and the section agrees with the bell',
    !/Adaeze|Payroll/i.test(await p.evaluate(() => document.querySelector('.alert-list')?.innerText ?? '')),
    (await p.evaluate(() => document.querySelector('.alert-list')?.innerText?.replace(/\n/g, ' ').slice(0, 60) ?? '')))
 await notifs()
-await p.getByRole('button', { name: /Money landing/ }).click(); await p.waitForTimeout(300)
+await p.getByRole('switch', { name: /Money landing/ }).click(); await p.waitForTimeout(300)
 
 console.log('ASK FOR THE PIN ABOVE')
 await at('/invest/aapl/invest')

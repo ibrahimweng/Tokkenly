@@ -125,7 +125,12 @@
    slipped, not as a pair. The mirror is now the field itself — flipped, and in
    the other colour — rather than which end of the card it is at. */
 .row.prods { align-items: stretch; }
-.card.prod { padding: 0; overflow: hidden; gap: 0; flex: 1 1 0; min-width: 0; }
+/* Side by side from the tablet up; stacked on a phone, where the row's own
+   rule makes every child full width. The flex is scoped rather than fought:
+   written for every width, it outweighed the phone's stacking rule and the two
+   cards collapsed to nothing. */
+.card.prod { padding: 0; overflow: hidden; gap: 0; min-width: 0; }
+@media (min-width: 900px) { .card.prod { flex: 1 1 0; } }
 .card.prod > *:not(.prod-art) { padding-inline: 24px; }
 .card.prod > .stack-8:first-child { padding-top: 24px; }
 /* A button that is width:100% and also has side margins is 48px wider than
@@ -395,6 +400,10 @@
 /* Danger is quiet on purpose. Signing out everywhere matters, but a filled
    orange button shouts louder than the action deserves. */
 .btn-destructive { background: var(--control); color: var(--negative); }
+/* Inverse (8.1): the button for a deep ground, where a dark one disappears.
+   Nothing draws one today, and it stays: it is one of the five variants the
+   file names, and states.mjs holds it to the file. */
+.btn-inverse { background: var(--sand); color: var(--ink); }
 .btn-sm { height: 40px; padding: 0 18px; width: auto; }
 .btn[disabled] { background: var(--off); color: var(--off-ink); cursor: not-allowed; }
 
@@ -2764,6 +2773,7 @@ th.right .th-sort { flex-direction: row-reverse; }
   .btn-secondary:hover { background: var(--control-pressed); }
   .btn-quiet:hover { background: var(--control); }
   .btn-destructive:hover { background: var(--control-pressed); }
+  .btn-inverse:hover { background: var(--sand-hover); }
   /* A button steps along its ramp and does nothing else. It used to rise a
      pixel and cast `--shadow-hover` — 20px of blur at 45% black — on the
      argument that a lighter fill alone is easy to miss on a page this dark.

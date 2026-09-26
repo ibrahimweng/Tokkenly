@@ -165,17 +165,17 @@ console.log('SECURITY IS NOT DECORATIVE  the switches used to toast and forget')
   await at(p, '/account/security')
   const on = () => p.evaluate(() =>
     [...document.querySelectorAll('.toggle-knob, .switch')].length)
-  await p.getByRole('button', { name: /Face ID/ }).click()
+  await p.getByRole('switch', { name: /Face ID/ }).click()
   await p.waitForTimeout(300)
   await at(p, '/invest')
   await at(p, '/account/security')
   const stuck = await p.evaluate(() => {
     const row = [...document.querySelectorAll('.set-row, .pref-row, button')]
       .find((e) => /Face ID/.test(e.textContent ?? ''))
-    return row?.getAttribute('aria-pressed')
+    return row?.getAttribute('aria-checked')
   })
-  ok('a switch survives leaving the screen', stuck === 'false', 'aria-pressed ' + stuck)
-  await p.getByRole('button', { name: /Face ID/ }).click()
+  ok('a switch survives leaving the screen', stuck === 'false', 'aria-checked ' + stuck)
+  await p.getByRole('switch', { name: /Face ID/ }).click()
   await p.waitForTimeout(200)
   void on
   await p.close()
