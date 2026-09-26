@@ -200,7 +200,10 @@ console.log('WHAT A THUMB CAN HIT')
   // pixels: shoot the button, make its glyph transparent, shoot it again. If
   // the two images are the same, the glyph was not being drawn.
   for (const [w, tag] of [[390, 'a phone'], [1440, 'a desktop']]) {
-    const g = await b.newPage({ viewport: { width: w, height: 900 } })
+    // bypassCSP: the built page's policy refuses inline styles, which is
+    // right for the product and would refuse the test's own style tag below.
+    const gc = await b.newContext({ viewport: { width: w, height: 900 }, bypassCSP: true })
+    const g = await gc.newPage()
     await seen(g)
     await g.goto(B + '/grow', { waitUntil: 'domcontentloaded' }); await g.waitForTimeout(400)
     const el = g.locator('.hint').first()
@@ -210,7 +213,7 @@ console.log('WHAT A THUMB CAN HIT')
     const blank = await el.screenshot()
     ok(`  and the question mark is drawn on ${tag}`, !shown.equals(blank),
        shown.equals(blank) ? 'its own circle is painted over it' : 'visible')
-    await g.close()
+    await gc.close()
   }
   await m.close()
 }

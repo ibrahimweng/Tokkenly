@@ -111,11 +111,13 @@ the pennies:
 | Amount | What happens |
 |---|---|
 | ends `.99` | the bank declines. Nothing is written and nothing leaves. |
-| ends `.98` | no answer in time. Recorded unsettled, and it shows up in Still settling. |
+| ends `.98` | no answer in time. Recorded unsettled, it sits in Still settling for two minutes, and is then reversed: the money comes back and so does the part of your limit it used. |
 | anything else | settles. |
 
 It applies to payments and trades — the movements with somebody else in the
-middle. Moving your own money between your own buckets has nobody to decline it.
+middle, including a send to another Tokkenly account, which can go unanswered
+like any other. Moving your own money between your own buckets has nobody to
+decline it.
 
 Signing in works the same way. Any email and password gets you in, except one:
 
