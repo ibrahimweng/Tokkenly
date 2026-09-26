@@ -71,6 +71,15 @@ const FLAT: Record<string, () => HTMLElement> = {
   disclosures: disclosuresScreen,
 }
 
+/** Every first segment screenFor answers to, besides the flat table. It is
+ *  what lets an address typed without a hash (/market/aapl) be read as the
+ *  route it names; a first segment missing from here would send that link to
+ *  Home instead, so a new place added below belongs in this list too. walk.mjs
+ *  opens a path per entry, typed without a hash, to hold the two together. */
+const NESTED = ['signin', 'signup', 'map', 'all', 'welcome', 'verify', 'statement', 'admin',
+  'send', 'spend', 'addmoney', 'convert', 'account', 'security', 'support', 'market', 'invest', 'grow']
+const knownFirst = (first: string): boolean => Object.hasOwn(FLAT, first) || NESTED.includes(first)
+
 function screenFor(r: Route): HTMLElement {
   const [a, b, c] = r.parts
 
@@ -291,4 +300,4 @@ recall()
 applyTheme()
 subscribe(() => render(current()))
 onBreakpointChange(() => render(current()))
-start(render)
+start(render, knownFirst)

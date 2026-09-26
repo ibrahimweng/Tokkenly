@@ -72,7 +72,25 @@ export function setParams(params: Record<string, string>): void {
 /** The address last handed to the handler by the browser's own events. */
 let seen = ''
 
-export function start(fn: Handler): void {
+/** The hash an address typed without one stands for.
+ *
+ *  The host rewrites every path to index.html (vercel.json), so a link like
+ *  https://host/market/aapl?sheet=x reaches the app with no hash at all. It
+ *  used to be reset to `#/`, which meant the rewrite saved the visit and then
+ *  threw away where it was going. Now the path and its query become the hash
+ *  route they name, /market/aapl?sheet=x → #/market/aapl?sheet=x. A path the
+ *  app has no screen for (`known` says which first segments it has) still
+ *  falls back to Home rather than to "No screen at that address", because
+ *  the stray path came from outside — a mistyped link, a crawler — not from
+ *  anywhere in the product. */
+export function fromPathname(pathname: string, search: string, known: (first: string) => boolean): string {
+  const path = pathname.replace(/\/index\.html$/, '/').replace(/\/+$/, '') || '/'
+  const first = path.split('/').filter(Boolean)[0]
+  if (first !== undefined && !known(first)) return '#/'
+  return '#' + path + (search.length > 1 ? search : '')
+}
+
+export function start(fn: Handler, known: (first: string) => boolean = () => false): void {
   handler = fn
   // Back, forward and an address typed into the bar fire both `popstate` and
   // `hashchange`, and each used to render the whole app — twice per step back,
@@ -85,7 +103,9 @@ export function start(fn: Handler): void {
   }
   addEventListener('hashchange', onNav)
   addEventListener('popstate', onNav)
-  if (!location.hash) history.replaceState(null, '', '#/')
+  // No hash: translate the path into the route it names, and put the address
+  // bar on the root so every address after this one is a plain hash change.
+  if (!location.hash) history.replaceState(null, '', '/' + fromPathname(location.pathname, location.search, known))
   seen = location.hash
   handler(current())
 }

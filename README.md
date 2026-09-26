@@ -58,8 +58,9 @@ Three details that matter.
   opposite and set `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD` to stop a download that
   never happened; it is gone.)
 - **Every path is rewritten to `index.html`**, so a link typed without a hash
-  gets the app rather than a 404. The router reads only the hash, so such a
-  link opens at Home; it does not deep-link.
+  gets the app rather than a 404. With no hash, the router reads the path as
+  the route it names, so `/market/aapl?sheet=x` opens `#/market/aapl?sheet=x`;
+  only a path the app has no screen for opens at Home.
 - **Headers.** Both configs send `X-Frame-Options: DENY` and
   `frame-ancestors 'none'`, `nosniff`, a strict referrer policy, a
   Permissions-Policy that turns off camera, microphone, location and payment,

@@ -50,8 +50,10 @@ export default defineConfig({
   // Absolute, not './'. The catch-all rewrite in vercel.json serves index.html
   // for any path, so a link typed without a hash, like /market/aapl, gets the
   // app rather than a 404. A relative base would look for the assets under
-  // /market/ and find nothing. The router reads only the hash, so that page
-  // opens at Home: the rewrite saves the visit, it does not deep-link.
+  // /market/ and find nothing. With no hash, the router reads the path as the
+  // route it names (fromPathname in src/router.ts): /market/aapl?sheet=x
+  // becomes #/market/aapl?sheet=x, and only a path with no screen behind it
+  // opens at Home. So the rewrite is what makes a plain path deep-link.
   base: '/',
   plugins: [contentSecurityPolicy()],
   // localhost only. The dev server used to listen on every interface, which
