@@ -1,4 +1,5 @@
 import { h } from '../ui'
+import { onTeardown } from '../scope'
 
 /* ---------------------------------------------------------------------------
    A question mark, and the shortest true answer.
@@ -134,11 +135,12 @@ export function popover(trigger: HTMLElement, label: string, ...body: (Node | nu
 
   // The tree is rebuilt on every state change, so the trigger this panel is
   // pinned to is routinely no longer on the page. Without this the panel
-  // outlives the row it was explaining.
-  const watch = setInterval(() => { if (!trigger.isConnected) closeHint() }, 200)
+  // outlives the row it was explaining. It closes when the drawing it was
+  // opened on is replaced (see scope.ts), rather than by checking five times
+  // a second whether it has been.
+  onTeardown(closeHint)
 
   open = () => {
-    clearInterval(watch)
     document.removeEventListener('click', away, true)
     document.removeEventListener('keydown', key)
     removeEventListener('scroll', move, true)

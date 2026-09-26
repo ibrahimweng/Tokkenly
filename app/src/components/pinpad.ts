@@ -1,5 +1,15 @@
 import { h } from '../ui'
 import { icon } from '../icons'
+import { scope } from '../scope'
+
+/** The digits of a PIN part-way typed, carried across a redraw. The whole
+ *  screen is rebuilt whenever anything changes — a payout landing somewhere
+ *  else is enough — and the pad used to come back empty in the middle of
+ *  somebody's second digit. Held only for a moment, and only for the pad
+ *  asking the same question; cleared the instant the fourth digit lands or
+ *  an attempt is refused. Never written anywhere. */
+let carry: { hint: string; value: string; at: number } | null = null
+const CARRY_MS = 30_000
 
 /** Four dots and a pad. One component behind three jobs — changing the PIN,
  *  unlocking the app, and signing off a payment — because a PIN that looks
@@ -24,7 +34,9 @@ export function pinPad(opts: {
   /** A line under the dots that is not an error — what this PIN is for. */
   hint?: string
 }): PinPad {
-  let value = ''
+  const hint = opts.hint ?? ''
+  let value = carry && carry.hint === hint && Date.now() - carry.at < CARRY_MS ? carry.value : ''
+  const keep = () => { carry = value.length && value.length < 4 ? { hint, value, at: Date.now() } : null }
   const dots = h('div', { class: 'pin-dots', role: 'status', ariaLabel: 'No digits entered' })
   const note = h('span', { class: 'pin-note muted t-caption', text: opts.hint ?? '' })
 
@@ -44,6 +56,7 @@ export function pinPad(opts: {
       note.textContent = opts.hint ?? ''
     }
     value += d
+    keep()
     paint()
     if (value.length === 4) {
       const full = value
@@ -53,6 +66,7 @@ export function pinPad(opts: {
   }
   const back = () => {
     value = value.slice(0, -1)
+    keep()
     paint()
   }
 
@@ -75,26 +89,29 @@ export function pinPad(opts: {
   // before anybody has touched a key. Neither is right on a screen where the
   // pad is the only thing there is to do.
   //
-  // Self-cleaning: this app replaces a screen wholesale rather than unmounting
-  // it, so the listener drops itself the moment its pad leaves the document.
+  // It ends with the drawing it belongs to (see scope.ts). It used to remove
+  // itself on the first keypress after its pad had gone, so every pad ever
+  // drawn stayed subscribed until somebody pressed a key. The check on the
+  // element stays for a pad swapped out within one drawing.
   const onKey = (e: KeyboardEvent) => {
-    if (!el.isConnected) { document.removeEventListener('keydown', onKey); return }
+    if (!el.isConnected) return
     const t = e.target as HTMLElement | null
     // Somebody typing into a field is typing into a field.
     if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return
     if (/^\d$/.test(e.key)) { press(e.key); e.preventDefault() }
     else if (e.key === 'Backspace') { back(); e.preventDefault() }
   }
-  document.addEventListener('keydown', onKey)
+  document.addEventListener('keydown', onKey, { signal: scope() })
 
   paint()
 
   return {
     el,
     value: () => value,
-    reset: () => { value = ''; paint() },
+    reset: () => { value = ''; carry = null; paint() },
     reject: (message: string) => {
       value = ''
+      carry = null
       paint()
       note.textContent = message
       note.classList.add('bad')

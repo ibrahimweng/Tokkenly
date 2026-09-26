@@ -2,6 +2,7 @@ import { h } from '../ui'
 import { icon } from '../icons'
 import { parseAmount, USD, type Unit } from '../format'
 import { isMobile } from '../responsive'
+import { scope } from '../scope'
 
 export interface AmountComposer {
   el: HTMLElement
@@ -232,7 +233,10 @@ export function amountComposer(opts: {
   )
 
   queueMicrotask(draw)
-  addEventListener('resize', draw)
+  // Ends with the drawing it belongs to (see scope.ts). It used to be added
+  // on every render and never removed, so each redraw of a composer left
+  // another listener redrawing a canvas that was no longer on the page.
+  addEventListener('resize', draw, { signal: scope() })
 
   return {
     el,

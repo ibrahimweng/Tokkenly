@@ -1,5 +1,6 @@
 import { h } from '../ui'
 import { usd, pct } from '../format'
+import { onTeardown } from '../scope'
 
 /** One chart, used everywhere the product draws a value over time. It was two
  *  near-copies before — a comb of fixed 5px bars on Home and another on the
@@ -432,10 +433,14 @@ export function barChart(spec: ChartSpec): HTMLElement {
   // preview runs in has ResizeObserver.
   if (typeof ResizeObserver !== 'undefined') {
     let last = 0
-    new ResizeObserver(() => {
+    const watch = new ResizeObserver(() => {
       const n = fitBars(bars.clientWidth)
       if (n !== last) { last = n; hide(); draw() }
-    }).observe(bars)
+    })
+    watch.observe(bars)
+    // Disconnected with the drawing it belongs to (see scope.ts). Nothing
+    // ever disconnected it, so every redraw of Home kept one more observer.
+    onTeardown(() => watch.disconnect())
   }
   draw()
   // The first measurement can be taken before the column has settled, which

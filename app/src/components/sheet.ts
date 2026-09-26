@@ -4,6 +4,7 @@ import { closeSheet } from '../router'
 import { say } from '../announce'
 import { spinCoin } from './coin'
 import { breathe } from '../beam'
+import { scope } from '../scope'
 
 /* ---------------- what makes a sheet a dialog ----------------
 
@@ -106,15 +107,13 @@ export function sheet(title: string, ...body: (Node | false | null)[]): HTMLElem
     },
   }, panel)
 
-  // Escape closes, and the listener retires with the sheet it belongs to.
+  // Escape closes, and the listener retires with the drawing it belongs to
+  // (see scope.ts) rather than on the next keypress after the sheet has gone.
   const onKey = (e: KeyboardEvent) => {
-    if (!scrim.isConnected) {
-      removeEventListener('keydown', onKey)
-      return
-    }
+    if (!scrim.isConnected) return
     if (e.key === 'Escape') closeSheet()
   }
-  addEventListener('keydown', onKey)
+  addEventListener('keydown', onKey, { signal: scope() })
   asDialog(scrim, panel, closeSheet)
   return scrim
 }
@@ -139,10 +138,10 @@ export function modalOver(
     on: { click: (e) => { if (e.target === scrim) onClose() } },
   }, panel)
   const onKey = (e: KeyboardEvent) => {
-    if (!scrim.isConnected) { removeEventListener('keydown', onKey); return }
+    if (!scrim.isConnected) return
     if (e.key === 'Escape') onClose()
   }
-  addEventListener('keydown', onKey)
+  addEventListener('keydown', onKey, { signal: scope() })
   asDialog(scrim, panel, onClose)
   // The screen this is drawn over goes inert — out of the tab order, out of
   // the accessibility tree and deaf to the pointer. Child by child, because
