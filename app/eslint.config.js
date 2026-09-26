@@ -17,9 +17,10 @@ export default tseslint.config(
 
   js.configs.recommended,
 
-  // The product: TypeScript in the browser.
+  // The product: TypeScript in the browser. vite.config.ts rides along for
+  // the TypeScript parser; it runs in Node, hence the Node globals below.
   {
-    files: ['src/**/*.ts'],
+    files: ['src/**/*.ts', '*.ts'],
     extends: [tseslint.configs.recommended],
     languageOptions: { globals: globals.browser },
     rules: {
@@ -35,7 +36,7 @@ export default tseslint.config(
   // Config files and the scripts that drive a browser: Node, with the
   // callbacks passed to page.evaluate running in the page.
   {
-    files: ['*.{js,ts}', 'scripts/**/*.{mjs,js}'],
+    files: ['*.js', 'scripts/**/*.{mjs,js}'],
     extends: [tseslint.configs.disableTypeChecked],
     languageOptions: { globals: { ...globals.node, ...globals.browser } },
     rules: {
@@ -46,6 +47,8 @@ export default tseslint.config(
       'no-empty': ['error', { allowEmptyCatch: true }],
     },
   },
+
+  { files: ['*.ts'], languageOptions: { globals: globals.node } },
 
   // figma/node.js is not a module: it is pasted into a use_figma script that
   // declares the names it uses (PARTS, missing, byName, styleFor, rgb, figma).
