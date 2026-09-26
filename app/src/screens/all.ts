@@ -2,7 +2,7 @@ import { h, link, swap } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader, eyebrow } from '../components/shell'
 import { card, cardHead } from '../components/bits'
-import { SCREENS, PLACE_LABEL, type Place, type Destination } from '../destinations'
+import { visibleScreens, PLACE_LABEL, type Place, type Destination } from '../destinations'
 import { searchField, searchNote } from '../components/search'
 import { rank, onlyNear } from '../match'
 import { current, go } from '../router'
@@ -15,6 +15,8 @@ export function allScreen(): HTMLElement {
   const FIELDS = (d: Destination) => [d.label, d.also, d.hint, PLACE_LABEL[d.place]]
   const order: Place[] = ['home', 'wallet', 'market', 'grow', 'spend', 'history', 'account']
 
+  // Staff pages only for staff: see `visibleScreens`.
+  const SCREENS = visibleScreens()
   const setTerm = (v: string) => go('/all' + (v ? '?q=' + encodeURIComponent(v) : ''))
 
   // The grid narrows as you type; the address is only touched on Enter,

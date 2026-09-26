@@ -100,11 +100,17 @@ export function longWhen(iso: string): string {
   )
 }
 
-export function reference(): string {
+/** A new reference, drawn again until `taken` says nobody has it. Six
+ *  characters from thirty-four is a billion and a half of them, which is
+ *  plenty and is still not a guarantee — two movements sharing a receipt is
+ *  the kind of fault nobody finds until support does. */
+export function reference(taken: (ref: string) => boolean = () => false): string {
   const abc = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789'
-  let s = ''
-  for (let i = 0; i < 6; i++) s += abc[Math.floor(Math.random() * abc.length)]
-  return 'TKN-' + s
+  for (;;) {
+    let s = ''
+    for (let i = 0; i < 6; i++) s += abc[Math.floor(Math.random() * abc.length)]
+    if (!taken('TKN-' + s)) return 'TKN-' + s
+  }
 }
 
 /** Reads "1,234.5" or "$1,234.50" as a number. Empty is zero, never NaN. */

@@ -195,15 +195,15 @@ export const DESTINATIONS: Destination[] = [
   { label: 'Operations', to: '/admin', place: 'account', kind: 'place', primary: true, staff: true,
     also: 'admin ops console staff switches providers reconciliation audit launch pilot kill switch',
     hint: 'Staff view: switches, providers, reconciliation' },
-  { label: 'Provider status', to: '/admin/status', place: 'account', kind: 'screen',
+  { label: 'Provider status', to: '/admin/status', place: 'account', kind: 'screen', staff: true,
     also: 'admin health up down switch chainlink 0x didit base cdp outage' },
-  { label: 'Feature switches', to: '/admin/switches', place: 'account', kind: 'screen',
+  { label: 'Feature switches', to: '/admin/switches', place: 'account', kind: 'screen', staff: true,
     also: 'admin kill switch turn off buying selling funding gas asset' },
-  { label: 'Reconciliation', to: '/admin/breaks', place: 'account', kind: 'screen',
+  { label: 'Reconciliation', to: '/admin/breaks', place: 'account', kind: 'screen', staff: true,
     also: 'admin breaks differences provider records balances' },
-  { label: 'Audit history', to: '/admin/audit', place: 'account', kind: 'screen',
+  { label: 'Audit history', to: '/admin/audit', place: 'account', kind: 'screen', staff: true,
     also: 'admin staff actions who did what log' },
-  { label: 'Launch readiness', to: '/admin/launch', place: 'account', kind: 'screen',
+  { label: 'Launch readiness', to: '/admin/launch', place: 'account', kind: 'screen', staff: true,
     also: 'admin gates before launch legal contracts limits security review' },
   { label: 'Your wallet', to: '/account/wallet', place: 'account', kind: 'screen', primary: true,
     also: 'address base smart account export key you hold your own key custody gas sponsored invite',
@@ -253,6 +253,12 @@ export const DESTINATIONS: Destination[] = [
  *  reads this; the breadcrumbs read the full list, because a trail has to be
  *  able to name a row you are standing on. */
 export const SCREENS: Destination[] = DESTINATIONS.filter((d) => !d.item)
+
+/** The pages this person may see. The console's six were in the index of
+ *  every screen and in the search, for every customer — a door to the staff
+ *  view, with the address on it. They are there for staff and nobody else. */
+export const visibleScreens = (): Destination[] =>
+  SCREENS.filter((d) => !d.staff || state.staff)
 
 export const PLACE_LABEL: Record<Place, string> = {
   home: 'Home', wallet: 'Wallet', market: 'Invest',
@@ -330,12 +336,12 @@ export interface Hit { label: string; to: string; group: string; hint?: string }
 export function search(raw: string): Hit[] {
   const q = norm(raw.trim())
   if (!q) {
-    return SCREENS.filter((d) => d.kind !== 'screen' || d.primary)
+    return visibleScreens().filter((d) => d.kind !== 'screen' || d.primary)
       .slice(0, 8)
       .map((d) => ({ label: d.label, to: d.to, group: PLACE_LABEL[d.place], hint: d.hint }))
   }
   const hits: Hit[] = []
-  for (const d of SCREENS) {
+  for (const d of visibleScreens()) {
     const hay = norm(d.label + ' ' + (d.also ?? '') + ' ' + PLACE_LABEL[d.place])
     if (hay.includes(q)) hits.push({ label: d.label, to: d.to, group: PLACE_LABEL[d.place], hint: d.hint })
   }

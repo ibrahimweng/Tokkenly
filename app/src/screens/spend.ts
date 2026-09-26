@@ -6,18 +6,18 @@ import {
 } from '../components/bits'
 import { table } from '../components/table'
 import { composerScreen } from '../components/composer'
-import { state, movementCeiling, ceilingLabel, switchOn, payAsset, type Activity } from '../state'
+import { state, movementCeiling, ceilingLabel, switchOn, payAsset, purseHolds, sideRate, type Activity } from '../state'
 import { usd, naira, when, activityLabel, NGN } from '../format'
-import { current, go, openSheet } from '../router'
+import { current, go, openSheet, setParams } from '../router'
 import { isSplit } from '../responsive'
 import { payRow } from '../components/purse'
 import { ASSETS, assetOf, type Asset } from '../assets'
 import {
   NETWORKS, networkOf, guessNetwork, validNumber, digitsOf, prettyNumber,
-  plansFor, planOf, DISCOS, discoOf, validMeter, resolveMeter, prettyMeter,
-  BILLERS, billerOf, billersOf, packOf, validAccount, resolveAccount,
-  EXAMS, examOf, SERVICES, serviceOf, subPlanOf,
-  type Network, type Plan, type MeterKind, type Kind, type Biller,
+  plansFor, DISCOS, discoOf, validMeter, resolveMeter, prettyMeter,
+  BILLERS, billerOf, billersOf, validAccount, resolveAccount,
+  EXAMS, SERVICES, serviceOf,
+  type Network, type MeterKind, type Kind, type Biller, type Way,
 } from '../bills'
 
 /* ---------------------------------------------------------------------------
@@ -58,8 +58,6 @@ import {
    keep arrives as naira through Add money; this place spends it.
    --------------------------------------------------------------------------- */
 
-type Way = 'airtime' | 'data' | 'electricity' | 'tv' | 'internet' | 'betting'
-  | 'exam' | 'subscription'
 
 const on = (): boolean => switchOn('spend.bills')
 
@@ -88,18 +86,6 @@ const KINDS: Partial<Record<Way, Kind>> = { tv: 'tv', internet: 'internet', bett
 
 const wayLabel = (w: Way): string => WAYS.find((x) => x.key === w)!.label
 
-/** What the thing taking the money is called, in the words that trade uses.
- *  A bouquet is not sold by a network and an exam PIN is not sold by a
- *  supplier — one noun per thing, which is rule 37 applied to the party on the
- *  other side of the payment. */
-export const whoLabel = (w: Way): string =>
-  w === 'electricity' ? 'Supplier'
-    : w === 'tv' || w === 'internet' ? 'Provider'
-    : w === 'betting' ? 'Bookmaker'
-    : w === 'exam' ? 'Exam body'
-    : w === 'subscription' ? 'Service'
-    : 'Network'
-
 /** What a network takes in one recharge. A real ceiling, and lower than the
  *  account's own on any verified account — so it is stated separately rather
  *  than folded into the limit, which is about you and not about them. */
@@ -114,21 +100,29 @@ const METER_CAP = 200000
  *  compare against the figure in front of them is not a ceiling they can
  *  work within — so it is converted once, here, and floored to a whole naira
  *  because the composer must never offer a figure the wallet cannot cover. */
-const nairaCeiling = (own: number, asset: Asset = 'usdc'): number =>
+const nairaCeiling = (own: number, asset: Asset = 'usdc'): number => {
   // Paid from naira, what stops you first is the naira you hold — but the
   // monthly ceiling still applies, because item 06 is one limit policy for
   // every outflow and a bill paid out of naira is an outflow. It is a dollar
-  // figure, so it is brought into naira to be compared here.
-  Math.min(own,
-    Math.floor(Math.min(asset === 'ngn' ? state.naira / state.ngnPerUsd : state.cash,
-                        movementCeiling()) * state.ngnPerUsd))
+  // figure, so it is brought into naira to be compared here, at the rate the
+  // review will use.
+  //
+  // Paid from a stablecoin, it is that one stablecoin. It was `cash`, both of
+  // them added together, and the bill then came out of one.
+  const rate = sideRate('sell')
+  const limit = Math.floor(movementCeiling() * rate)
+  return asset === 'ngn'
+    ? Math.min(own, Math.floor(purseHolds('ngn')), limit)
+    : Math.min(own, Math.floor(purseHolds(asset) * rate), limit)
+}
 
 /** Which ceiling is actually doing the stopping, so the message names the real
  *  one. Four can bind here — the money, the month, the single payment, and the
  *  network's own limit — and the first three already have one sentence each. */
 const capLabel = (own: number, whose: string, asset: Asset = 'usdc'): string => {
-  const held = asset === 'ngn' ? state.naira / state.ngnPerUsd : state.cash
-  if (own < Math.floor(Math.min(held, movementCeiling()) * state.ngnPerUsd)) return whose
+  const rate = sideRate('sell')
+  const held = asset === 'ngn' ? purseHolds('ngn') / rate : purseHolds(asset)
+  if (own < Math.floor(Math.min(held, movementCeiling()) * rate)) return whose
   if (asset === 'ngn' && held <= movementCeiling()) return 'What you hold in naira'
   return ceilingLabel(held, 'The most you can spend here')
 }
@@ -141,7 +135,7 @@ const spendAssets = (): Asset[] => ASSETS.map((a) => a.key)
 /** What each balance would have to give up for a bill of this many naira.
  *  Naira pays naira; a stablecoin pays the dollars it converts to. */
 const needsFor = (ngn: number) => (a: Asset): number =>
-  a === 'ngn' ? ngn : ngn / state.ngnPerUsd
+  a === 'ngn' ? ngn : ngn / sideRate('sell')
 
 /** Which balance an address names, falling back to the preference. */
 const assetFrom = (q: URLSearchParams): Asset =>
@@ -375,7 +369,8 @@ function numberPanel(w: Way): (Node | null)[] {
 function airtimeScreen(num: string): HTMLElement {
   const q = current().query
   const net = networkOf(q.get('net') ?? '') ?? guessNetwork(num) ?? NETWORKS[0]
-  const rate = state.ngnPerUsd
+  // What a stablecoin is sold at to buy these naira: the review's rate.
+  const rate = sideRate('sell')
   // The address wins over the preference, so a link that names a balance opens
   // on it. Nothing in the product writes one today; the review reads `a` and
   // so should the screen that fills it, or the two disagree about the same
@@ -398,7 +393,8 @@ function airtimeScreen(num: string): HTMLElement {
     pay: {
       assets: spendAssets(),
       get: () => asset,
-      set: (a: Asset) => { asset = a },
+      // A different balance is a different ceiling: drawn again around it.
+      set: (a: Asset) => { if (a !== asset) { asset = a; setParams({ a }) } },
       needs: needsFor(1000),
     },
     note: 'Goes straight onto the number. Usually within a few seconds.',
@@ -650,7 +646,8 @@ function meterPanel(disco: string, kind: MeterKind, start: string): (Node | null
 function meterCompose(disco: string, kind: MeterKind, meter: string): HTMLElement {
   const d = discoOf(disco)!
   const m = resolveMeter(meter)!
-  const rate = state.ngnPerUsd
+  // What a stablecoin is sold at to buy these naira: the review's rate.
+  const rate = sideRate('sell')
   let asset: Asset = assetFrom(current().query)
   const max = nairaCeiling(METER_CAP, asset)
   const steps = [
@@ -675,7 +672,8 @@ function meterCompose(disco: string, kind: MeterKind, meter: string): HTMLElemen
     pay: {
       assets: spendAssets(),
       get: () => asset,
-      set: (a: Asset) => { asset = a },
+      // A different balance is a different ceiling: drawn again around it.
+      set: (a: Asset) => { if (a !== asset) { asset = a; setParams({ a }) } },
       needs: needsFor(10000),
     },
     note: kind === 'prepaid'
@@ -1077,95 +1075,8 @@ export function spendScreen(sub?: string): HTMLElement {
     dataPanel(to, net))
 }
 
-/* --------------------------------------------------------- read by sheets -- */
-
-/** What a review is about, rebuilt from the address it was opened at. A dialog
- *  that cannot be reconstructed from the route is a dialog that loses its
- *  subject on a refresh — and this one carries the only copy of what somebody
- *  is about to pay for. */
-export interface BillOrder {
-  way: Way
-  /** What the activity row will be called. */
-  what: string
-  /** Who takes the money. */
-  who: string
-  /** What it is for, as a person would read it back. */
-  target: string
-  naira: number
-  /** What you get for the money, when it is a thing rather than an amount. A
-   *  bundle's size and length is the whole product; airtime and units are the
-   *  figure itself and have nothing to add. */
-  note?: string
-  /** Whose meter it is, as the disco's register has it. The reason the check
-   *  exists, so it is stated again at the commit. */
-  holder?: string
-  kind?: MeterKind
-  /** Which balance pays for it. Carried on the address so the review is
-   *  rebuildable from it — a dialog that lost this on a refresh would be a
-   *  dialog about a different payment. */
-  asset: Asset
-}
-
-export function billFrom(q: URLSearchParams): BillOrder | null {
-  const way = q.get('way') as Way | null
-  const asset = assetFrom(q)
-  if (way === 'airtime') {
-    const to = digitsOf(q.get('to') ?? '')
-    const net = networkOf(q.get('net') ?? '') ?? guessNetwork(to)
-    const v = Number(q.get('v') ?? 0)
-    if (!validNumber(to) || !net || !(v > 0)) return null
-    return { way, what: 'Airtime', who: net.name, target: prettyNumber(to), naira: v, asset }
-  }
-  if (way === 'data') {
-    const to = digitsOf(q.get('to') ?? '')
-    const p: Plan | undefined = planOf(q.get('plan') ?? '')
-    if (!validNumber(to) || !p) return null
-    const net = networkOf(q.get('net') ?? '') ?? guessNetwork(to) ?? NETWORKS[0]
-    return { way, what: 'Data', who: net.name, target: prettyNumber(to),
-             naira: p.price, note: `${p.size} for ${p.lasts}`, asset }
-  }
-  // The four added in 11g.78. Each rebuilds from the address alone, because a
-  // review that cannot be rebuilt from the route is a review that loses its
-  // subject on a refresh — and it is the only copy of what is about to be paid.
-  if (way === 'tv' || way === 'internet' || way === 'betting') {
-    const b = billerOf(q.get('biller') ?? '')
-    if (!b) return null
-    const id = b.text ? (q.get('id') ?? '').trim() : (q.get('id') ?? '').replace(/[^0-9]/g, '')
-    const who = resolveAccount(b.key, id)
-    if (!who) return null
-    const what = way === 'tv' ? 'TV' : way === 'internet' ? 'Internet' : 'Betting'
-    if (b.packs) {
-      const pack = packOf(q.get('pack') ?? '')
-      if (!pack || !b.packs.some((x) => x.key === pack.key)) return null
-      return { way, what, who: b.name, target: id, naira: pack.price,
-               note: `${pack.name} for ${pack.lasts}`, holder: who.name, asset }
-    }
-    const v = Number(q.get('v') ?? 0)
-    if (!(v > 0)) return null
-    return { way, what, who: b.name, target: id, naira: v, holder: who.name, asset }
-  }
-  if (way === 'exam') {
-    const e = examOf(q.get('exam') ?? '')
-    if (!e) return null
-    return { way, what: 'Exam PIN', who: e.body, target: e.name, naira: e.price,
-             note: e.what, asset }
-  }
-  if (way === 'subscription') {
-    const svc = serviceOf(q.get('svc') ?? '')
-    const pl = subPlanOf(q.get('plan') ?? '')
-    if (!svc || !pl || !svc.plans.some((x) => x.key === pl.key)) return null
-    return { way, what: 'Subscription', who: svc.name, target: pl.name, naira: pl.price,
-             note: pl.what + ' · every month', asset }
-  }
-  if (way === 'electricity') {
-    const d = discoOf(q.get('disco') ?? '')
-    const meter = (q.get('meter') ?? '').replace(/[^0-9]/g, '')
-    const m = resolveMeter(meter)
-    const v = Number(q.get('v') ?? 0)
-    if (!d || !m || !(v > 0)) return null
-    const kind: MeterKind = q.get('kind') === 'postpaid' ? 'postpaid' : 'prepaid'
-    return { way, what: 'Electricity', who: d.name, target: prettyMeter(meter), naira: v,
-             holder: m.name, kind, asset }
-  }
-  return null
-}
+/* --------------------------------------------------------- read by sheets --
+   `billFrom` and the order it builds used to live here and were imported by
+   the review dialog, which put arithmetic about bills inside a screen. They
+   are in bills.ts now, with the rest of what a bill is. */
+export { billFrom, whoLabel, type BillOrder } from '../bills'

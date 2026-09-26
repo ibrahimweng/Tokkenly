@@ -223,16 +223,74 @@ const book: Posting[] = []
 
 export const postings = (): readonly Posting[] => book
 
+/** Which accounts are allowed to go below nothing.
+ *
+ *  Everything outside the product can: a bank we have debited, the market, a
+ *  network, the opening position — their balances here are only the part of
+ *  them this record has seen, and a negative figure means money came from
+ *  them. So can the two accounts that are a debt by definition, the loan and
+ *  the interest on it, and the desk, whose two halves are apart for a moment
+ *  in every conversion. What cannot is anything that is yours to spend or ours
+ *  to hold: a purse, what you have lent, what is in custody for you, and the
+ *  accounts money waits in between two banks. A movement that would take one
+ *  of those below nothing is a movement spending money that is not there, and
+ *  it is refused here, under every screen and every action, rather than
+ *  trusted to each of them. */
+const MAY_GO_NEGATIVE = new Set(['loan', 'loan.int', 'desk.usd', 'desk.ngn', 'interest'])
+export const mayGoNegative = (id: string): boolean =>
+  MAY_GO_NEGATIVE.has(id) || account(id).book === 'theirs'
+
+/** A cached balance per account, kept up to date as postings are written.
+ *  Every figure on every screen is a balance, and deriving each of them by
+ *  walking every posting ever made meant the wallet was read by scanning the
+ *  whole book a dozen times per render. The book is still the truth — this is
+ *  rebuilt from it on a reset or a restore — it is just not re-read for every
+ *  question. */
+const balances = new Map<string, number>()
+/** And the running totals by kind, for `paidOf`, for the same reason. */
+const paid = new Map<string, number>()
+/** Bumped on every posting, so a reading derived from the book (a holding, a
+ *  cost basis) can be kept until the book has actually changed. */
+let version = 0
+export const ledgerVersion = (): number => version
+
+const round6 = (n: number): number => Math.round(n * 1e6) / 1e6
+
+function apply(p: Posting): void {
+  for (const e of p.entries) {
+    balances.set(e.account, round6((balances.get(e.account) ?? 0) + e.amount))
+    if (p.kind && isPurse(e.account)) paid.set(p.kind, round6((paid.get(p.kind) ?? 0) + e.amount))
+  }
+  version += 1
+}
+
+/** Why a movement was refused. Thrown, not returned: the action that asked
+ *  for it cannot have meant to carry on. */
+export class Refused extends Error {}
+
 /** Sums to zero in every currency it touches, or it does not happen.
  *
  *  Thrown rather than logged. A prototype that quietly tolerates an unbalanced
  *  movement is a prototype that will ship one, and the whole reason this file
- *  exists is that the product used to invent money without noticing. */
-export function post(p: Posting): Posting {
+ *  exists is that the product used to invent money without noticing.
+ *
+ *  Three more refusals sit beside that one. An amount that is not a finite
+ *  number is refused before anything is summed: NaN compares false against
+ *  every tolerance, so a movement of NaN dollars used to pass the zero-sum
+ *  check and write NaN into a wallet. A posting with no entries is refused,
+ *  because it records nothing. And a posting that would take one of your
+ *  balances, or one of ours, below nothing is refused — see
+ *  `MAY_GO_NEGATIVE` — which is the floor under every overdraw a screen
+ *  failed to stop. `floor: false` is for replaying history only. */
+export function post(p: Posting, opts: { floor?: boolean } = {}): Posting {
+  if (!p.entries.length) throw new Refused(`${p.what}: a movement with no entries records nothing.`)
   const per = new Map<Currency, number>()
   for (const e of p.entries) {
+    if (typeof e.amount !== 'number' || !Number.isFinite(e.amount)) {
+      throw new Refused(`${p.what}: ${String(e.amount)} is not an amount of money.`)
+    }
     const c = account(e.account).currency
-    per.set(c, Math.round(((per.get(c) ?? 0) + e.amount) * 1e6) / 1e6)
+    per.set(c, round6((per.get(c) ?? 0) + e.amount))
   }
   for (const [currency, sum] of per) {
     if (Math.abs(sum) > 1e-6) {
@@ -242,27 +300,56 @@ export function post(p: Posting): Posting {
       )
     }
   }
+  // What each account would hold afterwards, summed per account first so a
+  // posting that touches the same account twice is judged on where it ends.
+  const net = new Map<string, number>()
+  for (const e of p.entries) net.set(e.account, (net.get(e.account) ?? 0) + e.amount)
+  // The replay of history is the one caller that turns the floor off: the
+  // opening position is worked out so the replay *ends* at today's balances,
+  // and a row from last month can pass through a figure below nothing on the
+  // way without anybody having spent money that was not there.
+  for (const [id, delta] of opts.floor === false ? [] : net) {
+    if (delta >= 0 || mayGoNegative(id)) continue
+    const after = round6((balances.get(id) ?? 0) + delta)
+    // A hundredth of a cent of slack, for the rounding every division leaves.
+    if (after < -1e-4) {
+      throw new Refused(`${p.what}: ${account(id).name} holds ${round6(balances.get(id) ?? 0)}, `
+        + `which is less than the ${round6(-delta)} this would take out of it.`)
+    }
+  }
   book.push(p)
+  apply(p)
   return p
 }
 
-/** What an account holds now. Derived every time, from the postings. */
+/** What an account holds now. Read off the running balance, which is kept in
+ *  step with the postings by `post` and rebuilt from them by `reset` and
+ *  `restore`. */
 export function balanceOf(id: string): number {
-  let n = 0
-  for (const p of book) for (const e of p.entries) if (e.account === id) n += e.amount
-  return Math.round(n * 1e6) / 1e6
+  return balances.get(id) ?? 0
+}
+
+/** Undoes one movement by writing its opposite.
+ *
+ *  Nothing is deleted from the book, because a record that can be rewritten
+ *  is not a record: a payment that went out and came back is two lines, and
+ *  both of them happened. Every posting under the reference is negated as it
+ *  was written, so each one still balances in each of its currencies. */
+export function reverse(ref: string, what: string, at = new Date().toISOString()): void {
+  const mine = book.filter((x) => x.ref === ref)
+  // Newest first, so a two-stage movement is unwound in the order it would
+  // have to be: the naira back to the desk before the dollars back to you.
+  for (const x of [...mine].reverse()) {
+    post({ ref, at, what, kind: x.kind ? x.kind + '.reversed' : undefined,
+           entries: x.entries.map((e) => ({ account: e.account, amount: -e.amount })) })
+  }
 }
 
 /** A running total of one kind of movement, for the two or three figures that
  *  are a history rather than a balance — interest paid to you so far is not
  *  the balance of anything, because it was spent the moment it landed. */
 export function paidOf(kind: string): number {
-  let n = 0
-  for (const p of book) {
-    if (p.kind !== kind) continue
-    for (const e of p.entries) if (isPurse(e.account)) n += e.amount
-  }
-  return Math.round(n * 1e6) / 1e6
+  return paid.get(kind) ?? 0
 }
 
 /** The naira half of a conversion, and the rate it was honoured at.
@@ -285,10 +372,6 @@ export function conversion(ref: string): { naira: number; rate: number } | null 
   }
   return rate && ngn ? { naira: ngn, rate } : null
 }
-
-/** Everything that touched one account, newest first. */
-export const touching = (id: string): Posting[] =>
-  book.filter((p) => p.entries.some((e) => e.account === id)).reverse()
 
 /** The proof. Every account, its book, and what it holds — which is the whole
  *  claim this file makes, in a form somebody can check. Within a currency the
@@ -341,7 +424,20 @@ export function held(): { ticker: Currency; shares: number }[] {
  *  which lot went — which is also what makes the figure stable when they sell
  *  half and the price moves afterwards.
  */
+const basisCache = new Map<Currency, { at: number; value: { cost: number; shares: number; each: number } }>()
+
 export function basis(ticker: Currency): { cost: number; shares: number; each: number } {
+  // Walking the book is the only honest way to arrive at this figure, and it
+  // only changes when the book does — so it is walked once per change rather
+  // than once per render of every screen that shows a gain.
+  const hit = basisCache.get(ticker)
+  if (hit && hit.at === version) return hit.value
+  const value = walkBasis(ticker)
+  basisCache.set(ticker, { at: version, value })
+  return value
+}
+
+function walkBasis(ticker: Currency): { cost: number; shares: number; each: number } {
   let shares = 0
   let cost = 0
   for (const p of book) {
@@ -378,5 +474,79 @@ export const setOpeningCost = (ticker: Currency, each: number): void => {
   openingCost.set(ticker, each)
 }
 
-/** Wipes the book. Only the seed uses this, and only before anything is read. */
-export function reset(): void { book.length = 0; openingCost.clear() }
+/** Wipes the book. Only the seed and a restore use this, and only before
+ *  anything is read. */
+export function reset(): void {
+  book.length = 0
+  openingCost.clear()
+  balances.clear()
+  paid.clear()
+  basisCache.clear()
+  version += 1
+}
+
+/* ---------------------------------------------------------------------------
+   Keeping it.
+
+   The book used to be rebuilt from the seed on every load, so a reload undid
+   every payment made since — and a receipt opened after the reload pointed at
+   a movement that no longer existed. It is kept now, as the postings
+   themselves plus the names of the accounts made on the way, because those
+   are the whole of it: every balance is derived from them.
+   --------------------------------------------------------------------------- */
+
+export interface Snapshot {
+  postings: Posting[]
+  names: [string, string][]
+  opening: [Currency, number][]
+}
+
+export function snapshot(): Snapshot {
+  return {
+    postings: book.map((p) => ({ ...p, entries: p.entries.map((e) => ({ ...e })) })),
+    names: [...made.values()].filter((a) => a.id.includes(':')).map((a) => [a.id, a.name]),
+    opening: [...openingCost.entries()],
+  }
+}
+
+/** Puts a kept book back, or refuses it whole. Every posting goes back through
+ *  `post`, so a saved book that does not balance, holds a NaN, or overdraws a
+ *  purse is not restored at all — half a ledger is worse than the seed. */
+export function restore(s: Snapshot): boolean {
+  const kept = book.slice()
+  const keptOpening = [...openingCost.entries()]
+  try {
+    if (!s || !Array.isArray(s.postings) || !Array.isArray(s.names) || !Array.isArray(s.opening)) {
+      throw new Error('not a book')
+    }
+    reset()
+    for (const [id, name] of s.names) {
+      if (typeof id === 'string' && typeof name === 'string') account(id, name)
+    }
+    for (const [t, each] of s.opening) {
+      if (typeof t === 'string' && Number.isFinite(each)) openingCost.set(t, each)
+    }
+    for (const p of s.postings) {
+      if (!p || typeof p.ref !== 'string' || typeof p.at !== 'string' || typeof p.what !== 'string'
+          || !Array.isArray(p.entries)) throw new Error('not a posting')
+      post({
+        ref: p.ref, at: p.at, what: p.what,
+        kind: typeof p.kind === 'string' ? p.kind : undefined,
+        rate: typeof p.rate === 'number' && Number.isFinite(p.rate) ? p.rate : undefined,
+        pair: typeof p.pair === 'string' ? p.pair : undefined,
+        entries: p.entries.map((e) => ({ account: String(e.account), amount: Number(e.amount) })),
+      }, { floor: false })
+    }
+    // History may pass below nothing on the way (see `post`); where it ends
+    // may not.
+    for (const [id, n] of balances) {
+      if (n < -1e-4 && !mayGoNegative(id)) throw new Error(id + ' ends below nothing')
+    }
+    return true
+  } catch {
+    reset()
+    for (const [t, each] of keptOpening) openingCost.set(t, each)
+    for (const p of kept) { book.push(p); apply(p) }
+    return false
+  }
+}

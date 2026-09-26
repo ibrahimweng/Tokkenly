@@ -6,10 +6,18 @@ import { table } from '../components/table'
 import { amount } from '../components/bits'
 import { find, discount, refusals, priceImpact, minReceived, GUARDS } from '../catalogue'
 import { stockScreen } from './stock'
-import { state, holding, nairaAside, tradeFee, maxInvestable, movementCeiling, ceilingLabel, switchOn, assetOn, priced, payAsset } from '../state'
-import { DOLLARS, type Asset } from '../assets'
+import { state, holding, nairaAside, tradeFee, maxInvestable, movementCeiling, ceilingLabel, switchOn, assetOn, priced, payAsset, purseHolds } from '../state'
+import { DOLLARS, assetOf, type Asset } from '../assets'
 import { usd, pct, signed, shares as fmtShares, when } from '../format'
-import { go, openSheet } from '../router'
+import { go, openSheet, current, setParams } from '../router'
+
+/** Which stablecoin this composer is spending, off its address — so choosing
+ *  the other one rebuilds the screen around that balance, and a reload keeps
+ *  the choice. */
+const chosen = (): Asset => {
+  const a = current().query.get('a') as Asset | null
+  return a && DOLLARS.includes(a) ? a : payAsset()
+}
 
 function orders(ticker?: string): HTMLElement {
   const rows = state.activity.filter((a) => a.kind === 'trade' && (!ticker || a.who === find(ticker)?.name))
@@ -42,7 +50,12 @@ export function investScreen(ticker: string): HTMLElement {
   // in dollars, and a pill you cannot press is worse than a pill that is not
   // there. Somebody whose default is naira gets the stablecoin they hold most
   // of, and can say otherwise here.
-  let asset: Asset = payAsset()
+  let asset: Asset = chosen()
+  // Everything the composer caps at is what this one balance can pay, fee
+  // included. It used to be both stablecoins added together, while the
+  // purchase came out of one of them.
+  const most = maxInvestable(asset)
+  const name = assetOf(asset)!.name
   return composerScreen({
     place: 'market',
     base: () => stockScreen(ticker),
@@ -53,20 +66,20 @@ export function investScreen(ticker: string): HTMLElement {
     title: 'Buy',
     eyebrow: ['Cash available', usd(state.cash)],
     cardLabel: 'How much',
-    cardRight: 'Cash ' + usd(state.cash),
-    initial: Math.min(500, maxInvestable()),
+    cardRight: name + ' ' + usd(purseHolds(asset)),
+    initial: Math.min(500, most),
     // The fee has to fit in the cash too, so the ceiling is what is left once
     // it does — not the balance, which would put every "All" over the top.
     // Two ceilings, and the lower one is the real one: the cash that is there
     // once the fee fits, and what the account is allowed to move.
-    max: Math.min(maxInvestable(), movementCeiling()),
-    maxLabel: ceilingLabel(maxInvestable(), 'The most you can invest, fee included'),
-    note: nairaAside(Math.min(500, state.cash)) ?? undefined,
+    max: Math.min(most, movementCeiling()),
+    maxLabel: ceilingLabel(most, `The most your ${name} can invest, fee included`),
+    note: nairaAside(Math.min(500, most)) ?? undefined,
     quick: [
       { label: usd(100, false), value: 100 },
       { label: usd(250, false), value: 250 },
       { label: usd(500, false), value: 500 },
-      { label: 'All', value: state.cash },
+      { label: 'All', value: most },
     ],
     summary: (v) => {
       // What the gap to the real share is worth on this order. It was stated
@@ -105,8 +118,11 @@ export function investScreen(ticker: string): HTMLElement {
       : 'You are buying part of a share. Its value can fall as well as rise, and you can get back less than you put in.',
     risky: true,
     action: (v) => `Buy ${usd(v)} of ${c.name}`,
-    pay: { assets: DOLLARS, get: () => asset, set: (a: Asset) => { asset = a },
-           needs: () => 0 },
+    pay: { assets: DOLLARS, get: () => asset,
+           set: (a: Asset) => { if (a !== asset) { asset = a; setParams({ a }) } },
+           // The smallest order and its fee. A balance that cannot cover even
+           // that says so on its pill.
+           needs: () => GUARDS.minOrder + tradeFee(GUARDS.minOrder) },
     onAction: (v) => openSheet('invest-review', { v: String(v), t: c.ticker, a: asset }),
     right: (v) => {
       const held = holding(c.ticker)
@@ -150,7 +166,7 @@ export function sellScreen(ticker: string): HTMLElement {
   if (!c || !held) return shell('market', pageHeader('Nothing to sell'))
   const maxValue = held.shares * c.price
   // And which one the proceeds land in.
-  let asset: Asset = payAsset()
+  let asset: Asset = chosen()
   return composerScreen({
     place: 'market',
     base: () => stockScreen(ticker),

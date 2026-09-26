@@ -30,6 +30,7 @@ export function go(to: string, replace = false): void {
   const url = '#' + to
   if (replace) history.replaceState(null, '', url)
   else history.pushState(null, '', url)
+  seen = location.hash
   handler(current())
 }
 
@@ -58,10 +59,33 @@ export function replaceSheet(name: string, params: Record<string, string> = {}):
   go(r.path + '?' + q.toString(), true)
 }
 
+/** Sets values on the current address without adding a history entry, for a
+ *  choice that changes what a screen can offer — which balance is paying, say
+ *  — so the screen is rebuilt around it and a reload keeps it. */
+export function setParams(params: Record<string, string>): void {
+  const r = current()
+  const q = new URLSearchParams(r.query)
+  for (const [k, v] of Object.entries(params)) q.set(k, v)
+  go(r.path + '?' + q.toString(), true)
+}
+
+/** The address last handed to the handler by the browser's own events. */
+let seen = ''
+
 export function start(fn: Handler): void {
   handler = fn
-  addEventListener('hashchange', () => handler(current()))
-  addEventListener('popstate', () => handler(current()))
+  // Back, forward and an address typed into the bar fire both `popstate` and
+  // `hashchange`, and each used to render the whole app — twice per step back,
+  // with every timer and quote that implies. One render per address change:
+  // whichever event arrives first handles it, and the other finds nothing new.
+  const onNav = (): void => {
+    if (location.hash === seen) return
+    seen = location.hash
+    handler(current())
+  }
+  addEventListener('hashchange', onNav)
+  addEventListener('popstate', onNav)
   if (!location.hash) history.replaceState(null, '', '#/')
+  seen = location.hash
   handler(current())
 }

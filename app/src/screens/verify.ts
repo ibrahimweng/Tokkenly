@@ -101,7 +101,13 @@ export function verifyScreen(step: string): HTMLElement {
         kv('Date of birth', p.dob),
         kv('Number', (state.kyc.method ?? 'NIN') + ' ending ' + (state.kyc.last4 ?? '••••'))),
       h('button', { class: 'btn btn-primary', text: 'Yes, check it',
-        on: { click: () => { actions.finishVerification(); go('/verify/done') } } }),
+        // Simulated: there is no Didit to ask, so answering finishes it — unless
+        // Didit is marked down in the console, in which case the check waits,
+        // as the provider's own fallback says it does.
+        on: { click: () => {
+          if (actions.finishVerification()) go('/verify/done')
+          else toast('Didit is not responding, so your check is queued. Nothing else changes.')
+        } } }),
       h('button', { class: 'btn btn-quiet', text: 'Back', on: { click: () => go('/verify/number') } }))
   }
 

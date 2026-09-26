@@ -12,6 +12,8 @@
  *  record that resets.
  */
 
+import { assetOf, type Asset } from './assets'
+
 /* --------------------------------------------------------------- networks --
    The four that matter, and the prefixes that identify them. A person types
    their own number from memory and should not then have to tell us which
@@ -509,4 +511,125 @@ export const subPlanOf = (key: string): SubPlan | undefined => {
     if (p) return p
   }
   return undefined
+}
+
+/** Every way a bill can be paid, as an address names it. */
+export type Way = 'airtime' | 'data' | 'electricity' | 'tv' | 'internet' | 'betting'
+  | 'exam' | 'subscription'
+
+/** What the thing taking the money is called, in the words that trade uses.
+ *  A bouquet is not sold by a network and an exam PIN is not sold by a
+ *  supplier — one noun per thing, which is rule 37 applied to the party on the
+ *  other side of the payment. */
+export const whoLabel = (w: Way): string =>
+  w === 'electricity' ? 'Supplier'
+    : w === 'tv' || w === 'internet' ? 'Provider'
+    : w === 'betting' ? 'Bookmaker'
+    : w === 'exam' ? 'Exam body'
+    : w === 'subscription' ? 'Service'
+    : 'Network'
+
+/* ---------------------------------------------------------------- orders --
+   What a review is about, read off its address. Here rather than on the
+   Spend screen because the review dialog needs it too, and a dialog that
+   imports arithmetic from a screen is a dialog that breaks when the screen is
+   redrawn. */
+
+/** What a review is about, rebuilt from the address it was opened at. A dialog
+ *  that cannot be reconstructed from the route is a dialog that loses its
+ *  subject on a refresh — and this one carries the only copy of what somebody
+ *  is about to pay for. */
+export interface BillOrder {
+  way: Way
+  /** What the activity row will be called. */
+  what: string
+  /** Who takes the money. */
+  who: string
+  /** What it is for, as a person would read it back. */
+  target: string
+  naira: number
+  /** What you get for the money, when it is a thing rather than an amount. A
+   *  bundle's size and length is the whole product; airtime and units are the
+   *  figure itself and have nothing to add. */
+  note?: string
+  /** Whose meter it is, as the disco's register has it. The reason the check
+   *  exists, so it is stated again at the commit. */
+  holder?: string
+  kind?: MeterKind
+  /** Which balance pays for it. Carried on the address so the review is
+   *  rebuildable from it — a dialog that lost this on a refresh would be a
+   *  dialog about a different payment. */
+  asset: Asset
+}
+
+export function billFrom(q: URLSearchParams, fallback: Asset = 'usdc'): BillOrder | null {
+  const way = q.get('way') as Way | null
+  const named = q.get('a') ?? ''
+  const asset: Asset = assetOf(named) ? named as Asset : fallback
+  // An amount off an address is whatever somebody typed into the address bar,
+  // so it has to be a finite, positive number before it is anything else.
+  // `Number('Infinity') > 0` is true, and so was `v > 0` on its own.
+  const amount = (k = 'v'): number => {
+    const n = Number(q.get(k) ?? 0)
+    return Number.isFinite(n) && n > 0 ? Math.round(n) : 0
+  }
+  if (way === 'airtime') {
+    const to = digitsOf(q.get('to') ?? '')
+    const net = networkOf(q.get('net') ?? '') ?? guessNetwork(to)
+    const v = amount()
+    if (!validNumber(to) || !net || !(v > 0)) return null
+    return { way, what: 'Airtime', who: net.name, target: prettyNumber(to), naira: v, asset }
+  }
+  if (way === 'data') {
+    const to = digitsOf(q.get('to') ?? '')
+    const p: Plan | undefined = planOf(q.get('plan') ?? '')
+    if (!validNumber(to) || !p) return null
+    const net = networkOf(q.get('net') ?? '') ?? guessNetwork(to) ?? NETWORKS[0]
+    return { way, what: 'Data', who: net.name, target: prettyNumber(to),
+             naira: p.price, note: `${p.size} for ${p.lasts}`, asset }
+  }
+  // The four added in 11g.78. Each rebuilds from the address alone, because a
+  // review that cannot be rebuilt from the route is a review that loses its
+  // subject on a refresh — and it is the only copy of what is about to be paid.
+  if (way === 'tv' || way === 'internet' || way === 'betting') {
+    const b = billerOf(q.get('biller') ?? '')
+    if (!b) return null
+    const id = b.text ? (q.get('id') ?? '').trim() : (q.get('id') ?? '').replace(/[^0-9]/g, '')
+    const who = resolveAccount(b.key, id)
+    if (!who) return null
+    const what = way === 'tv' ? 'TV' : way === 'internet' ? 'Internet' : 'Betting'
+    if (b.packs) {
+      const pack = packOf(q.get('pack') ?? '')
+      if (!pack || !b.packs.some((x) => x.key === pack.key)) return null
+      return { way, what, who: b.name, target: id, naira: pack.price,
+               note: `${pack.name} for ${pack.lasts}`, holder: who.name, asset }
+    }
+    const v = amount()
+    if (!(v > 0)) return null
+    return { way, what, who: b.name, target: id, naira: v, holder: who.name, asset }
+  }
+  if (way === 'exam') {
+    const e = examOf(q.get('exam') ?? '')
+    if (!e) return null
+    return { way, what: 'Exam PIN', who: e.body, target: e.name, naira: e.price,
+             note: e.what, asset }
+  }
+  if (way === 'subscription') {
+    const svc = serviceOf(q.get('svc') ?? '')
+    const pl = subPlanOf(q.get('plan') ?? '')
+    if (!svc || !pl || !svc.plans.some((x) => x.key === pl.key)) return null
+    return { way, what: 'Subscription', who: svc.name, target: pl.name, naira: pl.price,
+             note: pl.what + ' · every month', asset }
+  }
+  if (way === 'electricity') {
+    const d = discoOf(q.get('disco') ?? '')
+    const meter = (q.get('meter') ?? '').replace(/[^0-9]/g, '')
+    const m = resolveMeter(meter)
+    const v = amount()
+    if (!d || !m || !(v > 0)) return null
+    const kind: MeterKind = q.get('kind') === 'postpaid' ? 'postpaid' : 'prepaid'
+    return { way, what: 'Electricity', who: d.name, target: prettyMeter(meter), naira: v,
+             holder: m.name, kind, asset }
+  }
+  return null
 }

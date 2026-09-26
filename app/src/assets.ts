@@ -26,6 +26,8 @@
  *  while somebody is using the app.
  */
 
+import { usd, naira } from './format'
+
 export type Asset = 'usdc' | 'usdt' | 'ngn'
 
 export interface AssetDef {
@@ -57,8 +59,6 @@ export const assetOf = (key: string): AssetDef | undefined =>
 
 /** The two that are dollars, in the order they are offered. */
 export const DOLLARS: Asset[] = ['usdc', 'usdt']
-
-export const isDollar = (a: Asset): boolean => a !== 'ngn'
 
 /** The account in the ledger that holds it. One purse per asset, because two
  *  balances in one account is one balance. */
@@ -183,3 +183,19 @@ export function addressFor(asset: Asset, net: string): string {
 /** How an address reads when there is no room for all of it. */
 export const shortAddress = (a: string): string =>
   a.length > 14 ? a.slice(0, 6) + '…' + a.slice(-4) : a
+
+/* ------------------------------------------------------------- figures --
+   How much of a thing a conversion gives and costs, and how to write it.
+   They lived on the Convert screen, which meant the review dialog imported
+   arithmetic from a screen; they are about assets, so they are here. */
+
+/** A figure in the unit an asset is counted in. */
+export const figureOf = (a: Asset, n: number): string => (a === 'ngn' ? naira(n) : usd(n))
+
+/** How much of `to` a conversion of this many dollars gives. */
+export const gets = (to: Asset, dollars: number, rate: number): number =>
+  to === 'ngn' ? Math.round(dollars * rate) : dollars
+
+/** And how much of `from` it costs. */
+export const costs = (from: Asset, dollars: number, rate: number): number =>
+  from === 'ngn' ? Math.round(dollars * rate) : dollars

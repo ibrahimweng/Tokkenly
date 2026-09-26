@@ -85,8 +85,10 @@ export function kv(label: string, value: string | Node, cls = ''): HTMLElement {
 export function providerNote(key: string): HTMLElement | null {
   const p = state.providers.find((x) => x.key === key)
   if (!p || p.state === 'up') return null
+  // Slow and down are different sentences: down stops things, and the
+  // actions refuse while it is; slow only makes them take longer.
   return callout(
-    `${p.name} is ${p.state === 'down' ? 'not responding' : 'slow'} right now. ${p.fallback}`,
+    `${p.name} is ${p.state === 'down' ? 'not responding' : 'slow'} right now. ${p.state === 'slow' && p.slow ? p.slow : p.fallback}`,
     p.state === 'down' ? 'warning' : 'brand')
 }
 

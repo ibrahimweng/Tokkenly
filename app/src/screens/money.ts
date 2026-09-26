@@ -7,7 +7,8 @@ import { searchField, searchNote } from '../components/search'
 import { rank, onlyNear } from '../match'
 import { composerScreen } from '../components/composer'
 import {
-  state, movementCeiling, ceilingLabel, holding, cardFee, resolveAccount, switchOn,
+  state, movementCeiling, ceilingLabel, holding, cardFee, bankHolder, switchOn,
+  networkFee, purseHolds, sideRate,
   type Destination,
 } from '../state'
 
@@ -16,7 +17,7 @@ import { stockScreen } from './stock'
 import { walletScreen } from './wallet'
 import { find, type Instrument, pathOf } from '../catalogue'
 import { usd, naira, when, shares, activityLabel } from '../format'
-import { openSheet, current, go, closeSheet } from '../router'
+import { openSheet, current, go, closeSheet, setParams } from '../router'
 
 import { isMobile, isSplit } from '../responsive'
 import { payRow, netRow, assetLine } from '../components/purse'
@@ -26,45 +27,10 @@ import {
 } from '../assets'
 import { toast } from '../components/sheet'
 
-/** Names only. Cash goes to anybody, so the Tokkenly flag on a person is
- *  nothing to do with paying them — it is what decides whether a share can be
- *  handed over, and that lives on the share screen. */
-const PEOPLE = (): string[] => state.people.map((p) => p.name)
-
-/** Ordered by memory rather than alphabet: the person you paid on Tuesday
- *  first. Shared, because the picker and the column beside Send must not
- *  disagree about who is at the top. */
-export function byRecent(names: string[]): string[] {
-  return [...names].sort((a, b) => {
-    const ia = state.activity.findIndex((x) => x.who === a)
-    const ib = state.activity.findIndex((x) => x.who === b)
-    return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib)
-  })
-}
-
-export const initials = (name: string) => name.split(' ').map((s) => s[0]).join('')
-
-/** When someone was last paid, so the list is ordered by memory rather than
- *  alphabet. Nothing beats "the person you paid on Tuesday". */
-export function lastPaid(name: string): string {
-  const a = state.activity.find((x) => x.who === name && x.kind === 'payment')
-  return a ? (a.amount < 0 ? 'You sent ' : 'They sent ') + usd(Math.abs(a.amount)) + ' · ' + when(a.at) : 'No payments yet'
-}
-
-/** Step one of Send on a phone. There is no second column to hold the list,
- *  so who comes first and how much follows as a sheet. Figma M07. */
-/** The same list the phone shows as a screen, as a sheet for the dialog's
- *  Change row. One source of people, two presentations. */
-export function peopleRows(onPick: (who: string) => void): HTMLElement[] {
-  return byRecent(PEOPLE())
-    .map((p) =>
-      h('button', { class: 'sheet-row', on: { click: () => onPick(p) } },
-        h('span', { class: 'avatar', text: initials(p) }),
-        h('span', { class: 'two-line' },
-          h('span', { class: 't-body-strong', text: p }),
-          h('small', { text: lastPaid(p) })),
-        h('span', { class: 'muted', html: icon.chevron() })))
-}
+// Who you pay, and in what order, is shared with the review dialogs, so it
+// lives in people.ts rather than on this screen.
+import { PEOPLE, byRecent, initials, lastPaid, peopleRows } from '../people'
+export { byRecent, initials, lastPaid, peopleRows }
 
 /* ---------------------------------------------------------------------------
    One Send, and the question it asks first.
@@ -132,7 +98,7 @@ function payeeCard(): HTMLElement {
 
   let name: string | null = null
   const check = () => {
-    name = resolveAccount(acct.value)
+    name = bankHolder(acct.value, pick.value)
     field.classList.toggle('error', !name && acct.value.replace(/\D/g, '').length === 10)
     err.hidden = !!name || acct.value.replace(/\D/g, '').length < 10
     show(found, !!name)
@@ -514,6 +480,20 @@ export function sendScreen(sub?: string, forced?: Destination): HTMLElement {
     ? named
     : offered.includes(state.prefs.payWith) ? state.prefs.payWith : 'usdc'
   const net = chain ? (netOf(q.get('net') ?? '')?.key ?? defaultNet(asset)!.key) : undefined
+  // What the paying balance can send, in dollars, once the network's fee has
+  // come out of it. It was `cash` — both stablecoins together — for every
+  // balance, so $800 of USDT offered to send $2,480; and from naira it was a
+  // dollar ceiling on a payment that then took the dollars times the rate in
+  // naira. Naira is converted to dollars here only to be compared with the
+  // dollar limits, and floored so the composer never offers a figure whose
+  // naira the balance cannot cover.
+  const fee = chain ? networkFee(net) : 0
+  const has = asset === 'ngn'
+    ? Math.floor((purseHolds('ngn') / state.ngnPerUsd) * 100) / 100
+    : Math.max(0, Math.round((purseHolds(asset) - fee) * 100) / 100)
+  // Dollars out to a bank are sold at the desk's selling rate; naira out of
+  // naira is not converted at all.
+  const payRate = asset === 'ngn' ? rate : sideRate('sell')
 
   const spec = {
     place: 'wallet' as const,
@@ -552,16 +532,18 @@ export function sendScreen(sub?: string, forced?: Destination): HTMLElement {
     title: 'Send money',
     eyebrow: ['Cash available', usd(state.cash)] as [string, string],
     cardLabel: 'How much',
-    cardRight: 'Cash ' + usd(state.cash),
+    cardRight: assetOf(asset)!.name + ' ' + (asset === 'ngn' ? naira(purseHolds('ngn')) : usd(purseHolds(asset))),
     pay: {
       assets: offered,
       get: () => asset,
-      set: (a: Asset) => { asset = a },
-      needs: () => 0,
+      // A different balance is a different ceiling, so the screen is drawn
+      // again around it.
+      set: (a: Asset) => { if (a !== asset) { asset = a; setParams({ a }) } },
+      needs: (a: Asset) => (a === 'ngn' ? 1 : 0.01 + (chain ? networkFee(net) : 0)),
     },
-    initial: Math.min(bank ? 300 : 120, state.cash),
-    max: Math.min(state.cash, movementCeiling()),
-    maxLabel: ceilingLabel2(state.cash),
+    initial: Math.min(bank ? 300 : 120, has),
+    max: Math.min(has, movementCeiling()),
+    maxLabel: ceilingLabel2(has),
     note: bank
       ? 'Dollars out of your wallet, naira into that account.'
       : 'Arrives in about a minute, any day.',
@@ -570,13 +552,13 @@ export function sendScreen(sub?: string, forced?: Destination): HTMLElement {
           { label: usd(50, false), value: 50 },
           { label: usd(100, false), value: 100 },
           { label: usd(300, false), value: 300 },
-          { label: 'All', value: state.cash },
+          { label: 'All', value: has },
         ]
       : [
           { label: usd(20, false), value: 20 },
           { label: usd(50, false), value: 50 },
           { label: usd(120, false), value: 120 },
-          { label: 'All', value: state.cash },
+          { label: 'All', value: has },
         ],
     // No 'To' row: the lede above already names them, and the same fact twice
     // in one dialog reads as a mistake.
@@ -592,14 +574,15 @@ export function sendScreen(sub?: string, forced?: Destination): HTMLElement {
               ['Arrives', 'Usually within a minute'],
             ]
           : [
-              ['Rate', '1 dollar = ' + naira(rate)],
+              ['Rate', '1 dollar = ' + naira(payRate)],
               ['Fee', 'No fee'],
-              ['They get', naira(v * rate)],
+              ['They get', naira(v * payRate)],
               ['Arrives', 'Usually within a minute'],
             ])
       : [
-          ['Fee', chain && netOf(net!)!.fee
-            ? usd(netOf(net!)!.fee, false) + ' network fee' : 'No fee'],
+          // Charged, on top, from the same balance. It was stated here and
+          // never taken.
+          ['Fee', fee ? usd(fee) + ' network fee, on top' : 'No fee'],
           ['Arrives', chain ? netOf(net!)!.takes : 'In about a minute'],
           ['Network', chain ? netOf(net!)!.name : 'Inside Tokkenly'],
         ],
@@ -1211,7 +1194,9 @@ function basePanel(full = true): HTMLElement {
  *  found out about later. */
 function cardPanel(): HTMLElement {
   const plastic = state.cards[0]
-  const rate = state.ngnPerUsd
+  // Dollars bought with naira, so the buying side of the desk — the rate the
+  // review will hold.
+  const rate = sideRate('buy')
   // Switched off. The screen still exists, still says Card, and says why it
   // cannot take a payment — and then points at the two ways that can. A
   // paused way that hands you an amount box you cannot submit is worse than

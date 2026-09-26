@@ -94,6 +94,28 @@ shows every drawing at once in both themes. `art.mjs` and `sheet.mjs` read
 source modules through a dev server (`npm run dev`, or `DEV_URL`). The
 `_site*` scripts belong to the marketing site; see `site/README.md`.
 
+## Signing in, and the staff console
+
+Any email and password signs in, except the password `wrong`, which is refused
+so the error can be seen. One exception is not negotiable: after five wrong
+PINs the password is the way back in, so it is checked. The demo account's
+password is `harmattan evening walk` and its PIN is `4193`. Both are kept in
+the browser only as a salted SHA-256, never as typed.
+
+The operations console at `#/admin` is for staff. Sign in with any address at
+`tokkenly.com` (for example `ops@tokkenly.com`, with any password) and the
+console, its door on Account and its entries in search appear. Signed in any
+other way, they do not exist. Signing out clears it.
+
+Face ID is off until it is turned on in Security, and it is simulated: there is
+no sensor for a web page to ask, so the button on the lock screen says so.
+
+What happens in the app is kept in `localStorage` between visits: the ledger,
+the activity, the identity check, the switches the console moved. To start
+again from the seed, clear the site's storage. A movement ending `.98` (see the
+table in the top-level README) waits in Still settling for two minutes, and is
+then returned: the money goes back where it came from and the row says so.
+
 ## What is invented
 
 The rates, the collateral ratio and the payout schedule are made up, exactly as

@@ -6,11 +6,18 @@ import { table } from '../components/table'
 import { amount } from '../components/bits'
 import {
   state, holdingsValue, owed, availableToBorrow, sellPoint,
-  monthlyCost, monthlyInterest, movementCeiling, ceilingLabel, money, MASK, payAsset,
+  monthlyCost, monthlyInterest, movementCeiling, ceilingLabel, money, MASK, payAsset, purseHolds,
 } from '../state'
-import { DOLLARS, type Asset } from '../assets'
+import { DOLLARS, assetOf, type Asset } from '../assets'
 import { usd, pct, signed, when } from '../format'
-import { go, openSheet } from '../router'
+import { go, openSheet, current, setParams } from '../router'
+
+/** Which stablecoin a composer here is moving, off its address — so picking
+ *  the other rebuilds the screen around that balance's own ceiling. */
+const chosen = (): Asset => {
+  const a = current().query.get('a') as Asset | null
+  return a && DOLLARS.includes(a) ? a : payAsset()
+}
 import { LEND, BORROW, type Art } from '../components/drawings'
 import { hint, type Hint } from '../components/hint'
 
@@ -340,23 +347,26 @@ export function borrowScreen(): HTMLElement {
 /* ---------------- repay ---------------- */
 
 export function repayScreen(): HTMLElement {
-  let repayAsset: Asset = payAsset()
+  let repayAsset: Asset = chosen()
   const total = owed()
+  // What the paying balance holds, not both stablecoins together: a repayment
+  // comes out of one of them, and the ceiling was the sum.
+  const has = purseHolds(repayAsset)
   return composerScreen({
     place: 'grow',
     base: growScreen,
     title: 'Repay',
     eyebrow: ['You owe', usd(total)],
     cardLabel: 'How much',
-    cardRight: 'Wallet ' + usd(state.cash),
-    initial: Math.min(200, total),
-    max: Math.min(total, state.cash),
+    cardRight: assetOf(repayAsset)!.name + ' ' + usd(has),
+    initial: Math.min(200, total, has),
+    max: Math.min(total, has),
     note: 'Repay any part of it. There is no fee for repaying early.',
     quick: [
       { label: usd(50, false), value: 50 },
       { label: usd(100, false), value: 100 },
       { label: usd(200, false), value: 200 },
-      { label: 'All', value: Math.min(total, state.cash) },
+      { label: 'All', value: Math.min(total, has) },
     ],
     summary: (v) => {
       const left = Math.max(0, total - v)
@@ -369,7 +379,8 @@ export function repayScreen(): HTMLElement {
     },
     callout: 'Repaying frees the same amount up to borrow again whenever you want.',
     action: (v) => 'Repay ' + usd(v),
-    pay: { assets: DOLLARS, get: () => repayAsset, set: (a: Asset) => { repayAsset = a }, label: 'Paying with' },
+    pay: { assets: DOLLARS, get: () => repayAsset, label: 'Paying with',
+           set: (a: Asset) => { if (a !== repayAsset) { repayAsset = a; setParams({ a }) } } },
     onAction: (v) => openSheet('repay-review', { v: String(v), a: repayAsset }),
     right: () =>
       card(
@@ -399,22 +410,24 @@ export function repayScreen(): HTMLElement {
 /* ---------------- earn ---------------- */
 
 export function earnScreen(): HTMLElement {
-  let earnAsset: Asset = payAsset()
+  let earnAsset: Asset = chosen()
+  // Capped at the balance that is lending, for the same reason as Repay.
+  const has = purseHolds(earnAsset)
   return composerScreen({
     place: 'grow',
     base: growScreen,
     title: 'Lend',
     eyebrow: ['In your wallet', usd(state.cash)],
     cardLabel: 'How much',
-    cardRight: 'In wallet ' + usd(state.cash),
-    initial: Math.min(500, state.cash),
-    max: state.cash,
+    cardRight: assetOf(earnAsset)!.name + ' ' + usd(has),
+    initial: Math.min(500, has),
+    max: has,
     note: 'Take it out any time. Nothing is locked up.',
     quick: [
       { label: usd(100, false), value: 100 },
       { label: usd(250, false), value: 250 },
       { label: usd(500, false), value: 500 },
-      { label: 'All', value: state.cash },
+      { label: 'All', value: has },
     ],
     summary: (v) => [
       ['Rate', pct(state.rates.lend) + ' a year'],
@@ -428,7 +441,8 @@ export function earnScreen(): HTMLElement {
     // does it said move. Nine of the ten composers name their own verb on
     // their own button; this is the tenth.
     action: (v) => 'Lend ' + usd(v),
-    pay: { assets: DOLLARS, get: () => earnAsset, set: (a: Asset) => { earnAsset = a }, label: 'Paying with' },
+    pay: { assets: DOLLARS, get: () => earnAsset, label: 'Paying with',
+           set: (a: Asset) => { if (a !== earnAsset) { earnAsset = a; setParams({ a }) } } },
     onAction: (v) => openSheet('earn-review', { v: String(v), a: earnAsset }),
     right: (v) => {
       const after = state.lent + v

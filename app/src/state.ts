@@ -5,8 +5,15 @@
 import { reference, usd, naira, shares as sharesOf } from './format'
 import { CATALOGUE, find, tradable, refusals, type Refusal, type Instrument } from './catalogue'
 import * as ledger from './ledger'
-import { tokenFor } from './bills'
-import { purseFor, assetOf, defaultNet, type Asset } from './assets'
+import { tokenFor, pinFor } from './bills'
+import { purseFor, assetOf, defaultNet, netOf, ASSETS, DOLLARS, NETS, type Asset } from './assets'
+import { sealed, newSalt } from './digest'
+
+/** Why an action would not do what it was asked. The dialog that asked shows
+ *  the sentence under its button; nothing has been written when this is
+ *  thrown. */
+export const Refused = ledger.Refused
+const refuse = (why: string): never => { throw new ledger.Refused(why) }
 
 export type ActivityKind = 'payment' | 'trade' | 'grow' | 'convert'
 
@@ -44,7 +51,7 @@ export interface Activity {
    *  is — the token is a function of the reference and the reference does not
    *  change, but the network's name and the meter's owner are facts about the
    *  day it was paid. */
-  bill?: { target: string; naira: number; token?: string }
+  bill?: { target: string; naira: number; token?: string; pin?: string }
   /** What a conversion turned into what. A conversion is the one movement with
    *  two figures and no direction: nothing came in, nothing went out, and you
    *  are worth exactly what you were a moment ago. `amount` can only hold one
@@ -64,6 +71,27 @@ export interface Activity {
    *  payment on TRON and a payment on Ethereum cost different money and go
    *  wrong in different ways, so "on the chain" is not an answer. */
   net?: string
+  /** What a trade actually filled at: the shares, and the price each. The
+   *  receipt and the replay used to divide the amount by today's price, so a
+   *  purchase made at $224.10 restated its own quantity every time Apple
+   *  moved. Written once, at the fill, like the fee. */
+  fill?: { ticker: string; shares: number; price: number }
+  /** The naira half of a movement that crosses into naira: what was sent or
+   *  is to land, the rate that was held for it if one was, and — for a payout
+   *  — which account in the ledger it goes to. Kept on the movement because
+   *  the second stage happens later, possibly after a reload, and has to land
+   *  exactly what the first stage promised. */
+  leg?: { naira: number; rate?: number; account?: string }
+  /** No answer came back in time (a `.98`). It sits in Still settling until
+   *  it is answered or until `UNANSWERED_MS` has passed, and then it is
+   *  returned rather than left open for ever. */
+  unanswered?: boolean
+  /** It never landed, and the money came back. The row stays, because both
+   *  halves happened; this says which way it ended. */
+  returned?: boolean
+  /** What this counted against the monthly limit, so a return can give it
+   *  back. */
+  counted?: number
   settled: boolean
 }
 
@@ -120,16 +148,26 @@ export const DEFAULT_PREFS: Prefs = {
  *  — a security screen that lies about its own state is worse than none, so
  *  every one of them reads and writes here now.
  *
- *  The PIN and the password are held in the clear because this is a prototype
- *  with no server. A real one sends the password and never stores it, and
- *  keeps the PIN in the device's secure enclave. The shapes are the same. */
+ *  Neither the PIN nor the password is held as typed. They used to be, in
+ *  localStorage, readable by anybody who opened the browser's storage; what
+ *  is kept now is a salted SHA-256 of each (see digest.ts), and a secret is
+ *  checked by sealing what was typed and comparing. A real product sends the
+ *  password to a server and keeps the PIN in the device's secure enclave;
+ *  this is the most a prototype with neither can honestly do. */
 export interface Security {
-  /** Four digits. The product asks for it to unlock and to authorise anything
-   *  over the ask-again figure. */
-  pin: string
+  /** A random salt for this device, so the same PIN is a different digest
+   *  somewhere else. */
+  salt: string
+  /** The four digits, sealed. The product asks for them to unlock and to
+   *  authorise anything over the ask-again figure. */
+  pinHash: string
   pinChanged: string
-  password: string
+  passwordHash: string
   passwordChanged: string
+  /** A simulated biometric, and off until somebody turns it on. There is no
+   *  sensor for a web page to ask, so the button that stands in for one can
+   *  only ever be a button — which is why it is not offered unless the person
+   *  chose it, and why it says it is simulated. */
   faceId: boolean
   /** Whether opening the app asks for the PIN at all. */
   appLock: boolean
@@ -137,14 +175,24 @@ export interface Security {
   wrongPin: number
 }
 
-export const DEFAULT_SECURITY: Security = {
-  pin: '4193',
-  pinChanged: '24 August 2026',
-  password: 'harmattan evening walk',
-  passwordChanged: '2 July 2026',
-  faceId: true,
-  appLock: true,
-  wrongPin: 0,
+/** The demo account's PIN and password, as a new device would first seal
+ *  them. Sealed at start with a fresh salt; nothing after this line holds
+ *  them as typed. */
+const DEMO_PIN = '4193'
+const DEMO_PASSWORD = 'harmattan evening walk'
+
+export function defaultSecurity(): Security {
+  const salt = newSalt()
+  return {
+    salt,
+    pinHash: sealed(salt, DEMO_PIN),
+    pinChanged: '24 August 2026',
+    passwordHash: sealed(salt, DEMO_PASSWORD),
+    passwordChanged: '2 July 2026',
+    faceId: false,
+    appLock: true,
+    wrongPin: 0,
+  }
 }
 
 /** The four digits nobody should be allowed to choose. Not a strength meter —
@@ -162,7 +210,7 @@ export function weakPin(pin: string, dob = ''): string | null {
   // A year between 1930 and this year is a date of birth, and a date of birth
   // is on the card in the same wallet as the phone.
   const year = Number(pin)
-  if (year >= 1930 && year <= 2026) return 'That looks like a year. Anyone who knows your age can guess it.'
+  if (year >= 1930 && year <= new Date().getFullYear()) return 'That looks like a year. Anyone who knows your age can guess it.'
   const born = dob.match(/\b(19|20)\d{2}\b/)
   if (born && pin === born[0]) return 'That is the year you were born.'
   return null
@@ -369,23 +417,32 @@ const HOLDERS = [
   'KEHINDE FOLASADE LAWAL',
 ]
 
-export function resolveAccount(number: string): string | null {
+/** Named for what it answers, and so as not to be confused with the bill
+ *  partner's `resolveAccount` in bills.ts, which asks a different register a
+ *  different question. The holder is read off the bank and the number
+ *  together, the way a bank's name enquiry is: the same ten digits at two
+ *  banks are two accounts, and the last digit alone used to decide whose
+ *  name came back. */
+export function bankHolder(number: string, bank = ''): string | null {
   const digits = number.replace(/\D/g, '')
   if (digits.length !== 10) return null
-  const own = state.banks.find((b) => b.number === digits)
+  const own = state.banks.find((b) => b.number === digits && (!bank || b.name === bank))
   if (own) return own.holder.toUpperCase()
   if (digits.slice(-2) === '99') return null
-  return HOLDERS[Number(digits.slice(-1))]
+  let h = 0
+  const key = bank.toLowerCase() + ':' + digits
+  for (let i = 0; i < key.length; i++) h = (Math.imul(h, 31) + key.charCodeAt(i)) | 0
+  return HOLDERS[Math.abs(h) % HOLDERS.length]
 }
 
-/** What is on its way in and has not landed. Derived, like everything else:
- *  it is the balance of the account the money sits in between the two banks,
- *  not a number kept beside the row that is waiting. */
-export const inflightNaira = (): number => ledger.balanceOf('inflight')
-
-/** And what is on its way out: naira that left the desk and have not reached
- *  anybody's bank yet. The other half of the same honesty. */
-export const outboundNaira = (): number => ledger.balanceOf('payout')
+/** The ledger account a payout lands in, keyed by what identifies an account
+ *  at a bank — which bank, and the ten digits. It used to be keyed by the
+ *  holder's name, so two people called Tunde Bakare were one account, and the
+ *  landing looked it up by the first account whose name started with the
+ *  payee's — which found somebody else's whenever one name began another. */
+export const payeeAccount = (to: Destination): string =>
+  to.bankId ? 'bank:' + to.bankId
+    : 'payee:' + (to.bank ?? '').toLowerCase().replace(/[^a-z0-9]+/g, '') + ':' + (to.number ?? '').replace(/\D/g, '')
 
 /** The transaction on Base, for the movements that have one.
  *
@@ -459,8 +516,13 @@ export interface Provider {
   /** What is measured, and what it read. */
   metric: string
   since?: string
-  /** What the customer sees while it is like this. */
+  /** What the customer sees while it is down. Every action that depends on
+   *  the provider reads its state and refuses while it is down, so this
+   *  sentence is a description of what the product actually does rather than
+   *  of what it would do. */
   fallback: string
+  /** And while it is only slow, when that is different. */
+  slow?: string
 }
 
 /** A line in the audit history. Staff actions only: the customer's own
@@ -537,6 +599,12 @@ export interface Device {
 
 export interface State {
   signedIn: boolean
+  /** Whether the person signed in is Tokkenly staff, which is what opens the
+   *  operations console. Set by signing in with an address at tokkenly.com —
+   *  the demo's way in, written down in app/README.md — and cleared by
+   *  signing out. A customer never sees the console or anything pointing at
+   *  it. */
+  staff: boolean
   /** Whether the browser believes it can reach the network. Not a guarantee —
    *  navigator.onLine is true on a wifi that goes nowhere — but it catches the
    *  common case, and on the connections this product is for the common case
@@ -565,8 +633,14 @@ export interface State {
   readonly interestPaid: number
   readonly borrowed: number
   readonly interestOwed: number
-  borrowLimit: number
-  rates: { lend: number; borrow: number; collateral: number }
+  /** What your shares will lend against: their value now, times the
+   *  loan-to-value in `rates.ltv`. It was a fixed $1,860 that did not move
+   *  when the shares did, so selling every share left the whole limit
+   *  standing. */
+  readonly borrowLimit: number
+  /** `ltv` is the share of your holdings' value you may borrow; `collateral`
+   *  is the cover below which shares are sold. */
+  rates: { lend: number; borrow: number; collateral: number; ltv: number }
   /** What a transaction costs, as a percentage. The marketing sells this:
    *  "the amount, the rate, the fee, and exactly what you receive, before you
    *  confirm. Nothing folded into a worse rate." A product that answers that
@@ -578,8 +652,12 @@ export interface State {
    *  required before financial and investment services", so an account starts
    *  without one and the limits say what that costs. */
   kyc: Kyc
-  usedThisMonth: number
-  holdings: Holding[]
+  /** What has left the account this calendar month, read off `usage`. It was
+   *  a number that only ever went up — never reset on the first of the month
+   *  and never saved — so the monthly limit was a lifetime limit that a reload
+   *  forgave. */
+  readonly usedThisMonth: number
+  readonly holdings: Holding[]
   watchlist: string[]
   /** Companies picked out and not yet paid for. A watchlist is a list of
    *  things you are interested in; a bucket is a list of things you have
@@ -605,18 +683,40 @@ export interface State {
   seenIntro: boolean
   cardWaitlist: boolean
   phraseWrittenDown: boolean
+  /** The day it was, when it was. Empty until it has been. */
+  phraseWrittenOn: string
   ngnPerUsd: number
   /** When that rate was last quoted. A rate with no time on it is a rumour. */
   rateAt: string
 }
 
 /* --------------------------------------------------------------- keeping --
-   The ledger is demo data and resets, which is the point of a prototype. The
-   preferences are not: a theme that forgets on reload, or an intro that plays
-   again every time the page is opened, is worse than not having the setting.
-   Only these two are kept, and a browser that refuses storage just gets the
-   defaults rather than an error. */
+   Three things are kept, under three keys.
+
+     prefs    the preferences, the intro, and the lock: the salted PIN and
+              password, the switches, and the count of wrong tries. The key
+              predates the rest and the test suites seed it, so its shape is
+              unchanged apart from the secrets no longer being in it as typed.
+     account  whether anybody is signed in, and whether they are staff. It was
+              never kept, and started true, so signing out lasted until the
+              next reload.
+     books    the ledger itself and everything that is a record rather than a
+              setting: the activity, the notifications, the identity check,
+              the switches and providers the console moved, the bucket, the
+              banks, what has left this month. It used to reset on every load,
+              which undid every payment made since and left every "done"
+              dialog pointing at a movement that no longer existed.
+
+   Everything read back is checked field by field against what it is allowed
+   to be. Preferences fall back one field at a time; the books are all or
+   nothing, because half a ledger is worse than the seed. A browser that
+   refuses storage just gets the defaults rather than an error. */
 const KEEP = 'tokkenly.prefs.v1'
+const ACCOUNT = 'tokkenly.account.v1'
+const BOOKS = 'tokkenly.books.v1'
+/** Bumped whenever the shape of the books changes. A saved book of another
+ *  version is not read at all. */
+const BOOKS_VERSION = 1
 const SESSION = 'tokkenly.unlocked'
 
 /** How long the app may sit in the background before it wants the PIN again.
@@ -624,17 +724,55 @@ const SESSION = 'tokkenly.unlocked'
  *  turned off, which is not the phone anybody loses. */
 export const IDLE_LOCK_MS = 2 * 60 * 1000
 
-function remember(): void {
+function write(): void {
   try {
     localStorage.setItem(KEEP, JSON.stringify({
       prefs: state.prefs, seenIntro: state.seenIntro,
       // The attempt count is kept. A lockout a reload clears is not a
       // lockout — and there is a way out that does not need a server: the
-      // password. Signing in unlocks, and unlocking resets the count.
+      // password. Signing in with it unlocks, and unlocking resets the count.
       security: state.security,
+    }))
+    localStorage.setItem(ACCOUNT, JSON.stringify({ signedIn: state.signedIn, staff: state.staff }))
+    localStorage.setItem(BOOKS, JSON.stringify({
+      v: BOOKS_VERSION,
+      ledger: ledger.snapshot(),
+      activity: state.activity,
+      notifications: state.notifications,
+      kyc: state.kyc,
+      checks: state.checks,
+      switches: state.switches.map((x) => ({ key: x.key, on: x.on, by: x.by, at: x.at })),
+      providers: state.providers.map((x) => ({ key: x.key, state: x.state })),
+      audit: state.audit,
+      breaks: state.breaks.map((x) => ({ id: x.id, state: x.state })),
+      bucket: state.bucket,
+      watchlist: state.watchlist,
+      banks: state.banks,
+      usage,
+      accruedAt,
+      phrase: { written: state.phraseWrittenDown, on: state.phraseWrittenOn },
+      cardWaitlist: state.cardWaitlist,
+      person: { email: state.person.email, phone: state.person.phone, address: state.person.address },
+      devices: state.devices.map((d) => d.id),
     }))
   } catch { /* private windows and blocked storage are not a failure */ }
 }
+
+/** Written once per burst of changes rather than once per change. The
+ *  connection flickering on a commute used to rewrite storage every time it
+ *  came and went; a burst of changes now costs one write, a moment later. */
+let writing: ReturnType<typeof setTimeout> | null = null
+function remember(): void {
+  if (writing) return
+  writing = setTimeout(flush, 40)
+}
+/** And at once, for the one write that must not be lost to a reload that
+ *  comes a moment later: a wrong PIN. */
+function flush(): void {
+  if (writing) { clearTimeout(writing); writing = null }
+  write()
+}
+if (typeof addEventListener === 'function') addEventListener('pagehide', flush)
 
 /* ---------------------------------------------------------------------------
    Opening the books.
@@ -708,12 +846,13 @@ function legsFor(a: Activity): Legs | null {
       return { entries: [{ account: 'held:' + a.asset.ticker, amount: -a.asset.shares },
                          { account: 'sent:' + a.asset.ticker, amount: a.asset.shares }] }
     }
-    // Both halves of a trade: dollars one way, shares the other. The count
-    // comes off the figure the person typed rather than off the amount
-    // recorded, which has the fee in it.
-    const t = tickerOf(a.who)
+    // Both halves of a trade: dollars one way, shares the other. The count is
+    // the one recorded at the fill; a row written before fills were recorded
+    // falls back to the figure the person typed over today's price, which is
+    // the best that row can do.
+    const t = a.fill?.ticker ?? tickerOf(a.who)
     const price = t ? find(t)?.price : undefined
-    const units = t && price ? grossOf(a) / price : 0
+    const units = a.fill ? a.fill.shares : t && price ? grossOf(a) / price : 0
     const shares: ledger.Entry[] = t
       ? [{ account: 'float:' + t, amount: a.type === 'Sold' ? units : -units },
          { account: 'held:' + t, amount: a.type === 'Sold' ? -units : units }]
@@ -742,22 +881,6 @@ function legsFor(a: Activity): Legs | null {
   }
   return null
 }
-
-/** How long a Nigerian bank payout takes to confirm. Longer than money coming
- *  in, because it is: an outbound transfer waits on the receiving bank, and
- *  the whole point of tracking it as two stages is that the second one is not
- *  instant. */
-const PAYOUT_MS = 3400
-/** How long the two legs of a conversion are apart. Shorter than a payout,
- *  because a payout waits on a bank and this waits on us.
- *
- *  It was 1,600ms, which was wrong for a reason that is not visible in this
- *  file: the outcome sheet reveals itself over 980ms — tick, figure, panel,
- *  buttons, each on its own delay — so a 1,600ms window left "On its way"
- *  fully legible for about half a second before it became "Converted". The
- *  stage was there and nobody could read it. A number that has to clear an
- *  animation elsewhere is a number that has to know about it. */
-const CONVERT_MS = 2800
 
 /** Where the account actually stands, which the replay has to arrive at.
  *
@@ -861,26 +984,276 @@ function activityLine(a: Activity): string {
   return `${a.type} ${usd(Math.abs(a.amount))} ${a.amount >= 0 ? 'from' : 'to'} ${a.who}`
 }
 
+/* ------------------------------------------------------------- checking --
+   Small questions asked of anything read back from storage. Storage is the
+   one input this product takes that nobody typed into a field it drew, and a
+   `payWith: 'btc'` left there by an older build, or by anybody with the
+   developer tools open, used to reach `assetOf(asset)!` and take the whole
+   app down. */
+const isStr = (x: unknown): x is string => typeof x === 'string'
+const isNum = (x: unknown): x is number => typeof x === 'number' && Number.isFinite(x)
+const isBool = (x: unknown): x is boolean => typeof x === 'boolean'
+const oneOf = <T extends string>(x: unknown, allowed: readonly T[]): x is T =>
+  isStr(x) && (allowed as readonly string[]).includes(x)
+const obj = (x: unknown): Record<string, unknown> =>
+  x && typeof x === 'object' && !Array.isArray(x) ? x as Record<string, unknown> : {}
+const isWhen = (x: unknown): x is string => isStr(x) && !Number.isNaN(Date.parse(x))
+const HEX64 = /^[0-9a-f]{64}$/
+const ASSET_KEYS = ASSETS.map((a) => a.key)
+
+/** Each preference on its own: one bad value costs that value, not the lot. */
+function prefsFrom(raw: unknown): Prefs {
+  const p = obj(raw)
+  const n = obj(p.notify)
+  const d = DEFAULT_PREFS
+  return {
+    homeView: oneOf(p.homeView, ['simple', 'detailed'] as const) ? p.homeView : d.homeView,
+    payWith: oneOf(p.payWith, ASSET_KEYS) ? p.payWith : d.payWith,
+    theme: oneOf(p.theme, ['dark', 'light'] as const) ? p.theme : d.theme,
+    showNaira: isBool(p.showNaira) ? p.showNaira : d.showNaira,
+    tradeDefault: isNum(p.tradeDefault) && p.tradeDefault > 0 && p.tradeDefault <= 100000
+      ? p.tradeDefault : d.tradeDefault,
+    confirmOver: isNum(p.confirmOver) && p.confirmOver >= 0 && p.confirmOver <= 1_000_000
+      ? p.confirmOver : d.confirmOver,
+    hideBalances: isBool(p.hideBalances) ? p.hideBalances : d.hideBalances,
+    putAway: Array.isArray(p.putAway) ? p.putAway.filter(isStr).slice(0, 20) : [],
+    notify: {
+      payments: isBool(n.payments) ? n.payments : d.notify.payments,
+      prices: isBool(n.prices) ? n.prices : d.notify.prices,
+      earn: isBool(n.earn) ? n.earn : d.notify.earn,
+      borrowing: isBool(n.borrowing) ? n.borrowing : d.notify.borrowing,
+    },
+  }
+}
+
+/** The lock, from storage. A saved PIN or password in the clear — every build
+ *  before this one wrote them that way — is sealed on the way in and never
+ *  written back as it was. */
+function securityFrom(raw: unknown): Security {
+  const s = obj(raw)
+  const base = defaultSecurity()
+  // A salt read back with both its digests keeps them. Anything less cannot
+  // be checked against, so the device starts from a fresh salt — sealing any
+  // secret still stored as typed, and the demo's otherwise.
+  const whole = isStr(s.salt) && /^[0-9a-f]{8,64}$/.test(s.salt)
+    && isStr(s.pinHash) && HEX64.test(s.pinHash)
+    && isStr(s.passwordHash) && HEX64.test(s.passwordHash)
+  const salt = whole ? s.salt as string : base.salt
+  return {
+    salt,
+    pinHash: whole ? s.pinHash as string
+      : isStr(s.pin) && /^\d{4}$/.test(s.pin) ? sealed(salt, s.pin) : base.pinHash,
+    passwordHash: whole ? s.passwordHash as string
+      : isStr(s.password) && s.password.length > 0 ? sealed(salt, s.password) : base.passwordHash,
+    pinChanged: isStr(s.pinChanged) ? s.pinChanged : base.pinChanged,
+    passwordChanged: isStr(s.passwordChanged) ? s.passwordChanged : base.passwordChanged,
+    faceId: isBool(s.faceId) ? s.faceId : base.faceId,
+    appLock: isBool(s.appLock) ? s.appLock : base.appLock,
+    wrongPin: isNum(s.wrongPin) ? Math.max(0, Math.min(5, Math.floor(s.wrongPin))) : 0,
+  }
+}
+
+const KINDS: ActivityKind[] = ['payment', 'trade', 'grow', 'convert']
+const NET_KEYS = NETS.map((n) => n.key)
+
+/** One row of the activity, or null if any part of it is not what a row can
+ *  be. */
+function activityFrom(raw: unknown): Activity | null {
+  const a = obj(raw)
+  if (!isStr(a.ref) || !/^TKN-[A-Z0-9]{3,12}$/.test(a.ref)) return null
+  if (!oneOf(a.kind, KINDS) || !isStr(a.who) || !isStr(a.type) || !isNum(a.amount)
+      || !isWhen(a.at) || !isBool(a.settled)) return null
+  const out: Activity = { ref: a.ref, kind: a.kind, who: a.who, type: a.type, amount: a.amount,
+                          at: a.at, settled: a.settled }
+  if (a.note !== undefined) { if (!isStr(a.note)) return null; out.note = a.note }
+  if (a.fee !== undefined) { if (!isNum(a.fee) || a.fee < 0) return null; out.fee = a.fee }
+  if (a.rail !== undefined) { if (!oneOf(a.rail, ['bank', 'base', 'card'] as const)) return null; out.rail = a.rail }
+  if (a.purse !== undefined) { if (!oneOf(a.purse, ASSET_KEYS)) return null; out.purse = a.purse }
+  if (a.net !== undefined) { if (!oneOf(a.net, NET_KEYS)) return null; out.net = a.net }
+  for (const k of ['unanswered', 'returned'] as const) {
+    if (a[k] !== undefined) { if (!isBool(a[k])) return null; out[k] = a[k] as boolean }
+  }
+  if (a.counted !== undefined) { if (!isNum(a.counted)) return null; out.counted = a.counted }
+  if (a.asset !== undefined) {
+    const x = obj(a.asset)
+    if (!isStr(x.ticker) || !isNum(x.shares) || !isNum(x.price)) return null
+    out.asset = { ticker: x.ticker, shares: x.shares, price: x.price }
+  }
+  if (a.fill !== undefined) {
+    const x = obj(a.fill)
+    if (!isStr(x.ticker) || !isNum(x.shares) || !isNum(x.price)) return null
+    out.fill = { ticker: x.ticker, shares: x.shares, price: x.price }
+  }
+  if (a.bill !== undefined) {
+    const x = obj(a.bill)
+    if (!isStr(x.target) || !isNum(x.naira)) return null
+    if ((x.token !== undefined && !isStr(x.token)) || (x.pin !== undefined && !isStr(x.pin))) return null
+    out.bill = { target: x.target, naira: x.naira,
+                 ...(isStr(x.token) ? { token: x.token } : {}), ...(isStr(x.pin) ? { pin: x.pin } : {}) }
+  }
+  if (a.swap !== undefined) {
+    const x = obj(a.swap)
+    if (!oneOf(x.from, ASSET_KEYS) || !oneOf(x.to, ASSET_KEYS) || !isNum(x.gave) || !isNum(x.got)) return null
+    out.swap = { from: x.from, to: x.to, gave: x.gave, got: x.got }
+  }
+  if (a.leg !== undefined) {
+    const x = obj(a.leg)
+    if (!isNum(x.naira) || (x.rate !== undefined && !isNum(x.rate))
+        || (x.account !== undefined && !isStr(x.account))) return null
+    out.leg = { naira: x.naira, ...(isNum(x.rate) ? { rate: x.rate } : {}),
+                ...(isStr(x.account) ? { account: x.account } : {}) }
+  }
+  return out
+}
+
+function notificationFrom(raw: unknown): Notif | null {
+  const n = obj(raw)
+  if (!isStr(n.id) || !oneOf(n.kind, ['money', 'trade', 'grow', 'security'] as const)
+      || !isStr(n.title) || !isStr(n.body) || !isWhen(n.at) || !isBool(n.read)) return null
+  return {
+    id: n.id, kind: n.kind, title: n.title, body: n.body, at: n.at, read: n.read,
+    ...(isStr(n.ref) ? { ref: n.ref } : {}),
+    ...(isStr(n.to) && n.to.startsWith('/') ? { to: n.to } : {}),
+    ...(oneOf(n.emailed, ['always', 'preference'] as const) || n.emailed === false
+      ? { emailed: n.emailed as Notif['emailed'] } : {}),
+  }
+}
+
+/** Every entry of a list, or null if any one of them is not what it should be.
+ *  A list is a record, and a record with a row quietly missing is not one. */
+function all<T>(raw: unknown, each: (x: unknown) => T | null): T[] | null {
+  if (!Array.isArray(raw)) return null
+  const out: T[] = []
+  for (const x of raw) {
+    const v = each(x)
+    if (v === null) return null
+    out.push(v)
+  }
+  return out
+}
+
+/** The books, back from storage, or nothing changed at all. */
+function booksFrom(raw: unknown): boolean {
+  const b = obj(raw)
+  if (b.v !== BOOKS_VERSION) return false
+  const activity = all(b.activity, activityFrom)
+  const notifications = all(b.notifications, notificationFrom)
+  if (!activity || !notifications) return false
+  const k = obj(b.kyc)
+  if (!oneOf(k.status, ['none', 'checking', 'verified'] as const)) return false
+  const kyc: Kyc = { status: k.status,
+    ...(oneOf(k.method, ['NIN', 'BVN'] as const) ? { method: k.method } : {}),
+    ...(isStr(k.checkedOn) ? { checkedOn: k.checkedOn } : {}),
+    ...(isStr(k.last4) && /^(\d{4}|••••)$/.test(k.last4) ? { last4: k.last4 } : {}) }
+  const checks = all(b.checks, (x) => {
+    const c = obj(x)
+    const seed = state.checks.find((y) => y.key === c.key)
+    if (!seed || !oneOf(c.state, ['pending', 'passed', 'failed', 'review'] as const) || !isStr(c.detail)) return null
+    return { ...seed, state: c.state, detail: c.detail, ...(isWhen(c.at) ? { at: c.at } : { at: undefined }) }
+  })
+  const bucket = all(b.bucket, (x) => {
+    const it = obj(x)
+    return isStr(it.ticker) && find(it.ticker) && isNum(it.dollars) && it.dollars >= 0
+      ? { ticker: it.ticker, dollars: it.dollars } : null
+  })
+  const watchlist = all(b.watchlist, (x) => (isStr(x) && find(x) ? x : null))
+  const banks = all(b.banks, (x) => {
+    const y = obj(x)
+    return isStr(y.id) && isStr(y.name) && isStr(y.holder) && isStr(y.number) && /^\d{10}$/.test(y.number)
+      ? { id: y.id, name: y.name, holder: y.holder, number: y.number, last4: y.number.slice(-4) } : null
+  })
+  const audit = all(b.audit, (x) => {
+    const y = obj(x)
+    return isWhen(y.at) && isStr(y.who) && isStr(y.what) && isStr(y.target) && oneOf(y.kind, ['read', 'change'] as const)
+      ? { at: y.at, who: y.who, what: y.what, target: y.target, kind: y.kind } : null
+  })
+  if (!checks || checks.length !== state.checks.length || !bucket || !watchlist || !banks || !audit) return false
+  const u = obj(b.usage)
+  if (!isStr(u.month) || !/^\d{4}-\d{2}$/.test(u.month) || !isNum(u.used) || u.used < 0) return false
+  if (!isNum(b.accruedAt)) return false
+  // The ledger last, because restoring it replaces the one built from the
+  // seed; everything above has to have passed first.
+  if (!ledger.restore(b.ledger as ledger.Snapshot)) return false
+
+  state.activity = activity
+  state.notifications = notifications
+  state.kyc = kyc
+  state.checks = checks
+  state.bucket = bucket
+  state.watchlist = watchlist
+  state.banks = banks
+  state.audit = audit
+  usage = { month: u.month, used: u.used }
+  accruedAt = b.accruedAt
+  // The console's switches and providers are merged onto the seed by key:
+  // a switch added in a later build arrives at its default, and a key this
+  // build does not know is ignored rather than invented.
+  for (const x of Array.isArray(b.switches) ? b.switches : []) {
+    const y = obj(x)
+    const sw = state.switches.find((z) => z.key === y.key)
+    if (!sw || !isBool(y.on)) continue
+    sw.on = y.on
+    if (isStr(y.by)) sw.by = y.by
+    if (isWhen(y.at)) sw.at = y.at
+  }
+  for (const x of Array.isArray(b.providers) ? b.providers : []) {
+    const y = obj(x)
+    const pr = state.providers.find((z) => z.key === y.key)
+    if (pr && oneOf(y.state, ['up', 'slow', 'down'] as const)) pr.state = y.state
+  }
+  for (const x of Array.isArray(b.breaks) ? b.breaks : []) {
+    const y = obj(x)
+    const br = state.breaks.find((z) => z.id === y.id)
+    if (br && oneOf(y.state, ['open', 'working', 'cleared'] as const)) br.state = y.state
+  }
+  const ph = obj(b.phrase)
+  state.phraseWrittenDown = isBool(ph.written) ? ph.written : false
+  state.phraseWrittenOn = state.phraseWrittenDown && isStr(ph.on) ? ph.on : ''
+  state.cardWaitlist = isBool(b.cardWaitlist) ? b.cardWaitlist : false
+  const pe = obj(b.person)
+  if (isStr(pe.email) && pe.email.includes('@')) state.person.email = pe.email
+  if (isStr(pe.phone)) state.person.phone = pe.phone
+  if (isStr(pe.address)) state.person.address = pe.address
+  if (Array.isArray(b.devices)) {
+    const keep = new Set(b.devices.filter(isStr))
+    state.devices = state.devices.filter((d) => d.current || keep.has(d.id))
+  }
+  return true
+}
+
 export function recall(): void {
   try {
     state.unlocked = sessionStorage.getItem(SESSION) === '1'
   } catch { /* no session storage: the lock simply asks again */ }
   try {
     const raw = localStorage.getItem(KEEP)
-    if (!raw) return
-    const saved = JSON.parse(raw) as {
-      prefs?: Partial<Prefs>; seenIntro?: boolean; security?: Partial<Security>
+    if (raw) {
+      const saved = obj(JSON.parse(raw))
+      state.prefs = prefsFrom(saved.prefs)
+      state.security = securityFrom(saved.security)
+      state.seenIntro = isBool(saved.seenIntro) ? saved.seenIntro : false
     }
-    // Merged, not replaced: a preference added after this was written should
-    // arrive at its default rather than as undefined.
-    state.prefs = {
-      ...DEFAULT_PREFS, ...saved.prefs,
-      notify: { ...DEFAULT_PREFS.notify, ...(saved.prefs?.notify ?? {}) },
-      putAway: [...(saved.prefs?.putAway ?? [])],
+  } catch { /* unreadable: the defaults stand */ }
+  try {
+    const raw = localStorage.getItem(ACCOUNT)
+    if (raw) {
+      const saved = obj(JSON.parse(raw))
+      if (isBool(saved.signedIn)) state.signedIn = saved.signedIn
+      state.staff = state.signedIn && saved.staff === true
     }
-    state.security = { ...DEFAULT_SECURITY, ...saved.security }
-    state.seenIntro = saved.seenIntro ?? false
-  } catch { /* unreadable or from an older shape: the defaults stand */ }
+  } catch { /* the seed's answer stands */ }
+  try {
+    const raw = localStorage.getItem(BOOKS)
+    if (raw && !booksFrom(JSON.parse(raw))) {
+      // Kept by another version, or damaged. The seed stands, and the bad
+      // copy is not left there to fail the same way next time.
+      localStorage.removeItem(BOOKS)
+    }
+  } catch { /* the seed stands */ }
+  // Anything still on its way when the page was last closed carries on from
+  // where it was, rather than waiting for a timer that no longer exists.
+  for (const a of state.activity) if (!a.settled) follow(a)
+  accrue()
 }
 
 /** The only preference that lands on the document rather than in a screen. */
@@ -892,16 +1265,33 @@ export function applyTheme(): void {
 
 const iso = (d: string) => new Date(d).toISOString()
 
+/** The calendar month a movement counts against, as 2026-09. */
+const monthKey = (d = new Date()): string =>
+  d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')
+
+/** What has left the account, and which month it was counted in. When the
+ *  month turns, the count starts again from nothing. Seeded at the $180 the
+ *  design's opening figures show, in whatever month the demo is first opened. */
+let usage = { month: monthKey(), used: 180 }
+
+/** When interest on the loan was last charged up to. */
+let accruedAt = Date.now()
+
+let holdingsMemo: { at: number; list: Holding[] } | null = null
+
 /** The date a person would write, for "changed on" lines. */
 const today = (): string =>
   new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
 
 export const state: State = {
+  // Signed in on a first visit, because the demo opens on the product rather
+  // than on a form. From then on it is whatever it was left as: see ACCOUNT.
   signedIn: true,
+  staff: false,
   online: typeof navigator === 'undefined' ? true : navigator.onLine,
   unlocked: false,
   prefs: { ...DEFAULT_PREFS, notify: { ...DEFAULT_PREFS.notify } },
-  security: { ...DEFAULT_SECURITY },
+  security: defaultSecurity(),
   person: {
     name: 'Chinaza Okoro',
     /* example.com is reserved for exactly this and can never reach a real
@@ -927,12 +1317,22 @@ export const state: State = {
   get interestPaid() { return ledger.paidOf('lend-interest') },
   get borrowed() { return -ledger.balanceOf('loan') },
   get interestOwed() { return -ledger.balanceOf('loan.int') },
-  borrowLimit: 1860,
-  rates: { lend: 4.8, borrow: 9.4, collateral: 140 },
+  get borrowLimit() { return Math.floor(holdingsValue() * state.rates.ltv) / 100 },
+  // Fifteen per cent of what the shares are worth, which is where the $1,860
+  // this used to be fixed at came from on the opening portfolio. Far enough
+  // above the 140% sale point that a normal week's moves do not sell anybody.
+  rates: { lend: 4.8, borrow: 9.4, collateral: 140, ltv: 15 },
   // A transfer costs nothing and a card costs what the card networks charge.
   // Two ways in that cost the same are one way in wearing two names; the
   // difference is the reason to offer both.
-  fees: { trade: 0.5, fx: 0, card: 1.4 },
+  //
+  // `fx` is the spread between buying dollars and selling them, split evenly
+  // either side of the indicative rate. It was nought, and with quotes that
+  // stepped through a known sequence that meant naira to dollars and back
+  // again could be timed to come out ahead — a round trip that made money.
+  // Every rate a review states is the side's rate, so the spread is in the
+  // figure the person confirms rather than hidden behind it.
+  fees: { trade: 0.5, fx: 0.6, card: 1.4 },
   kyc: { status: 'none' },
   // Identity is one check; permission is four more. Seeded at the state a
   // person arrives in: their details are on file and nothing has been run.
@@ -984,14 +1384,20 @@ export const state: State = {
       metric: 'Block 24,881,204 · 2s behind', fallback: 'Nothing settles. Balances stay correct; movements queue.' },
     { key: '0x', name: '0x Swap API', does: 'Buy and sell quotes', state: 'slow',
       metric: '2,140ms median, up from 340ms', since: iso('2026-09-07T07:52'),
-      fallback: 'Quotes take longer to arrive. The review shows a skeleton and the rate hold starts when it lands.' },
+      fallback: 'Buying and selling stop: there is nobody to quote a price.',
+      slow: 'Quotes take longer to arrive. The review shows a skeleton and the rate hold starts when it lands.' },
     { key: 'chainlink', name: 'Chainlink', does: 'Independent reference prices', state: 'up',
       metric: 'All feeds under 30s', fallback: 'Every trade is refused: there is nothing to check a quote against.' },
     { key: 'didit', name: 'Didit', does: 'Identity and screening', state: 'up',
       metric: '4 checks today, all cleared', fallback: 'New verifications queue. Nobody already verified is affected.' },
-    { key: 'switch', name: 'Switch', does: 'Naira in and out', state: 'down',
-      metric: 'Webhooks failing since 07:14', since: iso('2026-09-07T07:14'),
-      fallback: 'Naira funding and bank payouts both stop. USDC in and out is unaffected, and the app says which.' },
+    // Slow rather than down in the seed. Down is now enforced — funding and
+    // payouts really do stop — and a demo that opened with half its naira
+    // flows refused would be a demo of the console rather than the product.
+    // Staff can mark it down from Status to see what that does.
+    { key: 'switch', name: 'Switch', does: 'Naira in and out', state: 'slow',
+      metric: 'Webhooks arriving 40s late since 07:14', since: iso('2026-09-07T07:14'),
+      fallback: 'Naira funding and bank payouts both stop. USDC in and out is unaffected, and the app says which.',
+      slow: 'Naira can take a minute longer than usual to arrive or leave. Nothing is lost.' },
     { key: 'baxi', name: 'Baxi', does: 'Airtime, data and electricity', state: 'up',
       metric: '312 bills today, 2 refused by the network',
       fallback: 'Spend stops taking payments. Nothing is charged and the screen says the partner is down.' },
@@ -1042,13 +1448,17 @@ export const state: State = {
     { key: 'security', what: 'Security review and small-value production tests end to end',
       who: 'Engineering', state: 'not-started', note: 'Blocked on the Switch sandbox' },
   ],
-  usedThisMonth: 180,
+  get usedThisMonth() { return usage.month === monthKey() ? usage.used : 0 },
   // Not a list that is kept up to date beside the ledger — a reading of it.
   // A share in this array exists because a movement put it in custody, and
   // its price and day move come off the catalogue, so nothing here can drift
   // from either. What the account opened with is in OPENING_SHARES.
   get holdings() {
-    return ledger.held().map((h) => {
+    // Read once per change to the book rather than once per access: every
+    // screen asks for this several times per render, and each answer walked
+    // the whole ledger.
+    if (holdingsMemo && holdingsMemo.at === ledger.ledgerVersion()) return holdingsMemo.list
+    const list = ledger.held().map((h) => {
       const c = find(h.ticker)
       // What it cost is read the same way the quantity is: off the trades that
       // built the position. There is no second copy to drift.
@@ -1066,6 +1476,8 @@ export const state: State = {
         gainPct: b.cost > 0 ? ((value - b.cost) / b.cost) * 100 : 0,
       }
     })
+    holdingsMemo = { at: ledger.ledgerVersion(), list }
+    return list
   },
   bucket: [],
   watchlist: ['AAPLc', 'NVDAc', 'TSLAc', 'METAc', 'VOOc'],
@@ -1120,6 +1532,7 @@ export const state: State = {
   seenIntro: false,
   cardWaitlist: false,
   phraseWrittenDown: false,
+  phraseWrittenOn: '',
   ngnPerUsd: 1500,
   rateAt: iso('2026-09-06T09:40'),
   activity: [
@@ -1172,9 +1585,13 @@ export const availableToBorrow = (): number =>
 export const buyingPower = (): number => state.cash + availableToBorrow()
 
 /** Cover is what the shares are worth against what is owed. Below the
- *  collateral floor we sell; above it nothing happens. */
-export const cover = (): number =>
-  state.borrowed === 0 ? Infinity : (holdingsValue() / state.borrowed) * 100
+ *  collateral floor we sell; above it nothing happens.
+ *
+ *  This is cover if this many dollars of shares left the account. What `sell` and
+ *  `sendShares` check before they let a share go: a sale that takes the
+ *  shares below the sale point is a sale that sells the rest of them. */
+export const coverAfter = (removed: number): number =>
+  owed() <= 0 ? Infinity : (Math.max(0, holdingsValue() - removed) / owed()) * 100
 
 export const sellPoint = (): number => state.borrowed * (state.rates.collateral / 100)
 
@@ -1257,6 +1674,17 @@ export function settlement(amount: number): Settlement {
   return 'ok'
 }
 
+/** Whether a movement is one nobody has answered. Read off the flag it was
+ *  written with; rows from before the flag existed fall back to the cents. */
+export const unanswered = (a: Activity): boolean =>
+  !a.settled && (a.unanswered ?? settlement(a.amount) === 'pending')
+
+/** How long an unanswered movement is left in Still settling before it is
+ *  returned. The README's rule is that `.98` is "no answer in time"; this is
+ *  the time. Long enough to be seen waiting, short enough that nothing sits
+ *  open for ever — which is what every `.98` used to do. */
+export const UNANSWERED_MS = 2 * 60 * 1000
+
 /** The same rule, on the naira side.
  *
  *  `settlement` reads the cents of a dollar figure, which is the figure a
@@ -1323,12 +1751,24 @@ export const moneyNaira = (n: number): string =>
    was decoration on a screen whose whole job is to be believed about a rate.
    A quote is the rate at a moment, and it stops being honoured. */
 
+/** Which way dollars are going. `buy` is naira becoming dollars — adding
+ *  money, converting naira in — and `sell` is dollars becoming naira: a
+ *  payout, a bill, converting out. */
+export type Side = 'buy' | 'sell'
+
 export interface Quote {
   /** Naira per dollar, fixed for the life of this quote. */
   rate: number
   /** When it stops being honoured, in epoch milliseconds. */
   until: number
+  side: Side
 }
+
+/** The rate on one side of the desk: the indicative rate with half the spread
+ *  on it, up when you are buying dollars and down when you are selling them.
+ *  So a round trip always costs the spread and can never come out ahead. */
+export const sideRate = (side: Side, mid = state.ngnPerUsd): number =>
+  Math.round(mid * (1 + (side === 'buy' ? 1 : -1) * state.fees.fx / 200))
 
 export const RATE_HOLD_MS = 90_000
 
@@ -1336,15 +1776,27 @@ export const RATE_HOLD_MS = 90_000
  *  rather than drawn at random, because a figure on screen must not move on
  *  its own — it moves when you ask for a new one, which is what a hold is
  *  for. The first quote of a session is the indicative rate exactly, so the
- *  review agrees with the composer you just came from. */
-const DRIFT = [0, 0.004, -0.003, 0.007, -0.005, 0.002]
+ *  review agrees with the composer you just came from.
+ *
+ *  Every step is smaller than half the spread. The steps used to reach 0.7%,
+ *  which with no spread at all meant a person could ask for rates until one
+ *  was high, convert, ask until one was low, and convert back richer. Now the
+ *  widest gap two quotes can have (0.4%) is less than what a round trip costs
+ *  (0.6%), so no sequence of re-quotes pays. */
+const DRIFT = [0, 0.002, -0.0015, 0.001, -0.002, 0.0005]
 let quoteSeq = 0
 
-export function takeQuote(): Quote {
-  const rate = Math.round(state.ngnPerUsd * (1 + DRIFT[quoteSeq % DRIFT.length]))
+export function takeQuote(side: Side = 'sell'): Quote {
+  const mid = state.ngnPerUsd * (1 + DRIFT[quoteSeq % DRIFT.length])
   quoteSeq += 1
-  return { rate, until: Date.now() + RATE_HOLD_MS }
+  return { rate: sideRate(side, mid), until: Date.now() + RATE_HOLD_MS, side }
 }
+
+/** Whether a rate is one this desk could have quoted today. Every action that
+ *  takes a rate checks it, because the rate reaches the action from a dialog
+ *  and a dialog is rebuilt from an address anybody can edit. */
+const rateOk = (rate: number): boolean =>
+  Number.isFinite(rate) && Math.abs(rate / state.ngnPerUsd - 1) <= 0.02
 
 export const quoteLive = (q: Quote): boolean => q.until > Date.now()
 
@@ -1354,11 +1806,11 @@ export const quoteLive = (q: Quote): boolean => q.until > Date.now()
  *  one is the moment a dropped signal costs somebody money. */
 export const QUOTE_MS = 450
 
-export function requestQuote(): Promise<Quote> {
+export function requestQuote(side: Side = 'sell'): Promise<Quote> {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       if (!state.online) reject(new Error('offline'))
-      else resolve(takeQuote())
+      else resolve(takeQuote(side))
     }, QUOTE_MS)
   })
 }
@@ -1433,9 +1885,33 @@ export const tradeFee = (amount: number): number =>
 export const cardFee = (naira: number): number =>
   Math.round(naira * state.fees.card / 100)
 
-/** The most that can be invested once the fee has to fit in the cash too. */
-export const maxInvestable = (): number =>
-  Math.floor((state.cash / (1 + state.fees.trade / 100)) * 100) / 100
+/** What one balance holds, in its own unit: dollars for a stablecoin, naira
+ *  for naira. The screens used to cap every payment at `cash` — both
+ *  stablecoins added together — and then take it out of one of them, so $800
+ *  of USDT could be asked to pay for $1,500 of Apple. */
+export const purseHolds = (a: Asset): number => ledger.balanceOf(purseFor(a))
+
+/** The same, in dollars, for the ceilings that are dollar figures. */
+export const purseDollars = (a: Asset): number =>
+  a === 'ngn' ? purseHolds('ngn') / state.ngnPerUsd : purseHolds(a)
+
+/** The most that can be invested out of one balance once the fee has to fit
+ *  in it too. */
+export const maxInvestable = (a: Asset = payAsset()): number =>
+  Math.floor((purseHolds(a) / (1 + state.fees.trade / 100)) * 100) / 100
+
+/** What a network charges to carry a payment. TRON and Ethereum charge the
+ *  sender, and the review has always said so — $1 and $6 — while the wallet
+ *  was charged nothing. Base is sponsored while the `gas` switch is on; off,
+ *  the customer pays the gas, which is exactly what the switch says. */
+export const BASE_GAS = 0.05
+export const networkFee = (net?: string): number => {
+  if (!net) return 0
+  const n = netOf(net)
+  if (!n) return 0
+  if (n.fee) return n.fee
+  return n.key === 'base' && !switchOn('gas') ? BASE_GAS : 0
+}
 
 /** What a trade was before its fee — the figure the person typed.
  *
@@ -1456,8 +1932,10 @@ export const bucketTotal = (): number =>
  *  payment, not per company, which is the point of paying once. */
 export const bucketCost = (): number => bucketTotal() + tradeFee(bucketTotal())
 
+/** What the balance that pays is short by. The bucket is paid from one
+ *  stablecoin, so it is measured against that one, not against both. */
 export const bucketShortfall = (): number =>
-  Math.max(0, bucketCost() - state.cash)
+  Math.max(0, bucketCost() - purseHolds(payAsset()))
 
 /** Every reason the basket cannot be paid for, company by company. Empty
  *  means it is safe to show a confirm button.
@@ -1499,19 +1977,36 @@ export function subscribe(fn: Listener): () => void {
   listeners.add(fn)
   return () => listeners.delete(fn)
 }
-function changed(): void {
-  remember()
+function notify(): void {
   for (const fn of listeners) fn()
 }
+function changed(): void {
+  remember()
+  notify()
+}
 
-function record(a: Omit<Activity, 'ref' | 'at' | 'settled'> & Partial<Activity>): Activity {
+/** A reference nobody has been given yet. Six random characters collide once
+ *  in a few hundred thousand, which is often enough over a pilot to hand two
+ *  movements one receipt — so it is checked against every reference there is
+ *  and drawn again when it is taken. */
+const newRef = (): string =>
+  reference((r) => state.activity.some((a) => a.ref === r) || ledger.postings().some((p) => p.ref === r))
+
+type Draft = Omit<Activity, 'ref' | 'at' | 'settled'> & Partial<Activity>
+
+function record(a: Draft): Activity {
   // A movement that left the building can come back unconfirmed. Interest and
-  // moves between your own buckets cannot: there is nobody else in them.
+  // moves between your own buckets cannot: there is nobody else in them. A
+  // decline never reaches here — every action refuses one before it writes,
+  // where it used to be written down as settled — so what is not answered is
+  // exactly what was flagged as unanswered. It is read off the flag rather
+  // than off the cents of the recorded total, which has the fee in it and
+  // could end in .98 on an order nobody typed that way.
   const outward = a.kind === 'payment' || a.kind === 'trade'
   const entry: Activity = {
-    ref: a.ref ?? reference(),
+    ref: a.ref ?? newRef(),
     at: a.at ?? new Date().toISOString(),
-    settled: a.settled ?? (outward ? settlement(a.amount) !== 'pending' : true),
+    settled: a.settled ?? (outward ? !a.unanswered : true),
     kind: a.kind,
     who: a.who,
     type: a.type,
@@ -1528,34 +2023,202 @@ function record(a: Omit<Activity, 'ref' | 'at' | 'settled'> & Partial<Activity>)
     // replayed out of the default purse rather than the one it named.
     purse: a.purse,
     net: a.net,
+    fill: a.fill,
+    leg: a.leg,
+    unanswered: a.unanswered,
+    counted: a.counted,
   }
+  // Undefined fields are left off, so what is kept is what was said.
+  for (const k of Object.keys(entry) as (keyof Activity)[]) if (entry[k] === undefined) delete entry[k]
   state.activity.unshift(entry)
   return entry
 }
 
-/** One movement, written down twice: as the row a person reads, and as the
- *  entries that have to balance. The same reference on both, so the receipt
- *  and the statement are provably the same event — and because `post` refuses
- *  an unbalanced set, an action cannot record a movement it cannot account
- *  for. That is the whole guarantee. */
-function move(
-  a: Omit<Activity, 'ref' | 'at' | 'settled'> & Partial<Activity>,
-  what: string,
-  entries: ledger.Entry[],
-  extra: { kind?: string; rate?: number; pair?: string } = {},
-): Activity {
-  const entry = record(a)
-  ledger.post({ ref: entry.ref, at: entry.at, what, entries, ...extra })
-  return entry
+/** One movement, written down twice: as the entries that have to balance, and
+ *  as the row a person reads. The same reference on both, so the receipt and
+ *  the statement are provably the same event — and because `post` refuses an
+ *  unbalanced set, an action cannot record a movement it cannot account for.
+ *
+ *  The ledger first. It used to be the row first, so a posting that was
+ *  refused left a row in the activity for a movement that never happened. */
+function move(a: Draft, postings: { what: string; entries: ledger.Entry[]; kind?: string;
+                                    rate?: number; pair?: boolean }[]): Activity {
+  const ref = a.ref ?? newRef()
+  const at = a.at ?? new Date().toISOString()
+  for (const p of postings) {
+    ledger.post({ ref, at, what: p.what, entries: p.entries, kind: p.kind, rate: p.rate,
+                  pair: p.pair ? ref : undefined })
+  }
+  return record({ ...a, ref, at })
+}
+
+/* ------------------------------------------------------------ the checks --
+   Every action below starts with the questions it has to answer before any
+   money moves, and they are asked here rather than on the screens. The
+   screens ask them too, to take a button away before it is pressed — but a
+   dialog is an address, an address is something anybody can type, and
+   `?sheet=send-review&v=-500` used to create five hundred dollars. A rule
+   that only exists in a view is a rule one route around the view undoes. */
+
+/** An amount of money, or a refusal. Not a number, not finite, nothing, or
+ *  less than nothing are all refused; what is left is rounded to the unit it
+ *  is counted in. */
+function amountOf(n: unknown, unit: 'usd' | 'ngn' = 'usd', what = 'That amount'): number {
+  if (typeof n !== 'number' || !Number.isFinite(n)) refuse(`${what} is not an amount we can move.`)
+  const v = unit === 'ngn' ? Math.round(n as number) : Math.round((n as number) * 100) / 100
+  // Judged after rounding, because 1e308 is finite until it is multiplied by
+  // a hundred; and capped far above anything an account here can hold.
+  if (!Number.isFinite(v) || v > 1e12) refuse(`${what} is not an amount we can move.`)
+  if (!(v > 0)) refuse(`${what} has to be more than nothing.`)
+  return v
+}
+
+/** A balance this movement may come out of. */
+function purseOf(a: unknown, dollarsOnly = false): Asset {
+  if (!oneOf(a, ASSET_KEYS)) refuse('That is not a balance you hold.')
+  if (dollarsOnly && !DOLLARS.includes(a as Asset)) refuse('Only dollars can pay for this.')
+  return a as Asset
+}
+
+/** Enough in the one balance that is paying. */
+function covers(a: Asset, amount: number): void {
+  const held = purseHolds(a)
+  if (held + 1e-6 < amount) {
+    const fig = (n: number) => (a === 'ngn' ? naira(n) : usd(n))
+    refuse(`Your ${assetOf(a)!.name} holds ${fig(held)}, which is less than the ${fig(amount)} this needs. Nothing has moved.`)
+  }
+}
+
+/** Within what the account may move. */
+function withinLimit(dollars: number): void {
+  if (dollars > movementCeiling() + 1e-6) {
+    refuse(`${ceilingLabel(Infinity, 'Your limit')} is ${usd(movementCeiling())}. Nothing has moved.`)
+  }
+}
+
+/** A switch the console has not turned off. */
+function switchedOn(key: string): void {
+  const sw = state.switches.find((x) => x.key === key)
+  if (sw && !sw.on) refuse(`${sw.label} is paused right now. ${sw.effect}`)
+}
+
+/** A provider that is answering. */
+function answering(key: string): void {
+  const p = state.providers.find((x) => x.key === key)
+  if (p && p.state === 'down') refuse(`${p.name} is not responding right now. ${p.fallback}`)
+}
+
+function online(): void {
+  if (!state.online) refuse('No connection, so nothing was sent. Try again when you are back online.')
+}
+
+/** A rate this desk could have quoted. */
+function fairRate(rate: number): number {
+  if (!rateOk(rate)) refuse('That rate is not one we quoted. Get a new rate and try again.')
+  return rate
+}
+
+/** The bank has not said no. */
+function notDeclined(dollars: number): void {
+  if (settlement(dollars) === 'declined') {
+    refuse('Your bank said no. Nothing left your account. Check with them, or try less.')
+  }
+}
+
+/** Money that has left, for the monthly limit. Buying a share counts: the
+ *  marketing's phrase is "financial and investment services", and a limit
+ *  that only watched transfers would be a limit with a hole in it. Called
+ *  after the movement is written, never before: a count for a movement that
+ *  was then refused is a limit spent on nothing. */
+function countAgainstLimit(amount: number): void {
+  if (usage.month !== monthKey()) usage = { month: monthKey(), used: 0 }
+  usage.used = Math.round((usage.used + amount) * 100) / 100
+}
+
+/* ----------------------------------------------------------- following --
+   What happens to a movement after the button, when there is a second stage.
+
+   A payout, money coming in, a conversion: each has a stage that lands later,
+   and each used to be a `setTimeout` set by whichever dialog confirmed it —
+   so a reload between the two stages left the money in between for ever.
+   They are followed from here now, by the movement's own record, and
+   `recall` follows everything still open after a reload.
+
+   And the `.98`s. "No answer in time" used to mean no answer ever: the row
+   sat in Still settling and the money sat in an account between two banks.
+   Now it waits `UNANSWERED_MS` from when it was made, and then it is
+   returned — the money goes back where it came from, the row says so, and
+   what it counted against the month is given back. */
+
+const PAYOUT_MS = 3400
+/** How long the two legs of a conversion are apart. Shorter than a payout,
+ *  because a payout waits on a bank and this waits on us.
+ *
+ *  It was 1,600ms, which was wrong for a reason that is not visible in this
+ *  file: the outcome sheet reveals itself over 980ms — tick, figure, panel,
+ *  buttons, each on its own delay — so a 1,600ms window left "On its way"
+ *  fully legible for about half a second before it became "Converted". */
+const CONVERT_MS = 2800
+/* How long the two ways in actually take. A card is pulled by us and clears
+   in seconds; a transfer is pushed by a person through their own bank and
+   takes as long as the banks take. */
+const CARD_MS = 1400
+const TRANSFER_MS = 2600
+
+const following = new Set<string>()
+
+function follow(a: Activity): void {
+  if (a.settled || following.has(a.ref)) return
+  following.add(a.ref)
+  const age = Date.now() - Date.parse(a.at)
+  const after = (ms: number, fn: () => void) =>
+    setTimeout(() => { following.delete(a.ref); fn() }, Math.max(0, ms - age))
+  if (unanswered(a)) { after(UNANSWERED_MS, () => actions.giveUp(a.ref)); return }
+  if (a.swap) { after(CONVERT_MS, () => actions.landConvert(a.ref)); return }
+  if (a.kind === 'payment' && a.amount > 0 && (a.rail === 'bank' || a.rail === 'card')) {
+    after(a.rail === 'card' ? CARD_MS : TRANSFER_MS, () => actions.landAddMoney(a.ref))
+    return
+  }
+  if (a.kind === 'payment' && a.amount < 0 && (a.leg || a.note === 'Paid out in naira' || a.note === 'Converted to naira')) {
+    after(PAYOUT_MS, () => actions.landPayout(a.ref))
+    return
+  }
+  // A trade or a payment with nobody to wait on: it is settled as written.
+  following.delete(a.ref)
+}
+
+/* ------------------------------------------------------------- interest --
+   What the loan costs, charged as it is owed. The figure on the borrowing
+   screen used to be a fixed $8.90 that never moved however long the loan was
+   open. Now each whole day that passes with money owed adds that day's
+   interest at the borrowing rate: from the pool's account to what you owe,
+   so the ledger says who is owed it. */
+const DAY_MS = 24 * 60 * 60 * 1000
+
+function accrue(now = Date.now()): void {
+  if (state.borrowed <= 0) { accruedAt = now; return }
+  const days = Math.floor((now - accruedAt) / DAY_MS)
+  if (days < 1) return
+  const charge = Math.round(state.borrowed * state.rates.borrow / 100 / 365 * days * 100) / 100
+  accruedAt += days * DAY_MS
+  if (charge <= 0) return
+  ledger.post({
+    ref: newRef(), at: new Date(now).toISOString(), kind: 'loan-interest',
+    what: `Interest on ${usd(state.borrowed)} borrowed, ${days} ${days === 1 ? 'day' : 'days'} at ${state.rates.borrow}%`,
+    entries: [{ account: 'interest', amount: charge }, { account: 'loan.int', amount: -charge }],
+  })
+  remember()
 }
 
 export const actions = {
   /** The connection came or went. Nothing else in the app polls for this:
-   *  the browser tells us, and every screen re-reads from here. */
+   *  the browser tells us, and every screen re-reads from here. It is not
+   *  kept, so it does not touch storage — it used to rewrite all of it every
+   *  time a commute dropped the signal. */
   setOnline(v: boolean) {
     if (state.online === v) return
     state.online = v
-    changed()
+    notify()
   },
 
   readNotification(id: string) {
@@ -1579,20 +2242,16 @@ export const actions = {
     changed()
   },
 
-  /** Money that has left, for the monthly limit. Buying a share counts: the
-   *  marketing's phrase is "financial and investment services", and a limit
-   *  that only watched transfers would be a limit with a hole in it. */
-  countAgainstLimit(amount: number) {
-    state.usedThisMonth = Math.round((state.usedThisMonth + amount) * 100) / 100
-  },
-
-  /* ----- the ops console ----- */
+  /* ----- the ops console -----
+     Every action here is staff's, and refuses anybody else. The console's
+     screen is gated too; this is the floor under it. */
 
   /** Flip a switch, and write down who did it. An audit line is not a nicety:
    *  the whole value of a kill switch is knowing afterwards who used it and
    *  when, and a console that changes the product silently is worse than no
    *  console. */
   flipSwitch(key: string, by = 'you@tokkenly') {
+    if (!state.staff) return
     const sw = state.switches.find((x) => x.key === key)
     if (!sw) return
     sw.on = !sw.on
@@ -1606,10 +2265,26 @@ export const actions = {
     changed()
   },
 
+  /** Mark a provider up, slow or down. Down is enforced: the actions that
+   *  depend on it refuse, with the provider's own fallback sentence. */
+  setProvider(key: string, to: Provider['state'], by = 'you@tokkenly') {
+    if (!state.staff) return
+    const p = state.providers.find((x) => x.key === key)
+    if (!p || p.state === to) return
+    p.state = to
+    p.since = new Date().toISOString()
+    state.audit.unshift({
+      at: p.since, who: by, kind: 'change',
+      what: `Marked ${p.name} ${to}`, target: 'Provider · ' + key,
+    })
+    changed()
+  },
+
   /** Move a reconciliation break along. Three states, because "someone is on
    *  it" is a real and useful thing to know and a two-state list forces
    *  everybody to guess. */
   workBreak(id: string, to: Break['state'], by = 'you@tokkenly') {
+    if (!state.staff) return
     const b = state.breaks.find((x) => x.id === id)
     if (!b) return
     b.state = to
@@ -1621,12 +2296,21 @@ export const actions = {
     changed()
   },
 
-  /* ----- identity ----- */
+  /* ----- identity -----
+     Simulated, and says so: there is no Didit to call, so answering the
+     questions finishes the check. What is not simulated any more is what the
+     answer unlocks — `buy` reads the checks — and the two controls that undo
+     or refuse a check are staff's, in the console, rather than two links on
+     the customer's own settings. */
   startVerification(method: 'NIN' | 'BVN', number: string) {
-    state.kyc = { status: 'checking', method, last4: number.slice(-4) }
+    state.kyc = { status: 'checking', method, last4: number.replace(/\D/g, '').slice(-4) }
     changed()
   },
-  finishVerification() {
+  finishVerification(): boolean {
+    // Screening is Didit's. While it is down, a check waits rather than
+    // passing on nobody's word.
+    const didit = state.providers.find((p) => p.key === 'didit')
+    if (didit?.state === 'down') { changed(); return false }
     state.kyc = {
       ...state.kyc, status: 'verified',
       checkedOn: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
@@ -1645,16 +2329,21 @@ export const actions = {
     }
     state.checks = state.checks.map((c) => ({ ...c, state: said[c.key][0], detail: said[c.key][1], at }))
     changed()
+    return true
   },
-  resetVerification() {
+  resetVerification(by = 'you@tokkenly') {
+    if (!state.staff) return
     state.kyc = { status: 'none' }
     state.checks = state.checks.map((c) => ({ ...c, state: 'pending', detail: '', at: undefined }))
+    state.audit.unshift({ at: new Date().toISOString(), who: by, kind: 'change',
+      what: 'Cleared an identity check', target: state.person.name })
     changed()
   },
   /** The other ending, and the one nobody builds. A person can be exactly who
    *  they say and still not be allowed to hold the instrument, and the screen
    *  that says so has to exist before somebody meets it. */
-  failEligibility() {
+  failEligibility(by = 'you@tokkenly') {
+    if (!state.staff) return
     const at = new Date().toISOString()
     state.kyc = { ...state.kyc, status: 'verified',
       checkedOn: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) }
@@ -1662,6 +2351,8 @@ export const actions = {
       ? { ...c, state: 'failed' as CheckState, at,
           detail: 'Your address is outside the pilot. We know who you are. We cannot open trading for you yet.' }
       : { ...c, state: 'passed' as CheckState, at, detail: 'Passed' })
+    state.audit.unshift({ at, who: by, kind: 'change',
+      what: 'Refused an eligibility check', target: state.person.name })
     changed()
   },
 
@@ -1670,86 +2361,113 @@ export const actions = {
      errand — "why is there a send and there is a withdrawal?" — and the
      honest answer is that there is not. Both take dollars out of the same
      wallet; what differs is where they land, and that one fact decides the
-     currency, the speed, the fee and whether anybody's name needs checking.
-
-     So the destination is the question, and everything else follows from it:
+     currency, the speed, the fee and whether anybody's name needs checking:
 
        tokkenly  another account here. Dollars, instantly, free.
-       chain     a Base address. Dollars, on the network, free, and final.
+       chain     an address on a network. Dollars, and the network's fee.
        bank      any Nigerian account, yours or somebody else's. Dollars out,
                  naira in, at the rate — which makes it a conversion, so it is
                  two postings joined by that rate rather than one.
-  */
-  sendMoney(to: Destination, amount: number, rate = state.ngnPerUsd,
+
+     `amount` is dollars, except from naira, where it is naira. */
+  sendMoney(to: Destination, amount: number, rate = sideRate('sell'),
             asset: Asset = state.prefs.payWith, net?: string): Activity {
-    // One limit policy for every outflow (item 06), and the limit is a dollar
-    // figure — so a payment made in naira counts the dollars it is worth
-    // rather than the naira it is. Counting the naira put ₦145,000 against a
-    // $1,000 month and shut the account after one bill.
-    actions.countAgainstLimit(asset === 'ngn' ? amount / rate : amount)
+    online()
+    switchedOn('send')
+    const from = purseOf(asset)
+    if (!to || !oneOf(to.rail, ['tokkenly', 'chain', 'bank'] as const) || !isStr(to.name) || !to.name.trim()) {
+      refuse('Nobody to send it to. Go back and pick who it is for.')
+    }
+    if (to.rail !== 'bank' && from === 'ngn') refuse('Naira can only go to a Nigerian bank account.')
+
     // Naira out to a Nigerian bank, from naira. No desk, no rate, no second
     // posting: the naira you held are the naira that left, and a conversion
     // between naira and naira is a fiction with a spread in it.
-    if (to.rail === 'bank' && asset === 'ngn') {
-      const account = to.bankId ? 'bank:' + to.bankId : 'payee:' + to.name
-      ledger.account(account, to.name + (to.number ? ' ···· ' + to.number.slice(-4) : ''))
-      const a = record({
-        kind: 'payment', who: to.name, type: 'Sent', amount: -Math.round(amount) / rate,
-        note: to.bankId ? 'Converted to naira' : 'Paid out in naira',
-        purse: 'ngn', settled: false,
-      })
-      ledger.post({
-        ref: a.ref, at: a.at,
-        what: `${naira(amount)} queued for ${to.name}`,
-        entries: [{ account: 'wallet.ngn', amount: -amount },
-                  { account: 'payout', amount: amount }],
-      })
-      setTimeout(() => actions.landPayout(a.ref, rate), PAYOUT_MS)
-      changed()
-      return a
-    }
     if (to.rail === 'bank') {
+      switchedOn('payout.ngn')
+      answering('switch')
+      if (!to.bankId && !/^\d{10}$/.test((to.number ?? '').replace(/\D/g, ''))) {
+        refuse('That is not a ten digit account number. Nothing has moved.')
+      }
+      if (to.bankId && !state.banks.some((b) => b.id === to.bankId)) {
+        refuse('That bank is not one of yours any more. Nothing has moved.')
+      }
+      const account = payeeAccount(to)
+      ledger.account(account, to.name + (to.number ? ' ···· ' + to.number.slice(-4) : ''))
+      const note = to.bankId ? 'Converted to naira' : 'Paid out in naira'
+      if (from === 'ngn') {
+        const ngn = amountOf(amount, 'ngn')
+        const mid = state.ngnPerUsd
+        // One limit policy for every outflow (item 06), and the limit is a
+        // dollar figure — so a payment made in naira counts the dollars it is
+        // worth rather than the naira it is. Rounded to the cent, because a
+        // dollar figure with nine decimals on a receipt is a bug on a receipt.
+        const dollars = Math.round((ngn / mid) * 100) / 100
+        withinLimit(dollars)
+        covers('ngn', ngn)
+        const a = move(
+          { kind: 'payment', who: to.name, type: 'Sent', amount: -dollars, note, purse: 'ngn',
+            settled: false, unanswered: settlement(dollars) === 'pending',
+            leg: { naira: ngn, account }, counted: dollars },
+          [{ what: `${naira(ngn)} queued for ${to.name}`,
+             entries: [{ account: 'wallet.ngn', amount: -ngn }, { account: 'payout', amount: ngn }] }],
+        )
+        countAgainstLimit(dollars)
+        follow(a)
+        changed()
+        return a
+      }
       // Two stages, because there are two. The dollars leave the wallet the
       // moment it is authorised and the naira reach somebody's bank when the
       // banks get round to it, and a screen that calls the first one "sent"
       // is telling somebody their rent is paid when it is sitting on a desk.
       // So this half only ever writes what has actually happened.
-      const naira = Math.round(amount * rate)
-      const account = to.bankId ? 'bank:' + to.bankId : 'payee:' + to.name
-      ledger.account(account, to.name + (to.number ? ' ···· ' + to.number.slice(-4) : ''))
-      const a = record({
-        kind: 'payment', who: to.name, type: 'Sent', amount: -amount,
-        note: to.bankId ? 'Converted to naira' : 'Paid out in naira',
-        purse: asset, settled: false,
-      })
-      ledger.post({
-        ref: a.ref, at: a.at, pair: a.ref, rate,
-        what: `Took ${usd(amount)} from your ${assetOf(asset)!.name}`,
-        entries: [{ account: purseFor(asset), amount: -amount }, { account: 'desk.usd', amount }],
-      })
-      // The naira are ours until the bank has them. `payout` is the account
-      // they wait in, and it is the figure the Transfer screen shows as money
-      // on its way out.
-      ledger.post({
-        ref: a.ref, at: a.at, pair: a.ref, rate,
-        what: `₦${naira.toLocaleString('en-US')} queued for ${to.name}`,
-        entries: [{ account: 'desk.ngn', amount: -naira }, { account: 'payout', amount: naira }],
-      })
-      setTimeout(() => actions.landPayout(a.ref, rate), PAYOUT_MS)
+      const dollars = amountOf(amount)
+      fairRate(rate)
+      notDeclined(dollars)
+      withinLimit(dollars)
+      covers(from, dollars)
+      const ngn = Math.round(dollars * rate)
+      const a = move(
+        { kind: 'payment', who: to.name, type: 'Sent', amount: -dollars, note, purse: from,
+          settled: false, unanswered: settlement(dollars) === 'pending',
+          leg: { naira: ngn, rate, account }, counted: dollars },
+        [{ what: `Took ${usd(dollars)} from your ${assetOf(from)!.name}`, rate, pair: true,
+           entries: [{ account: purseFor(from), amount: -dollars }, { account: 'desk.usd', amount: dollars }] },
+         // The naira are ours until the bank has them. `payout` is the account
+         // they wait in, and it is the figure the Transfer screen shows as
+         // money on its way out.
+         { what: `${naira(ngn)} queued for ${to.name}`, rate, pair: true,
+           entries: [{ account: 'desk.ngn', amount: -ngn }, { account: 'payout', amount: ngn }] }],
+      )
+      countAgainstLimit(dollars)
+      follow(a)
       changed()
       return a
     }
+
     // Dollars, and the far end is the only difference: a Tokkenly account, or
-    // the network for anything outside it.
-    const on = net ?? defaultNet(asset)?.key ?? 'base'
+    // the network for anything outside it. The network's fee is charged on
+    // top, from the same balance, because the review has always stated it and
+    // a stated fee that is never taken is a stated fee that is wrong.
+    const dollars = amountOf(amount)
+    const on = to.rail === 'chain' ? (net && netOf(net) ? net : defaultNet(from)?.key ?? 'base') : undefined
+    if (on === 'base') answering('base')
+    const fee = on ? networkFee(on) : 0
+    notDeclined(dollars)
+    withinLimit(dollars + fee)
+    covers(from, dollars + fee)
     const far = to.rail === 'tokkenly' ? 'person:' + to.name : 'chain.' + on
     if (to.rail === 'tokkenly') ledger.account(far, to.name)
     const a = move(
-      { kind: 'payment', who: to.name, type: 'Sent', amount: -amount,
-        purse: asset, net: to.rail === 'tokkenly' ? undefined : on },
-      `Sent ${usd(amount)} to ${to.name}`,
-      [{ account: purseFor(asset), amount: -amount }, { account: far, amount }],
+      { kind: 'payment', who: to.name, type: 'Sent', amount: -(dollars + fee), purse: from, net: on,
+        fee: fee || undefined, unanswered: settlement(dollars) === 'pending', counted: dollars + fee },
+      [{ what: `Sent ${usd(dollars)} to ${to.name}` + (fee ? `, with ${usd(fee)} network fee` : ''),
+         entries: [{ account: purseFor(from), amount: -(dollars + fee) }, { account: far, amount: dollars },
+                   ...(fee ? [{ account: 'fees', amount: fee }] : [])] }],
     )
+    countAgainstLimit(dollars + fee)
+    follow(a)
     changed()
     return a
   },
@@ -1768,61 +2486,54 @@ export const actions = {
    *
    *  It settles at once, and that is not a shortcut. A bank payout waits on
    *  a bank and has an account to wait in; a top-up has nothing to wait for.
-   *  The network takes it or refuses it, and a refusal never gets here: the
-   *  review checks `billOutcome` before it confirms, so nothing is written
-   *  and nothing leaves the wallet. */
+   *  The network takes it or refuses it, and a refusal is refused here, before
+   *  anything is written. */
   payBill(bill: { what: string; who: string; naira: number; target: string;
-                  prepaid?: boolean; note?: string; asset?: Asset },
-          rate = state.ngnPerUsd): Activity {
-    const asset = bill.asset ?? state.prefs.payWith
-    const dollars = Math.round((bill.naira / rate) * 100) / 100
+                  prepaid?: boolean; exam?: boolean; note?: string; asset?: Asset },
+          rate = sideRate('sell')): Activity {
+    online()
+    switchedOn('spend.bills')
+    answering('baxi')
+    const asset = purseOf(bill.asset ?? state.prefs.payWith)
+    const ngn = amountOf(bill.naira, 'ngn')
+    if (!isStr(bill.who) || !isStr(bill.target) || !bill.who || !bill.target) refuse('Nothing to pay. Go back and pick it again.')
+    if (billOutcome(ngn) === 'declined') {
+      refuse(`${bill.who} would not take that payment. Nothing left your wallet. Try again, or try a different amount.`)
+    }
+    fairRate(rate)
+    const dollars = Math.round((ngn / rate) * 100) / 100
     // Counted whichever balance paid. Item 06 says one limit policy for every
     // outflow, and a bill paid from naira is an outflow — the ceiling is a
     // dollar figure, so what is counted is what it was worth.
-    actions.countAgainstLimit(dollars)
-    const a = record({
-      kind: 'payment', who: bill.who, type: bill.what, amount: -dollars,
-      note: bill.note, purse: asset,
-      bill: { target: bill.target, naira: bill.naira },
-      settled: true,
-    })
-    // The token is what a prepaid payment actually buys, and it is derived
-    // from the reference, so it can only be minted once the record has one.
-    // Written down rather than recomputed on every read: a receipt opened
-    // tomorrow has to show the same twenty digits somebody typed into a wall.
-    if (bill.prepaid) a.bill!.token = tokenFor(a.ref)
-    if (asset === 'ngn') {
-      ledger.post({
-        ref: a.ref, at: a.at,
-        what: `${naira(bill.naira)} paid to ${bill.who}`,
-        entries: [{ account: 'wallet.ngn', amount: -bill.naira },
-                  { account: 'biller', amount: bill.naira }],
-      })
-      changed()
-      return a
-    }
-    ledger.post({
-      ref: a.ref, at: a.at, pair: a.ref, rate,
-      what: `Took ${usd(dollars)} from your ${assetOf(asset)!.name}`,
-      entries: [{ account: purseFor(asset), amount: -dollars }, { account: 'desk.usd', amount: dollars }],
-    })
-    ledger.post({
-      ref: a.ref, at: a.at, pair: a.ref, rate,
-      what: `${naira(bill.naira)} paid to ${bill.who}`,
-      entries: [
-        { account: 'desk.ngn', amount: -bill.naira },
-        { account: 'biller', amount: bill.naira },
-      ],
-    })
+    withinLimit(dollars)
+    covers(asset, asset === 'ngn' ? ngn : dollars)
+    const ref = newRef()
+    // The token is what a prepaid payment actually buys, and an exam PIN is
+    // what an exam payment buys. Both are derived from the reference and
+    // written down rather than recomputed on every read: a receipt opened
+    // tomorrow has to show the same digits somebody typed into a wall, or
+    // into the WAEC portal.
+    const billed = { target: bill.target, naira: ngn,
+                     ...(bill.prepaid ? { token: tokenFor(ref) } : {}),
+                     ...(bill.exam ? { pin: pinFor(ref) } : {}) }
+    const a = move(
+      { ref, kind: 'payment', who: bill.who, type: bill.what, amount: -dollars, note: bill.note,
+        purse: asset, bill: billed, settled: true, counted: dollars },
+      asset === 'ngn'
+        ? [{ what: `${naira(ngn)} paid to ${bill.who}`,
+             entries: [{ account: 'wallet.ngn', amount: -ngn }, { account: 'biller', amount: ngn }] }]
+        : [{ what: `Took ${usd(dollars)} from your ${assetOf(asset)!.name}`, rate, pair: true,
+             entries: [{ account: purseFor(asset), amount: -dollars }, { account: 'desk.usd', amount: dollars }] },
+           { what: `${naira(ngn)} paid to ${bill.who}`, rate, pair: true,
+             entries: [{ account: 'desk.ngn', amount: -ngn }, { account: 'biller', amount: ngn }] }],
+    )
+    countAgainstLimit(dollars)
     changed()
     return a
   },
 
   /* ------------------------------------------------------- adding money --
      Money arriving takes time, and the product used to pretend it did not.
-     `addMoney` credited the wallet the instant the button was pressed, from a
-     bank nobody had told, which is the single most dishonest thing the
-     prototype did: it invented the one event the whole flow is about.
 
      There are two ways in and they behave differently, which is the reason to
      offer both rather than to dress one up as two.
@@ -1838,45 +2549,51 @@ export const actions = {
      Both run in two steps. `startAddMoney` records what left; `landAddMoney`
      records what arrived and converts it. In between, the naira sits in
      `inflight` — an account that is neither yours nor ours, which is exactly
-     what money between two banks is. The wallet does not move until step two,
-     and because every balance is derived there is no way to make it. */
+     what money between two banks is. */
   startAddMoney(amount: number, via: { kind: 'transfer' | 'card'; id?: string },
-                rate = state.ngnPerUsd, into: Asset = state.prefs.payWith): Activity {
-    actions.countAgainstLimit(amount)
-    const naira = Math.round(amount * rate)
-    const from = via.kind === 'card'
-      ? state.cards.find((c) => c.id === via.id) ?? state.cards[0]
-      : state.banks.find((b) => b.id === via.id) ?? state.banks[0]
-    const account = via.kind === 'card' ? 'card:' + from.id : 'bank:' + from.id
+                rate = sideRate('buy'), into: Asset = state.prefs.payWith): Activity {
+    online()
+    switchedOn('fund.ngn')
+    if (via?.kind === 'card') switchedOn('fund.card')
+    answering('switch')
+    const land = purseOf(into)
+    const dollars = amountOf(amount)
+    fairRate(rate)
+    notDeclined(dollars)
+    withinLimit(dollars)
+    const from = via?.kind === 'card'
+      ? state.cards.find((c) => c.id === via.id)
+      : state.banks.find((b) => b.id === via?.id)
+    if (!from) refuse('That card or bank is not on your account any more.')
+    const account = via.kind === 'card' ? 'card:' + from!.id : 'bank:' + from!.id
     const label = via.kind === 'card'
-      ? (from as Card).brand + ' ···· ' + from.last4
-      : (from as Bank).name + ' ···· ' + from.last4
+      ? (from as Card).brand + ' ···· ' + from!.last4
+      : (from as Bank).name + ' ···· ' + from!.last4
     ledger.account(account, label)
+    const ngn = Math.round(dollars * rate)
     // A card takes its cut in naira, on the naira, so it is added to what you
     // pay rather than taken out of what you get — and the review says both
     // figures rather than one. A transfer costs nothing, which is the whole
     // difference between the two rails and the reason to show both.
-    const fee = via.kind === 'card' ? cardFee(naira) : 0
-    const a = record({
-      kind: 'payment', who: via.kind === 'card' ? (from as Card).brand + ' card' : (from as Bank).name,
-      type: 'Received', amount, note: 'Bought dollars', rail: via.kind === 'card' ? 'card' : 'bank',
-      // It has not landed. `settlement()` still decides the two magic
-      // endings — a card that declines and one that goes unanswered — but
-      // anything else starts pending and stays pending until the naira is
-      // actually in our account.
-      purse: into, settled: false,
-    })
-    ledger.post({
-      ref: a.ref, at: a.at, rate,
-      what: via.kind === 'card'
-        ? `${label} charged ₦${naira.toLocaleString('en-US')}`
-        : `₦${naira.toLocaleString('en-US')} sent from ${label}`,
-      entries: [
-        { account, amount: -(naira + fee) },
-        { account: 'inflight', amount: naira },
-        ...(fee ? [{ account: 'fees.ngn', amount: fee }] : []),
-      ],
-    })
+    const fee = via.kind === 'card' ? cardFee(ngn) : 0
+    const a = move(
+      { kind: 'payment', who: via.kind === 'card' ? (from as Card).brand + ' card' : (from as Bank).name,
+        type: 'Received', amount: dollars, note: 'Bought dollars', rail: via.kind === 'card' ? 'card' : 'bank',
+        // It has not landed. `.98` is flagged as unanswered; anything else
+        // starts pending and stays pending until the naira is actually in
+        // our account. A card's rate is held, so it is kept with the
+        // movement; a transfer's is struck when it lands.
+        purse: land, settled: false, unanswered: settlement(dollars) === 'pending',
+        leg: { naira: ngn, ...(via.kind === 'card' ? { rate } : {}) }, counted: dollars },
+      [{ what: via.kind === 'card'
+            ? `${label} charged ${naira(ngn + fee)}`
+            : `${naira(ngn)} sent from ${label}`,
+         rate,
+         entries: [{ account, amount: -(ngn + fee) }, { account: 'inflight', amount: ngn },
+                   ...(fee ? [{ account: 'fees.ngn', amount: fee }] : [])] }],
+    )
+    countAgainstLimit(dollars)
+    follow(a)
     changed()
     return a
   },
@@ -1888,26 +2605,27 @@ export const actions = {
    *  is "never describe a bank withdrawal as complete until the payout is
    *  confirmed", and the only way to keep that promise is to have somewhere
    *  for the money to be in the meantime. */
-  landPayout(ref: string, rate = state.ngnPerUsd): void {
+  landPayout(ref: string): void {
     const a = state.activity.find((x) => x.ref === ref)
-    if (!a || a.settled) return
-    // The same magic value, on the way out. `.98` is a payout the bank never
-    // confirms: the naira sit in our payout account and the row stays open.
-    if (settlement(a.amount) === 'pending') return
-    const ngn = Math.round(Math.abs(a.amount) * rate)
-    const account = ledger.accounts().find((x) => x.name.startsWith(a.who))?.id
-      ?? 'payee:' + a.who
+    if (!a || a.settled || unanswered(a)) return
+    // What was queued, to the account it was queued for — both written on the
+    // movement when it was made. A row from before they were falls back to
+    // the payout it can work out.
+    const ngn = a.leg?.naira ?? Math.round(Math.abs(a.amount) * state.ngnPerUsd)
+    const account = a.leg?.account ?? 'payee:' + a.who
     ledger.post({
       ref, at: new Date().toISOString(),
-      what: `₦${ngn.toLocaleString('en-US')} reached ${a.who}`,
+      what: `${naira(ngn)} reached ${a.who}`,
       entries: [{ account: 'payout', amount: -ngn }, { account, amount: ngn }],
     })
     a.settled = true
     state.notifications.unshift({
       id: 'n-' + ref,
       kind: 'money',
-      title: `₦${ngn.toLocaleString('en-US')} reached ${a.who}`,
-      body: `The ${usd(Math.abs(a.amount))} left your wallet earlier; the bank has it now.`,
+      title: `${naira(ngn)} reached ${a.who}`,
+      body: a.purse === 'ngn'
+        ? `It left your naira earlier; the bank has it now.`
+        : `The ${usd(Math.abs(a.amount))} left your wallet earlier; the bank has it now.`,
       at: new Date().toISOString(),
       read: false,
       ref,
@@ -1917,33 +2635,24 @@ export const actions = {
   },
 
   /** The other half: the naira reaches the Tokkenly account and is converted.
-   *  The rate is the one honoured at this moment rather than the one shown
-   *  when the transfer was started, because that is the truth of it — and on
-   *  the card, where a quote was held, the two are the same number. */
-  landAddMoney(ref: string, rate = state.ngnPerUsd): void {
+   *  A card's rate was held and is the one honoured; a transfer's is struck
+   *  now, on the buying side, because that is the truth of it. */
+  landAddMoney(ref: string): void {
     const a = state.activity.find((x) => x.ref === ref)
-    if (!a || a.settled) return
-    // The one that never arrives. `.98` is the product's magic value for
-    // "no answer", and with money genuinely in flight it finally has a state
-    // to mean: the transfer sits in `inflight` and stays there. The rule is
-    // here rather than on the screen that waits, because a rule that only
-    // exists in a view is a rule one route around the view undoes.
-    if (settlement(a.amount) === 'pending') return
-    const ngn = Math.round(a.amount * rate)
+    if (!a || a.settled || unanswered(a)) return
+    const ngn = a.leg?.naira ?? Math.round(a.amount * state.ngnPerUsd)
+    const rate = a.leg?.rate ?? sideRate('buy')
+    const at = new Date().toISOString()
     ledger.post({
-      ref, at: new Date().toISOString(),
-      what: `₦${ngn.toLocaleString('en-US')} reached your Tokkenly naira account`,
+      ref, at, what: `${naira(ngn)} reached your Tokkenly naira account`,
       entries: [{ account: 'inflight', amount: -ngn }, { account: 'collect', amount: ngn }],
     })
     // Naira in, naira kept. Nothing is converted, so there is no desk and no
     // rate: the money simply moves from the account we collected it into to
-    // the one that is yours. This is the movement the product used to have no
-    // way to make, which is why every naira that arrived had to become
-    // dollars whether anybody wanted that or not.
+    // the one that is yours.
     if (a.purse === 'ngn') {
       ledger.post({
-        ref, at: new Date().toISOString(),
-        what: `${naira(ngn)} paid into your naira balance`,
+        ref, at, what: `${naira(ngn)} paid into your naira balance`,
         entries: [{ account: 'collect', amount: -ngn }, { account: 'wallet.ngn', amount: ngn }],
       })
       a.settled = true
@@ -1951,132 +2660,144 @@ export const actions = {
         id: 'n-' + ref, kind: 'money',
         title: `${naira(ngn)} landed in your naira balance`,
         body: `From ${a.who}. Nothing was converted.`,
-        at: new Date().toISOString(), read: false, ref, emailed: 'always',
+        at, read: false, ref, emailed: 'always',
       })
       changed()
       return
     }
     // The conversion itself: two postings, one in each currency, joined by the
-    // rate. One entry cannot be denominated twice.
+    // rate. One entry cannot be denominated twice. What lands is what the
+    // naira buys at that rate — for a transfer that can differ by cents from
+    // the figure the screen estimated, and the row is corrected to it.
+    const dollars = a.leg?.rate ? a.amount : Math.floor((ngn / rate) * 100) / 100
     ledger.post({
-      ref, at: new Date().toISOString(), pair: ref, rate,
-      what: `₦${ngn.toLocaleString('en-US')} went to the currency desk`,
+      ref, at, pair: ref, rate, what: `${naira(ngn)} went to the currency desk`,
       entries: [{ account: 'collect', amount: -ngn }, { account: 'desk.ngn', amount: ngn }],
     })
     ledger.post({
-      ref, at: new Date().toISOString(), pair: ref, rate,
-      what: `Converted to ${usd(a.amount)} and paid to your ${assetOf(a.purse ?? 'usdc')!.name}`,
-      entries: [{ account: 'desk.usd', amount: -a.amount },
-                { account: purseFor(a.purse ?? 'usdc'), amount: a.amount }],
+      ref, at, pair: ref, rate,
+      what: `Converted to ${usd(dollars)} and paid to your ${assetOf(a.purse ?? 'usdc')!.name}`,
+      entries: [{ account: 'desk.usd', amount: -dollars },
+                { account: purseFor(a.purse ?? 'usdc'), amount: dollars }],
     })
+    a.amount = dollars
+    a.leg = { ...(a.leg ?? { naira: ngn }), rate }
     a.settled = true
     // The one genuinely asynchronous event in the product, and so the one that
     // has to say so out loud. The waiting sheet tells people they can close it
     // and carry on; without this, carrying on means never being told it
-    // arrived. It is also the first notification the product has ever written
-    // — the other five are seeded — which is what finally makes the switch in
-    // Preferences gate something real rather than filter a fixed list.
+    // arrived.
     state.notifications.unshift({
       id: 'n-' + ref,
       kind: 'money',
-      title: `${usd(a.amount)} landed in your wallet`,
-      body: `₦${ngn.toLocaleString('en-US')} from ${a.who}, at ${naira(rate)} to the dollar.`,
-      at: new Date().toISOString(),
+      title: `${usd(dollars)} landed in your wallet`,
+      body: `${naira(ngn)} from ${a.who}, at ${naira(rate)} to the dollar.`,
+      at,
       read: false,
       ref,
     })
     changed()
   },
 
+  /** The end of a `.98`: nobody answered, so the movement is returned. Every
+   *  posting it made is written again the other way — nothing is deleted, a
+   *  record of money that went and came back is two records — and what it
+   *  counted against the month is given back. */
+  giveUp(ref: string): void {
+    const a = state.activity.find((x) => x.ref === ref)
+    if (!a || a.settled) return
+    ledger.reverse(ref, `No answer in time. ${a.type} ${a.amount >= 0 ? 'from' : 'to'} ${a.who} returned`)
+    if (a.counted) countAgainstLimit(-a.counted)
+    a.settled = true
+    a.returned = true
+    a.note = 'Returned · no answer in time'
+    state.notifications.unshift({
+      id: 'n-' + ref + '-back', kind: 'money',
+      title: a.amount >= 0 ? `${usd(a.amount)} from ${a.who} never arrived` : `${usd(Math.abs(a.amount))} came back`,
+      body: a.amount >= 0
+        ? 'Nothing reached us, so nothing was taken. Your bank will return anything that left.'
+        : `Nobody confirmed the payment to ${a.who} in time, so it was returned to your balance.`,
+      at: new Date().toISOString(), read: false, ref, emailed: 'always',
+    })
+    changed()
+  },
 
   /* ----------------------------------------------------------- converting --
      Turning one thing you hold into another thing you hold.
 
-     Every other movement in this product has a direction, because there is
-     somebody at the other end: a payee, a bank, the market. A conversion has
-     nobody at the other end. Your naira becomes your dollars; both were yours
-     before and both are yours after, and you are worth the same at the end of
-     it as you were at the start.
+     A conversion has nobody at the other end. Your naira becomes your
+     dollars; both were yours before and both are yours after. Three
+     consequences follow from that one fact:
 
-     Three consequences follow from that one fact, and each of them is a rule
-     somewhere else in this file rather than a special case here:
+       It does not answer to the limit. `movementCeiling` exempts "moving your
+       own money between your own buckets", and this is that, exactly.
 
-       It does not answer to the limit. `movementCeiling` catches "anything
-       that crosses the boundary of the account" and exempts "moving your own
-       money between your own buckets". This is that, exactly, so
-       `countAgainstLimit` is not called — and the ceiling the screen enforces
-       is what you hold, not what you are allowed to move.
+       It cannot be refused by somebody else. The refusals a conversion has —
+       more than you hold, nothing typed, the same purse on both sides — all
+       happen before any money moves.
 
-       It cannot be refused by somebody else. A payment can go unanswered
-       because a bank can go quiet; there is no second institution here. The
-       refusals a conversion has — more than you hold, nothing typed, the same
-       purse on both sides — all happen before any money moves, which is the
-       right place for a refusal that is about arithmetic rather than about
-       another party's silence.
+       It goes through the desk, which gives the money a named place to be
+       while the two legs are apart.
 
-       It goes through the desk. `desk.ngn` and `desk.usd` are described in the
-       ledger as "one side of every conversion" and "the other side", and this
-       is a conversion, so it uses them rather than inventing a route. That
-       also gives the money a named place to be while the two legs are apart,
-       which is what the pending row on the wallet reads to say where it is.
-
-     Two stablecoins convert one for one. That is not a simplification: `cash`
-     is `usdc + usdt` summed into a single dollar figure, on the wallet, on
-     Home and in buying power. Any other rate would make that sum a lie in
-     every one of those places, so the day USDC and USDT stop being worth the
-     same to this product is the day that sum has to stop existing. */
+     Two stablecoins convert one for one: `cash` is `usdc + usdt` summed into a
+     single dollar figure, and any other rate would make that sum a lie. Naira
+     against dollars converts at the side's rate, so naira to dollars and back
+     again costs the spread and cannot come out ahead. */
   convert(from: Asset, to: Asset, dollars: number,
-          rate = state.ngnPerUsd): Activity | null {
-    if (from === to || !(dollars > 0)) return null
-    const naira_ = Math.round(dollars * rate)
+          rate = sideRate(from === 'ngn' ? 'buy' : 'sell')): Activity | null {
+    const f = purseOf(from)
+    const t = purseOf(to)
+    if (f === t) refuse('That is the same balance on both sides.')
+    const v = amountOf(dollars)
+    const crosses = f === 'ngn' || t === 'ngn'
+    if (crosses) {
+      online()
+      fairRate(rate)
+    }
+    const naira_ = Math.round(v * rate)
     // What actually leaves, in the unit the thing is held in. Checked against
     // the ledger rather than against what the screen believed, because the
     // screen was drawn before the button was pressed.
-    const gave = from === 'ngn' ? naira_ : dollars
-    const got = to === 'ngn' ? naira_ : dollars
-    if (ledger.balanceOf(purseFor(from)) + 1e-6 < gave) return null
+    const gave = f === 'ngn' ? naira_ : v
+    const got = t === 'ngn' ? naira_ : v
+    covers(f, gave)
 
     const name = (a: Asset) => assetOf(a)!.name
     const fig = (a: Asset, n: number) => (a === 'ngn' ? naira(n) : usd(n))
-    const a = record({
-      kind: 'convert', who: `${name(from)} to ${name(to)}`, type: 'Converted',
-      // Positive, and not a direction. The row that draws it reads `swap` and
-      // shows both figures; `amount` is here so that one conversion of $500 is
-      // the same size as another, which is what a list sorts and totals by.
-      amount: dollars,
-      note: from === 'ngn' || to === 'ngn' ? `At ${naira(rate)} to the dollar` : 'One for one',
-      swap: { from, to, gave, got },
-      // Where it lands, the same field Add money sets for the same reason.
-      purse: to,
-      settled: false,
-    })
     // Leg one: out of your purse and onto the desk. It is the desk's money for
     // as long as the two legs are apart, which is the only honest thing to say
     // about money that has left one balance and not reached the other.
-    const pair = from === 'ngn' || to === 'ngn' ? a.ref : undefined
-    ledger.post({
-      ref: a.ref, at: a.at, pair, rate: pair ? rate : undefined,
-      what: `${fig(from, gave)} went to the currency desk`,
-      entries: [{ account: purseFor(from), amount: -gave },
-                { account: from === 'ngn' ? 'desk.ngn' : 'desk.usd', amount: gave }],
-    })
-    setTimeout(() => actions.landConvert(a.ref, rate), CONVERT_MS)
+    const a = move(
+      { kind: 'convert', who: `${name(f)} to ${name(t)}`, type: 'Converted',
+        // Positive, and not a direction. The row that draws it reads `swap`
+        // and shows both figures; `amount` is here so that one conversion of
+        // $500 is the same size as another.
+        amount: v,
+        note: crosses ? `At ${naira(rate)} to the dollar` : 'One for one',
+        swap: { from: f, to: t, gave, got },
+        purse: t, settled: false,
+        ...(crosses ? { leg: { naira: naira_, rate } } : {}) },
+      [{ what: `${fig(f, gave)} went to the currency desk`, pair: crosses, rate: crosses ? rate : undefined,
+         entries: [{ account: purseFor(f), amount: -gave },
+                   { account: f === 'ngn' ? 'desk.ngn' : 'desk.usd', amount: gave }] }],
+    )
+    follow(a)
     changed()
     return a
   },
 
   /** Leg two: the desk pays out the other currency, and the second balance
    *  moves. Nothing here can decline — see above — so this lands whatever the
-   *  amount is, unlike `landAddMoney` and `landPayout`, which both have a
-   *  counterparty that can go quiet and a magic value that says so. */
-  landConvert(ref: string, rate = state.ngnPerUsd): void {
+   *  amount is. */
+  landConvert(ref: string): void {
     const a = state.activity.find((x) => x.ref === ref)
     if (!a || a.settled || !a.swap) return
     const { to, got } = a.swap
-    const pair = a.swap.from === 'ngn' || to === 'ngn' ? ref : undefined
+    const crosses = a.swap.from === 'ngn' || to === 'ngn'
+    const rate = a.leg?.rate
     const fig = to === 'ngn' ? naira(got) : usd(got)
     ledger.post({
-      ref, at: new Date().toISOString(), pair, rate: pair ? rate : undefined,
+      ref, at: new Date().toISOString(), pair: crosses ? ref : undefined, rate: crosses ? rate : undefined,
       what: `${fig} reached your ${assetOf(to)!.name} balance`,
       entries: [{ account: to === 'ngn' ? 'desk.ngn' : 'desk.usd', amount: -got },
                 { account: purseFor(to), amount: got }],
@@ -2091,157 +2812,206 @@ export const actions = {
     changed()
   },
 
-  /** Buying something you do not already hold opens the position. It used to
-   *  take the money and add the shares only `if (h)`, so a first purchase —
-   *  the one the whole product is for — charged the wallet, created nothing,
-   *  and reported "you now own undefined shares". */
-  buy(ticker: string, dollars: number,
-      asset: Asset = payAsset()): { activity: Activity; shares: number; fee: number; invested: number } {
+  /** Buying something you do not already hold opens the position.
+   *
+   *  It used to clamp whatever it was asked for to what the wallet held — both
+   *  stablecoins together — and then take all of it from one, which is how
+   *  $800 of USDT bought $1,500 of Apple. It refuses now, with the reason,
+   *  and asks every question the review asks: the switches, the providers,
+   *  the checks, the market's own refusals, the smallest order and the limit.
+   *  `fee` is for the bucket, which charges one fee on the whole payment; it
+   *  is a parameter rather than, as it was, the global fee set to nought for
+   *  the length of a loop. */
+  buy(ticker: string, dollars: number, asset: Asset = payAsset(),
+      opts: { fee?: number; bucket?: boolean } = {}):
+      { activity: Activity; shares: number; fee: number; invested: number } {
     const c = find(ticker)
-    if (!c) throw new Error('No such instrument: ' + ticker)
-    // Never spend money that is not there, whatever the caller asks for —
-    // and the fee is part of what has to be there. The composer clamps too;
-    // this is the floor under it.
-    const spend = Math.max(0, Math.min(dollars, maxInvestable()))
-    const fee = tradeFee(spend)
-    const shares = spend / c.price
-    actions.countAgainstLimit(spend + fee)
+    if (!c) refuse('We do not list ' + ticker + '.')
+    const spend = amountOf(dollars)
+    const from = purseOf(asset, true)
+    if (!opts.bucket) {
+      online()
+      tradeable(c!, spend, 'buy')
+    }
+    const fee = opts.fee ?? tradeFee(spend)
+    if (!opts.bucket) {
+      notDeclined(spend)
+      withinLimit(spend + fee)
+    }
+    covers(from, spend + fee)
+    const shares = spend / c!.price
     // Both halves, in one movement that has to balance in both of the things
     // it touches. Dollars: the wallet pays the market for the shares and pays
     // us the fee. Apple: the same number of shares leaves the market and
-    // arrives in custody in your name. The holdings list is a reading of that
-    // second half, so the position cannot be credited without the trade that
-    // bought it — and the shares are counted in shares rather than valued in
-    // dollars, because an account holding "the value of your Apple" would move
-    // every time the market did, which is not a thing a ledger account does.
+    // arrives in custody in your name.
     const activity = move(
-      { kind: 'trade', who: c.name, type: 'Bought', amount: -(spend + fee), fee, purse: asset },
-      `Bought ${usd(spend)} of ${c.name}`,
-      [{ account: purseFor(asset), amount: -(spend + fee) },
-       { account: 'market', amount: spend },
-       { account: 'fees', amount: fee },
-       { account: 'float:' + c.ticker, amount: -shares },
-       { account: 'held:' + c.ticker, amount: shares }],
+      { kind: 'trade', who: c!.name, type: 'Bought', amount: -(spend + fee), fee, purse: from,
+        fill: { ticker: c!.ticker, shares, price: c!.price },
+        unanswered: settlement(spend) === 'pending', counted: opts.bucket ? undefined : spend + fee },
+      [{ what: `Bought ${usd(spend)} of ${c!.name}`,
+         entries: [{ account: purseFor(from), amount: -(spend + fee) },
+                   { account: 'market', amount: spend },
+                   ...(fee ? [{ account: 'fees', amount: fee }] : []),
+                   { account: 'float:' + c!.ticker, amount: -shares },
+                   { account: 'held:' + c!.ticker, amount: shares }] }],
     )
-    changed()
+    if (!opts.bucket) {
+      countAgainstLimit(spend + fee)
+      follow(activity)
+      changed()
+    }
     return { activity, shares, fee, invested: spend }
   },
 
   /** And selling is bounded by what is actually held, so a holding can never
    *  go negative and the wallet can never be paid for shares that were not
-   *  there. A position sold out entirely leaves rather than sitting at zero. */
+   *  there — and by what is owed against them, so a sale cannot take the
+   *  shares below the point where the rest would be sold to cover the loan. */
   sell(ticker: string, dollars: number,
        asset: Asset = payAsset()): { activity: Activity; shares: number; fee: number; proceeds: number } {
     const h = holding(ticker)
     const c = find(ticker)
-    if (!h || !c) throw new Error('Nothing held in ' + ticker)
-    const value = Math.max(0, Math.min(dollars, h.shares * h.price))
+    if (!h || !c) refuse('You do not hold any ' + ticker + '.')
+    const into = purseOf(asset, true)
+    online()
+    let value = amountOf(dollars)
+    const worth = h!.shares * h!.price
+    // A cent of slack for the rounding between the figure shown and the
+    // shares held, and no more.
+    if (value > worth + 0.01) refuse(`You hold ${usd(worth)} of ${c!.name}, which is less than ${usd(value)}.`)
+    value = Math.min(value, worth)
+    const closing = value >= worth - 0.01
+    tradeable(c!, value, 'sell', closing)
+    notDeclined(value)
+    if (coverAfter(value) < state.rates.collateral) {
+      refuse(`That would leave your shares worth less than ${state.rates.collateral}% of the ${usd(owed())} you owe, and we would have to sell the rest. Repay some first, or sell less.`)
+    }
     const fee = tradeFee(value)
-    const shares = value / h.price
+    const shares = closing ? h!.shares : value / h!.price
     // Selling $100 puts $99.50 in the wallet: the fee comes out of what you
-    // get, not out of what you sold, which is the figure on the review. The
-    // shares go back the way they came, and a position sold out entirely
-    // leaves the list because nothing is left in custody to read.
+    // get, not out of what you sold, which is the figure on the review.
     const activity = move(
-      { kind: 'trade', who: c.name, type: 'Sold', amount: value - fee, fee, purse: asset },
-      `Sold ${usd(value)} of ${c.name}`,
-      [{ account: 'market', amount: -value },
-       { account: purseFor(asset), amount: value - fee },
-       { account: 'fees', amount: fee },
-       { account: 'held:' + c.ticker, amount: -shares },
-       { account: 'float:' + c.ticker, amount: shares }],
+      { kind: 'trade', who: c!.name, type: 'Sold', amount: value - fee, fee, purse: into,
+        fill: { ticker: c!.ticker, shares, price: h!.price },
+        unanswered: settlement(value) === 'pending' },
+      [{ what: `Sold ${usd(value)} of ${c!.name}`,
+         entries: [{ account: 'market', amount: -value },
+                   { account: purseFor(into), amount: value - fee },
+                   ...(fee ? [{ account: 'fees', amount: fee }] : []),
+                   { account: 'held:' + c!.ticker, amount: -shares },
+                   { account: 'float:' + c!.ticker, amount: shares }] }],
     )
+    follow(activity)
     changed()
     return { activity, shares, fee, proceeds: value - fee }
   },
 
   /** Hand shares to another Tokkenly account.
    *
-   *  No fee, because the fees card says sending costs nothing and a share is
-   *  not a special case of that. No wallet movement either: the portfolio goes
-   *  down by what left it and the cash balance does not move, which is the
-   *  whole difference between this and selling.
-   *
-   *  Bounded by what is actually held, like sell(), so a holding can never go
-   *  negative however the caller was written. The refusal for a recipient
-   *  without an account is on the screen, not here — but the floor is here as
-   *  well, because a rule that only exists in a view is a rule one route
-   *  around the view undoes. */
+   *  No fee, and no wallet movement: the portfolio goes down by what left it
+   *  and the cash balance does not move, which is the whole difference between
+   *  this and selling. Bounded by what is held, by the cover on a loan, and by
+   *  the month's limit, like any other outflow. */
   sendShares(ticker: string, dollars: number, to: string):
       { activity: Activity; shares: number; value: number } {
+    online()
+    switchedOn('send')
     const p = state.people.find((x) => x.name === to)
-    if (!p?.onTokkenly) throw new Error(to + ' does not hold a Tokkenly account')
+    if (!p?.onTokkenly) refuse(to + ' does not hold a Tokkenly account, so a share cannot go to them.')
     const h = holding(ticker)
     const c = find(ticker)
-    if (!h || !c) throw new Error('Nothing held in ' + ticker)
-    const value = Math.max(0, Math.min(dollars, h.shares * h.price))
-    const shares = value / h.price
-    // Rule from item 06: one limit policy for every outflow. A share leaving
-    // the account is an outflow — an unverified account handing somebody
-    // $5,000 of Apple is exactly what a ceiling is for — so it counts against
-    // the month like a payment does.
-    actions.countAgainstLimit(value)
+    if (!h || !c) refuse('You do not hold any ' + ticker + '.')
+    const worth = h!.shares * h!.price
+    let value = amountOf(dollars)
+    if (value > worth + 0.01) refuse(`You hold ${usd(worth)} of ${c!.name}, which is less than ${usd(value)}.`)
+    value = Math.min(value, worth)
+    withinLimit(value)
+    if (coverAfter(value) < state.rates.collateral) {
+      refuse(`That would leave your shares worth less than ${state.rates.collateral}% of the ${usd(owed())} you owe. Repay some first, or send less.`)
+    }
+    const shares = value >= worth - 0.01 ? h!.shares : value / h!.price
     // Units, and no money. The movement balances in Apple and touches no
-    // dollar account at all, which is the ledger saying the same thing the
-    // screen does: this is not a sale, nobody was paid, and the position
-    // simply is not yours any more.
+    // dollar account at all.
     const activity = move(
-      { kind: 'trade', who: to, type: 'Sent', amount: -value,
-        asset: { ticker: c.ticker, shares, price: h.price } },
-      `Sent ${sharesOf(shares)} ${c.ticker} to ${to}`,
-      [{ account: 'held:' + c.ticker, amount: -shares },
-       { account: 'sent:' + c.ticker, amount: shares }],
+      { kind: 'trade', who: to, type: 'Sent', amount: -value, counted: value,
+        asset: { ticker: c!.ticker, shares, price: h!.price } },
+      [{ what: `Sent ${sharesOf(shares)} ${c!.ticker} to ${to}`,
+         entries: [{ account: 'held:' + c!.ticker, amount: -shares },
+                   { account: 'sent:' + c!.ticker, amount: shares }] }],
     )
+    countAgainstLimit(value)
     changed()
     return { activity, shares, value }
   },
 
   borrow(amount: number, asset: Asset = payAsset()): Activity {
-    actions.countAgainstLimit(amount)
+    online()
+    const into = purseOf(asset, true)
+    const v = amountOf(amount)
+    accrue()
+    if (v > availableToBorrow() + 1e-6) {
+      refuse(`Your shares will lend ${usd(availableToBorrow())} more right now, which is less than ${usd(v)}.`)
+    }
+    withinLimit(v)
     // The loan account goes negative by what you drew, because it is not
     // yours. The wallet goes up by the same. Nothing was created.
     const a = move(
-      { kind: 'grow', who: 'Borrowing', type: 'Borrowed', amount, purse: asset },
-      `Drew ${usd(amount)} against your shares`,
-      [{ account: 'loan', amount: -amount }, { account: purseFor(asset), amount }],
+      { kind: 'grow', who: 'Borrowing', type: 'Borrowed', amount: v, purse: into, counted: v },
+      [{ what: `Drew ${usd(v)} against your shares`,
+         entries: [{ account: 'loan', amount: -v }, { account: purseFor(into), amount: v }] }],
     )
+    countAgainstLimit(v)
     changed()
     return a
   },
 
   repay(amount: number, asset: Asset = payAsset()): Activity {
+    const from = purseOf(asset, true)
+    let v = amountOf(amount)
+    accrue()
+    const due = Math.round(owed() * 100) / 100
+    if (due <= 0) refuse('You do not owe anything.')
+    if (v > due + 0.01) refuse(`You owe ${usd(due)}, which is less than ${usd(v)}.`)
+    v = Math.min(v, due)
+    covers(from, v)
     // Interest first, then principal. Both are liabilities of yours, so
     // clearing them moves money from one of your accounts to another — the
     // interest was charged when it accrued, not when it is paid.
-    const toInterest = Math.min(amount, state.interestOwed)
-    const toPrincipal = Math.min(amount - toInterest, state.borrowed)
+    const toInterest = Math.min(v, state.interestOwed)
+    const toPrincipal = Math.round((v - toInterest) * 100) / 100
     const a = move(
-      { kind: 'grow', who: 'Borrowing', type: 'Repaid', amount: -(toInterest + toPrincipal), purse: asset },
-      `Repaid ${usd(toInterest + toPrincipal)} of what you owe`,
-      [{ account: purseFor(asset), amount: -(toInterest + toPrincipal) },
-       { account: 'loan.int', amount: toInterest },
-       { account: 'loan', amount: toPrincipal }],
+      { kind: 'grow', who: 'Borrowing', type: 'Repaid', amount: -v, purse: from },
+      [{ what: `Repaid ${usd(v)} of what you owe`,
+         entries: [{ account: purseFor(from), amount: -v },
+                   ...(toInterest ? [{ account: 'loan.int', amount: toInterest }] : []),
+                   ...(toPrincipal ? [{ account: 'loan', amount: toPrincipal }] : [])] }],
     )
     changed()
     return a
   },
 
   lend(amount: number, asset: Asset = payAsset()): Activity {
+    const from = purseOf(asset, true)
+    const v = amountOf(amount)
+    covers(from, v)
     const a = move(
-      { kind: 'grow', who: 'Lending', type: 'Lent', amount: -amount, purse: asset },
-      `Lent ${usd(amount)} into the pool`,
-      [{ account: purseFor(asset), amount: -amount }, { account: 'lent', amount }],
+      { kind: 'grow', who: 'Lending', type: 'Lent', amount: -v, purse: from },
+      [{ what: `Lent ${usd(v)} into the pool`,
+         entries: [{ account: purseFor(from), amount: -v }, { account: 'lent', amount: v }] }],
     )
     changed()
     return a
   },
 
   takeBack(amount: number, asset: Asset = payAsset()): Activity {
-    const back = Math.min(amount, state.lent)
+    const into = purseOf(asset, true)
+    const v = amountOf(amount)
+    if (v > state.lent + 0.01) refuse(`You have ${usd(state.lent)} lent, which is less than ${usd(v)}.`)
+    const back = Math.min(v, state.lent)
     const a = move(
-      { kind: 'grow', who: 'Lending', type: 'Taken back', amount: back, purse: asset },
-      `Took ${usd(back)} back out of the pool`,
-      [{ account: 'lent', amount: -back }, { account: purseFor(asset), amount: back }],
+      { kind: 'grow', who: 'Lending', type: 'Taken back', amount: back, purse: into },
+      [{ what: `Took ${usd(back)} back out of the pool`,
+         entries: [{ account: 'lent', amount: -back }, { account: purseFor(into), amount: back }] }],
     )
     changed()
     return a
@@ -2259,6 +3029,9 @@ export const actions = {
   /* ----- preferences ----- */
   setPref<K extends keyof Prefs>(key: K, value: Prefs[K]) {
     state.prefs[key] = value
+    // Checked the way a saved one is, so a value no screen offers cannot be
+    // set by a caller that was not a screen.
+    state.prefs = prefsFrom(state.prefs)
     if (key === 'theme') applyTheme()
     changed()
   },
@@ -2283,30 +3056,41 @@ export const actions = {
 
   /* ----- security ----- */
   /** The five-attempt ceiling is here rather than in the screen, so every
-   *  place that asks for the PIN counts against the same total. */
+   *  place that asks for the PIN counts against the same total. Written to
+   *  storage at once rather than in the next batch: a reload a moment after a
+   *  wrong guess must not be a way to take the guess back. */
   checkPin(pin: string): boolean {
-    if (pin === state.security.pin) {
+    if (actions.pinLocked()) return false
+    if (isStr(pin) && sealed(state.security.salt, pin) === state.security.pinHash) {
       state.security.wrongPin = 0
-      remember()
+      flush()
       return true
     }
     state.security.wrongPin += 1
-    remember()
+    flush()
     return false
   },
+  /** Whether these are the digits already set, without it counting as a try:
+   *  choosing a new PIN is not guessing the old one. */
+  isCurrentPin: (pin: string): boolean =>
+    sealed(state.security.salt, pin) === state.security.pinHash,
+  checkPassword: (password: string): boolean =>
+    isStr(password) && sealed(state.security.salt, password) === state.security.passwordHash,
   pinLocked: (): boolean => state.security.wrongPin >= 5,
   clearPinAttempts() {
     state.security.wrongPin = 0
-    remember()
+    flush()
   },
   setPin(pin: string) {
-    state.security.pin = pin
+    if (!/^\d{4}$/.test(pin) || weakPin(pin, state.person.dob)) refuse('That PIN cannot be used.')
+    state.security.pinHash = sealed(state.security.salt, pin)
     state.security.pinChanged = today()
     state.security.wrongPin = 0
     changed()
   },
   setPassword(next: string) {
-    state.security.password = next
+    if (!ratePassword(next, state.person.name).ok) refuse('That password is too easy to guess.')
+    state.security.passwordHash = sealed(state.security.salt, next)
     state.security.passwordChanged = today()
     changed()
   },
@@ -2317,29 +3101,26 @@ export const actions = {
 
   /* ----- the bucket ----- */
   /** The bucket is a queue of purchases, so the gate that stands in front of
-   *  buying one company stands in front of joining the queue. Without this
-   *  the bucket is a way round every check in the product: the composer
-   *  refuses a company that is not in the launch set, and the bucket would
-   *  have bought the same company at the till without asking anything.
-   *  Returns whether it went in, so a caller can avoid celebrating a thing
-   *  that did not happen. */
+   *  buying one company stands in front of joining the queue. Returns whether
+   *  it went in, so a caller can avoid celebrating a thing that did not
+   *  happen. */
   addToBucket(ticker: string, dollars: number): boolean {
     const c = find(ticker)
-    if (!c || !tradable(c)) return false
+    if (!c || !tradable(c) || !Number.isFinite(dollars) || dollars <= 0) return false
     const it = state.bucket.find((b) => b.ticker === ticker)
-    if (it) it.dollars += dollars
-    else state.bucket.push({ ticker, dollars })
+    if (it) it.dollars = Math.round((it.dollars + dollars) * 100) / 100
+    else state.bucket.push({ ticker, dollars: Math.round(dollars * 100) / 100 })
     changed()
     return true
   },
   /** Deliberately does not broadcast. Every listener re-renders the whole
-   *  screen, and this is called from a field's own change handler — rebuilding
-   *  the screen out from under a focused input throws on the blur that
-   *  follows. Nothing outside the bucket screen shows these amounts, and that
-   *  screen repaints the parts that moved itself. */
+   *  screen, and this is called from a field's own change handler. Nothing
+   *  outside the bucket screen shows these amounts, and that screen repaints
+   *  the parts that moved itself. It is still kept. */
   setBucketAmount(ticker: string, dollars: number) {
     const it = state.bucket.find((b) => b.ticker === ticker)
-    if (it) it.dollars = Math.max(0, Math.round(dollars * 100) / 100)
+    if (it && Number.isFinite(dollars)) it.dollars = Math.max(0, Math.round(dollars * 100) / 100)
+    remember()
   },
   removeFromBucket(ticker: string) {
     state.bucket = state.bucket.filter((b) => b.ticker !== ticker)
@@ -2350,36 +3131,52 @@ export const actions = {
     changed()
   },
   /** One payment, one order per company. The receipts have to stay per
-   *  company or a history row could never be reconciled against a holding. */
+   *  company or a history row could never be reconciled against a holding.
+   *
+   *  One payment is also one set of questions: every refusal a single buy
+   *  has, asked of the whole basket before the first order goes in, and the
+   *  limit asked of the total. It used to go through `buy` one company at a
+   *  time with the fee switched off globally, and nothing stood in front of
+   *  it but the screen. */
   payBucket(): { refs: string[]; spent: number; lines: { ticker: string; shares: number }[] } {
+    online()
+    const items = state.bucket.filter((it) => it.dollars > 0)
+    if (!items.length) refuse('Your bucket is empty.')
+    const bad = bucketRefusals()
+    if (bad.length) refuse(`${bad[0].c?.name ?? bad[0].item.ticker}: ${bad[0].bad[0].title}. Nothing has been bought.`)
+    for (const it of items) tradeable(find(it.ticker)!, it.dollars, 'buy')
+    const total = Math.round(items.reduce((t, it) => t + it.dollars, 0) * 100) / 100
+    // The fee is charged once on the whole payment rather than per company —
+    // that is what paying once is for.
+    const fee = tradeFee(total)
+    const from = payAsset()
+    notDeclined(total)
+    withinLimit(total + fee)
+    covers(from, total + fee)
     const refs: string[] = []
     const lines: { ticker: string; shares: number }[] = []
     let spent = 0
-    // The fee is charged once on the whole payment rather than per company —
-    // that is what paying once is for — so the individual buys go through at
-    // no fee and the single charge is applied after.
-    const fee = tradeFee(bucketTotal())
-    const kept = state.fees.trade
-    state.fees.trade = 0
-    try {
-      for (const it of [...state.bucket]) {
-        if (it.dollars <= 0) continue
-        const { activity, shares } = actions.buy(it.ticker, it.dollars)
-        refs.push(activity.ref)
-        lines.push({ ticker: it.ticker, shares })
-        spent += Math.abs(activity.amount)
-      }
-    } finally { state.fees.trade = kept }
+    for (const it of items) {
+      const { activity, shares } = actions.buy(it.ticker, it.dollars, from, { fee: 0, bucket: true })
+      refs.push(activity.ref)
+      lines.push({ ticker: it.ticker, shares })
+      spent += Math.abs(activity.amount)
+    }
     // The one fee for the whole payment, posted on its own so the statement
     // shows a single charge rather than one per company.
     if (fee > 0) {
       move(
-        { kind: 'trade', who: 'Tokkenly', type: 'Fee', amount: -fee, fee },
-        `Fee on one payment for ${lines.length} ${lines.length === 1 ? 'company' : 'companies'}`,
-        [{ account: purseFor(payAsset()), amount: -fee }, { account: 'fees', amount: fee }],
+        { kind: 'trade', who: 'Tokkenly', type: 'Fee', amount: -fee, fee, purse: from },
+        [{ what: `Fee on one payment for ${lines.length} ${lines.length === 1 ? 'company' : 'companies'}`,
+           entries: [{ account: purseFor(from), amount: -fee }, { account: 'fees', amount: fee }] }],
       )
     }
     spent += fee
+    countAgainstLimit(total + fee)
+    for (const r of refs) {
+      const a = state.activity.find((x) => x.ref === r)
+      if (a) follow(a)
+    }
     state.bucket = []
     changed()
     return { refs, spent, lines }
@@ -2387,27 +3184,35 @@ export const actions = {
 
   toggleWatch(ticker: string) {
     const i = state.watchlist.indexOf(ticker)
-    if (i === -1) state.watchlist.push(ticker)
+    if (i === -1) { if (find(ticker)) state.watchlist.push(ticker) }
     else state.watchlist.splice(i, 1)
     changed()
   },
 
+  /** A bank of your own. Nigerian account numbers are ten digits, always —
+   *  NUBAN — so anything else is refused rather than stored, spaces and
+   *  dashes are taken out first, and the same number twice is one bank. */
   addBank(name: string, number: string) {
-    const last4 = number.slice(-4)
-    state.banks.push({
-      id: name.toLowerCase().replace(/\s+/g, '') + last4,
-      name, last4, number, holder: state.person.name,
-    })
+    const n = (name ?? '').trim()
+    const digits = (number ?? '').replace(/\D/g, '')
+    if (!n) refuse('Add the bank’s name.')
+    if (digits.length !== 10) refuse('A Nigerian account number is ten digits.')
+    if (state.banks.some((b) => b.number === digits)) refuse('That account is already on your list.')
+    const last4 = digits.slice(-4)
+    let id = n.toLowerCase().replace(/[^a-z0-9]+/g, '') + last4
+    while (state.banks.some((b) => b.id === id)) id += 'x'
+    state.banks.push({ id, name: n, last4, number: digits, holder: state.person.name })
     changed()
   },
 
   updatePerson(field: 'email' | 'phone' | 'address', value: string) {
-    state.person[field] = value
+    if (!oneOf(field, ['email', 'phone', 'address'] as const) || !isStr(value) || !value.trim()) return
+    state.person[field] = value.trim()
     changed()
   },
 
   signOutDevice(id: string) {
-    state.devices = state.devices.filter((d) => d.id !== id)
+    state.devices = state.devices.filter((d) => d.id !== id || d.current)
     changed()
   },
 
@@ -2423,24 +3228,51 @@ export const actions = {
 
   markPhraseWritten() {
     state.phraseWrittenDown = true
+    state.phraseWrittenOn = today()
     changed()
   },
 
-  signIn() {
+  /** Signing in. The sandbox rule stands — any address and any password but
+   *  `wrong` gets you in, which the README documents and the demo depends on —
+   *  with one exception that is not negotiable: after five wrong PINs, the
+   *  password is the way back in, so the password is checked. Signing in used
+   *  to reset the count whatever was typed, which made the lockout a lockout
+   *  for about as long as it took to type anything at all into two fields.
+   *
+   *  An address at tokkenly.com signs in as staff, which is the demo's way
+   *  into the operations console. Returns why it refused, or null. */
+  signIn(opts: { email?: string; password?: string; via?: 'password' | 'google' | 'signup' } = {}): string | null {
+    const via = opts.via ?? 'password'
+    const cdp = state.providers.find((p) => p.key === 'cdp')
+    if (cdp?.state === 'down') return `${cdp.name} is not responding, so nobody can sign in right now. ${cdp.fallback}`
+    if (via === 'signup' && !switchOn('signup')) {
+      const sw = state.switches.find((x) => x.key === 'signup')!
+      return `New wallets are paused right now. ${sw.effect}`
+    }
+    const proved = via === 'password' && actions.checkPassword(opts.password ?? '')
+    if (actions.pinLocked() && !proved) {
+      return 'After five wrong PINs only the password on this account opens it. Check it, or reset it by email.'
+    }
+    if (via === 'password' && opts.password === 'wrong') return 'We do not recognise that email and password.'
     state.signedIn = true
+    state.staff = via === 'password' && /@tokkenly\.com$/i.test((opts.email ?? '').trim())
     // Getting in with the password is getting in. Asking for the PIN
     // immediately afterwards is asking the same question twice.
     actions.unlock()
+    return null
   },
 
   signOut() {
     state.signedIn = false
+    state.staff = false
     actions.lock()
   },
 
+  /** Opens the app. Only reached by a correct PIN, a proved password, or the
+   *  simulated biometric the person turned on; it does not clear a lockout on
+   *  its own, because that is `checkPin`'s job and `signIn`'s. */
   unlock() {
     state.unlocked = true
-    state.security.wrongPin = 0
     try { sessionStorage.setItem(SESSION, '1') } catch { /* fine */ }
     changed()
   },
@@ -2450,4 +3282,23 @@ export const actions = {
     try { sessionStorage.removeItem(SESSION) } catch { /* fine */ }
     changed()
   },
+}
+
+/** Every reason a trade must not go through, asked of the trade itself: the
+ *  switches, the providers that price it, the checks that permit it, and the
+ *  market's own refusals — the smallest order among them. */
+function tradeable(c: Instrument, dollars: number, side: 'buy' | 'sell', closing = false): void {
+  answering('0x')
+  answering('chainlink')
+  if (side === 'buy') {
+    // Identity is not required to buy a small amount — the limits are what an
+    // unverified account pays — but a check that has come back failed or gone
+    // to a person is a no, and a verified account that is not eligible is a
+    // no. Both used to be printed on Account and enforced by nothing.
+    const stop = blockedBy()
+    if (stop) refuse(`${stop.label}: ${stop.detail || 'not passed'}. You cannot buy shares until it is.`)
+    if (verified() && !eligible()) refuse('Your identity is checked but you are not yet cleared to hold tokenised shares.')
+  }
+  const bad = refusals(c, dollars, { trading: !switchOn(side), asset: !assetOn(c.ticker), closing })
+  if (bad.length) refuse(`${bad[0].title}. ${bad[0].why}`)
 }

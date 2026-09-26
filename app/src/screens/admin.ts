@@ -52,6 +52,7 @@ type Tab = typeof TABS[number]['key']
 
 const TONE: Record<Provider['state'], string> = { up: 'pos', slow: 'warn', down: 'warn' }
 const WORD: Record<Provider['state'], string> = { up: 'Up', slow: 'Slow', down: 'Down' }
+const NEXT: Record<Provider['state'], Provider['state']> = { up: 'slow', slow: 'down', down: 'up' }
 
 /* ---------------- status ---------------- */
 
@@ -70,7 +71,7 @@ function statusBody(): (Node | null)[] {
                 h('span', { class: 't-body-strong', text: p.name }),
                 h('small', { text: p.metric })),
               h('span', { class: TONE[p.state] + ' t-body-strong', text: WORD[p.state] })),
-            callout(p.fallback, 'warning'))))
+            callout(p.state === 'slow' && p.slow ? p.slow : p.fallback, 'warning'))))
       : card(
           cardHead('Everything is up', h('span', { class: 'pill pos', text: 'All clear' })),
           h('span', { class: 'muted', text: 'Six providers, all healthy. Nothing is degraded and no fallback is in force.' })),
@@ -85,7 +86,18 @@ function statusBody(): (Node | null)[] {
             h('small', { class: 'phone-only', text: p.does })),
           h('span', { class: 'muted', text: p.does }),
           h('span', { class: 'muted', text: p.metric }),
-          h('span', { class: TONE[p.state] + ' t-body-strong', text: WORD[p.state] }),
+          // Pressing the state moves it on: up, slow, down, up. Down is not a
+          // label — every action that depends on the provider refuses while
+          // it is down — so this is how a demo shows what an outage does.
+          h('button', {
+            class: 'btn btn-sm btn-secondary ' + TONE[p.state], text: WORD[p.state],
+            ariaLabel: `${p.name} is ${WORD[p.state].toLowerCase()}. Press to mark it ${NEXT[p.state]}`,
+            on: { click: (e: Event) => {
+              e.stopPropagation()
+              actions.setProvider(p.key, NEXT[p.state])
+              toast(`${p.name} marked ${NEXT[p.state]}`)
+            } },
+          }),
         ]))),
     card(
       cardHead('Alerts and runbooks'),
@@ -169,6 +181,21 @@ function peopleBody(): (Node | null)[] {
       kv('Cleared to trade', String(state.members.filter((m) => m.eligible).length)),
       kv('Restricted', String(state.members.filter((m) => m.state === 'restricted').length)),
       callout('Verified and eligible are different counts on purpose. Somebody can be exactly who they say and still not be allowed to hold these.')),
+    // The two controls that used to sit on the customer's own settings,
+    // where anybody could un-verify themselves. They are staff's: the
+    // verification is simulated in this prototype, and the refusal is a path
+    // a demo needs to walk, but the person being checked is not the one who
+    // gets to press them.
+    card(
+      cardHead('This account’s check', h('span', { class: 'pill', text: 'Demo controls' })),
+      kv('Whose', state.person.name),
+      kv('Identity', state.kyc.status === 'verified' ? 'Verified' : state.kyc.status === 'checking' ? 'Checking' : 'Not done'),
+      h('div', { class: 'chip-row' },
+        h('button', { class: 'btn btn-secondary btn-sm', text: 'Clear the check',
+          on: { click: () => { actions.resetVerification(); toast('Verification cleared') } } }),
+        h('button', { class: 'btn btn-secondary btn-sm', text: 'Show a refused eligibility check',
+          on: { click: () => { actions.failEligibility(); toast('Eligibility refused, for the demo') } } })),
+      h('span', { class: 'muted t-caption', text: 'Both go in the audit log.' })),
   ]
 }
 

@@ -3,7 +3,7 @@ import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, headLink, kv, callout, amount, directionMark, figureWithEye, spentBar } from '../components/bits'
 import { table } from '../components/table'
-import { state, buyingPower, availableToBorrow, alsoIn, limits, leftThisMonth, verified, money, moneyNaira, settlement, type Activity } from '../state'
+import { state, buyingPower, availableToBorrow, alsoIn, limits, leftThisMonth, verified, money, moneyNaira, unanswered, type Activity } from '../state'
 import * as ledger from '../ledger'
 import { usd, naira, when, activityLabel } from '../format'
 import { go, openSheet } from '../router'
@@ -58,7 +58,7 @@ function stage(a: Activity): string {
   }
   const inbound = a.amount > 0
   if (inbound) {
-    return settlement(a.amount) === 'pending'
+    return unanswered(a)
       ? (c ? naira(c.naira) + ' in route · we have not seen it yet, and nothing was taken twice'
            : 'In route · we have not seen it yet, and nothing was taken twice')
       : (c ? naira(c.naira) + ' in route · has not landed yet'
