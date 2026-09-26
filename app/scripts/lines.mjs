@@ -99,10 +99,12 @@ for (const theme of ['dark', 'light']) {
       }
       return out
     }, ALLOWED)
-    for (const f of found) {
-      bad++
-      check(`${width} ${theme} ${route}  ${f.what}`, false, f.sides)
-    }
+    // One check per route at each width and theme, passing when nothing on it
+    // draws a line, so a clean run says what it walked instead of printing
+    // "0 passed, 0 failed" and looking like it walked nothing.
+    bad += found.length
+    check(`${width} ${theme} ${route} draws no line`, found.length === 0,
+      found.map((f) => `${f.what}: ${f.sides}`).join(' | '))
   }
   await p.close()
 }
