@@ -118,7 +118,8 @@ const results = []
 for (const name of suites) {
   const r = await run(name)
   const fails = r.out.split('\n').filter((l) => /^\s*FAIL\b/.test(l))
-  const tally = r.out.match(/(\d+) passed, (\d+) failed\s*$/)
+  // The last tally line, wherever it is: a warning on stderr can follow it.
+  const tally = [...r.out.matchAll(/^(\d+) passed, (\d+) failed$/gm)].pop()
   // A FAIL line is a failure even if the suite forgot to set its exit code,
   // and a non-zero exit with no FAIL line is a crash, not a pass.
   r.status = fails.length ? 'FAIL' : r.code !== 0 ? 'CRASH' : 'PASS'
