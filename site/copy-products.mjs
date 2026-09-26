@@ -1,88 +1,50 @@
-/* The eight product pages, in words.
+/* The six product pages, in words.
    ---------------------------------------------------------------------------
    Separated from build-products.mjs on purpose: this file is the one a person
    reads and edits. Nothing in it is HTML. The builder turns it into pages.
 
-   Voice: the client's revised landing-page document (September 2026). Titles
-   and leads are lifted from it verbatim where it has them; everything below
-   that is drafted here and is the client's to cut. Where a page states a fact
-   about how Tokkenly behaves — a limit, a method, a hold, a fee — the fact is
-   the app's, not an invention: it is what app/src does.
+   Voice: the client’s revised landing-page document (September 2026) and the
+   product frames in Figma. Where a page states a fact about how Tokkenly
+   behaves — a limit, a method, a hold, a fee — the fact is the app’s, not an
+   invention: it is what app/src does.
 
-   `spine` is the page's shape, and no two are the same.
+   Each product is:
 
-   ---------------------------------------------------------------------------
-   PANELS
+     slug       the URL, /products/<slug>
+     nav        the product’s name, in sentence case, as the bar, the footer
+                and the sibling cards all write it
+     title      the one-line promise under the name in the Products menu
+     lead       the page’s meta description
+     image      the picture a shared link shows, a path under img/
+     close      the closing slab: headline, lead and, optionally, the button
+     sections   the page, band by band, in the order the frame draws it; each
+                `type` is a renderer in build-products.mjs (KIT2)
 
-   A `panel` is a small piece of the product, written out rather than
-   photographed. The first version of these pages put whole 780x1600 phone
-   screenshots on coloured slabs: 656px tall against a paragraph of 90 words,
-   so the picture was four times the copy and no page fitted a screen.
+   PRODUCTS is in the order the site lists them everywhere — the bar, the
+   phone menu and the footer — so that order is changed here and nowhere
+   else. */
 
-   The landing page never shows a whole phone. It shows a receipt — the white
-   panel on the two wide product cards — which is four rows and a button, is
-   about 300 tall, and says more about what the product does than a screenshot
-   of the screen it came from. That is what a panel is here.
+/* Every Sign up on the site reads this one constant. The app is its own Vercel
+   project at this address; signed out, it sends a visitor to /login. */
+export const APP_URL = 'https://app.tokkenly.com'
 
-   A panel is a list of blocks, in order:
-
-     ['head', 'You are sending', '$120.00']     caps label over a figure
-     ['rows', [[k, v], ...]]                    a sunken block of pairs
-     ['pairs', [[k, v], ...]]                   the same, two across
-     ['list', [[badge, name, sub, value, tone], ...]]
-     ['swap', [[k, big, unit], [k, big, unit]]] two fields and a flip
-     ['bar',  [[label, value, percent], ...]]   one bar, split by share
-     ['note', 'small print']
-     ['btn',  'Buy $50.00']
-
-   Every figure below is one the app would actually show. */
-
-export const APP_URL = 'https://app.tokkenly.com'   /* placeholder: the app is
-   a separate Vercel project and is not deployed yet. Every Sign up on the site
-   reads this one constant, so it is a one-line change when the URL is real. */
-
-/* ------------------------------------------------------------- the props --
-   The 3-D objects the landing page bleeds off the edge of its cards. Each
-   placement is fitted once, here, and referred to by name, so a card asks for
-   `coins` rather than carrying four percentages of its own. */
-export const PROPS = {
-  coins:   { src: 'ts/coins-us.webp',     l: '2.17%',   t: '19.447%', w: '74.552%', r: '3.25deg', w2: '56%' },
-  dangote: { src: 'ts/coin-dangote.webp', l: '12.686%', t: '-8.232%', w: '59.298%', w2: '48%' },
-  pen:     { src: 'ts/pen.webp',          l: '-1.018%', t: '-4.133%', w: '77.024%', w2: '62%', r2: '16deg' },
-  penback: { src: 'ts/pen.webp',          l: '28.13%',  t: '40.355%', w: '52.795%', r: '-100.9deg', fx: -1 },
-  notes:   { src: 'ts/notes-green.webp',  l: '-2%',     t: '8%',      w: '104%',    w2: '58%' },
-  purple:  { src: 'pr/notes-purple.webp', l: '-6%',     t: '6%',      w: '112%',    w2: '58%' },
-  /* The one object that is about its own page: a naira sign, a dollar sign,
-     and the arrows between them. It is drawn small inside a lot of empty
-     canvas, so it needs more of a slab than the others to read at all. */
-  convert: { src: 'pr/convert.webp',      l: '-8%',     t: '-2%',     w: '116%',    w2: '94%', r2: '0deg' },
-  coin:    { src: 'cta/coin.webp',        l: '18%',     t: '10%',     w: '64%',     w2: '50%' },
-}
-
-/* The money gun, the purse and the two duplicate note renders are in
-   site/img and deliberately not listed: a toy gun on a page about sending
-   money to family reads as a joke at the reader's expense, and `purse` and
-   `naira` are the same drawing as `purple`. */
+/* The site’s own address. Nothing in the repository wrote it down, so this is
+   an assumption to confirm: tokkenly.com, with the app on its app. subdomain.
+   Canonical links, og:url, og:image, robots.txt and sitemap.xml all read it,
+   so a different domain is a one-line change here and in index.html’s head. */
+export const SITE_URL = 'https://tokkenly.com'
 
 export const PRODUCTS = [
   /* ------------------------------------------------------------ flagship -- */
   {
     slug: 'tokenized-stocks',
+    image: 'ts/coins-us.webp',
     close: ['Make your next investment now.', 'Explore tokenized stocks with Tokkenly and bring the rest of your money along.'],
-    nav: 'Tokenized Stocks',
-    eyebrow: 'Tokenized Stocks',
+    nav: 'Tokenized stocks',
     title: 'From Nigeria to Wall Street.',
     lead:
       'The companies on your radar can be part of your portfolio. Invest in tokenized stocks linked ' +
       'to companies listed in Nigeria and the US, right from Tokkenly.',
-    stage: 'stage-mint',
-    prop: 'coins',
-    panel: [
-      ['head', 'You are buying', '$50.00'],
-      ['pairs', [['Company', 'Apple &#183; AAPLc'], ['Price', '$226.40'],
-                 ['You get', '0.2208 AAPLc'], ['Fee', 'No fee']]],
-      ['btn', 'Buy $50.00'],
-    ],
     /* ---------------------------------------------------------------------
        The frame (529:681) redraws this page around seven bands rather than
        the old spine. `sections` is what the builder reads when it is here;
@@ -90,7 +52,7 @@ export const PRODUCTS = [
        been rebuilt, so the site keeps building one page at a time. */
     sections: [
       { type: 'phero',
-        eyebrow: 'Tokenized Stocks',
+        eyebrow: 'Tokenized stocks',
         h: 'Invest in Nigerian\nand US stocks',
         lead: 'The companies on your radar can be part of your portfolio. Invest in tokenized stocks linked to companies listed in Nigeria and the US, right from Tokkenly.',
         ctas: [['Get started', 'ink', null], ['See how it works', 'white', '#more']],
@@ -192,7 +154,7 @@ export const PRODUCTS = [
         /* This frame keeps the older sibling band: icon chips and a short
            line each, where the newer pages use a letter and a sentence. */
         cards: [
-          ['gifting-and-rewards', 'gift', 'Gifting &amp; Rewards', 'Make their day. Start their portfolio.', 'Explore Gifting &amp; Rewards'],
+          ['gifting-and-rewards', 'gift', 'Gifting and rewards', 'Make their day. Start their portfolio.', 'Explore Gifting and rewards'],
           ['receive-and-send', 'updown', 'Receive and send', 'Get paid. Make someone\u2019s day.', 'Explore Receive and send'],
           ['borrow-and-earn', 'split', 'Borrow and earn', 'Put it to work, or borrow against it.', 'Explore Borrow and earn'],
         ] },
@@ -200,59 +162,12 @@ export const PRODUCTS = [
       { type: 'pclose' },
     ],
 
-    spine: [
-      { type: 'stats', head: 'Two markets, one list.', items: [
-        ['2', 'markets', 'Nigerian and US companies in the same search.'],
-        ['24/7', 'trading', 'Tokenised, so the market does not keep office hours.'],
-        ['$1', 'to start', 'Buy a slice. You do not have to afford a whole share.'],
-      ] },
-      { type: 'bento', eyebrow: 'What you actually do', head: 'Three screens, and you own a slice.',
-        lead: 'No brokerage account in another country. No minimum you have to save up for.',
-        rows: [
-          ['a',
-           { chip: 'mint', icon: 'search', h: 'Find the company, not the ticker.',
-             p: ['Search a name and Tokkenly finds it. AAPLc is Apple, DANGCEMc is Dangote Cement, and the list says which is which rather than making you know.',
-                 'Nigerian and US companies come back in the same list, in the same search, so you are not choosing a market before you have chosen a company.'],
-             panel: [['list', [
-               ['A', 'Apple', 'AAPLc', '$226.40', 'up'],
-               ['D', 'Dangote Cement', 'DANGCEMc', '&#8358;512.00', 'up'],
-               ['T', 'Tesla', 'TSLAc', '$412.90', 'down'],
-             ]]] },
-           { chip: 'yellow', icon: 'book', h: 'Read it before you buy it.',
-             p: ['Every tokenized stock has a page saying what it represents, what it costs and what can go wrong. In front of you before you commit, not linked from a footnote.'],
-             prop: 'purple' }],
-          ['b',
-           { chip: 'orange', icon: 'clock', h: 'Buy a slice, not a share.',
-             p: ['An amount of money, not a number of shares. A dollar is a real starting position.'],
-             prop: 'coins' },
-           { chip: 'mint', icon: 'wallet', h: 'Keep it with the rest of your money.',
-             p: ['Your holdings, your naira and your stablecoins sit in one place. Sell, convert, send or pay a bill without moving money between apps first.',
-                 'What is invested and what is spendable are counted separately on every screen, so one is never mistaken for the other.'],
-             panel: [['head', 'Your portfolio', '$1,284.60'],
-                     ['rows', [['In tokenized stocks', '$444.40'], ['Spendable', '$340.20'], ['Committed to earn', '$500.00']]]] }],
-        ] },
-      { type: 'facts', head: 'The plain version.', rows: [
-        ['What you own', 'A tokenized stock that tracks the company’s share price. Not the share itself, and not a vote at its AGM.'],
-        ['What it costs', 'The price on the screen. Any fee is stated on the same screen before you confirm.'],
-        ['When you can sell', 'Any time the product is open for trading. Some are marked Not open yet and say so on the row.'],
-        ['Where the money goes', 'Into your Tokkenly balance, in the currency you sold for.'],
-      ] },
-      { type: 'risk' },
-      { type: 'faq', items: [
-        ['Do I own the actual share?',
-         'No. You own a tokenized stock that tracks the share price. What it represents is written on the product’s own page, and it is worth reading before you buy.'],
-        ['What happens if the company’s price falls?',
-         'Your holding falls with it. Investments can lose value, and Tokkenly does not guarantee a return.'],
-        ['Can I buy part of a share?',
-         'Yes. You choose an amount of money rather than a number of shares.'],
-      ] },
-      { type: 'related' },
-    ],
   },
 
   /* ------------------------------------------------------------ new page -- */
   {
     slug: 'gifting-and-rewards',
+    image: 'gift/hero-portrait.webp',
     /* Frame 640:1611. Seven bands: a hero with the words on the left and a
        portrait running off the right, two ways to give, the unlock, three
        steps, the questions, the siblings and the close. */
@@ -328,71 +243,17 @@ export const PRODUCTS = [
       { type: 'pclose', tall: true },
     ],
     close: ['Give something that grows.', 'Pick a company, set the day it opens, and let the gift do the rest.'],
-    nav: 'Gifting &amp; Rewards',
-    eyebrow: 'Gifting and Rewards',
+    nav: 'Gifting and rewards',
     title: 'Make their day. Start their portfolio.',
     lead:
       'Give tokenized stocks for birthdays, graduations, or just because. Reward customers through ' +
       'referrals, cashback, and loyalty programs.',
-    stage: 'stage-peach',
-    prop: 'dangote',
-    panel: [
-      ['head', 'You are gifting', '$25.00'],
-      ['pairs', [['To', 'Chidi Umeh'], ['Gift', 'Apple &#183; AAPLc'],
-                 ['Unlocks', '14 March 2027'], ['Fee', 'No fee']]],
-      ['note', '&#8220;Happy birthday. Start somewhere.&#8221;'],
-      ['btn', 'Send gift'],
-    ],
-    spine: [
-      { type: 'split', side: 'b',
-        eyebrow: 'A gift with a date on it',
-        head: 'Worth something<br />in ten years.',
-        lead:
-          'Pick a company they will recognize, write a line, and set the day it opens. A gift with a ' +
-          'date on it is a gift twice: once when it arrives, once when it unlocks.',
-        points: [
-          ['Any tokenized stock on Tokkenly', 'A slice is fine. You do not have to give a whole share.'],
-          ['Now, or on the day that matters', 'Send it today or set it for a birthday two years out.'],
-        ],
-        cta: ['See what you could give', '#s-steps'],
-        stage: 'stage-mint', prop: 'purple',
-        panel: [['head', 'Unlocks in', '540 days'],
-                ['rows', [['Gift', 'Apple &#183; AAPLc'], ['From', 'Aunty Ngozi'], ['Opens', '14 March 2027']]],
-                ['note', 'Until then it sits in their portfolio and keeps tracking the price.']] },
-      { type: 'two', head: 'Two ways to give.', cols: [
-        ['For people you know',
-         'A birthday, a graduation, a new job, or no occasion at all. They get something that is ' +
-         'still worth something in ten years.',
-         ['Choose any tokenized stock on Tokkenly',
-          'Set a future unlock date, or send it now',
-          'They open an account to claim it'] ],
-        ['For people who buy from you',
-         'Referrals, cashback and loyalty, paid in tokenized stocks instead of points nobody ' +
-         'redeems. A reward that grows is a reward people remember.',
-         ['Pay rewards in tokenized stocks',
-          'Set it per referral, per order or per tier',
-          'Your customers keep it in their own Tokkenly account'] ],
-      ] },
-      { type: 'steps', head: 'How a gift travels.', items: [
-        ['Pick what to give', 'Choose a tokenized stock and an amount. A slice is fine — you do not have to give a whole share.'],
-        ['Say when it opens', 'Send it now, or set a date. Until that day it sits in their portfolio, tracking the price.'],
-        ['They claim it', 'They get a link, open an account, and it lands in their portfolio. Theirs to keep, sell or add to.'],
-      ] },
-      { type: 'faq', items: [
-        ['What if they already use Tokkenly?',
-         'It lands straight in their portfolio. No link to claim, no account to open.'],
-        ['Can I take a gift back?',
-         'Not once it has been claimed. Before it is claimed, an unclaimed gift returns to you.'],
-        ['Is a gift taxed?',
-         'That depends on where the two of you are and what you do with it. Tokkenly does not give tax advice — talk to someone who does.'],
-      ] },
-      { type: 'related' },
-    ],
   },
 
   /* ------------------------------------------------------------- everyday -- */
   {
     slug: 'receive-and-send',
+    image: 'rs/receipt.webp',
     /* Frame 644:1611. The frame merges receive and send into one page: the
        hero, then money in and money out side by side, then what happens while
        it is moving, then the questions, the siblings and the close. */
@@ -452,7 +313,7 @@ export const PRODUCTS = [
                      rows: [['Sent', '14:02'], ['At the bank', '14:03'], ['Landed', '\u2014']] } },
            { grad: ['#d1cbc2', '#fac6ff'], h: 'Still moving is not spendable.',
              p: 'The screen keeps the two apart until it lands, so one is never mistaken for the other.',
-             art: { src: 'rs/money-gun.webp', l: 17.625, t: 16.944, w: 70.646, ar: [353.230, 452.701] } }],
+             art: { src: 'hero/gun.webp', l: 17.625, t: 16.944, w: 70.646, ar: [353.230, 452.701] } }],
           [{ grad: ['#d1cbc2', '#c8e1ff'], tight: true, h: 'It ends in a receipt.',
              p: 'When it lands the row becomes a record you can find again in Activity.',
              art: { src: 'rs/receipt.webp', l: 7.2, t: 37.222, w: 76.123, ar: [380.617, 427.057] } },
@@ -484,54 +345,16 @@ export const PRODUCTS = [
     ],
     close: ['Give out your details once.', 'Then get paid into the same app you invest and spend from.'],
     nav: 'Receive and send',
-    eyebrow: 'Receive',
     title: 'Get paid. Get on with life.',
     lead:
       'Receive payments and transfers into Tokkenly. Put that money towards an investment, a bill, ' +
       'or someone who needs it.',
-    stage: 'stage-yellow',
-    prop: 'purple',
-    panel: [
-      ['head', 'Your account number', '7043 118 220'],
-      ['pairs', [['Bank', 'Wema Bank'], ['Name', 'Amara Nwosu'],
-                 ['Currency', 'Naira'], ['To receive', 'No fee']]],
-      ['btn', 'Copy details'],
-    ],
-    spine: [
-      { type: 'bento', eyebrow: 'Three ways in', head: 'However they pay you.',
-        lead: 'A bank transfer, a wallet, or a card. All of it lands in the same balance.',
-        rows: [
-          ['b',
-           { chip: 'yellow', icon: 'card', h: 'A debit card',
-             p: ['Top up from a card you already hold. Paused while we finish the checks — and the screen says so rather than failing quietly.'],
-             prop: 'notes' },
-           { chip: 'mint', icon: 'down', h: 'A Nigerian account, and a wallet address.',
-             p: ['Your own account number, in your own name, at a Nigerian bank. Anyone who can send a transfer can pay you.',
-                 'For stablecoins, an address on the network you pick. It is yours, it does not change, and you can hand it out once.'],
-             panel: [['list', [
-               ['N', 'Wema Bank', '7043 118 220 &#183; Amara Nwosu', 'Naira', 'flat'],
-               ['B', 'Base', '0x7a2f&#8230;4c19', 'USDC', 'flat'],
-               ['T', 'Tron', 'TJmv&#8230;9Qp4', 'USDT', 'flat'],
-             ]]] }],
-        ] },
-      { type: 'trio', eyebrow: 'While it is moving', head: 'Money in transit gets a row of its own.',
-        cards: [
-          ['It says where it actually is', 'En route, at the bank, not landed yet. Not a balance that jumps with no explanation.', 'notes'],
-          ['It is counted honestly', 'Money still moving is not spendable, and the screen keeps the two apart until it lands.', 'penback,pen'],
-          ['It ends in a receipt', 'When it lands the row becomes a record you can find again in Activity.', 'purple'],
-        ] },
-      { type: 'facts', head: 'Before you ask.', rows: [
-        ['What it costs', 'Nothing to receive.'],
-        ['How long it takes', 'A Nigerian transfer is usually minutes. A crypto transfer takes as long as the network does.'],
-        ['What you need first', 'An account and a completed NIN or BVN check. Nigerian law requires it before you can hold a balance.'],
-      ] },
-      { type: 'related' },
-    ],
   },
 
 
   {
     slug: 'pay-bills',
+    image: 'pb/receipt-portrait.webp',
     /* Frame 647:1611. A centred hero over a masked screenshot, the three
        bills as tiles, the receipt, the questions and the close. No sibling
        band on this one. */
@@ -603,53 +426,15 @@ export const PRODUCTS = [
     close: ['Clear the whole list in one app.',
             'Airtime, data and electricity, beside the rest of your money.', 'Pay a bill'],
     nav: 'Pay bills',
-    eyebrow: 'Pay bills',
     title: 'One less thing on your list.',
     lead:
       'Take care of everyday bills in Tokkenly and get back to your day. Your money is already here. ' +
       'Your bill payments can be too.',
-    stage: 'stage-sand',
-    prop: 'notes',
-    panel: [
-      ['head', 'Ikeja Electric', '&#8358;5,000'],
-      ['pairs', [['Meter', '4512 8890 22'], ['Type', 'Prepaid'],
-                 ['Paying with', 'Naira'], ['Fee', '&#8358;0']]],
-      ['btn', 'Pay &#8358;5,000'],
-    ],
-    spine: [
-      { type: 'trio', eyebrow: 'What you can pay', head: 'Airtime, data, and the light bill.',
-        cards: [
-          ['Airtime', 'Any Nigerian network. Your number is remembered, so the second time is one tap.', 'purple'],
-          ['Data', 'Pick the bundle, not the price code. The screen says what you are buying.', 'penback,pen'],
-          ['Electricity', 'Prepaid or postpaid. The token comes back on the receipt, where you can find it again.', 'notes'],
-        ] },
-      { type: 'compare', head: 'Why it is here and not somewhere else.',
-        before: ['Open a different app', 'Fund it from your bank', 'Wait for the transfer', 'Then pay the bill', 'Keep the receipt somewhere'],
-        after: ['Open Tokkenly', 'Pay the bill', 'The receipt is in Activity'] },
-      { type: 'bento', eyebrow: 'After you pay', head: 'The token does not go missing.',
-        lead: 'A receipt you can open again, and a failure that says what happened.',
-        rows: [
-          ['a',
-           { chip: 'mint', icon: 'receipt', h: 'The receipt keeps the number.',
-             p: ['A prepaid token is no use if you cannot find it twenty minutes later. It sits on the receipt, in Activity, where you left it.',
-                 'So does the meter number, the amount and the date, which is the difference between a payment and a piece of paper you have lost.'],
-             panel: [['head', 'Paid', '&#8358;5,000'],
-                     ['rows', [['Token', '8842 1190 5573 2041'], ['Meter', '4512 8890 22'], ['Kept in', 'Activity']]]] },
-           { chip: 'orange', icon: 'back', h: 'A failure is a row, not a silence.',
-             p: ['If a payment does not go through the money comes back, and Activity says so.'],
-             prop: 'coins' }],
-        ] },
-      { type: 'facts', head: 'Details.', rows: [
-        ['What it costs', 'The bill, and any fee stated on the screen before you confirm.'],
-        ['What you pay with', 'Any balance you hold. Pick a default once and it stops asking.'],
-        ['If it fails', 'The money comes back. A failed payment is a row in Activity that says what happened, not a silence.'],
-      ] },
-      { type: 'related' },
-    ],
   },
 
   {
     slug: 'convert',
+    image: 'pr/convert.webp',
     /* Frame 648:1611. The swap panel sits beside the words, then the two ways
        of doing it side by side over a portrait, the balances slab, the
        questions, the siblings and the close. */
@@ -727,7 +512,6 @@ export const PRODUCTS = [
     close: ['See what the rate is today.',
             'Move between naira and stablecoins without leaving Tokkenly.', 'See today\u2019s rate'],
     nav: 'Convert',
-    eyebrow: 'Convert',
     title: 'Change currencies. Keep your plans.',
     lead:
       'Move between naira and stablecoins for the way you want to use your money. Spend, send, or ' +
@@ -737,6 +521,7 @@ export const PRODUCTS = [
   /* ---------------------------------------------------------- with a risk -- */
   {
     slug: 'borrow-and-earn',
+    image: 'be/cloud.webp',
     /* Frame 560:1129. The frame merges earning and borrowing into one page: a
        hero with both panels on a stage, the two halves, three steps, the
        questions, the siblings and the close. */
@@ -828,7 +613,6 @@ export const PRODUCTS = [
     close: ['See what you could earn, or borrow.',
             'The figure, the rate and the terms, before you agree to anything.', 'Get started'],
     nav: 'Borrow and earn',
-    eyebrow: 'Borrow and earn',
     title: 'Earn more, or borrow against it.',
     lead:
       'Earn on your stablecoins or borrow when you need flexibility. Review the terms, choose an ' +

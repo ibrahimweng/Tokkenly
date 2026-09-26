@@ -1,6 +1,10 @@
-import { chromium } from 'playwright'
+/* The landing page at three widths: broken images, sideways overflow,
+   script errors, failed requests. Screenshots go to the folder given, or
+   /tmp. Any problem sets a non-zero exit. The site is read from SITE_URL
+   (see _sitelib.mjs). */
+import { launch, open } from './_sitelib.mjs'
 const out = process.argv[2] ?? '/tmp'
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+const browser = await launch()
 
 async function run(label, width, height) {
   const p = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 })
@@ -8,7 +12,8 @@ async function run(label, width, height) {
   p.on('pageerror', (e) => errs.push('pageerror: ' + e.message))
   p.on('console', (m) => { if (m.type() === 'error') errs.push('console: ' + m.text()) })
   p.on('requestfailed', (r) => errs.push('failed: ' + r.url()))
-  await p.goto('http://localhost:4321/', { waitUntil: 'networkidle' })
+  p.on('response', (r) => { if (r.status() >= 400) errs.push(r.status() + ': ' + r.url()) })
+  await open(p, '/', { waitUntil: 'networkidle' })
 
   // Walk the page so lazy images actually start loading.
   await p.evaluate(async () => {
@@ -75,6 +80,7 @@ async function run(label, width, height) {
   if (report.bad.length) console.log('  OVERFLOW: ' + report.bad.join('\n            '))
   if (errs.length) console.log('  ERRORS: ' + errs.join('\n          '))
   if (!report.broken.length && !report.bad.length && !errs.length) console.log('  clean')
+  else process.exitCode = 1
   await p.close()
 }
 

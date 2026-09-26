@@ -1,7 +1,7 @@
-import { chromium } from 'playwright'
-import { seen } from './seen.mjs'
-const base = 'http://localhost:4173/#'
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+import { B, launch, check, teardown, shot } from './lib/harness.mjs'
+import { seen } from './lib/seen.mjs'
+const base = B
+const browser = await launch()
 const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2 })
 // Since the app lock landed, a page that does not seed the unlock drives
 // the PIN pad instead of the product. This suite was measuring the lock
@@ -24,17 +24,23 @@ const routes = [
   ['/signin', 'p23-signin'],
 ]
 const lines = []
+let overflowing = 0
 for (const [hash, name] of routes) {
   await page.goto(base + hash, { waitUntil: 'networkidle' })
   await page.waitForTimeout(160)
-  await page.screenshot({ path: `/tmp/shots/${name}.png` })
+  await page.screenshot({ path: shot(`${name}.png`) })
   // nothing should scroll sideways on a phone
   const over = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
   const rail = await page.locator('.railbar').count()
   const sheet = await page.locator('.sheet').count()
   lines.push(`${name.padEnd(20)} ${hash.padEnd(44)} overflowX ${String(over).padStart(3)}  rail ${rail}  sheet ${sheet}`)
+  // Printed and never checked, this was a table somebody had to read. It is
+  // what the suite is for, so it fails the run.
+  if (over > 0) lines.push(`  FAIL  ${hash} scrolls sideways by ${over}px`)
+  overflowing += over > 0 ? 1 : 0
 }
 console.log(lines.join('\n'))
+check('no route scrolls sideways at 390', overflowing === 0, overflowing ? `${overflowing} do` : '')
 
 /* THE NAV BAR
    Two objects, not one bar: a capsule of tabs, and a button of its own beside
@@ -42,7 +48,7 @@ console.log(lines.join('\n'))
    becomes the list, in place, while the button stays exactly where the thumb
    left it and turns into the way out. Everything here is a property that is
    easy to break by accident and impossible to see in a screenshot. */
-const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
+const ok = check
 console.log('\nTHE NAV BAR')
 {
   const box = (sel) => page.evaluate((s) => {
@@ -201,4 +207,5 @@ console.log('\nEVERY SCREEN, ON A PHONE')
 }
 
 console.log('\nERRORS: ' + (errs.length ? errs.join('\n') : 'none'))
-await browser.close()
+check('no page or console errors', !errs.length, errs.length ? `${errs.length}` : '')
+await teardown(browser)

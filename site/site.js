@@ -1,7 +1,9 @@
-/* Tokkenly marketing site. Four small jobs: the bar knows when the page has
-   moved, the Products menu opens and closes, the phone menu does the same,
-   and sections arrive rather than appear. Nothing here is load-bearing — with
-   the script blocked the page is still a readable document. */
+/* Tokkenly marketing site. The bar knows when the page has moved, the
+   Products menu and the phone menu open and close, sections arrive rather
+   than appear, the landing page's pieces move, the blog filters, and the two
+   forms send without leaving the page. Nothing here is load-bearing — with
+   the script blocked the page is still a readable document and both forms
+   still post. */
 ;(function () {
   'use strict'
 
@@ -62,36 +64,65 @@
   document.addEventListener('click', function (e) {
     if (!dropMenu.hidden && !dropMenu.contains(e.target)) setDrop(false)
   })
+  /* Tabbing out of the menu closes it. A menu left open behind the focus is
+     a panel covering the page that nobody is using, and the next Tab lands
+     somewhere the reader cannot see past it. relatedTarget is where focus is
+     going; null means it left the page, which counts as leaving the menu. */
+  dropBtn.parentNode.addEventListener('focusout', function (e) {
+    if (dropMenu.hidden) return
+    if (!e.relatedTarget || !dropBtn.parentNode.contains(e.relatedTarget)) setDrop(false)
+  })
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Escape') return
     if (!dropMenu.hidden) { setDrop(false); dropBtn.focus() }
-    if (!mobileMenu.hidden) { setBurger(false); burger.focus() }
+    if (!mobileMenu.hidden) setBurger(false)
   })
 
   /* -------------------------------------------------------- phone menu -- */
+  /* Open, it is a modal in all but name: it covers the page, so the page
+     behind it stops scrolling, Tab and Shift-Tab go round the menu and the
+     button that closes it rather than wandering into the hidden page, and
+     Escape or a second press of the button closes it and puts focus back on
+     the button. */
   var burger = document.querySelector('.burger')
   var mobileMenu = document.getElementById('mobile-menu')
+  var root = document.documentElement
 
-  function setBurger(open) {
+  function setBurger(open, quiet) {
+    var was = !mobileMenu.hidden
     burger.setAttribute('aria-expanded', String(open))
+    burger.setAttribute('aria-label', open ? 'Close menu' : 'Menu')
     mobileMenu.hidden = !open
+    root.classList.toggle('menu-open', open)
+    if (open && !was) {
+      var first = mobileMenu.querySelector('a')
+      if (first) first.focus()
+    } else if (!open && was && !quiet) {
+      burger.focus()
+    }
   }
 
   burger.addEventListener('click', function () { setBurger(mobileMenu.hidden) })
   mobileMenu.addEventListener('click', function (e) {
-    if (e.target.closest('a')) setBurger(false)
+    if (e.target.closest('a')) setBurger(false, true)
+  })
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Tab' || mobileMenu.hidden) return
+    var stops = [burger].concat([].slice.call(mobileMenu.querySelectorAll('a[href], button')))
+    var i = stops.indexOf(document.activeElement)
+    if (i < 0) { e.preventDefault(); stops[0].focus(); return }
+    var next = i + (e.shiftKey ? -1 : 1)
+    if (next < 0 || next >= stops.length) {
+      e.preventDefault()
+      stops[(next + stops.length) % stops.length].focus()
+    }
   })
   /* A menu that is open at 640px and still open at 1200px is a menu nobody
      can close, because the button that closes it is gone by then. */
   var wide = matchMedia('(min-width: 1041px)')
-  var onWide = function (m) { if (m.matches) setBurger(false) }
+  var onWide = function (m) { if (m.matches) setBurger(false, true) }
   if (wide.addEventListener) wide.addEventListener('change', onWide)
   else wide.addListener(onWide)
-
-  /* --------------------------------------------- links with no page yet -- */
-  document.querySelectorAll('[data-soon]').forEach(function (a) {
-    a.addEventListener('click', function (e) { e.preventDefault() })
-  })
 
   /* ------------------------------------------------------------ reveal -- */
   var io = null
@@ -136,7 +167,7 @@
      so this runs before the menus' own handlers close anything. */
   document.addEventListener('click', function (e) {
     var a = e.target.closest && e.target.closest('a[href^="#"]')
-    if (!a || a.hasAttribute('data-soon')) return
+    if (!a) return
     settleHash(a.getAttribute('href'))
   }, true)
 
@@ -1251,4 +1282,99 @@
   targets.forEach(function (t) { io.observe(t) })
   addEventListener('resize', paint, { passive: true })
   paint()
+})()
+
+/* -------------------------------------------------- the blog's chips --
+   One chip pressed at a time. "All" carries an empty data-filter; any other
+   chip shows only the cards whose data-cat matches it. The count line under
+   the chips is a live region, so a screen reader hears how many are showing
+   after each press rather than having to go and count. */
+;(function () {
+  var chips = [].slice.call(document.querySelectorAll('.bl-chip[data-filter]'))
+  var posts = [].slice.call(document.querySelectorAll('.bl-post[data-cat]'))
+  var count = document.querySelector('.bl-count')
+  if (!chips.length || !posts.length) return
+
+  function choose(chip) {
+    var want = chip.getAttribute('data-filter')
+    chips.forEach(function (c) {
+      var on = c === chip
+      c.classList.toggle('is-on', on)
+      c.setAttribute('aria-pressed', String(on))
+    })
+    var shown = 0
+    posts.forEach(function (p) {
+      var show = !want || p.getAttribute('data-cat') === want
+      p.hidden = !show
+      if (show) shown++
+    })
+    if (count) count.textContent = shown + (shown === 1 ? ' post' : ' posts') + (want ? ' about ' + chip.textContent.trim() : '')
+  }
+  chips.forEach(function (c) { c.addEventListener('click', function () { choose(c) }) })
+})()
+
+/* ------------------------------------------------------- the two forms --
+   The contact form and the newsletter post to /api/contact on their own; this
+   only keeps the reader on the page while they do. The button is disabled
+   while a message is in flight so a second press cannot send it twice, and
+   the outcome is written into the form's status line, which is a live region.
+
+   If the function cannot send — it answers 503 until the Resend key is set —
+   or the network fails, the line says so and gives the support address,
+   because a form that fails silently is worse than no form. */
+;(function () {
+  var SUPPORT = 'support@tokkenly.com'
+  document.querySelectorAll('form[data-form]').forEach(function (form) {
+    var status = form.querySelector('.form-status')
+    var button = form.querySelector('[type="submit"]')
+    if (!status || !button || !window.fetch) return
+
+    /* Written as text, with the support address made a link wherever it
+       appears, so a message from the function can name it and still be
+       something to click. */
+    function say(kind, text) {
+      status.className = 'form-status is-' + kind
+      status.textContent = ''
+      text.split(SUPPORT).forEach(function (part, i) {
+        if (i) {
+          var a = document.createElement('a')
+          a.href = 'mailto:' + SUPPORT
+          a.textContent = SUPPORT
+          status.appendChild(a)
+        }
+        if (part) status.appendChild(document.createTextNode(part))
+      })
+    }
+
+    form.addEventListener('submit', function (e) {
+      if (!form.checkValidity()) return          // let the browser say what is missing
+      e.preventDefault()
+      var data = {}
+      new FormData(form).forEach(function (v, k) { data[k] = v })
+      button.disabled = true
+      form.setAttribute('aria-busy', 'true')
+      say('busy', 'Sending…')
+      fetch(form.getAttribute('action'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(data),
+      }).then(function (r) {
+        return r.json().catch(function () { return {} }).then(function (body) {
+          if (r.ok && body.ok) {
+            say('ok', body.message || 'Thank you.')
+            form.reset()
+          } else {
+            /* The function's own words when it sent some: they say what to
+               add, or to wait, or that the form is not connected yet. */
+            say('error', body.message || 'That did not go through. Please email us at ' + SUPPORT + '.')
+          }
+        })
+      }).catch(function () {
+        say('error', 'That did not go through. Please email us at ' + SUPPORT + '.')
+      }).then(function () {
+        button.disabled = false
+        form.removeAttribute('aria-busy')
+      })
+    })
+  })
 })()

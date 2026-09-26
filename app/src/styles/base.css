@@ -34,6 +34,23 @@
     U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
+/* What the page is drawn in for the moment before Geist arrives, or for the
+   whole session if it never does: Arial, stretched and shifted to take up
+   Geist's room. Without it the swap moved every line — Arial is narrower and
+   sits lower in its line box — so a figure that had been read jumped when the
+   real face landed. Measured in the browser against the shipped Geist: 1.3%
+   wider across a sample of words and figures, an ascent of 1.005 em and a
+   descent of 0.295, no line gap. The overrides are those, divided by the
+   size adjustment, because they apply after it. */
+@font-face {
+  font-family: 'Geist Fallback';
+  src: local('Arial'), local('ArialMT'), local('Liberation Sans'), local('Helvetica');
+  size-adjust: 101.3%;
+  ascent-override: 99.2%;
+  descent-override: 29.1%;
+  line-gap-override: 0%;
+}
+
 *, *::before, *::after { box-sizing: border-box; }
 /* So the browser paints form controls, scrollbars and the overscroll gutter
    in the theme the page is actually in. */
@@ -77,7 +94,12 @@ input { font: inherit; color: inherit; background: none; border: 0; }
 input[type='search'] { -webkit-appearance: none; appearance: none; }
 input[type='search']::-webkit-search-decoration,
 input[type='search']::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
-input:focus { outline: none; }
+/* A text field is ringed as a whole (see .field in components.css), so the
+   input inside it draws nothing of its own. Only an input that is inside a
+   field: one on its own keeps the ring every other control has, because
+   `input:focus` without the qualifier beat :focus-visible everywhere and
+   left some fields with no sign of focus at all. */
+.field input:focus, .field select:focus, .field textarea:focus { outline: none; }
 ul { margin: 0; padding: 0; list-style: none; }
 [hidden] { display: none !important; }
 :focus-visible { outline: 2px solid var(--positive); outline-offset: 2px; border-radius: 6px; }
@@ -90,7 +112,9 @@ ul { margin: 0; padding: 0; list-style: none; }
   clip-path: inset(50%); white-space: nowrap; margin: -1px; padding: 0; border: 0;
 }
 
-.screen { display: flex; min-height: 100vh; }
+/* 100dvh where it is understood, so a phone whose toolbar comes and goes is
+   measured at the height actually showing; 100vh before it for the rest. */
+.screen { display: flex; min-height: 100vh; min-height: 100dvh; }
 .content {
   flex: 1;
   min-width: 0;
@@ -134,7 +158,9 @@ ul { margin: 0; padding: 0; list-style: none; }
    the only honest reduction is to make what is reserved no bigger than it has
    to be. 66 became 56 this way, against 24 for a page that used to have no
    routing row at all. */
-:root { --hdr-route: 22px; --hdr-title: 34px; }
+/* 24 and 36: the same two rows, put back on the 4px grid (rule 2) — they
+   were 22 and 34, which put every title's baseline two pixels off it. */
+:root { --hdr-route: 24px; --hdr-title: 36px; }
 .page-header {
   display: grid;
   grid-template-rows: var(--hdr-route) var(--hdr-title);
@@ -164,10 +190,12 @@ ul { margin: 0; padding: 0; list-style: none; }
    and an 18px page name occupy the same rectangle rather than two boxes that
    merely share a centre. */
 .page-header h1 { margin: 0; font-size: 18px; line-height: var(--hdr-title); font-weight: 600; }
-/* except where the heading is the greeting. 26, not 32: the title row has to
+/* except where the heading is the greeting. 28, not 36: the title row has to
    be as tall as the tallest heading in the product, so every page pays for
-   Home's greeting in the space above its first card. */
-.page-header h1.t-display { font-size: 26px; }
+   Home's greeting in the space above its first card. 28 is the scale's
+   screen-title step (design.md 9, Heading/XL); it was 26, which is on no
+   scale in the file. */
+.page-header h1.t-display { font-size: 28px; }
 .eyebrow { display: flex; align-items: baseline; gap: 8px; color: var(--muted); }
 .eyebrow strong { color: var(--ink); font-weight: 600; }
 
@@ -178,9 +206,14 @@ ul { margin: 0; padding: 0; list-style: none; }
    over — at a 900 viewport that came to 88px, and the chart inside it had
    nothing to draw on. Rows that carry a .col-side stack; rows of equal cards
    and rows of tiles do not, because three cards across 700px is still fine. */
-@media (max-width: 1239px) {
+@media (max-width: 1279px) {
   .row:has(> .col-side, > .col-compose) { flex-direction: column; gap: 16px; }
-  .row:has(> .col-side, > .col-compose) > * { width: 100% !important; flex: none !important; }
+  /* Specificity rather than !important: `:is()` counts as its heaviest
+     argument, so this outweighs `.row > .col-side` and `.row.equal > *` above
+     it, and a component that wants a row's children back side by side
+     (`.row.tiles`, `.row.prods`) says so after it at the same weight and wins
+     by coming later — instead of the two sides escalating !important. */
+  .row:has(> .col-side, > .col-compose) > :is(*, .col-side) { width: 100%; flex: none; }
 }
 
 /* 96 down each side is the desktop figure the file draws at 1440. On a
@@ -201,8 +234,13 @@ ul { margin: 0; padding: 0; list-style: none; }
    Fixed, because an amount field that grows with the monitor reads as a form
    field rather than as the one thing on the screen. */
 .row > .col-compose { width: 456px; flex: none; }
-.stack { display: flex; flex-direction: column; gap: 16px; }
-.stack-16 { display: flex; flex-direction: column; gap: 16px; }
+/* Home's figure column: fixed, so the total does not move as the cards beside
+   it grow. It was a width written inline, which is why the phone needed an
+   !important to take it back. */
+.row > .col-figure { width: 308px; flex: none; }
+/* Two names, one rule: `.stack` is the default and `.stack-16` says the same
+   gap out loud where the number is the point. */
+.stack, .stack-16 { display: flex; flex-direction: column; gap: 16px; }
 .stack-12 { display: flex; flex-direction: column; gap: 12px; }
 .stack-8  { display: flex; flex-direction: column; gap: 8px; }
 .grow { flex: 1 1 auto; }
@@ -213,6 +251,9 @@ ul { margin: 0; padding: 0; list-style: none; }
 .warn { color: var(--warning); }
 .right { text-align: right; }
 .nowrap { white-space: nowrap; }
+/* No margin of its own, for a heading or paragraph whose spacing is its
+   container's gap. Instead of `style: { margin: 0 }` written inline. */
+.flush { margin: 0; }
 
 /* ---------------------------------------------------------------- phone --
    Below 900 the product becomes the phone: one column, a top bar, and a
@@ -228,12 +269,12 @@ ul { margin: 0; padding: 0; list-style: none; }
     /* The rail sits 32 up and is 64 tall, and the fade above it reaches
        another 52. The last row of a list has to clear all three, or scrolling
        to the bottom still leaves something dimmed under the gradient. */
-    padding-bottom: calc(var(--nav-h) + 84px);
+    padding-bottom: calc(var(--nav-h) + 84px + env(safe-area-inset-bottom, 0px));
   }
   /* Rule 35 wants 44 under a thumb, and the back link lives in the routing
      row, so on a phone that row is a touch target rather than a caption. */
   :root { --hdr-route: 44px; --hdr-title: 44px; }
-  .page-header h1 { font-size: 22px; line-height: 28px; }
+  .page-header h1 { font-size: 20px; line-height: 28px; }
   /* The greeting is the one heading whose length is not the product's to
      choose: it is a time of day and a name, and "Good afternoon, Chinaza" is
      296px in a 290px box at 390 and a 260px box at 360. It read "Good
@@ -250,9 +291,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 
   /* every row becomes a stack, and every side column a full-width band */
   .row { flex-direction: column; gap: 16px; }
-  .row > .col-side,
-  .row > .col-main,
-  .row > * { width: 100% !important; flex: none !important; }
+  .row > :is(*, .col-side, .col-main, .col-compose, .col-figure) { width: 100%; flex: none; }
 
   .stack, .row { gap: 16px; }
   .card { padding: 20px; border-radius: 24px; }

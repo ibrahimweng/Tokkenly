@@ -63,7 +63,7 @@ function aside(): HTMLElement {
 }
 
 function authCard(title: string, sub: string, body: Node[], footer: Node): HTMLElement {
-  return h('div', { class: 'auth' },
+  return h('main', { class: 'auth' },
     h('div', { class: 'auth-card' },
       h('div', { class: 'brand' },
         h('span', { class: 'brand-mark', text: 'T' }),
@@ -108,10 +108,12 @@ function secret(label: string, placeholder: string): { el: HTMLElement; input: H
   }
 }
 
-/** The password that fails, so the error state is a thing you can reach.
- *  Same idea as the cents rule in the README: a prototype where nothing can
- *  go wrong has not designed the half people judge it on. */
-const WRONG = 'wrong'
+/* The password that fails is `wrong`, so the error state is a thing you can
+   reach — the same idea as the cents rule in the README. That rule, and the
+   one exception to "anything else gets you in", live in `actions.signIn`
+   now: after five wrong PINs the password on the account is actually
+   checked, because signing in is the way out of that lockout and a way out
+   that accepts anything is not a lockout. */
 
 /** Everything the two screens share: check the fields, refuse when there is no
  *  connection, go busy, then either fail where the mistake was made or go. */
@@ -121,6 +123,8 @@ function submit(opts: {
   button: HTMLButtonElement
   error: HTMLElement
   check?: () => string | null
+  /** Which door this is: signing in, or creating an account. */
+  via?: 'password' | 'signup'
 }): void {
   const fail = (why: string): void => {
     swap(opts.error, h('span', { html: icon.alert() }), h('span', { text: why }))
@@ -138,11 +142,24 @@ function submit(opts: {
     opts.button.classList.add('is-busy')
     setTimeout(() => {
       opts.button.classList.remove('is-busy')
-      if (opts.password.value === WRONG) return fail('We do not recognise that email and password.')
-      actions.signIn()
+      const no = actions.signIn({
+        email: opts.email.value, password: opts.password.value, via: opts.via ?? 'password',
+      })
+      if (no) return fail(no)
       go('/')
     }, 700)
   })
+}
+
+/** The other door. Google proves who you are to Google, not the password on
+ *  this account, so it cannot clear a PIN lockout — `signIn` says so, and the
+ *  sentence goes where a sign-in error goes. */
+function google(error: HTMLElement, via: 'google' | 'signup'): void {
+  const no = actions.signIn({ via })
+  if (!no) { go('/'); return }
+  swap(error, h('span', { html: icon.alert() }), h('span', { text: no }))
+  show(error, true)
+  say(no)
 }
 
 export function signInScreen(): HTMLElement {
@@ -161,9 +178,8 @@ export function signInScreen(): HTMLElement {
       // that is not email, and drawing somebody else's mark from memory is a
       // worse answer than drawing none.
       h('button', { class: 'btn btn-secondary', text: 'Continue with Google',
-        on: { click: () => { actions.signIn(); go('/') } } }),
-      h('div', { class: 'auth-or' },
-        h('span', { class: 'rule' }), h('span', { class: 't-caption subtle', text: 'or' }), h('span', { class: 'rule' })),
+        on: { click: () => google(error, 'google') } }),
+      h('div', { class: 'auth-or' }, h('span', { class: 't-caption subtle', text: 'or' })),
       email.el,
       password.el,
       // The link belongs here, under the field that failed, not in a footer.
@@ -193,7 +209,7 @@ export function signUpScreen(): HTMLElement {
   error.hidden = true
   const button = h('button', { class: 'btn btn-primary', text: 'Create account' })
   submit({
-    email: email.input, password: password.input, button, error,
+    email: email.input, password: password.input, button, error, via: 'signup',
     // The rules this screen owns: the invite, and the password floor the
     // product enforces everywhere else. Both said before the button is
     // pressed rather than after.
@@ -213,9 +229,8 @@ export function signUpScreen(): HTMLElement {
     'Invite-only during the pilot. Two minutes, then a NIN check before you can hold a balance.',
     [
       h('button', { class: 'btn btn-secondary', text: 'Continue with Google',
-        on: { click: () => { actions.signIn(); go('/') } } }),
-      h('div', { class: 'auth-or' },
-        h('span', { class: 'rule' }), h('span', { class: 't-caption subtle', text: 'or' }), h('span', { class: 'rule' })),
+        on: { click: () => google(error, 'signup') } }),
+      h('div', { class: 'auth-or' }, h('span', { class: 't-caption subtle', text: 'or' })),
       invite.el,
       name.el,
       email.el,

@@ -1,16 +1,14 @@
 /* A preference that changes nothing is a preference that lies. Every switch in
    Account is followed to the thing it claims to change. */
-import { chromium } from 'playwright'
-import { seen, verify } from './seen.mjs'
-const B = 'http://localhost:4173/#'
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+import { B, launch, check, teardown } from './lib/harness.mjs'
+import { seen, verify } from './lib/seen.mjs'
+const b = await launch()
 const errs = []
-const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
+const ok = check
 const p = await b.newPage({ viewport: { width: 1440, height: 1100 } })
 await seen(p)
 p.on('pageerror', (e) => errs.push(String(e)))
 p.setDefaultTimeout(6000)
-await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 // Every control lives in its own group now, so a helper per group rather
 // than one /account that held all twenty-five.
 const group = async (g) => { await p.goto(B + '/account/' + g, { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400) }
@@ -49,14 +47,14 @@ console.log('NAIRA BESIDE DOLLARS')
 await at('/transfer')
 ok('naira is there by default', /About \u20a6[\d,]+/.test(await text()))
 await acct()
-await p.getByRole('button', { name: /Show the other currency/ }).click(); await p.waitForTimeout(300)
+await p.getByRole('switch', { name: /Show the other currency/ }).click(); await p.waitForTimeout(300)
 await at('/transfer')
 ok('turning it off removes it', !/About \u20a6[\d,]+/.test(await text()))
 await at('/withdraw')
 ok('but Convert still shows naira, because that is what it is about',
    /₦/.test(await text()))
 await acct()
-await p.getByRole('button', { name: /Show the other currency/ }).click(); await p.waitForTimeout(300)
+await p.getByRole('switch', { name: /Show the other currency/ }).click(); await p.waitForTimeout(300)
 
 console.log('HIDE MY BALANCES  the switch, and where it sits')
 {
@@ -114,7 +112,7 @@ console.log('HIDE MY BALANCES  the switch, and where it sits')
   // control you cannot find again on purpose.
   await acct()
   ok('Preferences still holds it too',
-     (await p.getByRole('button', { name: /Hide my balances/ }).count()) === 1)
+     (await p.getByRole('switch', { name: /Hide my balances/ }).count()) === 1)
 }
 
 console.log('THE REMINDERS ON HOME  where they sit, and how to be rid of them')
@@ -125,7 +123,6 @@ console.log('THE REMINDERS ON HOME  where they sit, and how to be rid of them')
   await seen(t)
   t.on('pageerror', (e) => errs.push(String(e)))
   t.setDefaultTimeout(6000)
-  await t.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   const home = async () => { await t.goto(B + '/', { waitUntil: 'domcontentloaded' }); await t.waitForTimeout(450) }
   await home()
   // Reading order rather than child order: the task and the feed share a
@@ -215,7 +212,7 @@ console.log('NOTIFICATIONS')
 await at('/')
 const before = await p.evaluate(() => document.querySelector('.bell .dot')?.textContent ?? '0')
 await notifs()
-await p.getByRole('button', { name: /Money landing/ }).click(); await p.waitForTimeout(300)
+await p.getByRole('switch', { name: /Money landing/ }).click(); await p.waitForTimeout(300)
 await at('/')
 const after = await p.evaluate(() => document.querySelector('.bell .dot')?.textContent ?? '0')
 ok('turning one off changes what reaches you', before !== after, `${before} → ${after}`)
@@ -230,7 +227,7 @@ ok('and the section agrees with the bell',
    !/Adaeze|Payroll/i.test(await p.evaluate(() => document.querySelector('.alert-list')?.innerText ?? '')),
    (await p.evaluate(() => document.querySelector('.alert-list')?.innerText?.replace(/\n/g, ' ').slice(0, 60) ?? '')))
 await notifs()
-await p.getByRole('button', { name: /Money landing/ }).click(); await p.waitForTimeout(300)
+await p.getByRole('switch', { name: /Money landing/ }).click(); await p.waitForTimeout(300)
 
 console.log('ASK FOR THE PIN ABOVE')
 await at('/invest/aapl/invest')
@@ -283,7 +280,6 @@ console.log('QUICK AMOUNTS AGAINST THE CEILING')
   // last test left behind is checking nothing in particular.
   const q = await b.newPage({ viewport: { width: 1440, height: 1100 } })
   await seen(q)
-  await q.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   for (const r of ['/grow/borrow', '/invest/aapl/invest', '/withdraw', '/grow/earn']) {
     await q.goto(B + r, { waitUntil: 'domcontentloaded' }); await q.waitForTimeout(550)
     const m = await q.evaluate(() => ({
@@ -330,4 +326,4 @@ await at('/invest/aapl/invest')
 }
 
 console.log('\nerrors:', errs.length ? errs : 'none')
-await b.close()
+await teardown(b)

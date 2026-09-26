@@ -1,17 +1,15 @@
 /* Two things the marketing promises that the product has to actually say:
    that some of these are funds and not companies, and that you can lose
    money. Both are only worth anything where a decision is being made. */
-import { chromium } from 'playwright'
-import { seen } from './seen.mjs'
-const B = 'http://localhost:4173/#'
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+import { B, launch, check, teardown } from './lib/harness.mjs'
+import { seen } from './lib/seen.mjs'
+const b = await launch()
 const errs = []
-const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
+const ok = check
 const p = await b.newPage({ viewport: { width: 1440, height: 1100 } })
 await seen(p)
 p.on('pageerror', (e) => errs.push(String(e)))
 p.setDefaultTimeout(6000)
-await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 const at = async (r) => { await p.goto(B + r, { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400) }
 const text = () => p.evaluate(() => document.body.innerText)
 
@@ -139,4 +137,4 @@ await at('/all')
 ok('and the index lists it', /Risk and disclosures/.test(await text()))
 
 console.log('\nerrors:', errs.length ? errs : 'none')
-await b.close()
+await teardown(b)

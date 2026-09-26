@@ -37,9 +37,13 @@ function tones(): { dim: string; mid: string; lit: string; hot: string } {
   const s = getComputedStyle(document.documentElement)
   const at = (n: string, f: string) => s.getPropertyValue(n).trim() || f
   return {
-    dim: at('--dot-dim', '#65656c'),
-    mid: at('--dot-mid', '#a6a6ad'),
-    lit: at('--dot-lit', '#dcdce0'),
+    // The ink ramp. These read --dot-dim, --dot-mid and --dot-lit, which were
+    // deleted with the picture they belonged to (tokens.css), so every lookup
+    // fell back to the dark theme's hex and the coin was near-white on a white
+    // sheet in the light theme. The ramp is the same three steps, per theme.
+    dim: at('--part-3', '#62626b'),
+    mid: at('--part-2', '#9a9aa2'),
+    lit: at('--part-1', '#dcdce0'),
     hot: at('--positive', '#3fd99b'),
   }
 }

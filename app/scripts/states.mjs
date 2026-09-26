@@ -1,10 +1,9 @@
 /* Every state the product claims to have, exercised in a real browser.
    Figma 02 Components: Button, Icon button, Text field, Empty state, Toast. */
-import { chromium } from 'playwright'
-import { seen, fresh } from './seen.mjs'
+import { B, launch, check, teardown } from './lib/harness.mjs'
+import { seen, fresh } from './lib/seen.mjs'
 
-const B = 'http://localhost:4173/#'
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+const b = await launch()
 const errors = []
 const page = await b.newPage({ viewport: { width: 1440, height: 1024 } })
 // This suite is about what a button looks like, not about arriving, so it
@@ -18,8 +17,7 @@ const go = async (r, w = 1440) => {
   await page.goto(B + r, { waitUntil: 'networkidle' })
   await page.waitForTimeout(150)
 }
-const ok = (label, pass, detail = '') =>
-  console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${label}${detail ? '  ' + detail : ''}`)
+const ok = check
 
 console.log('HOVER')
 // Home carries no filled button since Send and Receive moved to the wallet
@@ -79,7 +77,10 @@ ok('and does it without a veil over the label',
    Number(dis.opacity) === 1, `"${dis.label}" at opacity ${dis.opacity}`)
 
 console.log('LOADING')
-await go('/grow/borrow?sheet=borrow-review&v=500')
+// $200, inside the unverified $250 single-payment limit. This read $500, and
+// passed only because the action behind the dialog never asked the limit;
+// it does now, and says so under the button rather than confirming.
+await go('/grow/borrow?sheet=borrow-review&v=200')
 await page.locator('.sheet .btn-primary').click()
 await page.waitForTimeout(80)
 const busy = await page.locator('.sheet .btn-primary.is-busy').count()
@@ -217,7 +218,6 @@ console.log('THE FIRST SCREEN, AND ITS THREE STATES')
   const a = await b.newPage({ viewport: { width: 1440, height: 1000 } })
   await fresh(a)
   a.on('pageerror', (e) => errors.push(String(e)))
-  await a.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   const err = () => a.evaluate(() => {
     const e = document.querySelector('.field-error')
     return e && !e.hidden ? e.innerText.replace(/\n/g, ' ').trim() : null
@@ -261,4 +261,4 @@ console.log('THE FIRST SCREEN, AND ITS THREE STATES')
 }
 
 console.log('\nERRORS: ' + (errors.length ? errors.join(' | ') : 'none'))
-await b.close()
+await teardown(b)

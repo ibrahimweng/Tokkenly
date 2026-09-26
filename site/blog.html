@@ -5,11 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Blog — Tokkenly</title>
     <meta name="description" content="Plain explanations of tokenized stocks, naira and stablecoins, and the everyday money tools around them." />
+    <link rel="canonical" href="https://tokkenly.com/blog" />
     <link rel="icon" href="./favicon.svg" />
+    <meta property="og:site_name" content="Tokkenly" />
     <meta property="og:title" content="Blog — Tokkenly" />
     <meta property="og:description" content="Plain explanations of tokenized stocks, naira and stablecoins, and the everyday money tools around them." />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://tokkenly.com/blog" />
+    <meta property="og:image" content="https://tokkenly.com/img/hero/globe.webp" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://tokkenly.com/img/hero/globe.webp" />
     <link rel="preload" href="./fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="./styles.css" />
   </head>
@@ -18,7 +23,7 @@
 
     <header class="nav" id="nav">
       <div class="nav-in">
-        <a class="brand" href="./index.html" aria-label="Tokkenly, home">
+        <a class="brand" href="/" aria-label="Tokkenly, home">
           <span class="brand-mark" aria-hidden="true">T</span>
           <span class="brand-word">Tokkenly</span>
         </a>
@@ -30,35 +35,35 @@
               <svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" /></svg>
             </button>
             <div class="drop-menu" id="products-menu" hidden>
-              <a href="./products/tokenized-stocks.html">
-                <span class="dm-name">Tokenized Stocks</span>
+              <a href="/products/tokenized-stocks">
+                <span class="dm-name">Tokenized stocks</span>
                 <span class="dm-say">From Nigeria to Wall Street.</span>
               </a>
-              <a href="./products/gifting-and-rewards.html">
-                <span class="dm-name">Gifting &amp; Rewards</span>
+              <a href="/products/gifting-and-rewards">
+                <span class="dm-name">Gifting and rewards</span>
                 <span class="dm-say">Make their day. Start their portfolio.</span>
               </a>
-              <a href="./products/receive-and-send.html">
+              <a href="/products/receive-and-send">
                 <span class="dm-name">Receive and send</span>
                 <span class="dm-say">Get paid. Get on with life.</span>
               </a>
-              <a href="./products/pay-bills.html">
+              <a href="/products/pay-bills">
                 <span class="dm-name">Pay bills</span>
                 <span class="dm-say">One less thing on your list.</span>
               </a>
-              <a href="./products/convert.html">
+              <a href="/products/convert">
                 <span class="dm-name">Convert</span>
                 <span class="dm-say">Change currencies. Keep your plans.</span>
               </a>
-              <a href="./products/borrow-and-earn.html">
+              <a href="/products/borrow-and-earn">
                 <span class="dm-name">Borrow and earn</span>
                 <span class="dm-say">Earn more, or borrow against it.</span>
               </a>
             </div>
           </div>
-          <a href="./about.html">About us</a>
-          <a href="./blog.html">Blog</a>
-          <a href="./contact.html">Help</a>
+          <a href="/about">About us</a>
+          <a href="/blog" aria-current="page">Blog</a>
+          <a href="/contact">Help</a>
         </nav>
 
         <div class="nav-end">
@@ -71,16 +76,16 @@
 
       <div class="mobile-menu" id="mobile-menu" hidden>
         <p class="mm-head">Products</p>
-        <a href="./products/tokenized-stocks.html">Tokenized Stocks</a>
-        <a href="./products/gifting-and-rewards.html">Gifting &amp; Rewards</a>
-        <a href="./products/receive-and-send.html">Receive and send</a>
-        <a href="./products/pay-bills.html">Pay bills</a>
-        <a href="./products/convert.html">Convert</a>
-        <a href="./products/borrow-and-earn.html">Borrow and earn</a>
+        <a href="/products/tokenized-stocks">Tokenized stocks</a>
+        <a href="/products/gifting-and-rewards">Gifting and rewards</a>
+        <a href="/products/receive-and-send">Receive and send</a>
+        <a href="/products/pay-bills">Pay bills</a>
+        <a href="/products/convert">Convert</a>
+        <a href="/products/borrow-and-earn">Borrow and earn</a>
         <p class="mm-head">Company</p>
-        <a href="./about.html">About us</a>
-        <a href="./blog.html">Blog</a>
-        <a href="./contact.html">Help</a>
+        <a href="/about">About us</a>
+        <a href="/blog">Blog</a>
+        <a href="/contact">Help</a>
         <a class="btn btn-mint mm-cta" href="https://app.tokkenly.com">Sign up</a>
       </div>
     </header>
@@ -91,65 +96,74 @@
       <section class="band bl">
         <div class="wrap">
           <div class="bl-head reveal">
-            <h1>Blogs</h1>
+            <h1>Blog</h1>
             <p class="bl-lead">Plain explanations of tokenized stocks, naira and stablecoins, and the everyday money tools around them.</p>
           </div>
 
-          <div class="bl-filters reveal">
-            <button class="bl-chip is-on" type="button" aria-pressed="true">All</button>
-            <button class="bl-chip" type="button" aria-pressed="false">Tokenized stocks</button>
-            <button class="bl-chip" type="button" aria-pressed="false">Money basics</button>
-            <button class="bl-chip" type="button" aria-pressed="false">Product</button>
-            <button class="bl-chip" type="button" aria-pressed="false">Company</button>
+          <div class="bl-filters reveal" role="group" aria-label="Show posts about">
+            <button class="bl-chip is-on" type="button" data-filter="" aria-pressed="true">All</button>
+            <button class="bl-chip" type="button" data-filter="Tokenized stocks" aria-pressed="false">Tokenized stocks</button>
+            <button class="bl-chip" type="button" data-filter="Money basics" aria-pressed="false">Money basics</button>
+            <button class="bl-chip" type="button" data-filter="Product" aria-pressed="false">Product</button>
+            <button class="bl-chip" type="button" data-filter="Company" aria-pressed="false">Company</button>
           </div>
 
+          <p class="bl-count" role="status" aria-live="polite"></p>
           <div class="bl-grid reveal">
-            <article class="bl-post">
+            <article class="bl-post" data-cat="Money basics">
               <span class="bl-thumb" aria-hidden="true"></span>
               <p class="bl-cat">Money basics</p>
               <h2 class="bl-title">Naira, dollars, and the rate you actually get</h2>
-              <p class="bl-meta">5 Sept 2026 · 5 min read</p>
+              <p class="bl-meta">Coming soon</p>
             </article>
-            <article class="bl-post">
+            <article class="bl-post" data-cat="Tokenized stocks">
               <span class="bl-thumb" aria-hidden="true"></span>
               <p class="bl-cat">Tokenized stocks</p>
               <h2 class="bl-title">Nigerian listings, US listings, one portfolio</h2>
-              <p class="bl-meta">29 Aug 2026 · 6 min read</p>
+              <p class="bl-meta">Coming soon</p>
             </article>
-            <article class="bl-post">
+            <article class="bl-post" data-cat="Product">
               <span class="bl-thumb" aria-hidden="true"></span>
               <p class="bl-cat">Product</p>
               <h2 class="bl-title">Gifting a first investment</h2>
-              <p class="bl-meta">22 Aug 2026 · 4 min read</p>
+              <p class="bl-meta">Coming soon</p>
             </article>
-            <article class="bl-post">
+            <article class="bl-post" data-cat="Money basics">
               <span class="bl-thumb" aria-hidden="true"></span>
               <p class="bl-cat">Money basics</p>
               <h2 class="bl-title">Putting idle stablecoins to work</h2>
-              <p class="bl-meta">15 Aug 2026 · 7 min read</p>
+              <p class="bl-meta">Coming soon</p>
             </article>
-            <article class="bl-post">
+            <article class="bl-post" data-cat="Product">
               <span class="bl-thumb" aria-hidden="true"></span>
               <p class="bl-cat">Product</p>
               <h2 class="bl-title">Borrowing without selling your shares</h2>
-              <p class="bl-meta">8 Aug 2026 · 6 min read</p>
+              <p class="bl-meta">Coming soon</p>
             </article>
-            <article class="bl-post">
+            <article class="bl-post" data-cat="Company">
               <span class="bl-thumb" aria-hidden="true"></span>
               <p class="bl-cat">Company</p>
               <h2 class="bl-title">Why we built Tokkenly on Base</h2>
-              <p class="bl-meta">1 Aug 2026 · 5 min read</p>
+              <p class="bl-meta">Coming soon</p>
             </article>
           </div>
 
           <div class="bl-news reveal">
             <h2>Get it in your inbox.</h2>
             <p class="bl-news-p">One email a month. What moved, what we shipped, and nothing else.</p>
-            <form class="bl-form" method="post" action="mailto:support@tokkenly.com">
+            <form class="bl-form" method="post" action="/api/contact" data-form="newsletter">
+              <input type="hidden" name="kind" value="newsletter" />
               <label class="bl-vh" for="bl-email">Email</label>
-              <input class="bl-input" id="bl-email" name="email" type="email" placeholder="you@example.com" />
+              <input class="bl-input" id="bl-email" name="email" type="email" autocomplete="email" required placeholder="you@example.com" />
               <button class="btn btn-deep bl-sub" type="submit">Subscribe</button>
+            <p class="hp" aria-hidden="true">
+              <label for="bl-website">Leave this empty</label>
+              <input id="bl-website" name="website" type="text" tabindex="-1" autocomplete="off" />
+            </p>
+              <p class="form-status" role="status" aria-live="polite"></p>
             </form>
+          <p class="form-note form-done" id="bl-sent" tabindex="-1">You are on the list. The first one arrives when there is something worth sending.</p>
+          <p class="form-note form-fail" id="bl-failed" tabindex="-1">That did not go through. Please email us at <a href="mailto:support@tokkenly.com">support@tokkenly.com</a> instead.</p>
           </div>
         </div>
       </section>
@@ -174,16 +188,11 @@
       <div class="wrap">
         <div class="foot-top">
           <div class="foot-brand">
-            <a class="brand" href="./index.html" aria-label="Tokkenly, home">
+            <a class="brand" href="/" aria-label="Tokkenly, home">
               <span class="brand-mark" aria-hidden="true">T</span>
               <span class="brand-word">Tokkenly</span>
             </a>
             <p>Your money, free to do more.</p>
-            <ul class="socials">
-              <li><a href="#" data-soon aria-label="Tokkenly on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.7 3h3.3l-7.2 8.3L22.4 21h-6.6l-5.2-6.8L4.6 21H1.3l7.7-8.8L1.6 3h6.8l4.7 6.2L17.7 3Zm-1.2 16h1.8L7.6 4.9H5.7L16.5 19Z" /></svg></a></li>
-              <li><a href="#" data-soon aria-label="Tokkenly on Instagram"><svg viewBox="0 0 24 24" aria-hidden="true" class="ic-stroke"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none" /></svg></a></li>
-              <li><a href="#" data-soon aria-label="Tokkenly on LinkedIn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.98 3.5A2.5 2.5 0 1 1 5 8.5a2.5 2.5 0 0 1 0-5ZM3 9.5h4V21H3V9.5Zm6.5 0h3.8v1.6h.05c.53-.95 1.83-1.95 3.77-1.95 4.03 0 4.78 2.56 4.78 5.89V21h-4v-5.2c0-1.24-.02-2.84-1.77-2.84-1.78 0-2.05 1.35-2.05 2.75V21h-4V9.5Z" /></svg></a></li>
-            </ul>
           </div>
 
           <nav class="foot-cols" aria-label="Footer">
@@ -191,33 +200,36 @@
               <p class="foot-head">Products</p>
               <div class="foot-split">
                 <div>
-                  <a href="./products/tokenized-stocks.html">Tokenized Stocks</a>
-                  <a href="./products/gifting-and-rewards.html">Gifting &amp; Rewards</a>
-                  <a href="./products/receive-and-send.html">Receive and send</a>
+                  <a href="/products/tokenized-stocks">Tokenized stocks</a>
+                  <a href="/products/gifting-and-rewards">Gifting and rewards</a>
+                  <a href="/products/receive-and-send">Receive and send</a>
                 </div>
                 <div>
-                  <a href="./products/pay-bills.html">Pay bills</a>
-                  <a href="./products/convert.html">Convert</a>
-                  <a href="./products/borrow-and-earn.html">Borrow and earn</a>
+                  <a href="/products/pay-bills">Pay bills</a>
+                  <a href="/products/convert">Convert</a>
+                  <a href="/products/borrow-and-earn">Borrow and earn</a>
                 </div>
               </div>
             </div>
             <div class="foot-col">
               <p class="foot-head">Company</p>
-              <a href="./about.html">About us</a>
-              <a href="./blog.html">Blog</a>
+              <a href="/about">About us</a>
+              <a href="/blog">Blog</a>
+            </div>
+            <div class="foot-col">
+              <p class="foot-head">Support</p>
+              <a href="/contact">Help</a>
             </div>
             <div class="foot-col">
               <p class="foot-head">Legal</p>
-              <a href="./terms.html">Terms of service</a>
-              <a href="./privacy.html">Privacy policy</a>
-              <a href="./contact.html">Help</a>
+              <a href="/terms">Terms of service</a>
+              <a href="/privacy">Privacy policy</a>
             </div>
           </nav>
         </div>
 
         <div class="foot-end">
-          <p class="foot-word" aria-hidden="true">Tokkenly</p>
+          <p class="foot-word" aria-hidden="true" data-word="Tokkenly"></p>
           <p class="risk">Investments and earning products involve risk. Returns are not guaranteed.</p>
         </div>
       </div>

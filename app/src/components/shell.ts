@@ -45,7 +45,11 @@ export const BEHIND_MORE: { label: string; sub: string; to: string; ic: () => st
   { label: 'Account', sub: 'Your details and your address', to: '/account', ic: icon.account },
   { label: 'Security', sub: 'PIN, Face ID and recovery', to: '/security', ic: icon.lock },
   { label: 'Your banks', sub: 'Where your payouts land', to: '/transfer?sheet=banks', ic: icon.wallet },
-  { label: 'Support', sub: state.person.email, to: '/support', ic: icon.mail },
+  // Our address, not yours. It was `state.person.email`, read once when this
+  // module loaded, so the Support cell showed the person their own address —
+  // as if support were something they wrote to themselves — and kept showing
+  // the old one after they changed it.
+  { label: 'Support', sub: 'support@tokkenly.com', to: '/support', ic: icon.mail },
   { label: 'Everything', sub: 'Every screen, in one list', to: '/all', ic: icon.grid },
 ]
 
@@ -204,10 +208,15 @@ export function viewToggle(): HTMLElement {
  *
  *  The state is still `?sheet=more`, so the back gesture closes it and a
  *  reload reopens it. What changed is only where it is drawn. */
+/** Where the keyboard goes as the More panel opens and shuts. The panel is
+ *  drawn by a re-render, so the button that opened it is not the button on
+ *  screen afterwards; these carry the intent across the rebuild. */
+let railFocus: 'in' | 'back' | null = null
+
 function rail(active: Place): HTMLElement {
   const r = current()
   const open = r.sheet === 'more'
-  const shut = () => history.back()
+  const shut = () => { railFocus = 'back'; history.back() }
 
   /** Whether a cell in the panel is the screen you are standing on. Path
    *  first, then every query the cell names — Activity and Notices are one
@@ -241,8 +250,7 @@ function rail(active: Place): HTMLElement {
   // centred — a grid that recentres its last row is a grid whose columns stop
   // meaning anything. Then the one thing in here that is not a place.
   const panel = h('div', {
-    class: 'rail-panel', role: 'group', ariaLabel: 'The rest of Tokkenly',
-    on: { keydown: (e) => { if ((e as KeyboardEvent).key === 'Escape') shut() } },
+    class: 'rail-panel', role: 'group', ariaLabel: 'The rest of Tokkenly', id: 'rail-panel',
   },
     h('div', { class: 'rail-grid' },
       // Replacing rather than pushing: the panel and the place it sends you to
@@ -254,11 +262,13 @@ function rail(active: Place): HTMLElement {
           class: 'rail-cell' + (here(m.to) ? ' on' : ''), on: { click: () => go(m.to, true) },
         },
           h('span', { class: 'rail-cell-ic', html: m.ic() }),
-          h('span', { class: 'rail-cell-label', text: m.label }))
+          // A soft hyphen in the one word longer than a cell: at 12px
+          // "Notifications" is wider than a quarter of the panel, and left to
+          // itself it broke as "Notificatio / ns".
+          h('span', { class: 'rail-cell-label', text: m.label.replace('Notifications', 'Notifi\u00ADcations') }))
         if (here(m.to)) cell.setAttribute('aria-current', 'page')
         return cell
       })),
-    h('div', { class: 'rail-rule' }),
     h('div', { class: 'rail-pref' },
       h('span', { class: 't-caps subtle', text: 'Home view' }), viewToggle()))
 
@@ -284,13 +294,47 @@ function rail(active: Place): HTMLElement {
     class: 'rail-more' + (behind && !open ? ' is-here' : ''),
     html: open ? icon.close() : icon.grid(),
     ariaLabel: open ? 'Close' : behind ? 'More, and you are in here' : 'More',
-    on: { click: () => (open ? shut() : openSheet('more')) },
+    dataset: { focusKey: 'rail-more' },
+    on: { click: () => { if (open) shut(); else { railFocus = 'in'; openSheet('more') } } },
   })
   more.setAttribute('aria-expanded', String(open))
+  more.setAttribute('aria-controls', 'rail-panel')
   if (behind) more.setAttribute('aria-current', 'page')
 
-  const bar = h('div', { class: 'railbar' + (open ? ' is-open' : '') },
+  // Escape shuts it from anywhere in the bar, the button included — it used
+  // to listen on the panel only, so with focus on the button that opened it
+  // Escape did nothing at all. Tab walks the panel and the button and wraps:
+  // the page stays lit underneath, but while the list is open it is what
+  // the keyboard is in, the same as a pointer that has to press away first.
+  // A <nav>, so the phone has the landmark the desktop's sidebar always had.
+  const bar = h('nav', {
+    class: 'railbar' + (open ? ' is-open' : ''), ariaLabel: 'Places',
+    on: { keydown: (e) => {
+      const k = e as KeyboardEvent
+      if (!open) return
+      if (k.key === 'Escape') { k.preventDefault(); shut(); return }
+      if (k.key !== 'Tab') return
+      const items = [...bar.querySelectorAll<HTMLElement>('.rail-panel button, .rail-more')]
+      const first = items[0], last = items[items.length - 1]
+      if (k.shiftKey && document.activeElement === first) { k.preventDefault(); last.focus() }
+      else if (!k.shiftKey && document.activeElement === last) { k.preventDefault(); first.focus() }
+    } },
+  },
     h('div', { class: 'rail-stack' }, pill, open ? panel : null), more)
+
+  // After the render has put the new tree in place, not during it: the
+  // render loop puts focus back on the equivalent of whatever was pressed,
+  // and this has to come after that to win.
+  if (railFocus === 'in' && open) {
+    railFocus = null
+    requestAnimationFrame(() => {
+      const cell = panel.querySelector<HTMLElement>('.rail-cell')
+      if (cell?.isConnected) cell.focus({ preventScroll: true })
+    })
+  } else if (railFocus === 'back' && !open) {
+    railFocus = null
+    requestAnimationFrame(() => { if (more.isConnected) more.focus({ preventScroll: true }) })
+  }
   if (!open) return bar
   // A menu closes when you press away from it. There is no scrim to press —
   // the page underneath stays lit, because this is a menu and not a modal —

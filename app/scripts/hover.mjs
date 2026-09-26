@@ -2,21 +2,16 @@
    For each target: the surface at rest, the surface under the pointer, the
    lightness step between them, and whether the text on the hovered surface
    still clears AA. A hover nobody can see is not a hover. */
-import { chromium } from 'playwright'
-import { seen } from './seen.mjs'
+import { B, launch, check, teardown } from './lib/harness.mjs'
+import { seen } from './lib/seen.mjs'
 
-const B = 'http://localhost:4173/#'
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+const b = await launch()
 const page = await b.newPage({ viewport: { width: 1440, height: 1000 } })
 await seen(page, { homeView: 'detailed' })
 const errors = []
 page.on('pageerror', (e) => errors.push(String(e)))
 page.setDefaultTimeout(4000)
 
-/* The webfont is fetched from a host this sandbox cannot reach, and a page
-   that never stops loading never settles. Colour does not need it. */
-const noFonts = (pg) => pg.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
-await noFonts(page)
 
 const rgb = (s) => (s.match(/[\d.]+/g) || []).slice(0, 3).map(Number)
 const lin = (c) => { c /= 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4 }
@@ -108,7 +103,7 @@ console.log('hero tooltip:', JSON.stringify(tip))
 /* A pointer is the premise. On a touch screen :hover latches after a tap, so
    none of it may apply. */
 const touch = await b.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
-const tp = await touch.newPage(); await noFonts(tp); await seen(tp, { homeView: 'detailed' })
+const tp = await touch.newPage(); await seen(tp, { homeView: 'detailed' })
 await tp.goto(B + '/invest', { waitUntil: 'networkidle' }); await tp.waitForTimeout(200)
 const coarse = await tp.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches)
 await tp.tap('.table tbody tr td:first-child').catch(() => {})
@@ -120,7 +115,7 @@ console.log('\ntouch: pointer is fine?', coarse, ' rows left lit after a tap:', 
 
 /* Reduced motion keeps the answer and drops the travel. */
 const rm = await b.newContext({ viewport: { width: 1440, height: 1000 }, reducedMotion: 'reduce' })
-const rp = await rm.newPage(); await noFonts(rp); await seen(rp, { homeView: 'detailed' })
+const rp = await rm.newPage(); await seen(rp, { homeView: 'detailed' })
 await rp.goto(B + '/', { waitUntil: 'networkidle' }); await rp.waitForTimeout(200)
 await rp.hover('a.card.tile'); await rp.waitForTimeout(250)
 const rmState = await rp.$eval('a.card.tile', (e) => {
@@ -138,12 +133,12 @@ console.log('reduced motion:', JSON.stringify(rmState))
    drawing does not move while it answers, and the drawing's own ground moves
    with the card so it does not read as a hole punched in it. */
 {
-  const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
+  const ok = check
   console.log('\nTHE DOORS ANSWER, AND THE DRAWING HOLDS STILL')
   // Its own page: the one this suite has been using is seeded on Detailed,
   // and the doors are Simple's.
   const door = await b.newPage({ viewport: { width: 1440, height: 1000 } })
-  await noFonts(door); await seen(door)
+  await seen(door)
   door.on('pageerror', (e) => errors.push(String(e)))
   await door.goto(B + '/', { waitUntil: 'networkidle' }); await door.waitForTimeout(250)
 
@@ -204,11 +199,10 @@ console.log('page errors:', errors.length ? errors : 'none')
    `currentColor` and the holder sets the colour, so this now reads what the
    holder is set to rather than what several hundred cells were painted. */
 console.log('\nTHE DRAWINGS ARE GROUND, NOT FOREGROUND')
-const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
+const ok = check
 for (const theme of ['dark', 'light']) {
   const fp = await b.newPage({ viewport: { width: 1440, height: 1000 } })
   await seen(fp, { theme })
-  await noFonts(fp)
   for (const r of ['/', '/grow']) {
     await fp.goto(B + r, { waitUntil: 'domcontentloaded' }); await fp.waitForTimeout(800)
     const m = await fp.evaluate(() => {
@@ -242,4 +236,4 @@ for (const theme of ['dark', 'light']) {
   await fp.close()
 }
 
-await b.close()
+await teardown(b)

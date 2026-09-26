@@ -52,7 +52,8 @@ import { swapCard } from '../components/swap'
 import { state, money, moneyNaira } from '../state'
 import { usd, naira } from '../format'
 import { go, openSheet, closeSheet } from '../router'
-import { assetOf, purseFor, type Asset } from '../assets'
+import { assetOf, purseFor, figureOf, gets, costs, type Asset } from '../assets'
+export { figureOf, gets, costs }
 import * as ledger from '../ledger'
 
 const KEYS: Asset[] = ['usdc', 'usdt', 'ngn']
@@ -63,8 +64,6 @@ export const isAsset = (s?: string): s is Asset => !!s && (KEYS as string[]).inc
  *  the balance a refusal is measured against has to be the same number the
  *  posting will be measured against a moment later. */
 const held = (a: Asset): number => ledger.balanceOf(purseFor(a))
-
-export const figureOf = (a: Asset, n: number): string => (a === 'ngn' ? naira(n) : usd(n))
 
 /** The same figure, through the privacy switch. A balance is yours; a rate and
  *  a quote are not, which is why only this one is masked. */
@@ -88,14 +87,6 @@ const others = (from: Asset): Asset[] => KEYS.filter((k) => k !== from)
  *  screen branches on, named once. */
 export const crossesCurrency = (from: Asset, to: Asset): boolean =>
   from === 'ngn' || to === 'ngn'
-
-/** How much of `to` you get for `dollars` of value. */
-export const gets = (to: Asset, dollars: number, rate: number): number =>
-  to === 'ngn' ? Math.round(dollars * rate) : dollars
-
-/** And how much of `from` it costs. */
-export const costs = (from: Asset, dollars: number, rate: number): number =>
-  from === 'ngn' ? Math.round(dollars * rate) : dollars
 
 /** An address for a pair. A `to` that cannot follow this `from` is dropped
  *  rather than carried, so there is no address in the product that names a

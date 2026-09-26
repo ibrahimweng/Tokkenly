@@ -5,9 +5,9 @@
    memory: where a shot has a before, the before is a browser pointed at the
    older build.
 
-     (cd site && python3 -m http.server 4321) &
+     npx serve site -l 4321 &
      git worktree add /tmp/gs-before <sha>
-     (cd /tmp/gs-before/site && python3 -m http.server 4322) &
+     npx serve /tmp/gs-before/site -l 4322 &
      node app/scripts/_siteshots-gs.mjs [outdir]
 
    Two rules, both learned the hard way.
@@ -23,23 +23,26 @@
    of the time. `till` waits for the thing the shot is of, which cannot drift
    and cannot lie. */
 import { chromium } from 'playwright'
+import { chromiumPath } from './lib/harness.mjs'
 import { mkdirSync } from 'node:fs'
 
 const OUT = process.argv[2] ?? '/tmp/gs-shots'
 mkdirSync(OUT, { recursive: true })
-const AFTER = 'http://localhost:4321/index.html'
-const BEFORE = 'http://localhost:4322/index.html'
+/* The two builds, served the way Vercel serves them (cleanUrls), so the
+   landing page is "/" rather than "/index.html". */
+const AFTER = (process.env.SITE_URL || 'http://localhost:4321').replace(/\/$/, '') + '/'
+const BEFORE = (process.env.SITE_BEFORE_URL || 'http://localhost:4322').replace(/\/$/, '') + '/'
 const SIZES = [[1440, 1000, '1440'], [834, 1112, '834'], [390, 844, '390']]
 
 const up = async (u) => { try { return (await fetch(u)).ok } catch { return false } }
 for (const [name, u] of [['after', AFTER], ['before', BEFORE]]) {
   if (await up(u)) continue
   console.log(`no ${name} build on ${u} — nothing to compare, skipping.`)
-  console.log('Serve each with: python3 -m http.server 4321 (and 4322 from a worktree)')
+  console.log('Serve each with: npx serve site -l 4321 (and 4322 from a worktree)')
   process.exit(0)
 }
 
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+const b = await chromium.launch({ executablePath: chromiumPath() })
 let bad = 0
 const shots = []
 
@@ -145,8 +148,14 @@ const save = async (p, sel, name, note) => {
      in the middle of the picture, across whichever card happened to be under
      it. That is a capture artefact and not what anybody sees, so it steps
      out of the way while the shutter is open. */
-  const tall = await p.evaluate((s) =>
-    document.querySelector(s).getBoundingClientRect().height > innerHeight, sel)
+  /* A build without the element — an older worktree whose cards are still
+     exports, say — has nothing to photograph, and says so rather than
+     throwing. */
+  const tall = await p.evaluate((s) => {
+    const el = document.querySelector(s)
+    return el ? el.getBoundingClientRect().height > innerHeight : null
+  }, sel)
+  if (tall === null) { console.log(`  skipped ${name}: no ${sel} on this build`); return }
   if (tall) await p.evaluate(() => { document.querySelector('.nav').style.visibility = 'hidden' })
   await p.locator(sel).screenshot({ path: `${OUT}/${name}.png` })
   if (tall) await p.evaluate(() => { document.querySelector('.nav').style.visibility = '' })

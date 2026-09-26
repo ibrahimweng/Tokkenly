@@ -250,3 +250,110 @@ export function countTo(
   }
   requestAnimationFrame(step)
 }
+
+/* ---------------------------------------------------------------------------
+   Keeping somebody's place across a rebuild.
+
+   The render loop replaces the whole tree on every state change, so the
+   control a keyboard user just pressed — a filter chip, a toggle, a sort
+   header — is gone by the time the press has done its work, and focus falls
+   back to <body>. The next Tab then starts from the top of the document, past
+   the skip link and seven nav rows, every single time anything changes.
+
+   So the focused control is described before the tree goes, in terms that
+   survive it, and the equivalent control in the new tree is found and focused.
+   The description is, in order of trust: a `data-focus-key` a screen gave it
+   on purpose, its id, and then what it says and which one of the things that
+   say that it was. Its place among every focusable thing on the screen is
+   kept as the last resort, for a control whose words changed because it was
+   pressed ("5 more details" becoming "Fewer details").
+   --------------------------------------------------------------------------- */
+
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), ' +
+  'textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+/** What a focused control was, in terms a rebuilt tree can answer. */
+export interface FocusMark {
+  sig: string
+  /** Which of the controls with this signature it was. */
+  nth: number
+  /** Which of all the focusable controls it was. */
+  at: number
+  /** The caret, for a text field. */
+  sel: [number, number] | null
+}
+
+const focusablesIn = (root: ParentNode): HTMLElement[] =>
+  [...root.querySelectorAll<HTMLElement>(FOCUSABLE)]
+
+function signature(el: HTMLElement): string {
+  const key = el.dataset.focusKey
+  if (key) return 'k:' + key
+  if (el.id) return '#' + el.id
+  const words = (el.getAttribute('aria-label') ?? el.textContent ?? '').trim().slice(0, 80)
+  const name = (el as HTMLInputElement).name ?? ''
+  // The first class only: the rest are usually state (`on`, `is-open`) and
+  // pressing the control is exactly what changes them.
+  return el.tagName + '|' + (el.classList[0] ?? '') + '|' + name + '|' + words
+}
+
+/** Describe whatever inside `root` has focus, or null when nothing does. */
+export function markFocus(root: ParentNode): FocusMark | null {
+  const el = document.activeElement as HTMLElement | null
+  if (!el || el === document.body || !root.contains(el)) return null
+  const all = focusablesIn(root)
+  const sig = signature(el)
+  const same = all.filter((c) => signature(c) === sig)
+  let sel: [number, number] | null = null
+  if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+    try { sel = el.selectionStart == null ? null : [el.selectionStart, el.selectionEnd ?? el.selectionStart] }
+    catch { sel = null }
+  }
+  return { sig, nth: Math.max(0, same.indexOf(el)), at: all.indexOf(el), sel }
+}
+
+/** Put focus back on the control a mark describes. Returns whether it could.
+ *  Nothing scrolls: the page is where the person left it, and a focus that
+ *  jumps the page to bring a chip into view is a page that moved by itself. */
+export function restoreFocus(root: ParentNode, mark: FocusMark | null): boolean {
+  if (!mark) return false
+  const all = focusablesIn(root).filter((el) => !el.closest('[inert]'))
+  const same = all.filter((c) => signature(c) === mark.sig)
+  const el = same[Math.min(mark.nth, same.length - 1)]
+    ?? (mark.at >= 0 && !mark.sig.startsWith('k:') && !mark.sig.startsWith('#') ? all[mark.at] : undefined)
+  if (!el) return false
+  el.focus({ preventScroll: true })
+  if (mark.sel && (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement)) {
+    try { el.setSelectionRange(mark.sel[0], mark.sel[1]) } catch { /* a type with no caret */ }
+  }
+  return document.activeElement === el
+}
+
+/** Where every scrolled box inside `root` was, by its place in the tree. A
+ *  row of chips scrolled sideways to the one somebody pressed should still be
+ *  scrolled there after the press. */
+export function markScroll(root: HTMLElement): Map<string, [number, number]> {
+  const out = new Map<string, [number, number]>()
+  const walk = (el: Element, path: string): void => {
+    if (el.scrollLeft || el.scrollTop) out.set(path, [el.scrollLeft, el.scrollTop])
+    let i = 0
+    for (const c of el.children) walk(c, path + '/' + c.tagName + (i++))
+  }
+  walk(root, '')
+  return out
+}
+
+export function restoreScroll(root: HTMLElement, marks: Map<string, [number, number]>): void {
+  for (const [path, [x, y]] of marks) {
+    let el: Element | null = root
+    for (const step of path.split('/').slice(1)) {
+      const i = Number(step.replace(/^\D+/, ''))
+      const tag = step.replace(/\d+$/, '')
+      const next: Element | undefined = el?.children[i]
+      el = next && next.tagName === tag ? next : null
+      if (!el) break
+    }
+    if (el) { el.scrollLeft = x; el.scrollTop = y }
+  }
+}

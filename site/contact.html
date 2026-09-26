@@ -5,11 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Help — Tokkenly</title>
     <meta name="description" content="Questions about your account, a transaction, or the product. A real person reads these." />
+    <link rel="canonical" href="https://tokkenly.com/contact" />
     <link rel="icon" href="./favicon.svg" />
+    <meta property="og:site_name" content="Tokkenly" />
     <meta property="og:title" content="Help — Tokkenly" />
     <meta property="og:description" content="Questions about your account, a transaction, or the product. A real person reads these." />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://tokkenly.com/contact" />
+    <meta property="og:image" content="https://tokkenly.com/img/hero/globe.webp" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://tokkenly.com/img/hero/globe.webp" />
     <link rel="preload" href="./fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="./styles.css" />
   </head>
@@ -18,7 +23,7 @@
 
     <header class="nav" id="nav">
       <div class="nav-in">
-        <a class="brand" href="./index.html" aria-label="Tokkenly, home">
+        <a class="brand" href="/" aria-label="Tokkenly, home">
           <span class="brand-mark" aria-hidden="true">T</span>
           <span class="brand-word">Tokkenly</span>
         </a>
@@ -30,35 +35,35 @@
               <svg class="chev" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4" /></svg>
             </button>
             <div class="drop-menu" id="products-menu" hidden>
-              <a href="./products/tokenized-stocks.html">
-                <span class="dm-name">Tokenized Stocks</span>
+              <a href="/products/tokenized-stocks">
+                <span class="dm-name">Tokenized stocks</span>
                 <span class="dm-say">From Nigeria to Wall Street.</span>
               </a>
-              <a href="./products/gifting-and-rewards.html">
-                <span class="dm-name">Gifting &amp; Rewards</span>
+              <a href="/products/gifting-and-rewards">
+                <span class="dm-name">Gifting and rewards</span>
                 <span class="dm-say">Make their day. Start their portfolio.</span>
               </a>
-              <a href="./products/receive-and-send.html">
+              <a href="/products/receive-and-send">
                 <span class="dm-name">Receive and send</span>
                 <span class="dm-say">Get paid. Get on with life.</span>
               </a>
-              <a href="./products/pay-bills.html">
+              <a href="/products/pay-bills">
                 <span class="dm-name">Pay bills</span>
                 <span class="dm-say">One less thing on your list.</span>
               </a>
-              <a href="./products/convert.html">
+              <a href="/products/convert">
                 <span class="dm-name">Convert</span>
                 <span class="dm-say">Change currencies. Keep your plans.</span>
               </a>
-              <a href="./products/borrow-and-earn.html">
+              <a href="/products/borrow-and-earn">
                 <span class="dm-name">Borrow and earn</span>
                 <span class="dm-say">Earn more, or borrow against it.</span>
               </a>
             </div>
           </div>
-          <a href="./about.html">About us</a>
-          <a href="./blog.html">Blog</a>
-          <a href="./contact.html">Help</a>
+          <a href="/about">About us</a>
+          <a href="/blog">Blog</a>
+          <a href="/contact" aria-current="page">Help</a>
         </nav>
 
         <div class="nav-end">
@@ -71,16 +76,16 @@
 
       <div class="mobile-menu" id="mobile-menu" hidden>
         <p class="mm-head">Products</p>
-        <a href="./products/tokenized-stocks.html">Tokenized Stocks</a>
-        <a href="./products/gifting-and-rewards.html">Gifting &amp; Rewards</a>
-        <a href="./products/receive-and-send.html">Receive and send</a>
-        <a href="./products/pay-bills.html">Pay bills</a>
-        <a href="./products/convert.html">Convert</a>
-        <a href="./products/borrow-and-earn.html">Borrow and earn</a>
+        <a href="/products/tokenized-stocks">Tokenized stocks</a>
+        <a href="/products/gifting-and-rewards">Gifting and rewards</a>
+        <a href="/products/receive-and-send">Receive and send</a>
+        <a href="/products/pay-bills">Pay bills</a>
+        <a href="/products/convert">Convert</a>
+        <a href="/products/borrow-and-earn">Borrow and earn</a>
         <p class="mm-head">Company</p>
-        <a href="./about.html">About us</a>
-        <a href="./blog.html">Blog</a>
-        <a href="./contact.html">Help</a>
+        <a href="/about">About us</a>
+        <a href="/blog">Blog</a>
+        <a href="/contact">Help</a>
         <a class="btn btn-mint mm-cta" href="https://app.tokkenly.com">Sign up</a>
       </div>
     </header>
@@ -95,27 +100,35 @@
             <p class="page-lead">Questions about your account, a transaction, or the product. A real person reads these.</p>
           </div>
 
-          <form class="cf reveal" method="post" action="mailto:support@tokkenly.com">
+          <form class="cf reveal" method="post" action="/api/contact" data-form="contact">
+            <input type="hidden" name="kind" value="contact" />
             <p class="cf-field">
               <label class="cf-label" for="cf-name">Your name</label>
-              <input class="cf-input" id="cf-name" name="name" type="text" placeholder="First and last name" />
+              <input class="cf-input" id="cf-name" name="name" autocomplete="name" required placeholder="First and last name" type="text" maxlength="200" />
             </p>
             <p class="cf-field">
               <label class="cf-label" for="cf-email">Email</label>
-              <input class="cf-input" id="cf-email" name="email" type="email" placeholder="you@example.com" />
+              <input class="cf-input" id="cf-email" name="email" autocomplete="email" required placeholder="you@example.com" type="email" maxlength="254" />
             </p>
             <p class="cf-field">
-              <label class="cf-label" for="cf-about">What is it about?</label>
-              <input class="cf-input" id="cf-about" name="about" type="text" placeholder="Account, a transaction, or something else" />
+              <label class="cf-label" for="cf-about">What is it about? <span class="cf-opt">(optional)</span></label>
+              <input class="cf-input" id="cf-about" name="about" autocomplete="off" placeholder="Account, a transaction, or something else" type="text" maxlength="200" />
             </p>
             <p class="cf-field">
               <label class="cf-label" for="cf-message">Message</label>
-              <textarea class="cf-input" id="cf-message" name="message" rows="3" placeholder="Tell us what happened, and when"></textarea>
+              <textarea class="cf-input" id="cf-message" name="message" autocomplete="off" required placeholder="Tell us what happened, and when" rows="3" maxlength="5000"></textarea>
+            </p>
+            <p class="hp" aria-hidden="true">
+              <label for="cf-website">Leave this empty</label>
+              <input id="cf-website" name="website" type="text" tabindex="-1" autocomplete="off" />
             </p>
             <p class="cf-send">
               <button class="cf-btn" type="submit">Send message <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></button>
             </p>
+            <p class="form-status" role="status" aria-live="polite"></p>
           </form>
+          <p class="form-note form-done" id="cf-sent" tabindex="-1">Thank you. Your message is with us, and we reply within one working day.</p>
+          <p class="form-note form-fail" id="cf-failed" tabindex="-1">That did not go through. Please email us at <a href="mailto:support@tokkenly.com">support@tokkenly.com</a> instead.</p>
 
           <div class="cf-channels reveal">
             <div class="cf-channel">
@@ -127,10 +140,10 @@
               <h2>Answers to the common ones</h2>
               <p>Some of it is already written down, and reading it is faster than waiting for us.</p>
               <ul class="cf-links">
-                <li><a href="./products/tokenized-stocks.html#s-faq">What a tokenized share is <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></a></li>
-                <li><a href="./products/convert.html#s-faq">The rate, and the ninety seconds it is held for <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></a></li>
-                <li><a href="./products/receive-and-send.html">Why there is a cap before your identity check <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></a></li>
-                <li><a href="./index.html#faq">Everything else people ask <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></a></li>
+                <li><a href="/products/tokenized-stocks#s-faq">What a tokenized share is <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></a></li>
+                <li><a href="/products/convert#s-faq">The rate, and the ninety seconds it is held for <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></a></li>
+                <li><a href="/products/receive-and-send#s-transit">Why there is a cap before your identity check <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></a></li>
+                <li><a href="/#faq">Everything else people ask <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></a></li>
               </ul>
             </div>
             <div class="cf-channel">
@@ -138,8 +151,8 @@
               <p>Money that has not arrived, a payment stuck halfway, an account you cannot get into.</p>
               <ul class="cf-links">
                 <li><a href="mailto:support@tokkenly.com?subject=URGENT">Email us, with URGENT first <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></a></li>
-                <li><a href="./terms.html">What we owe you when it does <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></a></li>
-                <li><a href="./privacy.html">What we do with your data <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></a></li>
+                <li><a href="/terms">What we owe you when it does <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></a></li>
+                <li><a href="/privacy">What we do with your data <svg class="pr-arrow" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h9M8.5 4.5L12 8l-3.5 3.5" /></svg></a></li>
               </ul>
             </div>
           </div>
@@ -166,16 +179,11 @@
       <div class="wrap">
         <div class="foot-top">
           <div class="foot-brand">
-            <a class="brand" href="./index.html" aria-label="Tokkenly, home">
+            <a class="brand" href="/" aria-label="Tokkenly, home">
               <span class="brand-mark" aria-hidden="true">T</span>
               <span class="brand-word">Tokkenly</span>
             </a>
             <p>Your money, free to do more.</p>
-            <ul class="socials">
-              <li><a href="#" data-soon aria-label="Tokkenly on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.7 3h3.3l-7.2 8.3L22.4 21h-6.6l-5.2-6.8L4.6 21H1.3l7.7-8.8L1.6 3h6.8l4.7 6.2L17.7 3Zm-1.2 16h1.8L7.6 4.9H5.7L16.5 19Z" /></svg></a></li>
-              <li><a href="#" data-soon aria-label="Tokkenly on Instagram"><svg viewBox="0 0 24 24" aria-hidden="true" class="ic-stroke"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" stroke="none" /></svg></a></li>
-              <li><a href="#" data-soon aria-label="Tokkenly on LinkedIn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.98 3.5A2.5 2.5 0 1 1 5 8.5a2.5 2.5 0 0 1 0-5ZM3 9.5h4V21H3V9.5Zm6.5 0h3.8v1.6h.05c.53-.95 1.83-1.95 3.77-1.95 4.03 0 4.78 2.56 4.78 5.89V21h-4v-5.2c0-1.24-.02-2.84-1.77-2.84-1.78 0-2.05 1.35-2.05 2.75V21h-4V9.5Z" /></svg></a></li>
-            </ul>
           </div>
 
           <nav class="foot-cols" aria-label="Footer">
@@ -183,33 +191,36 @@
               <p class="foot-head">Products</p>
               <div class="foot-split">
                 <div>
-                  <a href="./products/tokenized-stocks.html">Tokenized Stocks</a>
-                  <a href="./products/gifting-and-rewards.html">Gifting &amp; Rewards</a>
-                  <a href="./products/receive-and-send.html">Receive and send</a>
+                  <a href="/products/tokenized-stocks">Tokenized stocks</a>
+                  <a href="/products/gifting-and-rewards">Gifting and rewards</a>
+                  <a href="/products/receive-and-send">Receive and send</a>
                 </div>
                 <div>
-                  <a href="./products/pay-bills.html">Pay bills</a>
-                  <a href="./products/convert.html">Convert</a>
-                  <a href="./products/borrow-and-earn.html">Borrow and earn</a>
+                  <a href="/products/pay-bills">Pay bills</a>
+                  <a href="/products/convert">Convert</a>
+                  <a href="/products/borrow-and-earn">Borrow and earn</a>
                 </div>
               </div>
             </div>
             <div class="foot-col">
               <p class="foot-head">Company</p>
-              <a href="./about.html">About us</a>
-              <a href="./blog.html">Blog</a>
+              <a href="/about">About us</a>
+              <a href="/blog">Blog</a>
+            </div>
+            <div class="foot-col">
+              <p class="foot-head">Support</p>
+              <a href="/contact">Help</a>
             </div>
             <div class="foot-col">
               <p class="foot-head">Legal</p>
-              <a href="./terms.html">Terms of service</a>
-              <a href="./privacy.html">Privacy policy</a>
-              <a href="./contact.html">Help</a>
+              <a href="/terms">Terms of service</a>
+              <a href="/privacy">Privacy policy</a>
             </div>
           </nav>
         </div>
 
         <div class="foot-end">
-          <p class="foot-word" aria-hidden="true">Tokkenly</p>
+          <p class="foot-word" aria-hidden="true" data-word="Tokkenly"></p>
           <p class="risk">Investments and earning products involve risk. Returns are not guaranteed.</p>
         </div>
       </div>

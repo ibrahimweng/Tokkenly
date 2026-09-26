@@ -17,7 +17,7 @@ import { pinPad } from '../components/pinpad'
  *  screen, because this screen is the whole app right now — sending somebody
  *  to Security when they cannot reach Security is sending them nowhere. */
 function lockedOut(): HTMLElement {
-  return h('div', { class: 'lock' },
+  return h('main', { class: 'lock' },
     h('div', { class: 'lock-card' },
       h('span', { class: 'mark lock-mark warn-mark', html: icon.alert() }),
       h('h1', { class: 't-title', style: { margin: '0' }, text: 'Locked' }),
@@ -48,24 +48,32 @@ export function lockScreen(): HTMLElement {
     },
   })
 
-  // Face ID first when it is on, because it is what people actually use. It
-  // is a button rather than a real biometric prompt — there is no device to
-  // ask — but the shape of the flow is the shape it would have.
+  // Face ID, when the person has turned it on — which they have to, because
+  // it is off to begin with. There is no sensor a web page can ask, so this is
+  // a button that stands in for one, and it says so on its face rather than
+  // wearing the name of a real biometric it cannot check. It is not offered
+  // at all after five wrong PINs: that screen is drawn instead of this one.
   const face = h('button', { class: 'btn btn-secondary lock-face' },
-    h('span', { html: icon.face() }), h('span', { text: 'Use Face ID' }))
+    h('span', { html: icon.face() }), h('span', { text: 'Use Face ID (simulated)' }))
   face.addEventListener('click', () => {
-    if (face.classList.contains('is-busy')) return
+    if (face.classList.contains('is-busy') || !state.security.faceId || actions.pinLocked()) return
     face.classList.add('is-busy')
     setTimeout(() => actions.unlock(), 500)
   })
 
-  return h('div', { class: 'lock' },
+  return h('main', { class: 'lock' },
     h('div', { class: 'lock-card' },
       h('span', { class: 'avatar lock-avatar', text: initials }),
       h('h1', { class: 't-title', style: { margin: '0' }, text: 'Welcome back, ' + first }),
       h('span', { class: 'muted t-caption', text: 'Tokkenly is locked' }),
       pad.el,
       state.security.faceId ? face : null,
+      state.security.faceId
+        ? h('span', { class: 'subtle t-caption', style: { textAlign: 'center' },
+            text: 'This prototype has no face sensor. The button stands in for one.' })
+        : null,
+      // Not the recovery phrase. That link used to open the twelve words over
+      // a locked phone; the way back from a forgotten PIN is the password.
       h('button', { class: 'link quiet', text: 'Forgotten your PIN?',
-        on: { click: () => openSheet('phrase') } })))
+        on: { click: () => openSheet('pin-help') } })))
 }

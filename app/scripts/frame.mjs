@@ -9,12 +9,18 @@
 
    So: at each width, every page must agree on where the title sits, how tall
    the header is, and where the body starts. One value each, no exceptions. */
-import { chromium } from 'playwright'
-import { seen } from './seen.mjs'
+import { B, launch, check, teardown } from './lib/harness.mjs'
+import { seen } from './lib/seen.mjs'
 
-const B = 'http://localhost:4173/#'
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
-const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
+/* The console's routes are walked too, and the console is staff's now:
+   signing in with an address at tokkenly.com is how the demo becomes staff,
+   and this is that sign-in, already done. */
+const asStaff = (p) => p.addInitScript(() => {
+  try { localStorage.setItem('tokkenly.account.v1', JSON.stringify({ signedIn: true, staff: true })) } catch {}
+})
+
+const b = await launch()
+const ok = check
 const errs = []
 
 /* Every place and every screen that draws a page header. The composers and the
@@ -44,10 +50,9 @@ const OWN_SHELL = ['/signin', '/signup', '/lock', '/welcome/0', '/welcome/1', '/
 for (const [w, tag] of [[1440, 'desktop'], [1100, 'tablet'], [390, 'phone']]) {
   console.log(`\n${tag.toUpperCase()}  ${w}px`)
   const p = await b.newPage({ viewport: { width: w, height: 1000 } })
-  await seen(p)
+  await seen(p); await asStaff(p)
   p.on('pageerror', (e) => errs.push(String(e)))
   p.setDefaultTimeout(8000)
-  await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 
   const read = []
   for (const r of ROUTES) {
@@ -91,8 +96,7 @@ for (const [w, tag] of [[1440, 'desktop'], [1100, 'tablet'], [390, 'phone']]) {
 /* And the exceptions really are exceptions. */
 {
   const p = await b.newPage({ viewport: { width: 1440, height: 1000 } })
-  await seen(p)
-  await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
+  await seen(p); await asStaff(p)
   const has = []
   for (const r of OWN_SHELL) {
     await p.goto('about:blank')
@@ -116,8 +120,7 @@ console.log('\nNO OVERSCROLL, EITHER WAY')
 {
   for (const w of [1440, 390]) {
     const p = await b.newPage({ viewport: { width: w, height: 900 } })
-    await seen(p)
-    await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
+    await seen(p); await asStaff(p)
     const loose = []
     for (const r of ROUTES) {
       await p.goto('about:blank')
@@ -169,8 +172,7 @@ console.log('\nA TABLET HELD UPRIGHT')
 
   for (const [w, hh] of [[768, 1024], [834, 1194]]) {
     const p = await b.newPage({ viewport: { width: w, height: hh } })
-    await seen(p)
-    await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
+    await seen(p); await asStaff(p)
     await p.goto(B + '/', { waitUntil: 'networkidle' }); await p.waitForTimeout(250)
     const said = await look(p)
     ok(`at ${w} the shell is still the one a finger uses`,
@@ -205,8 +207,7 @@ console.log('\nA TABLET HELD UPRIGHT')
   // The trap. A phone on its side is 844 wide, which is inside the band, and
   // 390 tall, which is why the query asks about the height as well.
   const flat = await b.newPage({ viewport: { width: 844, height: 390 } })
-  await seen(flat)
-  await flat.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
+  await seen(flat); await asStaff(flat)
   await flat.goto(B + '/', { waitUntil: 'networkidle' }); await flat.waitForTimeout(250)
   const lying = await look(flat)
   ok('a phone lying on its side is not a tablet',
@@ -216,4 +217,4 @@ console.log('\nA TABLET HELD UPRIGHT')
 }
 
 console.log('\nerrors: ' + (errs.length ? errs.join('\n') : 'none'))
-await b.close()
+await teardown(b)

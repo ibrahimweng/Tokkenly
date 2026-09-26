@@ -1,5 +1,6 @@
 import { h } from '../ui'
 import { usd, pct } from '../format'
+import { onTeardown } from '../scope'
 
 /** One chart, used everywhere the product draws a value over time. It was two
  *  near-copies before — a comb of fixed 5px bars on Home and another on the
@@ -263,7 +264,7 @@ export function barChart(spec: ChartSpec): HTMLElement {
     const marks = niceTicks(lo, hi)
     const step = marks.length > 1 ? marks[1] - marks[0] : hi - lo
     grid.replaceChildren(...marks.map((v) =>
-      h('div', { class: 'ch-line', style: { bottom: at(v) + '%' } },
+      h('div', { class: 'ch-rule', style: { bottom: at(v) + '%' } },
         h('span', { class: 'ch-tick', text: compact(v, step, money) }))))
 
     if (spec.shape === 'area') drawArea()
@@ -432,10 +433,14 @@ export function barChart(spec: ChartSpec): HTMLElement {
   // preview runs in has ResizeObserver.
   if (typeof ResizeObserver !== 'undefined') {
     let last = 0
-    new ResizeObserver(() => {
+    const watch = new ResizeObserver(() => {
       const n = fitBars(bars.clientWidth)
       if (n !== last) { last = n; hide(); draw() }
-    }).observe(bars)
+    })
+    watch.observe(bars)
+    // Disconnected with the drawing it belongs to (see scope.ts). Nothing
+    // ever disconnected it, so every redraw of Home kept one more observer.
+    onTeardown(() => watch.disconnect())
   }
   draw()
   // The first measurement can be taken before the column has settled, which

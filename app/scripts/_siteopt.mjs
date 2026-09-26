@@ -2,10 +2,11 @@
    canvas, scale it to the width the site actually shows it at, and re-encode
    as WebP. */
 import { chromium } from 'playwright'
+import { chromiumPath } from './lib/harness.mjs'
 import { readdirSync, readFileSync, writeFileSync, statSync, unlinkSync } from 'fs'
 
 const dir = new URL('../../site/img/', import.meta.url)
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+const browser = await chromium.launch({ executablePath: chromiumPath() })
 const page = await browser.newPage()
 
 const targetWidth = (name) => (name.startsWith('p-') ? 780 : 2040)

@@ -2,17 +2,15 @@
    costs against the thing it tracks, how thin the book is, who else is in it,
    and which token this actually is. Plus the chart that shows the first of
    those over time rather than only as of now. */
-import { chromium } from 'playwright'
-import { seen } from './seen.mjs'
-const B = 'http://localhost:4173/#'
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+import { B, launch, check, teardown } from './lib/harness.mjs'
+import { seen } from './lib/seen.mjs'
+const b = await launch()
 const errs = []
-const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
+const ok = check
 const p = await b.newPage({ viewport: { width: 1440, height: 1100 } })
 await seen(p)
 p.on('pageerror', (e) => errs.push(String(e)))
 p.setDefaultTimeout(6000)
-await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 const at = async (r) => { await p.goto(B + r, { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(500) }
 const num = (s) => Number((String(s ?? '').match(/-?[\d,]+\.?\d*/) ?? ['0'])[0].replace(/,/g, ''))
 
@@ -126,7 +124,6 @@ console.log('THE TWO CONTROLS BESIDE THE PRICE')
   // On a phone both have to clear 44, which is where the pill grows to meet it.
   const phone = await b.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true })
   await seen(phone)
-  await phone.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   await phone.goto(B + '/invest/aapl', { waitUntil: 'domcontentloaded' })
   await phone.waitForTimeout(600)
   const tap = await phone.evaluate(() => [...document.querySelector('.price-acts').children]
@@ -175,4 +172,4 @@ console.log('THE STRIP IS ONE PAGE, NOT THIRTEEN')
 }
 
 console.log('\nerrors:', errs.length ? errs : 'none')
-await b.close()
+await teardown(b)

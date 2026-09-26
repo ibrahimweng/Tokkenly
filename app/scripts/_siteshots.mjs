@@ -1,4 +1,11 @@
-/* The pictures on the marketing site.
+/* The pictures on the marketing site — as it was.
+ *
+ *  None of the files this takes is on the site any more: the landing page and
+ *  the product pages are drawn from their Figma frames now, with the frames'
+ *  own art, and home, invest, stock, wallet and the eleven p-* phones were
+ *  deleted from site/img as unused. It is kept because it still works and is
+ *  the way to photograph the app for the site if that is wanted again; run it
+ *  and _siteopt.mjs only to bring those pictures back.
  *
  *  Every image in site/img is a photograph of this app running in light mode,
  *  not a mockup, so the site cannot drift from the product without somebody
@@ -14,13 +21,14 @@
  *  is repetition, not illustration. The tall ones are the phone at 390x800.
  */
 import { chromium } from 'playwright'
+import { chromiumPath } from './lib/harness.mjs'
 
 const base = 'http://localhost:4173/#'
 const out = '../site/img'
 const SIDEBAR = 240        // --sidebar-w
 const CARD = { width: 1120, height: 700 }   // 1.6, the ratio the card frames are drawn at
 
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+const browser = await chromium.launch({ executablePath: chromiumPath() })
 
 const seedLight = (p) => p.addInitScript(`try {
   localStorage.setItem('tokkenly.prefs.v1', ${JSON.stringify(JSON.stringify({

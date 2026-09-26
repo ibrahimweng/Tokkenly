@@ -13,10 +13,10 @@
  *      says no;
  *    the composer's dialog scrolls on a phone — item 61's ceiling.
  */
-import { chromium } from 'playwright'
-import { seen } from './seen.mjs'
-const base = 'http://localhost:4173/#'
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+import { B, launch, check, teardown, shot } from './lib/harness.mjs'
+import { seen } from './lib/seen.mjs'
+const base = B
+const b = await launch()
 const errs = []
 const log = []
 const at = (p) => decodeURIComponent(p.url().split('#')[1] ?? '')
@@ -42,7 +42,7 @@ log.push('  tiles:     ' + tiles.length + ', address still ' + at(d))
 if (tiles.length !== 8) errs.push('the index lost a way: ' + tiles.length + ' tiles')
 if (at(d) !== '/spend') errs.push('the index forwarded to ' + at(d))
 log.push('  saved:     ' + (await d.locator('.sheet-row .t-body-strong').allTextContents()).join(' / '))
-await d.screenshot({ path: '/tmp/shots/spend-01-rail.png' })
+await d.screenshot({ path: shot('spend-01-rail.png') })
 
 /* ---------------- airtime: a number, then an amount ---------------- */
 
@@ -62,7 +62,7 @@ log.push('  composer:    ' + (await d.locator('.amount-box input').inputValue())
 const rows = await d.locator('.summary .kv').allTextContents()
 log.push('  summary:     ' + rows.join(' | '))
 log.push('  button:      ' + (await d.locator('.col-compose .btn-primary').textContent()))
-await d.screenshot({ path: '/tmp/shots/spend-02-airtime.png' })
+await d.screenshot({ path: shot('spend-02-airtime.png') })
 
 // The two figures have to agree. ₦1,000 at ₦1,500 to the dollar is $0.67.
 const cashBefore = await d.locator('.eyebrow strong').textContent()
@@ -71,13 +71,13 @@ await d.waitForTimeout(320)
 log.push('  review:      ' + (await d.locator('.sheet-head h2').textContent())
        + '   figure: ' + (await d.locator('.sheet .figure .t-display-xl').first().textContent()))
 log.push('  review rows: ' + (await d.locator('.sheet .panel .cell').allTextContents()).join(' | '))
-await d.screenshot({ path: '/tmp/shots/spend-03-review.png' })
+await d.screenshot({ path: shot('spend-03-review.png') })
 await d.locator('.sheet .btn-primary').click()
 await d.waitForTimeout(700)
 log.push('  outcome:     ' + (await d.locator('.sheet .t-title').textContent())
        + ' — ' + (await d.locator('.sheet .figure .muted').textContent()))
 log.push('  cash:        ' + cashBefore + ' → ' + (await d.locator('.eyebrow strong').textContent()))
-await d.screenshot({ path: '/tmp/shots/spend-04-done.png' })
+await d.screenshot({ path: shot('spend-04-done.png') })
 
 /* ---------------- data: a list, not a keypad ---------------- */
 
@@ -89,7 +89,7 @@ log.push('  keypads:   ' + (await d.locator('.amount-box').count()) + '  (a pric
 const plans = await d.locator('.set-panel .sheet-list .sheet-row').count()
 log.push('  plans:     ' + plans + '   first: '
        + (await d.locator('.set-panel .sheet-list .sheet-row').first().innerText()).replace(/\n/g, ' · '))
-await d.screenshot({ path: '/tmp/shots/spend-05-data.png' })
+await d.screenshot({ path: shot('spend-05-data.png') })
 await d.locator('.set-panel .sheet-list .sheet-row').nth(1).click()
 await d.waitForTimeout(320)
 log.push('  review:    ' + (await d.locator('.sheet .panel .cell').allTextContents()).join(' | '))
@@ -120,7 +120,7 @@ await meter.fill('45123456780')
 await d.waitForTimeout(160)
 log.push('  ...780:    ' + (await d.locator('.set-panel .set-banner').innerText()).replace(/\n/g, ' · ')
        + '   continue disabled: ' + (await d.locator('.set-panel .btn-primary').isDisabled()))
-await d.screenshot({ path: '/tmp/shots/spend-06-meter.png' })
+await d.screenshot({ path: shot('spend-06-meter.png') })
 await d.locator('.set-panel .btn-primary').click()
 await d.waitForTimeout(320)
 log.push('  continue → ' + at(d))
@@ -132,7 +132,7 @@ await d.locator('.sheet .btn-primary').click()
 await d.waitForTimeout(900)
 log.push('  outcome:   ' + (await d.locator('.sheet .t-title').textContent()))
 log.push('  token:     ' + (await d.locator('.sheet .panel .cell').first().innerText()).replace(/\n/g, ' '))
-await d.screenshot({ path: '/tmp/shots/spend-07-token.png' })
+await d.screenshot({ path: shot('spend-07-token.png') })
 
 /* ---------------- a network that says no writes nothing ---------------- */
 
@@ -149,11 +149,14 @@ log.push('')
 log.push('REFUSAL  ₦9,999')
 log.push('  said:      ' + (await d.locator('.sheet .hold.expired').innerText()))
 log.push('  still on the review: ' + (await d.locator('.sheet-head h2').textContent()))
-await d.screenshot({ path: '/tmp/shots/spend-08-refused.png' })
+await d.screenshot({ path: shot('spend-08-refused.png') })
 await d.locator('.sheet .close').click()
 await d.waitForTimeout(320)
-log.push('  cash:      ' + before + ' → ' + (await d.locator('.eyebrow strong').textContent())
-       + '   (must not move)')
+const afterRefusal = await d.locator('.eyebrow strong').textContent()
+log.push('  cash:      ' + before + ' → ' + afterRefusal + '   (must not move)')
+// This suite reported and never asserted. The refusal is the one claim it
+// makes that is about money, so it is the one that fails the run.
+check('a refused payment moves no money', before === afterRefusal, `${before} → ${afterRefusal}`)
 
 /* ---------------- the record, both ends ---------------- */
 
@@ -165,7 +168,7 @@ const trial = await d.evaluate(() => [...document.querySelectorAll('.card')]
 log.push('')
 log.push('STATEMENT  ' + trial.join('  |  '))
 log.push('  biller listed: ' + (await d.getByText('Bill partners').count()))
-await d.screenshot({ path: '/tmp/shots/spend-09-statement.png', fullPage: true })
+await d.screenshot({ path: shot('spend-09-statement.png'), fullPage: true })
 
 /* ---------------- the phone ---------------- */
 
@@ -178,13 +181,15 @@ log.push('')
 log.push('PHONE  /spend')
 log.push('  rails:     ' + (await p.locator('.ways .set-row').count())
        + '   dialogs: ' + (await p.locator('.scrim').count()))
-await p.screenshot({ path: '/tmp/shots/spend-10-phone.png' })
+await p.screenshot({ path: shot('spend-10-phone.png') })
 // The phone has four tabs and Spend is not one of them, so the grid behind
 // More has to carry it — otherwise the only way in is the door on Home.
 await p.locator('.rail-more').click()
 await p.waitForTimeout(260)
-log.push('  behind More: ' + (await p.locator('.rail-cell-label').allTextContents()).join(' / '))
-await p.screenshot({ path: '/tmp/shots/spend-10b-more.png' })
+const behind = await p.locator('.rail-cell-label').allTextContents()
+log.push('  behind More: ' + behind.join(' / '))
+check('Spend is behind More on the phone', behind.includes('Spend'), behind.join(' / '))
+await p.screenshot({ path: shot('spend-10b-more.png') })
 await p.locator('.rail-more').click()
 await p.waitForTimeout(220)
 
@@ -202,9 +207,10 @@ for (const [what, path] of [
     return { h: Math.round(s.clientHeight), content: s.scrollHeight,
              button: bb.bottom <= window.innerHeight + 1 && bb.top >= 0 }
   })
-  log.push(`  ${what.padEnd(8)} sheet ${fit.h}  content ${fit.content}  `
-         + `button on screen: ${fit.button}  scrolls: ${fit.content > fit.h}`)
-  await p.screenshot({ path: `/tmp/shots/spend-11-${what}.png` })
+  log.push(`  ${what.padEnd(8)} sheet ${fit?.h}  content ${fit?.content}  `
+         + `button on screen: ${fit?.button}  scrolls: ${fit?.content > fit?.h}`)
+  check(`the ${what} sheet has its button on screen`, !!fit?.button)
+  await p.screenshot({ path: shot(`spend-11-${what}.png`) })
 }
 
 // And the phone can finish one.
@@ -212,9 +218,12 @@ await p.locator('.sheet .btn-primary').click()
 await p.waitForTimeout(320)
 await p.locator('.sheet .btn-primary').click()
 await p.waitForTimeout(900)
-log.push('  finished:  ' + (await p.locator('.sheet .t-title').textContent()))
-await p.screenshot({ path: '/tmp/shots/spend-12-phone-done.png' })
+const finished = await p.locator('.sheet .t-title').textContent()
+log.push('  finished:  ' + finished)
+check('and the phone can finish one', /Token ready|Paid|Done/i.test(finished ?? ''), finished ?? '')
+await p.screenshot({ path: shot('spend-12-phone-done.png') })
 
 console.log(log.join('\n'))
 console.log(errs.length ? '\nERRORS\n' + errs.join('\n') : '\nno page errors')
-await b.close()
+check('no page errors', !errs.length, `${errs.length}`)
+await teardown(b)

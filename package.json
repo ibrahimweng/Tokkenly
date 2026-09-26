@@ -4,10 +4,13 @@
   "version": "0.1.0",
   "description": "Tokkenly. The product is in app/, the design record is design.md.",
   "scripts": {
-    "dev": "cd app && npm run dev",
-    "build": "cd app && npm ci && npm run build",
-    "preview": "cd app && npm run preview",
-    "typecheck": "cd app && npm run typecheck"
+    "postinstall": "npm --prefix app ci",
+    "dev": "npm --prefix app run dev",
+    "build": "npm --prefix app run build",
+    "preview": "npm --prefix app run preview",
+    "typecheck": "npm --prefix app run typecheck",
+    "lint": "npm --prefix app run lint",
+    "test": "npm --prefix app test"
   },
-  "engines": { "node": ">=18" }
+  "engines": { "node": "^20.19.0 || ^22.13.0 || >=24" }
 }

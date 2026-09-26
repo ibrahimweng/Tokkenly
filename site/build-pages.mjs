@@ -13,8 +13,8 @@ import { writeFileSync, readFileSync, existsSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { PAGES, EMAIL } from './copy-pages.mjs'
-import { APP_URL } from './copy-products.mjs'
-import { nav, footer } from './build-products.mjs'
+import { APP_URL, SITE_URL, PRODUCTS } from './copy-products.mjs'
+import { nav, footer, head, pageUrl, sized } from './build-products.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const esc = (s) => String(s).replace(/&(?![a-z#][a-z0-9]*;)/gi, '&amp;').replace(/</g, '&lt;')
@@ -46,7 +46,7 @@ const PROPS = {
 
 const close = (p) => {
   const [h, lead, label] = p.close
-  const href = label === 'Contact us' ? './contact.html' : APP_URL
+  const href = label === 'Contact us' ? '/contact' : APP_URL
   return `
       <section class="closing" data-cta="${p.cta}">
         <div class="wrap">
@@ -118,7 +118,7 @@ ${p.leads.map((l, i) => `              <p class="ab-lead-${i + 1}">${esc(l)}</p>
             </div>
           </div>
         </div>
-        <img class="ab-mast-art" src="./img/about/cloud.webp" width="1536" height="2048" alt="" aria-hidden="true" />
+        <img class="ab-mast-art" src="./img/about/cloud.webp" alt="" aria-hidden="true" />
       </section>
 
       <section class="ab-body">
@@ -161,11 +161,34 @@ ${p.narrative.ps.map((t) => `            <p>${esc(t)}</p>`).join('\n')}
         </div>
       </section>`
 
+/* ---- the forms ---------------------------------------------------------- */
+/* Both forms post to api/contact.js, the site's one serverless function, which
+   sends the message on through Resend. With the script running, site.js sends
+   them with fetch and writes the outcome into the form's status line; without
+   it they are ordinary form posts, and the function answers with a redirect
+   back to this page at #sent or #failed. Those two notes are in the markup
+   already and only show when they are the :target, so the thank-you works
+   with no script at all.
+
+   The `website` field is a honeypot: hidden from people and from assistive
+   technology, and filled in only by a bot that fills in every field. */
+const honeypot = (id) => `            <p class="hp" aria-hidden="true">
+              <label for="${id}-website">Leave this empty</label>
+              <input id="${id}-website" name="website" type="text" tabindex="-1" autocomplete="off" />
+            </p>`
+const outcome = (id, done) => `          <p class="form-note form-done" id="${id}-sent" tabindex="-1">${esc(done)}</p>
+          <p class="form-note form-fail" id="${id}-failed" tabindex="-1">That did not go through. Please email us at <a href="mailto:${EMAIL}">${EMAIL}</a> instead.</p>`
+
 /* ---- blog --------------------------------------------------------------- */
 /* Six posts, three across at 485 with 32 between and 56 down. The frame's
    thumbnails are empty grey rectangles — the artwork has not been chosen — so
    they are empty grey rectangles here too rather than something invented to
-   fill them. */
+   fill them.
+
+   None of them is written yet, so a card is a heading and a "Coming soon"
+   rather than a link with a date. The chips filter the cards by category:
+   site.js hides the others and keeps aria-pressed on the chip in step. Without
+   the script every card shows, which is what "All" means anyway. */
 const blogBody = (p) => `
       <section class="band bl">
         <div class="wrap">
@@ -174,27 +197,32 @@ const blogBody = (p) => `
             <p class="bl-lead">${esc(p.lead)}</p>
           </div>
 
-          <div class="bl-filters reveal">
-${p.filters.map((f, i) => `            <button class="bl-chip${i === 0 ? ' is-on' : ''}" type="button"${i === 0 ? ' aria-pressed="true"' : ' aria-pressed="false"'}>${esc(f)}</button>`).join('\n')}
+          <div class="bl-filters reveal" role="group" aria-label="Show posts about">
+${p.filters.map((f, i) => `            <button class="bl-chip${i === 0 ? ' is-on' : ''}" type="button" data-filter="${i === 0 ? '' : esc(f)}" aria-pressed="${i === 0}">${esc(f)}</button>`).join('\n')}
           </div>
 
+          <p class="bl-count" role="status" aria-live="polite"></p>
           <div class="bl-grid reveal">
-${p.posts.map(([cat, title, meta]) => `            <article class="bl-post">
+${p.posts.map(([cat, title]) => `            <article class="bl-post" data-cat="${esc(cat)}">
               <span class="bl-thumb" aria-hidden="true"></span>
               <p class="bl-cat">${esc(cat)}</p>
               <h2 class="bl-title">${esc(title)}</h2>
-              <p class="bl-meta">${esc(meta)}</p>
+              <p class="bl-meta">${esc(p.soon)}</p>
             </article>`).join('\n')}
           </div>
 
           <div class="bl-news reveal">
             <h2>${esc(p.newsletter.h)}</h2>
             <p class="bl-news-p">${esc(p.newsletter.p)}</p>
-            <form class="bl-form" method="post" action="mailto:${EMAIL}">
+            <form class="bl-form" method="post" action="/api/contact" data-form="newsletter">
+              <input type="hidden" name="kind" value="newsletter" />
               <label class="bl-vh" for="bl-email">Email</label>
-              <input class="bl-input" id="bl-email" name="email" type="email" placeholder="${esc(p.newsletter.ph)}" />
+              <input class="bl-input" id="bl-email" name="email" type="email" autocomplete="email" required placeholder="${esc(p.newsletter.ph)}" />
               <button class="btn btn-deep bl-sub" type="submit">${esc(p.newsletter.btn)}</button>
+${honeypot('bl')}
+              <p class="form-status" role="status" aria-live="polite"></p>
             </form>
+${outcome('bl', p.newsletter.done)}
           </div>
         </div>
       </section>`
@@ -203,15 +231,15 @@ ${p.posts.map(([cat, title, meta]) => `            <article class="bl-post">
 /* The frame's form is four fields on rules, 1120 wide inside the 1520, with
    the label above the value rather than floating in it — so the label is a
    real <label> and nothing depends on a placeholder being visible. */
-const field = ([id, label, ph, type]) => type === 'textarea'
-  ? `            <p class="cf-field">
-              <label class="cf-label" for="cf-${id}">${esc(label)}</label>
-              <textarea class="cf-input" id="cf-${id}" name="${id}" rows="3" placeholder="${esc(ph)}"></textarea>
+const field = ([id, label, ph, type, auto, req]) => {
+  const a = `id="cf-${id}" name="${id}" autocomplete="${auto}"${req ? ' required' : ''} placeholder="${esc(ph)}"`
+  return `            <p class="cf-field">
+              <label class="cf-label" for="cf-${id}">${esc(label)}${req ? '' : ' <span class="cf-opt">(optional)</span>'}</label>
+              ${type === 'textarea'
+    ? `<textarea class="cf-input" ${a} rows="3" maxlength="5000"></textarea>`
+    : `<input class="cf-input" ${a} type="${type}" maxlength="${type === 'email' ? 254 : 200}" />`}
             </p>`
-  : `            <p class="cf-field">
-              <label class="cf-label" for="cf-${id}">${esc(label)}</label>
-              <input class="cf-input" id="cf-${id}" name="${id}" type="${type}" placeholder="${esc(ph)}" />
-            </p>`
+}
 
 const contactBody = (p) => `
       <section class="band band-page">
@@ -221,12 +249,16 @@ const contactBody = (p) => `
             <p class="page-lead">${esc(p.lead)}</p>
           </div>
 
-          <form class="cf reveal" method="post" action="mailto:${EMAIL}">
+          <form class="cf reveal" method="post" action="/api/contact" data-form="contact">
+            <input type="hidden" name="kind" value="contact" />
 ${p.form.map(field).join('\n')}
+${honeypot('cf')}
             <p class="cf-send">
               <button class="cf-btn" type="submit">Send message ${ARROW}</button>
             </p>
+            <p class="form-status" role="status" aria-live="polite"></p>
           </form>
+${outcome('cf', p.sent)}
 
           <div class="cf-channels reveal">
 ${p.channels.map(([h, s, links], i) => `            <div class="cf-channel">
@@ -318,36 +350,97 @@ ${p.blocks.map(blockOf).join('\n')}
         </div>
       </section>`
 
-const BODY = { about: aboutBody, blog: blogBody, contact: contactBody, terms: legalBody, privacy: legalBody }
-/* About is the one page whose first section is dark, so the bar over it is
-   the light-on-dark one until it goes solid. */
-const NAVTONE = { about: ' data-navtone="over-dark"' }
-
-function page(p) {
-  const title = `${p.nav} — Tokkenly`
+/* ---- not found ---------------------------------------------------------- */
+/* Vercel serves 404.html for any address that matches nothing, at that
+   address — /products/nope/deeper as readily as /nope — so every asset on this
+   page is written from the root rather than relative to where it was asked
+   for. The generated pages are written relative; this one cannot be. */
+const notFound = () => {
+  const body = `
+      <section class="band nf">
+        <div class="wrap nf-in">
+          <p class="eyebrow">404</p>
+          <h1>This page is not here.</h1>
+          <p class="page-lead">The link may be old, or the address mistyped. Everything Tokkenly does is a click from the home page.</p>
+          <div class="cta-row">
+            <a class="btn btn-ink" href="/">Go to the home page</a>
+            <a class="btn btn-white" href="/contact">Ask us</a>
+          </div>
+          <ul class="nf-links">
+${PRODUCTS.map((p) => `            <li><a href="/products/${p.slug}">${esc(p.nav)} ${ARROW}</a></li>`).join('\n')}
+          </ul>
+        </div>
+      </section>`
   return `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${esc(title)}</title>
-    <meta name="description" content="${esc(p.meta)}" />
-    <link rel="icon" href="./favicon.svg" />
-    <meta property="og:title" content="${esc(title)}" />
-    <meta property="og:description" content="${esc(p.meta)}" />
-    <meta property="og:type" content="website" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <link rel="preload" href="./fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="stylesheet" href="./styles.css" />
+${head({ title: 'Page not found — Tokkenly', desc: 'This page is not here. Everything Tokkenly does is a click from the home page.', path: null, image: DEFAULT_IMAGE, up: '/', noindex: true, body })}
   </head>
-  <body${NAVTONE[p.slug] || ''}>
+  <body>
     <a class="skip" href="#main">Skip to content</a>
-${nav('./', null)}
+${nav('/', null)}
 
     <main id="main">
       <span id="top"></span>
-${BODY[p.slug](p)}
-${close(p)}
+${body}
+    </main>
+${footer('/')}
+
+    <script src="/site.js"></script>
+  </body>
+</html>
+`
+}
+
+/* ---- for crawlers ------------------------------------------------------- */
+/* The sitemap lists every page a search engine is welcome to: the home page,
+   the six products and the company pages. Terms and Privacy carry noindex
+   while they are drafts, so they are left out of it, and so is the 404. */
+const sitemap = () => {
+  const paths = ['/', ...PRODUCTS.map((p) => '/products/' + p.slug),
+    ...Object.values(PAGES).filter((p) => !p.noindex).map((p) => '/' + p.slug)]
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${paths.map((u) => `  <url><loc>${pageUrl(u)}</loc></url>`).join('\n')}
+</urlset>
+`
+}
+/* /api/ is the contact function: nothing there is a page. The drafts are kept
+   out of results by their own noindex, not here — a Disallow would stop a
+   crawler reading the noindex and could leave the bare URL listed. */
+const robots = () => `User-agent: *
+Allow: /
+Disallow: /api/
+
+Sitemap: ${SITE_URL}/sitemap.xml
+`
+
+const BODY = { about: aboutBody, blog: blogBody, contact: contactBody, terms: legalBody, privacy: legalBody }
+/* About is the one page whose first section is dark, so the bar over it is
+   the light-on-dark one until it goes solid. */
+const NAVTONE = { about: ' data-navtone="over-dark"' }
+/* What a shared link to a page without a picture of its own shows: the globe
+   from the landing page's hero. */
+const DEFAULT_IMAGE = 'hero/globe.webp'
+
+function page(p) {
+  const body = BODY[p.slug](p) + '\n' + close(p)
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+${head({ title: `${p.nav} — Tokkenly`, desc: p.meta, path: '/' + p.slug, image: p.image || DEFAULT_IMAGE, up: './', noindex: p.noindex, body })}
+  </head>
+  <body${NAVTONE[p.slug] || ''}>
+    <a class="skip" href="#main">Skip to content</a>
+${nav('./', p.slug)}
+
+    <main id="main">
+      <span id="top"></span>
+${body}
     </main>
 ${footer('./')}
 
@@ -374,15 +467,20 @@ ${footer('./')}
 const check = process.argv.includes('--check')
 checkProps()
 const stale = []
-for (const p of Object.values(PAGES)) {
-  const file = resolve(HERE, `${p.slug}.html`)
-  const html = page(p)
+const OUTPUTS = [
+  ...Object.values(PAGES).map((p) => [`${p.slug}.html`, sized(page(p))]),
+  ['404.html', sized(notFound())],
+  ['sitemap.xml', sitemap()],
+  ['robots.txt', robots()],
+]
+for (const [name, text] of OUTPUTS) {
+  const file = resolve(HERE, name)
   if (check) {
-    if (!existsSync(file) || readFileSync(file, 'utf8') !== html) stale.push(p.slug)
+    if (!existsSync(file) || readFileSync(file, 'utf8') !== text) stale.push(name)
     continue
   }
-  writeFileSync(file, html)
-  console.log('wrote ' + p.slug + '.html')
+  writeFileSync(file, text)
+  console.log('wrote ' + name)
 }
 if (check) {
   if (stale.length) {
@@ -390,5 +488,5 @@ if (check) {
     console.error('Run `node site/build-pages.mjs` and commit what it writes.')
     process.exit(1)
   }
-  console.log(`${Object.keys(PAGES).length} pages, all in step with the builder`)
+  console.log(`${OUTPUTS.length} files, all in step with the builder`)
 }

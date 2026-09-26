@@ -5,13 +5,12 @@
    phone, which on those two screens is the worst place in the product to put a
    line below a fold. The rule this holds: no dialog scrolls on a 390 x 844
    phone, and none of them is more than about four fifths of that screen. */
-import { chromium } from 'playwright'
-import { seen } from './seen.mjs'
+import { B, launch, check, teardown } from './lib/harness.mjs'
+import { seen } from './lib/seen.mjs'
 
-const B = 'http://localhost:4173/#'
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+const b = await launch()
 const errs = []
-const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
+const ok = check
 
 /* "more" is not on this list. It is a dialog on a desktop and it is not one on
    a phone: down there the nav bar's own capsule becomes the list, in place,
@@ -62,7 +61,6 @@ for (const [w, hh, tag] of [[1440, 1000, 'DESKTOP'], [390, 844, 'PHONE']]) {
   await seen(p)
   p.on('pageerror', (e) => errs.push(String(e)))
   p.setDefaultTimeout(6000)
-  await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   const out = []
   for (const [r, name] of ROUTES) {
     await p.goto(B + r, { waitUntil: 'domcontentloaded' })
@@ -99,7 +97,6 @@ console.log('WHAT FOLDS AND WHAT DOES NOT')
   const p = await b.newPage({ viewport: { width: 1440, height: 1000 } })
   await seen(p)
   p.on('pageerror', (e) => errs.push(String(e)))
-  await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   const at = async (r) => { await p.goto(B + r, { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(420) }
 
   await at('/activity?sheet=receipt&ref=TKN-8E4J77')
@@ -140,7 +137,6 @@ console.log('THE OUTCOME  a coin, and only when there is something to celebrate'
   const p = await b.newPage({ viewport: { width: 1440, height: 1000 } })
   await seen(p)
   p.on('pageerror', (e) => errs.push(String(e)))
-  await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   const buy = async (amount) => {
     await p.goto(B + '/invest/aapl/invest', { waitUntil: 'domcontentloaded' })
     await p.waitForTimeout(400)
@@ -222,4 +218,4 @@ console.log('THE OUTCOME  a coin, and only when there is something to celebrate'
 }
 
 console.log('\nerrors:', errs.length ? errs : 'none')
-await b.close()
+await teardown(b)

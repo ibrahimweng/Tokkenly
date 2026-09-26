@@ -1,3 +1,20 @@
+/* The whole set of widths the stylesheets change at, and nothing else. CSS
+ * cannot read a custom property inside a media query, so the numbers are
+ * written out there; this is the list they are written from, and a new
+ * `@media` that is not one of these is a new breakpoint that needs a reason.
+ *
+ *   399   NARROW_MAX   a 360 budget Android: the rail gives up its gutters
+ *   899   MOBILE_MAX   the phone and the upright tablet; the one that matters
+ *  1023   SPLIT_MIN-1  a list beside its panel becomes two screens
+ *  1199   LAPTOP_MAX   the tablet tier: 900 to 1199, sidebar and narrow gutters
+ *  1279   WIDE_MAX     the 96 gutters step down to 48; a side column stacks
+ *
+ * Two used to sit between them — 1180 and 1239 — each chosen by measuring
+ * one layout. They are 1199 and 1279 now, twenty and forty pixels earlier. */
+export const NARROW_MAX = 399
+export const LAPTOP_MAX = 1199
+export const WIDE_MAX = 1279
+
 /** One breakpoint. Below it the product is the phone drawn on Figma page
  *  `07 Mobile`: a top bar, a single column, a floating bottom rail of four
  *  tabs plus More, and every sheet arriving from the bottom. */

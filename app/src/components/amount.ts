@@ -2,6 +2,7 @@ import { h } from '../ui'
 import { icon } from '../icons'
 import { parseAmount, USD, type Unit } from '../format'
 import { isMobile } from '../responsive'
+import { scope } from '../scope'
 
 export interface AmountComposer {
   el: HTMLElement
@@ -84,7 +85,12 @@ export function amountComposer(opts: {
   })
 
   const canvas = h('canvas')
-  const ruler = h('div', { class: 'ruler', ariaLabel: 'Drag to change the amount' }, canvas)
+  // Hidden from a screen reader rather than labelled. A label on a div with
+  // no role is read by nothing, and the ruler is the pointer's way to the
+  // same number the field above it holds — the field is the control a
+  // keyboard and a screen reader use (rule 47), so the ruler is a picture
+  // of it to them.
+  const ruler = h('div', { class: 'ruler', ariaHidden: true }, canvas)
 
   const note = h('p', { class: 'amount-note', text: opts.note ?? '' })
   // What a drag is for, and what it can reach. "Type an amount, or drag the
@@ -156,7 +162,7 @@ export function amountComposer(opts: {
     ctx.scale(dpr, dpr)
     ctx.clearRect(0, 0, w, hgt)
     const css = getComputedStyle(document.documentElement)
-    const subtle = css.getPropertyValue('--subtle').trim() || '#65656c'
+    const subtle = css.getPropertyValue('--subtle').trim() || '#8e8e95'
     const ink = css.getPropertyValue('--ink').trim() || '#dcdce0'
 
     // Ticks are a fixed pitch; the value slides the field under the needle.
@@ -227,7 +233,10 @@ export function amountComposer(opts: {
   )
 
   queueMicrotask(draw)
-  addEventListener('resize', draw)
+  // Ends with the drawing it belongs to (see scope.ts). It used to be added
+  // on every render and never removed, so each redraw of a composer left
+  // another listener redrawing a canvas that was no longer on the page.
+  addEventListener('resize', draw, { signal: scope() })
 
   return {
     el,

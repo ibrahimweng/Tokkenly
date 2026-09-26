@@ -8,17 +8,16 @@
    Wants the site on 4321, which an app sweep does not start — hence the
    `_site` prefix, which is how all.sh knows to leave it alone. Run it by hand:
 
-     (cd site && python3 -m http.server 4321) &
-     node app/scripts/_sitegs.mjs
+     npx serve site -l 4321 &          # or anything that does cleanUrls
+     SITE_URL=http://localhost:4321 node app/scripts/_sitegs.mjs
 
    The timings below are read off the driver's own step durations. They are
    deliberately sampled between two steps rather than on the boundary of one:
    a check that fires exactly when a step does is a check that fails on a
    loaded machine and tells you nothing about the product. */
-import { chromium } from 'playwright'
+import { launch, open } from './_sitelib.mjs'
 
-const URL = 'http://localhost:4321/index.html'
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+const b = await launch()
 let fail = 0
 const ok = (cond, what) => {
   console.log(`${cond ? '  ok  ' : '  FAIL'}  ${what}`)
@@ -30,7 +29,7 @@ await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 p.setDefaultTimeout(9000)
 p.on('pageerror', (e) => { console.log('  FAIL  page error: ' + e.message); fail++ })
 
-await p.goto(URL, { waitUntil: 'load' })
+await open(p, '/')
 await p.waitForTimeout(500)
 await p.evaluate(() => document.querySelector('.gs-steps')
   .scrollIntoView({ block: 'center', behavior: 'instant' }))
@@ -265,7 +264,7 @@ console.log('\n--- no script ---')
 const dead = await b.newContext({ viewport: { width: 1440, height: 1000 }, javaScriptEnabled: false })
 const d = await dead.newPage()
 await d.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
-await d.goto(URL, { waitUntil: 'load' })
+await open(d, '/')
 await d.waitForTimeout(300)
 const still = await d.$$eval('.gs-mock', (ms) => ms.every((m) =>
   [...m.querySelectorAll('.m-val')].every((v) => v.textContent === '') &&
@@ -284,7 +283,7 @@ await dead.close()
 console.log('\n--- no hover, no pointer ---')
 const t = await b.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
 await t.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
-await t.goto(URL, { waitUntil: 'load' })
+await open(t, '/')
 await t.waitForTimeout(400)
 await t.evaluate(() => document.querySelector('.gs-mock[data-gs="signup"]')
   .scrollIntoView({ block: 'center', behavior: 'instant' }))

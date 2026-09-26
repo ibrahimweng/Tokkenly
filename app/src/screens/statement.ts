@@ -166,7 +166,9 @@ export function statementScreen(): HTMLElement {
             h('button', { class: 'btn btn-secondary btn-sm', text: 'Back to Activity',
               on: { click: () => go('/activity') } }),
             h('button', { class: 'btn btn-quiet btn-sm', text: 'Back to the top',
-              on: { click: () => scrollTo({ top: 0, behavior: 'smooth' }) } })))),
+              // A jump, not a glide, for somebody who has asked for less motion.
+              on: { click: () => scrollTo({ top: 0,
+                behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }) } })))),
       h('div', { class: 'stack col-side' },
         ...balances(),
         card(

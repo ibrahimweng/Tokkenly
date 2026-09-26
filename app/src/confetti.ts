@@ -37,7 +37,10 @@ const still = (): boolean =>
 function palette(): string[] {
   const style = getComputedStyle(document.documentElement)
   const at = (name: string) => style.getPropertyValue(name).trim()
-  return [at('--positive'), at('--data-2'), at('--dot-lit'), at('--dot-mid')]
+  // Two rungs of the ink ramp, --part-1 and --part-2. They were --dot-lit and
+  // --dot-mid, which no longer exist, so the burst had quietly lost half its
+  // colours.
+  return [at('--positive'), at('--data-2'), at('--part-1'), at('--part-2')]
     .filter(Boolean)
 }
 
@@ -56,7 +59,7 @@ export function celebrate(from: Element): void {
   const cy = box.top + box.height / 2
   canvas.style.cssText =
     `position:fixed;left:${cx - R}px;top:${cy - R}px;width:${R * 2}px;height:${R * 2}px;` +
-    'pointer-events:none;z-index:80'
+    'pointer-events:none;z-index:var(--z-burst)'
   canvas.width = R * 2 * dpr
   canvas.height = R * 2 * dpr
   canvas.setAttribute('aria-hidden', 'true')

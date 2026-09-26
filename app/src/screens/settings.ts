@@ -282,7 +282,10 @@ function securityBody(): (Node | null)[] {
         () => openSheet('pin')),
       actionRow('Password', 'For signing in, changed ' + s.passwordChanged, icon.key(),
         () => openSheet('password')),
-      toggle({ label: 'Face ID', sub: 'Unlock without typing your PIN', ic: icon.face(),
+      // Off until chosen, and named for what it is: a stand-in. There is no
+      // sensor for a web page to ask, so turning this on puts a button on the
+      // lock screen that opens it without the PIN.
+      toggle({ label: 'Face ID', sub: 'Simulated in this prototype. Unlocks without your PIN', ic: icon.face(),
         get: () => s.faceId, set: (v) => actions.setSecurity('faceId', v) }),
       toggle({ label: 'Lock the app',
         sub: 'Asks for your PIN when you open the app, and after two minutes away',
@@ -468,14 +471,11 @@ function verificationBody(): (Node | null)[] {
       kv('Checked on', state.kyc.checkedOn ?? ''),
       kv('Screened by', 'Didit'),
       kv('Monthly limit', usd(LIMITS.verified.monthly, false)),
-      kv('One payment', usd(LIMITS.verified.single, false)),
-      h('div', { class: 'chip-row' },
-        h('button', { class: 'link quiet', text: 'Start again',
-          on: { click: () => { actions.resetVerification(); toast('Verification cleared') } } }),
-        // The refusal is on a path anybody can walk. A state nobody has seen
-        // is a state nobody has designed.
-        h('button', { class: 'link quiet', text: 'Show a refused eligibility check',
-          on: { click: () => { actions.failEligibility(); toast('Eligibility refused, for the demo') } } })))]
+      kv('One payment', usd(LIMITS.verified.single, false)))]
+      // "Start again" and "Show a refused eligibility check" were two links
+      // here, on the customer's own settings, that undid or refused their own
+      // identity check. They are in the console now, where staff can walk the
+      // refusal for a demo, and a customer cannot un-verify themselves.
   }
   return [card(
     cardHead('Verification', h('span', { class: 'pill', text: 'Not done' })),
@@ -619,7 +619,11 @@ export const GROUPS: Group[] = [
  *  groups rather than among them because it is not a setting: it is a
  *  different product wearing the same shell, and putting it in the list would
  *  make an account holder think it was theirs. */
-export function opsDoor(): HTMLElement {
+export function opsDoor(): HTMLElement | null {
+  // Staff only. A customer who is shown a door to the console is a customer
+  // who has been told it exists and where it is; the screen behind it is gated
+  // too, and so is the search that used to list it.
+  if (!state.staff) return null
   const down = providersDown()
   return card(
     cardHead('Operations', h('span', { class: 'pill' + (down ? ' warn' : ' pos'),

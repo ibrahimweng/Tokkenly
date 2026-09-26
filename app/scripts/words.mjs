@@ -23,12 +23,18 @@
 
    It is not a style police. It reports the sentence and the screen, so what
    comes back is a list somebody can rewrite, not a score. */
-import { chromium } from 'playwright'
-import { seen, verify, locked } from './seen.mjs'
+import { B, launch, check, teardown } from './lib/harness.mjs'
+import { seen, verify, locked } from './lib/seen.mjs'
 
-const B = 'http://localhost:4173/#'
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
-const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
+/* The console's routes are walked too, and the console is staff's now:
+   signing in with an address at tokkenly.com is how the demo becomes staff,
+   and this is that sign-in, already done. */
+const asStaff = (p) => p.addInitScript(() => {
+  try { localStorage.setItem('tokkenly.account.v1', JSON.stringify({ signedIn: true, staff: true })) } catch {}
+})
+
+const b = await launch()
+const ok = check
 
 /* Every screen a customer meets, and every dialog that opens over one.
    The console is staff-facing and holds itself to the same rule, so it is in
@@ -124,9 +130,8 @@ const JARGON = [
 ]
 
 const p = await b.newPage({ viewport: { width: 1440, height: 1200 } })
-await seen(p)
+await seen(p); await asStaff(p)
 p.setDefaultTimeout(8000)
-await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 await verify(p)
 
 const long = []
@@ -202,7 +207,6 @@ for (const r of [...ROUTES, ...SHEETS]) {
 {
   const l = await b.newPage({ viewport: { width: 1440, height: 900 } })
   await locked(l)
-  await l.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   await l.goto(B + '/', { waitUntil: 'domcontentloaded' })
   await l.waitForTimeout(500)
   const found = await read(l)
@@ -232,4 +236,4 @@ ok('every technical word is explained on the screen it appears on', jargon.lengt
 
 console.log(EXEMPT.length ? '\nexempt, and only these:' : '\nnothing is exempt')
 for (const [sel, why] of EXEMPT) console.log(`  ${sel}  -  ${why}`)
-await b.close()
+await teardown(b)

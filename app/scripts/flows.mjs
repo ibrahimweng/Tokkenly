@@ -1,7 +1,17 @@
-import { chromium } from 'playwright'
-import { seen, settled } from './seen.mjs'
-const base = 'http://localhost:4173/#'
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+/* Five flows clicked through, and what the money did.
+
+   This is the suite the README calls the one that matters, and for a long time
+   it asserted nothing: it printed what it saw and exited 0. It typed 600 into
+   Borrow, the button read "Borrow $250.00", the wallet moved by 250, and the
+   run was green. The 250 was the unverified single-payment ceiling doing its
+   job (state.ts, movementCeiling): drawing on the credit line answers to the
+   same cap as any other money crossing into the account. So the account is
+   verified first, the way fees.mjs does it, and every step below states what
+   it expects the money to have done. */
+import { B, launch, check, teardown } from './lib/harness.mjs'
+import { seen, settled, verify } from './lib/seen.mjs'
+
+const browser = await launch()
 const page = await browser.newPage({ viewport: { width: 1440, height: 1024 } })
 // Since the app lock landed, a page that does not seed the unlock drives
 // the PIN pad instead of the product. This suite was measuring the lock
@@ -14,97 +24,115 @@ await seen(page, { homeView: 'detailed', confirmOver: 0 })
 const errs = []
 page.on('pageerror', (e) => errs.push('pageerror: ' + e.message))
 
-const log = []
-const step = async (msg) => log.push('  ' + msg)
-const text = async (sel) => (await page.locator(sel).first().textContent()) ?? ''
+const text = async (sel) => ((await page.locator(sel).first().textContent()) ?? '').trim()
+/** The first figure in a string, in dollars: "$2,576.67" is 2576.67. */
+const money = (s) => Number((String(s ?? '').match(/-?[\d,]+\.?\d*/) ?? ['NaN'])[0].replace(/,/g, ''))
+const cents = (n) => Math.round(n * 100)
 /** The value of a labelled row, found by its label. The stock page grew a
  *  "The token itself" card above the position, so "the first .kv in the side
  *  column" started reading Liquidity — a number this suite then reported as
  *  the holding, unchanged, twice, without failing. */
 const rowValue = async (label) =>
-  (await page.locator('.kv', { hasText: label }).first().locator('span').last().textContent()) ?? ''
-
-async function clickText(t, opts = {}) {
-  await page.getByText(t, { exact: opts.exact ?? true }).first().click()
-  await page.waitForTimeout(140)
+  ((await page.locator('.kv', { hasText: label }).first().locator('span').last().textContent()) ?? '').trim()
+/** The wallet's cash, once its figure has stopped counting towards it. */
+const wallet = async () => {
+  await page.goto(B + '/transfer', { waitUntil: 'networkidle' })
+  return money(await settled(page, '.hero-figure'))
+}
+const type = async (amount) => {
+  await page.locator('.amount-box input').fill(String(amount))
+  await page.locator('.amount-box input').blur()
+  await page.waitForTimeout(120)
 }
 
-/* ---- flow 1: borrow, end to end, and check the money actually moved ---- */
-log.push('FLOW 1  Borrow & Lend → Borrow → review → confirm → receipt')
-await page.goto(base + '/transfer', { waitUntil: 'networkidle' })
-const cashBefore = (await settled(page, '.hero-figure')).trim()
-await step('wallet cash before: ' + cashBefore.trim())
+// Out of the way of the limits, so an amount typed is the amount moved.
+await verify(page)
 
-await page.goto(base + '/grow', { waitUntil: 'networkidle' })
+/* ---- flow 1: borrow, end to end, and check the money actually moved ---- */
+console.log('FLOW 1  Borrow & Lend → Borrow → review → confirm → receipt')
+const BORROW = 600
+const cash0 = await wallet()
+await page.goto(B + '/grow', { waitUntil: 'networkidle' })
 // The card's button opens the position rather than the composer (11g.43):
 // somebody with an open loan came to look at it, not to take another one. So
 // the journey is one step longer, and the step is part of what is being
-// checked — this is the walk a person actually takes. It says what it opens
-// now rather than promising an action it does not perform (11g.58).
-await clickText('See your borrowing')
-await step('on ' + page.url().split('#')[1])
-await clickText('Borrow more')
-await step('then on ' + page.url().split('#')[1])
-await page.locator('.amount-box input').fill('600')
-await page.locator('.amount-box input').blur()
-await page.waitForTimeout(120)
-await step('typed 600, button now says: ' + (await text('.card .btn-primary')).trim())
+// checked — this is the walk a person actually takes.
+await page.getByText('See your borrowing', { exact: true }).first().click()
+await page.waitForTimeout(140)
+check('the card opens the position', page.url().includes('/grow/borrowing'), page.url().split('#')[1])
+await page.getByText('Borrow more', { exact: true }).first().click()
+await page.waitForTimeout(140)
+check('and the position opens the composer', page.url().includes('/grow/borrow'), page.url().split('#')[1])
+await type(BORROW)
+const borrowLabel = await text('.card .btn-primary')
+check('the button says the amount typed', borrowLabel === 'Borrow $600.00', borrowLabel)
 await page.locator('.card .btn-primary').click()
 await page.waitForTimeout(600)
-await step('sheet: ' + (await text('.sheet-head h2')).trim() + ' / ' + (await text('.figure .t-display-xl')).trim())
+const reviewed = await text('.figure .t-display-xl')
+check('the review states the same amount', money(reviewed) === BORROW, reviewed)
 await page.locator('.sheet .btn-primary').click()
 await page.waitForTimeout(600)
-await step('outcome: ' + (await text('.sheet .t-title')).trim() + ' — ' + (await text('.sheet .figure .muted')).trim())
-await page.locator('.sheet .btn-secondary').click()   // See the record
+const borrowed = await text('.sheet .t-title')
+check('the outcome says it is borrowed', borrowed === 'Borrowed', borrowed + ' — ' + (await text('.sheet .figure .muted')))
+await page.locator('.sheet .btn-secondary').click() // See the record
 await page.waitForTimeout(250)
 // In place: the record opens over the screen you were on rather than
 // navigating you to Activity to read it.
-await step('record opened on ' + page.url().split('#')[1].split('?')[0] + ', still: ' + (await text('.sheet-head h2')).trim())
+check('the record opens over the screen you were on',
+  page.url().includes('/grow/borrow') && (await text('.sheet-head h2')) === 'Receipt',
+  page.url().split('#')[1].split('?')[0] + ', ' + (await text('.sheet-head h2')))
 await page.keyboard.press('Escape')
 await page.waitForTimeout(150)
-
-await page.goto(base + '/transfer', { waitUntil: 'networkidle' })
-// The wallet's figure travels to its new value, so a read taken a fixed
-// moment after arriving is a read of the animation. This suite reports rather
-// than asserts, so it printed the old balance and nothing failed.
-await step('wallet cash after: ' + (await settled(page, '.hero-figure')).trim())
+const cash1 = await wallet()
+check(`the wallet went up by $${BORROW}`, cents(cash1 - cash0) === cents(BORROW), `${cash0} → ${cash1}`)
 
 /* ---- flow 2: repay it back ---- */
-log.push('')
-log.push('FLOW 2  Borrow & Lend → Repay → confirm')
-await page.goto(base + '/grow/repay', { waitUntil: 'networkidle' })
-await page.locator('.amount-box input').fill('600')
-await page.locator('.amount-box input').blur()
-await page.waitForTimeout(120)
+console.log('\nFLOW 2  Borrow & Lend → Repay → confirm')
+await page.goto(B + '/grow/repay', { waitUntil: 'networkidle' })
+await type(BORROW)
+const repayLabel = await text('.card .btn-primary')
+check('the button says the amount typed', money(repayLabel) === BORROW, repayLabel)
 await page.locator('.card .btn-primary').click()
 await page.waitForTimeout(600)
 await page.locator('.sheet .btn-primary').click()
 await page.waitForTimeout(600)
-await step('outcome: ' + (await text('.sheet .t-title')).trim() + ' — ' + (await text('.sheet .figure .muted')).trim())
+const repaid = await text('.sheet .t-title')
+check('the outcome says it is repaid', repaid === 'Repaid', repaid + ' — ' + (await text('.sheet .figure .muted')))
 await page.keyboard.press('Escape')
+const cash2 = await wallet()
+check(`the wallet went down by $${BORROW}`, cents(cash1 - cash2) === cents(BORROW), `${cash1} → ${cash2}`)
 
 /* ---- flow 3: buy a stock and see the holding change ---- */
-log.push('')
-log.push('FLOW 3  Market → Apple → Invest → confirm')
-await page.goto(base + '/invest/aapl', { waitUntil: 'networkidle' })
-const heldBefore = await rowValue('You hold')
-await step('holding before: ' + heldBefore.trim())
-await clickText('Buy AAPLc')
-await page.locator('.amount-box input').fill('250')
-await page.locator('.amount-box input').blur()
-await page.waitForTimeout(120)
+console.log('\nFLOW 3  Market → Apple → Invest → confirm')
+const BUY = 250
+await page.goto(B + '/invest/aapl', { waitUntil: 'networkidle' })
+const held0 = money(await rowValue('You hold'))
+await page.getByText('Buy AAPLc', { exact: true }).first().click()
+await page.waitForTimeout(140)
+await type(BUY)
+const buyLabel = await text('.card .btn-primary')
+check('the button says the amount typed', money(buyLabel) === BUY, buyLabel)
 await page.locator('.card .btn-primary').click()
 await page.waitForTimeout(600)
 await page.locator('.sheet .btn-primary').click()
 await page.waitForTimeout(600)
-await step('outcome: ' + (await text('.sheet .t-title')).trim() + ' — ' + (await text('.sheet .figure .muted')).trim())
+const bought = await text('.sheet .t-title')
+const said = await text('.sheet .figure .muted')
+check('the outcome says it is bought', bought === 'Bought', bought + ' — ' + said)
+const got = money((said.match(/([\d.]+) shares/) ?? [])[1])
 await page.keyboard.press('Escape')
-await page.goto(base + '/invest/aapl', { waitUntil: 'networkidle' })
-await step('holding after:  ' + (await rowValue('You hold')).trim())
+await page.goto(B + '/invest/aapl', { waitUntil: 'networkidle' })
+const held1 = money(await rowValue('You hold'))
+check('the holding grew by the shares the outcome named',
+  got > 0 && Math.abs(held1 - held0 - got) < 0.00015, `${held0} + ${got} → ${held1}`)
+const cash3 = await wallet()
+// A purchase carries its fee on top (fees.mjs checks the rate), so the wallet
+// pays at least the amount and not much over it.
+check(`the wallet paid $${BUY} and its fee`,
+  cash2 - cash3 >= BUY && cash2 - cash3 < BUY * 1.02, `${cash2} → ${cash3}`)
 
 /* ---- flow 4: the sheets that are not flows ---- */
-log.push('')
-log.push('FLOW 4  sheets reachable from a click')
+console.log('\nFLOW 4  sheets reachable from a click')
 for (const [start, label, expect] of [
   ['/security', 'Recovery phrase', 'Your recovery phrase'],
   ['/security', 'App PIN', 'Change your PIN'],
@@ -116,25 +144,25 @@ for (const [start, label, expect] of [
   // itself (11g.60).
   ['/send/bank', 'Add a bank', 'Your banks'],
 ]) {
-  await page.goto(base + start, { waitUntil: 'networkidle' })
+  await page.goto(B + start, { waitUntil: 'networkidle' })
   await page.getByText(label, { exact: true }).first().click()
   await page.waitForTimeout(180)
-  const got = (await text('.sheet-head h2')).trim()
-  await step(`${start.padEnd(11)} "${label}" → ${got}   ${got === expect ? 'ok' : 'EXPECTED ' + expect}`)
+  const got = await text('.sheet-head h2')
+  check(`${start} "${label}" opens ${expect}`, got === expect, got)
   await page.keyboard.press('Escape')
 }
 
 /* ---- flow 5: every nav place, and the deepest link on each ---- */
-log.push('')
-log.push('FLOW 5  the rail')
-for (const place of ['Home', 'Wallet', 'Invest', 'Borrow & Lend', 'Activity', 'Account']) {
-  await page.goto(base + '/', { waitUntil: 'networkidle' })
+console.log('\nFLOW 5  the rail')
+for (const [place, route] of [['Home', '/'], ['Wallet', '/transfer'], ['Invest', '/invest'],
+  ['Borrow & Lend', '/grow'], ['Activity', '/activity'], ['Account', '/account']]) {
+  await page.goto(B + '/', { waitUntil: 'networkidle' })
   await page.locator('.nav-row', { hasText: place }).first().click()
   await page.waitForTimeout(180)
-  const lit = await page.locator('.nav-row[aria-current="page"]').first().textContent()
-  await step(`${place.padEnd(8)} → ${page.url().split('#')[1].padEnd(10)} lit: ${lit?.trim()}`)
+  const lit = ((await page.locator('.nav-row[aria-current="page"]').first().textContent()) ?? '').trim()
+  const at = page.url().split('#')[1]
+  check(`${place} goes to ${route} and lights itself`, at === route && lit === place, `${at}, lit: ${lit}`)
 }
 
-console.log(log.join('\n'))
-console.log('\nPAGE ERRORS: ' + (errs.length ? errs.join('\n') : 'none'))
-await browser.close()
+check('no page errors', !errs.length, errs.join(' | '))
+await teardown(browser)

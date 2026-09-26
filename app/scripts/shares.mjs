@@ -4,19 +4,17 @@
    account and to nobody else. The refusal was built before the transfer, so it
    is tested first — a refusal nobody can reach is a refusal nobody has
    tested, which is why two of the four people in the list have no account. */
-import { chromium } from 'playwright'
-import { seen, verify, settled } from './seen.mjs'
+import { B, launch, check, teardown } from './lib/harness.mjs'
+import { seen, verify, settled } from './lib/seen.mjs'
 
-const B = 'http://localhost:4173/#'
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+const b = await launch()
 const errs = []
-const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
+const ok = check
 const page = async (w = 1440, h = 1024) => {
   const p = await b.newPage({ viewport: { width: w, height: h } })
   await seen(p)
   p.on('pageerror', (e) => errs.push(String(e)))
   p.setDefaultTimeout(6000)
-  await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   return p
 }
 const at = async (p, r) => {
@@ -212,4 +210,4 @@ console.log('PHONE  who first, then how much, as a sheet')
 }
 
 console.log('\nerrors:', errs.length ? errs : 'none')
-await b.close()
+await teardown(b)

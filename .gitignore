@@ -1,10 +1,13 @@
 node_modules/
 dist/
+# Screenshots from the suites (scripts/lib/harness.mjs writes to app/shots/).
 shots/
 *.log
 .DS_Store
-app/undefined/
 
-# Flow exports from scripts/_figma-read.mjs. Regenerated on demand and large;
+# Flow exports from scripts/figma/read.mjs. Regenerated on demand and large;
 # the converter is the thing worth keeping, not its output.
 app/figma/flows/
+# The icon bundle scripts/figma/icons.mjs writes and deletes, should it die
+# between the two.
+app/.icons.bundle.mjs

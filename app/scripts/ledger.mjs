@@ -4,18 +4,16 @@
    Every balance is read from a ledger of balanced postings now, so this suite
    asks the only question that matters: after doing everything the product can
    do, do the three books still come to nothing? */
-import { chromium } from 'playwright'
-import { seen, verify, settled } from './seen.mjs'
+import { B, launch, check, teardown } from './lib/harness.mjs'
+import { seen, verify, settled } from './lib/seen.mjs'
 
-const B = 'http://localhost:4173/#'
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+const b = await launch()
 const errs = []
-const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
+const ok = check
 const p = await b.newPage({ viewport: { width: 1440, height: 1200 } })
 await seen(p)
 p.on('pageerror', (e) => errs.push(String(e)))
 p.setDefaultTimeout(8000)
-await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 const at = async (r) => { await p.goto(B + r, { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(420) }
 const money = (s) => Number(String(s).replace(/[^0-9.-]/g, '')) || 0
 
@@ -169,7 +167,6 @@ console.log('A MOVEMENT THAT WOULD INVENT MONEY DOES NOT HAPPEN')
 {
   const sp = await b.newPage({ viewport: { width: 1440, height: 1000 } })
   await seen(sp)
-  await sp.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   await sp.goto(B + '/statement', { waitUntil: 'domcontentloaded' }); await sp.waitForTimeout(800)
   const end = await sp.evaluate(() => {
     const main = document.querySelector('.col-main')
@@ -189,4 +186,4 @@ console.log('A MOVEMENT THAT WOULD INVENT MONEY DOES NOT HAPPEN')
 }
 
 console.log('\nerrors:', errs.length ? errs : 'none')
-await b.close()
+await teardown(b)

@@ -1,13 +1,12 @@
 /* The lock. Two questions matter more than whether the pad works: does it
    actually stand in front of every screen, and does it leak what it exists to
    hide. A lock screen with the balance on it is a lock screen for nobody. */
-import { chromium } from 'playwright'
-import { seen, locked } from './seen.mjs'
+import { B, launch, check, teardown } from './lib/harness.mjs'
+import { seen, locked } from './lib/seen.mjs'
 
-const B = 'http://localhost:4173/#'
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+const b = await launch()
 const errs = []
-const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
+const ok = check
 
 const page = async (opts = {}, w = 1440, h = 1000) => {
   const p = await b.newPage({ viewport: { width: w, height: h } })
@@ -15,7 +14,6 @@ const page = async (opts = {}, w = 1440, h = 1000) => {
   else await locked(p, opts.security ?? {})
   p.on('pageerror', (e) => errs.push(String(e)))
   p.setDefaultTimeout(6000)
-  await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   return p
 }
 const at = async (p, r) => {
@@ -87,7 +85,6 @@ console.log('THE WRONG PIN')
   await p.close()
 
   const q = await b.newPage({ viewport: { width: 1440, height: 1000 } })
-  await q.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   await q.goto(B + '/', { waitUntil: 'domcontentloaded' })
   await q.evaluate(() => {
     localStorage.setItem('tokkenly.prefs.v1',
@@ -117,20 +114,40 @@ console.log('THE PASSWORD IS THE WAY BACK')
   await p.locator('.btn', { hasText: 'Sign in with my password' }).click()
   await p.waitForTimeout(400)
   ok('it goes to sign in', /Sign in/.test(await body(p)) && (await p.locator('.auth-card').count()) === 1)
+  // The sandbox takes any password but `wrong` — except here. Signing in is
+  // the way out of five wrong PINs, so here the password is checked: it used
+  // to accept anything, which made the lockout last as long as it took to
+  // type two words into two fields.
+  await p.locator('.auth-card input[type=email]').fill('chinaza.okoro@example.com')
+  await p.locator('.auth-card input[type=password]').fill('not the password at all')
   await p.locator('.auth-card .btn-primary').click()
-  await p.waitForTimeout(500)
+  await p.waitForTimeout(900)
+  ok('a password that is not the account\'s does not clear the lockout',
+     (await p.locator('.auth-card').count()) === 1 && /five wrong PINs/i.test(await body(p)),
+     (await body(p)).slice(0, 80))
+  await p.locator('.auth-card input[type=password]').fill('harmattan evening walk')
+  await p.locator('.auth-card .btn-primary').click()
+  await p.waitForTimeout(900)
   // Getting in with the password is getting in; asking for the PIN straight
   // afterwards is asking the same question twice.
-  ok('and signing in does not then ask for the PIN',
-     (await p.locator('.lock-card').count()) === 0, new URL(p.url()).hash)
+  ok('the account\'s own password does, and does not then ask for the PIN',
+     (await p.locator('.lock-card').count()) === 0 && (await p.locator('.auth-card').count()) === 0,
+     new URL(p.url()).hash)
   await p.close()
 }
 
 console.log('FACE ID  what people actually use, so it is on the screen')
 {
-  const p = await page()
+  // Off unless chosen: it is a simulated biometric, and a stand-in for a
+  // sensor nobody asked for is not offered.
+  const p = await page({ security: { faceId: true } })
   await at(p, '/')
   ok('offered when it is on', (await p.locator('.lock-face').count()) === 1)
+  ok('and it says it is simulated', /simulated/i.test(await p.locator('.lock-face').innerText()))
+  const def = await page()
+  await at(def, '/')
+  ok('and off until somebody turns it on', (await def.locator('.lock-face').count()) === 0)
+  await def.close()
   await p.locator('.lock-face').click()
   await p.waitForTimeout(800)
   ok('and it gets you in', (await p.locator('.lock-card').count()) === 0)
@@ -211,7 +228,6 @@ console.log('BOTH SIZES, BOTH THEMES')
         v.prefs = { ...(v.prefs || {}), theme: '${theme}' }
         localStorage.setItem(k, JSON.stringify(v))
       } catch {}`)
-      await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
       await at(p, '/')
       const fits = await p.evaluate(() => ({
         x: document.documentElement.scrollWidth - document.documentElement.clientWidth,
@@ -227,4 +243,4 @@ console.log('BOTH SIZES, BOTH THEMES')
 }
 
 console.log('\nerrors:', errs.length ? errs : 'none')
-await b.close()
+await teardown(b)

@@ -1,4 +1,5 @@
 import { h } from '../ui'
+import { onTeardown } from '../scope'
 
 /* ---------------------------------------------------------------------------
    A question mark, and the shortest true answer.
@@ -94,19 +95,37 @@ function show(trigger: HTMLElement, spec: Hint): void {
  *  overflow on a phone, a filter, an order. One of these open at a time,
  *  which is the reason it is a module and not a component. */
 export function popover(trigger: HTMLElement, label: string, ...body: (Node | null)[]): void {
-  const panel = h('div', { class: 'pop', role: 'dialog', ariaLabel: label },
+  const panel = h('div', { class: 'pop', role: 'dialog', ariaLabel: label, tabIndex: -1 },
     ...body.filter(Boolean) as Node[])
   document.body.appendChild(panel)
   trigger.setAttribute('aria-expanded', 'true')
 
   place(trigger, panel)
 
+  // Focus goes in. The panel is appended at the end of <body>, so left where
+  // it was, a keyboard user would have to Tab through the whole rest of the
+  // screen to reach it — and a screen reader would never hear that it opened.
+  // Its first control if it has one, the panel itself if it is only words.
+  const inside = (): HTMLElement[] => [...panel.querySelectorAll<HTMLElement>(
+    'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+  ;(inside()[0] ?? panel).focus({ preventScroll: true })
+
   // Anywhere else closes it. `capture` so a press on another control shuts
   // this first and still does its own job — a popover that eats the click
   // that dismissed it makes people press everything twice.
   const away = (e: Event) => { if (!panel.contains(e.target as Node)) closeHint() }
   const key = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') { closeHint(); trigger.focus() }
+    if (e.key === 'Escape') { e.stopPropagation(); closeHint(); trigger.focus(); return }
+    // Tab stays inside while it is open, and wraps. Leaving is Escape or a
+    // press anywhere else — the same two ways out a pointer has.
+    if (e.key === 'Tab' && panel.contains(document.activeElement)) {
+      const items = inside()
+      if (!items.length) { e.preventDefault(); return }
+      const first = items[0], last = items[items.length - 1]
+      const on = document.activeElement
+      if (e.shiftKey && (on === first || on === panel)) { e.preventDefault(); last.focus() }
+      else if (!e.shiftKey && on === last) { e.preventDefault(); first.focus() }
+    }
   }
   const move = () => place(trigger, panel)
   setTimeout(() => document.addEventListener('click', away, true), 0)
@@ -116,17 +135,23 @@ export function popover(trigger: HTMLElement, label: string, ...body: (Node | nu
 
   // The tree is rebuilt on every state change, so the trigger this panel is
   // pinned to is routinely no longer on the page. Without this the panel
-  // outlives the row it was explaining.
-  const watch = setInterval(() => { if (!trigger.isConnected) closeHint() }, 200)
+  // outlives the row it was explaining. It closes when the drawing it was
+  // opened on is replaced (see scope.ts), rather than by checking five times
+  // a second whether it has been.
+  onTeardown(closeHint)
 
   open = () => {
-    clearInterval(watch)
     document.removeEventListener('click', away, true)
     document.removeEventListener('keydown', key)
     removeEventListener('scroll', move, true)
     removeEventListener('resize', move)
+    // Back to what opened it, if focus was still in here — not if the press
+    // that closed it was on some other control, which has focus now and
+    // should keep it.
+    const wasIn = panel.contains(document.activeElement)
     panel.remove()
     trigger.setAttribute('aria-expanded', 'false')
+    if (wasIn && trigger.isConnected) trigger.focus({ preventScroll: true })
   }
 }
 

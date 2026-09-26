@@ -9,6 +9,26 @@
 *Source: HackMD, by Emmanuel Doji (Tokkenly_PRD_v3_UIUX.md). Transcribed into the
 repository so the product definition lives with the product.*
 
+## Where the product has moved on from this document
+
+*Added 26 September 2026.* This PRD is kept as it was written, because it
+records the intent the product started from. The build in `app/` and its design
+record, `design.md`, are the later decisions, and they differ from it in the
+places below. Where the two disagree, the product and `design.md` describe what
+exists; this document describes what was first asked for.
+
+| PRD says | The product does | Where |
+| --- | --- | --- |
+| §2 and §8: borrowing against eligible assets is future roadmap ("later"), and future functionality must not be designed as if it were available. | Borrow, Repay, Lend (earning on idle dollars) and Take out ship as working flows under **Borrow & Lend**, with a credit line, collateral cover and interest. The rates and the collateral ratio are invented. | `app/src/screens/grow.ts`; design.md 11b.4f |
+| §6: primary navigation is four places, Home \| Spend \| Invest \| Account, with Hold folded into Home. | On desktop the sidebar has seven places, Home, Invest, Wallet, Borrow & Lend, Spend, Activity and Account, plus the Bucket. On a phone the rail has four tabs, Home, Invest, Wallet and Borrow & Lend, and Spend, Activity and Account sit behind More. Hold has its own place, Wallet. | `app/src/components/shell.ts`; design.md 11b, 11e |
+| §5.6: mobile first. | The product was designed desktop first (the `06 Desktop` pages of the Figma file) and the phone (`07 Mobile`) is the same codebase below a 900px breakpoint. Both are built and tested. | `app/README.md`; `app/src/responsive.ts` |
+| §9: Spend (airtime, data, electricity) is being built. | Airtime, data and electricity work end to end against invented billers and prices. | `app/src/screens/spend.ts` |
+| §8.2: the current investment product is tokenized stocks. | Tokenized stocks, ETFs and index products are all browsable and buyable. | `app/src/catalogue.ts`, `app/src/indices.ts` |
+| §6: Spend holds convert, send and future cards. | Send and Convert are places of their own rather than parts of Spend, which is bills. | `app/src/screens/money.ts`, `app/src/screens/convert.ts` |
+
+Nothing here is connected to real money. Every price, rate and counterparty in
+`app/` is invented, as design.md 11b.4f records.
+
 ## 1. Product Overview
 
 Tokkenly is a stablecoin neobank designed for people who already earn, hold, and

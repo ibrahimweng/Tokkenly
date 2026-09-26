@@ -3,7 +3,8 @@ import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, kv, emptyState, fieldError } from '../components/bits'
 import { find, aboutTheAmount } from '../catalogue'
-import { state, actions, bucketTotal, bucketShortfall, bucketRefusals, bucketCost, tradeFee, priced} from '../state'
+import { state, actions, bucketTotal, bucketShortfall, bucketRefusals, bucketCost, tradeFee, priced, purseHolds, payAsset, movementCeiling } from '../state'
+import { assetOf } from '../assets'
 import { usd, shares as fmtShares } from '../format'
 import { go, openSheet } from '../router'
 
@@ -105,6 +106,12 @@ export function bucketScreen(): HTMLElement {
       stop = `That is ${usd(short)} more than you have.`
       label = 'Add ' + usd(short) + ' to cover this'
       act = () => go('/addmoney')
+    } else if (bucketCost() > movementCeiling()) {
+      // The limit applies to the bucket as one payment. It used to be paid
+      // through a door the limit never looked at.
+      stop = `That is over what you can move right now: ${usd(movementCeiling())}.`
+      label = 'Buy all ' + state.bucket.length
+      act = () => undefined
     } else if (sized.length) {
       const one = sized[0]
       const name = one.c?.name ?? one.item.ticker
@@ -123,9 +130,11 @@ export function bucketScreen(): HTMLElement {
       kv('Investment', usd(total)),
       kv('Fee', `${usd(tradeFee(total))} · ${state.fees.trade}%`),
       kv('Total', usd(bucketCost())),
-      kv('Cash you have', usd(state.cash)),
+      // The balance that pays, not both stablecoins together: the bucket is
+      // one payment out of one of them.
+      kv('Your ' + assetOf(payAsset())!.name, usd(purseHolds(payAsset()))),
       // The question you are actually asking while you fill a bucket.
-      kv('Left after', stop ? '—' : usd(state.cash - bucketCost())),
+      kv('Left after', stop ? '—' : usd(purseHolds(payAsset()) - bucketCost())),
       stop
         ? fieldError(h('span', { html: icon.alert() }), h('span', { text: stop }))
         : h('span', { class: 'muted t-caption',

@@ -21,22 +21,18 @@
    ones. Worth repeating by hand when a variant is re-fitted; not worth three
    screenshots and a pixel walk per slab on every sweep.
 
-   Wants the site on 4321, which an app sweep does not start, hence the
-   `_site` prefix that tells all.sh to leave it alone:
+   Wants the site on SITE_URL (default :4321), which an app sweep does not
+   start, hence the `_site` prefix that tells all.sh to leave it alone:
 
-     (cd site && python3 -m http.server 4321) &
-     node app/scripts/_sitecta.mjs [base-url]
-*/
-import { chromium } from 'playwright'
+     npx serve site -l 4321 &
+     node app/scripts/_sitecta.mjs
 
-const BASE = (process.argv[2] ?? 'http://localhost:4321').replace(/\/$/, '')
-const PAGES = ['index.html', 'about.html', 'blog.html', 'contact.html', 'terms.html', 'privacy.html',
-  ...['tokenized-stocks', 'gifting-and-rewards', 'receive', 'send',
-      'pay-bills', 'convert', 'earn', 'borrow'].map((s) => `products/${s}.html`)]
+   The pages are every page the site has, read from _sitelib.mjs, which reads
+   the product list from the copy the product pages are built from. A page
+   that does not answer 200 is a FAIL, not a quiet "no close". */
+import { launch, open, ok, summary, PAGES } from './_sitelib.mjs'
 
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
-let bad = 0
-const ok = (c, m) => { console.log(`${c ? '  ok  ' : '  FAIL'}  ${m}`); if (!c) bad++ }
+const b = await launch()
 
 for (const w of [1440, 834, 390]) {
   console.log(`\n=== ${w} ===`)
@@ -46,7 +42,7 @@ for (const w of [1440, 834, 390]) {
     /* domcontentloaded, not load: nothing here reads a pixel, and the props
        are lazy, so waiting for every image on the page is waiting for nothing
        this test is going to ask about. */
-    await p.goto(`${BASE}/${page}`, { waitUntil: 'domcontentloaded' })
+    try { await open(p, page, { waitUntil: 'domcontentloaded' }) } catch (e) { ok(false, e.message); continue }
     const r = await p.evaluate(() => {
       const sec = document.querySelector('.closing')
       if (!sec) return { none: true }
@@ -84,5 +80,4 @@ for (const w of [1440, 834, 390]) {
   await p.close()
 }
 await b.close()
-console.log(`\n${bad ? 'FAIL=' + bad : 'FAIL=0'}`)
-process.exit(bad ? 1 : 0)
+summary()

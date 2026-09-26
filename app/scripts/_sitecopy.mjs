@@ -5,10 +5,14 @@
  *  of the document is in it, rather than trusting that nobody tidied a
  *  sentence on the way past.
  *
- *    node scripts/_sitecopy.mjs            # site served on :4321
+ *    node scripts/_sitecopy.mjs            # site served on SITE_URL
+ *
+ *  copy.txt started as the document as delivered and now carries the page as
+ *  it was deliberately changed since — its header says which commits did
+ *  that. A line starting with # is a note in it, not copy.
  */
-import { chromium } from 'playwright'
 import { readFileSync } from 'fs'
+import { BASE, launch, open } from './_sitelib.mjs'
 
 const copy = readFileSync(new URL('../../site/copy.txt', import.meta.url), 'utf8')
 
@@ -29,27 +33,9 @@ const norm = (s) => s
   .replace(/\s+/g, ' ')
   .trim()
 
-/* Six product headings the document writes as "Name: sentence". Asked for
- *  explicitly: each card heading has to read as one complete phrase and sit on
- *  a single line. These six are therefore the only places the page departs
- *  from the document, and they are listed here rather than dropped, so the
- *  deviation stays visible and everything else is still checked as written. */
-const REWRITTEN = new Map([
-  ['Receive: Make room for money coming in.', 'Receive and send money'],
-  ['Send: For the people and plans that matter.', 'Receive and send money'],
-  ['Pay bills: Life keeps moving. Keep it connected.', 'Pay your bills'],
-  ['Earn: Give your spare money something to do.', 'Borrow and earn'],
-  ['Borrow: A little room for your next move.', 'Borrow and earn'],
-  ['Convert: Naira or stablecoins. Move between them.', 'Convert Naira to USD'],
-  /* Receive and Send are one card now, and so are Borrow and Earn, so two of
-     the document's six link labels are carried by the merged card's link. */
-  ['Explore Send', 'Explore Receive and Send'],
-  ['Explore Earn', 'Explore Borrow and Earn'],
-])
-
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+const browser = await launch()
 const p = await browser.newPage({ viewport: { width: 1440, height: 900 } })
-await p.goto('http://localhost:4321/', { waitUntil: 'networkidle' })
+await open(p, '/', { waitUntil: 'networkidle' })
 const page = norm(await p.evaluate(() => {
   document.querySelectorAll('details').forEach((d) => { d.open = true })
   document.getElementById('products-menu').hidden = false
@@ -59,37 +45,33 @@ const page = norm(await p.evaluate(() => {
   const off = document.createElement('style')
   off.textContent = '*{text-transform:none!important}'
   document.head.appendChild(off)
-  return document.body.innerText
+  /* The gifting card shows one of its two states at a time and innerText
+     skips the one that is not drawn, so both panels' words are added. */
+  return document.body.innerText + '\n' +
+    [...document.querySelectorAll('.gr-panel')].map((el) => el.textContent).join('\n')
 }))
 await browser.close()
 
 const missing = []
 let checked = 0
-let rewritten = 0
 for (const raw of copy.split('\n')) {
   let line = norm(raw.replace(/^﻿/, ''))
-  if (!line || STRUCTURE.has(line)) continue
+  if (!line || line.startsWith('#') || STRUCTURE.has(line)) continue
   line = line.replace(LABEL, '').replace(/^\d+\.\s*/, '')
   /* A "·"-separated run is a list of separate items; a sentence is not. */
   const parts = line.includes('·') ? line.split('·').map((s) => s.trim()) : [line]
   for (const part of parts) {
     if (!part) continue
     checked++
-    const swap = REWRITTEN.get(part)
-    if (swap !== undefined) {
-      rewritten++
-      if (!page.includes(norm(swap))) missing.push(`${part}  ->  ${swap}`)
-      continue
-    }
     if (!page.includes(norm(part))) missing.push(part)
   }
 }
 
 console.log(`checked ${checked} pieces of copy from site/copy.txt`)
-console.log(`${rewritten} of them are the product headings rewritten to one line`)
 if (missing.length) {
   console.log(`\nNOT FOUND ON THE PAGE (${missing.length}):`)
   for (const m of missing) console.log('  - ' + m.slice(0, 130))
-  process.exit(1)
+  process.exitCode = 1
+} else {
+  console.log('every one of them appears on the page, as written')
 }
-console.log('every one of them appears on the page, as written')

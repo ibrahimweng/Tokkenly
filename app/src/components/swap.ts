@@ -98,7 +98,10 @@ function sideRow(o: {
 
   const el = h('div', { class: 'swap-row' },
     h('div', { class: 'swap-head' },
-      h('span', { class: 't-caps subtle', text: o.label }),
+      // --muted, not --subtle: the row is --control, and --subtle on it is
+      // 4.21:1 in dark, under the 4.5 a 12px label needs. 11g.36 made the
+      // same measurement for the timeframe strip.
+      h('span', { class: 't-caps muted', text: o.label }),
       // The balance sits with the token it belongs to, which is the only
       // place it means anything. Dropping the rail took the balances off the
       // screen; this puts them back where they are read rather than where

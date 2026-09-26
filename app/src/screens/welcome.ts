@@ -126,7 +126,7 @@ export function welcomeScreen(at: number): HTMLElement {
   const done = (to: string) => () => { actions.finishIntro(); go(to) }
   const note = s.note?.() ?? null
 
-  return h('div', { class: 'welcome' + (s.lead ? ' lead' : '') + (s.pick ? ' picking' : '') },
+  return h('main', { class: 'welcome' + (s.lead ? ' lead' : '') + (s.pick ? ' picking' : '') },
     h('header', { class: 'welcome-top' },
       h('div', { class: 'brand' },
         h('span', { class: 'brand-mark', text: 'T' }), h('strong', { text: 'Tokkenly' })),

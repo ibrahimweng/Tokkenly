@@ -9,13 +9,14 @@
   gap: 24px;
   position: sticky;
   top: 0;
-  height: 100vh;
+  height: 100vh; height: 100dvh;
 }
 .brand { display: flex; align-items: center; gap: 12px; padding: 4px; }
 .brand-mark {
-  width: 28px; height: 28px; border-radius: 8px;
+  /* 32, the mark 11b.2 draws; it was 28. */
+  width: 32px; height: 32px; border-radius: 8px;
   background: var(--inverse); color: var(--on-inverse);
-  display: grid; place-items: center; font-weight: 600; font-size: 13px;
+  display: grid; place-items: center; font-weight: 600; font-size: 14px;
 }
 .nav { display: flex; flex-direction: column; gap: 4px; }
 
@@ -32,10 +33,15 @@
 .side-foot { margin-top: auto; flex: none; display: flex; flex-direction: column; gap: 20px; }
 .nav-row {
   display: flex; align-items: center; gap: 12px;
-  padding: 10px 12px; border-radius: 12px;
+  /* A pill, like every row 11b.2 draws in the sidebar — and like every other
+     thing in the product you press (rule 6). It was a 12px rounded box. */
+  padding: 10px 16px; border-radius: var(--r-pill);
   color: var(--muted); width: 100%; text-align: left;
 }
-.nav-row[aria-current='page'] { background: var(--control); color: var(--ink); font-weight: 600; }
+/* The place you are in, in the inverse fill 11b.2 gives the selected item:
+   the same object a chosen chip is, so "this one" looks the same wherever the
+   product says it. It was the control grey, which is what hover is. */
+.nav-row[aria-current='page'] { background: var(--inverse); color: var(--on-inverse); font-weight: 600; }
 .nav-row .ic { width: 18px; height: 18px; flex: none; opacity: 0.9; }
 .nav-gap { height: 12px; }
 
@@ -44,7 +50,7 @@
    the tab order and leave it unreachable — which is the one thing a skip link
    must not be. */
 .skip {
-  position: fixed; top: 12px; left: 12px; z-index: 90;
+  position: fixed; top: 12px; left: 12px; z-index: var(--z-skip);
   transform: translateY(-200%);
   /* It is a button, so it is a pill (rule 6) and it has no outline (rule 13).
      It floats, so the shadow is what separates it from whatever it lands on
@@ -81,17 +87,20 @@
   color: var(--subtle); opacity: 0; transition: opacity var(--t-fast) var(--ease);
 }
 .promo-shut svg { width: 14px; height: 14px; }
-.promo:hover .promo-shut, .promo-shut:focus-visible { opacity: 1; }
-@media (hover: none) { .promo-shut { opacity: 1; } }
+.promo-shut:focus-visible { opacity: 1; }
+@media (hover: hover) and (pointer: fine) { .promo:hover .promo-shut { opacity: 1; } }
+/* Without a fine pointer there is no hover to reveal it, so it is simply
+   there — the same test the hover rules use, turned round. */
+@media not ((hover: hover) and (pointer: fine)) { .promo-shut { opacity: 1; } }
 .promo-shut:active { background: var(--control-pressed); color: var(--ink); }
 
 .promo-badge {
   width: 32px; height: 32px; border-radius: 10px; background: var(--control);
   display: grid; place-items: center;
 }
-.promo-title { margin: 0; font-size: 15px; line-height: 20px; font-weight: 600; }
+.promo-title { margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; }
 .promo p { margin: 0; color: var(--muted); font-size: 12px; line-height: 16px; }
-.promo button { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 13px; }
+.promo button { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 14px; }
 
 .whoami {
   display: flex; align-items: center; gap: 12px; padding: 8px;
@@ -100,7 +109,7 @@
 .avatar {
   width: 32px; height: 32px; border-radius: 999px; background: var(--inverse);
   color: var(--on-inverse); display: grid; place-items: center;
-  font-size: 11px; font-weight: 600; flex: none;
+  font-size: 12px; font-weight: 600; flex: none;
 }
 
 /* -------------------------------------------------- borrowing and lending --
@@ -116,7 +125,12 @@
    slipped, not as a pair. The mirror is now the field itself — flipped, and in
    the other colour — rather than which end of the card it is at. */
 .row.prods { align-items: stretch; }
-.card.prod { padding: 0; overflow: hidden; gap: 0; flex: 1 1 0; min-width: 0; }
+/* Side by side from the tablet up; stacked on a phone, where the row's own
+   rule makes every child full width. The flex is scoped rather than fought:
+   written for every width, it outweighed the phone's stacking rule and the two
+   cards collapsed to nothing. */
+.card.prod { padding: 0; overflow: hidden; gap: 0; min-width: 0; }
+@media (min-width: 900px) { .card.prod { flex: 1 1 0; } }
 .card.prod > *:not(.prod-art) { padding-inline: 24px; }
 .card.prod > .stack-8:first-child { padding-top: 24px; }
 /* A button that is width:100% and also has side margins is 48px wider than
@@ -151,11 +165,11 @@
 /* The name of the thing, at the size a name gets. It used to be the eyebrow —
    eleven pixels of caps, the quietest type on the card, carrying the one word
    somebody actually needs. */
-.prod-title { margin: 0; font-size: 28px; line-height: 34px; font-weight: 600; letter-spacing: -0.01em; }
+.prod-title { margin: 0; font-size: 28px; line-height: 36px; font-weight: 600; letter-spacing: -0.01em; }
 /* The one sentence under the name. It is support, so it sits at body size and
    in grey: it used to be 20px semibold, which made it compete with the thing
    it was supporting. */
-.prod-say { margin: 0; font-size: 15px; line-height: 22px; }
+.prod-say { margin: 0; font-size: 14px; line-height: 20px; }
 /* A label and its question mark travel together. */
 .kv-key { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
 
@@ -163,7 +177,7 @@
    Smaller than a hero figure on purpose: the card is a door with your position
    written on the handle, not a dashboard. */
 .prod-standing { display: flex; flex-direction: column; gap: 4px; padding-bottom: 4px; }
-.prod-figure { font-size: 28px; line-height: 34px; font-weight: 600; letter-spacing: -0.02em; }
+.prod-figure { font-size: 28px; line-height: 36px; font-weight: 600; letter-spacing: -0.02em; }
 .prod-figure.warn { color: var(--warning); }
 
 /* The card does not answer to the pointer. Only the button does.
@@ -188,8 +202,8 @@
      are on the first screen. */
   .prod-art { height: 168px; }
   .prod-art svg { width: 152px; height: 152px; }
-  .prod-title { font-size: 24px; line-height: 30px; }
-  .prod-figure { font-size: 24px; line-height: 30px; }
+  .prod-title { font-size: 20px; line-height: 28px; }
+  .prod-figure { font-size: 20px; line-height: 28px; }
 }
 
 /* Six short answers, in as many columns as the width can carry a sentence in.
@@ -225,9 +239,10 @@
 /* Not yet read. A dot rather than a weight change, so the row does not shift
    when it is read. */
 .feed-row.unread .feed-ic { color: var(--ink); }
-.feed-row.unread .feed-told { color: var(--brand); }
+.feed-row.unread .feed-told { color: var(--positive); }
+.unread-dot { width: 8px; height: 8px; border-radius: var(--r-pill); background: var(--positive); flex: none; }
 .feed-row .set-chev { flex: none; }
-@media (hover: hover) { .feed-row:hover { background: var(--sunken-hover); } }
+@media (hover: hover) and (pointer: fine) { .feed-row:hover { background: var(--sunken-hover); } }
 @media (max-width: 899px) {
   .feed-row { padding: 12px 8px; margin-inline: -8px; min-height: 44px; }
 }
@@ -241,6 +256,26 @@
 }
 .row-figure > * { white-space: nowrap; }
 .row-trail { flex: none; display: inline-flex; }
+/* The row with a control at its end (see listOf in table.ts). The row is the
+   box; the destination is a button laid over all of it through its ::after,
+   so a press anywhere on the row still opens it; and the trailing control
+   is lifted above that layer so it stays its own target. */
+.feed-split { position: relative; padding-block: 0; }
+/* The row's height is the button's, so the thing a thumb presses is as tall
+   as the row it sees: the vertical padding moves from the row onto it. */
+.feed-go {
+  flex: 1 1 auto; min-width: 0; align-self: stretch; padding-block: 12px; min-height: 44px;
+  display: flex; align-items: center; gap: 12px; text-align: left;
+}
+.feed-go::after { content: ''; position: absolute; inset: 0; border-radius: 14px; }
+.feed-split .row-trail { position: relative; z-index: 1; }
+/* The ring goes round the row, which is what the button stands for, rather
+   than round the part of it the button's own box happens to cover. */
+.feed-go:focus-visible { outline: none; }
+.feed-go:focus-visible::after { outline: 2px solid var(--positive); outline-offset: 2px; border-radius: 14px; }
+/* The same idea on a desktop table: the first cell's words are a button, so
+   a keyboard can reach the row at all. It looks like the words it wraps. */
+.row-go { display: block; width: 100%; text-align: inherit; border-radius: 6px; }
 
 /* The order control, beside the list rather than on a column head. */
 .chip.sort-by { gap: 6px; }
@@ -255,7 +290,6 @@
   padding: 20px;
   display: flex; flex-direction: column; gap: 16px;
 }
-.card.tight { padding: 16px; }
 /* A head is a label and, often, a control beside it. On a narrow card the two
    have nowhere to go, so the control drops to its own line rather than pushing
    the page sideways. */
@@ -274,6 +308,11 @@
    side of a card is worse than one that takes two lines. */
 .kv { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; row-gap: 4px; }
 .kv > * { min-width: 0; }
+/* A row that goes somewhere: a company in a list, a position. A link rather
+   than a div with a click on it, so the keyboard can reach it too; it keeps
+   the row's look and borrows the feed's hover. */
+.kv-link { padding: 6px 12px; margin: -6px -12px; border-radius: 14px; }
+@media (hover: hover) and (pointer: fine) { .kv-link:hover { background: var(--sunken-hover); } }
 /* A value and the control that changes it. The long value is an email address,
    and at 320 it and its Change button do not fit on one line — so they wrap,
    and the address itself may break rather than run off the card. */
@@ -288,7 +327,7 @@
 .callout {
   display: flex; gap: 12px; align-items: flex-start;
   background: var(--tint-brand); border-radius: var(--r-panel);
-  padding: 16px 20px; color: var(--muted); font-size: 13px; line-height: 18px;
+  padding: 16px 20px; color: var(--muted); font-size: 14px; line-height: 20px;
 }
 .callout.warning { background: var(--tint-warning); color: var(--warning); }
 .callout .ic { flex: none; margin-top: 1px; }
@@ -300,7 +339,7 @@
 .hold {
   display: flex; gap: 12px; align-items: center;
   background: var(--tint-brand); border-radius: var(--r-panel);
-  padding: 14px 20px; color: var(--muted); font-size: 13px; line-height: 18px;
+  padding: 14px 20px; color: var(--muted); font-size: 14px; line-height: 20px;
 }
 .hold .ic { flex: none; }
 .hold.expired { background: var(--tint-warning); color: var(--warning); }
@@ -329,7 +368,7 @@
    the row away. It takes a surface only under the pointer. */
 .task .task-close { flex: none; background: transparent; }
 .task .task-close svg { width: 14px; height: 14px; }
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
   .task .task-close:hover { background: var(--sunken); color: var(--ink); }
 }
 .task .task-ic {
@@ -346,7 +385,7 @@
    fuller the sheet, the shorter the button, which is backwards. The buy sheet
    on a phone measured 30px and the Send dialog on a 1366x768 laptop measured
    20px, both of them the one control the screen exists to offer. Anything
-   that genuinely needs to flex says so after this rule; .btn-wide does. */
+   that genuinely needs to flex says so after this rule. */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   height: 56px; padding: 0 24px; border-radius: var(--r-pill);
@@ -361,13 +400,19 @@
 /* Danger is quiet on purpose. Signing out everywhere matters, but a filled
    orange button shouts louder than the action deserves. */
 .btn-destructive { background: var(--control); color: var(--negative); }
+/* Inverse (8.1): the button for a deep ground, where a dark one disappears.
+   Nothing draws one today, and it stays: it is one of the five variants the
+   file names, and states.mjs holds it to the file. */
 .btn-inverse { background: var(--sand); color: var(--ink); }
 .btn-sm { height: 40px; padding: 0 18px; width: auto; }
 .btn[disabled] { background: var(--off); color: var(--off-ink); cursor: not-allowed; }
 
 .chip {
-  height: 32px; padding: 0 16px; border-radius: var(--r-pill);
-  background: var(--control); color: var(--muted); font-size: 13px; font-weight: 600;
+  /* 8.5a: 32 tall, 12 at the sides, the label in Label (12/16), and the
+     strong ink on the control grey — a chip is a control, and --muted on it
+     read as a chip that was switched off. */
+  height: 32px; padding: 0 12px; border-radius: var(--r-pill);
+  background: var(--control); color: var(--ink); font-size: 12px; line-height: 16px; font-weight: 600;
   /* A chip can carry a count beside its label. Inline-flex rather than the
      block default, so the two sit on the baseline instead of stacking. */
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -382,13 +427,16 @@
 .chip-only .ic { display: inline-flex; opacity: 0.35; }
 .chip-only .ic svg { width: 14px; height: 14px; }
 .chip-only[aria-pressed='true'] .ic { opacity: 1; }
-/* The rule between the two questions. Hairline, full height of the row. */
-.chip-split { width: 1px; align-self: stretch; flex: none; background: var(--grid); margin: 0 2px; }
+/* The break between the two questions: space, not a hairline (rule 13).
+   Three times the gap between chips, so the two groups read as two. */
+.chip-split { width: 16px; flex: none; }
 
 /* A tab whose rail operations has turned off. Present, named, and saying so,
-   rather than gone. */
-.chip.off { opacity: 0.5; cursor: not-allowed; gap: 6px; }
-.chip.off small { color: var(--warn); font-weight: 600; }
+   rather than gone. In the disabled colours rather than at half opacity:
+   rule 28 does not let text recede by fading, and 8.1 says a disabled thing
+   is inert, not faded. */
+.chip.off { background: var(--off); color: var(--off-ink); cursor: not-allowed; gap: 6px; }
+.chip.off small { color: var(--warning); font-weight: 600; }
 
 /* ---------- search ----------
    The field, and the panel of closest matches under it. The panel is absolute
@@ -396,7 +444,7 @@
    pushes the results down the screen is a list fighting itself. */
 .search { position: relative; }
 .suggest {
-  position: absolute; left: 0; right: 0; top: calc(100% + 8px); z-index: 40;
+  position: absolute; left: 0; right: 0; top: calc(100% + 8px); z-index: var(--z-overlay);
   background: var(--surface);
   border-radius: var(--r-panel); padding: 8px;
   /* Rule 12 gives a floating element a shadow and rule 13 takes its outline
@@ -412,7 +460,7 @@
   min-height: 44px; padding: 8px 12px; border-radius: 10px;
   text-align: left; font-size: 14px; color: var(--ink);
 }
-.suggest-row .suggest-hint { flex: none; font-size: 13px; }
+.suggest-row .suggest-hint { flex: none; font-size: 14px; }
 .suggest-row .two-line small { font-size: 12px; line-height: 16px; }
 /* The keyboard cursor and the pointer land on the same treatment, so moving
    between the two does not look like two different lists. */
@@ -421,10 +469,19 @@
 
 .field {
   display: flex; align-items: center; gap: 12px;
-  height: 48px; padding: 0 20px; border-radius: var(--r-panel);
+  /* 56, the field 8.6 and size/field draw; it was 48. */
+  height: 56px; padding: 0 20px; border-radius: var(--r-panel);
   background: var(--control); color: var(--ink); width: 100%;
 }
 .field input { width: 100%; }
+/* Focused, the field takes a 2px ring — design.md 8.6 — on the field rather
+   than the input, so the ring is the shape the person sees as the field. An
+   inset box-shadow rather than an outline so the error ring below can take
+   its place without the two stacking. A select only rings for the keyboard,
+   the same as any other control. */
+.field:has(input:focus, textarea:focus, select:focus-visible) {
+  box-shadow: inset 0 0 0 2px var(--positive);
+}
 /* a placeholder is text someone has to read to know what the field wants */
 .field input::placeholder { color: var(--muted); }
 
@@ -447,7 +504,7 @@
 }
 .pay-tile .two-line { min-width: 0; }
 .pay-tile small { color: var(--muted); }
-@media (max-width: 1180px) { .pay-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 1199px) { .pay-grid { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 899px) { .pay-grid { grid-template-columns: repeat(2, 1fr); } }
 
 /* ---------- amount composer ---------- */
@@ -456,6 +513,9 @@
   background: var(--control); border-radius: var(--r-panel);
   padding: 8px 24px; display: flex; align-items: center; justify-content: center;
 }
+/* Ringed as a field is, and for the same reason: the box is the control. */
+.amount-box:has(input:focus) { box-shadow: inset 0 0 0 2px var(--positive); }
+.amount-box input:focus { outline: none; }
 .amount-box input {
   font-size: 40px; line-height: 52px; font-weight: 600; letter-spacing: -0.02em;
   text-align: center; width: 260px;
@@ -463,8 +523,22 @@
 /* The same control inside a dialog, where 52px of line height plus the panel
    it sits in is most of item 61's ceiling on its own. */
 .sheet .amount-box { padding: 4px 16px; }
-.sheet .amount-box input { font-size: 30px; line-height: 40px; width: 180px; }
+.sheet .amount-box input { font-size: 36px; line-height: 40px; width: 220px; }
 .amount-note { color: var(--muted); font-size: 12px; }
+
+/* What a fall does, what a balance pays, what a repayment leaves: a real
+   table of three columns (scenarios() in composer.ts). No lines (rule 13) —
+   the columns align and the rows are spaced, which is all a table of three
+   needs. The first two columns hold figures and sit right, so a column of
+   amounts lines up on its last digit. */
+.scenarios { width: 100%; border-collapse: collapse; }
+.scenarios caption { text-align: left; padding-bottom: 12px; }
+.scenarios th { text-align: right; padding: 0 0 8px; font: inherit; }
+.scenarios th { font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--subtle); }
+.scenarios td { text-align: right; padding: 4px 0; vertical-align: baseline; }
+.scenarios th:first-child, .scenarios td:first-child { width: 110px; }
+.scenarios th:nth-child(2), .scenarios td:nth-child(2) { width: 140px; }
+.scenarios th + th, .scenarios td + td { padding-left: 12px; }
 
 /* ---------- which balance, and which network ----------
    One row of pills, each carrying a name and the fact you are choosing on:
@@ -479,22 +553,24 @@
 .pay-row { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px; }
 .pay-pill {
   display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
-  min-height: 52px; padding: 8px 12px; border-radius: var(--r-panel);
+  /* A pill, as its name says and rule 6 asks of anything pressed. It was a
+     16px rounded box; the sides grow to 20 so the words clear the curve. */
+  min-height: 52px; padding: 8px 20px; border-radius: var(--r-pill);
   background: var(--control); color: var(--ink); text-align: left;
   min-width: 0;
 }
 .pay-pill small { color: var(--muted); font-size: 12px; line-height: 16px; }
-.pay-pill .t-body-strong { font-size: 13px; line-height: 18px; }
+.pay-pill .t-body-strong { font-size: 14px; line-height: 20px; }
 .pay-pill > * { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-@media (hover: hover) { .pay-pill:hover { background: var(--control-pressed); } }
+@media (hover: hover) and (pointer: fine) { .pay-pill:hover { background: var(--control-pressed); } }
 /* Chosen, and marked the way every other choice in the product is marked: the
    chip's own fill. A border would have been a line, and rule 13 says there are
    no lines — which was the right answer here anyway, because only one of the
    three is ever filled and one filled pill among three is not three primary
    buttons. */
 .pay-pill[aria-pressed='true'] { background: var(--inverse); color: var(--on-inverse); }
-.pay-pill[aria-pressed='true'] small { color: var(--on-inverse); opacity: 0.72; }
-@media (hover: hover) { .pay-pill[aria-pressed='true']:hover { background: var(--inverse-hover); } }
+.pay-pill[aria-pressed='true'] small { color: var(--on-inverse-muted); }
+@media (hover: hover) and (pointer: fine) { .pay-pill[aria-pressed='true']:hover { background: var(--inverse-hover); } }
 /* A balance that cannot cover what was typed. Still pressable — pressing it is
    how somebody finds out what it would take — and it says which it is. */
 .pay-pill.short small { color: var(--warning); }
@@ -510,7 +586,7 @@
   flex-direction: row; align-items: baseline; justify-content: space-between;
   gap: 6px; min-height: 44px; padding: 6px 10px;
 }
-.sheet .pay-pill small { font-size: 11px; }
+.sheet .pay-pill small { font-size: 12px; }
 /* The name keeps its width and the figure takes what is left. The other way
    round put an ellipsis through "USDC" while leaving room for cents nobody
    reads at this size. */
@@ -533,7 +609,7 @@
 .table-scroll { overflow-x: auto; overscroll-behavior-x: contain; }
 .table { width: 100%; border-collapse: collapse; }
 .table th {
-  text-align: left; font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+  text-align: left; font-size: 12px; font-weight: 600; letter-spacing: 0.08em;
   text-transform: uppercase; color: var(--subtle); padding: 0 0 8px; font-family: var(--font);
 }
 .table td { padding: 12px 0; vertical-align: middle; }
@@ -590,14 +666,14 @@
 /* ---------- sheets ---------- */
 .scrim {
   position: fixed; inset: 0; background: var(--scrim);
-  display: grid; place-items: center; padding: 24px; z-index: 40;
-  animation: fade 140ms ease-out;
+  display: grid; place-items: center; padding: 24px; z-index: var(--z-overlay);
+  animation: fade var(--t-base) var(--ease);
 }
 .sheet {
-  width: 480px; max-width: 100%; max-height: calc(100vh - 48px); overflow: auto;
+  width: 480px; max-width: 100%; max-height: calc(100vh - 48px); max-height: calc(100dvh - 48px); overflow: auto;
   background: var(--sunken); border-radius: var(--r-sheet); padding: 32px;
   display: flex; flex-direction: column; gap: 24px;
-  animation: rise 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation: rise var(--t-base) var(--ease);
 }
 .sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .sheet-head h2 { margin: 0; font-size: 18px; line-height: 24px; font-weight: 600; }
@@ -621,10 +697,10 @@
    under it, so the panel stays one object and the fold reads as part of it. */
 .panel-more {
   grid-column: 1 / -1; justify-self: start; text-align: left;
-  color: var(--muted); font-size: 13px; font-weight: 600;
+  color: var(--muted); font-size: 14px; font-weight: 600;
   text-decoration: underline; text-underline-offset: 3px;
 }
-@media (hover: hover) { .panel-more:hover { color: var(--ink); } }
+@media (hover: hover) and (pointer: fine) { .panel-more:hover { color: var(--ink); } }
 @media (max-width: 899px) { .panel-more { min-height: 44px; } }
 @media (max-width: 899px) {
   .panel { padding: 16px; gap: 16px; }
@@ -761,6 +837,19 @@
   overflow: visible;
   isolation: isolate;
   animation: beam-in 600ms ease forwards;
+  /* The eight blobs the edge and the core are both painted with. Written
+     once: they were the same eight lines twice, and a number changed in one
+     and not the other would pull the ring off its own glow. Resolved here,
+     where beam.ts writes the numbers that breathe, and inherited by both. */
+  --beam-blobs:
+    radial-gradient(ellipse calc(23.0% * var(--bw1)) calc(9.5% * var(--bh1) * var(--bgh)) at calc(27% + var(--bx1)) calc(0% + var(--by1)), rgba(var(--beam-0), var(--bop-tl)), transparent),
+    radial-gradient(ellipse calc(21.3% * var(--bw2)) calc(5.5% * var(--bh2) * var(--bgh)) at calc(73% + var(--bx2)) calc(-1% + var(--by2)), rgba(var(--beam-6), var(--bop-tr)), transparent),
+    radial-gradient(ellipse calc(4.3% * var(--bw3)) calc(22.0% * var(--bh3) * var(--bgh)) at calc(100% + var(--bx3)) calc(33% + var(--by3)), rgba(var(--beam-7), var(--bop-tr)), transparent),
+    radial-gradient(ellipse calc(5.5% * var(--bw1)) calc(19.0% * var(--bh1) * var(--bgh)) at calc(101% + var(--bx1)) calc(72% + var(--by1)), rgba(var(--beam-8), var(--bop-br)), transparent),
+    radial-gradient(ellipse calc(24.1% * var(--bw2)) calc(6.5% * var(--bh2) * var(--bgh)) at calc(67% + var(--bx2)) calc(100% + var(--by2)), rgba(var(--beam-4), var(--bop-br)), transparent),
+    radial-gradient(ellipse calc(17.2% * var(--bw3)) calc(10.5% * var(--bh3) * var(--bgh)) at calc(24% + var(--bx3)) calc(101% + var(--by3)), rgba(var(--beam-1), var(--bop-bl)), transparent),
+    radial-gradient(ellipse calc(4.9% * var(--bw1)) calc(20.0% * var(--bh1) * var(--bgh)) at calc(0% + var(--bx1)) calc(60% + var(--by1)), rgba(var(--beam-2), var(--bop-bl)), transparent),
+    radial-gradient(ellipse calc(3.7% * var(--bw2)) calc(16.0% * var(--bh2) * var(--bgh)) at calc(-1% + var(--bx2)) calc(28% + var(--by2)), rgba(var(--beam-3), var(--bop-tl)), transparent);
 }
 @keyframes beam-in { to { --beam-opacity: 1 } }
 
@@ -773,15 +862,7 @@
   border-radius: var(--r-sheet);
   padding: 1px;
   clip-path: inset(0 round var(--r-sheet));
-  background:
-    radial-gradient(ellipse calc(23.0% * var(--bw1)) calc(9.5% * var(--bh1) * var(--bgh)) at calc(27% + var(--bx1)) calc(0% + var(--by1)), rgba(var(--beam-0), var(--bop-tl)), transparent),
-    radial-gradient(ellipse calc(21.3% * var(--bw2)) calc(5.5% * var(--bh2) * var(--bgh)) at calc(73% + var(--bx2)) calc(-1% + var(--by2)), rgba(var(--beam-6), var(--bop-tr)), transparent),
-    radial-gradient(ellipse calc(4.3% * var(--bw3)) calc(22.0% * var(--bh3) * var(--bgh)) at calc(100% + var(--bx3)) calc(33% + var(--by3)), rgba(var(--beam-7), var(--bop-tr)), transparent),
-    radial-gradient(ellipse calc(5.5% * var(--bw1)) calc(19.0% * var(--bh1) * var(--bgh)) at calc(101% + var(--bx1)) calc(72% + var(--by1)), rgba(var(--beam-8), var(--bop-br)), transparent),
-    radial-gradient(ellipse calc(24.1% * var(--bw2)) calc(6.5% * var(--bh2) * var(--bgh)) at calc(67% + var(--bx2)) calc(100% + var(--by2)), rgba(var(--beam-4), var(--bop-br)), transparent),
-    radial-gradient(ellipse calc(17.2% * var(--bw3)) calc(10.5% * var(--bh3) * var(--bgh)) at calc(24% + var(--bx3)) calc(101% + var(--by3)), rgba(var(--beam-1), var(--bop-bl)), transparent),
-    radial-gradient(ellipse calc(4.9% * var(--bw1)) calc(20.0% * var(--bh1) * var(--bgh)) at calc(0% + var(--bx1)) calc(60% + var(--by1)), rgba(var(--beam-2), var(--bop-bl)), transparent),
-    radial-gradient(ellipse calc(3.7% * var(--bw2)) calc(16.0% * var(--bh2) * var(--bgh)) at calc(-1% + var(--bx2)) calc(28% + var(--by2)), rgba(var(--beam-3), var(--bop-tl)), transparent);
+  background: var(--beam-blobs);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
@@ -801,15 +882,7 @@
   inset: -6px;
   z-index: -1;
   border-radius: calc(var(--r-sheet) + 6px);
-  background:
-    radial-gradient(ellipse calc(23.0% * var(--bw1)) calc(9.5% * var(--bh1) * var(--bgh)) at calc(27% + var(--bx1)) calc(0% + var(--by1)), rgba(var(--beam-0), var(--bop-tl)), transparent),
-    radial-gradient(ellipse calc(21.3% * var(--bw2)) calc(5.5% * var(--bh2) * var(--bgh)) at calc(73% + var(--bx2)) calc(-1% + var(--by2)), rgba(var(--beam-6), var(--bop-tr)), transparent),
-    radial-gradient(ellipse calc(4.3% * var(--bw3)) calc(22.0% * var(--bh3) * var(--bgh)) at calc(100% + var(--bx3)) calc(33% + var(--by3)), rgba(var(--beam-7), var(--bop-tr)), transparent),
-    radial-gradient(ellipse calc(5.5% * var(--bw1)) calc(19.0% * var(--bh1) * var(--bgh)) at calc(101% + var(--bx1)) calc(72% + var(--by1)), rgba(var(--beam-8), var(--bop-br)), transparent),
-    radial-gradient(ellipse calc(24.1% * var(--bw2)) calc(6.5% * var(--bh2) * var(--bgh)) at calc(67% + var(--bx2)) calc(100% + var(--by2)), rgba(var(--beam-4), var(--bop-br)), transparent),
-    radial-gradient(ellipse calc(17.2% * var(--bw3)) calc(10.5% * var(--bh3) * var(--bgh)) at calc(24% + var(--bx3)) calc(101% + var(--by3)), rgba(var(--beam-1), var(--bop-bl)), transparent),
-    radial-gradient(ellipse calc(4.9% * var(--bw1)) calc(20.0% * var(--bh1) * var(--bgh)) at calc(0% + var(--bx1)) calc(60% + var(--by1)), rgba(var(--beam-2), var(--bop-bl)), transparent),
-    radial-gradient(ellipse calc(3.7% * var(--bw2)) calc(16.0% * var(--bh2) * var(--bgh)) at calc(-1% + var(--bx2)) calc(28% + var(--by2)), rgba(var(--beam-3), var(--bop-tl)), transparent);
+  background: var(--beam-blobs);
   pointer-events: none;
   will-change: opacity, filter;
   opacity: calc(var(--beam-opacity) * var(--beam-core-o));
@@ -903,11 +976,11 @@
   border-radius: var(--r-pill);
   background: var(--sunken); color: var(--muted);
   font-size: 14px; font-weight: 600;
-  transition: background 120ms var(--ease), color 120ms var(--ease);
+  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
 }
 /* Two channels, the same as every other lit row in the product. Rule 147. */
 .pager-tab.on { background: var(--control); color: var(--ink); }
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
   .pager-tab:hover { background: var(--sunken-hover); }
   .pager-tab.on:hover { background: var(--control-pressed); }
 }
@@ -918,7 +991,7 @@
    than a plus, and a pill reading "NOT OPE" is worse than one on two lines.
    Doubled up on `.shut` because that rule sets nowrap and sits later in this
    file: at equal specificity the last one wins, and the last one is not this. */
-.shut.wraps { white-space: normal; text-align: right; line-height: 14px; }
+.shut.wraps { white-space: normal; text-align: right; line-height: 16px; }
 
 /* One of the three the product puts forward, with the reason it does. A row
    rather than a table cell: the reason is a sentence, and a sentence in a
@@ -930,7 +1003,7 @@
 }
 .start-row .spark { width: 64px; height: 28px; flex: none; }
 .start-row .right { align-items: flex-end; text-align: right; flex: none; }
-@media (hover: hover) { .start-row:hover { background: var(--sunken-hover); } }
+@media (hover: hover) and (pointer: fine) { .start-row:hover { background: var(--sunken-hover); } }
 .start-row:active { background: var(--control-pressed); }
 @media (max-width: 899px) {
   .start-row { gap: 12px; }
@@ -943,8 +1016,8 @@
 .row-acts { display: inline-flex; align-items: center; gap: 4px; }
 
 /* A card that goes somewhere says so before it is pressed. */
-.door-card { cursor: pointer; transition: background 120ms var(--ease); }
-@media (hover: hover) { .door-card:hover { background: var(--sunken-hover); } }
+.door-card { cursor: pointer; transition: background var(--t-fast) var(--ease); }
+@media (hover: hover) and (pointer: fine) { .door-card:hover { background: var(--sunken-hover); } }
 .door-card:active { background: var(--control-pressed); }
 
 /* ---------- the company strip ----------
@@ -985,7 +1058,7 @@
   text-align: left;
   background: var(--sunken);
   border-radius: var(--r-panel);
-  transition: background 120ms var(--ease);
+  transition: background var(--t-fast) var(--ease);
 }
 .co-cell .two-line { gap: 2px; }
 /* Two channels, not one. Thirteen cells that differ only by a background one
@@ -1000,7 +1073,7 @@
 
 .co-cell.on { background: var(--control); }
 .co-cell.on .t-body-strong { color: var(--ink); }
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
   .co-cell:hover { background: var(--sunken-hover); }
   .co-cell.on:hover { background: var(--control-pressed); }
 }
@@ -1024,6 +1097,13 @@
    So it takes the same ramp Following takes: `--control` at rest, one rung up
    under the pointer. */
 .price-acts .icon-btn { background: var(--control); color: var(--ink); }
+/* The other half of that decision (design.md 11g entry above rule 168): the
+   plus on the market's own rows stays flat, on the card it sits in, because it
+   is alone in its column and its position is what says it is pressable. When
+   `.icon-btn` moved to `--control` for 8.2, this one moved with it by
+   accident, and a filled circle on every row of the market is the grid of
+   buttons that entry chose not to draw. The pointer still lifts it. */
+.table .icon-btn { background: var(--sunken); }
 /* And matched to its neighbour's height. `.btn-sm` is 40 with a mouse and 44
    with a thumb; `.icon-btn` is a flat 44 at every width. Nobody could see the
    four pixels while the plus had no body — two filled pills beside each other
@@ -1047,7 +1127,7 @@
 .leg { display: flex; align-items: center; gap: 12px; }
 .leg-dir {
   flex: none; width: 24px; height: 24px; border-radius: 999px;
-  display: grid; place-items: center; font-weight: 600; font-size: 13px;
+  display: grid; place-items: center; font-weight: 600; font-size: 14px;
   background: var(--control); color: var(--muted);
 }
 .leg-dir.in { background: var(--tint-positive); color: var(--positive); }
@@ -1076,11 +1156,13 @@
    channel, so the state does not rest on the step alone (rule 10). */
 .rail {
   display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
-  padding: 12px 16px; border-radius: var(--r-panel);
+  padding: 12px 24px 12px 16px; border-radius: var(--r-pill);
   background: var(--control); color: var(--ink); min-height: 56px;
 }
 .rail.on { background: var(--inverse); color: var(--on-inverse); }
-.rail.on small, .rail.on .pos { color: inherit; opacity: 0.72; }
+/* The quieter line on a chosen rail, in the quiet ink the inverse fill has
+   rather than the full one at 72% (rule 28: text never recedes by fading). */
+.rail.on small, .rail.on .pos { color: var(--on-inverse-muted); }
 .rail small { color: var(--muted); }
 
 /* A rail somebody in operations has switched off. It stays on the screen and
@@ -1104,7 +1186,7 @@
   font-variant-numeric: tabular-nums;
 }
 .copy svg { width: 14px; height: 14px; }
-@media (hover: hover) { .copy:hover { background: var(--control-pressed); } }
+@media (hover: hover) and (pointer: fine) { .copy:hover { background: var(--control-pressed); } }
 /* Rule 35. It is the control that copies an account number, which is the one
    thing anybody does on that panel, and it was 32 tall under a thumb. */
 @media (max-width: 899px) { .copy { min-height: 44px; padding: 6px 14px; } }
@@ -1123,7 +1205,7 @@
    phone already knows how to open. It keeps the field's own ground. */
 .field select {
   width: 100%; height: 100%; background: none; color: var(--ink);
-  font: inherit; appearance: none; border: none; outline: none;
+  font: inherit; appearance: none; border: none;
 }
 .field select option { background: var(--control); color: var(--ink); }
 
@@ -1141,7 +1223,7 @@
      on a phone left a plain grey disc where the question mark should be. */
   isolation: isolate;
 }
-@media (hover: hover) { .hint:hover { background: var(--control-pressed); color: var(--ink); } }
+@media (hover: hover) and (pointer: fine) { .hint:hover { background: var(--control-pressed); color: var(--ink); } }
 .hint[aria-expanded='true'] { background: var(--inverse); color: var(--on-inverse); }
 /* Rule 35 wants 44px under a thumb, and a 44px question mark would be a button
    the size of the figure it annotates. So the button really is 44 and gives
@@ -1166,20 +1248,24 @@
    outline away — the shadow is what lifts it, and a border would be the same
    statement in a language this product does not use. */
 .pop {
-  position: fixed; z-index: 70;
+  position: fixed; z-index: var(--z-pop);
   display: flex; flex-direction: column; gap: 8px;
   padding: 16px; border-radius: var(--r-panel);
   background: var(--surface); color: var(--ink);
   box-shadow: var(--shadow-float);
-  animation: rise var(--t-fast) var(--ease);
 }
-.pop .muted { font-size: 13px; line-height: 19px; }
+/* It rises into place, unless somebody has asked for less travel: then it is
+   simply there, the same as a sheet. */
+@media (prefers-reduced-motion: no-preference) {
+  .pop { animation: rise var(--t-fast) var(--ease); }
+}
+.pop .muted { font-size: 14px; line-height: 20px; }
 .pop .link { align-self: flex-start; }
 /* A few things, listed. The panel's own padding comes off, because a menu's
    rows want to reach its edges — a row you can only press the middle of is a
    row that feels smaller than it looks. */
 .pop:has(.pop-menu) { padding: 8px; }
-.pop-menu { display: flex; flex-direction: column; margin: 0 -0px; }
+.pop-menu { display: flex; flex-direction: column; }
 .pop-row {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   min-height: 44px; padding: 0 12px; border-radius: 12px;
@@ -1192,21 +1278,27 @@
 .pop-row:active { background: var(--control-pressed); }
 /* A state rather than an action: it is in the list because a control that
    quietly vanishes is not an answer to the question it used to answer. */
-.pop-said { display: flex; align-items: center; min-height: 44px; padding: 0 12px; font-size: 13px; }
-@media (hover: hover) { .pop-row:hover { background: var(--sunken-hover); } }
+.pop-said { display: flex; align-items: center; min-height: 44px; padding: 0 12px; font-size: 14px; }
+@media (hover: hover) and (pointer: fine) { .pop-row:hover { background: var(--sunken-hover); } }
 /* The chip that opens one. */
 .chip .ic { display: inline-flex; }
 .chip .ic svg { width: 16px; height: 16px; }
 
 /* ---------- toast ---------- */
-.toast-rail { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 60;
+.toast-rail { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: var(--z-toast);
   display: flex; flex-direction: column; gap: 8px; align-items: center; }
+/* On a phone the rail floats 32 up and is 64 tall, so a toast at 28 landed
+   on top of it and hid the tabs for as long as it lived. It sits above the
+   rail instead, with the same 16 the rail keeps from its fade. */
+@media (max-width: 899px) {
+  .toast-rail { bottom: calc(32px + var(--nav-h) + 16px + env(safe-area-inset-bottom, 0px)); }
+}
 /* A button, so it can be dismissed and can hold focus long enough to stop its
    own countdown — but it reads as the notice it is, not as a control. */
 .toast {
   background: var(--control-pressed); color: var(--ink); padding: 12px 20px;
-  border-radius: 999px; font-size: 13px; font-weight: 600; text-align: left;
-  box-shadow: var(--shadow-toast); animation: rise 160ms ease-out;
+  border-radius: 999px; font-size: 14px; font-weight: 600; text-align: left;
+  box-shadow: var(--shadow-toast); animation: rise var(--t-base) var(--ease);
 }
 
 /* ---------- auth ---------- */
@@ -1215,7 +1307,7 @@
    with nothing beside it, and the one screen where somebody decides whether to
    hand this product money had nothing to say about why they should. */
 .auth {
-  min-height: 100vh; display: grid;
+  min-height: 100vh; min-height: 100dvh; display: grid;
   grid-template-columns: minmax(0, 480px) minmax(0, 380px);
   gap: 64px; justify-content: center; align-items: center; padding: 48px 32px;
 }
@@ -1226,10 +1318,10 @@
 .auth-aside { display: flex; flex-direction: column; gap: 20px; align-self: center; }
 .promise { display: flex; gap: 12px; align-items: flex-start; }
 .promise .mark { flex: none; }
-.promise small { line-height: 18px; }
+.promise small { line-height: 20px; }
 .auth-warn {
   margin: 0; display: flex; gap: 10px; align-items: flex-start;
-  color: var(--warning); font-size: 12px; line-height: 18px;
+  color: var(--warning); font-size: 12px; line-height: 16px;
 }
 .auth-warn svg { width: 16px; height: 16px; flex: none; }
 /* A sentence in ink at the foot of a list reads as a closing line, not a way
@@ -1237,12 +1329,17 @@
 .auth-more { display: flex; align-items: center; gap: 8px; text-align: left; align-self: flex-start; }
 .auth-more svg { width: 14px; height: 14px; flex: none; }
 
-.auth-or { display: flex; align-items: center; gap: 12px; }
-.auth-or .rule { flex: 1; height: 1px; background: var(--control); }
+/* The word alone, centred in the space between the two ways in. It sat
+   between two hairlines, which rule 13 does not allow; the space around it
+   already says the two are alternatives. */
+.auth-or { display: flex; justify-content: center; }
 .auth-forgot { display: flex; justify-content: flex-end; margin-top: -4px; }
 /* Inside the field, where the thing it reveals is. */
 .reveal {
-  flex: none; width: 32px; height: 32px; border-radius: 999px;
+  /* 44, the smallest thing a thumb can find (rule 35). It was 32. The
+     negative margin tucks it toward the field's edge, so the glyph sits
+     where it did. */
+  flex: none; width: 44px; height: 44px; margin-right: -10px; border-radius: 999px;
   display: grid; place-items: center; color: var(--muted);
 }
 
@@ -1263,17 +1360,19 @@
   padding: 16px 20px 0;
 }
 .topbar .avatar { width: 40px; height: 40px; }
-.topbar .who-line { flex: 1; min-width: 0; }
-.topbar .who-line small { display: block; color: var(--muted); font-size: 12px; }
-.topbar .who-line strong { font-size: 15px; }
 .icon-btn {
-  width: 44px; height: 44px; border-radius: 999px; background: var(--sunken);
-  display: grid; place-items: center; flex: none; color: var(--muted);
+  /* The control grey and the strong ink (8.2): it is tapped, so it wears the
+     colour of things that are tapped. It was the card grey, which on a card
+     is no circle at all. */
+  width: 44px; height: 44px; border-radius: 999px; background: var(--control);
+  display: grid; place-items: center; flex: none; color: var(--ink);
 }
 
 .railbar {
   display: none;
-  position: fixed; left: 0; right: 0; bottom: 32px; z-index: 30;
+  /* Clear of the home indicator on a phone that has one: the page is drawn
+     under it (viewport-fit=cover in index.html), so the inset is added here. */
+  position: fixed; left: 0; right: 0; bottom: calc(32px + env(safe-area-inset-bottom, 0px)); z-index: var(--z-rail);
   padding: 0 20px;
   justify-content: center; gap: 12px;
   pointer-events: none;
@@ -1313,9 +1412,10 @@
 .rail-pill {
   display: flex; justify-content: space-between; gap: 2px; padding: 6px;
   background: var(--sunken); border-radius: 999px;
-  /* A ring rather than a border. A border is a box the height grows for, and
-     the circle beside this has to stay exactly as tall as the capsule. */
-  box-shadow: var(--shadow-float), inset 0 0 0 1px var(--grid);
+  /* The floating shadow and nothing else (rule 12). It carried a 1px inset
+     ring as well, which is an outline by another name — rule 13 — and the
+     fade under the bar already lifts it off the page. */
+  box-shadow: var(--shadow-float);
   width: 100%; min-width: 0;
 }
 .railbar.is-open .rail-pill { display: none; }
@@ -1329,14 +1429,17 @@
    exactly the place the fourth tab's second line landed. */
 .rail-tab {
   flex: 0 1 auto; min-width: 0;
-  height: 52px; padding: 0 10px; border-radius: 999px;
+  /* 6 at the sides, not 10: the labels are 12px now (3.2's floor, and the
+     size 9 gives bottom navigation labels), and at 10 a side the four words
+     no longer fitted the capsule on a 360 phone. */
+  height: 52px; padding: 0 6px; border-radius: 999px;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
   color: var(--muted);
 }
 .rail-tab .ic { display: grid; place-items: center; height: 18px; }
 /* One line. The tab is as wide as this is. */
 .rail-label {
-  font-size: 10px; line-height: 12px; font-weight: 600; letter-spacing: 0.01em;
+  font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0.01em;
   text-align: center; white-space: nowrap;
 }
 /* Where you are is a light left on behind the tab, not a white pill printed
@@ -1362,7 +1465,7 @@
   width: 64px; height: 64px; border-radius: 999px; flex: none; align-self: flex-end;
   background: var(--sunken); color: var(--muted);
   display: grid; place-items: center;
-  box-shadow: var(--shadow-float), inset 0 0 0 1px var(--grid);
+  box-shadow: var(--shadow-float);
 }
 .rail-more[aria-expanded='true'] { color: var(--ink); }
 .rail-more:active { background: var(--control-pressed); color: var(--ink); }
@@ -1377,12 +1480,14 @@
 .rail-root { display: contents; }
 /* No scrim: the page underneath stays lit, because this is a menu and not a
    modal. What it needs instead is somewhere to press that is not the menu. */
-.rail-catch { position: fixed; inset: 0; z-index: 29; background: none; cursor: default; }
+.rail-catch { position: fixed; inset: 0; z-index: var(--z-rail-catch); background: none; cursor: default; }
 .rail-panel {
   width: 100%;
   background: var(--sunken); border-radius: 24px; padding: 12px;
-  box-shadow: var(--shadow-float), inset 0 0 0 1px var(--grid);
-  display: flex; flex-direction: column; gap: 10px;
+  box-shadow: var(--shadow-float);
+  /* 16 between the grid and the view toggle, where a hairline used to be:
+     the space is the separation (rule 13). */
+  display: flex; flex-direction: column; gap: 16px;
   transform-origin: 50% 100%;
 }
 /* It arrives out of focus and comes to. The capsule is a narrow thing
@@ -1422,10 +1527,9 @@
    the word is what it is called. Two lines, because "Notifications" is one
    word and it is longer than a quarter of the capsule. */
 .rail-cell-label {
-  font-size: 10px; line-height: 12px; font-weight: 600; color: var(--muted);
-  text-align: center; overflow-wrap: anywhere;
+  font-size: 12px; line-height: 16px; font-weight: 600; color: var(--muted);
+  text-align: center; hyphens: manual;
 }
-.rail-rule { height: 1px; background: var(--grid); margin: 2px 0; }
 .rail-pref { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 /* 44, like everything else a thumb has to find down here (rule 35). It was
    32, which is the size a chip is on a desktop toolbar and not the size of
@@ -1443,6 +1547,13 @@
   padding: 12px; border-radius: 16px; width: 100%; text-align: left;
 }
 .sheet-row .mark { background: var(--control); }
+/* A row that is itself the control rather than a line in a list: filled at
+   rest, so it answers the pointer by stepping to --control-pressed. It was a
+   fill written inline on three rows, which beat the hover rule and left them
+   the only rows in the product that did not answer. */
+.sheet-row-filled { background: var(--control); }
+.sheet-row-filled .mark { background: var(--control-pressed); }
+@media (hover: hover) and (pointer: fine) { .sheet-row.sheet-row-filled:hover { background: var(--control-pressed); } }
 .sheet-row .two-line { flex: 1; min-width: 0; }
 
 /* In a list of people, a name and the line under it truncate rather than wrap.
@@ -1467,7 +1578,7 @@
        844 of everything, and it was the last twenty pixels standing between
        the tallest receipt and fitting without a scroll. */
     max-height: 88vh; padding: 12px 20px 32px; gap: 20px;
-    animation: slideup 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    animation: slideup var(--t-swap) var(--ease);
   }
   .sheet-head { padding-top: 8px; }
 
@@ -1478,16 +1589,17 @@
   .table td:first-child, .table th:first-child { padding-left: 8px; }
   .table td:last-child, .table th:last-child { padding-right: 8px; }
 
-  .amount-box input { width: 200px; font-size: 34px; line-height: 44px; }
+  .amount-box input { width: 200px; font-size: 36px; line-height: 40px; }
   .chip-row { gap: 6px; }
-  .btn { height: 52px; }
 }
 @keyframes slideup { from { transform: translateY(100%) } to { transform: none } }
 
 /* a numeric keypad, the way the phone enters an amount */
 .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
 .key {
-  height: 56px; border-radius: 16px; font-size: 20px; font-weight: 600;
+  /* A button, so a pill (rule 6); a 16px rounded key was the one rounded
+     rectangle left among the product's buttons. */
+  height: 56px; border-radius: var(--r-pill); font-size: 20px; font-weight: 600;
   display: grid; place-items: center;
 }
 
@@ -1505,10 +1617,10 @@
 @media (max-width: 899px) {
   .page-header h1:empty { display: none; }
   .row.tiles { flex-direction: row; gap: 8px; }
-  .row.tiles > * { width: auto !important; flex: 1 1 0 !important; min-width: 0; }
-  .tile { padding: 16px; gap: 10px; border-radius: 20px; min-height: 0 !important; }
+  .row.tiles > * { width: auto; flex: 1 1 0; min-width: 0; }
+  .tile { padding: 16px; gap: 10px; border-radius: 20px; min-height: 0; }
   .tile .spacer { display: none; }
-  .tile .t-title { font-size: 15px; line-height: 20px; }
+  .tile .t-title { font-size: 14px; line-height: 20px; }
   .tile .muted { display: none; }
   .tile .promo-badge { width: 40px; height: 40px; }
 }
@@ -1535,14 +1647,20 @@
      two get the rest, and they are scoped to this dialog because no other one
      is close to the ceiling. 44 is the tap minimum, so the keys stop there
      rather than at 48. */
-  .sheet-compose { gap: 10px; padding-bottom: 8px; }
+  .sheet-compose { gap: 8px; padding-bottom: 8px; }
   .sheet-compose .key { height: 44px; }
   /* The grabber is the affordance; eight more pixels under it is the same
      affordance stated twice, and this is the one dialog that cannot spare
      them. */
   .sheet-compose .sheet-head { padding-top: 0; }
+  /* The note under the figure is a <p>, and it was carrying the browser's
+     12px paragraph margin on both sides inside a column that already spaces
+     it with a 4px gap and a 16px stack. That is 24 pixels nobody chose, and
+     the withdraw sheet, which also has to carry its limit notice, came out
+     11 over the ceiling. Eight to the figure it explains and the stack's 16
+     to the chips keep the 4 grid (4.1). */
+  .sheet-compose .amount-note { margin: 4px 0 0; }
   .sheet .amount-box { padding: 4px 20px; }
-  .sheet .amount-box input { font-size: 30px; line-height: 40px; width: 180px; }
   .sheet .chip-row .chip { flex: 1 1 0; padding: 0 8px; }
 
   /* Shortening the parts above got the button on screen, but only just, and
@@ -1621,7 +1739,7 @@
 
 /* A field that is wrong says so where the mistake was made, not in a toast
    that has already gone by. */
-.field.error { box-shadow: inset 0 0 0 1px var(--negative); }
+.field.error, .field.error:has(input:focus) { box-shadow: inset 0 0 0 2px var(--negative); }
 .field-error {
   display: flex; align-items: center; gap: 6px;
   color: var(--negative); font-size: 12px; line-height: 16px;
@@ -1687,20 +1805,20 @@
 .pill {
   height: 32px; padding: 0 16px; border-radius: var(--r-pill);
   background: var(--control); color: var(--muted);
-  font-size: 13px; font-weight: 600;
+  font-size: 14px; font-weight: 600;
   display: inline-flex; align-items: center; cursor: default;
 }
 
-/* the bell, and the count it carries */
-.bell { position: relative; }
-.bell .dot {
+/* The bell and the bucket, and the count each carries: one badge, in two
+   colours — green for news, the inverse fill for things you put there. */
+.bell, .bucket-btn { position: relative; }
+.bell .dot, .bucket-btn .dot {
   position: absolute; top: 2px; right: 2px; min-width: 16px; height: 16px;
   padding: 0 4px; border-radius: 999px;
   background: var(--positive); color: var(--on-inverse);
-  font-size: 10px; font-weight: 600; line-height: 16px; text-align: center;
+  font-size: 12px; font-weight: 600; line-height: 16px; text-align: center;
 }
-.sheet-row.read { opacity: 0.55; }
-.sheet-row.read .mark { background: var(--sunken); }
+.bucket-btn .dot { background: var(--inverse); }
 
 /* A sortable header is a control, so it says so. The caret shows the axis you
    are on and which way it runs. */
@@ -1712,7 +1830,7 @@
 /* The caret was faded to 0.45, which put a 10px glyph at 2.1:1 — a mark
    carrying which way the sort runs, drawn too faint to read it from. It now
    follows the label it belongs to, and turns positive when the column is on. */
-.th-sort .caret { font-size: 10px; }
+.th-sort .caret { font-size: 12px; }
 .th-sort.on { color: var(--ink); }
 .th-sort.on .caret { opacity: 1; color: var(--positive); }
 /* On a right-hand column the caret goes to the left of the label, so the
@@ -1739,11 +1857,11 @@ th.right .th-sort { flex-direction: row-reverse; }
   display: inline-flex; align-items: center; align-self: flex-start;
   gap: 6px; margin-left: -8px; padding: 4px 8px;
   border-radius: var(--r-panel); color: var(--muted);
-  font-size: 13px; line-height: 18px; font-weight: 600;
+  font-size: 14px; line-height: 20px; font-weight: 600;
 }
 .page-back .ic { display: inline-flex; }
 .page-back svg { width: 16px; height: 16px; }
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
   .page-back:hover { color: var(--ink); background: var(--sunken); }
 }
 @media (max-width: 899px) {
@@ -1761,10 +1879,13 @@ th.right .th-sort { flex-direction: row-reverse; }
   display: flex; align-items: center; gap: 12px;
   padding: 20px;
 }
-.jump-field input { width: 100%; font-size: 16px; }
+/* 44 tall, so the field is a target a thumb can find rather than a 22px
+   line of text; the row's own padding comes down by the same amount. */
+.jump-field { padding-block: 10px; }
+.jump-field input { width: 100%; font-size: 16px; height: 44px; }
 .jump-field .kbd { flex: none; }
 .kbd {
-  font-size: 11px; font-weight: 600; color: var(--muted);
+  font-size: 12px; font-weight: 600; color: var(--muted);
   background: var(--control); border-radius: 8px; padding: 4px 8px;
 }
 .jump-list {
@@ -1772,7 +1893,7 @@ th.right .th-sort { flex-direction: row-reverse; }
   background: var(--canvas);
 }
 .jump-group {
-  font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+  font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--muted); padding: 12px 12px 8px;
 }
 .jump-hit {
@@ -1791,7 +1912,7 @@ th.right .th-sort { flex-direction: row-reverse; }
 .jump-open {
   display: flex; align-items: center; gap: 10px;
   height: 40px; padding: 0 12px 0 14px; border-radius: var(--r-pill);
-  background: var(--sunken); color: var(--muted); font-size: 13px; min-width: 220px;
+  background: var(--sunken); color: var(--muted); font-size: 14px; min-width: 220px;
 }
 
 @media (max-width: 899px) {
@@ -1821,7 +1942,7 @@ th.right .th-sort { flex-direction: row-reverse; }
    at — and takes its surface under the pointer, where a control should. */
 .figure-eye { display: flex; align-items: center; gap: 4px; }
 .figure-eye .eye-btn { background: transparent; }
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
   .figure-eye .eye-btn:hover { background: var(--control); color: var(--ink); }
 }
 
@@ -1841,12 +1962,10 @@ th.right .th-sort { flex-direction: row-reverse; }
 .headline { display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
 .t-figure { font-size: 48px; line-height: 52px; font-weight: 600; letter-spacing: -0.02em; }
 .delta { display: flex; align-items: baseline; gap: 8px; }
-.btn-wide { width: 148px; height: 48px; }
 
 @media (max-width: 899px) {
   .headline { align-items: flex-start; flex-direction: column; gap: 16px; }
   .t-figure { font-size: 36px; line-height: 44px; }
-  .btn-wide { width: auto; flex: 1 1 0; }
 }
 
 /* --------------------------------------------------------- the gateway --
@@ -1944,7 +2063,7 @@ th.right .th-sort { flex-direction: row-reverse; }
    that every other clickable card in the product takes. The ground the drawing
    fills with moves with it, or the faces stay the unhovered colour and the
    drawing reads as a hole punched in the card. */
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
   .gate:hover { background: var(--sunken-hover); --art-ground: var(--sunken-hover); }
 }
 
@@ -1976,7 +2095,7 @@ th.right .th-sort { flex-direction: row-reverse; }
      unrelated things. */
   .gate .gate-words { align-items: center; justify-content: center; gap: 0; height: 30px; }
   .gate .t-title {
-    font-size: 12px; line-height: 15px; text-align: center;
+    font-size: 12px; line-height: 16px; text-align: center;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
   }
   .gate-ic { display: grid; place-items: center; color: var(--ink); }
@@ -2017,7 +2136,7 @@ th.right .th-sort { flex-direction: row-reverse; }
   .gate-art { display: block; height: 148px; }
   .gate .gate-words { align-items: flex-start; justify-content: flex-start; gap: 8px; height: auto; }
   .gate .t-title { font-size: 18px; line-height: 24px; text-align: left; -webkit-line-clamp: 2; }
-  .gate-sub { font-size: 13px; line-height: 18px; }
+  .gate-sub { font-size: 14px; line-height: 20px; }
   .gates { gap: 12px; }
 
   /* Two columns where the content genuinely splits in two. Not where it does
@@ -2038,20 +2157,20 @@ th.right .th-sort { flex-direction: row-reverse; }
   .content > .feed, .content > .stack > .feed { max-width: 620px; }
 
   /* Both products beside each other, as they are on a desktop. The phone tier
-     hands every row's children `width: 100% !important`, which turned the row
-     back into a column with the second card off the side of the screen — so
-     the width and the flex have to be handed back as loudly as they were
-     taken. The band comes back up with them: at 365 wide the object has room
-     to be an object again. */
+     hands every row's children the full width, which turned the row back into
+     a column with the second card off the side of the screen — so the width
+     and the flex are handed back here, at the same weight and later. The band
+     comes back up with them: at 365 wide the object has room to be an object
+     again. */
   .row.prods { flex-direction: row; }
-  .row.prods > * { width: auto !important; flex: 1 1 0 !important; min-width: 0; }
+  .row.prods > * { width: auto; flex: 1 1 0; min-width: 0; }
   .prod-art { height: 220px; }
 
   /* A pair of doors is a pair at this width, not a stack. Same override as
      the products above, and for the same reason: the phone tier takes the
-     width from every child of a row with an !important on it. */
+     width from every child of a row. */
   .row.equal { flex-direction: row; }
-  .row.equal > * { width: auto !important; flex: 1 1 0 !important; min-width: 0; }
+  .row.equal > * { width: auto; flex: 1 1 0; min-width: 0; }
 
   /* The page's own gutters. 20 was a phone's; at 834 it is a hairline. */
   .content { padding-left: 32px; padding-right: 32px; }
@@ -2063,10 +2182,8 @@ th.right .th-sort { flex-direction: row-reverse; }
 /* Pressing anywhere on the card opens the breakdown, so it says so with the
    cursor and lifts a rung like every other pressable card in the product. */
 .hero-cash { padding: 32px; gap: 24px; text-align: left; align-items: stretch; cursor: pointer; }
-.hero-cash:hover { background: var(--sunken-hover); }
-.hero-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
-.hero-figure { font-size: 56px; line-height: 64px; font-weight: 600; letter-spacing: -0.03em; }
-.hero-aside { text-align: right; align-items: flex-end; max-width: 340px; }
+@media (hover: hover) and (pointer: fine) { .hero-cash:hover { background: var(--sunken-hover); } }
+.hero-figure { font-size: 48px; line-height: 52px; font-weight: 600; letter-spacing: -0.03em; }
 
 /* Four parts, four colours. The three balances take a ramp — strongest to
    lightest — because they are three of one kind of thing, and what is lent
@@ -2111,7 +2228,9 @@ th.right .th-sort { flex-direction: row-reverse; }
 /* The resting line shows when nothing is hovered, and gets out of the way the
    moment something is. */
 .hero-read > .rest { opacity: 1; visibility: visible; transform: none; gap: 16px; flex-wrap: wrap; }
-.hero-read .key { display: inline-flex; align-items: center; gap: 7px; }
+/* `.legend-key`, not `.key`: `.key` is the keypad's button, and the legend
+   inherited its 56px height, its radius and its hover. */
+.hero-read .legend-key { display: inline-flex; align-items: center; gap: 8px; }
 
 /* The card opens something, so it says so. Top right, out of the figure's way,
    and it leans in with the rest of the card on hover. */
@@ -2127,8 +2246,17 @@ th.right .th-sort { flex-direction: row-reverse; }
 @media (max-width: 899px) {
   .hero-cash { padding: 20px; gap: 20px; }
   .hero-figure { font-size: 40px; line-height: 48px; }
-  .hero-top { flex-direction: column; gap: 16px; }
-  .hero-aside { text-align: left; align-items: flex-start; max-width: none; }
+}
+/* Below the phone tier (320 is real) the card's inside is 240 wide, and the
+   figure with its eye (218), the 24 gap and the chevron's 32 came to 274: the
+   chevron sat outside the card and pushed the wallet and transfer pages 10
+   pixels sideways. The figure drops to Display, 36/40 (3.2), the gap to 12,
+   and the chevron pulls its left edge in by the same 12 its other sides
+   already give back, so its glyph still stands 26 clear of the eye. */
+@media (max-width: 359px) {
+  .hero-head { gap: 12px; }
+  .hero-go { margin-left: -12px; }
+  .hero-figure { font-size: 36px; line-height: 40px; }
 }
 /* The wallet's two doors. */
 .way { flex-direction: row; align-items: center; gap: 16px; text-align: left; }
@@ -2144,7 +2272,7 @@ th.right .th-sort { flex-direction: row-reverse; }
   display: flex; align-items: flex-start; gap: 12px; width: 100%; text-align: left;
   padding: 14px 16px; border-radius: var(--r-panel);
   background: var(--control); color: var(--ink);
-  font-size: 13px; line-height: 18px;
+  font-size: 14px; line-height: 20px;
 }
 .agree-box {
   width: 20px; height: 20px; border-radius: 6px; flex: none; margin-top: -1px;
@@ -2171,7 +2299,7 @@ th.right .th-sort { flex-direction: row-reverse; }
 .tag, .shut {
   flex: none; padding: 1px 7px; border-radius: 999px;
   background: var(--control); color: var(--muted);
-  font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+  font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
 }
 .shut { white-space: nowrap; }
 
@@ -2189,14 +2317,14 @@ th.right .th-sort { flex-direction: row-reverse; }
    The dot field from the gateway tiles carries the picture, so the intro and
    the screen it hands you to are visibly the same product. */
 .welcome {
-  position: relative; min-height: 100vh; overflow: hidden;
+  position: relative; min-height: 100vh; min-height: 100dvh; overflow: hidden;
   display: flex; flex-direction: column;
   padding: 32px 32px 40px;
   background: var(--canvas);
 }
-.welcome.lead {
-  background: linear-gradient(180deg, var(--canvas) 0%, var(--canvas) 46%, var(--accent) 100%);
-}
+/* The first screen of the intro used to wash green up from its foot. Section
+   7 allows one gradient in the product, under a chart line, and this was not
+   it; the picture carries the screen. */
 .welcome-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 
 .welcome-body {
@@ -2206,7 +2334,7 @@ th.right .th-sort { flex-direction: row-reverse; }
 }
 .welcome-title {
   margin: 0; white-space: pre-line;
-  font-size: 44px; line-height: 52px; font-weight: 600; letter-spacing: -0.02em;
+  font-size: 48px; line-height: 52px; font-weight: 600; letter-spacing: -0.02em;
 }
 .welcome-text { margin: 0; color: var(--muted); font-size: 16px; line-height: 24px; max-width: 46ch; }
 
@@ -2248,9 +2376,11 @@ th.right .th-sort { flex-direction: row-reverse; }
 .welcome-pick {
   display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
   text-align: left; padding: 20px;
-  transition: border-color var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
+  transition: background-color var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
 }
-.welcome-pick:hover { border-color: var(--accent); }
+/* A rung lighter, like every other pressable card. It set a border colour,
+   on a card that has no border (rule 13), so it did nothing at all. */
+@media (hover: hover) and (pointer: fine) { .welcome-pick:hover { background: var(--sunken-hover); } }
 .welcome-pick:active { transform: scale(0.995); }
 /* The claim from screen one, made good on a company you can press. Not green:
    green is money arriving (design.md 43), and this is money leaving. It is
@@ -2273,8 +2403,8 @@ th.right .th-sort { flex-direction: row-reverse; }
      a Back button reading through a field of dots. The padding reserves the
      band the art occupies so the two never share a row. */
   .welcome { padding: 20px 20px 216px; }
-  .welcome-title { font-size: 34px; line-height: 40px; }
-  .welcome-text { font-size: 15px; line-height: 22px; }
+  .welcome-title { font-size: 36px; line-height: 40px; }
+  .welcome-text { font-size: 16px; line-height: 24px; }
   .welcome-art { right: 20px; bottom: 24px; width: 176px; height: 176px; }
   .welcome-foot { flex-direction: column-reverse; align-items: stretch; gap: 20px; margin-top: 24px; }
   .welcome-actions .btn { flex: 1 1 0; }
@@ -2283,7 +2413,7 @@ th.right .th-sort { flex-direction: row-reverse; }
   /* Nothing is behind this one, so the band the art reserves is dead space,
      and the three cards need it. */
   .welcome.picking { padding-bottom: 24px; }
-  .welcome.picking .welcome-title { font-size: 30px; line-height: 36px; }
+  .welcome.picking .welcome-title { font-size: 36px; line-height: 40px; }
   .welcome.picking .welcome-body { gap: 12px; }
   .welcome-picks { grid-template-columns: 1fr; gap: 12px; }
   .welcome-pick { padding: 14px 16px; gap: 6px; }
@@ -2352,35 +2482,27 @@ th.right .th-sort { flex-direction: row-reverse; }
    for. The bar states what is in it and what it comes to, on the screens where
    the choosing happens — and it can be put away, because a bar you cannot
    dismiss is an advert. It sits above the phone's rail rather than under it. */
-.bucket-bar {
-  position: sticky; bottom: 20px; z-index: 20;
+.bucket-bar, .buy-bar {
   display: flex; align-items: center; gap: 16px;
   padding: 12px 12px 12px 20px; border-radius: var(--r-pill);
   background: var(--surface);
   box-shadow: var(--shadow-float);
   animation: rise var(--t-base) var(--ease);
 }
+.bucket-bar { position: sticky; bottom: 20px; z-index: var(--z-bar); }
 /* Two bars at the foot of a company page: what you are looking at, and what is
    already in the bucket. One sticky container so they stack rather than landing
    on each other; the children give up their own stickiness to it. */
 .bars {
-  position: sticky; bottom: 20px; z-index: 20;
+  position: sticky; bottom: 20px; z-index: var(--z-bar);
   display: flex; flex-direction: column; gap: 8px;
 }
 .bars > .bucket-bar { position: static; bottom: auto; }
-.buy-bar {
-  display: flex; align-items: center; gap: 16px;
-  padding: 12px 12px 12px 20px; border-radius: var(--r-pill);
-  background: var(--surface);
-  box-shadow: var(--shadow-float);
-  animation: rise var(--t-base) var(--ease);
-}
 .buy-bar .btn { flex: none; }
 @media (max-width: 899px) {
   .bars { bottom: calc(var(--nav-h) + 44px); }
   .buy-bar { padding: 10px 10px 10px 16px; gap: 12px; }
 }
-@media (prefers-reduced-motion: reduce) { .buy-bar { animation: none; } }
 
 .bucket-bar .mark { flex: none; }
 .bucket-bar .btn { flex: none; }
@@ -2390,7 +2512,7 @@ th.right .th-sort { flex-direction: row-reverse; }
   /* The words go; the count, the total and the way to pay are the bar. */
   .bucket-bar .mark { display: none; }
 }
-@media (prefers-reduced-motion: reduce) { .bucket-bar { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .bucket-bar, .buy-bar { animation: none; } }
 
 /* ---------------------------------------------------------- the bucket --
    Things picked out and not yet paid for. It lives in the sidebar with the
@@ -2399,20 +2521,13 @@ th.right .th-sort { flex-direction: row-reverse; }
 .nav-bucket .count {
   min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px;
   background: var(--inverse); color: var(--on-inverse);
-  font-size: 11px; font-weight: 600; line-height: 20px; text-align: center; flex: none;
+  font-size: 12px; font-weight: 600; line-height: 16px; text-align: center; flex: none;
 }
 /* The count on the bucket. It had the two colours and none of the geometry —
    no size, no radius, no line-height, no position — so it rendered as a word
    of inverse-coloured text sitting after the glyph rather than as a badge on
    it. Same anatomy as the bell's, which is the other icon button in the header
-   that carries a number. */
-.bucket-btn { position: relative; }
-.bucket-btn .dot {
-  position: absolute; top: 2px; right: 2px; min-width: 16px; height: 16px;
-  padding: 0 4px; border-radius: 999px;
-  background: var(--inverse); color: var(--on-inverse);
-  font-size: 10px; font-weight: 600; line-height: 16px; text-align: center;
-}
+   that carries a number — and the same rule, with the bell's (see .bell). */
 
 .bucket-row {
   display: flex; align-items: center; gap: 16px;
@@ -2459,13 +2574,14 @@ th.right .th-sort { flex-direction: row-reverse; }
    because the ends are the part anyone checks. */
 .addr {
   display: flex; align-items: center; gap: 12px; width: 100%;
-  padding: 10px 14px; border-radius: var(--r-panel);
+  /* A button, so a pill (rule 6). */
+  padding: 10px 20px; border-radius: var(--r-pill);
   background: var(--control); color: var(--ink);
   /* A button centres its text, so the address sat in the middle of its own
      field with the copy button adrift at the end — the one control on the row
      nowhere near the thing it copies. */
   text-align: left;
-  font-size: 13px; font-variant-numeric: tabular-nums;
+  font-size: 14px; font-variant-numeric: tabular-nums;
 }
 .addr svg { width: 14px; height: 14px; }
 
@@ -2490,13 +2606,17 @@ th.right .th-sort { flex-direction: row-reverse; }
 
 /* the grid, and its labels in the gutter to the left of the bars */
 .ch-grid { position: absolute; inset: 0; pointer-events: none; }
-.ch-line {
+/* A gridline. `.ch-rule`, not `.ch-line`, which is the price path's own
+   class further down: one name for a 1px div and an SVG stroke meant a rule
+   written for either landed on both. The one line rule 13 allows — a chart
+   is its named exception. */
+.ch-rule {
   position: absolute; left: 56px; right: 0; height: 1px;
   background: var(--grid);
 }
 .ch-tick {
   position: absolute; right: calc(100% + 12px); top: -8px;
-  font-size: 11px; line-height: 16px; color: var(--muted); white-space: nowrap;
+  font-size: 12px; line-height: 16px; color: var(--muted); white-space: nowrap;
 }
 
 /* Candles, not bars. A bar says where a period ended; a candle says where it
@@ -2552,13 +2672,13 @@ th.right .th-sort { flex-direction: row-reverse; }
 .ch-mark-tag {
   position: absolute; left: 0; top: -9px;
   background: var(--data-2); color: var(--on-inverse);
-  font-size: 10px; font-weight: 600; line-height: 16px;
+  font-size: 12px; font-weight: 600; line-height: 16px;
   padding: 0 6px; border-radius: 4px; white-space: nowrap;
 }
 /* the period's high and low, on the edge where a trader looks for them */
 .ch-edge {
   position: absolute; right: 0; height: 0;
-  font-size: 10px; line-height: 14px; color: var(--muted); white-space: nowrap;
+  font-size: 12px; line-height: 16px; color: var(--muted); white-space: nowrap;
 }
 /* Off the edge by its own padding. Flush against the card's inside edge, the
    chip read as cut rather than placed — and at a narrow width the last digit
@@ -2592,14 +2712,14 @@ th.right .th-sort { flex-direction: row-reverse; }
 @media (max-width: 899px) {
   /* the gutter shrinks with everything else, and the axis with it */
   .ch-plot, .ch-axis { padding-left: 44px; }
-  .ch-line { left: 44px; }
+  .ch-rule { left: 44px; }
   .ch-overlay { inset: 0 0 0 44px; }
   .ch-tick { right: calc(100% + 8px); }
-  .ch-axis { font-size: 11px; }
+  .ch-axis { font-size: 12px; }
   /* four OHLC figures and a change do not fit a phone beside the caption */
   .ch-ohlc { gap: 8px; }
-  .ch-num { font-size: 11px; }
-  .ch-mark-tag, .ch-edge { font-size: 9px; }
+  .ch-num { font-size: 12px; }
+  .ch-mark-tag, .ch-edge { font-size: 12px; }
 }
 
 /* ---------------------------------------------------------- the market --
@@ -2615,7 +2735,7 @@ th.right .th-sort { flex-direction: row-reverse; }
   background: var(--ink); transform: translateX(-1px);
 }
 .range-ends { display: flex; justify-content: space-between; }
-.range-ends small { color: var(--subtle); font-size: 11px; line-height: 14px; }
+.range-ends small { color: var(--subtle); font-size: 12px; line-height: 16px; }
 
 
 /* ----------------------------------------------------------------- hover --
@@ -2641,7 +2761,7 @@ th.right .th-sort { flex-direction: row-reverse; }
   /* -- rows. The target is the whole row, so the whole row answers. -- */
   .nav-row:hover { background: var(--control); color: var(--ink); }
   /* the lit row is still pressable, so it still has somewhere to go */
-  .nav-row[aria-current='page']:hover { background: var(--control-pressed); }
+  .nav-row[aria-current='page']:hover { background: var(--inverse-hover); color: var(--on-inverse); }
   .whoami:hover { background: var(--control); }
   .sheet-row:hover { background: var(--control); }
   .sheet-row:hover .mark { background: var(--control-pressed); }
@@ -2660,12 +2780,12 @@ th.right .th-sort { flex-direction: row-reverse; }
 
   /* -- cards that are links. The three gateway tiles on Home had no hover at
      all: a card 220 tall that navigates and never answers reads as a poster.
-     A card is an object, and an object you can pick comes forward. -- */
-  a.card:hover {
-    background: var(--sunken-hover);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-hover);
-  }
+     So it answers — by the wash, the rung above the card, and nothing else.
+     It used to rise two pixels and cast --shadow-hover as well, which rule 12
+     does not allow on a card (a shadow is for a sheet or a floating thing),
+     which rule 7 does not allow either (depth is the surface step), and which
+     the doors on Home and the buttons below had both already given up. -- */
+  a.card:hover { background: var(--sunken-hover); }
   a.card:hover .promo-badge { background: var(--control-pressed); }
 
   /* -- the three doors on Home take the lift and the shadow every card that
@@ -2689,7 +2809,7 @@ th.right .th-sort { flex-direction: row-reverse; }
 
   /* -- small controls -- */
   .suggest-row:hover { background: var(--control); }
-  .icon-btn:hover { background: var(--control); color: var(--ink); }
+  .icon-btn:hover { background: var(--control-pressed); color: var(--ink); }
   .price-acts .icon-btn:hover { background: var(--control-pressed); }
   .close:hover { background: var(--inverse-hover); }
   /* An unselected chip warms up. A selected one stays selected — turning it
@@ -2698,7 +2818,10 @@ th.right .th-sort { flex-direction: row-reverse; }
   .chip:not([aria-pressed='true']):hover { background: var(--control-pressed); color: var(--ink); }
   .chip[aria-pressed='true']:hover { background: var(--inverse-hover); }
   .rail-tab:hover { background: var(--control); color: var(--ink); }
-  .rail-tab[aria-current='page']:hover { background: var(--inverse-hover); color: var(--on-inverse); }
+  /* The lit tab is lit by a light behind it, not by a fill (see .rail-tab
+     above), so hovering it must not paint it white — which is what the old
+     inverse-hover rule did on a tablet with a mouse under 900. */
+  .rail-tab[aria-current='page']:hover { background: none; color: var(--ink); }
   .rail-more:hover { background: var(--control); color: var(--ink); }
   .th-sort:hover { color: var(--ink); }
   .jump-open:hover { background: var(--control); color: var(--ink); }
@@ -2742,8 +2865,7 @@ th.right .th-sort { flex-direction: row-reverse; }
    working, and it turns in place. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 60ms !important; }
-  .scrim, .sheet, .toast { animation: none !important; }
-  a.card:hover, .btn:hover { transform: none !important; }
+  .scrim, .sheet, .toast, .pop { animation: none !important; }
   .sk { animation: none !important; opacity: 0.7; }
 }
 
@@ -2831,7 +2953,7 @@ th.right .th-sort { flex-direction: row-reverse; }
   background: var(--tint-warning); color: var(--ink);
 }
 .set-banner .warn-mark { background: transparent; color: var(--warning); flex: none; }
-.set-banner .two-line small { color: var(--ink); opacity: 0.78; }
+.set-banner .two-line small { color: var(--muted); }
 
 /* Your own details, as a profile rather than as the first five rows of a
    table. The avatar is the same one the sidebar and the phone's top bar use,
@@ -2841,12 +2963,12 @@ th.right .th-sort { flex-direction: row-reverse; }
 .profile-name {
   display: flex; align-items: center; gap: 12px; flex-wrap: wrap; row-gap: 8px;
 }
-.profile-name strong { font-size: 22px; line-height: 28px; letter-spacing: -0.01em; }
+.profile-name strong { font-size: 20px; line-height: 28px; letter-spacing: -0.01em; }
 .profile .pill { height: 26px; padding: 0 12px; font-size: 12px; }
 @media (max-width: 899px) {
   .profile { gap: 14px; }
   .avatar.avatar-lg { width: 56px; height: 56px; font-size: 18px; }
-  .profile-name strong { font-size: 20px; line-height: 26px; }
+  .profile-name strong { font-size: 20px; line-height: 28px; }
 }
 
 /* Sign out is not a setting and does not sit among them. */
@@ -2856,53 +2978,25 @@ th.right .th-sort { flex-direction: row-reverse; }
 }
 .set-foot .btn { width: 100%; }
 
-@media (hover: hover) {
+@media (hover: hover) and (pointer: fine) {
   .set-row:hover { background: var(--sunken-hover); }
   .set-row.on:hover { background: var(--control-pressed); }
 }
 @media (max-width: 899px) {
   .set-row { padding: 14px 10px; gap: 12px; }
-  .set-value { font-size: 13px; }
+  .set-value { font-size: 14px; }
 }
-/* ------------------------------------------------------- notifications ----
-   The bell's panel, unpacked onto Activity. It borrows the settings row —
-   a mark, two lines and a chevron is the same anatomy — but its second line
-   is a sentence rather than a value, so it wraps where a setting's does not.
-   Read rows stand down; they are still there, and still worth a second look
-   at 2am, but they are not what the screen is for. */
-.alert-list { display: flex; flex-direction: column; gap: 4px; }
+/* A header action that is a state rather than an action ("All caught up").
+   The notification rows that used to sit under this heading are feed rows on
+   Activity now, and their rules went with them. */
 .head-state { display: flex; align-items: center; gap: 12px; }
-.set-row.alert { align-items: flex-start; padding: 12px; }
-.set-row.alert .mark { background: var(--control); margin-top: 1px; }
-.set-row.alert .who { gap: 14px; align-items: flex-start; }
-.set-row.alert .two-line small { white-space: normal; }
-.set-row.alert .set-chev { margin-top: 8px; }
-.set-row.alert > .t-caption { margin-top: 3px; }
-/* On a phone the title is the line worth reading, so it wraps and the time
-   drops under it. The other way round — which is what the settings row does by
-   default — gave "Adaeze Okonk…" over three lines of the sentence beneath it. */
-@media (max-width: 899px) {
-  /* Grid rather than a wrapping flex row: with flex the chevron dropped to a
-     line of its own whenever the title wrapped, which is exactly the rows
-     where it was most needed. */
-  .set-row.alert {
-    display: grid; grid-template-columns: minmax(0, 1fr) auto;
-    column-gap: 12px; row-gap: 2px;
-  }
-  .set-row.alert .two-line > * { white-space: normal; }
-  .set-row.alert .who { grid-area: 1 / 1; }
-  .set-row.alert .set-chev { grid-area: 1 / 2; align-self: start; margin-top: 6px; }
-  .set-row.alert > .t-caption { grid-area: 2 / 1 / 3 / 3; padding-left: 46px; margin-top: 0; }
-}
-.set-row.read { opacity: 0.55; }
-.set-row.read .mark { background: var(--sunken); }
 
 /* The count the bell used to carry, now on the chip that opens them. */
 .chip-count {
   min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px;
   display: inline-grid; place-items: center;
   background: var(--positive); color: var(--on-inverse);
-  font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums;
+  font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums;
 }
 /* Selected, the chip is already inverse; a green pill on top of it would be
    two loud things. It borrows the chip's own ink. */
@@ -2919,7 +3013,7 @@ th.right .th-sort { flex-direction: row-reverse; }
 .pw-note { display: block; min-height: 34px; }
 .pw-note.bad { color: var(--negative); }
 .pw-note.good { color: var(--positive); }
-.pw-eye { flex: none; font-size: 13px; }
+.pw-eye { flex: none; font-size: 14px; }
 
 
 /* The PIN standing in for the confirm button. Centred like the pad it holds,
@@ -2937,7 +3031,7 @@ th.right .th-sort { flex-direction: row-reverse; }
    against its own 400px and constrains nothing — the card hung 30px off a
    390 screen. `.auth` had the same bug and had never been swept. */
 .lock {
-  min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr);
+  min-height: 100vh; min-height: 100dvh; display: grid; grid-template-columns: minmax(0, 1fr);
   place-items: center; padding: 32px;
 }
 .lock-card {
@@ -2978,17 +3072,17 @@ th.right .th-sort { flex-direction: row-reverse; }
   .chip-row.chip-scroll .chip { flex: none; }
 
   .row.indices {
-    flex-direction: row !important;
+    flex-direction: row;
     overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; gap: 8px;
     margin-inline: calc(var(--content-pad-x) * -1);
     padding-inline: var(--content-pad-x);
   }
   .row.indices::-webkit-scrollbar { display: none; }
   .row.indices > .card {
-    width: 190px !important; flex: 0 0 auto !important;
+    width: 190px; flex: 0 0 auto;
     padding: 12px 14px; border-radius: 16px; gap: 6px;
   }
-  .row.indices .t-display { font-size: 22px; line-height: 28px; }
+  .row.indices .t-display { font-size: 20px; line-height: 28px; }
   .row.indices .kv { flex-direction: column; align-items: flex-start; gap: 2px; }
   .row.indices .kv > span:last-child { text-align: left; }
 
@@ -3019,7 +3113,7 @@ th.right .th-sort { flex-direction: row-reverse; }
   .nav { width: 100%; }
   .nav-row {
     flex-direction: column; gap: 4px; padding: 10px 4px; text-align: center;
-    font-size: 10px; line-height: 12px; font-weight: 600;
+    font-size: 12px; line-height: 16px; font-weight: 600;
   }
   /* The bucket row borrows .grow from the wide layout to push its count to the
      far edge; stacked, that would stretch the word instead. */
@@ -3042,12 +3136,12 @@ th.right .th-sort { flex-direction: row-reverse; }
   display: flex; align-items: center; gap: 10px;
   padding: 10px 20px;
   background: var(--tint-warning); color: var(--warning);
-  font-size: 13px; line-height: 18px; font-weight: 600;
+  font-size: 14px; line-height: 20px; font-weight: 600;
 }
 .offline-bar .ic { flex: none; }
 @media (min-width: 900px) {
   /* Beside the sidebar rather than over it, so the rail stays reachable. */
-  .screen > .offline-bar { position: fixed; top: 0; left: var(--sidebar-w); right: 0; z-index: 40; }
+  .screen > .offline-bar { position: fixed; top: 0; left: var(--sidebar-w); right: 0; z-index: var(--z-overlay); }
   .screen:has(> .offline-bar) > .content { padding-top: 62px; }
 }
 
@@ -3160,14 +3254,19 @@ th.right .th-sort { flex-direction: row-reverse; }
 .swap-bal { display: inline-flex; align-items: baseline; gap: 8px; font-size: 12px; }
 .swap-bal .muted { font-size: 12px; }
 .swap-max { font-size: 12px; }
+/* The word is 25 wide and a thumb is not. The target grows to 44 around it
+   and pulls back with margin, so the balance line does not get taller. */
+.swap-max { min-width: 44px; min-height: 44px; margin-block: -14px; display: inline-grid; place-items: center; }
 .swap-field { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .swap-amount { flex: 1; min-width: 0; }
 .swap-amount input {
-  width: 100%; font-size: 30px; line-height: 40px; font-weight: 600;
+  width: 100%; font-size: 36px; line-height: 40px; font-weight: 600;
   letter-spacing: -0.02em; background: transparent; border: 0; color: var(--ink);
 }
 .swap-amount input:focus { outline: none; }
-.swap-amount input:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; border-radius: 8px; }
+/* The same green ring as every other focused thing (rule 13 allows exactly
+   one focus ring, and it is green). It was --ink, the only white one. */
+.swap-amount input:focus-visible { outline: 2px solid var(--positive); outline-offset: 4px; border-radius: 8px; }
 /* The token, as a pill rather than a select: it opens the same three-way
    dialog the Wallet's Convert door opens, so it should look like the thing
    that opens a dialog. */
@@ -3177,7 +3276,7 @@ th.right .th-sort { flex-direction: row-reverse; }
      on, or it reads as a label. The rows are --control, so this is --surface. */
   background: var(--surface); color: var(--ink); font-size: 14px;
 }
-.swap-token:hover { background: var(--sunken); }
+@media (hover: hover) and (pointer: fine) { .swap-token:hover { background: var(--sunken); } }
 .swap-token .dot { width: 10px; height: 10px; flex: none; }
 .swap-token .ic { display: inline-flex; opacity: 0.55; }
 /* It opens a dialog under itself, so it points the way the dialog comes from.
@@ -3193,11 +3292,10 @@ th.right .th-sort { flex-direction: row-reverse; }
   background: var(--sunken); border: 4px solid var(--surface);
   display: inline-flex; align-items: center; justify-content: center;
 }
-.swap-flip:hover { background: var(--control); }
+@media (hover: hover) and (pointer: fine) { .swap-flip:hover { background: var(--control); } }
 .swap-quick { justify-content: center; margin-top: 4px; }
 .swap-detail { margin-top: 4px; }
 
 @media (max-width: 899px) {
-  .swap-amount input { font-size: 26px; line-height: 34px; }
-  .swap-token { height: 40px; }
+  .swap-amount input { font-size: 28px; line-height: 36px; }
 }

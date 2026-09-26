@@ -1,10 +1,9 @@
 /* The first thing a new person sees, walked the way a new person walks it. */
-import { chromium } from 'playwright'
-import { fresh, seen, settled } from './seen.mjs'
-const B = 'http://localhost:4173/#'
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+import { B, launch, check, teardown } from './lib/harness.mjs'
+import { fresh, settled } from './lib/seen.mjs'
+const b = await launch()
 const errs = []
-const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
+const ok = check
 const page = async (w = 1440, h = 900) => {
   const p = await b.newPage({ viewport: { width: w, height: h } })
   // New, but unlocked: signing up gets you in, and the intro is about the
@@ -12,7 +11,6 @@ const page = async (w = 1440, h = 900) => {
   await fresh(p)
   p.on('pageerror', (e) => errs.push(String(e)))
   p.setDefaultTimeout(6000)
-  await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   return p
 }
 
@@ -181,4 +179,4 @@ for (const [w, h] of [[1440, 900], [390, 844]]) {
   }
 }
 console.log('\nerrors:', errs.length ? errs : 'none')
-await b.close()
+await teardown(b)

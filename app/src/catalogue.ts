@@ -139,7 +139,6 @@ export const find = (ticker: string): Instrument | undefined => {
 /** What the approved launch set is, and what is waiting behind it. The market
  *  shows both — a market that hides what is coming is a market that looks
  *  smaller than it is — and only the first can be bought. */
-export const LAUNCH = CATALOGUE.filter((c) => c.launch)
 export const tradable = (c: Instrument): boolean => c.launch
 
 /** One company, one address. `AAPLc` is what you hold and `AAPL` is what the
@@ -156,12 +155,6 @@ export const pathOf = (c: Instrument | string): string => {
   const it = typeof c === 'string' ? find(c) : c
   return '/invest/' + (it?.under ?? String(c)).toLowerCase()
 }
-
-/** What one token is worth against the share it tracks. A multiplier above 1
- *  means dividends and splits have accrued into it, so a token is worth more
- *  than one share — which is the single most confusing thing about a tokenised
- *  security and the reason it is stated rather than folded in silently. */
-export const perToken = (c: Instrument): number => c.multiplier
 
 /* ---------------------------------------------------------------------------
    The safeguards.
@@ -225,7 +218,7 @@ export type Refusal = { code: string; title: string; why: string }
  *  positions in a queue of reasons — costing an order against the book is
  *  premature when the number is going to change anyway. */
 export const aboutTheAmount = (r: Refusal): boolean =>
-  r.code === 'impact' || r.code === 'liquidity'
+  r.code === 'impact' || r.code === 'liquidity' || r.code === 'minimum'
 
 /** Every reason this trade must not go through, in the order a person would
  *  want to hear them. Empty means it is safe to show a confirm button.
@@ -233,7 +226,8 @@ export const aboutTheAmount = (r: Refusal): boolean =>
  *  Returned as a list rather than a boolean because a trade can be refused for
  *  two reasons at once, and telling somebody about one of them sends them off
  *  to fix half a problem. */
-export function refusals(c: Instrument, dollars: number, off?: { trading?: boolean; asset?: boolean }): Refusal[] {
+export function refusals(c: Instrument, dollars: number,
+                         off?: { trading?: boolean; asset?: boolean; closing?: boolean }): Refusal[] {
   const out: Refusal[] = []
   // Somebody in operations turned it off, which is a different sentence from
   // "the market says no" and has to read as one. A person who is told the
@@ -263,6 +257,13 @@ export function refusals(c: Instrument, dollars: number, off?: { trading?: boole
   if (priceImpact(c, dollars) > GUARDS.impactPct) {
     out.push({ code: 'impact', title: 'This order is too big for the book',
       why: `An order this size would move the price ${priceImpact(c, dollars).toFixed(2)}%, over our ${GUARDS.impactPct}% ceiling. Try a smaller amount, or split it across a few days.` })
+  }
+  // The floor was named in GUARDS and enforced nowhere. Below it the fee and
+  // the gas are a real share of the order. Selling the last of a position is
+  // the exception: a holding worth $3 has to be sellable, or it is stuck.
+  if (dollars > 0 && dollars < GUARDS.minOrder && !off?.closing) {
+    out.push({ code: 'minimum', title: `Orders start at $${GUARDS.minOrder}`,
+      why: `The smallest order we take is $${GUARDS.minOrder}. Below that the costs of the trade are a real part of it.` })
   }
   if (dollars > c.liquidity) {
     out.push({ code: 'liquidity', title: 'Not enough on the book',

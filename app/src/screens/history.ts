@@ -178,14 +178,20 @@ function feedRow(i: Item): HTMLElement {
   },
     h('span', { class: 'mark feed-ic', html: ic() }),
     h('span', { class: 'two-line grow' },
-      h('span', { class: 't-body-strong', text: title }),
+      // Unread is said as well as drawn: the dot is for the eye, and a screen
+      // reader hears the word before the title.
+      h('span', { class: 't-body-strong' },
+        unread ? h('span', { class: 'sr-only', text: 'Unread. ' }) : null, title),
       h('small', { class: 'muted', text: meta.filter(Boolean).join(' · ') })),
     // What was announced, on the thing it was announced about. A second row
-    // saying the same event happened is the page saying it twice.
+    // saying the same event happened is the page saying it twice. `role=img`
+    // so its label is read: a label on a bare span is not.
     told
-      ? h('span', { class: 'feed-told', title: told.emailed ? 'We told you, and emailed you' : 'We told you',
-          ariaLabel: 'We told you about this', html: icon.bell() })
-      : null,
+      ? h('span', { class: 'feed-told', role: 'img',
+          title: told.emailed ? 'We told you, and emailed you' : 'We told you',
+          ariaLabel: told.emailed ? 'We told you, and emailed you' : 'We told you about this',
+          html: icon.bell() })
+      : unread ? h('span', { class: 'unread-dot', ariaHidden: true }) : null,
     isAct(i) ? amount(i.act) : h('span', { class: 'muted t-caption', text: '' }),
     h('span', { class: 'muted set-chev', html: icon.chevron() }))
 }

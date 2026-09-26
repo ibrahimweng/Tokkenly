@@ -2,20 +2,18 @@
    are the ones the old screen could not answer: can you find a control, does
    the row tell you what it is set to before you tap, and does the PIN stand
    between somebody and your money or is it decoration. */
-import { chromium } from 'playwright'
-import { seen, verify } from './seen.mjs'
+import { B, launch, check, teardown } from './lib/harness.mjs'
+import { seen, verify } from './lib/seen.mjs'
 
-const B = 'http://localhost:4173/#'
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+const b = await launch()
 const errs = []
-const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
+const ok = check
 
 const page = async (w = 1440, h = 1100) => {
   const p = await b.newPage({ viewport: { width: w, height: h } })
   await seen(p)
   p.on('pageerror', (e) => errs.push(String(e)))
   p.setDefaultTimeout(6000)
-  await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   return p
 }
 const at = async (p, r) => {
@@ -52,8 +50,10 @@ console.log('THE INDEX  eight rows, not ten cards')
 // a setting. The wall this was written against was ten cards *of settings*;
 // what is being kept out is a second way to change the same things, not a
 // signpost to a different product.
+  // And for a customer, none: the console's door is shown to staff only now,
+  // so the column is the list and nothing else.
   ok('the old wall of cards is gone',
-     (await p.locator('main .set-col .card').count()) === 1 &&
+     (await p.locator('main .set-col .card').count()) === 0 &&
      (await p.locator('main .set-list .set-row').count()) === 9,
      await p.locator('main .set-col .card').count() + ' cards beside the list')
   await p.close()
@@ -167,17 +167,19 @@ console.log('SECURITY IS NOT DECORATIVE  the switches used to toast and forget')
   await at(p, '/account/security')
   const on = () => p.evaluate(() =>
     [...document.querySelectorAll('.toggle-knob, .switch')].length)
-  await p.getByRole('button', { name: /Face ID/ }).click()
+  await p.getByRole('switch', { name: /Face ID/ }).click()
   await p.waitForTimeout(300)
   await at(p, '/invest')
   await at(p, '/account/security')
   const stuck = await p.evaluate(() => {
     const row = [...document.querySelectorAll('.set-row, .pref-row, button')]
       .find((e) => /Face ID/.test(e.textContent ?? ''))
-    return row?.getAttribute('aria-pressed')
+    return row?.getAttribute('aria-checked')
   })
-  ok('a switch survives leaving the screen', stuck === 'false', 'aria-pressed ' + stuck)
-  await p.getByRole('button', { name: /Face ID/ }).click()
+  // Face ID starts off now — it is a simulated biometric, and nobody gets one
+  // they did not choose — so the one press turned it on.
+  ok('a switch survives leaving the screen', stuck === 'true', 'aria-checked ' + stuck)
+  await p.getByRole('switch', { name: /Face ID/ }).click()
   await p.waitForTimeout(200)
   void on
   await p.close()
@@ -316,4 +318,4 @@ console.log('LOCKED OUT  the way back in is on the screen you are locked out of'
 }
 
 console.log('\nerrors:', errs.length ? errs : 'none')
-await b.close()
+await teardown(b)

@@ -1,16 +1,14 @@
 /* What the product owes somebody who is not using a mouse, or not looking at
    the screen. Contrast has its own suite; this is everything else. */
-import { chromium } from 'playwright'
-import { seen } from './seen.mjs'
-const B = 'http://localhost:4173/#'
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+import { B, BASE_URL, launch, check, teardown } from './lib/harness.mjs'
+import { seen } from './lib/seen.mjs'
+const b = await launch()
 const errs = []
-const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
+const ok = check
 const p = await b.newPage({ viewport: { width: 1440, height: 1000 } })
 await seen(p)
 p.on('pageerror', (e) => errs.push(String(e)))
 p.setDefaultTimeout(6000)
-await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 const at = async (r) => { await p.goto(B + r, { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(450) }
 
 console.log('A SHEET IS A DIALOG')
@@ -61,7 +59,6 @@ const phone = await b.newPage({ viewport: { width: 390, height: 844 } })
 await seen(phone)
 phone.on('pageerror', (e) => errs.push(String(e)))
 phone.setDefaultTimeout(6000)
-await phone.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 await phone.goto(B + '/send?to=Tunde Bakare', { waitUntil: 'domcontentloaded' })
 await phone.waitForTimeout(450)
 {
@@ -167,7 +164,6 @@ console.log('WHAT A THUMB CAN HIT')
   const m = await b.newPage({ viewport: { width: 390, height: 844 } })
   await seen(m)
   m.on('pageerror', (e) => errs.push(String(e)))
-  await m.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   const small = new Map()
   for (const r of ['/', '/transfer', '/invest', '/invest/aapl', '/grow', '/activity', '/bucket',
     '/account', '/account/preferences', '/account/payments', '/account/security', '/account/details',
@@ -204,9 +200,11 @@ console.log('WHAT A THUMB CAN HIT')
   // pixels: shoot the button, make its glyph transparent, shoot it again. If
   // the two images are the same, the glyph was not being drawn.
   for (const [w, tag] of [[390, 'a phone'], [1440, 'a desktop']]) {
-    const g = await b.newPage({ viewport: { width: w, height: 900 } })
+    // bypassCSP: the built page's policy refuses inline styles, which is
+    // right for the product and would refuse the test's own style tag below.
+    const gc = await b.newContext({ viewport: { width: w, height: 900 }, bypassCSP: true })
+    const g = await gc.newPage()
     await seen(g)
-    await g.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
     await g.goto(B + '/grow', { waitUntil: 'domcontentloaded' }); await g.waitForTimeout(400)
     const el = g.locator('.hint').first()
     const shown = await el.screenshot()
@@ -215,7 +213,7 @@ console.log('WHAT A THUMB CAN HIT')
     const blank = await el.screenshot()
     ok(`  and the question mark is drawn on ${tag}`, !shown.equals(blank),
        shown.equals(blank) ? 'its own circle is painted over it' : 'visible')
-    await g.close()
+    await gc.close()
   }
   await m.close()
 }
@@ -225,7 +223,6 @@ for (const theme of ['dark', 'light']) {
   const c = await b.newPage({ viewport: { width: 1440, height: 1000 } })
   await seen(c, { theme })
   c.on('pageerror', (e) => errs.push(String(e)))
-  await c.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   await c.goto(B + '/invest/aapl', { waitUntil: 'domcontentloaded' }); await c.waitForTimeout(700)
   const m = await c.evaluate(() => {
     const cs = [...document.querySelectorAll('.ch-candle')]
@@ -253,7 +250,6 @@ for (const [w, tag] of [[1440, 'desk'], [1100, 'tablet'], [390, 'phone'], [360, 
   const c = await b.newPage({ viewport: { width: w, height: 900 } })
   await seen(c)
   c.on('pageerror', (e) => errs.push(String(e)))
-  await c.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   await c.goto(B + '/invest/aapl', { waitUntil: 'domcontentloaded' }); await c.waitForTimeout(700)
   const m = await c.evaluate(() => {
     const plot = document.querySelector('.ch-plot')
@@ -281,7 +277,6 @@ for (const w of [390, 360, 320]) {
   const c = await b.newPage({ viewport: { width: w, height: 844 } })
   await seen(c)
   c.on('pageerror', (e) => errs.push(String(e)))
-  await c.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   const over = []
   for (const r of ['/activity', '/invest', '/all', '/send', '/account/support', '/verify/number', '/receive']) {
     await c.goto(B + r, { waitUntil: 'domcontentloaded' }); await c.waitForTimeout(350)
@@ -315,7 +310,7 @@ console.log('AND THE TYPE IS THE TYPE, WITH NOBODY ELSE IN THE PATH')
   const offsite = []
   await c.route('**/*', (r) => {
     const u = r.request().url()
-    if (u.startsWith('http://localhost:4173')) return r.continue()
+    if (u.startsWith(BASE_URL)) return r.continue()
     offsite.push(u)
     return r.abort()
   })
@@ -330,7 +325,9 @@ console.log('AND THE TYPE IS THE TYPE, WITH NOBODY ELSE IN THE PATH')
       const w = s.getBoundingClientRect().width; s.remove(); return Math.round(w)
     }
     return {
-      faces: [...document.fonts].filter((x) => x.status === 'loaded').length,
+      // Geist's own faces: 'Geist Fallback' is a local() face with metric
+      // overrides (base.css), loaded from the machine rather than fetched.
+      faces: [...document.fonts].filter((x) => x.status === 'loaded' && x.family.replace(/["']/g, '') === 'Geist').length,
       hero: getComputedStyle(document.querySelector('.hero-figure')).fontFamily.split(',')[0],
       // Geist and the fallback are nothing like each other, which is the whole
       // reason this matters: a session that fell back was a different design.
@@ -346,4 +343,4 @@ console.log('AND THE TYPE IS THE TYPE, WITH NOBODY ELSE IN THE PATH')
 }
 
 console.log('\nerrors:', errs.length ? errs : 'none')
-await b.close()
+await teardown(b)

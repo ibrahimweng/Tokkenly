@@ -9,18 +9,22 @@
    while the naira is genuinely in flight? Is the money somewhere real in the
    meantime? Does one Send actually reach all three destinations, and does the
    one that turns dollars into naira say so? */
-import { chromium } from 'playwright'
-import { seen, verify, settled } from './seen.mjs'
+import { B, launch, check, teardown } from './lib/harness.mjs'
+import { seen, verify, settled } from './lib/seen.mjs'
 
-const B = 'http://localhost:4173/#'
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+const b = await launch()
 const errs = []
-const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
+const ok = check
 const p = await b.newPage({ viewport: { width: 1440, height: 1200 } })
 await seen(p)
+// The card switch is turned back on from the console, and the console is
+// staff's now: signing in with an address at tokkenly.com is how the demo
+// becomes staff, and this is that sign-in, already done.
+await p.addInitScript(() => {
+  try { localStorage.setItem('tokkenly.account.v1', JSON.stringify({ signedIn: true, staff: true })) } catch {}
+})
 p.on('pageerror', (e) => errs.push(String(e)))
 p.setDefaultTimeout(8000)
-await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 const at = async (r) => { await p.goto(B + r, { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(420) }
 const money = (s) => Number(String(s ?? '').replace(/[^0-9.-]/g, '')) || 0
 const cash = async () => { await at('/transfer'); return money(await settled(p, '.hero-figure')) }
@@ -154,9 +158,16 @@ console.log('THE WALLET DOES NOT MOVE UNTIL THE NAIRA DOES')
 
   await p.waitForTimeout(2800)                     // the transfer lands
   const after = await cash()
-  ok('and when it lands the wallet goes up by exactly what was bought',
-     Math.abs(after - before - 300) < 0.01, `${before} → ${after}`)
   const bk2 = await books()
+  // A transfer is converted when it lands, on the buying side of the desk, so
+  // $300 of naira buys a little under $300 — the spread that stops naira to
+  // dollars and back from coming out ahead. What the wallet gains is exactly
+  // what the landing posting says it bought, and that is a hair under 300.
+  const bought = Number((bk2.posts.find((t) => /Converted to \$/.test(t)) ?? '')
+    .match(/Converted to \$([\d,.]+)/)?.[1]?.replace(/,/g, '') ?? NaN)
+  ok('and when it lands the wallet goes up by exactly what was bought',
+     Math.abs(after - before - bought) < 0.01 && bought < 300 && bought > 297,
+     `${before} → ${after}, bought ${bought}`)
   ok('with nothing left in flight', !bk2.balances['On its way to us'],
      bk2.balances['On its way to us'] ?? 'empty')
   // And the last step names which balance it landed in, because there are
@@ -389,4 +400,4 @@ console.log('BOTH WAYS IN ARE NAMED WHERE SOMEBODY WOULD LOOK FOR THEM')
 }
 
 console.log('\nerrors:', errs.length ? errs : 'none')
-await b.close()
+await teardown(b)

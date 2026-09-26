@@ -5,9 +5,9 @@ import { callout as calloutEl, emptyState as emptyStateEl, skeletonList } from '
 import {
   state, actions, owed, monthlyCost, monthlyInterest, holding, bucketTotal, bucketRefusals,
   tradeFee, cardFee, weakPin, ratePassword, LIMITS, type Activity, txHash, onChain, supportRef,
-  switchOn, assetOn,
+  switchOn, assetOn, sideRate, networkFee, unanswered, Refused, purseHolds,
   requestQuote, quoteLive, settlement, grossOf, billOutcome, payAsset, money, rateLine,
-  type Quote, type Destination,
+  type Quote, type Side, type Destination,
 } from './state'
 import { pinPad } from './components/pinpad'
 import {
@@ -19,12 +19,13 @@ import { usd, naira, pct, shares as fmtShares, longWhen, when, isDrawdown } from
 import { type Route, closeSheet, replaceSheet, go } from './router'
 import { isMobile } from './responsive'
 import { QA } from './screens/settings'
-import { peopleRows, sendWays, addWays } from './screens/money'
-import { convertWays, crossesCurrency, figureOf, gets, costs, isAsset,
-         defaultPair } from './screens/convert'
-import { billFrom, whoLabel } from './screens/spend'
+import { sendWays, addWays } from './screens/money'
+import { peopleRows } from './people'
+import { convertWays, crossesCurrency, isAsset, defaultPair } from './screens/convert'
+import { billFrom, whoLabel } from './bills'
+import { scope, onTeardown } from './scope'
 import { parts, partName, partFigure, partUnder, partAlso } from './screens/wallet'
-import { assetOf, netOf, shortAddress, DOLLARS, type Asset } from './assets'
+import { assetOf, netOf, shortAddress, DOLLARS, figureOf, gets, costs, type Asset } from './assets'
 import { assetLine } from './components/purse'
 import { search } from './destinations'
 import * as ledger from './ledger'
@@ -38,14 +39,9 @@ const YEAR: Range = { key: '1Y', days: 365, pct: 17.28, vol: 0.09, fmt: () => ''
  *  long enough that the state is real rather than decorative. */
 export const CONFIRM_MS = 350
 
-/* How long the two ways in actually take.
-   A card is pulled by us and clears in seconds; a transfer is pushed by a
-   person through their own bank and takes as long as the banks take. The
-   difference is the point of offering both, so it is a real wait with a real
-   posting on either side of it rather than a spinner over an answer we
-   already had. Short enough to demonstrate, long enough to be a state. */
-const CARD_MS = 1400
-const TRANSFER_MS = 2600
+/* How long the two ways in take is state.ts's business now: the second stage
+   is followed from the movement's own record, so it survives the dialog that
+   started it being closed, replaced or reloaded. */
 
 /** The destination a send sheet was opened for, rebuilt from its address.
  *  A dialog that cannot be reconstructed from the route is a dialog that
@@ -61,7 +57,38 @@ function destFrom(r: Route): Destination {
   return { rail, name: to }
 }
 
-const num = (r: Route, k: string, d = 0): number => Number(r.query.get(k) ?? d) || d
+/** A number off the address, or the default. An address is something anybody
+ *  can type, and `Number(q) || d` let through −500, Infinity and 1e308 — so a
+ *  review built from `?v=-500` offered to send minus five hundred dollars, and
+ *  the action behind it did. Only a finite figure of nothing or more comes
+ *  back, to the cent; the actions refuse anything that is not more than
+ *  nothing, and so do the reviews, before a button is drawn. */
+const num = (r: Route, k: string, d = 0): number => {
+  // Rounded before it is judged: 1e308 is finite until it is multiplied by a
+  // hundred. And nothing over a billion, which no account here can move.
+  const n = Math.round(Number(r.query.get(k) ?? d) * 100) / 100
+  return Number.isFinite(n) && n >= 0 && n <= 1e9 ? n : d
+}
+
+/** The movement a done dialog is about, off its reference. */
+const byRef = (r: Route): Activity | undefined =>
+  state.activity.find((x) => x.ref === str(r, 'ref'))
+
+/** What a done dialog says when its movement is not there — reached by an old
+ *  link, or a reference typed by hand. It used to assert the record existed
+ *  and throw, which the registry caught and turned into a blank complaint. */
+const gone = (title = 'Not in your history'): HTMLElement =>
+  sheet(title,
+    h('p', { class: 'muted flush', text: 'That reference is not in your history. Nothing has moved.' }),
+    h('button', { class: 'btn btn-secondary', text: 'See your activity',
+      on: { click: () => { closeSheet(); go('/activity') } } }))
+
+/** What a review says when the amount on its address is not one. */
+const badAmount = (): HTMLElement =>
+  sheet('Nothing to confirm',
+    h('p', { class: 'muted flush',
+      text: 'That amount is not one we can move. Go back and type it again. Nothing has moved.' }),
+    h('button', { class: 'btn btn-secondary', text: 'Back', on: { click: closeSheet } }))
 
 /** Which balance a dialog was opened against, read off its own address so a
  *  refresh cannot quietly move the payment onto a different one. */
@@ -96,6 +123,13 @@ function review(opts: {
    *  because all three change when the quote does. When present, the plain
    *  `rows`, `action` and `onConfirm` above are not used. */
   hold?: {
+    /** Which side of the desk: buying dollars or selling them. */
+    side: Side
+    /** What this dialog is, so a quote is held for this dialog and nothing
+     *  else. The dialog is rebuilt on every change of state, and it used to
+     *  ask for a new rate every time it was — so a payout landing elsewhere
+     *  in the app quietly replaced the rate somebody was reading. */
+    key: string
     rows: (q: Quote) => [string, string][]
     action: (q: Quote) => string
     onConfirm: (q: Quote) => void
@@ -155,7 +189,20 @@ function review(opts: {
     // Money takes a moment to move. The button says so, rather than pretending
     // the ledger changed the instant it was pressed. Figma Button State=Loading.
     button.classList.add('is-busy')
-    setTimeout(confirmNow, CONFIRM_MS)
+    setTimeout(() => {
+      // The action has the last word, and it can say no: the balance moved,
+      // the limit filled, a switch went off while the dialog was open. When it
+      // does, nothing has been written, and the reason goes under the button
+      // that is ready to be pressed again. It used to throw inside a timer,
+      // leave the button spinning for ever, and say nothing at all.
+      try {
+        confirmNow()
+      } catch (e) {
+        button.classList.remove('is-busy')
+        if (!(e instanceof Refused)) console.error(e)
+        refuse(e instanceof Refused ? e.message : 'That did not go through. Nothing has moved. Try again.')
+      }
+    }, CONFIRM_MS)
   })
 
   // The preference is "ask for your PIN above X". It was a tickbox, which is
@@ -215,14 +262,25 @@ function review(opts: {
       figure(opts.figureLabel, opts.figureValue),
       rows, clock, refusal, foot)
 
-    let timer = 0
+    let timer: ReturnType<typeof setInterval> | undefined
+    const hold = opts.hold
+    // The interval ends with the drawing it belongs to, rather than on the
+    // tick after somebody notices the element is gone.
+    onTeardown(() => clearInterval(timer))
 
     /** Asking. The rows are a skeleton rather than an empty panel, because the
      *  shape of the answer arriving is the difference between a slow screen and
      *  a broken one — and this was the component the product had written and
-     *  never once called. */
-    const ask = (): void => {
+     *  never once called.
+     *
+     *  A quote this dialog already holds, and that has not run out, is used
+     *  again rather than asked for again: the dialog is rebuilt whenever
+     *  anything changes, and a rate that changes because something else did
+     *  is not a rate that is held. Pressing for a new one asks afresh. */
+    const ask = (fresh = false): void => {
       clearInterval(timer)
+      const kept = HELD.get(hold.key)
+      if (!fresh && kept && quoteLive(kept)) { quote = kept; draw(); return }
       quote = null
       refusal.hidden = true
       swap(rows, skeletonList(3))
@@ -230,7 +288,13 @@ function review(opts: {
       clock.replaceChildren(h('span', { html: icon.info() }),
         h('span', { text: 'Getting you a rate.' }))
       swap(foot)
-      requestQuote().then((q) => { quote = q; draw() }).catch(fail)
+      const signal = scope()
+      requestQuote(hold.side).then((q) => {
+        HELD.set(hold.key, q)
+        // The dialog that asked may have been redrawn while the answer was on
+        // its way. The new one reads the held quote; this one has gone.
+        if (!signal.aborted) { quote = q; draw() }
+      }).catch(() => { if (!signal.aborted) fail() })
     }
 
     /** It did not arrive. Says which of the two reasons it was, and offers the
@@ -247,7 +311,7 @@ function review(opts: {
           ? 'Could not get a rate just now. Nothing has been sent.'
           : 'No connection, so there is no rate to hold. Nothing has been sent.' }))
       swap(foot, h('button', {
-        class: 'btn btn-secondary', text: 'Try again', on: { click: ask },
+        class: 'btn btn-secondary', text: 'Try again', on: { click: () => ask(true) },
       }))
     }
 
@@ -261,17 +325,9 @@ function review(opts: {
       clock.classList.remove('expired')
       tick()
       clearInterval(timer)
-      timer = setInterval(tick, 1000) as unknown as number
+      timer = setInterval(tick, 1000)
     }
-    let mounted = false
     function tick(): void {
-      // The sheet can be closed while the clock is running, and an interval
-      // that outlives what it was counting for is a leak with a timer on it.
-      // The check waits for the first mount: the opening call happens while
-      // the sheet is still being assembled and is not in the document yet, and
-      // bailing there left the clock blank for its first second.
-      if (mounted && !el.isConnected) { clearInterval(timer); return }
-      if (el.isConnected) mounted = true
       const left = quote ? quote.until - Date.now() : 0
       if (left > 0) {
         const s = Math.ceil(left / 1000)
@@ -288,7 +344,7 @@ function review(opts: {
       // The button goes rather than greying: a dead control you can still
       // press is how a stale rate gets spent.
       swap(foot, h('button', {
-        class: 'btn btn-primary', text: 'Get a new rate', on: { click: ask },
+        class: 'btn btn-primary', text: 'Get a new rate', on: { click: () => ask(true) },
       }))
     }
     ask()
@@ -333,6 +389,20 @@ function review(opts: {
   )
 }
 
+/** Until when a correct PIN keeps the recovery phrase on screen. */
+let phraseOpenUntil = 0
+
+/** Quotes held, one per dialog, for as long as each is honoured. */
+const HELD = new Map<string, Quote>()
+
+/** A dialog's identity for the quote it holds: which dialog, with what on
+ *  its address. The same review of the same payment is the same key; any
+ *  change to the amount or the destination is a different payment and gets
+ *  its own rate. */
+const holdKey = (r: Route): string =>
+  (r.sheet ?? '') + '?' + [...r.query.entries()].filter(([k]) => k !== 'sheet')
+    .sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => k + '=' + v).join('&')
+
 /** The end of a flow. It used to assert success on every one of them; a
  *  movement that has not come back confirmed says so instead, and says what
  *  that means, because "we do not know yet" is a state a person can act on and
@@ -343,6 +413,15 @@ function done(
   a: Activity,
   extra: [string, string][] = []
 ): HTMLElement {
+  if (a.returned) {
+    return outcome(
+      'Returned',
+      'Nobody answered in time, so it came back. Nothing has been taken.',
+      [['Reference', a.ref], ['When', longWhen(a.at)]],
+      { label: 'Done', onClick: closeSheet },
+      { label: 'See the record', onClick: () => replaceSheet('receipt', { ref: a.ref }) },
+      { celebrate: false })
+  }
   if (!a.settled) {
     return outcome(
       'Still settling',
@@ -379,8 +458,8 @@ function done(
  *  show its working reads as the app being broken; one that names the venue
  *  price, the independent price and the ceiling between them reads as the
  *  product doing its job. */
-function refused(c: Instrument, v: number, kind: 'buy' | 'sell' = 'buy'): HTMLElement | null {
-  const bad = refusals(c, v, { trading: !switchOn(kind), asset: !assetOn(c.ticker) })
+function refused(c: Instrument, v: number, kind: 'buy' | 'sell' = 'buy', closing = false): HTMLElement | null {
+  const bad = refusals(c, v, { trading: !switchOn(kind), asset: !assetOn(c.ticker), closing })
   if (!bad.length) return null
   return sheet('Not this one',
     figure('We are not taking this trade', bad.length + (bad.length === 1 ? ' reason' : ' reasons'), 'warn'),
@@ -453,7 +532,14 @@ export const SHEETS: Record<string, Builder> = {
    *  keyboard first, because that is the point of it. */
   jump: () => {
     const input = h('input', { placeholder: 'Search Tokkenly', ariaLabel: 'Search Tokkenly' })
-    const list = h('div', { class: 'jump-list' })
+    // A combobox over a listbox, the same pattern the Invest search uses, so
+    // a screen reader is told there is a list and which row the arrows are on.
+    // Without it the arrow keys moved a highlight only a sighted person saw.
+    input.setAttribute('role', 'combobox')
+    input.setAttribute('aria-expanded', 'true')
+    input.setAttribute('aria-autocomplete', 'list')
+    input.setAttribute('aria-controls', 'jump-list')
+    const list = h('div', { class: 'jump-list', role: 'listbox', id: 'jump-list', ariaLabel: 'Results' })
     let hits = search('')
     let cursor = 0
 
@@ -468,10 +554,11 @@ export const SHEETS: Record<string, Builder> = {
       hits.forEach((hit, i) => {
         if (hit.group !== group) {
           group = hit.group
-          list.appendChild(h('div', { class: 'jump-group', text: group }))
+          list.appendChild(h('div', { class: 'jump-group', ariaHidden: true, text: group }))
         }
         list.appendChild(h('button', {
-          class: 'jump-hit', dataset: { on: i === cursor ? '1' : '0' },
+          class: 'jump-hit', role: 'option', id: 'jump-hit-' + i, tabIndex: -1,
+          dataset: { on: i === cursor ? '1' : '0' },
           on: { click: () => { closeSheet(); go(hit.to) },
                 mouseenter: () => { cursor = i; mark() } },
         },
@@ -483,11 +570,16 @@ export const SHEETS: Record<string, Builder> = {
     }
     const mark = () => {
       const rows = list.querySelectorAll('.jump-hit')
-      rows.forEach((r, i) => r.setAttribute('data-on', i === cursor ? '1' : '0'))
+      rows.forEach((r, i) => {
+        r.setAttribute('data-on', i === cursor ? '1' : '0')
+        r.setAttribute('aria-selected', String(i === cursor))
+      })
+      if (rows[cursor]) input.setAttribute('aria-activedescendant', rows[cursor].id)
+      else input.removeAttribute('aria-activedescendant')
       rows[cursor]?.scrollIntoView({ block: 'nearest' })
     }
     input.addEventListener('input', () => {
-      hits = search(input.value); cursor = 0; paint()
+      hits = search(input.value); cursor = 0; paint(); mark()
     })
     input.addEventListener('keydown', (e) => {
       const k = (e as KeyboardEvent).key
@@ -496,6 +588,7 @@ export const SHEETS: Record<string, Builder> = {
       else if (k === 'Enter' && hits[cursor]) { e.preventDefault(); const to = hits[cursor].to; closeSheet(); go(to) }
     })
     paint()
+    mark()
     setTimeout(() => input.focus(), 0)
 
     const panel = sheet('',
@@ -508,6 +601,9 @@ export const SHEETS: Record<string, Builder> = {
     // no title row on this one; the field is the title
     panel.querySelector('.sheet-head')?.remove()
     panel.querySelector('.sheet')?.classList.add('jump')
+    // Named for what it is. With no heading, the dialog fell back to the
+    // label "Dialog", which is what a screen reader announced on Command K.
+    panel.querySelector('.sheet')?.setAttribute('aria-label', 'Search Tokkenly')
     panel.classList.add('scrim-top')     // a palette sits high, not centred
     return panel
   },
@@ -629,7 +725,9 @@ export const SHEETS: Record<string, Builder> = {
       'Receipt',
       figure(a.type, (inbound ? '+' : '−') + usd(Math.abs(a.amount)),
         inbound && !isDrawdown(a) ? 'pos' : '',
-        a.settled
+        a.returned
+          ? 'Returned · nobody answered in time, so the money went back where it came from'
+          : a.settled
           ? a.asset
             // Not "this payment": no money moved. What moved was the share,
             // and the one thing worth saying about a share that has gone is
@@ -641,7 +739,7 @@ export const SHEETS: Record<string, Builder> = {
             // and saying which one is the difference between a person waiting
             // calmly and a person ringing support.
             ? 'Dollars out, naira on the way · the bank has not confirmed it yet'
-            : settlement(a.amount) === 'pending'
+            : unanswered(a)
               ? 'Still settling · we have not seen it yet, and nothing has been taken twice'
               : 'Still settling · it usually clears within a minute'),
       c ? h('div', { class: 'receipt-co' },
@@ -666,8 +764,9 @@ export const SHEETS: Record<string, Builder> = {
         // supplier, which the figure above and the feed row both already name,
         // goes into it.
         ...(a.bill
-          ? [[a.type === 'Electricity' ? 'Meter' : 'Number', a.bill.target] as [string, string],
-             ...(a.bill.token ? [['Token', a.bill.token] as [string, string]] : [])]
+          ? [[a.type === 'Electricity' ? 'Meter' : a.bill.pin ? 'For' : 'Number', a.bill.target] as [string, string],
+             ...(a.bill.token ? [['Token', a.bill.token] as [string, string]] : []),
+             ...(a.bill.pin ? [['PIN', a.bill.pin] as [string, string]] : [])]
           : [[inbound ? 'From' : 'To', a.who] as [string, string]]),
         // Money that changed currency states both figures. Read off the
         // ledger's paired postings rather than multiplied out here, so a
@@ -679,8 +778,11 @@ export const SHEETS: Record<string, Builder> = {
         // A transfer states what left, at the price of the day it left at. The
         // shares are recorded rather than divided out of the amount, because a
         // price that has moved since would silently restate the quantity.
+        // A buy or a sale states the shares it filled, recorded at the fill.
+        // Rows from before fills were recorded fall back to the old division.
         ...(a.asset
           ? [['Shares', fmtShares(a.asset.shares) + ' ' + a.asset.ticker] as [string, string]]
+          : a.fill ? [['Shares', fmtShares(a.fill.shares)] as [string, string]]
           : c ? [['Shares', fmtShares(grossOf(a) / c.price)] as [string, string]] : []),
         // The total is the headline of a record; the amount and the fee that
         // add up to it are the detail, and they were both stated before the
@@ -701,7 +803,7 @@ export const SHEETS: Record<string, Builder> = {
         ...(a.asset ? [['Price each', usd(a.asset.price)] as [string, string]]
           : c ? [
             [a.type === 'Sold' ? 'Sale' : 'Investment', usd(grossOf(a))] as [string, string],
-            ['Price each', usd(c.price)] as [string, string],
+            ['Price each', usd(a.fill?.price ?? c.price)] as [string, string],
           ] : []),
         ['When', longWhen(a.at)],
         ...(fx ? [['Rate', '1 dollar = ' + naira(fx.rate)] as [string, string]] : []),
@@ -872,7 +974,12 @@ export const SHEETS: Record<string, Builder> = {
           askNew('Those did not match. Pick your new PIN again.')
           return
         }
-        actions.setPin(chosen)
+        try {
+          actions.setPin(chosen)
+        } catch (e) {
+          askNew(e instanceof Error ? e.message : 'That PIN cannot be used.')
+          return
+        }
         toast('Your PIN has been changed')
         closeSheet()
       })
@@ -881,7 +988,7 @@ export const SHEETS: Record<string, Builder> = {
       (v, pad) => {
         const why = weakPin(v, state.person.dob)
         if (why) { pad.reject(why); return }
-        if (v === state.security.pin) {
+        if (actions.isCurrentPin(v)) {
           pad.reject('That is the PIN you already have.')
           return
         }
@@ -937,12 +1044,17 @@ export const SHEETS: Record<string, Builder> = {
     next.addEventListener('input', grade)
 
     save.addEventListener('click', () => {
-      if (cur.value !== state.security.password) {
+      if (!actions.checkPassword(cur.value)) {
         toast('That is not your current password')
         cur.focus()
         return
       }
-      actions.setPassword(next.value)
+      try {
+        actions.setPassword(next.value)
+      } catch (e) {
+        toast(e instanceof Error ? e.message : 'That password cannot be used')
+        return
+      }
       toast('Your password has been changed')
       closeSheet()
     })
@@ -1002,12 +1114,49 @@ export const SHEETS: Record<string, Builder> = {
         ['Where to keep it', 'On paper, somewhere only you can reach'],
         ['Never', 'A photo, a note app, or a message'],
         ['If somebody asks', 'They are stealing from you. Nobody here will ask'],
-        ['Written down', '12 August 2026']
+        // The day it was, or that it has not been. This row said 12 August
+        // 2026 whether or not anything had been written down at all.
+        ['Written down', state.phraseWrittenDown ? state.phraseWrittenOn || 'Yes' : 'Not yet'],
       ),
       calloutEl('Anyone with these twelve words can move your money. We cannot stop them and we cannot get it back.', 'warning'),
       h('button', { class: 'btn btn-primary', text: 'Show the words', on: { click: () => replaceSheet('phrase-shown') } })),
 
+  /** The words themselves, behind the PIN.
+   *
+   *  They were one press away from anything that could open this dialog,
+   *  including the lock screen — "Forgotten your PIN?" opened the phrase, and
+   *  "Show the words" showed it, to whoever was holding a locked phone. The
+   *  lock screen no longer opens any of this, and the words ask for the PIN
+   *  every time they are shown, however the dialog was reached. A correct PIN
+   *  holds for a minute, so a redraw while they are being copied out does not
+   *  ask again; wrong ones count toward the same five as everywhere else. */
   'phrase-shown': () => {
+    if (Date.now() > phraseOpenUntil) {
+      if (actions.pinLocked()) {
+        return sheet('Your recovery phrase',
+          h('span', { class: 'field-error', role: 'status',
+            text: 'Five wrong tries. Sign in again with your password before the words can be shown.' }),
+          h('button', { class: 'btn btn-secondary', text: 'Sign in with my password',
+            on: { click: () => { closeSheet(); actions.signOut(); go('/signin') } } }))
+      }
+      const pad = pinPad({
+        hint: 'Your PIN, to show the twelve words',
+        onFull: (v) => {
+          if (!actions.checkPin(v)) {
+            if (actions.pinLocked()) { replaceSheet('phrase-shown'); return }
+            pad.reject('That is not your PIN. ' + (5 - state.security.wrongPin) + ' tries left.')
+            return
+          }
+          phraseOpenUntil = Date.now() + 60_000
+          replaceSheet('phrase-shown')
+        },
+      })
+      return sheet('Your recovery phrase',
+        h('p', { class: 'muted flush',
+          text: 'These words can move everything you hold, so they are only shown to somebody who knows the PIN.' }),
+        h('span', { class: 't-caps subtle', text: 'Authorise with your PIN' }),
+        pad.el)
+    }
     const words = ['ridge', 'olive', 'cargo', 'siren', 'palm', 'unfold', 'quilt', 'rocket', 'dolphin', 'marble', 'tenant', 'glide']
     const grid = h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' } })
     words.forEach((w, i) =>
@@ -1021,9 +1170,23 @@ export const SHEETS: Record<string, Builder> = {
       calloutEl('Anyone with these twelve words can move your money.', 'warning'),
       h('button', {
         class: 'btn btn-primary', text: 'I have written them down',
-        on: { click: () => { actions.markPhraseWritten(); toast('Keep it somewhere safe'); closeSheet() } },
+        on: { click: () => {
+          phraseOpenUntil = 0
+          actions.markPhraseWritten(); toast('Keep it somewhere safe'); closeSheet()
+        } },
       }))
   },
+
+  /** What the lock screen offers instead of the phrase. The way back from a
+   *  forgotten PIN is the password, exactly as it is from five wrong ones,
+   *  and this says so without showing anything a stranger could use. */
+  'pin-help': () =>
+    sheet('Forgotten your PIN?',
+      h('p', { class: 'muted flush',
+        text: 'Sign in with your password and you are straight back in. Then set a new PIN from Account, Security.' }),
+      calloutEl('Nobody at Tokkenly can read your PIN, and nobody will ever ask you for it.'),
+      h('button', { class: 'btn btn-primary', text: 'Sign in with my password',
+        on: { click: () => { closeSheet(); actions.signOut(); go('/signin') } } })),
 
   close: () =>
     sheet('Close your account',
@@ -1096,7 +1259,8 @@ export const SHEETS: Record<string, Builder> = {
 
   banks: () => {
     const name = h('input', { placeholder: 'Bank name' })
-    const acct = h('input', { placeholder: 'Account number' })
+    const acct = h('input', { placeholder: '10-digit account number', inputmode: 'numeric' })
+    acct.setAttribute('maxlength', '14')
     return sheet('Your banks',
       h('div', { class: 'stack-12' },
         ...state.banks.map((b) =>
@@ -1117,9 +1281,14 @@ export const SHEETS: Record<string, Builder> = {
         on: {
           click: () => {
             const n = name.value.trim()
-            const a = acct.value.trim()
-            if (!n || a.length < 4) { toast('Add a bank name and account number'); return }
-            actions.addBank(n, a)
+            // The action checks all of it — ten digits, not already on the
+            // list — and says which; this only passes on what it said.
+            try {
+              actions.addBank(n, acct.value)
+            } catch (e) {
+              toast(e instanceof Error ? e.message : 'That bank could not be added')
+              return
+            }
             toast(n + ' added')
             closeSheet()
           },
@@ -1139,17 +1308,23 @@ export const SHEETS: Record<string, Builder> = {
     // refresh would be a review of a different payment.
     const asset = (DOLLARS.includes(str(r, 'a') as Asset) || str(r, 'a') === 'ngn'
       ? str(r, 'a') : 'usdc') as Asset
-    const net = netOf(str(r, 'net'))
+    const net = to.rail === 'chain' ? netOf(str(r, 'net')) : undefined
     if (to.rail !== 'bank') {
+      // The network's fee is charged, on top, from the same balance — so it
+      // is in the total, and the PIN is asked against the total.
+      const fee = net ? networkFee(net.key) : 0
       return review({
         title: 'Review',
-        figureLabel: 'You are sending', figureValue: usd(v), amount: v,
+        figureLabel: 'You are sending', figureValue: usd(v), amount: v + fee,
         rows: [
           ['To', to.rail === 'chain' ? shortAddress(to.name) : to.name],
           ['Paying with', assetOf(asset)!.name],
           ...(net ? [['Network', net.name] as [string, string]] : []),
           ['They receive', usd(v)],
-          ['Fee', net && net.fee ? usd(net.fee, false) + ' network fee' : 'No fee'],
+          ['Fee', fee
+            ? usd(fee) + (net!.fee ? ' network fee' : ' gas, not sponsored today')
+            : 'No fee'],
+          ...(fee ? [['Total', usd(v + fee)] as [string, string]] : []),
           ['Arrives', net ? net.takes : 'In about a minute'],
         ],
         note: net
@@ -1196,6 +1371,7 @@ export const SHEETS: Record<string, Builder> = {
       rows: [], action: '', onConfirm: () => {},
       note: '',
       hold: {
+        side: 'sell', key: holdKey(r),
         rows: (q) => [
           ['To', to.name],
           ['Account', (to.bank ?? '') + (to.number ? ' · ' + to.number : '')],
@@ -1253,20 +1429,24 @@ export const SHEETS: Record<string, Builder> = {
         },
       })
     }
+    const side: Side = from === 'ngn' ? 'buy' : 'sell'
     return review({
       title: 'Review',
       figureLabel: 'You are converting',
-      figureValue: figureOf(from, costs(from, v, state.ngnPerUsd)),
+      figureValue: figureOf(from, costs(from, v, sideRate(side))),
       rows: [], action: '', onConfirm: () => {},
       note: '',
       hold: {
+        side, key: holdKey(r),
         rows: (q) => [
           ['Out of', fromName],
           ['Into', toName],
           ['Rate', '1 dollar = ' + naira(q.rate)],
           ['You give', figureOf(from, costs(from, v, q.rate))],
           ['You get', figureOf(to, gets(to, v, q.rate))],
-          ['Fee', 'No fee'],
+          // The spread is in the rate above, not added on top; it is said
+          // here so that "no fee" is not the whole of what this costs.
+          ['Fee', `No fee · the rate includes a ${state.fees.fx / 2}% spread`],
         ],
         action: (q) => 'Convert ' + figureOf(from, costs(from, v, q.rate)),
         onConfirm: (q) => {
@@ -1277,8 +1457,8 @@ export const SHEETS: Record<string, Builder> = {
     })
   },
   'convert-done': (r) => {
-    const a = state.activity.find((x) => x.ref === str(r, 'ref'))
-    if (!a || !a.swap) return sheet('Converted', h('p', { class: 'muted', text: 'That conversion is not in your history.' }))
+    const a = byRef(r)
+    if (!a || !a.swap) return gone('Converted')
     const s = a.swap
     const gave = figureOf(s.from, s.gave)
     const got = figureOf(s.to, s.got)
@@ -1302,8 +1482,14 @@ export const SHEETS: Record<string, Builder> = {
                 [['Fee', 'None'], ...(a.note ? [['Rate', a.note] as [string, string]] : [])])
   },
   'send-done': (r) => {
-    const a = state.activity.find((x) => x.ref === str(r, 'ref'))!
+    const a = byRef(r)
+    if (!a) return gone()
     const rate = num(r, 'rate', 0)
+    // What reached them: the amount without the network's fee, and in naira
+    // the naira that were queued rather than the dollars times a rate read
+    // off the address.
+    const sent = Math.abs(a.amount) - (a.fee ?? 0)
+    const ngn = a.leg?.naira ?? Math.abs(a.amount) * rate
     // A payout has two stages and this is the end of the first one, so the
     // sheet says so rather than saying "Sent". The dollars have gone; the
     // naira have not arrived. Both are true and only one of them is the good
@@ -1312,7 +1498,7 @@ export const SHEETS: Record<string, Builder> = {
     if (rate) {
       if (!a.settled) {
         return outcome('On its way',
-          `${usd(Math.abs(a.amount))} has left your wallet. ${naira(Math.abs(a.amount) * rate)} reaches ${a.who} when the bank confirms it.`,
+          `${a.purse === 'ngn' ? naira(ngn) : usd(sent)} has left your wallet. ${naira(ngn)} reaches ${a.who} when the bank confirms it.`,
           [['Stage', 'Dollars out'],
            ['Next', 'Naira into the account'],
            ['Rate', '1 dollar = ' + naira(rate)],
@@ -1321,10 +1507,11 @@ export const SHEETS: Record<string, Builder> = {
           { label: 'See the record', onClick: () => replaceSheet('receipt', { ref: a.ref }) },
           { celebrate: false })
       }
-      return done('Paid', `${naira(Math.abs(a.amount) * rate)} reached ${a.who}.`, a,
+      return done('Paid', `${naira(ngn)} reached ${a.who}.`, a,
                   [['Fee', 'None'], ['Rate', '1 dollar = ' + naira(rate)]])
     }
-    return done('Sent', `${usd(Math.abs(a.amount))} is on its way to ${a.who}.`, a, [['Fee', 'None']])
+    return done('Sent', `${usd(sent)} is on its way to ${a.who}.`, a,
+                [['Fee', a.fee ? usd(a.fee) + ' network fee' : 'None']])
   },
 
   /* ----- spend -----
@@ -1339,12 +1526,13 @@ export const SHEETS: Record<string, Builder> = {
      random on the ones that could. A naira figure ending in 99 is a network
      saying no, and it says so before anything is written. */
   'spend-review': (r) => {
-    const b = billFrom(r.query)
+    const b = billFrom(r.query, state.prefs.payWith)
     if (!b) {
       return sheet('Review', h('p', { class: 'muted',
         text: 'That is not something we can pay for. Go back and pick it again.' }))
     }
-    const rate = state.ngnPerUsd
+    // Naira bought with dollars is dollars sold, so it is the selling side.
+    const rate = sideRate('sell')
     const dollars = Math.round((b.naira / rate) * 100) / 100
     const fromNaira = b.asset === 'ngn'
     return review({
@@ -1392,15 +1580,31 @@ export const SHEETS: Record<string, Builder> = {
           note: b.note ?? (b.holder
             ? `${b.kind === 'prepaid' ? 'Prepaid' : 'Postpaid'} · ${b.holder}`
             : undefined),
-          prepaid: b.kind === 'prepaid', asset: b.asset,
+          prepaid: b.kind === 'prepaid', exam: b.way === 'exam', asset: b.asset,
         }, rate)
         replaceSheet('spend-done', { ref: a.ref })
       },
     })
   },
   'spend-done': (r) => {
-    const a = state.activity.find((x) => x.ref === str(r, 'ref'))!
-    const b = a.bill!
+    const a = byRef(r)
+    if (!a || !a.bill) return gone()
+    const b = a.bill
+    // An exam PIN is what an exam payment buys, and it used to buy nothing:
+    // the PIN was derived for the receipt and never delivered. It comes back
+    // the way a meter token does, first, with a button that copies it.
+    if (b.pin) {
+      const pin = b.pin
+      return outcome(
+        'PIN ready', `${a.note ?? a.type} for ${b.target}. The PIN is below.`,
+        [['PIN', pin], ['Paid', naira(b.naira)], ['Reference', a.ref]],
+        { label: 'Copy the PIN',
+          onClick: () => {
+            navigator.clipboard?.writeText(pin.replace(/ /g, '')).catch(() => undefined)
+            toast('PIN copied', 'success')
+          } },
+        { label: 'See the record', onClick: () => replaceSheet('receipt', { ref: a.ref }) })
+    }
     const token = b.token
     const line = a.type === 'Data'
       ? `${a.note} is on ${b.target}.`
@@ -1444,7 +1648,8 @@ export const SHEETS: Record<string, Builder> = {
     const v = num(r, 'v')
     const to = str(r, 'to')
     const t = str(r, 't')
-    const c = find(t)!
+    const c = find(t)
+    if (!c) return gone('Nothing to send')
     const held = holding(t)
     const n = held ? v / held.price : 0
     return review({
@@ -1467,7 +1672,8 @@ export const SHEETS: Record<string, Builder> = {
     })
   },
   'shares-done': (r) => {
-    const a = state.activity.find((x) => x.ref === str(r, 'ref'))!
+    const a = byRef(r)
+    if (!a) return gone()
     const n = a.asset ? fmtShares(a.asset.shares) + ' ' + a.asset.ticker : 'The shares'
     return done('Sent', `${n} now belong to ${a.who}.`, a,
       [['Worth', usd(Math.abs(a.amount))], ['Fee', 'None']])
@@ -1490,6 +1696,7 @@ export const SHEETS: Record<string, Builder> = {
       rows: [], action: '', onConfirm: () => {},
       note: '',
       hold: {
+        side: 'buy', key: holdKey(r),
         rows: (q) => {
           const ngn = Math.round(v * q.rate)
           return [
@@ -1503,11 +1710,11 @@ export const SHEETS: Record<string, Builder> = {
         },
         action: (q) => 'Pay ' + naira(Math.round(v * q.rate) + cardFee(Math.round(v * q.rate))),
         onConfirm: (q) => {
-          const a = actions.startAddMoney(v, { kind: 'card', id: c.id }, q.rate, into)
           // The charge is authorised; the naira has not reached us yet. A card
           // takes seconds, so the wait is short — but it is a real wait with a
-          // real posting behind it, not a spinner over an answer we already had.
-          setTimeout(() => actions.landAddMoney(a.ref, q.rate), CARD_MS)
+          // real posting behind it, followed by the ledger rather than by this
+          // dialog, so closing it does not strand the money.
+          const a = actions.startAddMoney(v, { kind: 'card', id: c.id }, q.rate, into)
           replaceSheet('add-waiting', { ref: a.ref, rate: String(q.rate) })
         },
       },
@@ -1524,6 +1731,33 @@ export const SHEETS: Record<string, Builder> = {
     const va = state.va
     const into = (assetOf(str(r, 'into')) ? str(r, 'into') : state.prefs.payWith) as Asset
     const ngn = Math.round(v * state.ngnPerUsd)
+    // What those naira buy when they land, on the buying side of the desk.
+    const buys = Math.floor((ngn / sideRate('buy')) * 100) / 100
+    // Pressing this is the person saying the naira has left their bank, so it
+    // is a confirmation like any other and gets the same guards: not with no
+    // connection, not on a `.99`, and not twice. It had none of them, so a
+    // second tap started a second deposit.
+    const refusal = h('div', { class: 'hold expired', hidden: true })
+    const refuseHere = (why: string) => {
+      show(refusal, true)
+      swap(refusal, h('span', { html: icon.alert() }), h('span', { text: why }))
+    }
+    const sent = h('button', { class: 'btn btn-primary', text: 'I have sent it' })
+    sent.addEventListener('click', () => {
+      if (sent.classList.contains('is-busy')) return
+      if (!state.online) { refuseHere('No connection, so nothing was recorded. Try again when you are back online.'); return }
+      if (settlement(v) === 'declined') { refuseHere('Your bank said no. Nothing left your account. Check with them, or try less.'); return }
+      sent.classList.add('is-busy')
+      try {
+        const a = actions.startAddMoney(v, { kind: 'transfer', id: state.banks[0]?.id },
+                                        state.ngnPerUsd, into)
+        replaceSheet('add-waiting', { ref: a.ref })
+      } catch (e) {
+        sent.classList.remove('is-busy')
+        if (!(e instanceof Refused)) console.error(e)
+        refuseHere(e instanceof Refused ? e.message : 'That did not go through. Nothing has moved.')
+      }
+    })
     const copy = h('button', {
       class: 'copy va-number', title: 'Copy the account number',
       on: {
@@ -1548,9 +1782,9 @@ export const SHEETS: Record<string, Builder> = {
           ? [['Converted', 'Nothing'] as [string, string],
              ['Fee', 'No fee'] as [string, string],
              ['You will get', naira(ngn)] as [string, string]]
-          : [['Rate', '1 dollar = ' + naira(state.ngnPerUsd) + ', today'] as [string, string],
+          : [['Rate', '1 dollar = ' + naira(sideRate('buy')) + ', today'] as [string, string],
              ['Fee', 'No fee'] as [string, string],
-             ['You will get', 'About ' + usd(v)] as [string, string]]),
+             ['You will get', 'About ' + usd(buys)] as [string, string]]),
       ),
       calloutEl(into === 'ngn'
         // Nothing is converted, so there is nothing for a rate to change. The
@@ -1561,20 +1795,11 @@ export const SHEETS: Record<string, Builder> = {
         // two. What the second line said — that the dollars may differ — the
         // panel above already says with the word "About".
         : 'You get the rate on the day it lands.'),
-      h('button', {
-        class: 'btn btn-primary', text: 'I have sent it',
-        on: {
-          click: () => {
-            const a = actions.startAddMoney(v, { kind: 'transfer', id: state.banks[0]?.id },
-                                            state.ngnPerUsd, into)
-            setTimeout(() => actions.landAddMoney(a.ref), TRANSFER_MS)
-            replaceSheet('add-waiting', { ref: a.ref })
-          },
-        },
-      }))
+      refusal,
       // No "Not now" under it. The sheet already closes from its own header,
       // and a second control that does the same thing is what 11g.32 spent a
       // tier taking out of the other dialogs.
+      sent)
   },
 
   /** Between the two halves. The wallet has not moved and this sheet does not
@@ -1582,8 +1807,17 @@ export const SHEETS: Record<string, Builder> = {
    *  next. When the naira lands the tree is rebuilt and this becomes the
    *  outcome, in place, without anybody pressing anything. */
   'add-waiting': (r) => {
-    const a = state.activity.find((x) => x.ref === str(r, 'ref'))!
-    const rate = num(r, 'rate', state.ngnPerUsd)
+    const a = byRef(r)
+    if (!a) return gone()
+    const rate = a.leg?.rate ?? num(r, 'rate', state.ngnPerUsd)
+    if (a.returned) {
+      return outcome('Never arrived',
+        'Nothing reached us in time, so nothing was added and nothing was kept. Anything that left your bank goes back to it.',
+        [['From', a.who], ['Reference', a.ref]],
+        { label: 'Done', onClick: closeSheet },
+        { label: 'See the record', onClick: () => replaceSheet('receipt', { ref: a.ref }) },
+        { celebrate: false })
+    }
     if (a.settled) {
       return outcome('Added', `${usd(a.amount)} is in your wallet.`,
         [['From', a.who], ['Rate', '1 dollar = ' + naira(rate)],
@@ -1592,9 +1826,9 @@ export const SHEETS: Record<string, Builder> = {
         { label: 'See the record', onClick: () => replaceSheet('receipt', { ref: a.ref }) },
         { celebrate: true })
     }
-    const stuck = settlement(a.amount) === 'pending'
+    const stuck = unanswered(a)
     return sheet('On its way',
-      figure('Waiting for', naira(Math.round(a.amount * rate))),
+      figure('Waiting for', naira(a.leg?.naira ?? Math.round(a.amount * rate))),
       panel(
         ['You will get', usd(a.amount)],
         ['From', a.who],
@@ -1611,6 +1845,7 @@ export const SHEETS: Record<string, Builder> = {
    *  matters: there is nothing on this sheet that moves their money, because
    *  there is nothing anywhere that could. */
   'admin-person': (r) => {
+    if (!state.staff) return gone('Staff only')
     const m = state.members.find((x) => x.id === str(r, 'id'))
     if (!m) return sheet('Not found', h('p', { class: 'muted', text: 'No such account.' }))
     return sheet(m.name,
@@ -1676,7 +1911,8 @@ export const SHEETS: Record<string, Builder> = {
   /* ----- invest ----- */
   'invest-review': (r) => {
     const v = num(r, 'v')
-    const c = find(str(r, 't'))!
+    const c = find(str(r, 't'))
+    if (!c) return gone('Nothing to buy')
     const stop = refused(c, v)
     if (stop) return stop
     return review({
@@ -1717,23 +1953,26 @@ export const SHEETS: Record<string, Builder> = {
     })
   },
   'invest-done': (r) => {
-    const a = state.activity.find((x) => x.ref === str(r, 'ref'))!
-    const c = find(str(r, 't'))!
-    const got = num(r, 'got')
+    const a = byRef(r)
+    const c = find(a?.fill?.ticker ?? str(r, 't'))
+    if (!a || !c) return gone()
+    const got = a.fill?.shares ?? num(r, 'got')
     const held = holding(c.ticker)
     // What this purchase bought, and what it adds up to. The second line used
     // to be the only one, and it read "undefined shares" for a first buy.
     const line = held && held.shares - got > 1e-6
       ? `${fmtShares(got)} shares of ${c.name}. You now hold ${fmtShares(held.shares)}.`
       : `${fmtShares(got)} shares of ${c.name}. That is your first holding in it.`
-    return done('Bought', line, a, [['Price each', usd(c.price)]])
+    return done('Bought', line, a, [['Price each', usd(a.fill?.price ?? c.price)]])
   },
 
   /* ----- sell ----- */
   'sell-review': (r) => {
     const v = num(r, 'v')
-    const c = find(str(r, 't'))!
-    const stop = refused(c, v, 'sell')
+    const c = find(str(r, 't'))
+    if (!c) return gone('Nothing to sell')
+    const h0 = holding(c.ticker)
+    const stop = refused(c, v, 'sell', !!h0 && v >= h0.shares * h0.price - 0.01)
     if (stop) return stop
     return review({
       title: 'Review',
@@ -1760,11 +1999,12 @@ export const SHEETS: Record<string, Builder> = {
     })
   },
   'sell-done': (r) => {
-    const a = state.activity.find((x) => x.ref === str(r, 'ref'))!
-    const c = find(str(r, 't'))!
+    const a = byRef(r)
+    const c = find(a?.fill?.ticker ?? str(r, 't'))
+    if (!a || !c) return gone()
     const left = holding(c.ticker)
     return done('Sold',
-      `${fmtShares(num(r, 'sold'))} shares of ${c.name}. ${usd(a.amount)} is in your wallet.`, a,
+      `${fmtShares(a.fill?.shares ?? num(r, 'sold'))} shares of ${c.name}. ${usd(a.amount)} is in your wallet.`, a,
       [['You hold now', left ? fmtShares(left.shares) + ' shares' : 'None left']])
   },
 
@@ -1785,7 +2025,9 @@ export const SHEETS: Record<string, Builder> = {
         ['Investment', usd(total)],
         ['Fee', `${usd(tradeFee(total))} · ${state.fees.trade}%`],
         ['Total', usd(total + tradeFee(total))],
-        ['Cash left after', usd(state.cash - total - tradeFee(total))],
+        // Out of the one balance that pays, which is the one that has to
+        // cover it.
+        ['Left in your ' + assetOf(payAsset())!.name, usd(purseHolds(payAsset()) - total - tradeFee(total))],
       ],
       note: 'One payment, but each company gets its own receipt so you can find any of them later.',
       action: `Buy all ${state.bucket.length} for ${usd(total + tradeFee(total))}`,
@@ -1833,7 +2075,8 @@ export const SHEETS: Record<string, Builder> = {
     })
   },
   'borrow-done': (r) => {
-    const a = state.activity.find((x) => x.ref === str(r, 'ref'))!
+    const a = byRef(r)
+    if (!a) return gone()
     return done('Borrowed', `${usd(a.amount)} is in your wallet. Repay any time.`, a,
       [['Rate', pct(state.rates.borrow) + ' a year']])
   },
@@ -1860,7 +2103,8 @@ export const SHEETS: Record<string, Builder> = {
     })
   },
   'repay-done': (r) => {
-    const a = state.activity.find((x) => x.ref === str(r, 'ref'))!
+    const a = byRef(r)
+    if (!a) return gone()
     const left = owed()
     return done('Repaid',
       left === 0 ? 'Nothing left to clear. Your limit is back to full.' : `${usd(left)} left to clear. Repay the rest whenever you want.`,
@@ -1888,7 +2132,8 @@ export const SHEETS: Record<string, Builder> = {
     })
   },
   'earn-done': (r) => {
-    const a = state.activity.find((x) => x.ref === str(r, 'ref'))!
+    const a = byRef(r)
+    if (!a) return gone()
     return done('Lent', `${usd(Math.abs(a.amount))} starts paying interest tomorrow morning.`, a,
       [['Rate', pct(state.rates.lend) + ' a year']])
   },
@@ -1915,7 +2160,8 @@ export const SHEETS: Record<string, Builder> = {
     })
   },
   'takeout-done': (r) => {
-    const a = state.activity.find((x) => x.ref === str(r, 'ref'))!
+    const a = byRef(r)
+    if (!a) return gone()
     return done('Taken back', `${usd(a.amount)} is in your wallet. ${usd(state.lent)} is still lent out.`, a)
   },
 }
@@ -1929,9 +2175,15 @@ export function buildSheet(r: Route): HTMLElement | null {
   if (r.sheet === 'more' && isMobile()) return null
   const make = SHEETS[r.sheet]
   if (!make) return null
+  // A review with no amount it could move is refused before it is drawn,
+  // rather than drawn with a button the action would refuse.
+  if (/-review$/.test(r.sheet) && r.query.has('v') && !(num(r, 'v') > 0)) return badAmount()
   try {
     return make(r)
-  } catch {
+  } catch (e) {
+    // Said, not swallowed. A dialog that fails to build is a bug, and a bug
+    // nobody can see in the console is a bug nobody fixes.
+    console.error('sheet ' + r.sheet + ' failed to build', e)
     return sheet('Something is missing',
       h('p', { class: 'muted', style: { margin: '0' },
         text: 'That sheet needs a record that is no longer here. Close it and try again.' }))
