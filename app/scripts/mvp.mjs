@@ -14,6 +14,12 @@ const errs = []
 const ok = check
 const p = await b.newPage({ viewport: { width: 1440, height: 1300 } })
 await seen(p, { homeView: 'detailed' })
+// The console is staff's now, and signing in with an address at tokkenly.com
+// is how the demo becomes staff. This is that sign-in, already done; the
+// customer's view of the same screens is in the exploit probe and names.mjs.
+await p.addInitScript(() => {
+  try { localStorage.setItem('tokkenly.account.v1', JSON.stringify({ signedIn: true, staff: true })) } catch {}
+})
 p.on('pageerror', (e) => errs.push(String(e)))
 p.setDefaultTimeout(8000)
 const at = async (r) => { await p.goto(B + r, { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(500) }
@@ -125,9 +131,13 @@ console.log('IDENTITY AND PERMISSION ARE TWO DIFFERENT FACTS')
      ['Who you are', 'Eighteen or over', 'Resident in Nigeria', 'Sanctions', 'May hold tokenised shares']
        .every((w) => new RegExp(w, 'i').test(before)))
   ok('and the screener is named', /Didit/.test(before))
-  // The ending nobody builds: known, and still not allowed.
-  await p.locator('.link', { hasText: 'Show a refused eligibility check' }).click()
+  // The ending nobody builds: known, and still not allowed. Walked from the
+  // console now — it was a link on the customer's own settings, where anybody
+  // could refuse or clear their own check.
+  await at('/admin/people')
+  await p.locator('.btn', { hasText: 'Show a refused eligibility check' }).click()
   await p.waitForTimeout(400)
+  await at('/account/verification')
   const after = await text()
   ok('somebody can be verified and still not be allowed to hold this',
      /Identity checked/i.test(after) && /not passed/i.test(after), '')
@@ -150,10 +160,17 @@ console.log('THE WALLET IS THEIRS, AND THE PRODUCT SAYS SO OUT LOUD')
 console.log('AND THERE IS A CONSOLE THAT CAN STOP ANY OF IT')
 {
   await at('/admin')
+  const opening = await text()
+  ok('it opens on what is not working', /Switch/.test(opening) && /slow/i.test(opening))
+  // Down is enforced now — funding and payouts really stop — so the demo
+  // opens with Switch slow, and staff mark it down to see what that does.
+  await p.getByRole('button', { name: /Switch is slow/ }).click()
+  await p.waitForTimeout(400)
   const status = await text()
-  ok('it opens on what is not working', /Switch/.test(status) && /not responding|Down/i.test(status))
-  ok('and says what a customer meets while it is like that',
+  ok('and says what a customer meets while it is down',
      /Naira funding and bank payouts both stop/i.test(status))
+  await p.getByRole('button', { name: /Switch is down/ }).click()
+  await p.waitForTimeout(300)
   ok('it states that staff cannot move customer money',
      /Nothing here can move customer money/i.test(status))
 

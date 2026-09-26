@@ -77,7 +77,10 @@ ok('and does it without a veil over the label',
    Number(dis.opacity) === 1, `"${dis.label}" at opacity ${dis.opacity}`)
 
 console.log('LOADING')
-await go('/grow/borrow?sheet=borrow-review&v=500')
+// $200, inside the unverified $250 single-payment limit. This read $500, and
+// passed only because the action behind the dialog never asked the limit;
+// it does now, and says so under the button rather than confirming.
+await go('/grow/borrow?sheet=borrow-review&v=200')
 await page.locator('.sheet .btn-primary').click()
 await page.waitForTimeout(80)
 const busy = await page.locator('.sheet .btn-primary.is-busy').count()

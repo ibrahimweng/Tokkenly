@@ -50,8 +50,10 @@ console.log('THE INDEX  eight rows, not ten cards')
 // a setting. The wall this was written against was ten cards *of settings*;
 // what is being kept out is a second way to change the same things, not a
 // signpost to a different product.
+  // And for a customer, none: the console's door is shown to staff only now,
+  // so the column is the list and nothing else.
   ok('the old wall of cards is gone',
-     (await p.locator('main .set-col .card').count()) === 1 &&
+     (await p.locator('main .set-col .card').count()) === 0 &&
      (await p.locator('main .set-list .set-row').count()) === 9,
      await p.locator('main .set-col .card').count() + ' cards beside the list')
   await p.close()
@@ -174,7 +176,9 @@ console.log('SECURITY IS NOT DECORATIVE  the switches used to toast and forget')
       .find((e) => /Face ID/.test(e.textContent ?? ''))
     return row?.getAttribute('aria-checked')
   })
-  ok('a switch survives leaving the screen', stuck === 'false', 'aria-checked ' + stuck)
+  // Face ID starts off now — it is a simulated biometric, and nobody gets one
+  // they did not choose — so the one press turned it on.
+  ok('a switch survives leaving the screen', stuck === 'true', 'aria-checked ' + stuck)
   await p.getByRole('switch', { name: /Face ID/ }).click()
   await p.waitForTimeout(200)
   void on

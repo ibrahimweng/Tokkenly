@@ -114,20 +114,40 @@ console.log('THE PASSWORD IS THE WAY BACK')
   await p.locator('.btn', { hasText: 'Sign in with my password' }).click()
   await p.waitForTimeout(400)
   ok('it goes to sign in', /Sign in/.test(await body(p)) && (await p.locator('.auth-card').count()) === 1)
+  // The sandbox takes any password but `wrong` — except here. Signing in is
+  // the way out of five wrong PINs, so here the password is checked: it used
+  // to accept anything, which made the lockout last as long as it took to
+  // type two words into two fields.
+  await p.locator('.auth-card input[type=email]').fill('chinaza.okoro@example.com')
+  await p.locator('.auth-card input[type=password]').fill('not the password at all')
   await p.locator('.auth-card .btn-primary').click()
-  await p.waitForTimeout(500)
+  await p.waitForTimeout(900)
+  ok('a password that is not the account\'s does not clear the lockout',
+     (await p.locator('.auth-card').count()) === 1 && /five wrong PINs/i.test(await body(p)),
+     (await body(p)).slice(0, 80))
+  await p.locator('.auth-card input[type=password]').fill('harmattan evening walk')
+  await p.locator('.auth-card .btn-primary').click()
+  await p.waitForTimeout(900)
   // Getting in with the password is getting in; asking for the PIN straight
   // afterwards is asking the same question twice.
-  ok('and signing in does not then ask for the PIN',
-     (await p.locator('.lock-card').count()) === 0, new URL(p.url()).hash)
+  ok('the account\'s own password does, and does not then ask for the PIN',
+     (await p.locator('.lock-card').count()) === 0 && (await p.locator('.auth-card').count()) === 0,
+     new URL(p.url()).hash)
   await p.close()
 }
 
 console.log('FACE ID  what people actually use, so it is on the screen')
 {
-  const p = await page()
+  // Off unless chosen: it is a simulated biometric, and a stand-in for a
+  // sensor nobody asked for is not offered.
+  const p = await page({ security: { faceId: true } })
   await at(p, '/')
   ok('offered when it is on', (await p.locator('.lock-face').count()) === 1)
+  ok('and it says it is simulated', /simulated/i.test(await p.locator('.lock-face').innerText()))
+  const def = await page()
+  await at(def, '/')
+  ok('and off until somebody turns it on', (await def.locator('.lock-face').count()) === 0)
+  await def.close()
   await p.locator('.lock-face').click()
   await p.waitForTimeout(800)
   ok('and it gets you in', (await p.locator('.lock-card').count()) === 0)

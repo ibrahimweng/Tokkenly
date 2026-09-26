@@ -17,6 +17,12 @@ const errs = []
 const ok = check
 const p = await b.newPage({ viewport: { width: 1440, height: 1200 } })
 await seen(p)
+// The card switch is turned back on from the console, and the console is
+// staff's now: signing in with an address at tokkenly.com is how the demo
+// becomes staff, and this is that sign-in, already done.
+await p.addInitScript(() => {
+  try { localStorage.setItem('tokkenly.account.v1', JSON.stringify({ signedIn: true, staff: true })) } catch {}
+})
 p.on('pageerror', (e) => errs.push(String(e)))
 p.setDefaultTimeout(8000)
 const at = async (r) => { await p.goto(B + r, { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(420) }
@@ -152,9 +158,16 @@ console.log('THE WALLET DOES NOT MOVE UNTIL THE NAIRA DOES')
 
   await p.waitForTimeout(2800)                     // the transfer lands
   const after = await cash()
-  ok('and when it lands the wallet goes up by exactly what was bought',
-     Math.abs(after - before - 300) < 0.01, `${before} → ${after}`)
   const bk2 = await books()
+  // A transfer is converted when it lands, on the buying side of the desk, so
+  // $300 of naira buys a little under $300 — the spread that stops naira to
+  // dollars and back from coming out ahead. What the wallet gains is exactly
+  // what the landing posting says it bought, and that is a hair under 300.
+  const bought = Number((bk2.posts.find((t) => /Converted to \$/.test(t)) ?? '')
+    .match(/Converted to \$([\d,.]+)/)?.[1]?.replace(/,/g, '') ?? NaN)
+  ok('and when it lands the wallet goes up by exactly what was bought',
+     Math.abs(after - before - bought) < 0.01 && bought < 300 && bought > 297,
+     `${before} → ${after}, bought ${bought}`)
   ok('with nothing left in flight', !bk2.balances['On its way to us'],
      bk2.balances['On its way to us'] ?? 'empty')
   // And the last step names which balance it landed in, because there are

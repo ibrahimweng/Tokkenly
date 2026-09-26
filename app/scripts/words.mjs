@@ -26,6 +26,13 @@
 import { B, launch, check, teardown } from './lib/harness.mjs'
 import { seen, verify, locked } from './lib/seen.mjs'
 
+/* The console's routes are walked too, and the console is staff's now:
+   signing in with an address at tokkenly.com is how the demo becomes staff,
+   and this is that sign-in, already done. */
+const asStaff = (p) => p.addInitScript(() => {
+  try { localStorage.setItem('tokkenly.account.v1', JSON.stringify({ signedIn: true, staff: true })) } catch {}
+})
+
 const b = await launch()
 const ok = check
 
@@ -123,7 +130,7 @@ const JARGON = [
 ]
 
 const p = await b.newPage({ viewport: { width: 1440, height: 1200 } })
-await seen(p)
+await seen(p); await asStaff(p)
 p.setDefaultTimeout(8000)
 await verify(p)
 
