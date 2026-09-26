@@ -1,0 +1,86 @@
+# Typecheck, lint, build and every suite, on every push and pull request.
+#
+# Two jobs. `app` is the product: the suites in app/scripts drive a real
+# Chromium against a fresh `vite preview` of the build (npm test starts it).
+# `site` is the marketing site: its two page generators must have nothing
+# left to write, and the site checks in app/scripts/_site*.mjs drive the
+# served folder the way Vercel serves it.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run build
+      - name: No sourcemaps in the build
+        run: test -z "$(find dist -name '*.map')"
+      - name: Chromium for the suites
+        run: npx playwright install --with-deps chromium
+      - run: npm test
+      - name: Keep the screenshots when something fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-shots
+          path: app/shots/
+          if-no-files-found: ignore
+
+  site:
+    runs-on: ubuntu-latest
+    env:
+      SITE_URL: http://localhost:4321
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - name: The generated pages match their generators
+        run: |
+          node site/build-pages.mjs --check
+          node site/build-products.mjs --check
+      # Playwright and the harness live in app/.
+      - run: npm ci
+        working-directory: app
+      - name: Chromium for the checks
+        run: npx playwright install --with-deps chromium
+        working-directory: app
+      # `serve` resolves /about to about.html, as cleanUrls does on Vercel.
+      - name: Serve the site
+        run: |
+          npx --yes serve@14 site -l 4321 > /tmp/serve.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf "$SITE_URL/" > /dev/null && exit 0; sleep 1; done
+          cat /tmp/serve.log; exit 1
+      - name: Site checks
+        working-directory: app
+        run: |
+          node scripts/_sitecheck.mjs "$RUNNER_TEMP"
+          node scripts/_siteinteract.mjs
+          node scripts/_sitecopy.mjs
+          node scripts/_sitecta.mjs "$SITE_URL"
+          node scripts/_sitegs.mjs
+          node scripts/_siteprod.mjs
