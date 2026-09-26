@@ -1,4 +1,4 @@
-import { h, swap } from '../ui'
+import { h, link, swap } from '../ui'
 import { icon } from '../icons'
 import { shell, pageHeader } from '../components/shell'
 import { card, cardHead, headLink, emptyState, bucketBar, showBucketBar } from '../components/bits'
@@ -16,14 +16,15 @@ import { celebrate } from '../confetti'
 function tickerRow(ticker: string): HTMLElement {
   const c = find(ticker)
   if (!c) return h('div')
-  const row = h('div', { class: 'kv', style: { cursor: 'pointer' } },
+  // A link, because it is one: it goes to the company. It was a div with a
+  // click handler, which a pointer could use and a keyboard could not reach.
+  const row = link(pathOf(c), 'kv kv-link',
     h('span', { class: 'two-line' },
       h('span', { class: 't-body-strong', text: c.ticker }),
       h('small', { text: c.name })),
     h('span', { class: 'two-line right' },
       h('span', { class: 't-body-strong', text: priced(c.price) }),
       h('small', { class: c.dayPct >= 0 ? 'pos' : 'muted', text: (c.dayPct >= 0 ? '+' : '') + pct(c.dayPct) })))
-  row.addEventListener('click', () => go(pathOf(c)))
   return row
 }
 
@@ -345,12 +346,11 @@ export function marketScreen(): HTMLElement {
         cardHead('Where people start', headLink('Why these three', '/invest/list/starters')),
         ...PICKS.map((p) => {
           const c = find(p.ticker)!
-          const row = h('div', { class: 'kv', style: { cursor: 'pointer' } },
+          const row = link(pathOf(c), 'kv kv-link',
             h('span', { class: 'two-line' },
               h('span', { class: 't-body-strong', text: c.name }),
               h('small', { text: p.line })),
             h('span', { class: 't-body-strong', text: priced(c.price) }))
-          row.addEventListener('click', () => go(pathOf(c)))
           return row
         })),
       card(cardHead('Your watchlist', headLink('Everything you follow', '/invest/list/watchlist')),

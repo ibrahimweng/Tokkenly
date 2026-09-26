@@ -231,7 +231,7 @@ function cashHero(): HTMLElement {
       // pointer, and finding it is not required to get the numbers.
       h('span', { class: 'read rest' },
         ...list.map((p) =>
-          h('span', { class: 'key' },
+          h('span', { class: 'legend-key' },
             h('span', { class: 'dot ' + p.cls }),
             h('span', { class: 'muted', text: partName(p.key) }))))))
 }

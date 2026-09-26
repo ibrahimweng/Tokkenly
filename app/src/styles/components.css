@@ -44,7 +44,7 @@
    the tab order and leave it unreachable — which is the one thing a skip link
    must not be. */
 .skip {
-  position: fixed; top: 12px; left: 12px; z-index: 90;
+  position: fixed; top: 12px; left: 12px; z-index: var(--z-skip);
   transform: translateY(-200%);
   /* It is a button, so it is a pill (rule 6) and it has no outline (rule 13).
      It floats, so the shadow is what separates it from whatever it lands on
@@ -225,7 +225,8 @@
 /* Not yet read. A dot rather than a weight change, so the row does not shift
    when it is read. */
 .feed-row.unread .feed-ic { color: var(--ink); }
-.feed-row.unread .feed-told { color: var(--brand); }
+.feed-row.unread .feed-told { color: var(--positive); }
+.unread-dot { width: 8px; height: 8px; border-radius: var(--r-pill); background: var(--positive); flex: none; }
 .feed-row .set-chev { flex: none; }
 @media (hover: hover) { .feed-row:hover { background: var(--sunken-hover); } }
 @media (max-width: 899px) {
@@ -241,6 +242,24 @@
 }
 .row-figure > * { white-space: nowrap; }
 .row-trail { flex: none; display: inline-flex; }
+/* The row with a control at its end (see listOf in table.ts). The row is the
+   box; the destination is a button laid over all of it through its ::after,
+   so a press anywhere on the row still opens it; and the trailing control
+   is lifted above that layer so it stays its own target. */
+.feed-split { position: relative; }
+.feed-go {
+  flex: 1 1 auto; min-width: 0;
+  display: flex; align-items: center; gap: 12px; text-align: left;
+}
+.feed-go::after { content: ''; position: absolute; inset: 0; border-radius: 14px; }
+.feed-split .row-trail { position: relative; z-index: 1; }
+/* The ring goes round the row, which is what the button stands for, rather
+   than round the part of it the button's own box happens to cover. */
+.feed-go:focus-visible { outline: none; }
+.feed-go:focus-visible::after { outline: 2px solid var(--positive); outline-offset: 2px; border-radius: 14px; }
+/* The same idea on a desktop table: the first cell's words are a button, so
+   a keyboard can reach the row at all. It looks like the words it wraps. */
+.row-go { display: block; width: 100%; text-align: inherit; border-radius: 6px; }
 
 /* The order control, beside the list rather than on a column head. */
 .chip.sort-by { gap: 6px; }
@@ -274,6 +293,11 @@
    side of a card is worse than one that takes two lines. */
 .kv { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; row-gap: 4px; }
 .kv > * { min-width: 0; }
+/* A row that goes somewhere: a company in a list, a position. A link rather
+   than a div with a click on it, so the keyboard can reach it too; it keeps
+   the row's look and borrows the feed's hover. */
+.kv-link { padding: 6px 12px; margin: -6px -12px; border-radius: 14px; }
+@media (hover: hover) and (pointer: fine) { .kv-link:hover { background: var(--sunken-hover); } }
 /* A value and the control that changes it. The long value is an email address,
    and at 320 it and its Change button do not fit on one line — so they wrap,
    and the address itself may break rather than run off the card. */
@@ -388,7 +412,7 @@
 /* A tab whose rail operations has turned off. Present, named, and saying so,
    rather than gone. */
 .chip.off { opacity: 0.5; cursor: not-allowed; gap: 6px; }
-.chip.off small { color: var(--warn); font-weight: 600; }
+.chip.off small { color: var(--warning); font-weight: 600; }
 
 /* ---------- search ----------
    The field, and the panel of closest matches under it. The panel is absolute
@@ -396,7 +420,7 @@
    pushes the results down the screen is a list fighting itself. */
 .search { position: relative; }
 .suggest {
-  position: absolute; left: 0; right: 0; top: calc(100% + 8px); z-index: 40;
+  position: absolute; left: 0; right: 0; top: calc(100% + 8px); z-index: var(--z-overlay);
   background: var(--surface);
   border-radius: var(--r-panel); padding: 8px;
   /* Rule 12 gives a floating element a shadow and rule 13 takes its outline
@@ -425,6 +449,14 @@
   background: var(--control); color: var(--ink); width: 100%;
 }
 .field input { width: 100%; }
+/* Focused, the field takes a 2px ring — design.md 8.6 — on the field rather
+   than the input, so the ring is the shape the person sees as the field. An
+   inset box-shadow rather than an outline so the error ring below can take
+   its place without the two stacking. A select only rings for the keyboard,
+   the same as any other control. */
+.field:has(input:focus, textarea:focus, select:focus-visible) {
+  box-shadow: inset 0 0 0 2px var(--positive);
+}
 /* a placeholder is text someone has to read to know what the field wants */
 .field input::placeholder { color: var(--muted); }
 
@@ -456,6 +488,9 @@
   background: var(--control); border-radius: var(--r-panel);
   padding: 8px 24px; display: flex; align-items: center; justify-content: center;
 }
+/* Ringed as a field is, and for the same reason: the box is the control. */
+.amount-box:has(input:focus) { box-shadow: inset 0 0 0 2px var(--positive); }
+.amount-box input:focus { outline: none; }
 .amount-box input {
   font-size: 40px; line-height: 52px; font-weight: 600; letter-spacing: -0.02em;
   text-align: center; width: 260px;
@@ -590,7 +625,7 @@
 /* ---------- sheets ---------- */
 .scrim {
   position: fixed; inset: 0; background: var(--scrim);
-  display: grid; place-items: center; padding: 24px; z-index: 40;
+  display: grid; place-items: center; padding: 24px; z-index: var(--z-overlay);
   animation: fade 140ms ease-out;
 }
 .sheet {
@@ -1123,7 +1158,7 @@
    phone already knows how to open. It keeps the field's own ground. */
 .field select {
   width: 100%; height: 100%; background: none; color: var(--ink);
-  font: inherit; appearance: none; border: none; outline: none;
+  font: inherit; appearance: none; border: none;
 }
 .field select option { background: var(--control); color: var(--ink); }
 
@@ -1166,7 +1201,7 @@
    outline away — the shadow is what lifts it, and a border would be the same
    statement in a language this product does not use. */
 .pop {
-  position: fixed; z-index: 70;
+  position: fixed; z-index: var(--z-pop);
   display: flex; flex-direction: column; gap: 8px;
   padding: 16px; border-radius: var(--r-panel);
   background: var(--surface); color: var(--ink);
@@ -1199,7 +1234,7 @@
 .chip .ic svg { width: 16px; height: 16px; }
 
 /* ---------- toast ---------- */
-.toast-rail { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 60;
+.toast-rail { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: var(--z-toast);
   display: flex; flex-direction: column; gap: 8px; align-items: center; }
 /* A button, so it can be dismissed and can hold focus long enough to stop its
    own countdown — but it reads as the notice it is, not as a control. */
@@ -1273,7 +1308,7 @@
 
 .railbar {
   display: none;
-  position: fixed; left: 0; right: 0; bottom: 32px; z-index: 30;
+  position: fixed; left: 0; right: 0; bottom: 32px; z-index: var(--z-rail);
   padding: 0 20px;
   justify-content: center; gap: 12px;
   pointer-events: none;
@@ -1377,7 +1412,7 @@
 .rail-root { display: contents; }
 /* No scrim: the page underneath stays lit, because this is a menu and not a
    modal. What it needs instead is somewhere to press that is not the menu. */
-.rail-catch { position: fixed; inset: 0; z-index: 29; background: none; cursor: default; }
+.rail-catch { position: fixed; inset: 0; z-index: var(--z-rail-catch); background: none; cursor: default; }
 .rail-panel {
   width: 100%;
   background: var(--sunken); border-radius: 24px; padding: 12px;
@@ -1621,7 +1656,7 @@
 
 /* A field that is wrong says so where the mistake was made, not in a toast
    that has already gone by. */
-.field.error { box-shadow: inset 0 0 0 1px var(--negative); }
+.field.error, .field.error:has(input:focus) { box-shadow: inset 0 0 0 2px var(--negative); }
 .field-error {
   display: flex; align-items: center; gap: 6px;
   color: var(--negative); font-size: 12px; line-height: 16px;
@@ -1761,7 +1796,10 @@ th.right .th-sort { flex-direction: row-reverse; }
   display: flex; align-items: center; gap: 12px;
   padding: 20px;
 }
-.jump-field input { width: 100%; font-size: 16px; }
+/* 44 tall, so the field is a target a thumb can find rather than a 22px
+   line of text; the row's own padding comes down by the same amount. */
+.jump-field { padding-block: 10px; }
+.jump-field input { width: 100%; font-size: 16px; height: 44px; }
 .jump-field .kbd { flex: none; }
 .kbd {
   font-size: 11px; font-weight: 600; color: var(--muted);
@@ -2111,7 +2149,9 @@ th.right .th-sort { flex-direction: row-reverse; }
 /* The resting line shows when nothing is hovered, and gets out of the way the
    moment something is. */
 .hero-read > .rest { opacity: 1; visibility: visible; transform: none; gap: 16px; flex-wrap: wrap; }
-.hero-read .key { display: inline-flex; align-items: center; gap: 7px; }
+/* `.legend-key`, not `.key`: `.key` is the keypad's button, and the legend
+   inherited its 56px height, its radius and its hover. */
+.hero-read .legend-key { display: inline-flex; align-items: center; gap: 8px; }
 
 /* The card opens something, so it says so. Top right, out of the figure's way,
    and it leans in with the rest of the card on hover. */
@@ -2353,7 +2393,7 @@ th.right .th-sort { flex-direction: row-reverse; }
    the choosing happens — and it can be put away, because a bar you cannot
    dismiss is an advert. It sits above the phone's rail rather than under it. */
 .bucket-bar {
-  position: sticky; bottom: 20px; z-index: 20;
+  position: sticky; bottom: 20px; z-index: var(--z-bar);
   display: flex; align-items: center; gap: 16px;
   padding: 12px 12px 12px 20px; border-radius: var(--r-pill);
   background: var(--surface);
@@ -2364,7 +2404,7 @@ th.right .th-sort { flex-direction: row-reverse; }
    already in the bucket. One sticky container so they stack rather than landing
    on each other; the children give up their own stickiness to it. */
 .bars {
-  position: sticky; bottom: 20px; z-index: 20;
+  position: sticky; bottom: 20px; z-index: var(--z-bar);
   display: flex; flex-direction: column; gap: 8px;
 }
 .bars > .bucket-bar { position: static; bottom: auto; }
@@ -3047,7 +3087,7 @@ th.right .th-sort { flex-direction: row-reverse; }
 .offline-bar .ic { flex: none; }
 @media (min-width: 900px) {
   /* Beside the sidebar rather than over it, so the rail stays reachable. */
-  .screen > .offline-bar { position: fixed; top: 0; left: var(--sidebar-w); right: 0; z-index: 40; }
+  .screen > .offline-bar { position: fixed; top: 0; left: var(--sidebar-w); right: 0; z-index: var(--z-overlay); }
   .screen:has(> .offline-bar) > .content { padding-top: 62px; }
 }
 

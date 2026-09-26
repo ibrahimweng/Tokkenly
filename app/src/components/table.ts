@@ -62,13 +62,21 @@ export function table(
     const on = live && sorting.current?.key === c.key
     const th = h('th')
     if (live) {
+      // The order is said as well as drawn. The label used to be "Sort by
+      // Price" whichever way the column was ordered, which hid the one thing
+      // the caret was there to show; `aria-sort` on the header is what a
+      // screen reader actually reads as the column's state.
+      const dir = on ? sorting.current!.dir : null
+      th.setAttribute('aria-sort', dir === 'asc' ? 'ascending' : dir === 'desc' ? 'descending' : 'none')
       th.appendChild(h('button', {
         class: 'th-sort' + (on ? ' on' : ''),
-        ariaLabel: `Sort by ${c.label}`,
+        ariaLabel: dir
+          ? `${c.label}, sorted ${dir === 'asc' ? 'lowest first' : 'highest first'}. Reverse the order`
+          : `Sort by ${c.label}`,
         on: { click: () => sorting.onSort(c.key) },
       },
         h('span', { text: c.label }),
-        h('span', { class: 'caret', text: on ? (sorting.current!.dir === 'asc' ? '↑' : '↓') : '↕' })))
+        h('span', { class: 'caret', ariaHidden: true, text: on ? (dir === 'asc' ? '↑' : '↓') : '↕' })))
     } else {
       th.textContent = c.label
     }
@@ -82,13 +90,28 @@ export function table(
 
   const tbody = h('tbody')
   rows.forEach((cells, i) => {
-    const row = h('tr', onRow ? { on: { click: () => onRow(i) } } : {})
+    // The whole row is a target for a pointer, and that is an enhancement:
+    // the way in that a keyboard and a screen reader can use is a real button
+    // in the row's first cell, wrapped round what the cell already says. A
+    // click on the button bubbles to the row, so there is one handler and not
+    // two. A click on some other control in the row — the bucket button — is
+    // that control's own business and does not open the row as well.
+    const row = h('tr', onRow ? { on: { click: (e) => {
+      const hit = (e.target as Element).closest('a, button, input, select, textarea')
+      if (hit && !hit.classList.contains('row-go')) return
+      onRow(i)
+    } } } : {})
     cells.forEach((cell, j) => {
       const td = h('td')
       if (cols[j]?.align === 'right') td.classList.add('right')
       if (cols[j]?.optional) td.classList.add('opt')
       if (cols[j]?.wide) td.classList.add('opt-wide')
-      td.appendChild(typeof cell === 'string' ? document.createTextNode(cell) : cell)
+      const node = typeof cell === 'string' ? document.createTextNode(cell) : cell
+      const nests = node instanceof Element && !!node.querySelector('a, button, input, select, textarea')
+      const own = node instanceof Element && node.matches('a, button, input, select, textarea')
+      td.appendChild(onRow && j === 0 && !nests && !own
+        ? h('button', { class: 'row-go', type: 'button' }, node)
+        : node)
       row.appendChild(td)
     })
     tbody.appendChild(row)
@@ -146,17 +169,27 @@ function listOf(
       body = h('span', { class: 'grow' }, head ?? h('span'))
     }
 
-    const row = h('button', {
-      class: 'feed-row',
-      ...(onRow ? { on: { click: () => onRow(i) } } : {}),
-    },
+    // The row is a container with a button in it, not a button. A control at
+    // the end of it — "Add Apple to your bucket" — used to sit inside the
+    // row's own button, and a button inside a button is not a thing HTML has:
+    // the browser hoists one out of the other, a screen reader hears one of
+    // them, and which one depends on the browser. So the destination is a
+    // button of its own that stretches over the row (see .feed-go), and the
+    // trailing control sits beside it, above the stretch.
+    const inner = [
       shape.ic ? h('span', { class: 'mark feed-ic', html: shape.ic(i) }) : null,
       body,
       figures.length
         ? h('span', { class: 'row-figure' }, ...figures.map((n) => node(n)).filter(Boolean) as Node[])
         : null,
-      trail >= 0 ? h('span', { class: 'row-trail' }, node(trail) ?? h('span')) : null,
-      trail < 0 && onRow ? h('span', { class: 'muted set-chev', html: icon.chevron() }) : null)
+      trail < 0 && onRow ? h('span', { class: 'muted set-chev', html: icon.chevron() }) : null,
+    ]
+    const row = onRow
+      ? h('div', { class: 'feed-row feed-split' },
+          h('button', { class: 'feed-go', type: 'button', on: { click: () => onRow(i) } }, ...inner),
+          trail >= 0 ? h('span', { class: 'row-trail' }, node(trail) ?? h('span')) : null)
+      : h('div', { class: 'feed-row' }, ...inner,
+          trail >= 0 ? h('span', { class: 'row-trail' }, node(trail) ?? h('span')) : null)
     list.appendChild(row)
   })
   return list

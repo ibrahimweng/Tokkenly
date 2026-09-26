@@ -128,6 +128,20 @@
   --r-sheet: 28px;
   --r-pill: 999px;
 
+  /* Stacking, as one ladder. The numbers were written where they were needed
+     — 20, 29, 30, 40, 60, 70, 80, 90 across three files, one of them inline
+     in a script — so whether a toast sat above a popover was something you
+     found out rather than read. Only what stacks against the whole page is
+     here; a 1 or a -1 inside a component orders that component's own parts. */
+  --z-bar: 20;          /* a sticky bar at the foot of a list */
+  --z-rail-catch: 29;   /* the invisible press-away under the open More panel */
+  --z-rail: 30;         /* the phone's floating nav */
+  --z-overlay: 40;      /* a dialog's scrim, a suggestion list, the offline bar */
+  --z-toast: 60;
+  --z-pop: 70;          /* a popover: a question mark's answer, a menu */
+  --z-burst: 80;        /* the confetti from the bucket */
+  --z-skip: 90;         /* the skip link, above everything when it has focus */
+
   --sidebar-w: 240px;
   --nav-h: 64px;
   --screen-h: 1024px;

@@ -253,22 +253,36 @@ export function toggle(opts: {
   get: () => boolean
   set: (on: boolean) => void
 }): HTMLElement {
-  const knob = h('span', { class: 'switch' }, h('span', { class: 'switch-knob' }))
-  const row = h('button', { class: 'pref-row' },
+  // A switch, said as one. It was a button with aria-pressed and a label
+  // that repeated the state ("Face ID, on"), so a screen reader heard a
+  // toggle button called "Face ID, on" that was pressed — the state twice,
+  // and the description not at all. Now the name is the label, the state is
+  // aria-checked, and the sentence under it is its description.
+  const ids = prefIds(opts.label)
+  const knob = h('span', { class: 'switch', ariaHidden: true }, h('span', { class: 'switch-knob' }))
+  const row = h('button', { class: 'pref-row', role: 'switch', type: 'button', ariaLabelledby: ids.label },
     h('span', { class: 'mark', html: opts.ic }),
     h('span', { class: 'two-line grow' },
-      h('span', { class: 't-body-strong', text: opts.label }),
-      h('small', { text: opts.sub })),
+      h('span', { class: 't-body-strong', id: ids.label, text: opts.label }),
+      h('small', { id: ids.sub, text: opts.sub })),
     knob)
+  row.setAttribute('aria-describedby', ids.sub)
   const paint = (): void => {
     const on = opts.get()
     knob.classList.toggle('on', on)
-    row.setAttribute('aria-pressed', String(on))
-    row.setAttribute('aria-label', `${opts.label}, ${on ? 'on' : 'off'}`)
+    row.setAttribute('aria-checked', String(on))
   }
   row.addEventListener('click', () => { opts.set(!opts.get()); paint() })
   paint()
   return row
+}
+
+/** Ids for a settings row's label and its sentence, made from the label so
+ *  they are the same every time the screen is drawn — the render loop finds
+ *  the control again by them after a rebuild. */
+function prefIds(label: string): { label: string; sub: string } {
+  const slug = 'pref-' + label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+  return { label: slug + '-label', sub: slug + '-sub' }
 }
 
 /** A choice between a few named things, where seeing the alternatives is the
@@ -282,7 +296,11 @@ export function choice(opts: {
   set: (v: string) => void
   onPick?: () => void
 }): HTMLElement {
-  const chips = h('div', { class: 'chip-row' })
+  // A named group: the chips were three buttons called Light, Dark and
+  // System with nothing to say what they were a choice of.
+  const ids = prefIds(opts.label)
+  const chips = h('div', { class: 'chip-row', role: 'group', ariaLabelledby: ids.label })
+  chips.setAttribute('aria-describedby', ids.sub)
   const paint = (): void => {
     for (const c of chips.children) {
       const el = c as HTMLElement
@@ -299,8 +317,8 @@ export function choice(opts: {
   return h('div', { class: 'pref-row pref-choice' },
     h('span', { class: 'mark', html: opts.ic }),
     h('span', { class: 'two-line grow' },
-      h('span', { class: 't-body-strong', text: opts.label }),
-      h('small', { text: opts.sub })),
+      h('span', { class: 't-body-strong', id: ids.label, text: opts.label }),
+      h('small', { id: ids.sub, text: opts.sub })),
     chips)
 }
 

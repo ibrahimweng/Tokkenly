@@ -11,7 +11,7 @@ import {
   alsoIn, bucketTotal, bucketCost,
 } from '../state'
 import { usd, naira, signed, when, pct, shares, greeting, activityLabel } from '../format'
-import { go, openSheet } from '../router'
+import { openSheet } from '../router'
 import { isMobile, isWideTouch } from '../responsive'
 
 /** The line under the greeting, which used to assert that nothing needed
@@ -189,7 +189,7 @@ function detailed(): HTMLElement {
     // The day move goes; it is on the company page, and a row cannot carry two
     // percentages without one of them being read as the other.
     ...state.holdings.map((p) => {
-      const row = h('div', { class: 'kv', style: { cursor: 'pointer' } },
+      const row = link(pathOf(p.ticker), 'kv kv-link',
         h('span', { class: 'two-line' },
           h('span', { class: 't-body-strong', text: p.ticker }),
           h('small', { text: `${shares(p.shares)} at ${usd(p.each)} average` })),
@@ -199,7 +199,6 @@ function detailed(): HTMLElement {
             text: state.prefs.hideBalances
               ? MASK
               : `${p.gain >= 0 ? '+' : '−'}${usd(Math.abs(p.gain), false)} · ${(p.gain >= 0 ? '+' : '−') + pct(Math.abs(p.gainPct))}` })))
-      row.addEventListener('click', () => go(pathOf(p.ticker)))
       return row
     })
   )

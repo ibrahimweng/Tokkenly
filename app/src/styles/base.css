@@ -77,7 +77,12 @@ input { font: inherit; color: inherit; background: none; border: 0; }
 input[type='search'] { -webkit-appearance: none; appearance: none; }
 input[type='search']::-webkit-search-decoration,
 input[type='search']::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
-input:focus { outline: none; }
+/* A text field is ringed as a whole (see .field in components.css), so the
+   input inside it draws nothing of its own. Only an input that is inside a
+   field: one on its own keeps the ring every other control has, because
+   `input:focus` without the qualifier beat :focus-visible everywhere and
+   left some fields with no sign of focus at all. */
+.field input:focus, .field select:focus, .field textarea:focus { outline: none; }
 ul { margin: 0; padding: 0; list-style: none; }
 [hidden] { display: none !important; }
 :focus-visible { outline: 2px solid var(--positive); outline-offset: 2px; border-radius: 6px; }
@@ -213,6 +218,9 @@ ul { margin: 0; padding: 0; list-style: none; }
 .warn { color: var(--warning); }
 .right { text-align: right; }
 .nowrap { white-space: nowrap; }
+/* No margin of its own, for a heading or paragraph whose spacing is its
+   container's gap. Instead of `style: { margin: 0 }` written inline. */
+.flush { margin: 0; }
 
 /* ---------------------------------------------------------------- phone --
    Below 900 the product becomes the phone: one column, a top bar, and a
