@@ -1097,6 +1097,13 @@
    So it takes the same ramp Following takes: `--control` at rest, one rung up
    under the pointer. */
 .price-acts .icon-btn { background: var(--control); color: var(--ink); }
+/* The other half of that decision (design.md 11g entry above rule 168): the
+   plus on the market's own rows stays flat, on the card it sits in, because it
+   is alone in its column and its position is what says it is pressable. When
+   `.icon-btn` moved to `--control` for 8.2, this one moved with it by
+   accident, and a filled circle on every row of the market is the grid of
+   buttons that entry chose not to draw. The pointer still lifts it. */
+.table .icon-btn { background: var(--sunken); }
 /* And matched to its neighbour's height. `.btn-sm` is 40 with a mouse and 44
    with a thumb; `.icon-btn` is a flat 44 at every width. Nobody could see the
    four pixels while the plus had no body — two filled pills beside each other
