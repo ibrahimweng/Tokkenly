@@ -1646,6 +1646,13 @@
      affordance stated twice, and this is the one dialog that cannot spare
      them. */
   .sheet-compose .sheet-head { padding-top: 0; }
+  /* The note under the figure is a <p>, and it was carrying the browser's
+     12px paragraph margin on both sides inside a column that already spaces
+     it with a 4px gap and a 16px stack. That is 24 pixels nobody chose, and
+     the withdraw sheet, which also has to carry its limit notice, came out
+     11 over the ceiling. Eight to the figure it explains and the stack's 16
+     to the chips keep the 4 grid (4.1). */
+  .sheet-compose .amount-note { margin: 4px 0 0; }
   .sheet .amount-box { padding: 4px 20px; }
   .sheet .chip-row .chip { flex: 1 1 0; padding: 0 8px; }
 
