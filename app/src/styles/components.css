@@ -2240,6 +2240,17 @@ th.right .th-sort { flex-direction: row-reverse; }
   .hero-cash { padding: 20px; gap: 20px; }
   .hero-figure { font-size: 40px; line-height: 48px; }
 }
+/* Below the phone tier (320 is real) the card's inside is 240 wide, and the
+   figure with its eye (218), the 24 gap and the chevron's 32 came to 274: the
+   chevron sat outside the card and pushed the wallet and transfer pages 10
+   pixels sideways. The figure drops to Display, 36/40 (3.2), the gap to 12,
+   and the chevron pulls its left edge in by the same 12 its other sides
+   already give back, so its glyph still stands 26 clear of the eye. */
+@media (max-width: 359px) {
+  .hero-head { gap: 12px; }
+  .hero-go { margin-left: -12px; }
+  .hero-figure { font-size: 36px; line-height: 40px; }
+}
 /* The wallet's two doors. */
 .way { flex-direction: row; align-items: center; gap: 16px; text-align: left; }
 .way .promo-badge { flex: none; }
