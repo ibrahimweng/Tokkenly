@@ -196,7 +196,12 @@ export function composerScreen(spec: ComposerSpec): HTMLElement {
       })
       more.setAttribute('aria-expanded', String(open))
       more.addEventListener('click', () => { open = !open; paint(comp.get(), capped) })
+      // The summary is redrawn in place, button and all, so the button that
+      // was just pressed is replaced by its twin. Focus goes with it rather
+      // than falling to <body>.
+      const pressed = summaryBox.contains(document.activeElement)
       summaryBox.replaceChildren(...(open ? rows : rows.slice(0, KEEP)), more)
+      if (pressed) more.focus({ preventScroll: true })
     }
     if (different) settle(summaryBox)
     if (!overlaid && spec.right) rightBox.replaceChildren(spec.right(v))
@@ -282,16 +287,16 @@ export function scenarios(
   head: [string, string, string],
   rows: [string, string, string][]
 ): HTMLElement {
-  const grid = h('div', { class: 'stack-12' })
-  const line = (cells: [string, string, string], caps: boolean) =>
-    h('div', { style: { display: 'flex', gap: '12px', alignItems: 'baseline' } },
-      h('span', { class: caps ? 't-caps subtle' : 't-body-strong right', style: { width: '110px' }, text: cells[0] }),
-      h('span', { class: caps ? 't-caps subtle' : 't-body-strong right', style: { width: '140px' }, text: cells[1] }),
-      h('span', { class: caps ? 't-caps subtle grow right' : 'muted grow right', text: cells[2] }))
-  grid.appendChild(h('span', { class: 't-caps subtle', text: title }))
-  grid.appendChild(line(head, true))
-  for (const r of rows) grid.appendChild(line(r, false))
-  return grid
+  // A table, because it is one: three columns that are read across and down.
+  // It was a stack of flex rows with widths written inline, which looked like
+  // a table to the eye and was three unrelated sentences to a screen reader.
+  return h('table', { class: 'scenarios' },
+    h('caption', { class: 't-caps subtle', text: title }),
+    h('thead', {}, h('tr', {}, ...head.map((c) => h('th', { text: c })))),
+    h('tbody', {}, ...rows.map((r) => h('tr', {},
+      h('td', { class: 't-body-strong', text: r[0] }),
+      h('td', { class: 't-body-strong', text: r[1] }),
+      h('td', { class: 'muted', text: r[2] })))))
 }
 
 export { closeSheet }

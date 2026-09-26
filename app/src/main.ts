@@ -2,7 +2,7 @@ import './styles/tokens.css'
 import './styles/base.css'
 import './styles/components.css'
 
-import { h } from './ui'
+import { h, markFocus, restoreFocus, markScroll, restoreScroll, type FocusMark } from './ui'
 import { start, current, go, openSheet, type Route } from './router'
 import { state, actions, subscribe, applyTheme, recall, openBooks, IDLE_LOCK_MS } from './state'
 import { onBreakpointChange } from './responsive'
@@ -39,10 +39,10 @@ import { lockScreen } from './screens/lock'
 const app = document.getElementById('app')!
 
 function notFound(path: string): HTMLElement {
-  return h('div', { class: 'auth' },
+  return h('main', { class: 'auth' },
     h('div', { class: 'auth-card' },
-      h('h1', { class: 't-title', style: { margin: '0' }, text: 'No screen at that address' }),
-      h('p', { class: 'muted', style: { margin: '0' }, text: path }),
+      h('h1', { class: 't-title flush', text: 'No screen at that address' }),
+      h('p', { class: 'muted flush', text: path }),
       h('button', { class: 'btn btn-primary', text: 'Go home', on: { click: () => go('/') } })))
 }
 
@@ -147,9 +147,18 @@ function screenFor(r: Route): HTMLElement {
 
 let lastPath = ''
 let hadDialog = false
+/** Whatever opened the dialog that is up now, described so it can be found
+ *  again in the tree drawn after the dialog has gone. */
+let opener: { path: string; mark: FocusMark } | null = null
 function render(r: Route): void {
   const keepScroll = r.path === lastPath ? window.scrollY : 0
   const arrived = r.path !== lastPath
+  const was = lastPath
+  // What had focus, and where every scrolled box was, before the tree goes.
+  // See `markFocus` in ui.ts: without this every chip, toggle and sort header
+  // dropped a keyboard user back to the top of the document when pressed.
+  const mark = markFocus(app)
+  const scrolled = arrived ? null : markScroll(app)
   lastPath = r.path
   // Before the screen is built, because a company page reads it while it
   // builds: which grouping you came through, so its trail can say so.
@@ -164,8 +173,15 @@ function render(r: Route): void {
     screen?.setAttribute('inert', '')
     app.appendChild(sheetEl)
   }
-  document.body.style.overflow = sheetEl ? 'hidden' : ''
+  // Any dialog holds the page still, the composer's included. The composer
+  // presents as a modal on a phone by drawing its own scrim inside the screen,
+  // and only the registry's sheets used to lock the page — so a thumb on the
+  // scrim of a phone composer scrolled the wallet underneath it.
+  const open = !!sheetEl || !!app.querySelector('.scrim')
+  document.documentElement.classList.toggle('is-locked', open)
+  document.body.style.overflow = open ? 'hidden' : ''
   window.scrollTo(0, keepScroll)
+  if (scrolled) restoreScroll(app, scrolled)
 
   // Say where we are, once per arrival rather than once per state change —
   // this function runs again every time anything at all changes, and a live
@@ -173,17 +189,27 @@ function render(r: Route): void {
   // that says nothing.
   if (arrived) nameTheScreen(app.querySelector('h1')?.textContent)
 
-  // Where focus goes when a dialog closes. It cannot go back to whatever
-  // opened it: this app replaces the entire tree on every change, so that
-  // element no longer exists by the time the dialog is gone. The content of
-  // the screen underneath is the honest answer — a keyboard user carries on
-  // from the page rather than from the top of the document, above seven nav
-  // rows they have already passed once.
-  const open = !!sheetEl || !!app.querySelector('.scrim')
-  if (hadDialog && !open) {
+  if (open && !hadDialog) {
+    // A dialog arriving takes focus for itself (see asDialog). What is kept
+    // here is what opened it, so closing it can go back there.
+    opener = mark ? { path: was, mark } : null
+  } else if (hadDialog && !open) {
+    // Where focus goes when a dialog closes: back to whatever opened it. That
+    // element no longer exists — the tree was replaced — so it is found again
+    // by its description. Only when it cannot be found does focus go to the
+    // content of the screen, so a keyboard user carries on from the page
+    // rather than from the top of the document, above seven nav rows they
+    // have already passed once.
     dialogClosed()
+    const back = opener && opener.path === r.path && restoreFocus(app, opener.mark)
+    opener = null
     const main = app.querySelector<HTMLElement>('main.content')
-    if (main && (document.activeElement === document.body || document.activeElement === null)) main.focus()
+    const adrift = document.activeElement === document.body || document.activeElement === null
+    if (!back && main && adrift) main.focus({ preventScroll: true })
+  } else if (!arrived || open) {
+    // The same screen drawn again, or the same dialog: the control that was
+    // pressed is put back under the keyboard.
+    restoreFocus(app, mark)
   }
   hadDialog = open
 }
