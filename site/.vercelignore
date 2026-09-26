@@ -1,0 +1,9 @@
+# The site deploys this folder as it stands (outputDirectory is "."), so
+# anything here that is not part of the website would be served at its own
+# URL. These are the sources the pages are generated from and the notes about
+# them: kept in git, left out of the deploy. api/ is NOT listed — Vercel
+# builds it into the contact function.
+README.md
+copy.txt
+*.mjs
+.vercelignore
