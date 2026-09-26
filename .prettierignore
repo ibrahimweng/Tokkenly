@@ -1,0 +1,12 @@
+# Prettier is opt-in: run it on the file you are editing
+# (npx --prefix app prettier --write <file>), never across the tree, so a
+# formatting pass never lands inside somebody else's change. These are never
+# formatted at all.
+node_modules/
+dist/
+shots/
+app/figma/
+app/package-lock.json
+design.md
+docs/
+site/img/
