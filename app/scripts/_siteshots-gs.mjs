@@ -23,6 +23,7 @@
    of the time. `till` waits for the thing the shot is of, which cannot drift
    and cannot lie. */
 import { chromium } from 'playwright'
+import { chromiumPath } from './lib/harness.mjs'
 import { mkdirSync } from 'node:fs'
 
 const OUT = process.argv[2] ?? '/tmp/gs-shots'
@@ -41,7 +42,7 @@ for (const [name, u] of [['after', AFTER], ['before', BEFORE]]) {
   process.exit(0)
 }
 
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+const b = await chromium.launch({ executablePath: chromiumPath() })
 let bad = 0
 const shots = []
 

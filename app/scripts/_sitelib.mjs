@@ -9,16 +9,18 @@
                    Serve it the way Vercel does — cleanUrls, so /about is a
                    page and /about.html is a redirect to it; `npx serve site`
                    does that out of the box.
-     CHROMIUM      the browser binary (default /opt/pw-browsers/chromium).
+     CHROMIUM      the browser binary. Unset, it is found the way the app
+                   suites find it: see chromiumPath() in lib/harness.mjs.
 
    open() fails on any response that is not 2xx, and ok() sets
    process.exitCode, so a FAIL anywhere makes the script exit non-zero even
    when it goes on to run its remaining checks. */
+import { chromiumPath } from './lib/harness.mjs'
 import { chromium } from 'playwright'
 import { PRODUCTS } from '../../site/copy-products.mjs'
 
 export const BASE = (process.env.SITE_URL || 'http://localhost:4321').replace(/\/$/, '')
-export const launch = () => chromium.launch({ executablePath: process.env.CHROMIUM || '/opt/pw-browsers/chromium' })
+export const launch = () => chromium.launch({ executablePath: chromiumPath() })
 
 /* The product slugs come from the copy the pages are built from, so a
    product added, merged or renamed there is checked here without an edit. */
