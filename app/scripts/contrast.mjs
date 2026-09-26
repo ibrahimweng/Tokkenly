@@ -2,10 +2,9 @@
    actually lands on, at rest and under the pointer. Alpha is composited the
    way a screen composites it rather than assumed away. AA is 4.5:1, or 3:1
    for text at 24px, or 18.66px carrying 600. */
-import { chromium } from 'playwright'
-import { seen } from './seen.mjs'
+import { B, launch, check, teardown } from './lib/harness.mjs'
+import { seen } from './lib/seen.mjs'
 
-const B = 'http://localhost:4173/#'
 const ROUTES = ['/', '/transfer', '/invest', '/invest/aapl', '/grow', '/activity',
   '/all', '/send', '/receive', '/bucket', '/verify', '/disclosures', '/signin',
   // Account is eight screens now, and the two locks are sheets over one of
@@ -16,15 +15,10 @@ const ROUTES = ['/', '/transfer', '/invest', '/invest/aapl', '/grow', '/activity
   '/account/security?sheet=pin', '/account/security?sheet=password',
   '/invest/aapl/invest']
 
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+const b = await launch()
 const page = await b.newPage({ viewport: { width: 1440, height: 1000 } })
 await seen(page)
 page.setDefaultTimeout(8000)
-
-/* The webfont is fetched from a host this sandbox cannot reach, and a page
-   that never stops loading never settles. Colour and layout do not need it. */
-const noFonts = (pg) => pg.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
-await noFonts(page)
 
 const MEASURE = () => {
   const num = (s) => (s.match(/[-\d.]+/g) || []).map(Number)
@@ -114,7 +108,6 @@ for (const r of ROUTES) {
 for (const theme of THEMES)
 for (const [label, wrong] of [['/lock', 0], ['/lock (locked out)', 5]]) {
   const lp = await b.newPage({ viewport: { width: 1440, height: 1000 } })
-  await lp.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   await lp.addInitScript(`try {
     localStorage.setItem('tokkenly.prefs.v1', JSON.stringify({
       seenIntro: true, prefs: { theme: '${theme}' }, security: { wrongPin: ${wrong} } }))
@@ -133,7 +126,6 @@ for (const [label, wrong] of [['/lock', 0], ['/lock (locked out)', 5]]) {
 for (const theme of THEMES)
 for (const step of [0, 1, 2, 3]) {
   const wp = await b.newPage({ viewport: { width: 1440, height: 1000 } })
-  await wp.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   await wp.addInitScript(`try {
     localStorage.setItem('tokkenly.prefs.v1', JSON.stringify({
       seenIntro: false, prefs: { theme: '${theme}' }, security: {} }))
@@ -160,7 +152,6 @@ for (const step of [0, 1, 2, 3]) {
 for (const theme of ['dark', 'light']) {
   const dp = await b.newPage({ viewport: { width: 1440, height: 1000 } })
   await seen(dp, { theme })
-  await noFonts(dp)
   for (const [route, zero] of [['/grow/borrow', '0'], ['/invest/aapl/invest', '0']]) {
     await dp.goto(B + route, { waitUntil: 'domcontentloaded' }); await dp.waitForTimeout(500)
     await dp.locator('.amount-box input').fill(zero)
@@ -171,7 +162,7 @@ for (const theme of ['dark', 'light']) {
       const s = getComputedStyle(el)
       return { text: el.textContent.trim(), fg: s.color, bg: s.backgroundColor, op: Number(s.opacity) }
     })
-    if (!off) { console.log(`  FAIL  ${theme} ${route}: no disabled button to measure`); continue }
+    if (!off) { check(`${theme} ${route}: a disabled button to measure`, false); continue }
     const f = (v) => { const x = v / 255; return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4) }
     const L = (c) => { const [r, g, bl] = c.match(/[\d.]+/g).slice(0, 3).map(Number)
       return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(bl) }
@@ -179,9 +170,8 @@ for (const theme of ['dark', 'light']) {
     const ratio = Number(((hi + 0.05) / (lo + 0.05)).toFixed(2))
     // A veil over the whole control is what made it unreadable, so the veil
     // itself is part of what is checked.
-    const ok = ratio >= 4.5 && off.op === 1
-    console.log(`  ${ok ? 'ok  ' : 'FAIL'}  ${theme} ${route} disabled "${off.text}" reads at ${ratio}:1` +
-                (off.op === 1 ? '' : `, veiled to ${off.op}`))
+    check(`${theme} ${route} disabled "${off.text}" reads at ${ratio}:1` +
+          (off.op === 1 ? '' : `, veiled to ${off.op}`), ratio >= 4.5 && off.op === 1)
   }
   await dp.close()
 }
@@ -192,8 +182,8 @@ console.log(uniq.length ? 'BELOW AA:' : 'BELOW AA: none')
 for (const x of uniq.sort((a, c) => a.ratio - c.ratio))
   console.log(`  ${String(x.ratio).padStart(5)} / ${x.need}  ${String(x.px).padStart(4)}px  ${x.route.padEnd(22)} ${x.sel.slice(0, 44).padEnd(45)} ${JSON.stringify(x.text)}`)
 // A check that reports and never fails is a check the sweep reads as green
-// (rule 129). It counts lines beginning FAIL, so this one says FAIL.
+// (rule 129), so this one fails the run.
 console.log('total below AA:', uniq.length)
-console.log(`  ${uniq.length ? 'FAIL' : 'ok  '}  every piece of text clears AA on the ground it sits on` +
-            (uniq.length ? `  ${uniq.length} do not` : ''))
-await b.close()
+check('every piece of text clears AA on the ground it sits on', !uniq.length,
+      uniq.length ? `${uniq.length} do not` : '')
+await teardown(b)

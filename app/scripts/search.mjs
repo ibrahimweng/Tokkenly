@@ -1,18 +1,16 @@
 /* Every search field in the product, on the screen it lives on. They were five
    fields that did nothing until Enter and then matched on `includes`, so a
    dropped letter was answered with an empty list. */
-import { chromium } from 'playwright'
-import { seen } from './seen.mjs'
-const B = 'http://localhost:4173/#'
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+import { B, launch, check, teardown } from './lib/harness.mjs'
+import { seen } from './lib/seen.mjs'
+const b = await launch()
 const errs = []
-const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
+const ok = check
 const page = async (w = 1440, h = 1000) => {
   const p = await b.newPage({ viewport: { width: w, height: h } })
   await seen(p)
   p.on('pageerror', (e) => errs.push(String(e)))
   p.setDefaultTimeout(6000)
-  await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   return p
 }
 const type = async (p, t) => {
@@ -101,4 +99,4 @@ console.log('A LINK INTO A SEARCH STILL WORKS')
 }
 
 console.log('\nerrors:', errs.length ? errs : 'none')
-await b.close()
+await teardown(b)

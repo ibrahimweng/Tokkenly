@@ -13,16 +13,18 @@
  *    the default currency changes a balance but not a price, or the other way
  *      round — it is one setting and it has to move both.
  */
-import { chromium } from 'playwright'
-import { seen } from './seen.mjs'
-const base = 'http://localhost:4173/#'
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+import { B, launch, check, teardown, shot } from './lib/harness.mjs'
+import { seen } from './lib/seen.mjs'
+const base = B
+const b = await launch()
 const errs = []
 const log = []
 let fails = 0
+// Collected into the log rather than printed as it goes, so the report reads
+// in the order of its headings. A failure still fails the run.
 const ok = (what, cond, detail = '') => {
-  if (!cond) fails += 1
-  log.push(`  ${cond ? 'ok  ' : 'FAIL'}  ${what}${detail ? '  ' + detail : ''}`)
+  if (!cond) { fails += 1; process.exitCode = 1 }
+  log.push(`  ${cond ? 'PASS' : 'FAIL'}  ${what}${detail ? '  ' + detail : ''}`)
 }
 const at = (p) => decodeURIComponent(p.url().split('#')[1] ?? '')
 
@@ -52,7 +54,7 @@ await d.keyboard.press('Escape'); await d.waitForTimeout(300)
 // And the bar is still the same four, said as widths rather than as figures.
 const segs = await d.locator('.hero-bar .seg').count()
 ok('and the bar is made of the same four', segs === 4, segs + ' segments')
-await d.screenshot({ path: '/tmp/shots/assets-01-wallet.png', fullPage: true })
+await d.screenshot({ path: shot('assets-01-wallet.png'), fullPage: true })
 
 /* ---------------- the statement keeps them apart ---------------- */
 
@@ -95,7 +97,7 @@ const afterUsdt = await balances()
 ok('the USDT balance moved', afterUsdt[1][2] !== before[1][2],
    before[1][2] + ' → ' + afterUsdt[1][2])
 ok('and the USDC balance did not', afterUsdt[0][2] === before[0][2], afterUsdt[0][2])
-await d.screenshot({ path: '/tmp/shots/assets-02-paid-usdt.png', fullPage: true })
+await d.screenshot({ path: shot('assets-02-paid-usdt.png'), fullPage: true })
 
 /* ---------------- naira out of naira strikes no rate ---------------- */
 
@@ -111,7 +113,7 @@ await d.locator('.col-compose .btn-primary').click()
 await d.waitForTimeout(350)
 const rows = (await d.locator('.sheet .panel .cell').allTextContents()).join(' | ')
 ok('and neither does the review', !/Rate/.test(rows) && /Converted\s*Nothing/.test(rows), rows)
-await d.screenshot({ path: '/tmp/shots/assets-03-from-naira.png' })
+await d.screenshot({ path: shot('assets-03-from-naira.png') })
 const nairaBefore = (await balances())[2][2]
 await d.goto(base + '/spend/airtime?to=08024319087&net=airtel', { waitUntil: 'networkidle' })
 await d.waitForTimeout(350)
@@ -147,7 +149,7 @@ await d.waitForTimeout(300)
 ok('and so does an Ethereum one', (await addrOf()).startsWith('0x'), await addrOf())
 ok('the warning names what it is warning about',
    /USDT on Ethereum only/.test(await d.locator('.set-panel .callout').innerText()))
-await d.screenshot({ path: '/tmp/shots/assets-04-receive.png', fullPage: true })
+await d.screenshot({ path: shot('assets-04-receive.png'), fullPage: true })
 
 /* ---------------- send: the wrong network does not get past ---------------- */
 
@@ -164,7 +166,7 @@ ok('and the button is not there to press',
    await d.locator('.set-panel .btn-secondary').isDisabled())
 ok('and the standing warning stands down for the specific one',
    await d.locator('.set-panel .callout').isHidden())
-await d.screenshot({ path: '/tmp/shots/assets-05-wrongnet.png' })
+await d.screenshot({ path: shot('assets-05-wrongnet.png') })
 await addr.fill('0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984')
 await d.waitForTimeout(250)
 ok('a Base address against Base is not', await d.locator('.set-panel .field-error').isHidden())
@@ -188,7 +190,7 @@ await d.waitForTimeout(350)
 const sendRows = (await d.locator('.sheet .panel .cell').allTextContents()).join(' | ')
 ok('the review names the token and the network', /USDT/.test(sendRows) && /Network/.test(sendRows),
    sendRows)
-await d.screenshot({ path: '/tmp/shots/assets-06-send-review.png' })
+await d.screenshot({ path: shot('assets-06-send-review.png') })
 await d.locator('.sheet .close').click()
 await d.waitForTimeout(250)
 
@@ -212,10 +214,9 @@ ok('a price follows the setting',
    priceUsd.trim() + ' → ' + priceNgn.trim())
 await d.goto(base + '/', { waitUntil: 'networkidle' })
 await d.waitForTimeout(450)
-const home = await d.locator('.headline, .page-header').first().innerText().catch(() => '')
 const fig = await d.locator('.t-figure, .t-display-xl').first().innerText()
 ok('and so does the balance on Home', fig.startsWith('₦'), fig)
-await d.screenshot({ path: '/tmp/shots/assets-07-naira-home.png', fullPage: true })
+await d.screenshot({ path: shot('assets-07-naira-home.png'), fullPage: true })
 // And a composer defaults to it without being told twice.
 await d.goto(base + '/spend/airtime?to=08024319087&net=airtel', { waitUntil: 'networkidle' })
 await d.waitForTimeout(450)
@@ -247,10 +248,11 @@ for (const [what, path] of [
   ok(`${what}: the picker is there and nothing scrolls`,
      !!fit && fit.pills > 0 && fit.content <= fit.h && fit.button,
      fit ? `${fit.pills} pills, sheet ${fit.h}, content ${fit.content}` : 'no sheet')
-  await p.screenshot({ path: `/tmp/shots/assets-08-phone-${what}.png` })
+  await p.screenshot({ path: shot(`assets-08-phone-${what}.png`) })
 }
 
 console.log(log.join('\n'))
 console.log('\nfailures: ' + fails)
 console.log(errs.length ? 'ERRORS\n' + errs.join('\n') : 'no page errors')
-await b.close()
+check('no page errors', !errs.length, errs.length ? `${errs.length}` : '')
+await teardown(b)

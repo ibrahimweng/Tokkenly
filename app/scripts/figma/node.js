@@ -1,5 +1,5 @@
-/* One node of a screen, built. Shared by _figma-build.mjs, which builds the
-   screens, and _figma-chrome.mjs, which builds the furniture that is on all of
+/* One node of a screen, built. Shared by build.mjs, which builds the
+   screens, and chrome.mjs, which builds the furniture that is on all of
    them — the same code, because a rail built by a second function is a rail
    that will drift from the screens around it.
 

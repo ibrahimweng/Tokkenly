@@ -1,13 +1,12 @@
 /* The lock. Two questions matter more than whether the pad works: does it
    actually stand in front of every screen, and does it leak what it exists to
    hide. A lock screen with the balance on it is a lock screen for nobody. */
-import { chromium } from 'playwright'
-import { seen, locked } from './seen.mjs'
+import { B, launch, check, teardown } from './lib/harness.mjs'
+import { seen, locked } from './lib/seen.mjs'
 
-const B = 'http://localhost:4173/#'
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+const b = await launch()
 const errs = []
-const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
+const ok = check
 
 const page = async (opts = {}, w = 1440, h = 1000) => {
   const p = await b.newPage({ viewport: { width: w, height: h } })
@@ -15,7 +14,6 @@ const page = async (opts = {}, w = 1440, h = 1000) => {
   else await locked(p, opts.security ?? {})
   p.on('pageerror', (e) => errs.push(String(e)))
   p.setDefaultTimeout(6000)
-  await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   return p
 }
 const at = async (p, r) => {
@@ -87,7 +85,6 @@ console.log('THE WRONG PIN')
   await p.close()
 
   const q = await b.newPage({ viewport: { width: 1440, height: 1000 } })
-  await q.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   await q.goto(B + '/', { waitUntil: 'domcontentloaded' })
   await q.evaluate(() => {
     localStorage.setItem('tokkenly.prefs.v1',
@@ -211,7 +208,6 @@ console.log('BOTH SIZES, BOTH THEMES')
         v.prefs = { ...(v.prefs || {}), theme: '${theme}' }
         localStorage.setItem(k, JSON.stringify(v))
       } catch {}`)
-      await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
       await at(p, '/')
       const fits = await p.evaluate(() => ({
         x: document.documentElement.scrollWidth - document.documentElement.clientWidth,
@@ -227,4 +223,4 @@ console.log('BOTH SIZES, BOTH THEMES')
 }
 
 console.log('\nerrors:', errs.length ? errs : 'none')
-await b.close()
+await teardown(b)

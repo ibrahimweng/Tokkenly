@@ -9,18 +9,16 @@
    while the naira is genuinely in flight? Is the money somewhere real in the
    meantime? Does one Send actually reach all three destinations, and does the
    one that turns dollars into naira say so? */
-import { chromium } from 'playwright'
-import { seen, verify, settled } from './seen.mjs'
+import { B, launch, check, teardown } from './lib/harness.mjs'
+import { seen, verify, settled } from './lib/seen.mjs'
 
-const B = 'http://localhost:4173/#'
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+const b = await launch()
 const errs = []
-const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
+const ok = check
 const p = await b.newPage({ viewport: { width: 1440, height: 1200 } })
 await seen(p)
 p.on('pageerror', (e) => errs.push(String(e)))
 p.setDefaultTimeout(8000)
-await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 const at = async (r) => { await p.goto(B + r, { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(420) }
 const money = (s) => Number(String(s ?? '').replace(/[^0-9.-]/g, '')) || 0
 const cash = async () => { await at('/transfer'); return money(await settled(p, '.hero-figure')) }
@@ -389,4 +387,4 @@ console.log('BOTH WAYS IN ARE NAMED WHERE SOMEBODY WOULD LOOK FOR THEM')
 }
 
 console.log('\nerrors:', errs.length ? errs : 'none')
-await b.close()
+await teardown(b)

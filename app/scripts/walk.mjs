@@ -1,32 +1,32 @@
-import { chromium } from 'playwright'
-import { seen } from './seen.mjs'
+/* Every desktop address at 1440: it renders a screen rather than the
+   not-found page, with a heading, a screenshot of it, and no page errors.
+   It used to print the titles and leave the reading to whoever ran it. */
+import { B, launch, check, teardown, shot } from './lib/harness.mjs'
+import { seen } from './lib/seen.mjs'
 
-const base = 'http://localhost:4173/#'
-const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+const browser = await launch()
 const page = await browser.newPage({ viewport: { width: 1440, height: 1024 } })
 // Since the app lock landed, a page that does not seed the unlock drives
 // the PIN pad instead of the product. This suite was measuring the lock
 // screen and reporting on it.
 await seen(page)
-// No Google Fonts in here, and the reset it fails with was being reported as a
-// page error of the app's own. Refuse the request instead, as every other suite
-// does, so ERRORS means the product.
-await page.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 const errors = []
 page.on('pageerror', (e) => errors.push('pageerror: ' + e.message))
 page.on('console', (m) => {
-  // The refusal above is ours, and the browser logs it. Anything from a font
-  // host is that, not the app.
-  if (m.type() !== 'error' || /fonts\.(googleapis|gstatic)\.com/.test(m.location()?.url ?? '')) return
-  errors.push('console: ' + m.text())
+  if (m.type() === 'error') errors.push('console: ' + m.text())
 })
 
-async function shot(hash, name) {
-  await page.goto(base + hash, { waitUntil: 'networkidle' })
+async function visit(hash, name) {
+  await page.goto(B + hash, { waitUntil: 'networkidle' })
   await page.waitForTimeout(180)
-  await page.screenshot({ path: `./shots/${name}.png` })
-  const title = await page.locator('h1, .sheet-head h2').first().textContent().catch(() => '?')
-  return `${name.padEnd(22)} ${hash.padEnd(46)} ${String(title).trim().slice(0, 32)}`
+  await page.screenshot({ path: shot(`${name}.png`) })
+  const title = String(await page.locator('h1, .sheet-head h2').first().textContent().catch(() => '')).trim()
+  check(`${hash} renders a screen`, !!title && title !== 'No screen at that address', title.slice(0, 40))
+  // A sheet is an address: one named in the URL has to be open over it.
+  if (hash.includes('sheet=')) {
+    const head = String(await page.locator('.sheet-head h2').first().textContent().catch(() => '')).trim()
+    check(`  and the sheet it names is open`, !!head, head)
+  }
 }
 
 const routes = [
@@ -54,8 +54,6 @@ const routes = [
   ['/security?sheet=phrase', '22-phrase'],
   ['/activity?sheet=receipt&ref=TKN-8F2K90', '23-receipt'],
 ]
-const lines = []
-for (const [hash, name] of routes) lines.push(await shot(hash, name))
-console.log(lines.join('\n'))
-console.log('\nERRORS: ' + (errors.length ? '\n' + errors.join('\n') : 'none'))
-await browser.close()
+for (const [hash, name] of routes) await visit(hash, name)
+check('no page or console errors', !errors.length, errors.join(' | '))
+await teardown(browser)

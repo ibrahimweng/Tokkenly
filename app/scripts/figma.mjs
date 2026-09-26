@@ -26,17 +26,14 @@
    Refreshing it is a person re-reading the file's collections. That is one
    manual step rather than none, and it is written down in design.md 11g.80. */
 import { readFileSync } from 'node:fs'
+import { check, teardown } from './lib/harness.mjs'
 
 const snap = JSON.parse(readFileSync(new URL('../figma/tokens.json', import.meta.url), 'utf8'))
 const css = readFileSync(new URL('../src/styles/tokens.css', import.meta.url), 'utf8')
 const comp = readFileSync(new URL('../src/styles/components.css', import.meta.url), 'utf8')
 const parts = JSON.parse(readFileSync(new URL('../figma/parts.json', import.meta.url), 'utf8'))
 
-let fails = 0
-const ok = (label, pass, detail = '') => {
-  if (!pass) fails += 1
-  console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${label}${detail ? '  ' + detail : ''}`)
-}
+const ok = check
 
 /* tokens.css holds the dark theme on a bare `:root` and the light one under
    `:root[data-theme='light']`. Split on that rather than on line numbers, so
@@ -140,7 +137,7 @@ console.log('\nPARTS  every drawn thing the product uses, and whether the file h
   // This is the check that would have said so at the time.
   const src = readFileSync(new URL('../src/icons.ts', import.meta.url), 'utf8')
   const body = src.slice(src.indexOf('export const icon'))
-  const inCode = [...body.matchAll(/^  ([A-Za-z][\w]*):/gm)].map((m) => m[1])
+  const inCode = [...body.matchAll(/^ {2}([A-Za-z][\w]*):/gm)].map((m) => m[1])
   const inFigma = new Set(parts.icons)
   const short = inCode.filter((n) => !inFigma.has(n))
   const spare = parts.icons.filter((n) => !inCode.includes(n))
@@ -153,4 +150,4 @@ console.log('\nPARTS  every drawn thing the product uses, and whether the file h
 console.log('\nSNAPSHOT  when the file was last read')
 console.log(`  read on ${snap.pulledAt}. Nothing here can tell you whether Figma has`)
 console.log('  moved since; re-read it when the file changes (design.md 11g.80).')
-console.log(fails ? `\n${fails} FAILED` : '\nERRORS: none')
+await teardown()

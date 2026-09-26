@@ -1,3 +1,5 @@
+import { B as HASH_BASE } from './harness.mjs'
+
 /* Every suite but ftue.mjs is about a person who has been here before, so the
    intro is in the way. Seeding the flag the app actually reads is truer than
    clicking Skip in every script, and it costs one line per page.
@@ -33,7 +35,7 @@ export const locked = (p, security = {}) =>
  *  need the limits out of the way so the ceiling they are testing is the one
  *  that bites. It is four clicks, and doing it for real beats reaching into
  *  state the app would never let a person reach into. */
-export async function verify(p, B = 'http://localhost:4173/#') {
+export async function verify(p, B = HASH_BASE) {
   await p.goto(B + '/verify', { waitUntil: 'domcontentloaded' })
   await p.waitForTimeout(300)
   await p.getByRole('button', { name: 'Start' }).click()

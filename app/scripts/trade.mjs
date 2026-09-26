@@ -1,23 +1,21 @@
 /* Buying and selling, walked the way a person walks them, on both surfaces.
    Every step asks the same three questions: can I tell what will happen, can
    I get out, and does the number that lands match the number I agreed to. */
-import { chromium } from 'playwright'
-import { seen, settled } from './seen.mjs'
-const B = 'http://localhost:4173/#'
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+import { B, launch, check, teardown } from './lib/harness.mjs'
+import { seen, settled } from './lib/seen.mjs'
+const b = await launch()
 const errs = []
-const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
+const ok = check
 const page = async (w = 1440, h = 1024) => {
   const p = await b.newPage({ viewport: { width: w, height: h } })
   await seen(p)
   p.on('pageerror', (e) => errs.push(String(e)))
   p.setDefaultTimeout(6000)
-  await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   return p
 }
 const money = (s) => Number(String(s).replace(/[^0-9.]/g, '')) || 0
 
-for (const [flow, route, verb] of [['BUY', '/invest/aapl/invest', 'Buy'], ['SELL', '/invest/aapl/sell', 'Sell']]) {
+for (const [flow, route] of [['BUY', '/invest/aapl/invest'], ['SELL', '/invest/aapl/sell']]) {
   console.log(flow + '  ' + route)
   const p = await page()
   await p.goto(B + route, { waitUntil: 'domcontentloaded' })
@@ -93,7 +91,6 @@ for (const [flow, route, verb] of [['BUY', '/invest/aapl/invest', 'Buy'], ['SELL
      rev.rows.slice(0, 3).join(' | '))
   ok('review can be backed out of', rev.back)
 
-  const before = await p.evaluate(() => document.body.innerText)
   await p.locator('.scrim .btn-primary').first().click()
   await p.waitForTimeout(900)
   const done = await p.evaluate(() => ({
@@ -284,4 +281,4 @@ console.log('A COMPANY PAGE  a name, the market beside it, and one Buy')
 }
 
 console.log('\nerrors:', errs.length ? errs : 'none')
-await b.close()
+await teardown(b)

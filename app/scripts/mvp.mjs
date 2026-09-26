@@ -6,18 +6,16 @@
    cost, that permission to trade is a different fact from identity, and that
    there is a console which can stop any of it — and that stopping it changes
    what a customer meets rather than a boolean in a dashboard. */
-import { chromium } from 'playwright'
-import { seen, verify, settled } from './seen.mjs'
+import { B, launch, check, teardown } from './lib/harness.mjs'
+import { seen, verify } from './lib/seen.mjs'
 
-const B = 'http://localhost:4173/#'
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+const b = await launch()
 const errs = []
-const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
+const ok = check
 const p = await b.newPage({ viewport: { width: 1440, height: 1300 } })
 await seen(p, { homeView: 'detailed' })
 p.on('pageerror', (e) => errs.push(String(e)))
 p.setDefaultTimeout(8000)
-await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 const at = async (r) => { await p.goto(B + r, { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(500) }
 const text = () => p.evaluate(() => document.querySelector('.content')?.innerText.replace(/\n/g, ' · ') ?? '')
 const rows = () => p.evaluate(() => Object.fromEntries(
@@ -201,4 +199,4 @@ console.log('A SWITCH CHANGES THE PRODUCT, NOT A DASHBOARD')
 }
 
 console.log('\nerrors:', errs.length ? errs : 'none')
-await b.close()
+await teardown(b)

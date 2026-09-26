@@ -15,18 +15,19 @@
  *     same children, in the same order, at the same coordinates — so this is a
  *     transport limit handled in transport, and not a change to the drawing.
  *
- * Usage: node scripts/_figma-build.mjs <flow-file> <indices> [parts] [n] [i]
- *        node scripts/_figma-build.mjs 02-home.json 0,1,2
- *        node scripts/_figma-build.mjs 03-....json 7 "" 3 0
+ * Usage: node scripts/figma/build.mjs <flow-file> <indices> [parts] [n] [i]
+ *        node scripts/figma/build.mjs 02-home.json 0,1,2
+ *        node scripts/figma/build.mjs 03-....json 7 "" 3 0
  */
 import { readFileSync } from 'node:fs'
 
-/* The node builder, shared with _figma-chrome.mjs so the furniture and the
+/* The node builder, shared with chrome.mjs so the furniture and the
    screens around it are built by one piece of code. */
-const NODE = readFileSync(new URL('./_figma-node.js', import.meta.url), 'utf8')
+const NODE = readFileSync(new URL('./node.js', import.meta.url), 'utf8')
 
-const [file, which, partsFile, nParts = '1', part = '0'] = process.argv.slice(2)
-const doc = JSON.parse(readFileSync(new URL('../figma/flows/' + file, import.meta.url), 'utf8'))
+// [parts] is positional and not read here: the parts map comes from the file.
+const [file, which, _partsFile, nParts = '1', part = '0'] = process.argv.slice(2)
+const doc = JSON.parse(readFileSync(new URL('../../figma/flows/' + file, import.meta.url), 'utf8'))
 const indices = String(which).split(',').map((s) => Number(s.trim()))
 for (const i of indices) {
   if (!doc.screens[i]) { console.error('no screen ' + i + ' in ' + file); process.exit(1) }

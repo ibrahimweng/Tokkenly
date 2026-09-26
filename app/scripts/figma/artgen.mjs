@@ -6,10 +6,10 @@
  * both to the variables afterwards, which is what makes a component follow the
  * theme rather than being a dark-mode picture.
  *
- * Usage: node scripts/_figma-artgen.mjs NAME [NAME...] > /tmp/x.js
+ * Usage: node scripts/figma/artgen.mjs NAME [NAME...] > build.js
  */
 import { readFileSync } from 'node:fs'
-const art = JSON.parse(readFileSync(new URL('../figma/art.json', import.meta.url), 'utf8'))
+const art = JSON.parse(readFileSync(new URL('../../figma/art.json', import.meta.url), 'utf8'))
 const want = process.argv.slice(2)
 const pick = art.filter((a) => want.includes(a.name))
 if (pick.length !== want.length) {
@@ -91,7 +91,7 @@ for (const a of ART) {
   }
   const comp = figma.createComponentFromNode(node)
   comp.name = 'art/' + a.name
-  comp.description = a.name + ' — drawn by components/drawings.ts, exported by scripts/_figma-art.mjs. Do not redraw by hand.'
+  comp.description = a.name + ' — drawn by components/drawings.ts, exported by scripts/figma/art.mjs. Do not redraw by hand.'
   made.push({ name: comp.name, id: comp.id })
 }
 return { made, count: made.length }

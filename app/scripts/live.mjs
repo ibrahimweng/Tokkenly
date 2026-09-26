@@ -1,21 +1,17 @@
 /* The parts that behave like a live product rather than a picture of one:
    dialogs that present the way Figma draws them, a chart whose ranges redraw,
    notifications that clear, and a table you can order. */
-import { chromium } from 'playwright'
-import { seen } from './seen.mjs'
+import { B, launch, check, teardown } from './lib/harness.mjs'
+import { seen } from './lib/seen.mjs'
 
-const B = 'http://localhost:4173/#'
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+const b = await launch()
 const errs = []
-const ok = (label, pass, detail = '') =>
-  console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${label}${detail ? '  ' + detail : ''}`)
+const ok = check
 const page = async (w = 1440, h = 1024) => {
   const p = await b.newPage({ viewport: { width: w, height: h } })
   await seen(p, { homeView: 'detailed' })
   p.on('pageerror', (e) => errs.push(String(e)))
   p.setDefaultTimeout(8000)
-  // the webfont host is unreachable from here, and networkidle waits for it
-  await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   return p
 }
 
@@ -307,7 +303,6 @@ console.log('WHAT THE DOORS SAY  the reading, now that it is only words')
   const p = await b.newPage({ viewport: { width: 1440, height: 1000 } })
   await seen(p, { homeView: 'simple' })
   p.on('pageerror', (e) => errs.push(String(e)))
-  await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   const read = async () => {
     await p.goto(B + '/', { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(600)
     return p.evaluate(() => [...document.querySelectorAll('.gate')].map((g) => ({
@@ -376,7 +371,6 @@ console.log('WHAT THE DOORS SAY  the reading, now that it is only words')
   // draws for somebody with money in all of them.
   const w = await b.newPage({ viewport: { width: 1440, height: 900 } })
   await w.addInitScript(`try { localStorage.removeItem('tokkenly.prefs.v1'); sessionStorage.setItem('tokkenly.unlocked','1') } catch {}`)
-  await w.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   await w.goto(B + '/welcome/0', { waitUntil: 'domcontentloaded' }); await w.waitForTimeout(600)
   ok('the intro draws its objects too',
      (await w.evaluate(() => document.querySelectorAll('.welcome-art svg path').length)) > 6)
@@ -385,4 +379,4 @@ console.log('WHAT THE DOORS SAY  the reading, now that it is only words')
 }
 
 console.log('\nERRORS: ' + (errs.length ? errs.join(' | ') : 'none'))
-await b.close()
+await teardown(b)

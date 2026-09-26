@@ -16,10 +16,9 @@
    may draw, a PIN dot is a glyph and its empty state is the drawing, and a
    focus ring is a ring. Everything else separates by space or by a step in the
    surface. */
-import { chromium } from 'playwright'
-import { seen } from './seen.mjs'
+import { B, launch, check, teardown } from './lib/harness.mjs'
+import { seen } from './lib/seen.mjs'
 
-const B = 'http://localhost:4173/#'
 const ROUTES = ['/', '/invest', '/invest/aapl', '/invest/aapl/invest', '/transfer',
   '/addmoney', '/send', '/withdraw', '/grow', '/grow/borrow', '/activity',
   '/statement', '/bucket', '/account', '/account/preferences', '/account/security',
@@ -32,12 +31,11 @@ const ALLOWED = [
   ['.btn.is-busy', 'the spinner is a glyph on a pseudo-element'],
 ]
 
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+const b = await launch()
 let bad = 0
 for (const theme of ['dark', 'light']) {
   const p = await b.newPage({ viewport: { width: 1440, height: 900 } })
   await seen(p, { theme })
-  await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   for (const route of ROUTES) {
     await p.goto(B + route, { waitUntil: 'domcontentloaded' })
     await p.waitForTimeout(240)
@@ -65,12 +63,12 @@ for (const theme of ['dark', 'light']) {
     }, ALLOWED)
     for (const f of found) {
       bad++
-      console.log(`  FAIL  ${theme} ${route}  ${f.what}  border on ${f.sides}`)
+      check(`${theme} ${route}  ${f.what}`, false, `border on ${f.sides}`)
     }
   }
   await p.close()
 }
-await b.close()
 console.log(bad ? `total strokes drawn: ${bad}` : 'nothing draws a line')
 console.log('allowed, and only these:')
 for (const [sel, why] of ALLOWED) console.log(`  ${sel}  —  ${why}`)
+await teardown(b)

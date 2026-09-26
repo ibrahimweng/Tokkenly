@@ -11,15 +11,14 @@
    `display: flex` and its direction, so a card built as a column in CSS is a
    column in Figma and reflows when somebody edits it.
 
-   Usage:  node scripts/_figma-read.mjs <flow>
+   Usage:  node scripts/figma/read.mjs <flow>
    Writes: figma/flows/<flow>.json
 */
-import { chromium } from 'playwright'
-import { seen, fresh, locked } from './seen.mjs'
+import { launch, B } from '../lib/harness.mjs'
+import { seen, fresh, locked } from '../lib/seen.mjs'
 import { mkdirSync, writeFileSync, readFileSync } from 'node:fs'
 
-const B = 'http://localhost:4173/#'
-const OUT = new URL('../figma/flows/', import.meta.url)
+const OUT = new URL('../../figma/flows/', import.meta.url)
 
 /* The product, flow by flow, screen by screen, at the two widths the file has
    always carried. The list is not invented: every address in it comes off
@@ -152,7 +151,7 @@ export const FLOWS = {
 
 /* The token behind a colour, so the builder can bind a variable rather than
    paint a hex. Built from the same snapshot figma.mjs checks. */
-const snap = JSON.parse(readFileSync(new URL('../figma/tokens.json', import.meta.url), 'utf8'))
+const snap = JSON.parse(readFileSync(new URL('../../figma/tokens.json', import.meta.url), 'utf8'))
 const BY_HEX = {}
 for (const [fig, v] of Object.entries(snap.colour.vars)) BY_HEX[v.Dark.toLowerCase()] = fig
 
@@ -294,12 +293,11 @@ if (!flow || !FLOWS[flow]) {
 }
 
 mkdirSync(OUT, { recursive: true })
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+const b = await launch()
 const screens = []
 for (const [name, route, width, opts = {}] of FLOWS[flow]) {
   const c = await b.newContext({ viewport: { width, height: width < 500 ? 844 : 1000 } })
   const p = await c.newPage()
-  await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   if (opts.fresh) await fresh(p)
   // The lock is a screen in its own right, and the only way to get it is a
   // cold tab: seeded unlocked, every other screen would paint over it.

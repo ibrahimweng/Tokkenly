@@ -1,16 +1,14 @@
 /* A preference that changes nothing is a preference that lies. Every switch in
    Account is followed to the thing it claims to change. */
-import { chromium } from 'playwright'
-import { seen, verify } from './seen.mjs'
-const B = 'http://localhost:4173/#'
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+import { B, launch, check, teardown } from './lib/harness.mjs'
+import { seen, verify } from './lib/seen.mjs'
+const b = await launch()
 const errs = []
-const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
+const ok = check
 const p = await b.newPage({ viewport: { width: 1440, height: 1100 } })
 await seen(p)
 p.on('pageerror', (e) => errs.push(String(e)))
 p.setDefaultTimeout(6000)
-await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 // Every control lives in its own group now, so a helper per group rather
 // than one /account that held all twenty-five.
 const group = async (g) => { await p.goto(B + '/account/' + g, { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400) }
@@ -125,7 +123,6 @@ console.log('THE REMINDERS ON HOME  where they sit, and how to be rid of them')
   await seen(t)
   t.on('pageerror', (e) => errs.push(String(e)))
   t.setDefaultTimeout(6000)
-  await t.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   const home = async () => { await t.goto(B + '/', { waitUntil: 'domcontentloaded' }); await t.waitForTimeout(450) }
   await home()
   // Reading order rather than child order: the task and the feed share a
@@ -283,7 +280,6 @@ console.log('QUICK AMOUNTS AGAINST THE CEILING')
   // last test left behind is checking nothing in particular.
   const q = await b.newPage({ viewport: { width: 1440, height: 1100 } })
   await seen(q)
-  await q.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   for (const r of ['/grow/borrow', '/invest/aapl/invest', '/withdraw', '/grow/earn']) {
     await q.goto(B + r, { waitUntil: 'domcontentloaded' }); await q.waitForTimeout(550)
     const m = await q.evaluate(() => ({
@@ -330,4 +326,4 @@ await at('/invest/aapl/invest')
 }
 
 console.log('\nerrors:', errs.length ? errs : 'none')
-await b.close()
+await teardown(b)

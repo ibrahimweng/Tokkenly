@@ -9,15 +9,15 @@
  * given the list of what is in the file; with names it writes the use_figma
  * script that builds those.
  *
- * Usage: node scripts/_figma-icons.mjs --check <in-figma.json>
- *        node scripts/_figma-icons.mjs bolt phone play > /tmp/x.js
+ * Usage: node scripts/figma/icons.mjs --check <in-figma.json>
+ *        node scripts/figma/icons.mjs bolt phone play > build.js
  */
 import { build } from 'esbuild'
-import { readFileSync, writeFileSync, unlinkSync } from 'node:fs'
+import { readFileSync, unlinkSync } from 'node:fs'
 
-const tmp = new URL('../.icons.bundle.mjs', import.meta.url)
+const tmp = new URL('../../.icons.bundle.mjs', import.meta.url)
 await build({
-  entryPoints: [new URL('../src/icons.ts', import.meta.url).pathname],
+  entryPoints: [new URL('../../src/icons.ts', import.meta.url).pathname],
   bundle: true, format: 'esm', write: true, logLevel: 'silent',
   outfile: tmp.pathname,
 })
@@ -98,7 +98,7 @@ for (const ic of ICONS) {
   }
   const comp = figma.createComponentFromNode(node)
   comp.name = 'icon/' + ic.name
-  comp.description = 'Drawn by src/icons.ts, exported by scripts/_figma-icons.mjs. Do not redraw by hand.'
+  comp.description = 'Drawn by src/icons.ts, exported by scripts/figma/icons.mjs. Do not redraw by hand.'
   made.push({ name: comp.name, id: comp.id })
 }
 return { made, count: made.length }

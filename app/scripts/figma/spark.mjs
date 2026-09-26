@@ -4,14 +4,14 @@
    paint back to the variable afterwards), and the 0-100 viewBox is pre-scaled
    to the 117x56 the table draws it at, because `preserveAspectRatio="none"`
    stretches the box but not the 2px stroke, and Figma has no equivalent. */
-import { chromium } from 'playwright'
-import { seen } from './seen.mjs'
+import { launch, B } from '../lib/harness.mjs'
+import { seen } from '../lib/seen.mjs'
 
 const W = 117, H = 56
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+const b = await launch()
 const p = await b.newPage({ viewport: { width: 1440, height: 1000 } })
 await seen(p)
-await p.goto('http://localhost:4173/#/invest/list/popular', { waitUntil: 'networkidle' })
+await p.goto(B + '/invest/list/popular', { waitUntil: 'networkidle' })
 await p.waitForTimeout(400)
 const raw = await p.evaluate(() => document.querySelector('.spark.up svg').outerHTML)
 await b.close()

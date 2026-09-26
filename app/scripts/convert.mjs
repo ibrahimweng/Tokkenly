@@ -12,19 +12,16 @@
    An account that could not turn its own naira into its own dollars because it
    had already sent $800 to a landlord would be a product that had confused a
    safety rail with a lock. */
-import { chromium } from 'playwright'
-import { seen, settled } from './seen.mjs'
+import { B, launch, check, teardown } from './lib/harness.mjs'
+import { seen, settled } from './lib/seen.mjs'
 
-const B = 'http://localhost:4173/#'
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+const b = await launch()
 const errs = []
-let bad = 0
-const ok = (l, pass, d = '') => { if (!pass) bad++; console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`) }
+const ok = check
 const p = await b.newPage({ viewport: { width: 1440, height: 1200 } })
 await seen(p)
 p.on('pageerror', (e) => errs.push(String(e)))
 p.setDefaultTimeout(9000)
-await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 
 const at = async (r) => { await p.goto(B + r, { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(420) }
 const num = (s) => Number(String(s).replace(/[^0-9.-]/g, '')) || 0
@@ -298,7 +295,5 @@ const phoneFits = await ph.evaluate(() => {
 })
 ok('the button is above the fold on a phone', phoneFits > 0 && phoneFits <= 844, String(phoneFits))
 
-console.log(errs.length ? 'ERRORS ' + errs.slice(0, 4).join(' | ') : 'no page errors')
-console.log(bad ? `${bad} FAILED` : 'all passed')
-await b.close()
-process.exit(bad || errs.length ? 1 : 0)
+check('no page errors', !errs.length, errs.slice(0, 4).join(' | '))
+await teardown(b)

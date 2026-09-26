@@ -1,17 +1,15 @@
 /* An identity check is only worth building if something is actually different
    on either side of it. This walks it and then checks the two numbers that
    were supposed to move. */
-import { chromium } from 'playwright'
-import { seen } from './seen.mjs'
-const B = 'http://localhost:4173/#'
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+import { B, launch, check, teardown } from './lib/harness.mjs'
+import { seen } from './lib/seen.mjs'
+const b = await launch()
 const errs = []
-const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
+const ok = check
 const p = await b.newPage({ viewport: { width: 1440, height: 1100 } })
 await seen(p)
 p.on('pageerror', (e) => errs.push(String(e)))
 p.setDefaultTimeout(6000)
-await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 const at = async (r) => { await p.goto(B + r, { waitUntil: 'domcontentloaded' }); await p.waitForTimeout(400) }
 const money = (s) => Number((String(s ?? '').match(/[\d,]+\.?\d*/) ?? ['0'])[0].replace(/,/g, '')) || 0
 const text = () => p.evaluate(() => document.body.innerText)
@@ -31,10 +29,6 @@ ok('and offers the way to lift it', await p.evaluate(() => !!document.body.inner
 
 console.log('THE CEILING BITES  before the balance does')
 await at('/send?to=Tunde%20Bakare')
-const capped = await p.evaluate(() => {
-  const i = document.querySelector('.amount-box input')
-  return { max: i?.value }
-})
 await p.locator('.amount-box input').fill('900')
 await p.locator('.amount-box input').dispatchEvent('input')
 await p.waitForTimeout(300)
@@ -103,4 +97,4 @@ ok('buying counts against the month too', Math.abs((after - before) - 100.5) < 0
    `${before} → ${after}, expected +100.50`)
 
 console.log('\nerrors:', errs.length ? errs : 'none')
-await b.close()
+await teardown(b)

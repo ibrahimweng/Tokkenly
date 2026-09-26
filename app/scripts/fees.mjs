@@ -1,17 +1,15 @@
 /* "Every transaction shows the amount, the rate, the fee, and exactly what you
    receive, before you confirm." That is a promise about arithmetic, so it is
    checked as arithmetic: what the review says must be what the ledger does. */
-import { chromium } from 'playwright'
-import { seen, verify, settled } from './seen.mjs'
-const B = 'http://localhost:4173/#'
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+import { B, launch, check, teardown } from './lib/harness.mjs'
+import { seen, verify, settled } from './lib/seen.mjs'
+const b = await launch()
 const errs = []
-const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
+const ok = check
 const p = await b.newPage({ viewport: { width: 1440, height: 1024 } })
 await seen(p)
 p.on('pageerror', (e) => errs.push(String(e)))
 p.setDefaultTimeout(6000)
-await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 /* the first figure in a string: "$0.50 · 0.5%" is fifty cents, not 0.500.5 */
 const money = (s) => Number((String(s ?? '').match(/[\d,]+\.?\d*/) ?? ['0'])[0].replace(/,/g, '')) || 0
 const cash = async () => {
@@ -117,4 +115,4 @@ ok('and the ledger agrees', Math.abs((cashBefore - cashAfterB) - 100.5) < 0.02,
    `${cashBefore} → ${cashAfterB}, expected −100.50`)
 
 console.log('\nerrors:', errs.length ? errs : 'none')
-await b.close()
+await teardown(b)

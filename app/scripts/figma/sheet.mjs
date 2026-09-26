@@ -7,29 +7,25 @@
 
    It reads `drawings.ts` directly off a Vite dev server rather than the build,
    because the module exports the objects by name and the build does not. Start
-   one first:
+   one first (DEV_URL, default http://localhost:5173):
 
-       npx vite --port 4180
+       npm run dev
 
    With no server this says so and stops. It used to render two blank images and
    report nothing, which is the shape of a check that can only pass. */
-import { chromium } from 'playwright'
+import { launch, check, teardown, shot, DEV_URL } from '../lib/harness.mjs'
 
-const URL = 'http://localhost:4180/scripts/_art.html'
+const URL = DEV_URL + '/scripts/figma/art.html'
 const WANT = 11
-let fail = 0
-const ok = (l, pass, d = '') => {
-  if (!pass) fail += 1
-  console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
-}
+const ok = check
 
 const up = await fetch(URL).then((r) => r.ok).catch(() => false)
 if (!up) {
-  console.log('SKIPPED  no dev server on 4180. Start one with: npx vite --port 4180')
+  console.log(`SKIPPED  no dev server at ${DEV_URL}. Start one with: npm run dev`)
   process.exit(0)
 }
 
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+const b = await launch()
 for (const theme of ['dark', 'light']) {
   const c = await b.newContext({ viewport: { width: 940, height: 1200 }, deviceScaleFactor: 2 })
   const p = await c.newPage()
@@ -48,8 +44,8 @@ for (const theme of ['dark', 'light']) {
   ok(`${theme}: every drawing in the set renders`, n === WANT, `${n} of ${WANT}`)
   ok(`${theme}: and none of them is an empty frame`, empties.length === 0, empties.join(' '))
   ok(`${theme}: and nothing threw`, errs.length === 0, errs.join(' | '))
-  await p.locator('.artsheet').screenshot({ path: `/tmp/ba7/sheet-${theme}.png` })
+  await p.locator('.artsheet').screenshot({ path: shot(`sheet-${theme}.png`) })
   await c.close()
 }
-console.log(fail ? `\n${fail} FAILED` : '\nok, /tmp/ba7/sheet-*.png written')
-await b.close()
+console.log(`written: ${shot('sheet-*.png')}`)
+await teardown(b)

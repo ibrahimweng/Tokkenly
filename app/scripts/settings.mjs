@@ -2,20 +2,18 @@
    are the ones the old screen could not answer: can you find a control, does
    the row tell you what it is set to before you tap, and does the PIN stand
    between somebody and your money or is it decoration. */
-import { chromium } from 'playwright'
-import { seen, verify } from './seen.mjs'
+import { B, launch, check, teardown } from './lib/harness.mjs'
+import { seen, verify } from './lib/seen.mjs'
 
-const B = 'http://localhost:4173/#'
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+const b = await launch()
 const errs = []
-const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
+const ok = check
 
 const page = async (w = 1440, h = 1100) => {
   const p = await b.newPage({ viewport: { width: w, height: h } })
   await seen(p)
   p.on('pageerror', (e) => errs.push(String(e)))
   p.setDefaultTimeout(6000)
-  await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   return p
 }
 const at = async (p, r) => {
@@ -316,4 +314,4 @@ console.log('LOCKED OUT  the way back in is on the screen you are locked out of'
 }
 
 console.log('\nerrors:', errs.length ? errs : 'none')
-await b.close()
+await teardown(b)

@@ -9,17 +9,15 @@
 
    So: every label that leads somewhere is read, followed, and checked against
    the name the destination gives itself. */
-import { chromium } from 'playwright'
-import { seen } from './seen.mjs'
+import { B, launch, check, teardown } from './lib/harness.mjs'
+import { seen } from './lib/seen.mjs'
 
-const B = 'http://localhost:4173/#'
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
-const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
+const b = await launch()
+const ok = check
 const p = await b.newPage({ viewport: { width: 1440, height: 1200 } })
 await seen(p)
 const errs = []
 p.on('pageerror', (e) => errs.push(String(e)))
-await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 
 /* Home's greeting is the one heading that is not a page name, and it is not
    one on purpose: nothing navigates to "Good afternoon, Chinaza". Named here
@@ -57,7 +55,6 @@ console.log('THE QUICK ACTIONS, AND THE WALLET DOORS')
    the preference is undone by the next navigation. */
 const d = await b.newPage({ viewport: { width: 1440, height: 1200 } })
 await seen(d, { homeView: 'detailed' })
-await d.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 await d.goto(B + '/', { waitUntil: 'networkidle' }); await d.waitForTimeout(300)
 const quick = await d.evaluate(() =>
   [...document.querySelectorAll('.row.tiles > *')].map((e) => ({
@@ -265,7 +262,6 @@ console.log('THE TRAIL NAMES THE LIST YOU CAME THROUGH')
   // says only what it knows.
   const cold = await b.newPage({ viewport: { width: 1280, height: 1000 } })
   await seen(cold)
-  await cold.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   await cold.goto(B + '/invest/dis', { waitUntil: 'domcontentloaded' })
   await cold.waitForTimeout(500)
   const alone = await cold.evaluate(() => [...document.querySelectorAll('.crumbs .crumb')].map((e) => e.textContent.trim()).join(' > '))
@@ -331,7 +327,6 @@ console.log('EVERY SCREEN SAYS HOW TO LEAVE IT, ON A PHONE')
 {
   const m = await b.newPage({ viewport: { width: 390, height: 844 } })
   await seen(m)
-  await m.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
   const ROUTES = [
     '/', '/invest', '/invest/aapl', '/transfer', '/grow', '/grow/lending', '/grow/borrowing',
     '/grow/borrow', '/grow/repay', '/grow/earn', '/grow/takeout', '/activity',
@@ -365,4 +360,4 @@ console.log('EVERY SCREEN SAYS HOW TO LEAVE IT, ON A PHONE')
 }
 
 console.log('\nerrors: ' + (errs.length ? errs.join('\n') : 'none'))
-await b.close()
+await teardown(b)

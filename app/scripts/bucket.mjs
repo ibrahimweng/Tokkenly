@@ -1,15 +1,13 @@
 /* Filling a bucket from the places you would fill it, and paying for it once. */
-import { chromium } from 'playwright'
-import { seen, settled } from './seen.mjs'
-const B = 'http://localhost:4173/#'
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' })
+import { B, launch, check, teardown } from './lib/harness.mjs'
+import { seen, settled } from './lib/seen.mjs'
+const b = await launch()
 const errs = []
-const ok = (l, pass, d = '') => console.log(`  ${pass ? 'ok  ' : 'FAIL'}  ${l}${d ? '  ' + d : ''}`)
+const ok = check
 const p = await b.newPage({ viewport: { width: 1440, height: 1024 } })
 await seen(p)
 p.on('pageerror', (e) => errs.push(String(e)))
 p.setDefaultTimeout(6000)
-await p.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 const money = (s) => Number(String(s).replace(/[^0-9.]/g, '')) || 0
 const count = () => p.evaluate(() => document.querySelector('.nav-bucket .count')?.textContent ?? '0')
 
@@ -184,7 +182,6 @@ ok('and it comes back when the connection does', back.some((t) => /^Buy all/.tes
 console.log('PHONE')
 const m = await b.newPage({ viewport: { width: 390, height: 844 } })
 await seen(m)
-await m.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort())
 await m.goto(B + '/invest/aapl', { waitUntil: 'domcontentloaded' }); await m.waitForTimeout(400)
 // A company page used to carry two pills and three buttons beside its name,
 // which does not fit across 390 pixels — so the phone kept Buy and put the rest
@@ -208,4 +205,4 @@ ok('and the bucket screen does not overflow',
    (await m.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)) === 0)
 
 console.log('\nerrors:', errs.length ? errs : 'none')
-await b.close()
+await teardown(b)

@@ -7,15 +7,15 @@
  * that every name means exactly one drawing, and emits the script that builds
  * each one once on the Design system page. The flows then reference them.
  *
- * Usage: node scripts/_figma-chrome.mjs [--check] [names...] > /tmp/x.js
+ * Usage: node scripts/figma/chrome.mjs [--check] [names...] > build.js
  */
 import { readFileSync, readdirSync } from 'node:fs'
 
-/* The node builder, shared with _figma-build.mjs. */
-const NODE = readFileSync(new URL('./_figma-node.js', import.meta.url), 'utf8')
+/* The node builder, shared with build.mjs. */
+const NODE = readFileSync(new URL('./node.js', import.meta.url), 'utf8')
 
-const DIR = new URL('../figma/flows/', import.meta.url)
-const tok = JSON.parse(readFileSync(new URL('../figma/tokens.json', import.meta.url), 'utf8'))
+const DIR = new URL('../../figma/flows/', import.meta.url)
+const tok = JSON.parse(readFileSync(new URL('../../figma/tokens.json', import.meta.url), 'utf8'))
 const BY_HEX = {}
 for (const [fig, v] of Object.entries(tok.colour.vars)) BY_HEX[v.Dark.toLowerCase()] = fig
 
@@ -153,7 +153,7 @@ for (const c of CHROME) {
   for (const k of c.tree.k || []) build(k, holder)
   const comp = figma.createComponentFromNode(holder)
   comp.name = c.name
-  comp.description = 'Chrome, read off the running product by scripts/_figma-read.mjs and built by _figma-chrome.mjs. Do not redraw by hand.'
+  comp.description = 'Chrome, read off the running product by scripts/figma/read.mjs and built by chrome.mjs. Do not redraw by hand.'
   made.push({ name: comp.name, id: comp.id })
   n += 1
 }
