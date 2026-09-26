@@ -4,12 +4,46 @@ This file is the reference for every screen in the Tokkenly mobile app. Read it
 before designing anything. If a value is not in this file, it does not go in the
 design. If something here is wrong, change this file first and then the design.
 
+## Contents
+
+The sections sit in the order they were written, not in numerical order: 13
+comes after 8, 11e before 11c, and 12 before 11f. Section numbers are cited all
+through this file and the code, so they are kept rather than renumbered, and
+this list is in file order. Section 11g is most of the file: the numbered entries
+11g.1 onwards, each a change and the reason for it.
+
+- [0. The three hard rules](#0-the-three-hard-rules)
+- [1. The direction](#1-the-direction)
+- [2. Colour](#2-colour)
+- [2b. The seventy twenty ten split](#2b-the-seventy-twenty-ten-split)
+- [3. Typography](#3-typography)
+- [4. Spacing](#4-spacing)
+- [5. Shape](#5-shape)
+- [6. Size](#6-size)
+- [6b. Icons](#6b-icons)
+- [7. Depth](#7-depth)
+- [8. Components](#8-components)
+- [13. What makes it beautiful](#13-what-makes-it-beautiful)
+- [9. How this maps to the reference work](#9-how-this-maps-to-the-reference-work)
+- [10. Rules that must not be broken](#10-rules-that-must-not-be-broken)
+- [11. The screens, by flow](#11-the-screens-by-flow)
+- [11b. The desktop product](#11b-the-desktop-product)
+- [11e. The phone](#11e-the-phone)
+- [11c. What the product actually does](#11c-what-the-product-actually-does)
+- [11d. The build](#11d-the-build)
+- [12. The prototype](#12-the-prototype)
+- [11f. Tightening, and the states nobody had drawn](#11f-tightening-and-the-states-nobody-had-drawn)
+- [11g. An outside pass, and all six tiers of it built](#11g-an-outside-pass-and-all-six-tiers-of-it-built)
+
 ## 0. The three hard rules
 
 These come before everything else. A screen that breaks one of them is wrong
 even if it looks fine.
 
-1. **Two font weights per screen.** Lato SemiBold and Lato Regular. Nothing else.
+1. **Two font weights per screen.** Geist SemiBold and Geist Regular. Nothing else.
+   *(This rule named Lato until 26 September 2026, after the face had already
+   changed to Geist everywhere else: section 3.1, rule 1 of section 10, and the
+   product. Geist is the face; see 3.1 for why.)*
 2. **Every size and every gap is a multiple of 4.** Font sizes, line heights,
    spacing, padding, heights and widths.
 3. **No mid tone surfaces.** A screen is near white or deep green, never a wash
@@ -3095,7 +3129,13 @@ Desktop puts all of this on a 480 wide card in `surface/default`, centred on
 `surface/canvas`, with the fields in `surface/sunken`. The phone uses the full
 width inside the usual 20 of side padding.
 
-The example address in every field is `ibrahimweng0@gmail.com`.
+A field that asks for the person's own address shows `you@example.com` as its
+example: an instruction about what to type, not an answer. The product's own
+address, wherever it shows one, is `support@tokkenly.com`, and a person the
+product invents gets their own name at `example.com`. The rule and its reasons
+are in 11g.92. *(Corrected 26 September 2026: this line used to give the
+project's personal mailbox as the example, which put a real person's name in
+every field.)*
 
 ### 11c.5a Sending
 
@@ -9134,11 +9174,11 @@ possible by writing the converter again, because the first one was ad-hoc
 scripts that were never checked in. That is the actual root cause of everything
 above: an export nobody can re-run is an export that happens once.
 
-`scripts/_figma-read.mjs` walks the DOM of a route and emits a tree — every box
+`scripts/_figma-read.mjs` (now `scripts/figma/read.mjs`) walks the DOM of a route and emits a tree — every box
 with its geometry, radius and fill, every run of text with its own size, weight
 and colour, auto-layout inferred from `display: flex`, and every fill that
 matches a token named so the builder binds a variable rather than paints a hex.
-`scripts/_figma-build.mjs` turns one of those trees into the script that builds
+`scripts/_figma-build.mjs` (now `scripts/figma/build.mjs`) turns one of those trees into the script that builds
 it. Both are checked in, and the flow list is data at the top of the reader.
 
 One product change fell out of it. Inlining an icon's paths costs about a
@@ -9358,7 +9398,8 @@ between a design file made of components and a design file made of copies.
   correct and they are quiet, which is what an empty state should be — but they
   are the two to look at again first if the set ever reads as eleven drawings
   and two placeholders.
-- `scripts/_art.html` and `scripts/_sheet.mjs` render every drawing in the set
+- `scripts/_art.html` and `scripts/_sheet.mjs` (now `scripts/figma/art.html` and
+  `scripts/figma/sheet.mjs`, against the dev server on DEV_URL) render every drawing in the set
   at once, in both themes, against a Vite dev server on 4180. It is the only
   way to see the set as a set rather than one card at a time, and it is not
   wired to anything: `all.sh` runs it and it reports nothing.
@@ -9433,7 +9474,7 @@ from source rather than checking is the answer to it.
 pages are cleared and the converter is verified against Home at both widths,
 but the remaining build is about 125 `use_figma` calls, each carrying a whole
 screen's tree. That is a transport problem, not a design one, and the exports
-in `figma/flows/` plus `_figma-build.mjs` are all that is needed to finish it.
+in `figma/flows/` plus `_figma-build.mjs` (now `scripts/figma/build.mjs`) are all that is needed to finish it.
 
 ### 11g.82 — the 172 screens, and the limit that was not the one on the label
 
@@ -9493,9 +9534,11 @@ and the screens were wrong. It took looking at one.
 widths, because the session the exporter walks has an empty bucket — so the file
 says "Nothing in the bucket yet" on the one screen whose whole point is a filled
 bucket. It needs re-seeding, not redrawing. And the sweep confirmed the address
-rule: every customer-facing address in the file is `ibrahimweng0@gmail.com`, and
-the only other addresses are the staff handles in the audit log, which are meant
-to be internal.
+rule as it then stood: every customer-facing address in the file was the
+project's personal mailbox, and the only other addresses were the staff handles
+in the audit log, which are meant to be internal. That rule was wrong, and
+11g.92 replaced it: `you@example.com` in a field, `support@tokkenly.com` for the
+product's own, and an invented person's own name at `example.com`.
 
 **What still is not closed.** The file is a snapshot. Nothing keeps it in step
 with the code after today, and the parts check compares names rather than
@@ -10229,7 +10272,7 @@ contact page is a lie with regulatory shape to it, and the socials in the
 footer are still `data-soon`. So the column says something true instead, and
 the real ones are the client's to supply.
 
-The form's email field also suggested `ibrahimweng0@gmail.com` — the project's
+The form's email field also suggested the project's personal mailbox — its
 own address, in the box where a visitor types theirs. It reads as a form that
 has already been filled in. `you@example.com` now.
 
@@ -10243,8 +10286,8 @@ them in the check at all.
 
 ### 11g.92 — nobody's name on a screen
 
-`ibrahimweng0@gmail.com` had spread through the product as though it were a
-string rather than a person. It was the placeholder in the contact form's
+The project's personal mailbox (the one CLAUDE.md names) had spread through the
+product as though it were a string rather than a person. It was the placeholder in the contact form's
 email field — the box where a visitor types *theirs*, so the form read as one
 already filled in. It was the address on the contact page, and in the "write
 to us" line of both the terms and the privacy policy. It was the email of the
@@ -10287,7 +10330,7 @@ that the strings are visible.
 **A postscript that makes the point better than the entry does.** While the
 app sweep for this ran, the parallel session rebuilt the company and legal
 pages from their Figma frames and added About and Blog. It set
-`EMAIL = 'ibrahimweng0@gmail.com'` again, put it in the blog page's newsletter
+`EMAIL` to the personal mailbox again, put it in the blog page's newsletter
 box as the placeholder — the one address a reader would certainly not type
 there — and wrote the reason down:
 
