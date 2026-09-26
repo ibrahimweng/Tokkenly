@@ -262,11 +262,13 @@ function rail(active: Place): HTMLElement {
           class: 'rail-cell' + (here(m.to) ? ' on' : ''), on: { click: () => go(m.to, true) },
         },
           h('span', { class: 'rail-cell-ic', html: m.ic() }),
-          h('span', { class: 'rail-cell-label', text: m.label }))
+          // A soft hyphen in the one word longer than a cell: at 12px
+          // "Notifications" is wider than a quarter of the panel, and left to
+          // itself it broke as "Notificatio / ns".
+          h('span', { class: 'rail-cell-label', text: m.label.replace('Notifications', 'Notifi\u00ADcations') }))
         if (here(m.to)) cell.setAttribute('aria-current', 'page')
         return cell
       })),
-    h('div', { class: 'rail-rule' }),
     h('div', { class: 'rail-pref' },
       h('span', { class: 't-caps subtle', text: 'Home view' }), viewToggle()))
 

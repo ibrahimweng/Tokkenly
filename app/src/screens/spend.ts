@@ -256,7 +256,7 @@ function targetRow(title: string, sub: string, ic: () => string, back: string): 
   return h('div', { class: 'stack-8' },
     h('span', { class: 't-caps subtle compose-label', text: 'For' }),
     h(split ? 'div' : 'button', {
-      class: 'sheet-row', style: { background: 'var(--control)' },
+      class: 'sheet-row sheet-row-filled',
       on: split ? {} : { click: () => go(back) },
     },
       h('span', { class: 'mark', html: ic() }),

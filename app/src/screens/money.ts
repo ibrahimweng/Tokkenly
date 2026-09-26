@@ -528,7 +528,7 @@ export function sendScreen(sub?: string, forced?: Destination): HTMLElement {
     lede: () => h('div', { class: 'stack-8' },
       h('span', { class: 't-caps subtle compose-label', text: 'To' }),
       h(split ? 'div' : 'button', {
-        class: 'sheet-row', style: { background: 'var(--control)' },
+        class: 'sheet-row sheet-row-filled',
         on: split ? {} : { click: () => go('/send/' + w) },
       },
         bank
@@ -788,7 +788,7 @@ export function sendSharesScreen(ticker: string): HTMLElement {
     lede: () => h('div', { class: 'stack-8' },
       h('span', { class: 't-caps subtle', text: 'To' }),
       h(side ? 'div' : 'button', {
-        class: 'sheet-row', style: { background: 'var(--control)' },
+        class: 'sheet-row sheet-row-filled',
         on: side ? {} : { click: () => go(`/invest/${c.ticker.toLowerCase()}/send`) },
       },
         h('span', { class: 'avatar', text: initials(to) }),

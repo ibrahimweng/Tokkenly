@@ -263,7 +263,7 @@ export function barChart(spec: ChartSpec): HTMLElement {
     const marks = niceTicks(lo, hi)
     const step = marks.length > 1 ? marks[1] - marks[0] : hi - lo
     grid.replaceChildren(...marks.map((v) =>
-      h('div', { class: 'ch-line', style: { bottom: at(v) + '%' } },
+      h('div', { class: 'ch-rule', style: { bottom: at(v) + '%' } },
         h('span', { class: 'ch-tick', text: compact(v, step, money) }))))
 
     if (spec.shape === 'area') drawArea()

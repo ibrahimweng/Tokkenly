@@ -205,7 +205,10 @@ function render(r: Route): void {
     opener = null
     const main = app.querySelector<HTMLElement>('main.content')
     const adrift = document.activeElement === document.body || document.activeElement === null
-    if (!back && main && adrift) main.focus({ preventScroll: true })
+    // Only on the same screen. A dialog that closed because the person went
+    // somewhere else leaves them at the top of the new page, where the skip
+    // link is the first thing Tab reaches.
+    if (!back && main && adrift && !arrived) main.focus({ preventScroll: true })
   } else if (!arrived || open) {
     // The same screen drawn again, or the same dialog: the control that was
     // pressed is put back under the keyboard.

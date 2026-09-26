@@ -225,7 +225,7 @@ function detailed(): HTMLElement {
       h('div', { class: 'header-actions' },
         isMobile() ? null : jumpOpen(), viewToggle(), bell())),
     h('div', { class: 'row' },
-      h('div', { class: 'stack', style: { width: '308px', flex: 'none' } },
+      h('div', { class: 'stack col-figure' },
         h('div', { class: 'stack-8' },
           h('span', { class: 'muted', text: standing() }),
           h('span', { class: 't-caps subtle', text: 'Total portfolio' }),

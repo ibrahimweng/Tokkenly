@@ -162,8 +162,7 @@ export function signInScreen(): HTMLElement {
       // worse answer than drawing none.
       h('button', { class: 'btn btn-secondary', text: 'Continue with Google',
         on: { click: () => { actions.signIn(); go('/') } } }),
-      h('div', { class: 'auth-or' },
-        h('span', { class: 'rule' }), h('span', { class: 't-caption subtle', text: 'or' }), h('span', { class: 'rule' })),
+      h('div', { class: 'auth-or' }, h('span', { class: 't-caption subtle', text: 'or' })),
       email.el,
       password.el,
       // The link belongs here, under the field that failed, not in a footer.
@@ -214,8 +213,7 @@ export function signUpScreen(): HTMLElement {
     [
       h('button', { class: 'btn btn-secondary', text: 'Continue with Google',
         on: { click: () => { actions.signIn(); go('/') } } }),
-      h('div', { class: 'auth-or' },
-        h('span', { class: 'rule' }), h('span', { class: 't-caption subtle', text: 'or' }), h('span', { class: 'rule' })),
+      h('div', { class: 'auth-or' }, h('span', { class: 't-caption subtle', text: 'or' })),
       invite.el,
       name.el,
       email.el,

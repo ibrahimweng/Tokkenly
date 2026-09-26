@@ -2,20 +2,49 @@
 <html lang="en" data-theme="dark">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" href="./favicon.svg" />
+    <!-- viewport-fit=cover so the page may draw under a notch and a home
+         indicator; the phone's rail then keeps clear of them itself, with
+         env(safe-area-inset-bottom). -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <!-- The browser's own chrome in the page's colour. The theme is the
+         person's choice rather than the system's, so the script below keeps
+         this in step with it rather than leaving it to a media query. -->
+    <meta name="theme-color" content="#0a0a0c" />
+    <meta name="color-scheme" content="dark light" />
+    <link rel="icon" href="/favicon.svg" />
     <title>Tokkenly</title>
+    <!-- The theme, before anything paints. It used to be applied by the app
+         once a 370KB bundle had loaded and run, so somebody who had chosen
+         light saw a dark frame first on every visit. This reads the same
+         saved preference the app does (tokkenly.prefs.v1) and falls back to
+         the app's own default, dark — the system's scheme is not consulted,
+         because the app does not consult it either, and a head script that
+         disagreed with the app would be a flash of its own. -->
+    <script>
+      (function () {
+        var root = document.documentElement
+        var theme = 'dark'
+        try {
+          var kept = JSON.parse(localStorage.getItem('tokkenly.prefs.v1') || 'null')
+          if (kept && kept.prefs && kept.prefs.theme === 'light') theme = 'light'
+        } catch (e) { /* storage refused: the default stands */ }
+        root.setAttribute('data-theme', theme)
+        var meta = document.querySelector('meta[name="theme-color"]')
+        var paint = function () {
+          meta.setAttribute('content', root.getAttribute('data-theme') === 'light' ? '#ffffff' : '#0a0a0c')
+        }
+        paint()
+        new MutationObserver(paint).observe(root, { attributes: true, attributeFilter: ['data-theme'] })
+      })()
+    </script>
     <!-- Geist is served from /fonts now, so there is no third party in the
          critical path and no session that renders in the fallback because a
-         CDN was slow. The latin subset is preloaded because every screen uses
-         it; latin-ext waits until something needs a ₦. -->
-    <link
-      rel="preload"
-      href="/fonts/geist-latin.woff2"
-      as="font"
-      type="font/woff2"
-      crossorigin
-    />
+         CDN was slow. Both subsets are preloaded: latin is on every screen,
+         and latin-ext holds ₦, which is on nearly every screen of a product
+         for Nigeria — waiting for it to be discovered drew the naira sign in
+         the fallback face and then swapped it. -->
+    <link rel="preload" href="/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/geist-latin-ext.woff2" as="font" type="font/woff2" crossorigin />
   </head>
   <body>
     <div id="app"></div>
