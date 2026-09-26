@@ -143,6 +143,34 @@ them there would be nothing left to tell them apart.
 Nothing on a screen is pure white except the canvas itself. If a card looks
 white, it is wrong.
 
+### 2.3a Where Figma is behind the product
+
+The product follows this document; the Figma file (`QMT7FjrIjJVDDGNjPY5Clu`)
+has not been rebuilt to match on the tokens below. It was re-read on
+26 September and still holds the old values. `app/scripts/figma.mjs` allows
+exactly these divergences, each at both its Figma and its CSS value, and fails
+on any other drift. **Figma needs updating for these tokens**, and once it is,
+the snapshot in `app/figma/tokens.json` is re-read and the entries come out of
+the suite's allowlist (it reports an entry as stale once the file has moved).
+
+| Figma variable or style | Figma holds | Product | Why |
+| --- | --- | --- | --- |
+| `ground/canvas` Light | `F4F4F1` | `FFFFFF` | 2.3, 2.9: the page is pure white |
+| `ground/surface` Light | `FFFFFF` | `FAFBFC` | 2.3, 2.9: `surface/default` |
+| `ground/sunken` Light | `FFFFFF` | `F0F2F4` | 2.3, 2.9: `surface/sunken` |
+| `ground/sunken-hover` Light | `F1F1EE` | `ECEFF1` | 2.3: one neutral rung toward control |
+| `ground/grid` Light | `E5E5DF` | `E2E6E9` | 2.3: neutral greys, no cast |
+| `control/control` Light | `E9E9E4` | `E9ECEF` | 2.3, 2.9: `surface/control` |
+| `control/control-pressed` Light | `DCDCD5` | `DDE2E6` | 2.3, 2.9: `surface/control-pressed` |
+| `control/off` Light | `EEEEE9` | `ECEFF1` | 2.3: neutral greys, no cast |
+| `ink/subtle` Light | `6C6C76` | `63636C` | 2.7: 4.5 to 1 on the new control grey |
+| `meaning/positive` Light | `0F7D55` | `0E7852` | 2.7: the same |
+| `meaning/warning` Light | `8A6510` | `836010` | 2.7: the same |
+| `control/on-inverse-muted` (new) | absent | `4A4A52` / `A8A8B0` | Rule 28: a quiet line on an inverse fill is a colour, not an opacity |
+| `Display XL` size | 40 | 48 | 3.2 |
+| `Display` size | 32 | 36 | 3.2 |
+| `Caps` size | 11 | 12 | 3.2 |
+
 ### 2.4 Ink
 
 | Token | Value | Contrast on canvas | Use |
